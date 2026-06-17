@@ -12,14 +12,14 @@ interface AddressBookEntryDao {
     suspend fun getEntries(): List<AddressBookEntryEntity>
 
     @Query("SELECT * FROM address_book_entry WHERE chainId = :chainId AND address = :address")
-    suspend fun getEntry(chainId: String, address: String): AddressBookEntryEntity
+    suspend fun getEntry(chainId: String, address: String): AddressBookEntryEntity?
 
     // COLLATE NOCASE folds ASCII case, which is exactly what EIP-55 checksum casing varies, so an
     // EVM entry is matched regardless of how the address was capitalized when saved or looked up.
     @Query(
         "SELECT * FROM address_book_entry WHERE chainId = :chainId AND address = :address COLLATE NOCASE"
     )
-    suspend fun getEntryIgnoringCase(chainId: String, address: String): AddressBookEntryEntity
+    suspend fun getEntryIgnoringCase(chainId: String, address: String): AddressBookEntryEntity?
 
     @Upsert suspend fun upsert(entry: AddressBookEntryEntity)
 

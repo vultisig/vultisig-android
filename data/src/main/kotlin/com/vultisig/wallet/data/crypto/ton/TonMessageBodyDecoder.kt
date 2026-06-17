@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.crypto.ton
 
+import java.math.BigInteger
+
 /**
  * Decodes a TonConnect message body (base64 or hex BOC) into a structured [TonMessageBodyIntent].
  *
@@ -17,6 +19,14 @@ object TonMessageBodyDecoder {
     private const val OP_JETTON_TRANSFER = 0x0f8a7ea5L // TEP-74
     private const val OP_NFT_TRANSFER = 0x5fcc3d14L // TEP-62
     private const val OP_EXCESSES = 0xd53276dbL // TEP-74 gas return
+    private const val OP_PTON_TRANSFER = 0x01f3835dL // STON.fi pTON (TON-side swap)
+    private const val OP_STONFI_V2_SWAP = 0x6664de2aL // STON.fi v2 swap (forward payload)
+    private const val OP_DEDUST_NATIVE_SWAP = 0xea06185dL // DeDust native-TON-in swap
+    // DeDust jetton-in swap. Defined for completeness but intentionally not dispatched: DeDust uses
+    // one vault per jetton, so the vault set is not statically enumerable and cannot be
+    // allow-listed.
+    // Such bodies fall through to the raw transfer display rather than a (ungated) swap card.
+    private const val OP_DEDUST_JETTON_SWAP = 0xe3a0d482L
 
     fun decode(payload: String?): TonMessageBodyIntent? {
         val base64 = TonBocParser.payloadToBase64(payload) ?: return null
@@ -41,9 +51,20 @@ object TonMessageBodyDecoder {
             OP_JETTON_TRANSFER -> parseJettonTransfer(slice)
             OP_NFT_TRANSFER -> parseNftTransfer(slice)
             OP_EXCESSES -> parseExcesses(slice)
+            OP_PTON_TRANSFER -> parsePtonTransfer(slice)
+            OP_DEDUST_NATIVE_SWAP -> parseDedustNativeSwap(slice)
+            // OP_DEDUST_JETTON_SWAP is deliberately absent — see its declaration.
             else -> null
         }
 
+    /**
+     * Parse a TEP-74 jetton transfer. When the forward payload carries a STON.fi v2 swap
+     * (`0x6664de2a`) this returns a [TonMessageBodyIntent.Swap] with the jetton-transfer
+     * destination as [TonMessageBodyIntent.Swap.inputRouterAddress] for the runtime allow-list
+     * gate; otherwise it returns a plain [TonMessageBodyIntent.JettonTransfer]. A forward payload
+     * that begins with the swap opcode but is then malformed throws (→ `null`) rather than
+     * degrading to a transfer, so a valid-prefix/garbage-tail body never renders a fake swap.
+     */
     private fun parseJettonTransfer(slice: TonSlice): TonMessageBodyIntent {
         val queryId = slice.loadUIntBig(64)
         val amount = slice.loadCoins()
@@ -51,15 +72,110 @@ object TonMessageBodyDecoder {
         val responseDestination = slice.loadMaybeAddress()
         slice.loadMaybeRef() // custom_payload:(Maybe ^Cell) — discarded
         val forwardTonAmount = slice.loadCoins()
-        // forward_payload:(Either Cell ^Cell) — consumed (not surfaced) so a
-        // body truncated before this field is rejected.
-        consumeForwardPayload(slice)
+        // forward_payload:(Either Cell ^Cell) — a STON.fi swap rides in here.
+        val forward = slice.loadForwardPayload()
+        if (forward.remainingBits >= 32 && forward.loadUInt(32) == OP_STONFI_V2_SWAP) {
+            return parseStonfiSwapForward(
+                forward,
+                offerAsset = TonMessageBodyIntent.OfferAsset.JETTON,
+                offerAmount = amount,
+                inputRouterAddress = destination,
+            )
+        }
         return TonMessageBodyIntent.JettonTransfer(
             queryId = queryId,
             amount = amount,
             destination = destination,
             responseDestination = responseDestination,
             forwardTonAmount = forwardTonAmount,
+        )
+    }
+
+    /**
+     * STON.fi pTON wallet transfer (`0x01f3835d`) — the TON-side leg of a STON.fi swap. The TON
+     * offer amount is read here; the swap parameters ride in the forward payload. Gated in the
+     * runtime layer on the outer message destination ∈ STON.fi pTON wallets.
+     */
+    private fun parsePtonTransfer(slice: TonSlice): TonMessageBodyIntent? {
+        slice.loadUIntBig(64) // query_id — discarded
+        val offerAmount = slice.loadCoins()
+        slice.loadAddress() // refund_address — discarded
+        val forward = slice.loadForwardPayload()
+        if (forward.remainingBits < 32 || forward.loadUInt(32) != OP_STONFI_V2_SWAP) return null
+        return parseStonfiSwapForward(
+            forward,
+            offerAsset = TonMessageBodyIntent.OfferAsset.TON,
+            offerAmount = offerAmount,
+            inputRouterAddress = null,
+        )
+    }
+
+    /**
+     * Body of a STON.fi v2 swap (`0x6664de2a`), with the opcode already consumed. Every field of
+     * the `additional_data` ref is read so a truncated tail throws and the swap fails closed.
+     */
+    private fun parseStonfiSwapForward(
+        slice: TonSlice,
+        offerAsset: TonMessageBodyIntent.OfferAsset,
+        offerAmount: BigInteger,
+        inputRouterAddress: String?,
+    ): TonMessageBodyIntent {
+        val targetAddress = slice.loadAddress()
+        val refundAddress = slice.loadAddress()
+        val excessesAddress = slice.loadAddress()
+        slice.loadUIntBig(64) // tx_deadline / query_id — discarded
+        val additional = slice.loadRef().beginParse()
+        val minOut = additional.loadCoins()
+        val receiverAddress = additional.loadAddress()
+        additional.loadCoins() // custom_payload_fwd_gas — discarded
+        additional.loadMaybeRef() // custom_payload — discarded
+        additional.loadCoins() // refund_fwd_gas — discarded
+        additional.loadMaybeRef() // refund_payload — discarded
+        additional.loadUInt(16) // referral_value (bps) — discarded
+        // referral_address:(Maybe MsgAddress) — must be optional; a no-referral swap encodes
+        // addr_none here and a non-optional read would throw and misclassify it.
+        additional.loadMaybeAddress()
+        return TonMessageBodyIntent.Swap(
+            provider = TonMessageBodyIntent.Provider.STONFI,
+            offerAsset = offerAsset,
+            offerAmount = offerAmount,
+            minOut = minOut,
+            targetAddress = targetAddress,
+            inputRouterAddress = inputRouterAddress,
+            receiverAddress = receiverAddress,
+            refundAddress = refundAddress,
+            excessesAddress = excessesAddress,
+        )
+    }
+
+    /**
+     * DeDust native-TON-in swap (`0xea06185d`), opcode already consumed. Only `given_in` (swap-kind
+     * bit `0`) is supported; `given_out` throws (→ `null`). Gated in the runtime layer on the outer
+     * message destination ∈ DeDust native vaults.
+     */
+    private fun parseDedustNativeSwap(slice: TonSlice): TonMessageBodyIntent {
+        slice.loadUIntBig(64) // query_id — discarded
+        val offerAmount = slice.loadCoins()
+        // SwapStep
+        val targetAddress = slice.loadAddress()
+        if (slice.loadBit()) throw TonCellException("dedust given_out swap not supported")
+        val minOut = slice.loadCoins()
+        slice.loadMaybeRef() // next:(Maybe ^SwapStep) — discarded
+        // params:^SwapParams lives in a ref, not inline. Descending into it (and reading the
+        // deadline + recipient) both surfaces the receiver and rejects a body missing the ref.
+        val params = slice.loadRef().beginParse()
+        params.loadUInt(32) // deadline — discarded
+        val receiverAddress = params.loadMaybeAddress() // recipient_addr
+        return TonMessageBodyIntent.Swap(
+            provider = TonMessageBodyIntent.Provider.DEDUST,
+            offerAsset = TonMessageBodyIntent.OfferAsset.TON,
+            offerAmount = offerAmount,
+            minOut = minOut,
+            targetAddress = targetAddress,
+            inputRouterAddress = null,
+            receiverAddress = receiverAddress,
+            refundAddress = null,
+            excessesAddress = null,
         )
     }
 

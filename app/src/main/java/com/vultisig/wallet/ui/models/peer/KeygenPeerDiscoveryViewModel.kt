@@ -2,13 +2,9 @@
 
 package com.vultisig.wallet.ui.models.peer
 
-import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Bitmap
-import android.os.Build
+import androidx.annotation.VisibleForTesting
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
@@ -19,26 +15,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
-import com.vultisig.wallet.data.api.models.signer.BatchKeygenRequestJson
-import com.vultisig.wallet.data.api.models.signer.BatchReshareRequestJson
-import com.vultisig.wallet.data.api.models.signer.CreateMldsaVaultRequestJson
-import com.vultisig.wallet.data.api.models.signer.JoinKeyImportRequest
-import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
-import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
-import com.vultisig.wallet.data.api.models.signer.MigrateRequest
-import com.vultisig.wallet.data.api.models.signer.toJson
 import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Endpoints.VULTISIG_RELAY_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.sha256
 import com.vultisig.wallet.data.keygen.isBatchEligibleReshare
-import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
-import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
-import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
-import com.vultisig.wallet.data.models.proto.v1.SingleKeygenMessageProto
-import com.vultisig.wallet.data.models.proto.v1.toProto
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.QrHelperModalRepository
@@ -71,7 +54,6 @@ import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.ktor.util.encodeBase64
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
@@ -80,13 +62,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 
@@ -145,6 +128,7 @@ constructor(
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
     private val networkUtils: NetworkUtils,
+    private val mediatorServiceController: MediatorServiceController,
 ) : ViewModel() {
 
     private val args: Route.Keygen.PeerDiscovery? =
@@ -152,7 +136,7 @@ constructor(
             .onFailure { Timber.e(it, "Failed to deserialize PeerDiscovery args") }
             .getOrNull()
 
-    val state =
+    private val _state =
         MutableStateFlow(
             PeerDiscoveryUiModel(
                 minimumDevices = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
@@ -163,34 +147,33 @@ constructor(
                 enableNotification = false,
             )
         )
+    val state: StateFlow<PeerDiscoveryUiModel> = _state.asStateFlow()
 
     private val sessionId = Uuid.random().toHexString()
     private val serviceName = generateServiceName()
 
     private val encryptionKeyHex = Utils.encryptionKeyHex
 
-    // For KeyImport, derive the BIP32 chain code from the mnemonic so the vault can
-    // derive addresses for chains not explicitly imported. Extraction happens in loadData()
-    // so failures surface as a UI error state rather than crashing ViewModel construction.
-    // For other actions, use a random hex immediately.
-    private var hexChainCode: String =
-        if (args?.action == TssAction.KeyImport) "" else Utils.encryptionKeyHex
-    private var localPartyId = Utils.deviceName(context)
     private val vaultName: String = args?.vaultName ?: ""
-    private var libType = SigningLibType.GG20
-    private var pubKeyEcdsa = ""
-    private var signers: List<String> = emptyList()
-    private var resharePrefix: String = ""
 
     /**
-     * Snapshot of the `tss-batch` feature flag taken once per peer discovery session.
-     *
-     * Captured early in [loadData] so the QR payload, the FastVault dispatch, and the navigation
-     * arg passed to [com.vultisig.wallet.ui.models.keygen.KeygenViewModel] all see the same value —
-     * otherwise an in-flight toggle could route the QR through the legacy path while the FastVault
-     * call hits `/batch/reshare`, leaving the joiner stranded on the wrong relay channel.
+     * Per-session config. Seeded with construction-time defaults, then replaced atomically by
+     * [loadData] once chain code, lib type, signers and the `tss-batch` flag are resolved. Holding
+     * it as one object means the QR payload, the FastVault dispatch and the navigation arg always
+     * observe a consistent snapshot rather than a half-updated mix.
      */
-    private var isTssBatchEnabled: Boolean = false
+    private var session: KeygenSession =
+        KeygenSession(
+            // For KeyImport the BIP32 chain code is derived from the mnemonic in loadData(); use an
+            // empty placeholder until then. Other actions use a random hex immediately.
+            hexChainCode = if (args?.action == TssAction.KeyImport) "" else Utils.encryptionKeyHex,
+            localPartyId = Utils.deviceName(context),
+            libType = SigningLibType.GG20,
+            pubKeyEcdsa = "",
+            signers = emptyList(),
+            resharePrefix = "",
+            isTssBatchEnabled = false,
+        )
 
     // fast vault data
     private val email = args?.email
@@ -225,13 +208,13 @@ constructor(
         if (!email.isNullOrBlank() && !password.isNullOrBlank()) return
 
         viewModelScope.launch {
-            state.map { it.selectedDevices.size }.first { it == targetDeviceCount - 1 }
+            _state.map { it.selectedDevices.size }.first { it >= targetDeviceCount - 1 }
             next()
         }
     }
 
     private fun showNetworkWarning() {
-        state.update {
+        _state.update {
             it.copy(
                 warning =
                     ErrorUiModel(
@@ -254,10 +237,11 @@ constructor(
         // Mirror loadData()'s fast/secure predicate: active-vault migrate (signers > 2) goes
         // through peer discovery even when email+password are present, so the share card must
         // not advertise "Fast Vault" for it.
+        val signerCount = session.signers.size
         val isFastVault =
             !email.isNullOrBlank() &&
                 !password.isNullOrBlank() &&
-                !(args?.action == TssAction.Migrate && signers.size > 2)
+                !(args?.action == TssAction.Migrate && signerCount > 2)
         val typeRes =
             if (isFastVault) R.string.qr_share_type_fast_vault
             else R.string.qr_share_type_secure_vault
@@ -284,7 +268,12 @@ constructor(
 
     fun switchMode() {
         if (args == null) return
-        state.update {
+        // Tear down the current transport before switching, otherwise the old discovery job or
+        // local mediator receiver can keep emitting and repopulate the just-cleared device list
+        // (or leave a stale local session/receiver behind).
+        discoverParticipantsJob?.cancel()
+        mediatorServiceController.stop()
+        _state.update {
             it.copy(
                 network =
                     when (it.network) {
@@ -295,11 +284,11 @@ constructor(
                 selectedDevices = emptyList(),
             )
         }
-        viewModelScope.launch { startPeerDiscovery() }
+        viewModelScope.safeLaunch { startPeerDiscovery() }
     }
 
     fun selectDevice(device: ParticipantName) {
-        state.update {
+        _state.update {
             val isReshare = args?.action == TssAction.ReShare
             val maxOtherDevices = it.minimumDevices - 1
             it.copy(
@@ -323,7 +312,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to start keygen session")
-                state.update {
+                _state.update {
                     it.copy(
                         warning =
                             ErrorUiModel(
@@ -335,8 +324,13 @@ constructor(
                 }
             }
         ) {
+            val session = session
             val existingVault = args.vaultId?.let { vaultRepository.get(it) }
-            val keygenCommittee = (listOf(localPartyId) + state.value.selectedDevices).distinct()
+            // Snapshot the selection once: startWithCommittee suspends, and oldCommittee below
+            // reads it again — without the snapshot a selection change mid-call would desync the
+            // started committee from the navigation args.
+            val selectedDevices = _state.value.selectedDevices
+            val keygenCommittee = (listOf(session.localPartyId) + selectedDevices).distinct()
             sessionApi.startWithCommittee(serverUrl, sessionId, keygenCommittee)
 
             navigator.route(
@@ -344,25 +338,20 @@ constructor(
                     action = args.action,
                     sessionId = sessionId,
                     serverUrl = serverUrl,
-                    localPartyId = localPartyId,
+                    localPartyId = session.localPartyId,
                     vaultName = vaultName,
-                    hexChainCode = hexChainCode,
+                    hexChainCode = session.hexChainCode,
                     keygenCommittee = keygenCommittee,
                     encryptionKeyHex = encryptionKeyHex,
                     isInitiatingDevice = true,
-                    libType =
-                        when (args.action) {
-                            TssAction.Migrate -> SigningLibType.DKLS
-                            TssAction.KeyImport -> SigningLibType.KeyImport
-                            else -> libType
-                        },
+                    libType = args.action.strategy().resolveLibType(session.libType),
                     email = email,
                     password = password,
                     hint = args.hint,
                     vaultId = args.vaultId,
                     oldCommittee =
                         existingVault?.signers?.filter {
-                            state.value.selectedDevices.contains(it) || it == localPartyId
+                            selectedDevices.contains(it) || it == session.localPartyId
                         } ?: emptyList(),
                     oldResharePrefix = existingVault?.resharePrefix ?: "",
                     deviceCount = args.deviceCount,
@@ -370,7 +359,9 @@ constructor(
                     // FastVault, every peer (including this one) must follow the same path.
                     // Both DKLS and KeyImport vaults qualify because they share the same root
                     // ECDSA / EdDSA threshold protocols — matches iOS / Windows.
-                    isTssBatch = isBatchEligibleReshare(args.action, libType) && isTssBatchEnabled,
+                    isTssBatch =
+                        isBatchEligibleReshare(args.action, session.libType) &&
+                            session.isTssBatchEnabled,
                 ),
                 opts =
                     NavigationOptions(
@@ -386,13 +377,30 @@ constructor(
             showNetworkWarning()
             return
         }
-        viewModelScope.launch {
-            val args = args ?: return@launch
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.e(e, "Failed to load peer discovery data")
+                _state.update {
+                    it.copy(
+                        error =
+                            ErrorUiModel(
+                                title = UiText.StringResource(R.string.error_view_default_title),
+                                description =
+                                    UiText.StringResource(R.string.error_view_default_description),
+                            )
+                    )
+                }
+            }
+        ) {
+            val args = args ?: return@safeLaunch
+
+            var hexChainCode =
+                if (args.action == TssAction.KeyImport) "" else Utils.encryptionKeyHex
             if (args.action == TssAction.KeyImport && hexChainCode.isEmpty()) {
                 val mnemonic = keyImportRepository.get()?.mnemonic
                 if (mnemonic == null) {
                     Timber.w("KeyImport: no mnemonic found in repository")
-                    state.update {
+                    _state.update {
                         it.copy(
                             error =
                                 ErrorUiModel(
@@ -404,14 +412,14 @@ constructor(
                                 )
                         )
                     }
-                    return@launch
+                    return@safeLaunch
                 }
                 val masterKeys =
                     try {
                         extractMasterKeys(mnemonic)
                     } catch (e: Exception) {
                         Timber.e(e, "KeyImport: failed to extract master keys")
-                        state.update {
+                        _state.update {
                             it.copy(
                                 error =
                                     ErrorUiModel(
@@ -424,11 +432,11 @@ constructor(
                                     )
                             )
                         }
-                        return@launch
+                        return@safeLaunch
                     }
                 if (masterKeys == null) {
                     Timber.w("KeyImport: extractMasterKeys returned null")
-                    state.update {
+                    _state.update {
                         it.copy(
                             error =
                                 ErrorUiModel(
@@ -438,17 +446,22 @@ constructor(
                                 )
                         )
                     }
-                    return@launch
+                    return@safeLaunch
                 }
                 hexChainCode = masterKeys.hexChainCode
             }
 
-            setupLibType()
+            var libType =
+                if (secretSettingsRepository.isDklsEnabled.first()) SigningLibType.DKLS
+                else SigningLibType.GG20
+            val isTssBatchEnabled = featureFlagRepository.getFeatureFlags().isTssBatchEnabled
 
-            isTssBatchEnabled = featureFlagRepository.getFeatureFlags().isTssBatchEnabled
+            var localPartyId = Utils.deviceName(context)
+            var pubKeyEcdsa = ""
+            var signers: List<String> = emptyList()
+            var resharePrefix = ""
 
             val existingVault = args.vaultId?.let { vaultRepository.get(it) }
-
             if (existingVault != null) {
                 libType = existingVault.libType
                 hexChainCode = existingVault.hexChainCode
@@ -458,7 +471,7 @@ constructor(
                 signers = existingVault.signers
 
                 if (args.action == TssAction.Migrate || args.action == TssAction.SingleKeygen) {
-                    state.update {
+                    _state.update {
                         it.copy(
                             minimumDevices = existingVault.signers.size,
                             minimumDevicesDisplayed = existingVault.signers.size,
@@ -467,7 +480,18 @@ constructor(
                 }
             }
 
-            state.update { it.copy(error = null, warning = null) }
+            session =
+                KeygenSession(
+                    hexChainCode = hexChainCode,
+                    localPartyId = localPartyId,
+                    libType = libType,
+                    pubKeyEcdsa = pubKeyEcdsa,
+                    signers = signers,
+                    resharePrefix = resharePrefix,
+                    isTssBatchEnabled = isTssBatchEnabled,
+                )
+
+            _state.update { it.copy(error = null, warning = null) }
 
             if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
                 // For active vault, we should present PeerDiscovery screen, so the other device can
@@ -485,16 +509,33 @@ constructor(
         }
     }
 
+    private fun actionContext(session: KeygenSession) =
+        KeygenActionContext(
+            sessionId = sessionId,
+            serviceName = serviceName,
+            encryptionKeyHex = encryptionKeyHex,
+            vaultName = vaultName,
+            session = session,
+            compressQr = compressQr,
+            protoBuf = protoBuf,
+            vultiSignerRepository = vultiSignerRepository,
+            generateServerPartyId = generateServerPartyId,
+            keyImportRepository = keyImportRepository,
+        )
+
     private suspend fun startPeerDiscovery() {
+        val args = args ?: return
+        val session = session
         checkQrHelperModalIsVisited()
 
-        val isRelayEnabled = state.value.network == NetworkOption.Internet
+        val isRelayEnabled = _state.value.network == NetworkOption.Internet
 
-        val keygenPayload = createKeygenPayload(isRelayEnabled = isRelayEnabled)
+        val keygenPayload =
+            args.action.strategy().buildPayload(actionContext(session), isRelayEnabled)
 
         loadQr(keygenPayload)
 
-        state.update { it.copy(localPartyId = localPartyId) }
+        _state.update { it.copy(localPartyId = session.localPartyId) }
 
         if (isRelayEnabled) {
             serverUrl = VULTISIG_RELAY_URL
@@ -507,7 +548,7 @@ constructor(
     }
 
     private suspend fun startVultiServerConnection() {
-        state.update { it.copy(connectingToServer = ConnectingToServerUiModel(false)) }
+        _state.update { it.copy(connectingToServer = ConnectingToServerUiModel(false)) }
 
         try {
             startSessionWithRetry()
@@ -517,7 +558,7 @@ constructor(
             startParticipantDiscovery(
                 onDiscovered = { devices ->
                     if (devices.size == 1) {
-                        state.update {
+                        _state.update {
                             it.copy(
                                 connectingToServer = it.connectingToServer?.copy(isSuccess = true)
                             )
@@ -532,7 +573,7 @@ constructor(
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to connect to Vultiserver")
-            state.update {
+            _state.update {
                 it.copy(
                     error =
                         ErrorUiModel(
@@ -553,38 +594,47 @@ constructor(
     private fun startParticipantDiscovery(
         onDiscovered: (suspend (devices: List<ParticipantName>) -> Unit)? = null
     ) {
+        val session = session
         discoverParticipantsJob?.cancel()
         discoverParticipantsJob =
-            viewModelScope.launch {
-                discoverParticipants(serverUrl, sessionId, localPartyId).collect { devices ->
-                    val currentState = state.value
-                    val existingDevices = currentState.devices.toSet()
-                    val newDevices = devices - existingDevices
-
-                    val devicesToAutoSelect =
-                        if (args?.action == TssAction.ReShare) {
-                            newDevices
-                        } else {
-                            val maxOtherDevices =
-                                if (currentState.minimumDevices > 1) currentState.minimumDevices - 1
-                                else currentState.minimumDevices
-                            val remainingSlots = maxOtherDevices - currentState.selectedDevices.size
-                            newDevices.take(remainingSlots.coerceAtLeast(0))
-                        }
-                    val selectedDevices = currentState.selectedDevices.toSet() + devicesToAutoSelect
-
-                    state.update {
-                        it.copy(devices = devices, selectedDevices = selectedDevices.toList())
-                    }
-
+            viewModelScope.safeLaunch {
+                discoverParticipants(serverUrl, sessionId, session.localPartyId).collect { devices
+                    ->
+                    applyDiscoveredDevices(devices)
                     onDiscovered?.invoke(devices)
                 }
             }
     }
 
+    /**
+     * Merges a freshly-discovered device list into state, auto-selecting peers up to the threshold
+     * (all of them for ReShare, otherwise filling the remaining slots). Extracted so it can be
+     * unit-tested directly without standing up the discovery flow.
+     */
+    @VisibleForTesting
+    internal fun applyDiscoveredDevices(devices: List<ParticipantName>) {
+        val currentState = _state.value
+        val existingDevices = currentState.devices.toSet()
+        val newDevices = devices - existingDevices
+
+        val devicesToAutoSelect =
+            if (args?.action == TssAction.ReShare) {
+                newDevices
+            } else {
+                val maxOtherDevices =
+                    if (currentState.minimumDevices > 1) currentState.minimumDevices - 1
+                    else currentState.minimumDevices
+                val remainingSlots = maxOtherDevices - currentState.selectedDevices.size
+                newDevices.take(remainingSlots.coerceAtLeast(0))
+            }
+        val selectedDevices = currentState.selectedDevices.toSet() + devicesToAutoSelect
+
+        _state.update { it.copy(devices = devices, selectedDevices = selectedDevices.toList()) }
+    }
+
     private suspend fun checkQrHelperModalIsVisited() {
         val showQrHelpModal = !qrHelperModalRepository.isVisited()
-        state.update { it.copy(showQrHelpModal = showQrHelpModal) }
+        _state.update { it.copy(showQrHelpModal = showQrHelpModal) }
     }
 
     private suspend fun loadQr(data: String) {
@@ -595,270 +645,37 @@ constructor(
         this@KeygenPeerDiscoveryViewModel.qrBitmap.value = qrBitmap
         val bitmapPainter =
             BitmapPainter(qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None)
-        state.update { it.copy(qr = bitmapPainter) }
+        _state.update { it.copy(qr = bitmapPainter) }
     }
-
-    private suspend fun setupLibType() {
-        libType =
-            if (secretSettingsRepository.isDklsEnabled.first()) {
-                SigningLibType.DKLS
-            } else {
-                SigningLibType.GG20
-            }
-    }
-
-    private fun createKeygenPayload(isRelayEnabled: Boolean): String {
-        val args = args ?: return ""
-        return when (args.action) {
-            TssAction.KEYGEN ->
-                "https://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
-                    compressQr(
-                            protoBuf.encodeToByteArray(
-                                KeygenMessageProto(
-                                    sessionId = sessionId,
-                                    hexChainCode = hexChainCode,
-                                    serviceName = serviceName,
-                                    encryptionKeyHex = encryptionKeyHex,
-                                    useVultisigRelay = isRelayEnabled,
-                                    vaultName = vaultName,
-                                    libType = libType.toProto(),
-                                )
-                            )
-                        )
-                        .encodeBase64()
-            TssAction.KeyImport ->
-                "https://vultisig.com?type=NewVault&tssType=KeyImport&jsonData=" +
-                    compressQr(
-                            protoBuf.encodeToByteArray(
-                                KeygenMessageProto(
-                                    sessionId = sessionId,
-                                    hexChainCode = hexChainCode,
-                                    serviceName = serviceName,
-                                    encryptionKeyHex = encryptionKeyHex,
-                                    useVultisigRelay = isRelayEnabled,
-                                    vaultName = vaultName,
-                                    libType = SigningLibType.KeyImport.toProto(),
-                                    chains =
-                                        keyImportRepository.get()?.chainSettings?.map {
-                                            it.chain.raw
-                                        } ?: emptyList(),
-                                )
-                            )
-                        )
-                        .encodeBase64()
-            TssAction.ReShare,
-            TssAction.Migrate ->
-                "https://vultisig.com?type=NewVault&tssType=${args.action.toLinkTssType()}&jsonData=" +
-                    compressQr(
-                            protoBuf.encodeToByteArray(
-                                ReshareMessageProto(
-                                    sessionId = sessionId,
-                                    hexChainCode = hexChainCode,
-                                    serviceName = serviceName,
-                                    publicKeyEcdsa = pubKeyEcdsa,
-                                    oldParties = signers,
-                                    encryptionKeyHex = encryptionKeyHex,
-                                    useVultisigRelay = isRelayEnabled,
-                                    oldResharePrefix = resharePrefix,
-                                    vaultName = args.vaultName,
-                                    libType = libType.toProto(),
-                                    // Only opt the reshare ceremony into batch mode; migrate
-                                    // shares the same proto but is excluded from batched reshare.
-                                    // Both DKLS and KeyImport vaults qualify (matches iOS).
-                                    isTssBatch =
-                                        isBatchEligibleReshare(args.action, libType) &&
-                                            isTssBatchEnabled,
-                                )
-                            )
-                        )
-                        .encodeBase64()
-            TssAction.SingleKeygen ->
-                "https://vultisig.com?type=NewVault&tssType=SingleKeygen&jsonData=" +
-                    compressQr(
-                            protoBuf.encodeToByteArray(
-                                SingleKeygenMessageProto(
-                                    sessionId = sessionId,
-                                    hexChainCode = hexChainCode,
-                                    serviceName = serviceName,
-                                    publicKeyEcdsa = pubKeyEcdsa,
-                                    encryptionKeyHex = encryptionKeyHex,
-                                    useVultisigRelay = isRelayEnabled,
-                                    vaultName = args.vaultName,
-                                    libType = libType.toProto(),
-                                )
-                            )
-                        )
-                        .encodeBase64()
-        }
-    }
-
-    private fun TssAction.toLinkTssType(): String =
-        when (this) {
-            TssAction.KEYGEN -> "Keygen"
-            TssAction.ReShare -> "Reshare"
-            TssAction.Migrate -> "Migrate"
-            TssAction.KeyImport -> "KeyImport"
-            TssAction.SingleKeygen -> "SingleKeygen"
-        }
 
     private suspend fun requestVultiServerConnection() {
         val args = args ?: return
+        val session = session
+        val email = email
+        val password = password
         if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
-            when (args.action) {
-                TssAction.ReShare -> {
-                    if (isTssBatchEnabled && isBatchEligibleReshare(args.action, libType)) {
-                        require(pubKeyEcdsa.isNotBlank()) {
-                            "Reshare requires the existing vault's ECDSA public key"
-                        }
-                        vultiSignerRepository.joinBatchReshare(
-                            BatchReshareRequestJson(
-                                publicKeyEcdsa = pubKeyEcdsa,
-                                sessionId = sessionId,
-                                hexEncryptionKey = encryptionKeyHex,
-                                localPartyId = generateServerPartyId(),
-                                oldParties = signers,
-                                encryptionPassword = password,
-                                email = email,
-                                protocols =
-                                    listOf(
-                                        BatchReshareRequestJson.PROTOCOL_ECDSA,
-                                        BatchReshareRequestJson.PROTOCOL_EDDSA,
-                                    ),
-                            )
-                        )
-                    } else {
-                        vultiSignerRepository.joinReshare(
-                            JoinReshareRequestJson(
-                                vaultName = vaultName,
-                                publicKeyEcdsa = pubKeyEcdsa,
-                                sessionId = sessionId,
-                                hexEncryptionKey = encryptionKeyHex,
-                                hexChainCode = hexChainCode,
-                                localPartyId = localPartyId,
-                                encryptionPassword = password,
-                                email = email,
-                                oldParties = signers,
-                                oldResharePrefix = resharePrefix,
-                            )
-                        )
-                    }
-                }
-
-                TssAction.KEYGEN -> {
-                    if (isTssBatchEnabled) {
-                        vultiSignerRepository.joinBatchKeygen(
-                            BatchKeygenRequestJson(
-                                vaultName = vaultName,
-                                sessionId = sessionId,
-                                hexEncryptionKey = encryptionKeyHex,
-                                hexChainCode = hexChainCode,
-                                localPartyId = generateServerPartyId(),
-                                encryptionPassword = password,
-                                email = email,
-                                libType = libType.toJson(),
-                                protocols =
-                                    listOf(
-                                        BatchKeygenRequestJson.PROTOCOL_ECDSA,
-                                        BatchKeygenRequestJson.PROTOCOL_EDDSA,
-                                    ),
-                            )
-                        )
-                    } else {
-                        vultiSignerRepository.joinKeygen(
-                            JoinKeygenRequestJson(
-                                vaultName = vaultName,
-                                sessionId = sessionId,
-                                hexEncryptionKey = encryptionKeyHex,
-                                hexChainCode = hexChainCode,
-                                localPartyId = generateServerPartyId(),
-                                encryptionPassword = password,
-                                email = email,
-                                libType = libType.toJson(),
-                            )
-                        )
-                    }
-                }
-
-                TssAction.Migrate -> {
-                    vultiSignerRepository.migrate(
-                        MigrateRequest(
-                            publicKeyEcdsa = pubKeyEcdsa,
-                            sessionId = sessionId,
-                            hexEncryptionKey = encryptionKeyHex,
-                            encryptionPassword = password,
-                            email = email,
-                        )
-                    )
-                }
-
-                TssAction.KeyImport -> {
-                    // Server uses joinKeyImport endpoint to determine the flow
-                    vultiSignerRepository.joinKeyImport(
-                        JoinKeyImportRequest(
-                            vaultName = vaultName,
-                            sessionId = sessionId,
-                            hexEncryptionKey = encryptionKeyHex,
-                            hexChainCode = hexChainCode,
-                            localPartyId = generateServerPartyId(),
-                            encryptionPassword = password,
-                            email = email,
-                            libType = SigningLibType.DKLS.toJson(),
-                            chains =
-                                keyImportRepository.get()?.chainSettings?.map { it.chain.raw }
-                                    ?: emptyList(),
-                        )
-                    )
-                }
-
-                TssAction.SingleKeygen -> {
-                    vultiSignerRepository.createMldsa(
-                        CreateMldsaVaultRequestJson(
-                            publicKey = pubKeyEcdsa,
-                            sessionId = sessionId,
-                            hexEncryptionKey = encryptionKeyHex,
-                            encryptionPassword = password,
-                            email = email,
-                        )
-                    )
-                }
-            }
+            args.action.strategy().joinServer(actionContext(session), email, password)
         }
     }
 
     fun dismissQrHelpModal() {
         viewModelScope.launch {
             qrHelperModalRepository.visited()
-            state.update { it.copy(showQrHelpModal = false) }
+            _state.update { it.copy(showQrHelpModal = false) }
         }
     }
 
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private fun startMediatorService() {
-        val filter = IntentFilter()
-        filter.addAction(MediatorService.SERVICE_ACTION)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(serviceStartedReceiver, filter, Context.RECEIVER_EXPORTED)
-        } else {
-            context.registerReceiver(serviceStartedReceiver, filter)
-        }
+        mediatorServiceController.start(serviceName) {
+            // send a request to local mediator server to start the session
+            viewModelScope.safeLaunch { withContext(Dispatchers.IO) { startSessionWithRetry() } }
 
-        MediatorService.start(context, serviceName)
+            startParticipantDiscovery()
+        }
     }
-
-    private val serviceStartedReceiver: BroadcastReceiver =
-        object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                if (intent.action == MediatorService.SERVICE_ACTION) {
-                    Timber.d("onReceive: Mediator service started")
-                    // send a request to local mediator server to start the session
-                    viewModelScope.launch(Dispatchers.IO) { startSessionWithRetry() }
-
-                    startParticipantDiscovery()
-                }
-            }
-        }
 
     private suspend fun startSessionWithRetry() {
+        val localPartyId = session.localPartyId
         repeat(3) { attempt ->
             try {
                 delay(1000)
@@ -870,7 +687,7 @@ constructor(
                 Timber.tag("startSessionAndDiscovery").e(e, "Attempt ${attempt + 1} failed")
                 if (attempt >= 2) {
                     Timber.tag("startSessionAndDiscovery").e("All attempts to start session failed")
-                    state.update {
+                    _state.update {
                         it.copy(
                             error =
                                 ErrorUiModel(
@@ -889,11 +706,7 @@ constructor(
     }
 
     override fun onCleared() {
-        try {
-            context.unregisterReceiver(serviceStartedReceiver)
-        } catch (_: IllegalArgumentException) {
-            // Already unregistered
-        }
+        mediatorServiceController.stop()
         super.onCleared()
     }
 

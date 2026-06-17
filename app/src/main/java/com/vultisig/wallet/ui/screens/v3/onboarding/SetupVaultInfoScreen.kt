@@ -103,7 +103,8 @@ private fun SetupVaultInfoScreen(
             OnboardingResponsiveBottomBar {
                 VsButton(
                     label = stringResource(R.string.key_import_device_count_get_started),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier =
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
                     onClick = { onEvent(SetupVaultInfoEvent.Next) },
                 )
             }

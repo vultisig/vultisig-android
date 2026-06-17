@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.common.normalizeMessageFormat
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionHistoryData
@@ -88,6 +89,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
 import vultisig.keysign.v1.KeysignMessage
+import wallet.core.jni.TONAddressConverter
 
 sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
@@ -605,7 +607,7 @@ constructor(
                 // decoded BOC instead.
                 val chain = payload.coin.chain
                 if (chain == Chain.Ton && payload.signTon != null) {
-                    loadTonJettonHero(payload, sendResult.vaultCoins)
+                    loadTonDappHero(payload, sendResult.vaultCoins)
                 } else {
                     loadBlockaidSimulation(payload, sendResult.functionName)
                 }
@@ -690,31 +692,107 @@ constructor(
      * this is the TON hero path. Cancels any prior run (NSD can re-fire) and pushes the hero into
      * both the verify model and [transactionTypeUiModel] so the done screen carries it forward.
      */
-    private fun loadTonJettonHero(payload: KeysignPayload, vaultCoins: List<Coin>) {
+    private fun loadTonDappHero(payload: KeysignPayload, vaultCoins: List<Coin>) {
         val messages = payload.signTon?.tonMessages?.filterNotNull().orEmpty()
         if (messages.isEmpty()) return
         tonJettonHeroJob?.cancel()
         tonJettonHeroJob =
             viewModelScope.safeLaunch(
-                onError = { Timber.w(it, "TON jetton hero resolution failed during dApp signing") }
+                onError = { Timber.w(it, "TON dApp hero resolution failed during dApp signing") }
             ) {
-                val coin =
+                val hero =
                     withContext(Dispatchers.IO) {
-                        resolveTonJettonHero(messages, vaultCoins) { wallet ->
-                            tonApi.getJettonMasterAddress(wallet)
-                        }
+                        // Prefer the "You're swapping" hero for a gated DEX swap; otherwise fall
+                        // back
+                        // to the single-sided jetton-transfer hero. Both are best-effort.
+                        resolveTonSwapHero(
+                            messages = messages,
+                            nativeTon =
+                                TonHeroCoin(
+                                    ticker = Coins.Ton.TON.ticker,
+                                    decimals = Coins.Ton.TON.decimal,
+                                    logo = Coins.Ton.TON.logo,
+                                ),
+                            toUserFriendly = {
+                                TONAddressConverter.toUserFriendly(it, true, false)
+                            },
+                            resolveCoinByWallet = { wallet ->
+                                resolveTonCoinByWallet(wallet, vaultCoins)
+                            },
+                            resolveDedustOutputCoin = { pool ->
+                                resolveTonDedustOutputCoin(pool, vaultCoins)
+                            },
+                        )
+                            ?: resolveTonJettonHero(messages, vaultCoins) { wallet ->
+                                    tonApi.getJettonMasterAddress(wallet)
+                                }
+                                ?.let { HeroContent.Send(title = null, coin = it) }
                     } ?: return@safeLaunch
-                val hero = HeroContent.Send(title = null, coin = coin)
-                updateSendUiModel(verifyUiModel) { current ->
-                    current.copy(transaction = current.transaction.copy(heroContent = hero))
-                }
-                // Mirror the resolved hero into [transactionTypeUiModel] so the
-                // done screen's `KeysignViewModel` carries the same content forward.
-                (transactionTypeUiModel as? TransactionTypeUiModel.Send)?.let { send ->
-                    transactionTypeUiModel =
-                        TransactionTypeUiModel.Send(send.tx.copy(heroContent = hero))
-                }
+                pushTonHero(hero)
             }
+    }
+
+    /**
+     * Resolve a jetton wallet to its display coin for a swap leg: vault-tracked tokens first
+     * (richest metadata), then the on-chain jetton master. Returns `null` when the wallet maps to
+     * no known token, so the swap hero degrades rather than mislabelling the asset.
+     */
+    private suspend fun resolveTonCoinByWallet(
+        wallet: String,
+        vaultCoins: List<Coin>,
+    ): TonHeroCoin? {
+        val master = tonApi.getJettonMasterAddress(wallet) ?: return null
+        return resolveTonCoinByMaster(master, vaultCoins)
+    }
+
+    /**
+     * Resolve a DeDust swap's output token. The swap addresses the liquidity **pool**, not the
+     * output jetton wallet, so the output master is read from the pool's `get_assets`.
+     */
+    private suspend fun resolveTonDedustOutputCoin(
+        poolAddress: String,
+        vaultCoins: List<Coin>,
+    ): TonHeroCoin? {
+        val master = tonApi.getDedustPoolOutputMaster(poolAddress) ?: return null
+        return resolveTonCoinByMaster(master, vaultCoins)
+    }
+
+    /**
+     * Resolve a jetton master to its display coin: vault-tracked tokens first (richest metadata),
+     * then the built-in [Coins] registry, then on-chain metadata. Returns `null` when nothing
+     * resolves, so the swap hero degrades rather than mislabelling the asset. [masterAddress] may
+     * be raw or user-friendly; it is canonicalized for comparison against the friendly-form
+     * contract addresses the registry/vault store.
+     */
+    private suspend fun resolveTonCoinByMaster(
+        masterAddress: String,
+        vaultCoins: List<Coin>,
+    ): TonHeroCoin? {
+        val master = TONAddressConverter.toUserFriendly(masterAddress, true, false) ?: masterAddress
+        (vaultCoins.asSequence() + Coins.coins[Chain.Ton].orEmpty().asSequence())
+            .firstOrNull {
+                it.chain == Chain.Ton && !it.isNativeToken && it.contractAddress == master
+            }
+            ?.let {
+                return TonHeroCoin(ticker = it.ticker, decimals = it.decimal, logo = it.logo)
+            }
+        return tonApi.getJettonMetadata(master)?.let {
+            TonHeroCoin(ticker = it.ticker, decimals = it.decimals, logo = it.logo ?: "")
+        }
+    }
+
+    /**
+     * Push a resolved TON dApp hero into the verify model and mirror it into
+     * [transactionTypeUiModel] so the done screen's `KeysignViewModel` carries the same content
+     * forward.
+     */
+    private fun pushTonHero(hero: HeroContent) {
+        updateSendUiModel(verifyUiModel) { current ->
+            current.copy(transaction = current.transaction.copy(heroContent = hero))
+        }
+        (transactionTypeUiModel as? TransactionTypeUiModel.Send)?.let { send ->
+            transactionTypeUiModel = TransactionTypeUiModel.Send(send.tx.copy(heroContent = hero))
+        }
     }
 
     private fun scanTransaction(transaction: Transaction) {
