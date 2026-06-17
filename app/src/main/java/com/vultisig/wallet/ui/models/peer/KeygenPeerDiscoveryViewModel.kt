@@ -512,7 +512,7 @@ constructor(
                     // This is the only Fast Vault path that shows peer discovery rather than the
                     // connecting screen, so undo the connecting state seeded in the initial UI
                     // model.
-                    state.update { it.copy(connectingToServer = null) }
+                    _state.update { it.copy(connectingToServer = null) }
                     startPeerDiscovery()
                     requestVultiServerConnection()
                 } else {
