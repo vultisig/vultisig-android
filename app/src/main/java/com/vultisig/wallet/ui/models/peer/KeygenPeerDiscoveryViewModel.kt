@@ -144,6 +144,17 @@ constructor(
                 deviceCount = args?.deviceCount,
                 allowsMoreDevices =
                     (args?.deviceCount ?: MIN_KEYGEN_DEVICES) >= UNBOUNDED_KEYGEN_DEVICE_COUNT,
+                // Seed the connecting state for every Fast Vault flow (credentials present) so the
+                // QR/devices branch is never composed during the async loadData() window (it would
+                // otherwise flash before startVultiServerConnection() flips this to non-null).
+                // loadData() clears this back to null for the only Fast Vault path that shows peer
+                // discovery instead of connecting to the server (active-vault migrate, signers >
+                // 2),
+                // which we cannot detect synchronously here.
+                connectingToServer =
+                    if (!args?.email.isNullOrBlank() && !args.password.isNullOrBlank())
+                        ConnectingToServerUiModel(false)
+                    else null,
                 enableNotification = false,
             )
         )
@@ -498,6 +509,10 @@ constructor(
                 // join
                 // Also need to request the server to join the upgrade process
                 if (args.action == TssAction.Migrate && signers.count() > 2) {
+                    // This is the only Fast Vault path that shows peer discovery rather than the
+                    // connecting screen, so undo the connecting state seeded in the initial UI
+                    // model.
+                    state.update { it.copy(connectingToServer = null) }
                     startPeerDiscovery()
                     requestVultiServerConnection()
                 } else {
