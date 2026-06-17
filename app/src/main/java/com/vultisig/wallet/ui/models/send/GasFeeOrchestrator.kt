@@ -323,10 +323,33 @@ internal class GasFeeOrchestrator(
                     .debounce(300)
                     .distinctUntilChanged()
 
-            combine(selectedToken.filterNotNull(), gasFee.filterNotNull(), dstAddressFlow) {
-                    token,
-                    gasFeeValue,
-                    dstAddress ->
+            val tokenAmountFlow =
+                tokenAmountFieldState.textAsFlow().debounce(300).distinctUntilChanged()
+
+            combine(
+                    selectedToken.filterNotNull(),
+                    gasFee.filterNotNull(),
+                    dstAddressFlow,
+                    tokenAmountFlow,
+                ) { token, gasFeeValue, dstAddress, tokenAmount ->
+                    val chain = token.chain
+                    // Cardano forces the initiator's size-derived fee, so getSpecific needs the
+                    // amount to plan it. For every other chain the amount is irrelevant here, so
+                    // we drop it: combined with distinctUntilChanged below this keeps those chains
+                    // from refetching specifics (nonce/gas) on every amount keystroke.
+                    val cardanoAmount =
+                        if (chain == Chain.Cardano) {
+                            tokenAmount
+                                .toString()
+                                .toBigDecimalOrNull()
+                                ?.movePointRight(token.decimal)
+                                ?.toBigInteger()
+                        } else null
+
+                    SpecificInput(token, gasFeeValue, dstAddress, cardanoAmount)
+                }
+                .distinctUntilChanged()
+                .collect { (token, gasFeeValue, dstAddress, cardanoAmount) ->
                     val chain = token.chain
                     val srcAddress = token.address
                     advanceGasUiRepository.updateTokenStandard(token.chain.standard)
@@ -338,16 +361,19 @@ internal class GasFeeOrchestrator(
 
                     try {
                         val spec =
-                            blockChainSpecificRepository.getSpecific(
-                                chain,
-                                srcAddress,
-                                token,
-                                gasFeeValue,
-                                isSwap = false,
-                                isMaxAmountEnabled = false,
-                                isDeposit = false,
-                                dstAddress = validDstAddress,
-                            )
+                            withContext(Dispatchers.IO) {
+                                blockChainSpecificRepository.getSpecific(
+                                    chain,
+                                    srcAddress,
+                                    token,
+                                    gasFeeValue,
+                                    isSwap = false,
+                                    isMaxAmountEnabled = false,
+                                    isDeposit = false,
+                                    dstAddress = validDstAddress,
+                                    tokenAmountValue = cardanoAmount,
+                                )
+                            }
                         specific.value = spec
                         advanceGasUiRepository.updateBlockChainSpecific(spec.blockChainSpecific)
                         advanceGasUiRepository.showIcon()
@@ -358,7 +384,6 @@ internal class GasFeeOrchestrator(
                         Timber.e(e)
                     }
                 }
-                .collect()
         }
     }
 }
@@ -367,16 +392,20 @@ internal fun adjustGasFee(
     gasFee: TokenValue,
     gasSettings: GasSettings?,
     spec: BlockChainSpecificAndUtxo?,
-) =
-    gasFee.copy(
+): TokenValue {
+    val cardanoSpecific = spec?.blockChainSpecific as? BlockChainSpecific.Cardano
+    return gasFee.copy(
         value =
-            if (
+            when {
                 gasSettings is GasSettings.UTXO &&
-                    spec?.blockChainSpecific is BlockChainSpecific.UTXO
-            ) {
-                gasSettings.byteFee
-            } else gasFee.value
+                    spec?.blockChainSpecific is BlockChainSpecific.UTXO -> gasSettings.byteFee
+                // Cardano transmits the initiator's size-derived fee as byteFee; surface it so the
+                // displayed fee, validation and the signed/forced fee all agree.
+                cardanoSpecific != null -> BigInteger.valueOf(cardanoSpecific.byteFee)
+                else -> gasFee.value
+            }
     )
+}
 
 private data class GasFeeInput(
     val token: Coin,
@@ -384,6 +413,13 @@ private data class GasFeeInput(
     val memo: String,
     val tokenAmount: CharSequence,
     val nonce: Long = 0,
+)
+
+private data class SpecificInput(
+    val token: Coin,
+    val gasFee: TokenValue,
+    val dstAddress: String,
+    val cardanoAmount: BigInteger?,
 )
 
 private data class PlanFeeInput(
