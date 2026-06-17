@@ -136,6 +136,33 @@ internal class GasFeeOrchestratorTest {
         assertEquals(BigInteger("42"), result.value)
     }
 
+    @Test
+    fun `adjustGasFee surfaces the Cardano byteFee so the displayed fee matches what is signed`() {
+        val gas = tokenValue(180_000, Coins.Cardano.ADA)
+        val cardanoSpec =
+            BlockChainSpecificAndUtxo(
+                BlockChainSpecific.Cardano(
+                    byteFee = 174_257,
+                    sendMaxAmount = false,
+                    ttl = 190_000_000u,
+                )
+            )
+
+        val result = adjustGasFee(gas, gasSettings = null, spec = cardanoSpec)
+
+        assertEquals(BigInteger.valueOf(174_257), result.value)
+        assertEquals(gas.unit, result.unit)
+    }
+
+    @Test
+    fun `adjustGasFee keeps the flat fee for Cardano until the specific is available`() {
+        val gas = tokenValue(180_000, Coins.Cardano.ADA)
+
+        val result = adjustGasFee(gas, gasSettings = null, spec = null)
+
+        assertEquals(BigInteger.valueOf(180_000), result.value)
+    }
+
     // ──────── refresh() ────────
 
     @Test
