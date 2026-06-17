@@ -61,6 +61,11 @@ class MediatorService : Service() {
     private fun broadcastServiceStarted() {
         val intent = Intent()
         intent.setAction(SERVICE_ACTION)
+        // Scope the broadcast to our own package. The receiver is registered RECEIVER_NOT_EXPORTED,
+        // and from Android 14+ an implicit (package-less) broadcast is treated as cross-app and is
+        // not delivered to a not-exported receiver — so without this the onServiceStarted callback
+        // never fires and Local mode never starts its session/peer discovery.
+        intent.setPackage(packageName)
         sendBroadcast(intent)
         Timber.d("broadcast service started")
     }
