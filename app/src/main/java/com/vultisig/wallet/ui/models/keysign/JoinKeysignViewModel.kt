@@ -41,6 +41,7 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationService
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
+import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.models.TransactionScanStatus
@@ -89,6 +90,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
 import vultisig.keysign.v1.KeysignMessage
+import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.TONAddressConverter
 
 sealed class JoinKeysignError(val message: UiText) {
@@ -252,6 +254,7 @@ constructor(
     private val joinSwapUiModelBuilder: JoinSwapUiModelBuilder,
     private val joinDepositUiModelBuilder: JoinDepositUiModelBuilder,
     private val joinSendUiModelBuilder: JoinSendUiModelBuilder,
+    private val parseCosmosMessage: ParseCosmosMessageUseCase,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -627,6 +630,12 @@ constructor(
             is BlockChainSpecific.MayaChain -> specific.isDeposit
             is BlockChainSpecific.THORChain -> specific.isDeposit
             is BlockChainSpecific.BitcoinPSBT -> false
+            // A joining device has no DepositTransactionRepository entry, so it recovers the
+            // initiator's Cosmos deposit classification from the transmitted payload: IBC transfers
+            // and staking SignDocs (issue #4939). Plain MsgSend / dApp txs stay sends.
+            is BlockChainSpecific.Cosmos ->
+                specific.transactionType == TransactionType.TRANSACTION_TYPE_IBC_TRANSFER ||
+                    payload.isCosmosStakingDeposit(parseCosmosMessage)
             else -> {
                 val memoUpper = payload.memo?.uppercase(Locale.ROOT)
                 payload.coin.isSecuredAssetEligible() && (memoUpper?.contains("SECURE+:") == true)
