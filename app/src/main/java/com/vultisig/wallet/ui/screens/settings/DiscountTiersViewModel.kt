@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.GOL
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.PLATINUM_TIER_THRESHOLD
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.ULTIMATE_TIER_THRESHOLD
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.sVultCoin
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -71,66 +72,62 @@ constructor(
                 val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
 
                 if (vault != null) {
-                    // Check if VULT token is enabled
-                    val vultCoin = vault.coins.find { it.id == Coins.Ethereum.VULT.id }
+                    // Tier is determined by staked VULT (sVULT), not the raw VULT balance, so this
+                    // does not gate on the vault holding VULT — every vault has an Ethereum
+                    // address.
+                    val (address, _) =
+                        chainAccountAddressRepository.getAddress(Chain.Ethereum, vault)
 
-                    if (vultCoin != null) {
-                        // Get the Ethereum address for this vault
-                        val (address, _) =
-                            chainAccountAddressRepository.getAddress(Chain.Ethereum, vault)
+                    // Get staked balance from cache first
+                    val stakedBalanceCache =
+                        balanceRepository
+                            .getCachedTokenBalances(listOf(address), listOf(sVultCoin))
+                            .find { it.coinId == sVultCoin.id }
 
-                        // Get VULT balance from cache first
-                        val vultBalanceCache =
+                    val hasNFTCache = tiersNFTRepository.hasTierNFT(vaultId)
+
+                    val cachedStakedBalance = stakedBalanceCache?.tokenBalance?.tokenValue?.value
+
+                    // Update UI with cached value if available
+                    if (cachedStakedBalance != null) {
+                        val cachedTier =
+                            cachedStakedBalance.determineTier()?.applyExtraDiscount(hasNFTCache)
+                        _state.value =
+                            DiscountTiersUiModel(activeTier = cachedTier, isLoading = false)
+                        Timber.d(
+                            "sVULT cached balance: %s, Active tier: %s",
+                            cachedStakedBalance,
+                            cachedTier,
+                        )
+                    }
+
+                    // Fetch fresh balance from network
+                    try {
+                        val freshTokenValue =
                             balanceRepository
-                                .getCachedTokenBalances(listOf(address), listOf(vultCoin))
-                                .find { it.coinId == Coins.Ethereum.VULT.id }
+                                .getTokenValue(address, sVultCoin)
+                                .first() // Collect first emission from the Flow
 
-                        val hasNFTCache = tiersNFTRepository.hasTierNFT(vaultId)
-
-                        val cachedVultBalance = vultBalanceCache?.tokenBalance?.tokenValue?.value
-
-                        // Update UI with cached value if available
-                        if (cachedVultBalance != null) {
-                            val cachedTier =
-                                cachedVultBalance.determineTier()?.applyExtraDiscount(hasNFTCache)
-                            _state.value =
-                                DiscountTiersUiModel(activeTier = cachedTier, isLoading = false)
-                            Timber.d(
-                                "VULT cached balance: $cachedVultBalance, Active tier: $cachedTier"
-                            )
-                        }
-
-                        // Fetch fresh balance from network
-                        try {
-                            val freshTokenValue =
-                                balanceRepository
-                                    .getTokenValue(address, vultCoin)
-                                    .first() // Collect first emission from the Flow
-
-                            val hasNFTValue =
-                                withContext(Dispatchers.IO) {
-                                    remoteNFTService.checkNFTBalance(address)
-                                }
-                            val vultBalance = freshTokenValue.value
-                            val tier = vultBalance.determineTier()?.applyExtraDiscount(hasNFTValue)
-
-                            _state.value =
-                                DiscountTiersUiModel(activeTier = tier, isLoading = false)
-
-                            Timber.d("VULT fresh balance: $vultBalance, Active tier: $tier")
-
+                        val hasNFTValue =
                             withContext(Dispatchers.IO) {
-                                tiersNFTRepository.saveTierNFT(vaultId, hasNFTValue)
+                                remoteNFTService.checkNFTBalance(address)
                             }
-                        } catch (e: Exception) {
-                            if (e is kotlinx.coroutines.CancellationException) throw e
-                            Timber.e(e)
-                            if (cachedVultBalance == null) {
-                                throw e
-                            }
+                        val stakedBalance = freshTokenValue.value
+                        val tier = stakedBalance.determineTier()?.applyExtraDiscount(hasNFTValue)
+
+                        _state.value = DiscountTiersUiModel(activeTier = tier, isLoading = false)
+
+                        Timber.d("sVULT fresh balance: %s, Active tier: %s", stakedBalance, tier)
+
+                        withContext(Dispatchers.IO) {
+                            tiersNFTRepository.saveTierNFT(vaultId, hasNFTValue)
                         }
-                    } else {
-                        _state.value = DiscountTiersUiModel(activeTier = null, isLoading = false)
+                    } catch (e: Exception) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
+                        Timber.e(e)
+                        if (cachedStakedBalance == null) {
+                            throw e
+                        }
                     }
                 } else {
                     _state.value = DiscountTiersUiModel(isLoading = false, activeTier = null)

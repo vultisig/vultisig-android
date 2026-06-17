@@ -17,17 +17,19 @@ import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.ui.screens.settings.TierType
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlinx.coroutines.flow.first
 import timber.log.Timber
 import wallet.core.jni.CoinType
 
 /**
- * Use case to calculate the discount in basis points (BPS) based on VULT token balance. Fetches the
- * VULT balance internally from the vault.
+ * Use case to calculate the discount in basis points (BPS) based on staked VULT (sVULT) balance.
+ * Fetches the sVULT balance internally from the vault's Ethereum address. sVULT is a 1:1 wrapper of
+ * VULT, so the tier thresholds stay identical to the raw VULT amounts.
  */
 interface GetDiscountBpsUseCase {
     suspend operator fun invoke(vaultId: String, swapProvider: SwapProvider): Int
 
-    /** True when the vault holds at least the Silver-tier VULT amount (>= 3000 VULT). */
+    /** True when the vault has staked at least the Silver-tier amount (>= 3000 sVULT). */
     suspend fun hasReachedSilverTier(vaultId: String): Boolean
 }
 
@@ -45,7 +47,7 @@ constructor(
             return NO_DISCOUNT_BPS
         }
 
-        val balance = getVultBalance(vaultId) ?: return NO_DISCOUNT_BPS
+        val balance = getStakedVultBalance(vaultId) ?: return NO_DISCOUNT_BPS
         val hasNFT = tiersNFTRepository.hasTierNFT(vaultId)
 
         val discount = getDiscountForBalance(balance)
@@ -58,27 +60,21 @@ constructor(
     }
 
     override suspend fun hasReachedSilverTier(vaultId: String): Boolean {
-        val balance = getVultBalance(vaultId) ?: return false
+        val balance = getStakedVultBalance(vaultId) ?: return false
         return balance >= SILVER_TIER_THRESHOLD
     }
 
-    suspend fun getVultBalance(vaultId: String): BigInteger? {
+    /**
+     * Reads the vault's staked VULT (sVULT) balance via `balanceOf` on the sVULT contract. sVULT is
+     * not held as a vault coin, so the balance is fetched fresh on-chain rather than from cache.
+     */
+    suspend fun getStakedVultBalance(vaultId: String): BigInteger? {
         try {
             val vault = vaultRepository.get(vaultId) ?: return null
 
-            val vultCoin = vault.coins.find { it.id == Coins.Ethereum.VULT.id } ?: return null
-
             val (address, _) = chainAccountAddressRepository.getAddress(Chain.Ethereum, vault)
 
-            val tokenBalance =
-                balanceRepository
-                    .getCachedTokenBalances(listOf(address), listOf(vultCoin))
-                    .find { it.coinId == Coins.Ethereum.VULT.id }
-                    ?.tokenBalance
-                    ?.tokenValue
-                    ?.value ?: BigInteger.ZERO
-
-            return tokenBalance
+            return balanceRepository.getTokenValue(address, sVultCoin).first().value
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e)
@@ -110,6 +106,17 @@ constructor(
     }
 
     companion object {
+        /** Staked VULT (sVULT) contract on Ethereum — a 1:1 wrapper of VULT. */
+        private const val SVULT_CONTRACT_ADDRESS = "0x11113d7311FB8584a6e82BB126aA11D92e5fB39B"
+
+        /**
+         * sVULT is not a vault coin; derive a synthetic coin from VULT (same chain/decimals) with
+         * the sVULT ticker and contract so its `balanceOf` is read and cached independently. Shared
+         * with the Discount Tiers screen so the displayed tier matches the applied discount.
+         */
+        val sVultCoin =
+            Coins.Ethereum.VULT.copy(ticker = "sVULT", contractAddress = SVULT_CONTRACT_ADDRESS)
+
         // Discount amounts in basis points
         const val NO_DISCOUNT_BPS = 0
         const val BRONZE_DISCOUNT_BPS = 5
