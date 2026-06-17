@@ -317,7 +317,10 @@ constructor(
                 selectedDevices = emptyList(),
             )
         }
-        startPeerDiscoveryJob = viewModelScope.launch { startPeerDiscovery(newSessionId) }
+        // safeLaunch (not launch): startPeerDiscovery does serialization/network work that can
+        // throw. A plain launch would let that escape uncaught — crashing the app on a failed mode
+        // switch and, in tests, leaking the exception into the next test's runTest.
+        startPeerDiscoveryJob = viewModelScope.safeLaunch { startPeerDiscovery(newSessionId) }
     }
 
     fun selectDevice(device: ParticipantName) {
