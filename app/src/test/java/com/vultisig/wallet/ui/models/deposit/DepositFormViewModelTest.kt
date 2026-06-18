@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -36,6 +37,7 @@ import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
+import com.vultisig.wallet.ui.models.deposit.load.RujiBalancesLoader
 import com.vultisig.wallet.ui.models.deposit.load.SecuredAssetLoader
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -154,6 +156,24 @@ internal class DepositFormViewModelTest {
                     onResult = onResult,
                 )
         }
+    private val rujiBalancesLoaderFactory: RujiBalancesLoader.Factory =
+        object : RujiBalancesLoader.Factory {
+            override fun create(
+                scope: CoroutineScope,
+                state: MutableStateFlow<DepositFormUiModel>,
+                address: StateFlow<Address?>,
+                rujiMergeBalances: MutableStateFlow<List<MergeAccount>?>,
+                tokenAmountFieldState: TextFieldState,
+            ): RujiBalancesLoader =
+                RujiBalancesLoader(
+                    thorChainApi = thorChainApi,
+                    scope = scope,
+                    state = state,
+                    address = address,
+                    rujiMergeBalances = rujiMergeBalances,
+                    tokenAmountFieldState = tokenAmountFieldState,
+                )
+        }
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase = mockk(relaxed = true)
     private val fieldValidator: DepositFieldValidator =
         DepositFieldValidatorImpl(chainAccountAddressRepository)
@@ -189,7 +209,6 @@ internal class DepositFormViewModelTest {
             chainAccountAddressRepository = chainAccountAddressRepository,
             transactionRepository = transactionRepository,
             blockChainSpecificRepository = blockChainSpecificRepository,
-            thorChainApi = thorChainApi,
             mayaChainApi = mayaChainApi,
             mayachainBondRepository = mayachainBondRepository,
             balanceRepository = balanceRepository,
@@ -202,6 +221,7 @@ internal class DepositFormViewModelTest {
             liquidityDataLoaderFactory = liquidityDataLoaderFactory,
             securedAssetLoaderFactory = securedAssetLoaderFactory,
             cacaoMaturityLoaderFactory = cacaoMaturityLoaderFactory,
+            rujiBalancesLoaderFactory = rujiBalancesLoaderFactory,
             thorChainLpPreflight = thorChainLpPreflight,
             fieldValidator = fieldValidator,
             gasFeeHelper = gasFeeHelper,
