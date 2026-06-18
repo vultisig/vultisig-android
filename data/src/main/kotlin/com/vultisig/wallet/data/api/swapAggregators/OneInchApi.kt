@@ -34,6 +34,7 @@ interface OneInchApi {
         amount: String,
         isAffiliate: Boolean,
         bpsDiscount: Int,
+        slippageBps: Int? = null,
     ): EVMSwapQuoteDeserialized
 
     suspend fun getTokens(chain: Chain): OneInchTokensJson
@@ -62,6 +63,7 @@ constructor(
         amount: String,
         isAffiliate: Boolean,
         bpsDiscount: Int,
+        slippageBps: Int?,
     ): EVMSwapQuoteDeserialized = coroutineScope {
         try {
             val baseSwapQuoteUrl =
@@ -74,6 +76,7 @@ constructor(
                     srcAddress,
                     isAffiliate,
                     bpsDiscount,
+                    slippageBps,
                 )
             }
             val swapResponseAsync = async {
@@ -118,16 +121,20 @@ constructor(
         srcAddress: String,
         isAffiliate: Boolean,
         bpsDiscount: Int,
+        slippageBps: Int?,
     ) {
         val bpsDiscountTransformed = round(bpsDiscount.toDouble()) / 100.0
         val referrerFeeUpdated =
             round((ONEINCH_REFERRER_FEE - bpsDiscountTransformed) * 100) / 100.0
 
+        // bps → percent (100 bps = 1%); Auto (null) keeps 1inch's historical 0.5% default.
+        val slippagePercent = slippageBps?.let { it.toDouble() / 100.0 } ?: ONEINCH_DEFAULT_SLIPPAGE
+
         parameter("src", srcTokenContractAddress.takeIf { it.isNotEmpty() } ?: ONEINCH_NULL_ADDRESS)
         parameter("dst", dstTokenContractAddress.takeIf { it.isNotEmpty() } ?: ONEINCH_NULL_ADDRESS)
         parameter("amount", amount)
         parameter("from", srcAddress)
-        parameter("slippage", "0.5")
+        parameter("slippage", slippagePercent.toString())
         parameter("disableEstimate", true)
         parameter("includeGas", true)
         parameter("referrer", ONEINCH_REFERRER_ADDRESS)
@@ -165,5 +172,7 @@ constructor(
         private const val ONEINCH_REFERRER_ADDRESS = "0x8E247a480449c84a5fDD25974A8501f3EFa4ABb9"
         private const val ONEINCH_REFERRER_FEE = 0.5
         private const val ONEINCH_NULL_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        /** 1inch's historical default slippage (percent) used when the user leaves it on Auto. */
+        private const val ONEINCH_DEFAULT_SLIPPAGE = 0.5
     }
 }

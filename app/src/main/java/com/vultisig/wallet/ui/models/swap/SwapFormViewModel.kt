@@ -68,6 +68,11 @@ constructor(
     private val selectedDstId = MutableStateFlow<String?>(null)
     private val referralCode = MutableStateFlow<String?>(null)
 
+    // User-chosen slippage tolerance in basis points, or null for "Auto" (each provider keeps its
+    // own default). Owned here and passed to the pipeline controller so a change re-fetches the
+    // quote with the new tolerance (#4858).
+    private val slippageBps = MutableStateFlow<Int?>(null)
+
     // Owns the gas / network-fee state and quote pipeline wiring (#4865). The ViewModel only reads
     // the resolved quote/fee values it exposes for swap(), the flip gesture, and percentage taps.
     private val quotePipeline =
@@ -78,6 +83,7 @@ constructor(
             selectedSrc = selectedSrc,
             selectedDst = selectedDst,
             referralCode = referralCode,
+            slippageBps = slippageBps,
             srcAmountState = srcAmountState,
             vaultId = { vaultId },
             showError = ::showError,
@@ -324,6 +330,7 @@ constructor(
             srcToken.address,
             dstToken.address,
             currentAmount,
+            slippageBps.value,
         )
     }
 
@@ -416,6 +423,15 @@ constructor(
                 selectTokensJob,
                 viewModelScope,
             )
+    }
+
+    /**
+     * Sets the per-swap slippage tolerance in basis points, or null for "Auto". Updates the
+     * displayed value and re-fetches the quote with the new tolerance (#4858).
+     */
+    fun setSlippageBps(bps: Int?) {
+        slippageBps.value = bps
+        _uiState.update { it.copy(slippageBps = bps) }
     }
 
     fun hideError() {

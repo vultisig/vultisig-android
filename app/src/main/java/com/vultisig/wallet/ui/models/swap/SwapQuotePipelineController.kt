@@ -74,6 +74,7 @@ constructor(
     @Assisted("selectedSrc") private val selectedSrc: StateFlow<SendSrc?>,
     @Assisted("selectedDst") private val selectedDst: StateFlow<SendSrc?>,
     @Assisted private val referralCode: MutableStateFlow<String?>,
+    @Assisted private val slippageBps: StateFlow<Int?>,
     @Assisted private val srcAmountState: TextFieldState,
     @Assisted private val vaultId: () -> String?,
     @Assisted private val showError: (UiText) -> Unit,
@@ -93,6 +94,7 @@ constructor(
             @Assisted("selectedSrc") selectedSrc: StateFlow<SendSrc?>,
             @Assisted("selectedDst") selectedDst: StateFlow<SendSrc?>,
             referralCode: MutableStateFlow<String?>,
+            slippageBps: StateFlow<Int?>,
             srcAmountState: TextFieldState,
             vaultId: () -> String?,
             showError: (UiText) -> Unit,
@@ -287,6 +289,9 @@ constructor(
                     showIndicativeRate(input)
                 }
                 .combine(refreshQuoteState) { input, _ -> input }
+                // A slippage change re-fetches the quote silently (like the refresh timer), so the
+                // new tolerance is applied without a spinner flash (#4858).
+                .combine(slippageBps) { input, _ -> input }
                 // Percentage / Max / paste skip the debounce (0ms); free typing still coalesces at
                 // 300ms so rapid edits fire a single quote fetch.
                 .debounce { input -> swapQuoteManager.quoteDebounceMillis(input.immediate) }
@@ -312,6 +317,7 @@ constructor(
                                 referralCode = referralCode.value,
                                 currentDiscountInfo = uiState.value.discountInfo,
                                 selectedSrcTokenTitle = uiState.value.selectedSrcToken?.title,
+                                slippageBps = slippageBps.value,
                             )
                     ) {
                         SwapQuotePipelineResult.Empty -> resetQuoteState()

@@ -29,11 +29,28 @@ internal class QuoteCacheTest {
     fun `get returns the cached quote for an identical key`() {
         val cache = QuoteCache()
         val quote = freshQuote()
-        cache.put("ETH.ETH", "SOL.SOL", "0xA", "0xB", BigInteger.TEN, SwapProvider.SWAPKIT, quote)
+        cache.put(
+            "ETH.ETH",
+            "SOL.SOL",
+            "0xA",
+            "0xB",
+            BigInteger.TEN,
+            SwapProvider.SWAPKIT,
+            null,
+            quote,
+        )
 
         assertSame(
             quote,
-            cache.get("ETH.ETH", "SOL.SOL", "0xA", "0xB", BigInteger.TEN, SwapProvider.SWAPKIT),
+            cache.get(
+                "ETH.ETH",
+                "SOL.SOL",
+                "0xA",
+                "0xB",
+                BigInteger.TEN,
+                SwapProvider.SWAPKIT,
+                null,
+            ),
         )
     }
 
@@ -47,6 +64,7 @@ internal class QuoteCacheTest {
             "0xDst",
             BigInteger.TEN,
             SwapProvider.SWAPKIT,
+            null,
             freshQuote(),
         )
 
@@ -59,6 +77,7 @@ internal class QuoteCacheTest {
                 "0xDst",
                 BigInteger.TEN,
                 SwapProvider.SWAPKIT,
+                null,
             )
         )
     }
@@ -73,6 +92,7 @@ internal class QuoteCacheTest {
             "0xVaultA",
             BigInteger.TEN,
             SwapProvider.SWAPKIT,
+            null,
             freshQuote(),
         )
 
@@ -84,6 +104,36 @@ internal class QuoteCacheTest {
                 "0xVaultB",
                 BigInteger.TEN,
                 SwapProvider.SWAPKIT,
+                null,
+            )
+        )
+    }
+
+    @Test
+    fun `get misses when the slippage differs (re-fetch after slippage change)`() {
+        val cache = QuoteCache()
+        cache.put(
+            "ETH.ETH",
+            "SOL.SOL",
+            "0xSrc",
+            "0xDst",
+            BigInteger.TEN,
+            SwapProvider.THORCHAIN,
+            slippageBps = 100,
+            quote = freshQuote(),
+        )
+
+        // Same pair / amount / provider, different slippage → must re-fetch so the new tolerance
+        // is applied instead of serving the quote built with the old one (#4858).
+        assertNull(
+            cache.get(
+                "ETH.ETH",
+                "SOL.SOL",
+                "0xSrc",
+                "0xDst",
+                BigInteger.TEN,
+                SwapProvider.THORCHAIN,
+                slippageBps = 300,
             )
         )
     }

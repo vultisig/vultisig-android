@@ -58,4 +58,6 @@ internal data class SwapFormUiModel(
     val isLoading: Boolean = false,
     val isLoadingNextScreen: Boolean = false,
     val enableMaxAmount: Boolean = false,
+    // Per-swap slippage tolerance in basis points, or null for "Auto" (#4858).
+    val slippageBps: Int? = null,
 )

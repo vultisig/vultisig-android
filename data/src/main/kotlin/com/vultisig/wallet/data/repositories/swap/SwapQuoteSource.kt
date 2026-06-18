@@ -22,6 +22,13 @@ data class SwapQuoteRequest(
     val bpsDiscount: Int = 0,
     val referralCode: String = "",
     val affiliateBps: Int = 0,
+    /**
+     * User-chosen slippage tolerance in basis points (100 = 1%), or null for "Auto" — in which case
+     * each provider keeps its own default ([DEFAULT_THORCHAIN_TOLERANCE_BPS] for THORChain/Maya,
+     * 0.5% for 1inch, 1% for Kyber). Honoured only by providers that accept a quote-time slippage
+     * override; LI.FI / SwapKit / Jupiter ignore it (server-side protection). See #4858.
+     */
+    val slippageBps: Int? = null,
 )
 
 /**

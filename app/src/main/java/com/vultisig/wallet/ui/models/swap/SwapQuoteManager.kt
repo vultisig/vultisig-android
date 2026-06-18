@@ -207,6 +207,7 @@ constructor(
         vultBPSDiscount: Int?,
         referral: String?,
         amount: BigDecimal,
+        slippageBps: Int? = null,
     ): QuoteFetchResult {
         val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
 
@@ -228,6 +229,7 @@ constructor(
                         vultBPSDiscount,
                         referral,
                         amount,
+                        slippageBps,
                     )
 
                 SwapProvider.KYBER ->
@@ -239,6 +241,7 @@ constructor(
                         vultBPSDiscount,
                         provider,
                         srcNativeToken,
+                        slippageBps,
                     )
 
                 SwapProvider.ONEINCH ->
@@ -250,6 +253,7 @@ constructor(
                         vultBPSDiscount,
                         provider,
                         srcNativeToken,
+                        slippageBps,
                     )
 
                 SwapProvider.LIFI,
@@ -378,6 +382,7 @@ constructor(
         tokenValue: TokenValue,
         currency: AppCurrency,
         amount: BigDecimal,
+        slippageBps: Int? = null,
     ): BestQuote {
         if (candidates.isEmpty()) {
             throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
@@ -404,6 +409,7 @@ constructor(
                                                 vultBPSDiscount = candidate.vultBPSDiscount,
                                                 referral = candidate.referral,
                                                 amount = amount,
+                                                slippageBps = slippageBps,
                                             ),
                                     )
                                 }
@@ -488,6 +494,7 @@ constructor(
         currency: AppCurrency,
         amount: BigDecimal,
         selectedSrcTokenTitle: String?,
+        slippageBps: Int? = null,
     ): QuoteResolution =
         try {
             QuoteResolution.Success(
@@ -501,6 +508,7 @@ constructor(
                     tokenValue = tokenValue,
                     currency = currency,
                     amount = amount,
+                    slippageBps = slippageBps,
                 )
             )
         } catch (e: SwapException) {
@@ -585,6 +593,7 @@ constructor(
         vultBPSDiscount: Int?,
         referral: String?,
         amount: BigDecimal,
+        slippageBps: Int?,
     ): Pair<SwapQuote, UiText> {
         val isAffiliate = true
         val (quote, recommendedMinAmountToken) =
@@ -597,6 +606,7 @@ constructor(
                         dstToken.address,
                         srcTokenValue,
                         SwapProvider.MAYA,
+                        slippageBps,
                     ) {
                         swapQuoteRepository
                             .getQuote(
@@ -609,6 +619,7 @@ constructor(
                                     isAffiliate = isAffiliate,
                                     bpsDiscount = vultBPSDiscount ?: 0,
                                     referralCode = referral.orEmpty(),
+                                    slippageBps = slippageBps,
                                 ),
                             )
                             .expectNative(SwapProvider.MAYA)
@@ -624,6 +635,7 @@ constructor(
                         dstToken.address,
                         srcTokenValue,
                         SwapProvider.THORCHAIN,
+                        slippageBps,
                     ) {
                         swapQuoteRepository
                             .getQuote(
@@ -635,6 +647,7 @@ constructor(
                                     dstAddress = dst.address.address,
                                     referralCode = referral.orEmpty(),
                                     bpsDiscount = vultBPSDiscount ?: 0,
+                                    slippageBps = slippageBps,
                                 ),
                             )
                             .expectNative(SwapProvider.THORCHAIN)
@@ -664,6 +677,7 @@ constructor(
         vultBPSDiscount: Int?,
         provider: SwapProvider,
         srcNativeToken: Coin,
+        slippageBps: Int?,
     ): Pair<SwapQuote, UiText> {
         val swapQuote =
             getCachedQuoteOrFetch(
@@ -673,6 +687,7 @@ constructor(
                 dstToken.address,
                 srcTokenValue,
                 SwapProvider.KYBER,
+                slippageBps,
             ) {
                 val apiQuote =
                     swapQuoteRepository
@@ -684,6 +699,7 @@ constructor(
                                 tokenValue = tokenValue,
                                 affiliateBps =
                                     maxOf(0, KYBER_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0)),
+                                slippageBps = slippageBps,
                             ),
                         )
                         .expectEvm(SwapProvider.KYBER)
@@ -721,6 +737,7 @@ constructor(
         vultBPSDiscount: Int?,
         provider: SwapProvider,
         srcNativeToken: Coin,
+        slippageBps: Int?,
     ): Pair<SwapQuote, UiText> {
         val isAffiliate = true
         val swapQuote =
@@ -731,6 +748,7 @@ constructor(
                 dstToken.address,
                 srcTokenValue,
                 SwapProvider.ONEINCH,
+                slippageBps,
             ) {
                 val apiQuote =
                     swapQuoteRepository
@@ -742,6 +760,7 @@ constructor(
                                 tokenValue = tokenValue,
                                 isAffiliate = isAffiliate,
                                 bpsDiscount = vultBPSDiscount ?: 0,
+                                slippageBps = slippageBps,
                             ),
                         )
                         .expectEvm(SwapProvider.ONEINCH)
@@ -786,6 +805,9 @@ constructor(
                 dstToken.address,
                 srcTokenValue,
                 provider,
+                // LI.FI / Jupiter have no quote-time slippage override (#4858) — keep their cache
+                // key slippage-agnostic so changing slippage never needlessly invalidates them.
+                slippageBps = null,
             ) {
                 val apiQuote =
                     if (provider == SwapProvider.LIFI)
@@ -873,6 +895,9 @@ constructor(
                 dstToken.address,
                 srcTokenValue,
                 SwapProvider.SWAPKIT,
+                // SwapKit uses a server-side slippage floor (no quote-time override, #4858) — keep
+                // its cache key slippage-agnostic.
+                slippageBps = null,
             ) {
                 val result =
                     swapQuoteRepository.getQuote(
@@ -1005,8 +1030,18 @@ constructor(
         srcAddress: String,
         dstAddress: String,
         srcAmount: BigInteger,
+        slippageBps: Int?,
     ) {
-        quoteCache.put(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider, quote)
+        quoteCache.put(
+            srcTokenId,
+            dstTokenId,
+            srcAddress,
+            dstAddress,
+            srcAmount,
+            provider,
+            slippageBps,
+            quote,
+        )
     }
 
     private suspend fun getCachedQuoteOrFetch(
@@ -1016,11 +1051,14 @@ constructor(
         dstAddress: String,
         srcAmount: BigInteger,
         provider: SwapProvider,
+        slippageBps: Int?,
         fetch: suspend () -> SwapQuote,
     ): SwapQuote {
-        quoteCache.get(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider)?.let {
-            return it
-        }
+        quoteCache
+            .get(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider, slippageBps)
+            ?.let {
+                return it
+            }
         return fetch().also { fresh ->
             quoteCache.put(
                 srcTokenId,
@@ -1029,6 +1067,7 @@ constructor(
                 dstAddress,
                 srcAmount,
                 provider,
+                slippageBps,
                 fresh,
             )
         }
@@ -1195,6 +1234,10 @@ internal class QuoteCache(private val maxSize: Int = MAX_SIZE) {
         val dstAddress: String,
         val srcAmount: BigInteger,
         val provider: SwapProvider,
+        // Slippage changes the quote (THOR/Maya memo LIM, aggregator calldata), so two slippage
+        // values for the same pair/amount must cache as distinct entries — otherwise a re-fetch
+        // after a slippage change would serve the stale quote built with the old tolerance (#4858).
+        val slippageBps: Int?,
     )
 
     private val lock = Any()
@@ -1207,9 +1250,19 @@ internal class QuoteCache(private val maxSize: Int = MAX_SIZE) {
         dstAddress: String,
         srcAmount: BigInteger,
         provider: SwapProvider,
+        slippageBps: Int?,
     ): SwapQuote? =
         synchronized(lock) {
-            val key = Key(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider)
+            val key =
+                Key(
+                    srcTokenId,
+                    dstTokenId,
+                    srcAddress,
+                    dstAddress,
+                    srcAmount,
+                    provider,
+                    slippageBps,
+                )
             val quote = entries[key] ?: return null
             if (Clock.System.now() < quote.expiredAt) {
                 quote
@@ -1226,11 +1279,20 @@ internal class QuoteCache(private val maxSize: Int = MAX_SIZE) {
         dstAddress: String,
         srcAmount: BigInteger,
         provider: SwapProvider,
+        slippageBps: Int?,
         quote: SwapQuote,
     ) =
         synchronized(lock) {
-            entries[Key(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider)] =
-                quote
+            entries[
+                Key(
+                    srcTokenId,
+                    dstTokenId,
+                    srcAddress,
+                    dstAddress,
+                    srcAmount,
+                    provider,
+                    slippageBps,
+                )] = quote
             evict()
         }
 

@@ -886,6 +886,8 @@
     <string name="swap_advanced_external_recipient_title">Externen Empfänger verwenden</string>
     <string name="swap_advanced_value_auto">Auto</string>
     <string name="swap_advanced_value_off">Aus</string>
+    <string name="swap_slippage_helper">Begrenzt, wie stark sich der Preis vor der Ausführung ändern darf, bevor sie abgebrochen wird.</string>
+    <string name="swap_slippage_custom_hint">Benutzerdefiniert</string>
     <string name="keygen_benefit_1_template">Beseitigung des Single Point of Failure</string>
     <string name="keygen_benefit_1_emphasized">Multifaktor-Sicherheit</string>
     <string name="keygen_benefit_2_template">Volle Kontrolle über Ihre Vermögenswerte</string>

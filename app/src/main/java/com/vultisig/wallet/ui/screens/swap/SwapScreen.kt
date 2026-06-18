@@ -93,6 +93,7 @@ internal fun NavGraphBuilder.swapScreen(navController: NavHostController) {
             onDstLongPressStarted = model::selectDstNetworkPopup,
             onSrcLongPressStarted = model::selectSrcNetworkPopup,
             onValidateAmount = model::validateAmount,
+            onSlippageSelected = model::setSlippageBps,
         )
     }
 }
@@ -117,6 +118,7 @@ internal fun SwapScreen(
     onDstLongPressStarted: (Offset) -> Unit = {},
     onSrcLongPressStarted: (Offset) -> Unit = {},
     onValidateAmount: () -> Unit = {},
+    onSlippageSelected: (Int?) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -317,7 +319,10 @@ internal fun SwapScreen(
                         )
                     } else {
                         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
-                            AdvancedSwapSettings()
+                            AdvancedSwapSettings(
+                                slippageBps = state.slippageBps,
+                                onSlippageSelected = onSlippageSelected,
+                            )
                             VsButton(
                                 label =
                                     if (srcAmountTextFieldState.text.isEmpty()) {

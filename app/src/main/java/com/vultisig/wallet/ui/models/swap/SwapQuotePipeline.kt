@@ -140,6 +140,7 @@ internal class SwapQuotePipeline(
         referralCode: String?,
         currentDiscountInfo: DiscountInfo,
         selectedSrcTokenTitle: String?,
+        slippageBps: Int?,
     ): SwapQuotePipelineResult {
         val (src, dst) = input.address
         val amount = input.amount
@@ -209,6 +210,7 @@ internal class SwapQuotePipeline(
                     currency = currency,
                     amount = amount,
                     selectedSrcTokenTitle = selectedSrcTokenTitle,
+                    slippageBps = slippageBps,
                 )
             // Map the sealed result: a typed fetch failure becomes a Failure carrying its
             // already-mapped error; only a Success continues into fee processing.
