@@ -338,45 +338,64 @@ constructor(
         )
 
     init {
-        val sendTx = transactionTypeUiModel as? TransactionTypeUiModel.Send
-        sendTx?.tx?.let { tx ->
+        // Both Send and Deposit done-screens resolve the same destination labels + "Add to Address
+        // Book" affordance, so a Cosmos staking deposit renders identically on the initiator and a
+        // joining device (issue #4939).
+        val target = transactionTypeUiModel?.addressBookTarget()
+        if (target != null) {
             viewModelScope.safeLaunch {
-                val chain = tx.token.token.chain
-                val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
-                val normalizedDstAddress = normalizeAddressForLookup(tx.dstAddress)
-                val dstVaultName =
-                    allVaults
-                        .firstOrNull { v ->
-                            v.coins.any {
-                                it.chain == chain &&
-                                    normalizeAddressForLookup(it.address) == normalizedDstAddress
-                            }
-                        }
-                        ?.name
-
-                val isSavedBefore =
-                    addressBookRepository.entryExists(address = tx.dstAddress, chainId = chain.id)
-
-                val dstAddressBookTitle =
-                    if (dstVaultName == null && isSavedBefore) {
-                        addressBookRepository.getEntry(chain.id, tx.dstAddress)?.title
-                    } else null
-
+                val labels = resolveDestinationLabels(target.chain, target.dstAddress)
                 _state.update {
                     it.copy(
-                        showSaveToAddressBook = isSavedBefore.not() && dstVaultName == null,
+                        showSaveToAddressBook = labels.showSaveToAddressBook,
                         transactionUiModel =
-                            TransactionTypeUiModel.Send(
-                                tx.copy(
-                                    srcVaultName = vault.name,
-                                    dstVaultName = dstVaultName,
-                                    dstAddressBookTitle = dstAddressBookTitle,
-                                )
+                            transactionTypeUiModel.withResolvedLabels(
+                                srcVaultName = vault.name,
+                                dstVaultName = labels.dstVaultName,
+                                dstAddressBookTitle = labels.dstAddressBookTitle,
                             ),
                     )
                 }
             }
         }
+    }
+
+    /** Destination labels resolved for the Transaction-complete screen. */
+    private data class DestinationLabels(
+        val dstVaultName: String?,
+        val dstAddressBookTitle: String?,
+        val showSaveToAddressBook: Boolean,
+    )
+
+    private suspend fun resolveDestinationLabels(
+        chain: Chain,
+        dstAddress: String,
+    ): DestinationLabels {
+        val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
+        val normalizedDstAddress = normalizeAddressForLookup(dstAddress)
+        val dstVaultName =
+            allVaults
+                .firstOrNull { v ->
+                    v.coins.any {
+                        it.chain == chain &&
+                            normalizeAddressForLookup(it.address) == normalizedDstAddress
+                    }
+                }
+                ?.name
+
+        val isSavedBefore =
+            addressBookRepository.entryExists(address = dstAddress, chainId = chain.id)
+
+        val dstAddressBookTitle =
+            if (dstVaultName == null && isSavedBefore) {
+                addressBookRepository.getEntry(chain.id, dstAddress)?.title
+            } else null
+
+        return DestinationLabels(
+            dstVaultName = dstVaultName,
+            dstAddressBookTitle = dstAddressBookTitle,
+            showSaveToAddressBook = isSavedBefore.not() && dstVaultName == null,
+        )
     }
 
     /** Begins the TSS signing flow for the configured vault and payload. */
@@ -922,19 +941,17 @@ constructor(
         }
     }
 
-    /** Opens the address-book entry form pre-populated with the send destination. */
+    /** Opens the address-book entry form pre-populated with the send/deposit destination. */
     fun navigateToAddressBook() {
-        val sendTx = transactionTypeUiModel as? TransactionTypeUiModel.Send
-        sendTx?.tx?.let { tx ->
-            viewModelScope.launch {
-                navigator.route(
-                    Route.AddressEntry(
-                        vaultId = vault.id,
-                        address = tx.dstAddress,
-                        chainId = tx.token.token.chain.id,
-                    )
+        val target = transactionTypeUiModel?.addressBookTarget() ?: return
+        viewModelScope.launch {
+            navigator.route(
+                Route.AddressEntry(
+                    vaultId = vault.id,
+                    address = target.dstAddress,
+                    chainId = target.chain.id,
                 )
-            }
+            )
         }
     }
 
@@ -957,3 +974,48 @@ constructor(
         super.onCleared()
     }
 }
+
+/** The (chain, destination) pair whose address-book labels the done screen resolves. */
+private data class AddressBookTarget(val chain: Chain, val dstAddress: String)
+
+/**
+ * The destination to resolve labels for on the Transaction-complete screen — sends and deposits
+ * both have one; sign-message and other types do not. A blank destination (some deposits carry
+ * none) yields `null` so no lookup runs.
+ */
+private fun TransactionTypeUiModel.addressBookTarget(): AddressBookTarget? {
+    val (chain, dstAddress) =
+        when (this) {
+            is TransactionTypeUiModel.Send -> tx.token.token.chain to tx.dstAddress
+            is TransactionTypeUiModel.Deposit ->
+                depositTransactionUiModel.token.token.chain to depositTransactionUiModel.dstAddress
+            else -> return null
+        }
+    return if (dstAddress.isBlank()) null else AddressBookTarget(chain, dstAddress)
+}
+
+/** Returns a copy of this model with the resolved From/To labels applied (Send or Deposit only). */
+private fun TransactionTypeUiModel.withResolvedLabels(
+    srcVaultName: String,
+    dstVaultName: String?,
+    dstAddressBookTitle: String?,
+): TransactionTypeUiModel =
+    when (this) {
+        is TransactionTypeUiModel.Send ->
+            TransactionTypeUiModel.Send(
+                tx.copy(
+                    srcVaultName = srcVaultName,
+                    dstVaultName = dstVaultName,
+                    dstAddressBookTitle = dstAddressBookTitle,
+                )
+            )
+        is TransactionTypeUiModel.Deposit ->
+            TransactionTypeUiModel.Deposit(
+                depositTransactionUiModel.copy(
+                    srcVaultName = srcVaultName,
+                    dstVaultName = dstVaultName,
+                    dstAddressBookTitle = dstAddressBookTitle,
+                )
+            )
+        else -> this
+    }

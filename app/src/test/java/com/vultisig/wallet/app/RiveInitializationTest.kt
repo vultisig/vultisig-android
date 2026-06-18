@@ -31,7 +31,7 @@ internal class RiveInitializationTest {
     fun setUp() {
         resetRiveInitialized()
         mockkObject(Rive)
-        mockkStatic("com.vultisig.wallet.app.VoltixApplicationKt")
+        mockkStatic("com.vultisig.wallet.app.RiveInitializerKt")
         every { riveGuardPrefs(context) } returns prefs
         // Read from / write to a single in-memory backing variable so the test can observe what
         // the production code commits.
@@ -52,7 +52,7 @@ internal class RiveInitializationTest {
     @AfterEach
     fun tearDown() {
         unmockkObject(Rive)
-        unmockkStatic("com.vultisig.wallet.app.VoltixApplicationKt")
+        unmockkStatic("com.vultisig.wallet.app.RiveInitializerKt")
         resetRiveInitialized()
         storedVersion = NO_IN_FLIGHT_VERSION
     }
@@ -107,6 +107,18 @@ internal class RiveInitializationTest {
 
         isRiveInitialized.shouldBeFalse()
         storedVersion.shouldBe(NO_IN_FLIGHT_VERSION)
+    }
+
+    @Test
+    fun `init is skipped when the in-flight marker commit fails`() {
+        // A failed durable write (full disk, I/O error, thread interruption) means the crash-loop
+        // guard could not record this attempt, so running Rive.init unguarded risks a crash loop.
+        every { editor.commit() } returns false
+
+        initializeRive(context)
+
+        isRiveInitialized.shouldBeFalse()
+        verify(exactly = 0) { Rive.init(any(), any()) }
     }
 
     @Test

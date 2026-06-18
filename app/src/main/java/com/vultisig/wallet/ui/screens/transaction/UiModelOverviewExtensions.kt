@@ -34,7 +34,11 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
                 type = UiTransactionInfoType.Deposit,
                 token = this.depositTransactionUiModel.token,
                 from = this.depositTransactionUiModel.srcAddress,
+                fromLabel = this.depositTransactionUiModel.srcVaultName,
                 to = this.depositTransactionUiModel.dstAddress,
+                toLabel =
+                    this.depositTransactionUiModel.dstVaultName
+                        ?: this.depositTransactionUiModel.dstAddressBookTitle,
                 memo = this.depositTransactionUiModel.memo,
                 networkFeeFiatValue = this.depositTransactionUiModel.networkFeeFiatValue,
                 networkFeeTokenValue = this.depositTransactionUiModel.networkFeeTokenValue,

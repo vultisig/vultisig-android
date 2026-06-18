@@ -35,7 +35,16 @@ constructor(
                             convertTokenValueToFiat(from.srcToken, from.srcTokenValue, currency)
                         ),
                 ),
-            networkFeeFiatValue = from.estimateFeesFiat,
+            // Cosmos staking VMs leave estimateFeesFiat blank (the fee denom equals the native
+            // staking token); derive the fiat from the native fee so deposits show it like sends
+            // do, on both the initiator and a joining device (issue #4939).
+            networkFeeFiatValue =
+                from.estimateFeesFiat.ifBlank {
+                    fiatValueToStringMapper(
+                        convertTokenValueToFiat(from.srcToken, from.estimatedFees, currency),
+                        asFee = true,
+                    )
+                },
             networkFeeTokenValue = mapTokenValueToStringWithUnit(from.estimatedFees),
             memo = from.memo,
             dstAddress = from.dstAddress,
