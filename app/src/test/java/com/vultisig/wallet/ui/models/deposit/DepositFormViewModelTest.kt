@@ -36,6 +36,7 @@ import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
+import com.vultisig.wallet.ui.models.deposit.load.RujiBalancesLoader
 import com.vultisig.wallet.ui.models.deposit.load.SecuredAssetLoader
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -154,6 +155,26 @@ internal class DepositFormViewModelTest {
                     onResult = onResult,
                 )
         }
+    private val rujiBalancesLoaderFactory: RujiBalancesLoader.Factory =
+        object : RujiBalancesLoader.Factory {
+            override fun create(
+                scope: CoroutineScope,
+                tokenAmountFieldState: TextFieldState,
+                addressProvider: () -> String?,
+                selectedUnMergeCoinProvider: () -> TokenMergeInfo,
+                onSharesBalance: (UiText) -> Unit,
+                setLoading: (Boolean) -> Unit,
+            ): RujiBalancesLoader =
+                RujiBalancesLoader(
+                    thorChainApi = thorChainApi,
+                    scope = scope,
+                    tokenAmountFieldState = tokenAmountFieldState,
+                    addressProvider = addressProvider,
+                    selectedUnMergeCoinProvider = selectedUnMergeCoinProvider,
+                    onSharesBalance = onSharesBalance,
+                    setLoading = setLoading,
+                )
+        }
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase = mockk(relaxed = true)
     private val fieldValidator: DepositFieldValidator =
         DepositFieldValidatorImpl(chainAccountAddressRepository)
@@ -189,7 +210,6 @@ internal class DepositFormViewModelTest {
             chainAccountAddressRepository = chainAccountAddressRepository,
             transactionRepository = transactionRepository,
             blockChainSpecificRepository = blockChainSpecificRepository,
-            thorChainApi = thorChainApi,
             mayaChainApi = mayaChainApi,
             mayachainBondRepository = mayachainBondRepository,
             balanceRepository = balanceRepository,
@@ -202,6 +222,7 @@ internal class DepositFormViewModelTest {
             liquidityDataLoaderFactory = liquidityDataLoaderFactory,
             securedAssetLoaderFactory = securedAssetLoaderFactory,
             cacaoMaturityLoaderFactory = cacaoMaturityLoaderFactory,
+            rujiBalancesLoaderFactory = rujiBalancesLoaderFactory,
             thorChainLpPreflight = thorChainLpPreflight,
             fieldValidator = fieldValidator,
             gasFeeHelper = gasFeeHelper,
