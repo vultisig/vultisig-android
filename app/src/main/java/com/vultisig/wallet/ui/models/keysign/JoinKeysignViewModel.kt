@@ -629,6 +629,7 @@ constructor(
         when (val specific = payload.blockChainSpecific) {
             is BlockChainSpecific.MayaChain -> specific.isDeposit
             is BlockChainSpecific.THORChain -> specific.isDeposit
+            is BlockChainSpecific.Ton -> specific.isDeposit
             is BlockChainSpecific.BitcoinPSBT -> false
             // A joining device has no DepositTransactionRepository entry, so it recovers the
             // initiator's Cosmos deposit classification from the transmitted payload: IBC transfers

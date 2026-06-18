@@ -41,7 +41,8 @@ constructor(
             networkFeeFiatValue =
                 from.estimateFeesFiat.ifBlank {
                     fiatValueToStringMapper(
-                        convertTokenValueToFiat(from.srcToken, from.estimatedFees, currency)
+                        convertTokenValueToFiat(from.srcToken, from.estimatedFees, currency),
+                        asFee = true,
                     )
                 },
             networkFeeTokenValue = mapTokenValueToStringWithUnit(from.estimatedFees),
