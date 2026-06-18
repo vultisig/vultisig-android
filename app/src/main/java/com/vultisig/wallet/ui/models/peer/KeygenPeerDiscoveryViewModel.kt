@@ -402,48 +402,78 @@ constructor(
             showNetworkWarning()
             return
         }
-        viewModelScope.safeLaunch(
-            onError = { e ->
-                Timber.e(e, "Failed to load peer discovery data")
-                _state.update {
-                    it.copy(
-                        error =
-                            ErrorUiModel(
-                                title = UiText.StringResource(R.string.error_view_default_title),
-                                description =
-                                    UiText.StringResource(R.string.error_view_default_description),
-                            )
-                    )
-                }
-            }
-        ) {
-            val args = args ?: return@safeLaunch
-
-            var hexChainCode =
-                if (args.action == TssAction.KeyImport) "" else Utils.encryptionKeyHex
-            if (args.action == TssAction.KeyImport && hexChainCode.isEmpty()) {
-                val mnemonic = keyImportRepository.get()?.mnemonic
-                if (mnemonic == null) {
-                    Timber.w("KeyImport: no mnemonic found in repository")
+        // Track the initial run in startPeerDiscoveryJob so switchMode() can cancel it. Otherwise
+        // an
+        // in-flight startPeerDiscovery() from here (e.g. still retrying in startSessionWithRetry)
+        // resumes after the toggle and rebinds discoverParticipantsJob to the old session,
+        // resurfacing stale peers (issue #4944).
+        startPeerDiscoveryJob?.cancel()
+        startPeerDiscoveryJob =
+            viewModelScope.safeLaunch(
+                onError = { e ->
+                    Timber.e(e, "Failed to load peer discovery data")
                     _state.update {
                         it.copy(
                             error =
                                 ErrorUiModel(
-                                    title = UiText.StringResource(R.string.key_import_error_title),
+                                    title =
+                                        UiText.StringResource(R.string.error_view_default_title),
                                     description =
                                         UiText.StringResource(
-                                            R.string.key_import_error_no_mnemonic_description
+                                            R.string.error_view_default_description
                                         ),
                                 )
                         )
                     }
-                    return@safeLaunch
                 }
-                val masterKeys =
-                    try {
-                        extractMasterKeys(mnemonic)
-                    } catch (e: Exception) {
-                        Timber.e(e, "KeyImport: failed to extract master keys")
+            ) {
+                val args = args ?: return@safeLaunch
+
+                var hexChainCode =
+                    if (args.action == TssAction.KeyImport) "" else Utils.encryptionKeyHex
+                if (args.action == TssAction.KeyImport && hexChainCode.isEmpty()) {
+                    val mnemonic = keyImportRepository.get()?.mnemonic
+                    if (mnemonic == null) {
+                        Timber.w("KeyImport: no mnemonic found in repository")
+                        _state.update {
+                            it.copy(
+                                error =
+                                    ErrorUiModel(
+                                        title =
+                                            UiText.StringResource(R.string.key_import_error_title),
+                                        description =
+                                            UiText.StringResource(
+                                                R.string.key_import_error_no_mnemonic_description
+                                            ),
+                                    )
+                            )
+                        }
+                        return@safeLaunch
+                    }
+                    val masterKeys =
+                        try {
+                            extractMasterKeys(mnemonic)
+                        } catch (e: Exception) {
+                            Timber.e(e, "KeyImport: failed to extract master keys")
+                            _state.update {
+                                it.copy(
+                                    error =
+                                        ErrorUiModel(
+                                            title =
+                                                UiText.StringResource(
+                                                    R.string.key_import_error_title
+                                                ),
+                                            description =
+                                                UiText.StringResource(
+                                                    R.string.key_import_error_description
+                                                ),
+                                        )
+                                )
+                            }
+                            return@safeLaunch
+                        }
+                    if (masterKeys == null) {
+                        Timber.w("KeyImport: extractMasterKeys returned null")
                         _state.update {
                             it.copy(
                                 error =
@@ -459,83 +489,71 @@ constructor(
                         }
                         return@safeLaunch
                     }
-                if (masterKeys == null) {
-                    Timber.w("KeyImport: extractMasterKeys returned null")
-                    _state.update {
-                        it.copy(
-                            error =
-                                ErrorUiModel(
-                                    title = UiText.StringResource(R.string.key_import_error_title),
-                                    description =
-                                        UiText.StringResource(R.string.key_import_error_description),
-                                )
-                        )
-                    }
-                    return@safeLaunch
+                    hexChainCode = masterKeys.hexChainCode
                 }
-                hexChainCode = masterKeys.hexChainCode
-            }
 
-            var libType =
-                if (secretSettingsRepository.isDklsEnabled.first()) SigningLibType.DKLS
-                else SigningLibType.GG20
-            val isTssBatchEnabled = featureFlagRepository.getFeatureFlags().isTssBatchEnabled
+                var libType =
+                    if (secretSettingsRepository.isDklsEnabled.first()) SigningLibType.DKLS
+                    else SigningLibType.GG20
+                val isTssBatchEnabled = featureFlagRepository.getFeatureFlags().isTssBatchEnabled
 
-            var localPartyId = Utils.deviceName(context)
-            var pubKeyEcdsa = ""
-            var signers: List<String> = emptyList()
-            var resharePrefix = ""
+                var localPartyId = Utils.deviceName(context)
+                var pubKeyEcdsa = ""
+                var signers: List<String> = emptyList()
+                var resharePrefix = ""
 
-            val existingVault = args.vaultId?.let { vaultRepository.get(it) }
-            if (existingVault != null) {
-                libType = existingVault.libType
-                hexChainCode = existingVault.hexChainCode
-                localPartyId = existingVault.localPartyID
-                pubKeyEcdsa = existingVault.pubKeyECDSA
-                resharePrefix = existingVault.resharePrefix
-                signers = existingVault.signers
+                val existingVault = args.vaultId?.let { vaultRepository.get(it) }
+                if (existingVault != null) {
+                    libType = existingVault.libType
+                    hexChainCode = existingVault.hexChainCode
+                    localPartyId = existingVault.localPartyID
+                    pubKeyEcdsa = existingVault.pubKeyECDSA
+                    resharePrefix = existingVault.resharePrefix
+                    signers = existingVault.signers
 
-                if (args.action == TssAction.Migrate || args.action == TssAction.SingleKeygen) {
-                    _state.update {
-                        it.copy(
-                            minimumDevices = existingVault.signers.size,
-                            minimumDevicesDisplayed = existingVault.signers.size,
-                        )
+                    if (args.action == TssAction.Migrate || args.action == TssAction.SingleKeygen) {
+                        _state.update {
+                            it.copy(
+                                minimumDevices = existingVault.signers.size,
+                                minimumDevicesDisplayed = existingVault.signers.size,
+                            )
+                        }
                     }
                 }
-            }
 
-            session =
-                KeygenSession(
-                    hexChainCode = hexChainCode,
-                    localPartyId = localPartyId,
-                    libType = libType,
-                    pubKeyEcdsa = pubKeyEcdsa,
-                    signers = signers,
-                    resharePrefix = resharePrefix,
-                    isTssBatchEnabled = isTssBatchEnabled,
-                )
+                session =
+                    KeygenSession(
+                        hexChainCode = hexChainCode,
+                        localPartyId = localPartyId,
+                        libType = libType,
+                        pubKeyEcdsa = pubKeyEcdsa,
+                        signers = signers,
+                        resharePrefix = resharePrefix,
+                        isTssBatchEnabled = isTssBatchEnabled,
+                    )
 
-            _state.update { it.copy(error = null, warning = null) }
+                _state.update { it.copy(error = null, warning = null) }
 
-            if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
-                // For active vault, we should present PeerDiscovery screen, so the other device can
-                // join
-                // Also need to request the server to join the upgrade process
-                if (args.action == TssAction.Migrate && signers.count() > 2) {
-                    // This is the only Fast Vault path that shows peer discovery rather than the
-                    // connecting screen, so undo the connecting state seeded in the initial UI
-                    // model.
-                    _state.update { it.copy(connectingToServer = null) }
-                    startPeerDiscovery(sessionId)
-                    requestVultiServerConnection(sessionId)
+                if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
+                    // For active vault, we should present PeerDiscovery screen, so the other device
+                    // can
+                    // join
+                    // Also need to request the server to join the upgrade process
+                    if (args.action == TssAction.Migrate && signers.count() > 2) {
+                        // This is the only Fast Vault path that shows peer discovery rather than
+                        // the
+                        // connecting screen, so undo the connecting state seeded in the initial UI
+                        // model.
+                        _state.update { it.copy(connectingToServer = null) }
+                        startPeerDiscovery(sessionId)
+                        requestVultiServerConnection(sessionId)
+                    } else {
+                        startVultiServerConnection()
+                    }
                 } else {
-                    startVultiServerConnection()
+                    startPeerDiscovery(sessionId)
                 }
-            } else {
-                startPeerDiscovery(sessionId)
             }
-        }
     }
 
     private fun actionContext(session: KeygenSession, sessionId: String) =
@@ -631,12 +649,14 @@ constructor(
     ) {
         val session = session
         discoverParticipantsJob?.cancel()
-        discoverParticipantsJob = viewModelScope.safeLaunch {
-            discoverParticipants(serverUrl, sessionId, session.localPartyId).collect { devices ->
-                applyDiscoveredDevices(devices)
-                onDiscovered?.invoke(devices)
+        discoverParticipantsJob =
+            viewModelScope.safeLaunch {
+                discoverParticipants(serverUrl, sessionId, session.localPartyId).collect { devices
+                    ->
+                    applyDiscoveredDevices(devices)
+                    onDiscovered?.invoke(devices)
+                }
             }
-        }
     }
 
     /**
