@@ -35,6 +35,7 @@ import com.vultisig.wallet.data.usecases.ThorChainLpPreflightBlock
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
+import com.vultisig.wallet.ui.models.deposit.load.DepositDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.RujiBalancesLoader
 import com.vultisig.wallet.ui.models.deposit.load.SecuredAssetLoader
@@ -175,6 +176,24 @@ internal class DepositFormViewModelTest {
                     setLoading = setLoading,
                 )
         }
+    private val dataLoaderFactory: DepositDataLoader.Factory =
+        object : DepositDataLoader.Factory {
+            override fun create(
+                scope: CoroutineScope,
+                address: MutableStateFlow<Address?>,
+                depositTypeActionProvider: () -> String?,
+                clearDepositTypeAction: () -> Unit,
+                selectDepositOption: (DepositOption) -> Unit,
+            ): DepositDataLoader =
+                DepositDataLoader(
+                    accountsRepository = accountsRepository,
+                    scope = scope,
+                    address = address,
+                    depositTypeActionProvider = depositTypeActionProvider,
+                    clearDepositTypeAction = clearDepositTypeAction,
+                    selectDepositOption = selectDepositOption,
+                )
+        }
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase = mockk(relaxed = true)
     private val fieldValidator: DepositFieldValidator =
         DepositFieldValidatorImpl(chainAccountAddressRepository)
@@ -185,6 +204,7 @@ internal class DepositFormViewModelTest {
             tokenRepository = tokenRepository,
             gasFeeToEstimatedFee = gasFeeToEstimatedFee,
             tokenPriceRepository = tokenPriceRepository,
+            blockChainSpecificRepository = blockChainSpecificRepository,
         )
 
     @BeforeEach
@@ -223,6 +243,7 @@ internal class DepositFormViewModelTest {
             securedAssetLoaderFactory = securedAssetLoaderFactory,
             cacaoMaturityLoaderFactory = cacaoMaturityLoaderFactory,
             rujiBalancesLoaderFactory = rujiBalancesLoaderFactory,
+            dataLoaderFactory = dataLoaderFactory,
             thorChainLpPreflight = thorChainLpPreflight,
             fieldValidator = fieldValidator,
             gasFeeHelper = gasFeeHelper,

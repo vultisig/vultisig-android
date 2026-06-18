@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EstimatedGasFee
@@ -15,14 +16,18 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
+import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -43,7 +48,44 @@ constructor(
     private val tokenRepository: TokenRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val tokenPriceRepository: TokenPriceRepository,
+    private val blockChainSpecificRepository: BlockChainSpecificRepository,
 ) {
+
+    /**
+     * Fetches the native-token deposit gas fee for [address] on [chain] and reports the formatted
+     * total-gas / estimated-fee strings via [onResult] for display. Runs on [scope]; no-op when the
+     * address holds no native-token account.
+     *
+     * @param vaultId the vault whose keys back the transaction.
+     */
+    fun loadGasFeeForDisplay(
+        scope: CoroutineScope,
+        vaultId: String,
+        chain: Chain,
+        address: Address,
+        onResult: (totalGas: UiText, estimatedFee: UiText) -> Unit,
+    ) {
+        scope.safeLaunch {
+            val token = address.accounts.find { it.token.isNativeToken }?.token ?: return@safeLaunch
+            val srcAddress = token.address
+            val gasFee = calculateGasFee(vaultId, chain, token, srcAddress)
+            val specific =
+                blockChainSpecificRepository.getSpecific(
+                    chain,
+                    srcAddress,
+                    token,
+                    gasFee,
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                )
+            val estimatedGasFee = getFeesFiatValue(chain, specific, gasFee, token)
+            onResult(
+                UiText.DynamicString(estimatedGasFee.formattedTokenValue),
+                UiText.DynamicString(estimatedGasFee.formattedFiatValue),
+            )
+        }
+    }
 
     /**
      * Calculates the native-token gas fee for a deposit on [chain] originating from [srcAddress].
