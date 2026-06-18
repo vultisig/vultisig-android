@@ -9,6 +9,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -68,9 +69,15 @@ constructor(
                     accountsRepository.loadAddress(vaultId, chain).collect { loadedAddress ->
                         address.value = loadedAddress
                     }
-                } catch (e: Exception) {
-                    if (e is CancellationException) throw e
-                    Timber.e(e)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: IOException) {
+                    Timber.e(
+                        e,
+                        "Failed to load address for vaultId=%s chain=%s",
+                        vaultId,
+                        chain.raw,
+                    )
                 }
             }
     }
