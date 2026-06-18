@@ -31,7 +31,7 @@ internal class RiveInitializationTest {
     fun setUp() {
         resetRiveInitialized()
         mockkObject(Rive)
-        mockkStatic("com.vultisig.wallet.app.VoltixApplicationKt")
+        mockkStatic("com.vultisig.wallet.app.RiveInitializerKt")
         every { riveGuardPrefs(context) } returns prefs
         // Read from / write to a single in-memory backing variable so the test can observe what
         // the production code commits.
@@ -52,7 +52,7 @@ internal class RiveInitializationTest {
     @AfterEach
     fun tearDown() {
         unmockkObject(Rive)
-        unmockkStatic("com.vultisig.wallet.app.VoltixApplicationKt")
+        unmockkStatic("com.vultisig.wallet.app.RiveInitializerKt")
         resetRiveInitialized()
         storedVersion = NO_IN_FLIGHT_VERSION
     }
