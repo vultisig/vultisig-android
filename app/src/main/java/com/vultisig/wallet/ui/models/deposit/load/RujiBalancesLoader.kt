@@ -4,6 +4,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
 import com.vultisig.wallet.ui.utils.UiText
@@ -11,12 +12,10 @@ import com.vultisig.wallet.ui.utils.asUiText
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import wallet.core.jni.CoinType
@@ -70,12 +69,16 @@ constructor(
      * Fetches the RUJI merge balances for the current address and updates the shares balance field.
      */
     fun loadRujiMergeBalances() {
-        scope.launch {
+        scope.safeLaunch(
+            onError = { t ->
+                onSharesBalance(UiText.Empty)
+                Timber.e(t, "Can't load Ruji Balances")
+            }
+        ) {
             try {
                 val selectedToken = selectedUnMergeCoinProvider()
                 val addressString =
-                    addressProvider()
-                        ?: throw RuntimeException("Invalid address: cannot fetch balance")
+                    requireNotNull(addressProvider()) { "Invalid address: cannot fetch balance" }
 
                 withContext(Dispatchers.IO) {
                     val newBalances = thorChainApi.getRujiMergeBalances(addressString)
@@ -83,10 +86,6 @@ constructor(
                 }
 
                 setUnMergeTokenSharesField(selectedToken)
-            } catch (t: Throwable) {
-                if (t is CancellationException) throw t
-                onSharesBalance(UiText.Empty)
-                Timber.e("Can't load Ruji Balances ${t.message}")
             } finally {
                 setLoading(false)
             }
