@@ -69,6 +69,7 @@ constructor(
      * Fetches the RUJI merge balances for the current address and updates the shares balance field.
      */
     fun loadRujiMergeBalances() {
+        setLoading(true)
         scope.safeLaunch(
             onError = { t ->
                 onSharesBalance(UiText.Empty)
