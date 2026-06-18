@@ -141,7 +141,7 @@ class NetworkException(
  * server HTTP error or an application bug). Used by the UI layer to pick a cause-specific error
  * message.
  */
-fun Throwable.networkErrorKind(): NetworkErrorKind? {
+fun Throwable.toNetworkErrorKind(): NetworkErrorKind? {
     var current: Throwable? = this
     while (current != null) {
         when (current) {

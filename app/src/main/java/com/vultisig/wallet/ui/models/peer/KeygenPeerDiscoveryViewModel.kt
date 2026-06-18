@@ -39,8 +39,8 @@ import com.vultisig.wallet.data.usecases.QrShareInfo
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
 import com.vultisig.wallet.data.utils.NetworkErrorKind
-import com.vultisig.wallet.data.utils.networkErrorKind
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.data.utils.toNetworkErrorKind
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -237,18 +237,18 @@ constructor(
      * copy.
      */
     private fun Throwable.toKeygenErrorUiModel(): ErrorUiModel =
-        when (networkErrorKind()) {
+        when (toNetworkErrorKind()) {
             NetworkErrorKind.Timeout ->
                 ErrorUiModel(
                     title = UiText.StringResource(R.string.keygen_error_timeout_title),
                     description = UiText.StringResource(R.string.keygen_error_timeout_description),
                 )
-            NetworkErrorKind.NoConnectivity,
-            NetworkErrorKind.Transport ->
+            NetworkErrorKind.NoConnectivity ->
                 ErrorUiModel(
                     title = UiText.StringResource(R.string.keygen_error_network_title),
                     description = UiText.StringResource(R.string.keygen_error_network_description),
                 )
+            NetworkErrorKind.Transport,
             NetworkErrorKind.Http,
             null ->
                 ErrorUiModel(
