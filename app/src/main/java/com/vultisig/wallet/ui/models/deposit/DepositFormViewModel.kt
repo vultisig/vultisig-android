@@ -8,8 +8,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.MayaChainApi
-import com.vultisig.wallet.data.api.ThorChainApi
-import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
 import com.vultisig.wallet.data.api.models.thorchain.RujiStakeBalances
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
@@ -42,11 +40,11 @@ import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
-import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
 import com.vultisig.wallet.ui.models.deposit.load.InboundAddressResult
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
+import com.vultisig.wallet.ui.models.deposit.load.RujiBalancesLoader
 import com.vultisig.wallet.ui.models.deposit.load.SecuredAssetLoader
 import com.vultisig.wallet.ui.models.deposit.submit.AddCacaoPoolStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.AddLiquidityStrategy
@@ -85,7 +83,6 @@ import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -103,10 +100,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
-import wallet.core.jni.CoinType
 import wallet.core.jni.proto.Bitcoin
 
 internal enum class DepositOption {
@@ -206,7 +201,6 @@ constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val transactionRepository: DepositTransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
-    private val thorChainApi: ThorChainApi,
     private val mayaChainApi: MayaChainApi,
     private val mayachainBondRepository: MayachainBondRepository,
     private val balanceRepository: BalanceRepository,
@@ -222,6 +216,7 @@ constructor(
     private val liquidityDataLoaderFactory: LiquidityDataLoader.Factory,
     private val securedAssetLoaderFactory: SecuredAssetLoader.Factory,
     private val cacaoMaturityLoaderFactory: CacaoMaturityLoader.Factory,
+    private val rujiBalancesLoaderFactory: RujiBalancesLoader.Factory,
 ) : ViewModel() {
 
     private val appCurrency =
@@ -247,7 +242,6 @@ constructor(
     private var vaultId: String? = null
     private var chain: Chain? = null
 
-    private var rujiMergeBalances = MutableStateFlow<List<MergeAccount>?>(null)
     private var rujiStakeBalances = MutableStateFlow<RujiStakeBalances?>(null)
 
     val tokenAmountFieldState = TextFieldState()
@@ -308,6 +302,18 @@ constructor(
                     it.copy(isUnstakeMature = isMature, unstakeUnlocksInText = unlocksInText)
                 }
             },
+        )
+
+    private val rujiBalancesLoader: RujiBalancesLoader =
+        rujiBalancesLoaderFactory.create(
+            scope = viewModelScope,
+            tokenAmountFieldState = tokenAmountFieldState,
+            addressProvider = { address.value?.address },
+            selectedUnMergeCoinProvider = { state.value.selectedUnMergeCoin },
+            onSharesBalance = { sharesBalance ->
+                _state.update { it.copy(sharesBalance = sharesBalance) }
+            },
+            setLoading = { isLoading = it },
         )
 
     private val bondStrategy: DepositSubmitStrategy =
@@ -407,7 +413,7 @@ constructor(
             chainProvider = { chain },
             stateProvider = { state.value },
             addressProvider = { address.value },
-            rujiMergeBalancesProvider = { rujiMergeBalances.value },
+            rujiMergeBalancesProvider = { rujiBalancesLoader.balances },
             tokenAmountFieldState = tokenAmountFieldState,
             blockChainSpecificRepository = blockChainSpecificRepository,
             calculateGasFee = ::calculateGasFee,
@@ -1118,10 +1124,10 @@ constructor(
 
     fun selectUnMergeToken(unmergeInfo: TokenMergeInfo) {
         _state.update { it.copy(selectedUnMergeCoin = unmergeInfo) }
-        if (rujiMergeBalances.value == null) {
+        if (rujiBalancesLoader.balances == null) {
             onLoadRujiMergeBalances()
         } else {
-            setUnMergeTokenSharesField(unmergeInfo)
+            rujiBalancesLoader.setUnMergeTokenSharesField(unmergeInfo)
         }
     }
 
@@ -1420,44 +1426,7 @@ constructor(
     }
 
     fun onLoadRujiMergeBalances() {
-        viewModelScope.launch {
-            try {
-                val selectedToken = state.value.selectedUnMergeCoin
-                val addressString =
-                    address.value?.address
-                        ?: throw RuntimeException("Invalid address: cannot fetch balance")
-
-                withContext(Dispatchers.IO) {
-                    val newBalances = thorChainApi.getRujiMergeBalances(addressString)
-                    rujiMergeBalances.update { newBalances }
-                }
-
-                setUnMergeTokenSharesField(selectedToken)
-            } catch (t: Throwable) {
-                if (t is kotlinx.coroutines.CancellationException) throw t
-                _state.update { it.copy(sharesBalance = UiText.Empty) }
-                Timber.e("Can't load Ruji Balances ${t.message}")
-            } finally {
-                isLoading = false
-            }
-        }
-    }
-
-    private fun setUnMergeTokenSharesField(selectedToken: TokenMergeInfo) {
-        val selectedSymbol = selectedToken.ticker
-        val selectedMergeAccount =
-            rujiMergeBalances.value?.firstOrNull {
-                it.pool?.mergeAsset?.metadata?.symbol.equals(selectedSymbol, true)
-            } ?: return
-
-        val amountText =
-            selectedMergeAccount.shares?.toBigInteger()?.let {
-                CoinType.THORCHAIN.toValue(it).toString()
-            } ?: "0"
-
-        _state.update { it.copy(sharesBalance = amountText.asUiText()) }
-
-        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amountText)
+        rujiBalancesLoader.loadRujiMergeBalances()
     }
 
     private fun requireTokenAmount(
