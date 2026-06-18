@@ -25,6 +25,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -34,6 +35,7 @@ import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -458,6 +460,38 @@ internal class KeygenPeerDiscoveryViewModelTest {
         vm.selectDevice("peer-1")
 
         coVerify(exactly = 0) { sessionApi.startWithCommittee(any(), any(), any()) }
+    }
+
+    // --- Mode switching tests (issue #4944) ---
+
+    @Test
+    fun `switching back to Internet mode uses a fresh session id`() {
+        stubRoute(deviceCount = 3)
+
+        // next() starts the keygen session with the current sessionId — capture it across switches.
+        // It mirrors what the relay session is keyed by, without going through the async QR/IO
+        // path.
+        val committeeSessionIds = mutableListOf<String>()
+        coEvery {
+            sessionApi.startWithCommittee(any(), capture(committeeSessionIds), any())
+        } returns Unit
+
+        val vm = createViewModel()
+
+        // Internet session #1
+        vm.next()
+        // Internet -> Local -> Internet must reconnect with a brand-new session, not reuse #1's.
+        vm.switchMode()
+        vm.switchMode()
+        // Internet session #2
+        vm.next()
+
+        assertEquals(2, committeeSessionIds.size)
+        assertNotEquals(
+            committeeSessionIds[0],
+            committeeSessionIds[1],
+            "switching back to Internet must mint a fresh session so stale peers don't reappear",
+        )
     }
 
     @Test
