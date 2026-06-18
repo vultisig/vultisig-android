@@ -141,6 +141,7 @@ internal class SwapQuotePipeline(
         currentDiscountInfo: DiscountInfo,
         selectedSrcTokenTitle: String?,
         slippageBps: Int?,
+        externalRecipient: String?,
     ): SwapQuotePipelineResult {
         val (src, dst) = input.address
         val amount = input.amount
@@ -170,7 +171,21 @@ internal class SwapQuotePipeline(
 
             val tokenValue = convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
 
-            val eligibleProviders = swapQuoteRepository.getEligibleProviders(srcToken, dstToken)
+            val allEligibleProviders = swapQuoteRepository.getEligibleProviders(srcToken, dstToken)
+            // External recipient (#4858): 1inch / Kyber / Jupiter sign calldata that pays the
+            // sender and cannot route to a different address, so drop them when a recipient is set
+            // — never silently misroute funds. THORChain / Maya / LI.FI / SwapKit route to the
+            // chosen address.
+            val eligibleProviders =
+                if (externalRecipient.isNullOrBlank()) {
+                    allEligibleProviders
+                } else {
+                    allEligibleProviders.filterNot {
+                        it == SwapProvider.ONEINCH ||
+                            it == SwapProvider.KYBER ||
+                            it == SwapProvider.JUPITER
+                    }
+                }
             if (eligibleProviders.isEmpty()) {
                 throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
             }
@@ -211,6 +226,7 @@ internal class SwapQuotePipeline(
                     amount = amount,
                     selectedSrcTokenTitle = selectedSrcTokenTitle,
                     slippageBps = slippageBps,
+                    externalRecipient = externalRecipient,
                 )
             // Map the sealed result: a typed fetch failure becomes a Failure carrying its
             // already-mapped error; only a Success continues into fee processing.

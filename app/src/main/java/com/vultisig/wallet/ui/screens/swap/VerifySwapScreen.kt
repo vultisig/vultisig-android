@@ -266,6 +266,19 @@ private fun VerifySwapScreen(
                         metadata = tx.src.token.address,
                     )
 
+                    // External recipient must be visible before signing — never a silent default
+                    // (#4858). Only shown when the user routed the output to a custom address.
+                    tx.externalRecipient
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { recipient ->
+                            VerifyCardDivider(size = 20.dp)
+                            VerifyVaultDetails(
+                                title = stringResource(R.string.verify_swap_recipient),
+                                subtitle = "",
+                                metadata = recipient,
+                            )
+                        }
+
                     VerifyCardDivider(size = 20.dp)
 
                     if (tx.provider.isNotBlank()) {

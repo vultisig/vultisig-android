@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.inputs.VsBasicTextField
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
@@ -68,6 +70,8 @@ private fun formatSlippage(bps: Int?): String? =
  * @param isGasLimitApplicable whether the source chain is EVM; the Gas Limit row is disabled
  *   otherwise.
  * @param onGasLimitSelected invoked with the chosen gas limit (null = Auto).
+ * @param externalRecipient the current external recipient address, or null/blank = off.
+ * @param onExternalRecipientSelected invoked with the entered address (null/blank = off).
  */
 @Composable
 internal fun AdvancedSwapSettings(
@@ -76,6 +80,8 @@ internal fun AdvancedSwapSettings(
     gasLimitOverride: Long?,
     isGasLimitApplicable: Boolean,
     onGasLimitSelected: (Long?) -> Unit,
+    externalRecipient: String?,
+    onExternalRecipientSelected: (String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var isSheetVisible by rememberSaveable { mutableStateOf(false) }
@@ -96,6 +102,8 @@ internal fun AdvancedSwapSettings(
             gasLimitOverride = gasLimitOverride,
             isGasLimitApplicable = isGasLimitApplicable,
             onGasLimitSelected = onGasLimitSelected,
+            externalRecipient = externalRecipient,
+            onExternalRecipientSelected = onExternalRecipientSelected,
             onDismiss = { isSheetVisible = false },
         )
     }
@@ -105,6 +113,7 @@ private enum class AdvancedPage {
     Menu,
     Slippage,
     GasLimit,
+    ExternalRecipient,
 }
 
 @Composable
@@ -114,6 +123,8 @@ private fun AdvancedSwapSettingsSheet(
     gasLimitOverride: Long?,
     isGasLimitApplicable: Boolean,
     onGasLimitSelected: (Long?) -> Unit,
+    externalRecipient: String?,
+    onExternalRecipientSelected: (String?) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var page by remember { mutableStateOf(AdvancedPage.Menu) }
@@ -126,6 +137,8 @@ private fun AdvancedSwapSettingsSheet(
                     AdvancedPage.Menu -> R.string.swap_advanced_sheet_title
                     AdvancedPage.Slippage -> R.string.swap_advanced_slippage_title
                     AdvancedPage.GasLimit -> R.string.swap_advanced_gas_limit_title
+                    AdvancedPage.ExternalRecipient ->
+                        R.string.swap_advanced_external_recipient_title
                 }
             ),
         leftAction = {
@@ -163,13 +176,23 @@ private fun AdvancedSwapSettingsSheet(
                     slippageValue = formatSlippage(slippageBps) ?: autoLabel,
                     gasLimitValue = gasLimitOverride?.toString() ?: autoLabel,
                     isGasLimitApplicable = isGasLimitApplicable,
+                    externalRecipientValue =
+                        if (externalRecipient.isNullOrBlank())
+                            stringResource(R.string.swap_advanced_value_off)
+                        else stringResource(R.string.swap_advanced_value_on),
                     onSlippageClick = { page = AdvancedPage.Slippage },
                     onGasLimitClick = { page = AdvancedPage.GasLimit },
+                    onExternalRecipientClick = { page = AdvancedPage.ExternalRecipient },
                 )
             AdvancedPage.Slippage ->
                 SlippagePage(slippageBps = slippageBps, onSelect = onSlippageSelected)
             AdvancedPage.GasLimit ->
                 GasLimitPage(gasLimitOverride = gasLimitOverride, onSelect = onGasLimitSelected)
+            AdvancedPage.ExternalRecipient ->
+                ExternalRecipientPage(
+                    externalRecipient = externalRecipient,
+                    onSelect = onExternalRecipientSelected,
+                )
         }
     }
 }
@@ -179,8 +202,10 @@ private fun AdvancedMenu(
     slippageValue: String,
     gasLimitValue: String,
     isGasLimitApplicable: Boolean,
+    externalRecipientValue: String,
     onSlippageClick: () -> Unit,
     onGasLimitClick: () -> Unit,
+    onExternalRecipientClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(top = 16.dp).clip(RoundedCornerShape(12.dp))
@@ -203,8 +228,48 @@ private fun AdvancedMenu(
         AdvancedSwapSettingRow(
             icon = R.drawable.ic_external_recipient,
             title = stringResource(R.string.swap_advanced_external_recipient_title),
-            value = stringResource(R.string.swap_advanced_value_off),
+            value = externalRecipientValue,
+            onClick = onExternalRecipientClick,
         )
+    }
+}
+
+@Composable
+private fun ExternalRecipientPage(externalRecipient: String?, onSelect: (String?) -> Unit) {
+    val state = rememberTextFieldState(externalRecipient.orEmpty())
+
+    LaunchedEffect(Unit) {
+        snapshotFlow { state.text.toString() }
+            .distinctUntilChanged()
+            .collect { text -> onSelect(text.trim().takeIf { it.isNotEmpty() }) }
+    }
+
+    Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+        Text(
+            text = stringResource(R.string.swap_external_recipient_helper),
+            style = Theme.brockmann.body.s.regular,
+            color = Theme.v2.colors.text.tertiary,
+            modifier = Modifier.padding(bottom = 16.dp),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            VsBasicTextField(
+                textFieldState = state,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.primary,
+                hint = stringResource(R.string.swap_external_recipient_hint),
+                lineLimits = TextFieldLineLimits.SingleLine,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                modifier = Modifier.weight(1f),
+            )
+            PasteIcon(
+                modifier = Modifier.padding(4.dp),
+                onPaste = { state.setTextAndPlaceCursorAtEnd(it.trim()) },
+            )
+        }
     }
 }
 

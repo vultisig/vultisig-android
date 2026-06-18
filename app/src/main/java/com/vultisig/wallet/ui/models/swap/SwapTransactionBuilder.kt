@@ -46,6 +46,7 @@ constructor(
         estimatedNetworkFeeTokenValue: TokenValue?,
         estimatedNetworkFeeFiatValue: FiatValue?,
         gasLimitOverride: Long? = null,
+        externalRecipient: String? = null,
     ): RegularSwapTransaction {
         val dstTokenValue = quote.expectedDstValue
 
@@ -91,6 +92,7 @@ constructor(
                     isApprovalRequired = isApprovalRequired,
                     memo = quote.data.memo,
                     gasFeeFiatValue = estimatedNetworkFeeFiatValue ?: gasFeeFiatValue,
+                    externalRecipient = externalRecipient,
                     payload =
                         SwapPayload.ThorChain(
                             THORChainSwapPayload(
@@ -165,6 +167,7 @@ constructor(
                     memo = quote.data.memo,
                     isApprovalRequired = isApprovalRequired,
                     gasFeeFiatValue = estimatedNetworkFeeFiatValue ?: gasFeeFiatValue,
+                    externalRecipient = externalRecipient,
                     payload =
                         SwapPayload.MayaChain(
                             THORChainSwapPayload(
@@ -223,6 +226,7 @@ constructor(
                     memo = quote.data.memo,
                     isApprovalRequired = false,
                     gasFeeFiatValue = estimatedNetworkFeeFiatValue ?: gasFeeFiatValue,
+                    externalRecipient = externalRecipient,
                     payload = SwapPayload.SwapKit(quote.data),
                 )
             }
@@ -296,6 +300,7 @@ constructor(
                     memo = null,
                     isApprovalRequired = isApprovalRequired,
                     gasFeeFiatValue = gasFeeFiatValue,
+                    externalRecipient = externalRecipient,
                     payload =
                         SwapPayload.EVM(
                             EVMSwapPayloadJson(

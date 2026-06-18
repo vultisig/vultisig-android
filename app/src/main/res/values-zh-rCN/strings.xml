@@ -1218,6 +1218,10 @@
     <string name="swap_slippage_helper">限制价格在执行取消前可变动的幅度。</string>
     <string name="swap_slippage_custom_hint">自定义</string>
     <string name="swap_gas_limit_helper">为此兑换设置手动燃料限制。留空则使用自动。</string>
+    <string name="swap_advanced_value_on">开启</string>
+    <string name="swap_external_recipient_helper">将兑换后的资金发送到其他地址。</string>
+    <string name="swap_external_recipient_hint">接收方地址</string>
+    <string name="verify_swap_recipient">接收方</string>
     <string name="keygen_benefit_1_template">消除单点故障</string>
     <string name="keygen_benefit_1_emphasized">多重身份验证</string>
     <string name="keygen_benefit_2_template">完全掌控您的资产</string>

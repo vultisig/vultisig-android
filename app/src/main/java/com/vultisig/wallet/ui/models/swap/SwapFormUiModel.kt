@@ -65,4 +65,6 @@ internal data class SwapFormUiModel(
     // Whether a custom gas limit applies to the current source chain (EVM only); the Gas Limit
     // row is disabled otherwise.
     val isGasLimitApplicable: Boolean = false,
+    // Optional external recipient address; null/blank = off (swap routes to the vault) (#4858).
+    val externalRecipient: String? = null,
 )

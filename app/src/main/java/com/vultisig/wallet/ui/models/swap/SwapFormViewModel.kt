@@ -79,6 +79,11 @@ constructor(
     // (#4858).
     private val gasLimitOverride = MutableStateFlow<Long?>(null)
 
+    // Optional external recipient address: when set, the swap output is routed here instead of the
+    // vault's own destination address. Passed to the pipeline (re-fetches a correctly-routed
+    // quote) and stamped on the built transaction so it is shown on the verify screen (#4858).
+    private val externalRecipient = MutableStateFlow<String?>(null)
+
     // Owns the gas / network-fee state and quote pipeline wiring (#4865). The ViewModel only reads
     // the resolved quote/fee values it exposes for swap(), the flip gesture, and percentage taps.
     private val quotePipeline =
@@ -90,6 +95,7 @@ constructor(
             selectedDst = selectedDst,
             referralCode = referralCode,
             slippageBps = slippageBps,
+            externalRecipient = externalRecipient,
             srcAmountState = srcAmountState,
             vaultId = { vaultId },
             showError = ::showError,
@@ -202,6 +208,7 @@ constructor(
                     estimatedNetworkFeeTokenValue = inputs.estimatedNetworkFeeTokenValue,
                     estimatedNetworkFeeFiatValue = inputs.estimatedNetworkFeeFiatValue,
                     gasLimitOverride = gasLimitOverride.value,
+                    externalRecipient = externalRecipient.value,
                 )
 
             swapTransactionRepository.addTransaction(transaction)
@@ -467,6 +474,16 @@ constructor(
     fun setGasLimit(units: Long?) {
         gasLimitOverride.value = units
         _uiState.update { it.copy(gasLimitOverride = units) }
+    }
+
+    /**
+     * Sets the external recipient address (blank/null = off). The swap output then routes to this
+     * address; it is re-quoted and shown on the verify screen before signing (#4858).
+     */
+    fun setExternalRecipient(address: String?) {
+        val normalized = address?.trim()?.takeIf { it.isNotEmpty() }
+        externalRecipient.value = normalized
+        _uiState.update { it.copy(externalRecipient = normalized) }
     }
 
     fun hideError() {

@@ -208,6 +208,7 @@ constructor(
         referral: String?,
         amount: BigDecimal,
         slippageBps: Int? = null,
+        externalRecipient: String? = null,
     ): QuoteFetchResult {
         val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
 
@@ -230,6 +231,7 @@ constructor(
                         referral,
                         amount,
                         slippageBps,
+                        externalRecipient,
                     )
 
                 SwapProvider.KYBER ->
@@ -268,6 +270,7 @@ constructor(
                         tokenValue,
                         vultBPSDiscount,
                         srcNativeToken,
+                        externalRecipient,
                     )
 
                 SwapProvider.SWAPKIT ->
@@ -280,6 +283,7 @@ constructor(
                         tokenValue,
                         vultBPSDiscount,
                         srcNativeToken,
+                        externalRecipient,
                     )
             }
 
@@ -383,6 +387,7 @@ constructor(
         currency: AppCurrency,
         amount: BigDecimal,
         slippageBps: Int? = null,
+        externalRecipient: String? = null,
     ): BestQuote {
         if (candidates.isEmpty()) {
             throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
@@ -410,6 +415,7 @@ constructor(
                                                 referral = candidate.referral,
                                                 amount = amount,
                                                 slippageBps = slippageBps,
+                                                externalRecipient = externalRecipient,
                                             ),
                                     )
                                 }
@@ -495,6 +501,7 @@ constructor(
         amount: BigDecimal,
         selectedSrcTokenTitle: String?,
         slippageBps: Int? = null,
+        externalRecipient: String? = null,
     ): QuoteResolution =
         try {
             QuoteResolution.Success(
@@ -509,6 +516,7 @@ constructor(
                     currency = currency,
                     amount = amount,
                     slippageBps = slippageBps,
+                    externalRecipient = externalRecipient,
                 )
             )
         } catch (e: SwapException) {
@@ -594,8 +602,15 @@ constructor(
         referral: String?,
         amount: BigDecimal,
         slippageBps: Int?,
+        externalRecipient: String?,
     ): Pair<SwapQuote, UiText> {
         val isAffiliate = true
+        // External recipient (#4858): route the swap output to a user-chosen address instead of
+        // the vault's own. THORChain/Maya carry it as the memo `destination` (baked by the node).
+        // It is part of the cache key so a recipient change re-fetches a correctly-routed quote.
+        val effectiveDst = externalRecipient?.takeIf { it.isNotBlank() }
+        val cacheDstAddress = effectiveDst ?: dstToken.address
+        val requestDstAddress = effectiveDst ?: dst.address.address
         val (quote, recommendedMinAmountToken) =
             if (provider == SwapProvider.MAYA) {
                 val mayaSwapQuote =
@@ -603,7 +618,7 @@ constructor(
                         srcToken.id,
                         dstToken.id,
                         srcToken.address,
-                        dstToken.address,
+                        cacheDstAddress,
                         srcTokenValue,
                         SwapProvider.MAYA,
                         slippageBps,
@@ -615,7 +630,7 @@ constructor(
                                     srcToken = srcToken,
                                     dstToken = dstToken,
                                     tokenValue = tokenValue,
-                                    dstAddress = dst.address.address,
+                                    dstAddress = requestDstAddress,
                                     isAffiliate = isAffiliate,
                                     bpsDiscount = vultBPSDiscount ?: 0,
                                     referralCode = referral.orEmpty(),
@@ -632,7 +647,7 @@ constructor(
                         srcToken.id,
                         dstToken.id,
                         srcToken.address,
-                        dstToken.address,
+                        cacheDstAddress,
                         srcTokenValue,
                         SwapProvider.THORCHAIN,
                         slippageBps,
@@ -644,7 +659,7 @@ constructor(
                                     srcToken = srcToken,
                                     dstToken = dstToken,
                                     tokenValue = tokenValue,
-                                    dstAddress = dst.address.address,
+                                    dstAddress = requestDstAddress,
                                     referralCode = referral.orEmpty(),
                                     bpsDiscount = vultBPSDiscount ?: 0,
                                     slippageBps = slippageBps,
@@ -796,13 +811,18 @@ constructor(
         tokenValue: TokenValue,
         vultBPSDiscount: Int?,
         srcNativeToken: Coin,
+        externalRecipient: String?,
     ): Pair<SwapQuote, UiText> {
+        // LI.FI routes to its `toAddress`, so it honours an external recipient; Jupiter does not,
+        // but it is skip-guarded upstream when a recipient is set, so it never reaches here with
+        // one (#4858).
+        val effectiveDst = externalRecipient?.takeIf { it.isNotBlank() }
         val swapQuote =
             getCachedQuoteOrFetch(
                 srcToken.id,
                 dstToken.id,
                 srcToken.address,
-                dstToken.address,
+                effectiveDst ?: dstToken.address,
                 srcTokenValue,
                 provider,
                 // LI.FI / Jupiter have no quote-time slippage override (#4858) — keep their cache
@@ -819,7 +839,7 @@ constructor(
                                     dstToken = dstToken,
                                     tokenValue = tokenValue,
                                     srcAddress = src.address.address,
-                                    dstAddress = dst.address.address,
+                                    dstAddress = effectiveDst ?: dst.address.address,
                                     bpsDiscount = vultBPSDiscount ?: 0,
                                 ),
                             )
@@ -882,7 +902,9 @@ constructor(
         tokenValue: TokenValue,
         vultBPSDiscount: Int?,
         srcNativeToken: Coin,
+        externalRecipient: String?,
     ): Pair<SwapQuote, UiText> {
+        val effectiveDst = externalRecipient?.takeIf { it.isNotBlank() }
         // iOS' SwapKit tier-discount formula at this milestone:
         //   max(0, min(1000, 50 - vultTierDiscount))
         // 50 bps base affiliate, clamped to 0..1000 (SwapKit's documented 0..10% range).
@@ -892,7 +914,7 @@ constructor(
                 srcToken.id,
                 dstToken.id,
                 srcToken.address,
-                dstToken.address,
+                effectiveDst ?: dstToken.address,
                 srcTokenValue,
                 SwapProvider.SWAPKIT,
                 // SwapKit uses a server-side slippage floor (no quote-time override, #4858) — keep
@@ -907,7 +929,7 @@ constructor(
                             dstToken = dstToken,
                             tokenValue = tokenValue,
                             srcAddress = src.address.address,
-                            dstAddress = dst.address.address,
+                            dstAddress = effectiveDst ?: dst.address.address,
                             affiliateBps = affiliateBps,
                         ),
                     )

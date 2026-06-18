@@ -889,6 +889,10 @@
     <string name="swap_slippage_helper">Begrenzt, wie stark sich der Preis vor der Ausführung ändern darf, bevor sie abgebrochen wird.</string>
     <string name="swap_slippage_custom_hint">Benutzerdefiniert</string>
     <string name="swap_gas_limit_helper">Legt ein manuelles Gaslimit für diesen Swap fest. Für Auto leer lassen.</string>
+    <string name="swap_advanced_value_on">Ein</string>
+    <string name="swap_external_recipient_helper">Sende die getauschten Mittel an eine andere Adresse.</string>
+    <string name="swap_external_recipient_hint">Empfängeradresse</string>
+    <string name="verify_swap_recipient">Empfänger</string>
     <string name="keygen_benefit_1_template">Beseitigung des Single Point of Failure</string>
     <string name="keygen_benefit_1_emphasized">Multifaktor-Sicherheit</string>
     <string name="keygen_benefit_2_template">Volle Kontrolle über Ihre Vermögenswerte</string>

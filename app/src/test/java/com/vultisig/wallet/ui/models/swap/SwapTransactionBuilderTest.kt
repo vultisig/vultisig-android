@@ -545,6 +545,44 @@ internal class SwapTransactionBuilderTest {
             assertEquals(BigInteger.valueOf(500_000), specific.gasLimit)
         }
 
+    @Test
+    fun `stamps the external recipient on the built transaction for verify-screen surfacing`() =
+        runTest {
+            val srcToken = coin(Chain.Bitcoin, "BTC", "bc1qsrc", 8, isNative = true)
+            val dstToken = coin(Chain.Ethereum, "ETH", "0xdst", 18, isNative = true)
+            val data =
+                mockk<THORChainSwapQuote>(relaxed = true).apply {
+                    every { router } returns null
+                    every { inboundAddress } returns "thor-inbound"
+                    every { memo } returns "=:ETH.ETH:0xExternal"
+                }
+            val quote =
+                SwapQuote.ThorChain(
+                    expectedDstValue = TokenValue(BigInteger.valueOf(100), dstToken),
+                    fees = TokenValue(BigInteger.valueOf(7), srcToken),
+                    expiredAt = Clock.System.now(),
+                    recommendedMinTokenValue = TokenValue(BigInteger.ZERO, srcToken),
+                    data = data,
+                )
+
+            val tx =
+                builder.build(
+                    vaultId = "vault-7",
+                    srcToken = srcToken,
+                    dstToken = dstToken,
+                    srcAddress = "bc1qsrc",
+                    srcTokenValue = TokenValue(BigInteger.valueOf(1_000), srcToken),
+                    quote = quote,
+                    gasFee = TokenValue(BigInteger.valueOf(5), srcToken),
+                    gasFeeFiatValue = FiatValue(BigDecimal("0.99"), "USD"),
+                    estimatedNetworkFeeTokenValue = null,
+                    estimatedNetworkFeeFiatValue = null,
+                    externalRecipient = "0xExternalRecipient",
+                )
+
+            assertEquals("0xExternalRecipient", tx.externalRecipient)
+        }
+
     /** Plan fixture whose [BlockChainSpecific] is a real [BlockChainSpecific.Ethereum]. */
     private fun ethereumSpecificAndUtxo(maxFeePerGasWei: BigInteger) =
         BlockChainSpecificAndUtxo(

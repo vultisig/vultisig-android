@@ -887,6 +887,10 @@
     <string name="swap_slippage_helper">Limita quanto il prezzo può variare prima che l\'esecuzione venga annullata.</string>
     <string name="swap_slippage_custom_hint">Personalizzato</string>
     <string name="swap_gas_limit_helper">Imposta un limite di gas manuale per questo swap. Lascia vuoto per usare Auto.</string>
+    <string name="swap_advanced_value_on">Attivato</string>
+    <string name="swap_external_recipient_helper">Invia i fondi scambiati a un altro indirizzo.</string>
+    <string name="swap_external_recipient_hint">Indirizzo del destinatario</string>
+    <string name="verify_swap_recipient">Destinatario</string>
     <string name="keygen_benefit_1_template">Rimozione del singolo punto di errore</string>
     <string name="keygen_benefit_1_emphasized">Sicurezza multifattoriale,</string>
     <string name="keygen_benefit_2_template">che ti dà il controllo completo sui tuoi asset</string>
