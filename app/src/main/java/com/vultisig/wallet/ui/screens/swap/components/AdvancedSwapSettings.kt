@@ -64,11 +64,18 @@ private fun formatSlippage(bps: Int?): String? =
  * @param slippageBps the current slippage tolerance in basis points, or null for "Auto".
  * @param onSlippageSelected invoked with the chosen tolerance (null = Auto) — hoisted to the
  *   ViewModel so the quote re-fetches with the new value.
+ * @param gasLimitOverride the current EVM gas-limit override (units), or null for "Auto".
+ * @param isGasLimitApplicable whether the source chain is EVM; the Gas Limit row is disabled
+ *   otherwise.
+ * @param onGasLimitSelected invoked with the chosen gas limit (null = Auto).
  */
 @Composable
 internal fun AdvancedSwapSettings(
     slippageBps: Int?,
     onSlippageSelected: (Int?) -> Unit,
+    gasLimitOverride: Long?,
+    isGasLimitApplicable: Boolean,
+    onGasLimitSelected: (Long?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var isSheetVisible by rememberSaveable { mutableStateOf(false) }
@@ -86,6 +93,9 @@ internal fun AdvancedSwapSettings(
         AdvancedSwapSettingsSheet(
             slippageBps = slippageBps,
             onSlippageSelected = onSlippageSelected,
+            gasLimitOverride = gasLimitOverride,
+            isGasLimitApplicable = isGasLimitApplicable,
+            onGasLimitSelected = onGasLimitSelected,
             onDismiss = { isSheetVisible = false },
         )
     }
@@ -94,12 +104,16 @@ internal fun AdvancedSwapSettings(
 private enum class AdvancedPage {
     Menu,
     Slippage,
+    GasLimit,
 }
 
 @Composable
 private fun AdvancedSwapSettingsSheet(
     slippageBps: Int?,
     onSlippageSelected: (Int?) -> Unit,
+    gasLimitOverride: Long?,
+    isGasLimitApplicable: Boolean,
+    onGasLimitSelected: (Long?) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var page by remember { mutableStateOf(AdvancedPage.Menu) }
@@ -111,24 +125,24 @@ private fun AdvancedSwapSettingsSheet(
                 when (page) {
                     AdvancedPage.Menu -> R.string.swap_advanced_sheet_title
                     AdvancedPage.Slippage -> R.string.swap_advanced_slippage_title
+                    AdvancedPage.GasLimit -> R.string.swap_advanced_gas_limit_title
                 }
             ),
         leftAction = {
-            when (page) {
-                AdvancedPage.Menu ->
-                    VsCircleButton(
-                        onClick = onDismiss,
-                        icon = R.drawable.x,
-                        size = VsCircleButtonSize.Small,
-                        type = VsCircleButtonType.Tertiary,
-                    )
-                AdvancedPage.Slippage ->
-                    VsCircleButton(
-                        onClick = { page = AdvancedPage.Menu },
-                        icon = R.drawable.ic_caret_left,
-                        size = VsCircleButtonSize.Small,
-                        type = VsCircleButtonType.Tertiary,
-                    )
+            if (page == AdvancedPage.Menu) {
+                VsCircleButton(
+                    onClick = onDismiss,
+                    icon = R.drawable.x,
+                    size = VsCircleButtonSize.Small,
+                    type = VsCircleButtonType.Tertiary,
+                )
+            } else {
+                VsCircleButton(
+                    onClick = { page = AdvancedPage.Menu },
+                    icon = R.drawable.ic_caret_left,
+                    size = VsCircleButtonSize.Small,
+                    type = VsCircleButtonType.Tertiary,
+                )
             }
         },
         rightAction = {
@@ -142,22 +156,32 @@ private fun AdvancedSwapSettingsSheet(
             }
         },
     ) {
+        val autoLabel = stringResource(R.string.swap_advanced_value_auto)
         when (page) {
             AdvancedPage.Menu ->
                 AdvancedMenu(
-                    slippageValue =
-                        formatSlippage(slippageBps)
-                            ?: stringResource(R.string.swap_advanced_value_auto),
+                    slippageValue = formatSlippage(slippageBps) ?: autoLabel,
+                    gasLimitValue = gasLimitOverride?.toString() ?: autoLabel,
+                    isGasLimitApplicable = isGasLimitApplicable,
                     onSlippageClick = { page = AdvancedPage.Slippage },
+                    onGasLimitClick = { page = AdvancedPage.GasLimit },
                 )
             AdvancedPage.Slippage ->
                 SlippagePage(slippageBps = slippageBps, onSelect = onSlippageSelected)
+            AdvancedPage.GasLimit ->
+                GasLimitPage(gasLimitOverride = gasLimitOverride, onSelect = onGasLimitSelected)
         }
     }
 }
 
 @Composable
-private fun AdvancedMenu(slippageValue: String, onSlippageClick: () -> Unit) {
+private fun AdvancedMenu(
+    slippageValue: String,
+    gasLimitValue: String,
+    isGasLimitApplicable: Boolean,
+    onSlippageClick: () -> Unit,
+    onGasLimitClick: () -> Unit,
+) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(top = 16.dp).clip(RoundedCornerShape(12.dp))
     ) {
@@ -171,7 +195,9 @@ private fun AdvancedMenu(slippageValue: String, onSlippageClick: () -> Unit) {
         AdvancedSwapSettingRow(
             icon = R.drawable.gas,
             title = stringResource(R.string.swap_advanced_gas_limit_title),
-            value = stringResource(R.string.swap_advanced_value_auto),
+            value = gasLimitValue,
+            enabled = isGasLimitApplicable,
+            onClick = onGasLimitClick,
         )
         AdvancedSwapSettingDivider()
         AdvancedSwapSettingRow(
@@ -291,29 +317,62 @@ private fun AdvancedSwapSettingRow(
     @DrawableRes icon: Int,
     title: String,
     value: String,
+    enabled: Boolean = true,
     onClick: () -> Unit = {},
 ) {
+    // Dim and disable rows whose setting does not apply to the current swap (e.g. gas limit on a
+    // non-EVM source).
+    val titleColor = if (enabled) Theme.v2.colors.text.secondary else Theme.v2.colors.text.tertiary
+    val valueColor = if (enabled) Theme.v2.colors.text.primary else Theme.v2.colors.text.tertiary
     Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(all = 24.dp),
+        modifier =
+            Modifier.fillMaxWidth()
+                .clickable(enabled = enabled, onClick = onClick)
+                .padding(all = 24.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        UiIcon(drawableResId = icon, size = 16.dp, tint = Theme.v2.colors.text.secondary)
+        UiIcon(drawableResId = icon, size = 16.dp, tint = titleColor)
         Text(
             text = title,
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.secondary,
+            color = titleColor,
             modifier = Modifier.weight(1f),
         )
+        Text(text = value, style = Theme.brockmann.body.s.medium, color = valueColor)
+        UiIcon(drawableResId = R.drawable.ic_chevron_right_small, size = 24.dp, tint = valueColor)
+    }
+}
+
+@Composable
+private fun GasLimitPage(gasLimitOverride: Long?, onSelect: (Long?) -> Unit) {
+    // Seed with the current override; blank means Auto (use the aggregator estimate).
+    val state = rememberTextFieldState(gasLimitOverride?.toString().orEmpty())
+
+    LaunchedEffect(Unit) {
+        snapshotFlow { state.text.toString() }
+            .distinctUntilChanged()
+            .collect { text -> onSelect(text.toLongOrNull()?.takeIf { it > 0 }) }
+    }
+
+    Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
         Text(
-            text = value,
+            text = stringResource(R.string.swap_gas_limit_helper),
+            style = Theme.brockmann.body.s.regular,
+            color = Theme.v2.colors.text.tertiary,
+            modifier = Modifier.padding(bottom = 16.dp),
+        )
+        VsBasicTextField(
+            textFieldState = state,
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
-        )
-        UiIcon(
-            drawableResId = R.drawable.ic_chevron_right_small,
-            size = 24.dp,
-            tint = Theme.v2.colors.text.primary,
+            hint = stringResource(R.string.swap_advanced_value_auto),
+            lineLimits = TextFieldLineLimits.SingleLine,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier =
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
         )
     }
 }

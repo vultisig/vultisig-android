@@ -605,6 +605,7 @@
     <string name="swap_advanced_value_off">Off</string>
     <string name="swap_slippage_helper">Limits how much the price can change before execution is canceled.</string>
     <string name="swap_slippage_custom_hint">Custom</string>
+    <string name="swap_gas_limit_helper">Sets a manual gas limit for this swap. Leave empty to use Auto.</string>
     <string name="select_asset_title">Select asset</string>
     <string name="select_asset_no_result">No result found.</string>
     <string name="select_chain_chain_title">Chain</string>

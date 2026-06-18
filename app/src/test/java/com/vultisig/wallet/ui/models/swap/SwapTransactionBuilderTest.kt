@@ -494,6 +494,57 @@ internal class SwapTransactionBuilderTest {
         assertEquals(EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT, payload.data.quote.tx.gas)
     }
 
+    @Test
+    fun `builds OneInch swap applying the gas-limit override to tx gas and the eth specific`() =
+        runTest {
+            val srcToken =
+                coin(Chain.Ethereum, "USDC", "0xsrc", 6, isNative = false, contract = "0xtoken")
+            val dstToken = coin(Chain.Ethereum, "ETH", "0xdst", 18, isNative = true)
+            coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+                ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(7))
+            val tx0 =
+                OneInchSwapTxJson(
+                    from = "0xsrc",
+                    to = "0xrouter",
+                    allowanceTarget = "0xproxy",
+                    gas = 21_000,
+                    data = "0xdata",
+                    value = "0",
+                    gasPrice = "1",
+                )
+            val quote =
+                SwapQuote.OneInch(
+                    expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
+                    fees = TokenValue(BigInteger.valueOf(9), dstToken),
+                    expiredAt = Clock.System.now(),
+                    data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
+                    provider = "1inch",
+                )
+
+            val tx =
+                builder.build(
+                    vaultId = "vault-6",
+                    srcToken = srcToken,
+                    dstToken = dstToken,
+                    srcAddress = "0xsrc",
+                    srcTokenValue = TokenValue(BigInteger.valueOf(1_000), srcToken),
+                    quote = quote,
+                    gasFee = TokenValue(BigInteger.valueOf(8), srcToken),
+                    gasFeeFiatValue = FiatValue(BigDecimal("2.00"), "USD"),
+                    estimatedNetworkFeeTokenValue = null,
+                    estimatedNetworkFeeFiatValue = null,
+                    gasLimitOverride = 500_000L,
+                )
+
+            // OneInchSwap signs with maxOf(tx.gas, ethSpecific.gasLimit), so the override must land
+            // on BOTH to be effective whether it raises or lowers the estimate (#4858).
+            val payload = assertIs<SwapPayload.EVM>(tx.payload)
+            assertEquals(500_000L, payload.data.quote.tx.gas)
+            val specific =
+                assertIs<BlockChainSpecific.Ethereum>(tx.blockChainSpecific.blockChainSpecific)
+            assertEquals(BigInteger.valueOf(500_000), specific.gasLimit)
+        }
+
     /** Plan fixture whose [BlockChainSpecific] is a real [BlockChainSpecific.Ethereum]. */
     private fun ethereumSpecificAndUtxo(maxFeePerGasWei: BigInteger) =
         BlockChainSpecificAndUtxo(

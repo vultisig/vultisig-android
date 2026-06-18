@@ -45,6 +45,7 @@ constructor(
         gasFeeFiatValue: FiatValue,
         estimatedNetworkFeeTokenValue: TokenValue?,
         estimatedNetworkFeeFiatValue: FiatValue?,
+        gasLimitOverride: Long? = null,
     ): RegularSwapTransaction {
         val dstTokenValue = quote.expectedDstValue
 
@@ -249,8 +250,24 @@ constructor(
                 // Aggregators can return tx.gas == 0; fall back to the standard EVM swap unit
                 // so the signed payload never carries a zero gas limit (matches
                 // SwapQuoteManager's fee path).
+                //
+                // A user gas-limit override (#4858) replaces the aggregator estimate. OneInchSwap
+                // signs with maxOf(tx.gas, ethSpecific.gasLimit), so set BOTH to the override —
+                // maxOf(x, x) = x — making it effective whether the user raises or lowers the
+                // limit. Auto (null/non-positive) keeps the estimate and the current behavior.
                 val gasLimit =
-                    quote.data.tx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT
+                    gasLimitOverride?.takeIf { it > 0L }
+                        ?: (quote.data.tx.gas.takeIf { it != 0L }
+                            ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT)
+                val hasGasOverride = gasLimitOverride != null && gasLimitOverride > 0L
+                val effectiveSpecificAndUtxo =
+                    if (specific is BlockChainSpecific.Ethereum && hasGasOverride) {
+                        specificAndUtxo.copy(
+                            blockChainSpecific = specific.copy(gasLimit = gasLimit.toBigInteger())
+                        )
+                    } else {
+                        specificAndUtxo
+                    }
                 val quoteData =
                     if (specific is BlockChainSpecific.Ethereum) {
                         quote.data.copy(
@@ -273,7 +290,7 @@ constructor(
                     dstAddress = dstAddress,
                     approveSpender = approveSpender,
                     expectedDstTokenValue = dstTokenValue,
-                    blockChainSpecific = specificAndUtxo,
+                    blockChainSpecific = effectiveSpecificAndUtxo,
                     estimatedFees = quote.fees,
                     gasFees = estimatedNetworkFeeTokenValue ?: gasFee,
                     memo = null,

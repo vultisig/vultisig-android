@@ -883,6 +883,7 @@
     <string name="swap_advanced_value_off">Uit</string>
     <string name="swap_slippage_helper">Beperkt hoeveel de prijs mag veranderen voordat de uitvoering wordt geannuleerd.</string>
     <string name="swap_slippage_custom_hint">Aangepast</string>
+    <string name="swap_gas_limit_helper">Stelt een handmatige gaslimiet in voor deze swap. Laat leeg voor Auto.</string>
     <string name="keygen_benefit_1_template">Verwijder het single point of failure</string>
     <string name="keygen_benefit_1_emphasized">Multifactorbeveiliging</string>
     <string name="keygen_benefit_2_template">Geeft volledige controle over uw vermogen</string>

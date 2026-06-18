@@ -60,4 +60,9 @@ internal data class SwapFormUiModel(
     val enableMaxAmount: Boolean = false,
     // Per-swap slippage tolerance in basis points, or null for "Auto" (#4858).
     val slippageBps: Int? = null,
+    // Per-swap EVM gas-limit override (units), or null for "Auto" (#4858).
+    val gasLimitOverride: Long? = null,
+    // Whether a custom gas limit applies to the current source chain (EVM only); the Gas Limit
+    // row is disabled otherwise.
+    val isGasLimitApplicable: Boolean = false,
 )

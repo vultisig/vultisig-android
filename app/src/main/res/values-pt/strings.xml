@@ -885,6 +885,7 @@
     <string name="swap_advanced_value_off">Desligado</string>
     <string name="swap_slippage_helper">Limita quanto o preço pode mudar antes de a execução ser cancelada.</string>
     <string name="swap_slippage_custom_hint">Personalizado</string>
+    <string name="swap_gas_limit_helper">Define um limite de gás manual para esta troca. Deixe vazio para usar Auto.</string>
     <string name="keygen_benefit_1_template">Removendo o ponto único de falha</string>
     <string name="keygen_benefit_1_emphasized">Segurança multifator</string>
     <string name="keygen_benefit_2_template">dando controlo total sobre os seus ativos</string>

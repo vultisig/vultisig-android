@@ -94,6 +94,7 @@ internal fun NavGraphBuilder.swapScreen(navController: NavHostController) {
             onSrcLongPressStarted = model::selectSrcNetworkPopup,
             onValidateAmount = model::validateAmount,
             onSlippageSelected = model::setSlippageBps,
+            onGasLimitSelected = model::setGasLimit,
         )
     }
 }
@@ -119,6 +120,7 @@ internal fun SwapScreen(
     onSrcLongPressStarted: (Offset) -> Unit = {},
     onValidateAmount: () -> Unit = {},
     onSlippageSelected: (Int?) -> Unit = {},
+    onGasLimitSelected: (Long?) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -322,6 +324,9 @@ internal fun SwapScreen(
                             AdvancedSwapSettings(
                                 slippageBps = state.slippageBps,
                                 onSlippageSelected = onSlippageSelected,
+                                gasLimitOverride = state.gasLimitOverride,
+                                isGasLimitApplicable = state.isGasLimitApplicable,
+                                onGasLimitSelected = onGasLimitSelected,
                             )
                             VsButton(
                                 label =

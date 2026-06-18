@@ -10,6 +10,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -73,6 +74,11 @@ constructor(
     // quote with the new tolerance (#4858).
     private val slippageBps = MutableStateFlow<Int?>(null)
 
+    // User EVM gas-limit override (units), or null for "Auto". Applied at transaction-build time
+    // (no quote re-fetch needed), so it stays in the ViewModel rather than the quote pipeline
+    // (#4858).
+    private val gasLimitOverride = MutableStateFlow<Long?>(null)
+
     // Owns the gas / network-fee state and quote pipeline wiring (#4865). The ViewModel only reads
     // the resolved quote/fee values it exposes for swap(), the flip gesture, and percentage taps.
     private val quotePipeline =
@@ -119,8 +125,27 @@ constructor(
             viewModelScope,
         )
         collectSelectedTokens()
+        observeGasLimitApplicability()
 
         quotePipeline.start()
+    }
+
+    /**
+     * Tracks whether a custom gas limit applies to the selected source chain (EVM only) and clears
+     * a stale override when switching to a non-EVM source, so it can never carry over to a chain
+     * that ignores it (#4858).
+     */
+    private fun observeGasLimitApplicability() {
+        viewModelScope.launch {
+            selectedSrc.collect { src ->
+                val applicable = src?.account?.token?.chain?.standard == TokenStandard.EVM
+                if (!applicable && gasLimitOverride.value != null) {
+                    gasLimitOverride.value = null
+                    _uiState.update { it.copy(gasLimitOverride = null) }
+                }
+                _uiState.update { it.copy(isGasLimitApplicable = applicable) }
+            }
+        }
     }
 
     fun back() {
@@ -176,6 +201,7 @@ constructor(
                     gasFeeFiatValue = inputs.gasFeeFiatValue,
                     estimatedNetworkFeeTokenValue = inputs.estimatedNetworkFeeTokenValue,
                     estimatedNetworkFeeFiatValue = inputs.estimatedNetworkFeeFiatValue,
+                    gasLimitOverride = gasLimitOverride.value,
                 )
 
             swapTransactionRepository.addTransaction(transaction)
@@ -432,6 +458,15 @@ constructor(
     fun setSlippageBps(bps: Int?) {
         slippageBps.value = bps
         _uiState.update { it.copy(slippageBps = bps) }
+    }
+
+    /**
+     * Sets the EVM gas-limit override in units, or null for "Auto". Applied when the swap
+     * transaction is built; no quote re-fetch is needed (#4858).
+     */
+    fun setGasLimit(units: Long?) {
+        gasLimitOverride.value = units
+        _uiState.update { it.copy(gasLimitOverride = units) }
     }
 
     fun hideError() {
