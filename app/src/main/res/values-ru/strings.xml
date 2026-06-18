@@ -879,6 +879,9 @@
     <string name="tx_overview_screen_tx_from">Из</string>
     <string name="swap_swap_button">Обмен</string>
     <string name="swap_swap_button_fill_in_amount">Введите сумму</string>
+    <string name="swap_mode_market">Рынок</string>
+    <string name="swap_mode_limit">Лимит</string>
+    <string name="swap_limit_coming_soon">Лимитные ордера скоро</string>
     <string name="keygen_benefit_1_template">Удаление единой точки отказа</string>
     <string name="keygen_benefit_1_emphasized">Многофакторная безопасность</string>
     <string name="keygen_benefit_2_template">предоставляет полный контроль над вашими активами</string>

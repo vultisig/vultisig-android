@@ -876,6 +876,9 @@
     <string name="tx_overview_screen_tx_from">Von</string>
     <string name="swap_swap_button">Tauschen</string>
     <string name="swap_swap_button_fill_in_amount">Betrag eingeben</string>
+    <string name="swap_mode_market">Markt</string>
+    <string name="swap_mode_limit">Limit</string>
+    <string name="swap_limit_coming_soon">Limit-Orders bald verfügbar</string>
     <string name="keygen_benefit_1_template">Beseitigung des Single Point of Failure</string>
     <string name="keygen_benefit_1_emphasized">Multifaktor-Sicherheit</string>
     <string name="keygen_benefit_2_template">Volle Kontrolle über Ihre Vermögenswerte</string>

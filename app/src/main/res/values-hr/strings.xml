@@ -879,6 +879,9 @@
     <string name="tx_overview_screen_tx_from">Od</string>
     <string name="swap_swap_button">Zamijeni</string>
     <string name="swap_swap_button_fill_in_amount">Upišite iznos</string>
+    <string name="swap_mode_market">Tržište</string>
+    <string name="swap_mode_limit">Limit</string>
+    <string name="swap_limit_coming_soon">Limit nalozi uskoro</string>
     <string name="keygen_benefit_1_template">Uklanjanje jedinstvene točke kvara</string>
     <string name="keygen_benefit_1_emphasized">Višefaktorska sigurnost,</string>
     <string name="keygen_benefit_2_template">dajući potpunu kontrolu nad vašom imovinom</string>

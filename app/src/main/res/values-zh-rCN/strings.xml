@@ -1205,6 +1205,9 @@
     <string name="tx_overview_screen_tx_from">从</string>
     <string name="swap_swap_button">交换</string>
     <string name="swap_swap_button_fill_in_amount">填写金额</string>
+    <string name="swap_mode_market">市价</string>
+    <string name="swap_mode_limit">限价</string>
+    <string name="swap_limit_coming_soon">限价单即将推出</string>
     <string name="keygen_benefit_1_template">消除单点故障</string>
     <string name="keygen_benefit_1_emphasized">多重身份验证</string>
     <string name="keygen_benefit_2_template">完全掌控您的资产</string>

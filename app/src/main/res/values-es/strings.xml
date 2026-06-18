@@ -874,6 +874,9 @@
     <string name="tx_overview_screen_tx_from">De</string>
     <string name="swap_swap_button">Intercambiar</string>
     <string name="swap_swap_button_fill_in_amount">Ingresa la cantidad</string>
+    <string name="swap_mode_market">Mercado</string>
+    <string name="swap_mode_limit">Límite</string>
+    <string name="swap_limit_coming_soon">Órdenes de límite próximamente</string>
     <string name="keygen_benefit_1_template">Eliminando el único punto de fallo</string>
     <string name="keygen_benefit_1_emphasized">Seguridad multifactor</string>
     <string name="keygen_benefit_2_template">Control total sobre tus activos</string>

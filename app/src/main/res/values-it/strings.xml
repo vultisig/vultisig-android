@@ -874,6 +874,9 @@
     <string name="tx_overview_screen_tx_from">Da</string>
     <string name="swap_swap_button">Scambia</string>
     <string name="swap_swap_button_fill_in_amount">Inserisci l\'importo</string>
+    <string name="swap_mode_market">Mercato</string>
+    <string name="swap_mode_limit">Limite</string>
+    <string name="swap_limit_coming_soon">Ordini limite in arrivo</string>
     <string name="keygen_benefit_1_template">Rimozione del singolo punto di errore</string>
     <string name="keygen_benefit_1_emphasized">Sicurezza multifattoriale,</string>
     <string name="keygen_benefit_2_template">che ti dà il controllo completo sui tuoi asset</string>
