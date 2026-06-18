@@ -110,6 +110,18 @@ internal class RiveInitializationTest {
     }
 
     @Test
+    fun `init is skipped when the in-flight marker commit fails`() {
+        // A failed durable write (full disk, I/O error, thread interruption) means the crash-loop
+        // guard could not record this attempt, so running Rive.init unguarded risks a crash loop.
+        every { editor.commit() } returns false
+
+        initializeRive(context)
+
+        isRiveInitialized.shouldBeFalse()
+        verify(exactly = 0) { Rive.init(any(), any()) }
+    }
+
+    @Test
     fun `init is skipped when stored version matches current version from a previous crash`() {
         // We cannot kill the JVM inside a unit test, so we simulate the post-crash state directly:
         // the stored version equals the current versionCode, which is exactly the on-disk shape a

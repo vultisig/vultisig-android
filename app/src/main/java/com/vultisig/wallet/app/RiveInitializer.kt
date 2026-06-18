@@ -54,12 +54,24 @@ internal fun initializeRive(context: Context) {
         return
     }
     // commit() (not apply()) so the marker is durable on disk before we cross the JNI boundary —
-    // an async write would race a SIGABRT and lose the signal we rely on next launch.
-    prefs.edit().putInt(KEY_RIVE_INIT_IN_FLIGHT_VERSION, BuildConfig.VERSION_CODE).commit()
+    // an async write would race a SIGABRT and lose the signal we rely on next launch. If the
+    // durable write fails (full disk, I/O error, thread interruption) we skip Rive.init entirely:
+    // the guard could not detect a native crash next launch, so running unguarded risks a crash
+    // loop. We leave isRiveInitialized false and composables fall back gracefully.
+    val committed =
+        prefs.edit().putInt(KEY_RIVE_INIT_IN_FLIGHT_VERSION, BuildConfig.VERSION_CODE).commit()
+    if (!committed) {
+        Timber.w("Skipping Rive init: failed to durably persist the in-flight crash-loop marker")
+        return
+    }
     try {
         Rive.init(context)
         isRiveInitialized = true
-    } catch (e: Throwable) {
+    } catch (e: LinkageError) {
+        // Native library load/link failure (e.g. UnsatisfiedLinkError) — Rive can't run on this
+        // device. Catchable, so the finally clears the marker and Rive is retried next launch.
+        Timber.e(e, "Failed to load Rive SDK native components, animations will be disabled")
+    } catch (e: RuntimeException) {
         Timber.e(e, "Failed to initialize Rive SDK, animations will be disabled")
     } finally {
         // apply() is fine on the clear path — we only need durability for the *set* (which races
