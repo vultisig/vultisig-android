@@ -25,6 +25,7 @@ interface LiFiChainApi {
         fromAddress: String,
         toAddress: String,
         bpsDiscount: Int,
+        slippageBps: Int? = null,
     ): LiFiSwapQuoteDeserialized
 
     companion object {
@@ -65,6 +66,7 @@ constructor(
         fromAddress: String,
         toAddress: String,
         bpsDiscount: Int,
+        slippageBps: Int?,
     ): LiFiSwapQuoteDeserialized {
         val isSolanaChainInvolved =
             fromChain.toLong() == Chain.Solana.oneInchChainId() ||
@@ -87,6 +89,8 @@ constructor(
                 parameter("fromAmount", fromAmount)
                 parameter("fromAddress", fromAddress)
                 parameter("toAddress", toAddress)
+                // LI.FI takes slippage as a fraction (0.01 = 1%); omitted = LI.FI's own default.
+                slippageBps?.let { parameter("slippage", it / 10_000.0) }
                 if (!isSolanaChainInvolved) {
                     parameter("integrator", LiFiChainApi.INTEGRATOR_ACCOUNT)
                     parameter("fee", updatedFeeIntegrator)

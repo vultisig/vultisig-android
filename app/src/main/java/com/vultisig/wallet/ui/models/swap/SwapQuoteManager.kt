@@ -270,7 +270,7 @@ constructor(
                         tokenValue,
                         vultBPSDiscount,
                         srcNativeToken,
-                        externalRecipient,
+                        slippageBps,
                     )
 
                 SwapProvider.SWAPKIT ->
@@ -283,7 +283,6 @@ constructor(
                         tokenValue,
                         vultBPSDiscount,
                         srcNativeToken,
-                        externalRecipient,
                     )
             }
 
@@ -811,23 +810,20 @@ constructor(
         tokenValue: TokenValue,
         vultBPSDiscount: Int?,
         srcNativeToken: Coin,
-        externalRecipient: String?,
+        slippageBps: Int?,
     ): Pair<SwapQuote, UiText> {
-        // LI.FI routes to its `toAddress`, so it honours an external recipient; Jupiter does not,
-        // but it is skip-guarded upstream when a recipient is set, so it never reaches here with
-        // one (#4858).
-        val effectiveDst = externalRecipient?.takeIf { it.isNotBlank() }
+        // LI.FI accepts a quote-time slippage override (fraction); Jupiter does not, so its cache
+        // key stays slippage-agnostic (#4858).
+        val liFiSlippageBps = slippageBps.takeIf { provider == SwapProvider.LIFI }
         val swapQuote =
             getCachedQuoteOrFetch(
                 srcToken.id,
                 dstToken.id,
                 srcToken.address,
-                effectiveDst ?: dstToken.address,
+                dstToken.address,
                 srcTokenValue,
                 provider,
-                // LI.FI / Jupiter have no quote-time slippage override (#4858) — keep their cache
-                // key slippage-agnostic so changing slippage never needlessly invalidates them.
-                slippageBps = null,
+                slippageBps = liFiSlippageBps,
             ) {
                 val apiQuote =
                     if (provider == SwapProvider.LIFI)
@@ -839,8 +835,9 @@ constructor(
                                     dstToken = dstToken,
                                     tokenValue = tokenValue,
                                     srcAddress = src.address.address,
-                                    dstAddress = effectiveDst ?: dst.address.address,
+                                    dstAddress = dst.address.address,
                                     bpsDiscount = vultBPSDiscount ?: 0,
+                                    slippageBps = slippageBps,
                                 ),
                             )
                             .expectEvm(SwapProvider.LIFI)
@@ -902,9 +899,7 @@ constructor(
         tokenValue: TokenValue,
         vultBPSDiscount: Int?,
         srcNativeToken: Coin,
-        externalRecipient: String?,
     ): Pair<SwapQuote, UiText> {
-        val effectiveDst = externalRecipient?.takeIf { it.isNotBlank() }
         // iOS' SwapKit tier-discount formula at this milestone:
         //   max(0, min(1000, 50 - vultTierDiscount))
         // 50 bps base affiliate, clamped to 0..1000 (SwapKit's documented 0..10% range).
@@ -914,7 +909,7 @@ constructor(
                 srcToken.id,
                 dstToken.id,
                 srcToken.address,
-                effectiveDst ?: dstToken.address,
+                dstToken.address,
                 srcTokenValue,
                 SwapProvider.SWAPKIT,
                 // SwapKit uses a server-side slippage floor (no quote-time override, #4858) — keep
@@ -929,7 +924,7 @@ constructor(
                             dstToken = dstToken,
                             tokenValue = tokenValue,
                             srcAddress = src.address.address,
-                            dstAddress = effectiveDst ?: dst.address.address,
+                            dstAddress = dst.address.address,
                             affiliateBps = affiliateBps,
                         ),
                     )

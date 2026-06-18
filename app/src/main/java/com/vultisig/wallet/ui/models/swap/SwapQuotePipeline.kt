@@ -172,18 +172,18 @@ internal class SwapQuotePipeline(
             val tokenValue = convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
 
             val allEligibleProviders = swapQuoteRepository.getEligibleProviders(srcToken, dstToken)
-            // External recipient (#4858): 1inch / Kyber / Jupiter sign calldata that pays the
-            // sender and cannot route to a different address, so drop them when a recipient is set
-            // — never silently misroute funds. THORChain / Maya / LI.FI / SwapKit route to the
-            // chosen address.
+            // External recipient (#4858): only the native protocols (THORChain / Maya) route the
+            // output to a custom address — they carry it as the memo `destination`. Every general
+            // aggregator (1inch / Kyber / Jupiter / LI.FI / SwapKit) is dropped when a recipient is
+            // set, never silently misrouting funds. This mirrors the cross-platform decision
+            // (vultisig-sdk#757 / vultisig-windows#4152): threading a recipient through the
+            // aggregators is a deferred follow-up there too.
             val eligibleProviders =
                 if (externalRecipient.isNullOrBlank()) {
                     allEligibleProviders
                 } else {
-                    allEligibleProviders.filterNot {
-                        it == SwapProvider.ONEINCH ||
-                            it == SwapProvider.KYBER ||
-                            it == SwapProvider.JUPITER
+                    allEligibleProviders.filter {
+                        it == SwapProvider.THORCHAIN || it == SwapProvider.MAYA
                     }
                 }
             if (eligibleProviders.isEmpty()) {
