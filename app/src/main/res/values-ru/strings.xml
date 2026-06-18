@@ -882,6 +882,13 @@
     <string name="swap_mode_market">Рынок</string>
     <string name="swap_mode_limit">Лимит</string>
     <string name="swap_limit_coming_soon">Лимитные ордера скоро</string>
+    <string name="swap_advanced_settings">Дополнительные настройки</string>
+    <string name="swap_advanced_sheet_title">Расширенный обмен</string>
+    <string name="swap_advanced_slippage_title">Допустимое проскальзывание</string>
+    <string name="swap_advanced_gas_limit_title">Предел газа</string>
+    <string name="swap_advanced_external_recipient_title">Использовать внешнего получателя</string>
+    <string name="swap_advanced_value_auto">Авто</string>
+    <string name="swap_advanced_value_off">Выкл.</string>
     <string name="keygen_benefit_1_template">Удаление единой точки отказа</string>
     <string name="keygen_benefit_1_emphasized">Многофакторная безопасность</string>
     <string name="keygen_benefit_2_template">предоставляет полный контроль над вашими активами</string>

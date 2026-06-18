@@ -55,6 +55,7 @@ import com.vultisig.wallet.ui.components.v2.utils.toPx
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.swap.components.AdvancedSwapSettings
 import com.vultisig.wallet.ui.screens.swap.components.DstTokenInput
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.screens.swap.components.PercentagePicker
@@ -315,29 +316,32 @@ internal fun SwapScreen(
                             onSelectSrcPercentage = onSelectSrcPercentage,
                         )
                     } else {
-                        VsButton(
-                            label =
-                                if (srcAmountTextFieldState.text.isEmpty()) {
-                                    stringResource(R.string.swap_swap_button_fill_in_amount)
-                                } else {
-                                    stringResource(R.string.swap_swap_button)
+                        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
+                            AdvancedSwapSettings()
+                            VsButton(
+                                label =
+                                    if (srcAmountTextFieldState.text.isEmpty()) {
+                                        stringResource(R.string.swap_swap_button_fill_in_amount)
+                                    } else {
+                                        stringResource(R.string.swap_swap_button)
+                                    },
+                                variant = VsButtonVariant.Primary,
+                                state =
+                                    if (state.isSwapDisabled || state.isLoading) {
+                                        VsButtonState.Disabled
+                                    } else {
+                                        VsButtonState.Enabled
+                                    },
+                                onClick = {
+                                    focusManager.clearFocus(true)
+                                    onSwap()
                                 },
-                            variant = VsButtonVariant.Primary,
-                            state =
-                                if (state.isSwapDisabled || state.isLoading) {
-                                    VsButtonState.Disabled
-                                } else {
-                                    VsButtonState.Enabled
-                                },
-                            onClick = {
-                                focusManager.clearFocus(true)
-                                onSwap()
-                            },
-                            modifier =
-                                Modifier.fillMaxWidth()
-                                    .padding(vertical = 12.dp, horizontal = 24.dp)
-                                    .testTag("SwapFormScreen.swapButton"),
-                        )
+                                modifier =
+                                    Modifier.fillMaxWidth()
+                                        .padding(vertical = 12.dp)
+                                        .testTag("SwapFormScreen.swapButton"),
+                            )
+                        }
                     }
                 }
             }

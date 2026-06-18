@@ -876,6 +876,13 @@
     <string name="swap_mode_market">Mercado</string>
     <string name="swap_mode_limit">Limite</string>
     <string name="swap_limit_coming_soon">Ordens limite em breve</string>
+    <string name="swap_advanced_settings">Configurações avançadas</string>
+    <string name="swap_advanced_sheet_title">Troca avançada</string>
+    <string name="swap_advanced_slippage_title">Tolerância de derrapagem</string>
+    <string name="swap_advanced_gas_limit_title">Limite de Gás</string>
+    <string name="swap_advanced_external_recipient_title">Usar destinatário externo</string>
+    <string name="swap_advanced_value_auto">Auto</string>
+    <string name="swap_advanced_value_off">Desligado</string>
     <string name="keygen_benefit_1_template">Removendo o ponto único de falha</string>
     <string name="keygen_benefit_1_emphasized">Segurança multifator</string>
     <string name="keygen_benefit_2_template">dando controlo total sobre os seus ativos</string>

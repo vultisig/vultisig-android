@@ -1208,6 +1208,13 @@
     <string name="swap_mode_market">市价</string>
     <string name="swap_mode_limit">限价</string>
     <string name="swap_limit_coming_soon">限价单即将推出</string>
+    <string name="swap_advanced_settings">高级设置</string>
+    <string name="swap_advanced_sheet_title">高级兑换</string>
+    <string name="swap_advanced_slippage_title">滑点容差</string>
+    <string name="swap_advanced_gas_limit_title">燃料限制</string>
+    <string name="swap_advanced_external_recipient_title">使用外部接收方</string>
+    <string name="swap_advanced_value_auto">自动</string>
+    <string name="swap_advanced_value_off">关闭</string>
     <string name="keygen_benefit_1_template">消除单点故障</string>
     <string name="keygen_benefit_1_emphasized">多重身份验证</string>
     <string name="keygen_benefit_2_template">完全掌控您的资产</string>

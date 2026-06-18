@@ -596,6 +596,13 @@
     <string name="swap_mode_market">Market</string>
     <string name="swap_mode_limit">Limit</string>
     <string name="swap_limit_coming_soon">Limit orders coming soon</string>
+    <string name="swap_advanced_settings">Advanced Settings</string>
+    <string name="swap_advanced_sheet_title">Advanced swap</string>
+    <string name="swap_advanced_slippage_title">Slippage Tolerance</string>
+    <string name="swap_advanced_gas_limit_title">Gas Limit</string>
+    <string name="swap_advanced_external_recipient_title">Use External Recipient</string>
+    <string name="swap_advanced_value_auto">Auto</string>
+    <string name="swap_advanced_value_off">Off</string>
     <string name="select_asset_title">Select asset</string>
     <string name="select_asset_no_result">No result found.</string>
     <string name="select_chain_chain_title">Chain</string>

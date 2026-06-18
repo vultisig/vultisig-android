@@ -874,6 +874,13 @@
     <string name="swap_mode_market">Markt</string>
     <string name="swap_mode_limit">Limiet</string>
     <string name="swap_limit_coming_soon">Limietorders binnenkort</string>
+    <string name="swap_advanced_settings">Geavanceerde instellingen</string>
+    <string name="swap_advanced_sheet_title">Geavanceerde swap</string>
+    <string name="swap_advanced_slippage_title">Slippage-tolerantie</string>
+    <string name="swap_advanced_gas_limit_title">Gaslimiet</string>
+    <string name="swap_advanced_external_recipient_title">Externe ontvanger gebruiken</string>
+    <string name="swap_advanced_value_auto">Auto</string>
+    <string name="swap_advanced_value_off">Uit</string>
     <string name="keygen_benefit_1_template">Verwijder het single point of failure</string>
     <string name="keygen_benefit_1_emphasized">Multifactorbeveiliging</string>
     <string name="keygen_benefit_2_template">Geeft volledige controle over uw vermogen</string>
