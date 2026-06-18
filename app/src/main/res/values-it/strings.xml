@@ -810,6 +810,10 @@
     <string name="migration_onboarding_step_1_text_end">e firma più velocemente che mai</string>
     <string name="error_view_default_title">Qualcosa è andato storto</string>
     <string name="error_view_default_description">Si è verificato un errore</string>
+    <string name="keygen_error_timeout_title">Connessione scaduta</string>
+    <string name="keygen_error_timeout_description">Impossibile raggiungere il server in tempo. Controlla la tua connessione e riprova.</string>
+    <string name="keygen_error_network_title">Problema di connessione</string>
+    <string name="keygen_error_network_description">Impossibile raggiungere il server. Controlla la tua connessione e riprova.</string>
     <string name="keygen_benefit_5_template">Non farti più truffare</string>
     <string name="keygen_benefit_5_emphasized">Un portafoglio seedless,</string>
     <string name="keygen_vault_created_success_part_1">Vault creato</string>

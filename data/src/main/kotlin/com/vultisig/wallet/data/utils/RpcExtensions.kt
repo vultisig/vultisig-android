@@ -90,20 +90,66 @@ private fun findValueRecursively(element: JsonElement, key: String): String? {
 }
 
 /**
+ * Categorises a [NetworkException] so callers can show a cause-specific message instead of a single
+ * generic "something went wrong". Transport failures are no longer collapsed into one bucket: a
+ * read/socket timeout ([Timeout]) is distinct from a genuine lack of connectivity
+ * ([NoConnectivity]).
+ */
+enum class NetworkErrorKind {
+    /** Read/socket timeout — the server was reachable but did not respond in time. */
+    Timeout,
+    /** No connectivity — DNS resolution failed / host unreachable, typically offline. */
+    NoConnectivity,
+    /** Other transport-level failure (connection refused, SSL handshake, generic I/O). */
+    Transport,
+    /** The server returned an HTTP error response (4xx / 5xx). */
+    Http,
+}
+
+/**
  * Represents a network-related error — either a transport failure or an HTTP error response.
  *
  * [httpStatusCode] semantics:
  * - `0` — transport-level failure (no HTTP response was received). Thrown by
  *   [HttpClientConfigurator][com.vultisig.wallet.data.networkutils.HttpClientConfigurator]'s
  *   `HttpCallValidator` when an [java.io.IOException] occurs (DNS failure, timeout, SSL error,
- *   etc.).
+ *   etc.). [kind] then carries the specific transport cause.
  * - `4xx / 5xx` — the server returned an error response. Thrown by [bodyOrThrow] when the HTTP
- *   status is not successful.
+ *   status is not successful; [kind] defaults to [NetworkErrorKind.Http].
  *
  * Extends [RuntimeException] so it is caught by existing `catch(Exception)` blocks.
  */
 class NetworkException(
     val httpStatusCode: Int,
     override val message: String,
+    val kind: NetworkErrorKind = NetworkErrorKind.Http,
     cause: Throwable? = null,
-) : RuntimeException(message, cause)
+) : RuntimeException(message, cause) {
+    /**
+     * Backwards-compatible constructor for callers that don't classify the failure (HTTP errors).
+     */
+    constructor(
+        httpStatusCode: Int,
+        message: String,
+        cause: Throwable?,
+    ) : this(httpStatusCode, message, NetworkErrorKind.Http, cause)
+}
+
+/**
+ * Walks this throwable's cause chain and returns the first transport-level [NetworkErrorKind] it
+ * can identify, or `null` when the failure isn't a recognisable network/transport error (e.g. a
+ * server HTTP error or an application bug). Used by the UI layer to pick a cause-specific error
+ * message.
+ */
+fun Throwable.toNetworkErrorKind(): NetworkErrorKind? {
+    var current: Throwable? = this
+    while (current != null) {
+        when (current) {
+            is NetworkException -> if (current.kind != NetworkErrorKind.Http) return current.kind
+            is java.net.SocketTimeoutException -> return NetworkErrorKind.Timeout
+            is java.net.UnknownHostException -> return NetworkErrorKind.NoConnectivity
+        }
+        current = current.cause
+    }
+    return null
+}
