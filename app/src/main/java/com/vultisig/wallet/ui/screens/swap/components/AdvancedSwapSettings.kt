@@ -20,7 +20,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -57,11 +56,36 @@ private fun formatSlippage(bps: Int?): String? =
     bps?.let { "${BigDecimal(it).movePointLeft(2).stripTrailingZeros().toPlainString()}%" }
 
 /**
- * "Advanced Settings" entry above the Swap button plus the Advanced swap sheet (#4858).
+ * The centered, underlined "Advanced Settings" entry shown above the Swap button.
  *
- * The sheet is a single bottom sheet that pages between the row menu and the slippage selector
- * (mirroring the Figma back-navigation) rather than stacking modals. Gas limit and external
- * recipient rows are still inert; their selectors are wired in later phases.
+ * The sheet it opens ([AdvancedSwapSettingsSheet]) is hosted separately at the screen-content level
+ * rather than next to this link — the link lives in the bottom bar, whose content is swapped by an
+ * `AnimatedContent` on keyboard visibility, and hosting the sheet there would unmount it (closing
+ * it) the moment a field inside it opens the keyboard (#4858).
+ */
+@Composable
+internal fun AdvancedSettingsLink(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Text(
+        text = stringResource(R.string.swap_advanced_settings),
+        style = Theme.brockmann.supplementary.caption,
+        color = Theme.v2.colors.text.tertiary,
+        textAlign = TextAlign.Center,
+        textDecoration = TextDecoration.Underline,
+        modifier = modifier.fillMaxWidth().clickable(onClick = onClick).padding(8.dp),
+    )
+}
+
+private enum class AdvancedPage {
+    Menu,
+    Slippage,
+    GasLimit,
+    ExternalRecipient,
+}
+
+/**
+ * The Advanced swap sheet (#4858): a single bottom sheet that pages between the row menu and the
+ * slippage / gas-limit / external-recipient selectors (mirroring the Figma back-navigation) rather
+ * than stacking modals.
  *
  * @param slippageBps the current slippage tolerance in basis points, or null for "Auto".
  * @param onSlippageSelected invoked with the chosen tolerance (null = Auto) — hoisted to the
@@ -74,50 +98,7 @@ private fun formatSlippage(bps: Int?): String? =
  * @param onExternalRecipientSelected invoked with the entered address (null/blank = off).
  */
 @Composable
-internal fun AdvancedSwapSettings(
-    slippageBps: Int?,
-    onSlippageSelected: (Int?) -> Unit,
-    gasLimitOverride: Long?,
-    isGasLimitApplicable: Boolean,
-    onGasLimitSelected: (Long?) -> Unit,
-    externalRecipient: String?,
-    onExternalRecipientSelected: (String?) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    var isSheetVisible by rememberSaveable { mutableStateOf(false) }
-
-    Text(
-        text = stringResource(R.string.swap_advanced_settings),
-        style = Theme.brockmann.supplementary.caption,
-        color = Theme.v2.colors.text.tertiary,
-        textAlign = TextAlign.Center,
-        textDecoration = TextDecoration.Underline,
-        modifier = modifier.fillMaxWidth().clickable { isSheetVisible = true }.padding(8.dp),
-    )
-
-    if (isSheetVisible) {
-        AdvancedSwapSettingsSheet(
-            slippageBps = slippageBps,
-            onSlippageSelected = onSlippageSelected,
-            gasLimitOverride = gasLimitOverride,
-            isGasLimitApplicable = isGasLimitApplicable,
-            onGasLimitSelected = onGasLimitSelected,
-            externalRecipient = externalRecipient,
-            onExternalRecipientSelected = onExternalRecipientSelected,
-            onDismiss = { isSheetVisible = false },
-        )
-    }
-}
-
-private enum class AdvancedPage {
-    Menu,
-    Slippage,
-    GasLimit,
-    ExternalRecipient,
-}
-
-@Composable
-private fun AdvancedSwapSettingsSheet(
+internal fun AdvancedSwapSettingsSheet(
     slippageBps: Int?,
     onSlippageSelected: (Int?) -> Unit,
     gasLimitOverride: Long?,

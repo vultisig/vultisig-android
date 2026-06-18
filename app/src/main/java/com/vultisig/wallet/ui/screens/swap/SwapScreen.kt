@@ -55,7 +55,8 @@ import com.vultisig.wallet.ui.components.v2.utils.toPx
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.swap.components.AdvancedSwapSettings
+import com.vultisig.wallet.ui.screens.swap.components.AdvancedSettingsLink
+import com.vultisig.wallet.ui.screens.swap.components.AdvancedSwapSettingsSheet
 import com.vultisig.wallet.ui.screens.swap.components.DstTokenInput
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.screens.swap.components.PercentagePicker
@@ -130,6 +131,11 @@ internal fun SwapScreen(
     // ViewModel has no stake in it yet. Market hosts the existing swap form; Limit is a
     // placeholder.
     var selectedMode by rememberSaveable { mutableStateOf(SwapMode.Market) }
+
+    // Hosted here (not in the bottom bar) so the Advanced sheet survives the bottom bar's
+    // keyboard-driven AnimatedContent swap — otherwise opening a field's keyboard would unmount and
+    // close the sheet (#4858).
+    var showAdvancedSettings by rememberSaveable { mutableStateOf(false) }
 
     val interactionSource = remember { MutableInteractionSource() }
     val isSrcAmountFocused by interactionSource.collectIsFocusedAsState()
@@ -303,6 +309,19 @@ internal fun SwapScreen(
                         )
                     }
                 }
+
+                if (showAdvancedSettings && selectedMode == SwapMode.Market) {
+                    AdvancedSwapSettingsSheet(
+                        slippageBps = state.slippageBps,
+                        onSlippageSelected = onSlippageSelected,
+                        gasLimitOverride = state.gasLimitOverride,
+                        isGasLimitApplicable = state.isGasLimitApplicable,
+                        onGasLimitSelected = onGasLimitSelected,
+                        externalRecipient = state.externalRecipient,
+                        onExternalRecipientSelected = onExternalRecipientSelected,
+                        onDismiss = { showAdvancedSettings = false },
+                    )
+                }
             }
         },
         bottomBar = {
@@ -323,15 +342,7 @@ internal fun SwapScreen(
                         )
                     } else {
                         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
-                            AdvancedSwapSettings(
-                                slippageBps = state.slippageBps,
-                                onSlippageSelected = onSlippageSelected,
-                                gasLimitOverride = state.gasLimitOverride,
-                                isGasLimitApplicable = state.isGasLimitApplicable,
-                                onGasLimitSelected = onGasLimitSelected,
-                                externalRecipient = state.externalRecipient,
-                                onExternalRecipientSelected = onExternalRecipientSelected,
-                            )
+                            AdvancedSettingsLink(onClick = { showAdvancedSettings = true })
                             VsButton(
                                 label =
                                     if (srcAmountTextFieldState.text.isEmpty()) {
