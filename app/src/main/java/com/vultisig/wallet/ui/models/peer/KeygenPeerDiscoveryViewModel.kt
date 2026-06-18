@@ -38,6 +38,8 @@ import com.vultisig.wallet.data.usecases.QrShareField
 import com.vultisig.wallet.data.usecases.QrShareInfo
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
+import com.vultisig.wallet.data.utils.NetworkErrorKind
+import com.vultisig.wallet.data.utils.networkErrorKind
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
@@ -224,6 +226,34 @@ constructor(
         }
     }
 
+    /**
+     * Maps a session-start failure to a cause-specific [ErrorUiModel]. A socket/read timeout or a
+     * connectivity loss gets a network-specific message so the user knows to check their connection
+     * and retry, instead of the opaque generic "Something went wrong" (issue #4956). Anything that
+     * isn't a recognisable transport failure (server error, app bug) falls back to the generic
+     * copy.
+     */
+    private fun Throwable.toKeygenErrorUiModel(): ErrorUiModel =
+        when (networkErrorKind()) {
+            NetworkErrorKind.Timeout ->
+                ErrorUiModel(
+                    title = UiText.StringResource(R.string.keygen_error_timeout_title),
+                    description = UiText.StringResource(R.string.keygen_error_timeout_description),
+                )
+            NetworkErrorKind.NoConnectivity,
+            NetworkErrorKind.Transport ->
+                ErrorUiModel(
+                    title = UiText.StringResource(R.string.keygen_error_network_title),
+                    description = UiText.StringResource(R.string.keygen_error_network_description),
+                )
+            NetworkErrorKind.Http,
+            null ->
+                ErrorUiModel(
+                    title = UiText.StringResource(R.string.error_view_default_title),
+                    description = UiText.StringResource(R.string.error_view_default_description),
+                )
+        }
+
     private fun showNetworkWarning() {
         _state.update {
             it.copy(
@@ -323,16 +353,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to start keygen session")
-                _state.update {
-                    it.copy(
-                        warning =
-                            ErrorUiModel(
-                                title = UiText.StringResource(R.string.error_view_default_title),
-                                description =
-                                    UiText.StringResource(R.string.error_view_default_description),
-                            )
-                    )
-                }
+                _state.update { it.copy(warning = e.toKeygenErrorUiModel()) }
             }
         ) {
             val session = session
@@ -588,21 +609,7 @@ constructor(
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to connect to Vultiserver")
-            _state.update {
-                it.copy(
-                    error =
-                        ErrorUiModel(
-                            title = UiText.StringResource(R.string.error_view_default_title),
-                            description =
-                                UiText.DynamicString(
-                                    e.message
-                                        ?: context.getString(
-                                            R.string.error_view_default_description
-                                        )
-                                ),
-                        )
-                )
-            }
+            _state.update { it.copy(error = e.toKeygenErrorUiModel()) }
         }
     }
 
@@ -699,22 +706,10 @@ constructor(
                 return
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                Timber.tag("startSessionAndDiscovery").e(e, "Attempt ${attempt + 1} failed")
+                Timber.tag("startSessionAndDiscovery").e(e, "Attempt %d failed", attempt + 1)
                 if (attempt >= 2) {
                     Timber.tag("startSessionAndDiscovery").e("All attempts to start session failed")
-                    _state.update {
-                        it.copy(
-                            error =
-                                ErrorUiModel(
-                                    title =
-                                        UiText.StringResource(R.string.error_view_default_title),
-                                    description =
-                                        UiText.StringResource(
-                                            R.string.error_view_default_description
-                                        ),
-                                )
-                        )
-                    }
+                    _state.update { it.copy(error = e.toKeygenErrorUiModel()) }
                 }
             }
         }

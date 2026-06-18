@@ -578,6 +578,10 @@
     <string name="enter_email_screen_next">Next</string>
     <string name="error_view_default_title">Something went wrong</string>
     <string name="error_view_default_description">An error occurred</string>
+    <string name="keygen_error_timeout_title">Connection timed out</string>
+    <string name="keygen_error_timeout_description">Couldn\'t reach the server in time. Check your connection and try again.</string>
+    <string name="keygen_error_network_title">Connection problem</string>
+    <string name="keygen_error_network_description">Couldn\'t reach the server. Check your connection and try again.</string>
     <string name="keygen_vault_created_success_part_1">Vault created</string>
     <string name="vault_created_success_part_2">successfully</string>
     <string name="vault_backup_screen_paste">Paste</string>
