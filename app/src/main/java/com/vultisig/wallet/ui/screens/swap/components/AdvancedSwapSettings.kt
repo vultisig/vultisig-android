@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.screens.swap.components
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,6 +33,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.inputs.VsBasicTextField
+import com.vultisig.wallet.ui.components.library.form.VsUiCheckbox
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
@@ -52,8 +52,9 @@ private val SLIPPAGE_PRESETS_BPS = listOf(50, 100, 300)
 private const val MAX_SLIPPAGE_BPS = 10_000
 
 /** Formats a slippage value for display: "Auto" when null, else a trimmed percent like "0.5%". */
-private fun formatSlippage(bps: Int?): String? =
-    bps?.let { "${BigDecimal(it).movePointLeft(2).stripTrailingZeros().toPlainString()}%" }
+private fun formatSlippage(bps: Int?): String? = bps?.let {
+    "${BigDecimal(it).movePointLeft(2).stripTrailingZeros().toPlainString()}%"
+}
 
 /**
  * The centered, underlined "Advanced Settings" entry shown above the Swap button.
@@ -105,6 +106,7 @@ internal fun AdvancedSwapSettingsSheet(
     isGasLimitApplicable: Boolean,
     onGasLimitSelected: (Long?) -> Unit,
     externalRecipient: String?,
+    externalRecipientError: String?,
     onExternalRecipientSelected: (String?) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -126,7 +128,7 @@ internal fun AdvancedSwapSettingsSheet(
             if (page == AdvancedPage.Menu) {
                 VsCircleButton(
                     onClick = onDismiss,
-                    icon = R.drawable.x,
+                    drawableResId = R.drawable.big_close,
                     size = VsCircleButtonSize.Small,
                     type = VsCircleButtonType.Tertiary,
                 )
@@ -140,14 +142,13 @@ internal fun AdvancedSwapSettingsSheet(
             }
         },
         rightAction = {
-            if (page == AdvancedPage.Menu) {
-                VsCircleButton(
-                    onClick = onDismiss,
-                    icon = R.drawable.check,
-                    size = VsCircleButtonSize.Small,
-                    type = VsCircleButtonType.Primary,
-                )
-            }
+            // The "done" check is present on every page in Figma (menu + each selector). Selections
+            // apply live, so it simply confirms and closes the whole sheet.
+            VsCircleButton(
+                onClick = onDismiss,
+                drawableResId = R.drawable.big_tick,
+                size = VsCircleButtonSize.Small,
+            )
         },
     ) {
         val autoLabel = stringResource(R.string.swap_advanced_value_auto)
@@ -172,6 +173,7 @@ internal fun AdvancedSwapSettingsSheet(
             AdvancedPage.ExternalRecipient ->
                 ExternalRecipientPage(
                     externalRecipient = externalRecipient,
+                    errorText = externalRecipientError,
                     onSelect = onExternalRecipientSelected,
                 )
         }
@@ -216,7 +218,11 @@ private fun AdvancedMenu(
 }
 
 @Composable
-private fun ExternalRecipientPage(externalRecipient: String?, onSelect: (String?) -> Unit) {
+private fun ExternalRecipientPage(
+    externalRecipient: String?,
+    errorText: String?,
+    onSelect: (String?) -> Unit,
+) {
     val state = rememberTextFieldState(externalRecipient.orEmpty())
 
     LaunchedEffect(Unit) {
@@ -249,6 +255,16 @@ private fun ExternalRecipientPage(externalRecipient: String?, onSelect: (String?
             PasteIcon(
                 modifier = Modifier.padding(4.dp),
                 onPaste = { state.setTextAndPlaceCursorAtEnd(it.trim()) },
+            )
+        }
+        // Invalid-address feedback: the entered recipient isn't a valid address for the destination
+        // chain. The swap is also blocked at sign time, but surface it here so the user can fix it.
+        if (errorText != null) {
+            Text(
+                text = errorText,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.alerts.error,
+                modifier = Modifier.padding(top = 8.dp),
             )
         }
     }
@@ -298,7 +314,7 @@ private fun SlippageOptionRow(label: String, selected: Boolean, onClick: () -> U
             color = Theme.v2.colors.text.primary,
             modifier = Modifier.weight(1f),
         )
-        SelectedCheck(selected)
+        VsUiCheckbox(checked = selected, onCheckedChange = { onClick() })
     }
 }
 
@@ -325,36 +341,25 @@ private fun SlippageCustomRow(isSelected: Boolean, currentBps: Int?, onSelect: (
     Row(
         modifier = Modifier.fillMaxWidth().padding(all = 24.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        // Figma shows a static "Custom" label followed by the editable "0.00%" value, with the
+        // same circular checkbox the preset rows use on the trailing edge.
+        Text(
+            text = stringResource(R.string.swap_slippage_custom_hint),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.primary,
+        )
         VsBasicTextField(
             textFieldState = customState,
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
-            hint = stringResource(R.string.swap_slippage_custom_hint),
+            hint = stringResource(R.string.swap_slippage_custom_value_hint),
             lineLimits = TextFieldLineLimits.SingleLine,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.weight(1f),
         )
-        Text(
-            text = "%",
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.primary,
-        )
-        SelectedCheck(isSelected)
-    }
-}
-
-@Composable
-private fun SelectedCheck(selected: Boolean) {
-    if (selected) {
-        UiIcon(
-            drawableResId = R.drawable.check,
-            size = 20.dp,
-            tint = Theme.v2.colors.primary.accent4,
-        )
-    } else {
-        Box(modifier = Modifier.padding(10.dp))
+        VsUiCheckbox(checked = isSelected, onCheckedChange = {})
     }
 }
 

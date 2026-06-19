@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
@@ -46,6 +47,7 @@ constructor(
     private val swapTransactionBuilder: SwapTransactionBuilder,
     private val swapInputCollector: SwapInputCollector,
     private val swapQuotePipelineControllerFactory: SwapQuotePipelineController.Factory,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -132,6 +134,7 @@ constructor(
         )
         collectSelectedTokens()
         observeGasLimitApplicability()
+        observeExternalRecipientValidity()
 
         quotePipeline.start()
     }
@@ -154,11 +157,47 @@ constructor(
         }
     }
 
+    /**
+     * Re-validates the external recipient whenever the destination changes: a previously-valid
+     * address can become invalid when the user switches the destination chain, so the inline error
+     * (and the [swap] pre-flight gate) stay in sync with the current destination (#4858).
+     */
+    private fun observeExternalRecipientValidity() {
+        viewModelScope.launch {
+            selectedDst.collect {
+                _uiState.update { it.copy(externalRecipientError = externalRecipientError()) }
+            }
+        }
+    }
+
+    /**
+     * The address-format error for the current external recipient, or `null` when the recipient is
+     * off or valid for the destination chain. Used both for inline feedback and as the [swap]
+     * pre-flight gate so a malformed address can never be baked into the swap memo/destination.
+     */
+    private fun externalRecipientError(): UiText? {
+        val address = externalRecipient.value ?: return null
+        val dstChain = selectedDst.value?.account?.token?.chain ?: return null
+        return if (chainAccountAddressRepository.isValid(dstChain, address)) {
+            null
+        } else {
+            UiText.StringResource(R.string.swap_external_recipient_invalid)
+        }
+    }
+
     fun back() {
         viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
     fun swap() {
+        // Hard gate: never stage a keysign that would route funds to a malformed recipient. The
+        // initiator and joiner both sign this address from the shared payload, so an invalid value
+        // must be caught here, before the transaction is built (#4858).
+        externalRecipientError()?.let { error ->
+            showError(error)
+            return
+        }
+
         val inputs =
             try {
                 isLoadingNextScreen = true
@@ -483,7 +522,12 @@ constructor(
     fun setExternalRecipient(address: String?) {
         val normalized = address?.trim()?.takeIf { it.isNotEmpty() }
         externalRecipient.value = normalized
-        _uiState.update { it.copy(externalRecipient = normalized) }
+        _uiState.update {
+            it.copy(
+                externalRecipient = normalized,
+                externalRecipientError = externalRecipientError(),
+            )
+        }
     }
 
     fun hideError() {

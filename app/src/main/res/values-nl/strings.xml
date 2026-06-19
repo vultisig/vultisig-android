@@ -332,7 +332,7 @@
     <string name="form_token_selection_balance">Saldo: %s</string>
     <string name="form_token_selection_asset">Bezit</string>
     <string name="insufficient_native_token">Onvoldoende %1$s voor gaskosten</string>
-    <string name="swap_error_amount_too_low">Swapbedrag te laag</string>
+    <string name="swap_error_amount_too_low">Bedrag te laag om de kosten te dekken. Verhoog het bedrag.</string>
     <string name="swap_error_amount_below_dust_threshold">Het bedrag is lager dan de dust-drempel. Verhoog het bedrag en probeer het opnieuw.</string>
     <string name="swap_error_insufficient_balance_and_fees">Onvoldoende %1$s saldo voor de swap en gaskosten. Vul %1$s aan of verlaag het swapbedrag</string>
     <string name="swap_error_insufficient_source_token">Onvoldoende %1$s saldo om te ruilen</string>
@@ -887,10 +887,13 @@
     <string name="swap_advanced_value_off">Uit</string>
     <string name="swap_slippage_helper">Beperkt hoeveel de prijs mag veranderen voordat de uitvoering wordt geannuleerd.</string>
     <string name="swap_slippage_custom_hint">Aangepast</string>
+    <string name="swap_slippage_custom_value_hint">0.00%</string>
     <string name="swap_gas_limit_helper">Stelt een handmatige gaslimiet in voor deze swap. Laat leeg voor Auto.</string>
     <string name="swap_advanced_value_on">Aan</string>
     <string name="swap_external_recipient_helper">Stuur de geruilde middelen naar een ander adres.</string>
     <string name="swap_external_recipient_hint">Ontvangeradres</string>
+    <string name="swap_external_recipient_invalid">Ongeldig ontvangeradres</string>
+    <string name="swap_external_recipient_unsupported">Externe ontvanger is niet beschikbaar voor deze swap. Schakel het uit om door te gaan.</string>
     <string name="verify_swap_recipient">Ontvanger</string>
     <string name="keygen_benefit_1_template">Verwijder het single point of failure</string>
     <string name="keygen_benefit_1_emphasized">Multifactorbeveiliging</string>

@@ -67,4 +67,7 @@ internal data class SwapFormUiModel(
     val isGasLimitApplicable: Boolean = false,
     // Optional external recipient address; null/blank = off (swap routes to the vault) (#4858).
     val externalRecipient: String? = null,
+    // Set when [externalRecipient] is not a valid address for the destination chain. Surfaced
+    // inline in the recipient sheet and blocks the swap so funds can't go to a malformed address.
+    val externalRecipientError: UiText? = null,
 )

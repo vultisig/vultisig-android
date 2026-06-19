@@ -199,10 +199,9 @@ internal class SwapQuotePipeline(
                 eligibleProviders
                     .map { p ->
                         async {
-                            val discount =
-                                vaultId?.let { id ->
-                                    getDiscountBpsUseCase.invoke(id, p).takeIf { bps -> bps != 0 }
-                                }
+                            val discount = vaultId?.let { id ->
+                                getDiscountBpsUseCase.invoke(id, p).takeIf { bps -> bps != 0 }
+                            }
                             QuoteCandidate(
                                 provider = p,
                                 vultBPSDiscount = discount,
@@ -234,7 +233,12 @@ internal class SwapQuotePipeline(
                 when (resolution) {
                     is QuoteResolution.Failure ->
                         return SwapQuotePipelineResult.Failure(
-                            error = resolution.formError,
+                            error =
+                                recipientAwareError(
+                                    resolution.formError,
+                                    resolution.cause,
+                                    externalRecipient,
+                                ),
                             cause = resolution.cause,
                             tag = resolution.tag,
                         )
@@ -251,10 +255,14 @@ internal class SwapQuotePipeline(
         } catch (e: SwapException) {
             SwapQuotePipelineResult.Failure(
                 error =
-                    swapQuoteManager.mapSwapExceptionToFormError(
+                    recipientAwareError(
+                        swapQuoteManager.mapSwapExceptionToFormError(
+                            e,
+                            srcToken,
+                            selectedSrcTokenTitle,
+                        ),
                         e,
-                        srcToken,
-                        selectedSrcTokenTitle,
+                        externalRecipient,
                     ),
                 cause = e,
                 tag = "swapError",
@@ -273,6 +281,32 @@ internal class SwapQuotePipeline(
                 cause = e,
                 tag = "swapUnexpectedError",
             )
+        }
+    }
+
+    /**
+     * Rewrites a quote failure into a recipient-aware message when an external recipient is active.
+     *
+     * Setting a recipient narrows the eligible providers to THORChain/Maya (the only protocols that
+     * route output to a custom address — see the native-only filter above). When the pair has no
+     * such route at all, the bare "not supported" error never explains that the recipient is the
+     * cause, so name it (#4858).
+     *
+     * Sub-minimum failures are deliberately NOT rewritten here: THORChain surfaces the concrete
+     * required minimum ("Minimum amount is X") via [SwapException.SmallSwapAmount], which is more
+     * actionable than a generic recipient note and must not be masked.
+     */
+    private fun recipientAwareError(
+        error: UiText,
+        cause: Throwable,
+        externalRecipient: String?,
+    ): UiText {
+        if (externalRecipient.isNullOrBlank()) return error
+        return when (cause) {
+            is SwapException.SwapIsNotSupported,
+            is SwapException.SwapRouteNotAvailable ->
+                UiText.StringResource(R.string.swap_external_recipient_unsupported)
+            else -> error
         }
     }
 

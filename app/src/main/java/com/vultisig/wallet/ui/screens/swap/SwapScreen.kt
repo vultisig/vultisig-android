@@ -318,6 +318,7 @@ internal fun SwapScreen(
                         isGasLimitApplicable = state.isGasLimitApplicable,
                         onGasLimitSelected = onGasLimitSelected,
                         externalRecipient = state.externalRecipient,
+                        externalRecipientError = state.externalRecipientError?.asString(),
                         onExternalRecipientSelected = onExternalRecipientSelected,
                         onDismiss = { showAdvancedSettings = false },
                     )

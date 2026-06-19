@@ -621,7 +621,7 @@
     <string name="insufficient_native_token">%1$s 不足以支付 Gas 费用</string>
 
     <!-- Swap Errors -->
-    <string name="swap_error_amount_too_low">交换金额太低</string>
+    <string name="swap_error_amount_too_low">金额太低，不足以支付手续费。请增加金额。</string>
     <string name="swap_error_amount_below_dust_threshold">金额低于粉尘阈值。请增加金额后重试。</string>
     <string name="swap_error_insufficient_balance_and_fees">%1$s 余额不足以支付交换和 Gas 费用。请充值 %1$s 或减少交换金额</string>
     <string name="swap_error_insufficient_source_token">%1$s 余额不足以进行交换</string>
@@ -1221,10 +1221,13 @@
     <string name="swap_advanced_value_off">关闭</string>
     <string name="swap_slippage_helper">限制价格在执行取消前可变动的幅度。</string>
     <string name="swap_slippage_custom_hint">自定义</string>
+    <string name="swap_slippage_custom_value_hint">0.00%</string>
     <string name="swap_gas_limit_helper">为此兑换设置手动燃料限制。留空则使用自动。</string>
     <string name="swap_advanced_value_on">开启</string>
     <string name="swap_external_recipient_helper">将兑换后的资金发送到其他地址。</string>
     <string name="swap_external_recipient_hint">接收方地址</string>
+    <string name="swap_external_recipient_invalid">收款地址无效</string>
+    <string name="swap_external_recipient_unsupported">此兑换不支持外部收款人。请将其关闭以继续。</string>
     <string name="verify_swap_recipient">接收方</string>
     <string name="keygen_benefit_1_template">消除单点故障</string>
     <string name="keygen_benefit_1_emphasized">多重身份验证</string>

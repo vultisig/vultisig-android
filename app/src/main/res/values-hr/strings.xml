@@ -333,7 +333,7 @@
     <string name="form_token_selection_balance">Stanje: %s</string>
     <string name="form_token_selection_asset">Sredstvo</string>
     <string name="insufficient_native_token">Nedovoljno %1$s za naknade za gas</string>
-    <string name="swap_error_amount_too_low">Iznos zamjene je prenizak</string>
+    <string name="swap_error_amount_too_low">Iznos je prenizak za pokrivanje naknada. Povećajte iznos.</string>
     <string name="swap_error_amount_below_dust_threshold">Iznos je manji od praga za prašinu. Povećajte iznos i pokušajte ponovno.</string>
     <string name="swap_error_insufficient_balance_and_fees">Nedovoljno %1$s salda za zamjenu i naknade za gas. Dopunite %1$s ili smanjite iznos zamjene</string>
     <string name="swap_error_insufficient_source_token">Nedovoljno %1$s salda za zamjenu</string>
@@ -895,10 +895,13 @@
     <string name="swap_advanced_value_off">Isključeno</string>
     <string name="swap_slippage_helper">Ograničava koliko se cijena može promijeniti prije nego što se izvršenje otkaže.</string>
     <string name="swap_slippage_custom_hint">Prilagođeno</string>
+    <string name="swap_slippage_custom_value_hint">0.00%</string>
     <string name="swap_gas_limit_helper">Postavlja ručno ograničenje plina za ovu zamjenu. Ostavite prazno za Auto.</string>
     <string name="swap_advanced_value_on">Uključeno</string>
     <string name="swap_external_recipient_helper">Pošaljite zamijenjena sredstva na drugu adresu.</string>
     <string name="swap_external_recipient_hint">Adresa primatelja</string>
+    <string name="swap_external_recipient_invalid">Nevažeća adresa primatelja</string>
+    <string name="swap_external_recipient_unsupported">Vanjski primatelj nije dostupan za ovu zamjenu. Isključite ga za nastavak.</string>
     <string name="verify_swap_recipient">Primatelj</string>
     <string name="keygen_benefit_1_template">Uklanjanje jedinstvene točke kvara</string>
     <string name="keygen_benefit_1_emphasized">Višefaktorska sigurnost,</string>
