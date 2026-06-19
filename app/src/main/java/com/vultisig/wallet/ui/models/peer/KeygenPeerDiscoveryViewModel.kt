@@ -38,7 +38,9 @@ import com.vultisig.wallet.data.usecases.QrShareField
 import com.vultisig.wallet.data.usecases.QrShareInfo
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
+import com.vultisig.wallet.data.utils.NetworkErrorKind
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.data.utils.toNetworkErrorKind
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -160,7 +162,9 @@ constructor(
         )
     val state: StateFlow<PeerDiscoveryUiModel> = _state.asStateFlow()
 
-    private val sessionId = Uuid.random().toHexString()
+    // var, not val: switchMode() mints a fresh id so a re-entered network mode never reuses a
+    // still-alive relay/mediator session and resurfaces stale peers (issue #4944).
+    private var sessionId = Uuid.random().toHexString()
     private val serviceName = generateServiceName()
 
     private val encryptionKeyHex = Utils.encryptionKeyHex
@@ -193,6 +197,7 @@ constructor(
     private val qrBitmap = MutableStateFlow<Bitmap?>(null)
 
     private var discoverParticipantsJob: Job? = null
+    private var startPeerDiscoveryJob: Job? = null
 
     private var serverUrl: String = VULTISIG_RELAY_URL
 
@@ -223,6 +228,34 @@ constructor(
             next()
         }
     }
+
+    /**
+     * Maps a session-start failure to a cause-specific [ErrorUiModel]. A socket/read timeout or a
+     * connectivity loss gets a network-specific message so the user knows to check their connection
+     * and retry, instead of the opaque generic "Something went wrong" (issue #4956). Anything that
+     * isn't a recognisable transport failure (server error, app bug) falls back to the generic
+     * copy.
+     */
+    private fun Throwable.toKeygenErrorUiModel(): ErrorUiModel =
+        when (toNetworkErrorKind()) {
+            NetworkErrorKind.Timeout ->
+                ErrorUiModel(
+                    title = UiText.StringResource(R.string.keygen_error_timeout_title),
+                    description = UiText.StringResource(R.string.keygen_error_timeout_description),
+                )
+            NetworkErrorKind.NoConnectivity ->
+                ErrorUiModel(
+                    title = UiText.StringResource(R.string.keygen_error_network_title),
+                    description = UiText.StringResource(R.string.keygen_error_network_description),
+                )
+            NetworkErrorKind.Transport,
+            NetworkErrorKind.Http,
+            null ->
+                ErrorUiModel(
+                    title = UiText.StringResource(R.string.error_view_default_title),
+                    description = UiText.StringResource(R.string.error_view_default_description),
+                )
+        }
 
     private fun showNetworkWarning() {
         _state.update {
@@ -282,8 +315,19 @@ constructor(
         // Tear down the current transport before switching, otherwise the old discovery job or
         // local mediator receiver can keep emitting and repopulate the just-cleared device list
         // (or leave a stale local session/receiver behind).
+        //
+        // Switching network mode must also start a brand-new session. Reusing the same sessionId
+        // let the relay (or mediator) hand back peers that joined the previous session — e.g.
+        // Internet -> Local -> Internet would re-read the still-alive relay session and resurface
+        // stale devices (issue #4944). Cancel the whole previous discovery run (not just
+        // participant polling) so an already-running startPeerDiscovery() can't observe the new
+        // sessionId mid-flight, then mint a fresh id captured in a local and threaded through the
+        // run so every step uses the same session even if switchMode() fires again.
         discoverParticipantsJob?.cancel()
+        startPeerDiscoveryJob?.cancel()
         mediatorServiceController.stop()
+        val newSessionId = Uuid.random().toHexString()
+        sessionId = newSessionId
         _state.update {
             it.copy(
                 network =
@@ -295,7 +339,7 @@ constructor(
                 selectedDevices = emptyList(),
             )
         }
-        viewModelScope.safeLaunch { startPeerDiscovery() }
+        startPeerDiscoveryJob = viewModelScope.safeLaunch { startPeerDiscovery(newSessionId) }
     }
 
     fun selectDevice(device: ParticipantName) {
@@ -323,16 +367,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to start keygen session")
-                _state.update {
-                    it.copy(
-                        warning =
-                            ErrorUiModel(
-                                title = UiText.StringResource(R.string.error_view_default_title),
-                                description =
-                                    UiText.StringResource(R.string.error_view_default_description),
-                            )
-                    )
-                }
+                _state.update { it.copy(warning = e.toKeygenErrorUiModel()) }
             }
         ) {
             val session = session
@@ -388,48 +423,78 @@ constructor(
             showNetworkWarning()
             return
         }
-        viewModelScope.safeLaunch(
-            onError = { e ->
-                Timber.e(e, "Failed to load peer discovery data")
-                _state.update {
-                    it.copy(
-                        error =
-                            ErrorUiModel(
-                                title = UiText.StringResource(R.string.error_view_default_title),
-                                description =
-                                    UiText.StringResource(R.string.error_view_default_description),
-                            )
-                    )
-                }
-            }
-        ) {
-            val args = args ?: return@safeLaunch
-
-            var hexChainCode =
-                if (args.action == TssAction.KeyImport) "" else Utils.encryptionKeyHex
-            if (args.action == TssAction.KeyImport && hexChainCode.isEmpty()) {
-                val mnemonic = keyImportRepository.get()?.mnemonic
-                if (mnemonic == null) {
-                    Timber.w("KeyImport: no mnemonic found in repository")
+        // Track the initial run in startPeerDiscoveryJob so switchMode() can cancel it. Otherwise
+        // an
+        // in-flight startPeerDiscovery() from here (e.g. still retrying in startSessionWithRetry)
+        // resumes after the toggle and rebinds discoverParticipantsJob to the old session,
+        // resurfacing stale peers (issue #4944).
+        startPeerDiscoveryJob?.cancel()
+        startPeerDiscoveryJob =
+            viewModelScope.safeLaunch(
+                onError = { e ->
+                    Timber.e(e, "Failed to load peer discovery data")
                     _state.update {
                         it.copy(
                             error =
                                 ErrorUiModel(
-                                    title = UiText.StringResource(R.string.key_import_error_title),
+                                    title =
+                                        UiText.StringResource(R.string.error_view_default_title),
                                     description =
                                         UiText.StringResource(
-                                            R.string.key_import_error_no_mnemonic_description
+                                            R.string.error_view_default_description
                                         ),
                                 )
                         )
                     }
-                    return@safeLaunch
                 }
-                val masterKeys =
-                    try {
-                        extractMasterKeys(mnemonic)
-                    } catch (e: Exception) {
-                        Timber.e(e, "KeyImport: failed to extract master keys")
+            ) {
+                val args = args ?: return@safeLaunch
+
+                var hexChainCode =
+                    if (args.action == TssAction.KeyImport) "" else Utils.encryptionKeyHex
+                if (args.action == TssAction.KeyImport && hexChainCode.isEmpty()) {
+                    val mnemonic = keyImportRepository.get()?.mnemonic
+                    if (mnemonic == null) {
+                        Timber.w("KeyImport: no mnemonic found in repository")
+                        _state.update {
+                            it.copy(
+                                error =
+                                    ErrorUiModel(
+                                        title =
+                                            UiText.StringResource(R.string.key_import_error_title),
+                                        description =
+                                            UiText.StringResource(
+                                                R.string.key_import_error_no_mnemonic_description
+                                            ),
+                                    )
+                            )
+                        }
+                        return@safeLaunch
+                    }
+                    val masterKeys =
+                        try {
+                            extractMasterKeys(mnemonic)
+                        } catch (e: Exception) {
+                            Timber.e(e, "KeyImport: failed to extract master keys")
+                            _state.update {
+                                it.copy(
+                                    error =
+                                        ErrorUiModel(
+                                            title =
+                                                UiText.StringResource(
+                                                    R.string.key_import_error_title
+                                                ),
+                                            description =
+                                                UiText.StringResource(
+                                                    R.string.key_import_error_description
+                                                ),
+                                        )
+                                )
+                            }
+                            return@safeLaunch
+                        }
+                    if (masterKeys == null) {
+                        Timber.w("KeyImport: extractMasterKeys returned null")
                         _state.update {
                             it.copy(
                                 error =
@@ -445,86 +510,74 @@ constructor(
                         }
                         return@safeLaunch
                     }
-                if (masterKeys == null) {
-                    Timber.w("KeyImport: extractMasterKeys returned null")
-                    _state.update {
-                        it.copy(
-                            error =
-                                ErrorUiModel(
-                                    title = UiText.StringResource(R.string.key_import_error_title),
-                                    description =
-                                        UiText.StringResource(R.string.key_import_error_description),
-                                )
-                        )
-                    }
-                    return@safeLaunch
+                    hexChainCode = masterKeys.hexChainCode
                 }
-                hexChainCode = masterKeys.hexChainCode
-            }
 
-            var libType =
-                if (secretSettingsRepository.isDklsEnabled.first()) SigningLibType.DKLS
-                else SigningLibType.GG20
-            val isTssBatchEnabled = featureFlagRepository.getFeatureFlags().isTssBatchEnabled
+                var libType =
+                    if (secretSettingsRepository.isDklsEnabled.first()) SigningLibType.DKLS
+                    else SigningLibType.GG20
+                val isTssBatchEnabled = featureFlagRepository.getFeatureFlags().isTssBatchEnabled
 
-            var localPartyId = Utils.deviceName(context)
-            var pubKeyEcdsa = ""
-            var signers: List<String> = emptyList()
-            var resharePrefix = ""
+                var localPartyId = Utils.deviceName(context)
+                var pubKeyEcdsa = ""
+                var signers: List<String> = emptyList()
+                var resharePrefix = ""
 
-            val existingVault = args.vaultId?.let { vaultRepository.get(it) }
-            if (existingVault != null) {
-                libType = existingVault.libType
-                hexChainCode = existingVault.hexChainCode
-                localPartyId = existingVault.localPartyID
-                pubKeyEcdsa = existingVault.pubKeyECDSA
-                resharePrefix = existingVault.resharePrefix
-                signers = existingVault.signers
+                val existingVault = args.vaultId?.let { vaultRepository.get(it) }
+                if (existingVault != null) {
+                    libType = existingVault.libType
+                    hexChainCode = existingVault.hexChainCode
+                    localPartyId = existingVault.localPartyID
+                    pubKeyEcdsa = existingVault.pubKeyECDSA
+                    resharePrefix = existingVault.resharePrefix
+                    signers = existingVault.signers
 
-                if (args.action == TssAction.Migrate || args.action == TssAction.SingleKeygen) {
-                    _state.update {
-                        it.copy(
-                            minimumDevices = existingVault.signers.size,
-                            minimumDevicesDisplayed = existingVault.signers.size,
-                        )
+                    if (args.action == TssAction.Migrate || args.action == TssAction.SingleKeygen) {
+                        _state.update {
+                            it.copy(
+                                minimumDevices = existingVault.signers.size,
+                                minimumDevicesDisplayed = existingVault.signers.size,
+                            )
+                        }
                     }
                 }
-            }
 
-            session =
-                KeygenSession(
-                    hexChainCode = hexChainCode,
-                    localPartyId = localPartyId,
-                    libType = libType,
-                    pubKeyEcdsa = pubKeyEcdsa,
-                    signers = signers,
-                    resharePrefix = resharePrefix,
-                    isTssBatchEnabled = isTssBatchEnabled,
-                )
+                session =
+                    KeygenSession(
+                        hexChainCode = hexChainCode,
+                        localPartyId = localPartyId,
+                        libType = libType,
+                        pubKeyEcdsa = pubKeyEcdsa,
+                        signers = signers,
+                        resharePrefix = resharePrefix,
+                        isTssBatchEnabled = isTssBatchEnabled,
+                    )
 
-            _state.update { it.copy(error = null, warning = null) }
+                _state.update { it.copy(error = null, warning = null) }
 
-            if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
-                // For active vault, we should present PeerDiscovery screen, so the other device can
-                // join
-                // Also need to request the server to join the upgrade process
-                if (args.action == TssAction.Migrate && signers.count() > 2) {
-                    // This is the only Fast Vault path that shows peer discovery rather than the
-                    // connecting screen, so undo the connecting state seeded in the initial UI
-                    // model.
-                    _state.update { it.copy(connectingToServer = null) }
-                    startPeerDiscovery()
-                    requestVultiServerConnection()
+                if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
+                    // For active vault, we should present PeerDiscovery screen, so the other device
+                    // can
+                    // join
+                    // Also need to request the server to join the upgrade process
+                    if (args.action == TssAction.Migrate && signers.count() > 2) {
+                        // This is the only Fast Vault path that shows peer discovery rather than
+                        // the
+                        // connecting screen, so undo the connecting state seeded in the initial UI
+                        // model.
+                        _state.update { it.copy(connectingToServer = null) }
+                        startPeerDiscovery(sessionId)
+                        requestVultiServerConnection(sessionId)
+                    } else {
+                        startVultiServerConnection()
+                    }
                 } else {
-                    startVultiServerConnection()
+                    startPeerDiscovery(sessionId)
                 }
-            } else {
-                startPeerDiscovery()
             }
-        }
     }
 
-    private fun actionContext(session: KeygenSession) =
+    private fun actionContext(session: KeygenSession, sessionId: String) =
         KeygenActionContext(
             sessionId = sessionId,
             serviceName = serviceName,
@@ -538,7 +591,9 @@ constructor(
             keyImportRepository = keyImportRepository,
         )
 
-    private suspend fun startPeerDiscovery() {
+    // sessionId is passed in (not read off the field) so a switchMode() mid-run can't shift the
+    // session this discovery run is wiring up — every step here observes the same id (issue #4944).
+    private suspend fun startPeerDiscovery(sessionId: String) {
         val args = args ?: return
         val session = session
         checkQrHelperModalIsVisited()
@@ -546,7 +601,7 @@ constructor(
         val isRelayEnabled = _state.value.network == NetworkOption.Internet
 
         val keygenPayload =
-            args.action.strategy().buildPayload(actionContext(session), isRelayEnabled)
+            args.action.strategy().buildPayload(actionContext(session, sessionId), isRelayEnabled)
 
         loadQr(keygenPayload)
 
@@ -554,23 +609,26 @@ constructor(
 
         if (isRelayEnabled) {
             serverUrl = VULTISIG_RELAY_URL
-            startSessionWithRetry()
-            startParticipantDiscovery()
+            startSessionWithRetry(sessionId)
+            startParticipantDiscovery(sessionId)
         } else {
             serverUrl = LOCAL_MEDIATOR_SERVER_URL
-            startMediatorService()
+            startMediatorService(sessionId)
         }
     }
 
     private suspend fun startVultiServerConnection() {
+        // Snapshot the session for this run so a later switchMode() can't shift it mid-flight.
+        val sessionId = sessionId
         _state.update { it.copy(connectingToServer = ConnectingToServerUiModel(false)) }
 
         try {
-            startSessionWithRetry()
+            startSessionWithRetry(sessionId)
 
-            requestVultiServerConnection()
+            requestVultiServerConnection(sessionId)
 
             startParticipantDiscovery(
+                sessionId = sessionId,
                 onDiscovered = { devices ->
                     if (devices.size == 1) {
                         _state.update {
@@ -583,31 +641,18 @@ constructor(
 
                         next()
                     }
-                }
+                },
             )
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to connect to Vultiserver")
-            _state.update {
-                it.copy(
-                    error =
-                        ErrorUiModel(
-                            title = UiText.StringResource(R.string.error_view_default_title),
-                            description =
-                                UiText.DynamicString(
-                                    e.message
-                                        ?: context.getString(
-                                            R.string.error_view_default_description
-                                        )
-                                ),
-                        )
-                )
-            }
+            _state.update { it.copy(error = e.toKeygenErrorUiModel()) }
         }
     }
 
     private fun startParticipantDiscovery(
-        onDiscovered: (suspend (devices: List<ParticipantName>) -> Unit)? = null
+        sessionId: String,
+        onDiscovered: (suspend (devices: List<ParticipantName>) -> Unit)? = null,
     ) {
         val session = session
         discoverParticipantsJob?.cancel()
@@ -663,13 +708,13 @@ constructor(
         _state.update { it.copy(qr = bitmapPainter) }
     }
 
-    private suspend fun requestVultiServerConnection() {
+    private suspend fun requestVultiServerConnection(sessionId: String) {
         val args = args ?: return
         val session = session
         val email = email
         val password = password
         if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
-            args.action.strategy().joinServer(actionContext(session), email, password)
+            args.action.strategy().joinServer(actionContext(session, sessionId), email, password)
         }
     }
 
@@ -680,41 +725,31 @@ constructor(
         }
     }
 
-    private fun startMediatorService() {
+    private fun startMediatorService(sessionId: String) {
         mediatorServiceController.start(serviceName) {
             // send a request to local mediator server to start the session
-            viewModelScope.safeLaunch { withContext(Dispatchers.IO) { startSessionWithRetry() } }
+            viewModelScope.safeLaunch {
+                withContext(Dispatchers.IO) { startSessionWithRetry(sessionId) }
+            }
 
-            startParticipantDiscovery()
+            startParticipantDiscovery(sessionId)
         }
     }
 
-    private suspend fun startSessionWithRetry() {
+    private suspend fun startSessionWithRetry(sessionId: String) {
         val localPartyId = session.localPartyId
         repeat(3) { attempt ->
             try {
                 delay(1000)
-                if (isSessionStarted().not())
+                if (isSessionStarted(sessionId).not())
                     sessionApi.startSession(serverUrl, sessionId, listOf(localPartyId))
                 return
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                Timber.tag("startSessionAndDiscovery").e(e, "Attempt ${attempt + 1} failed")
+                Timber.tag("startSessionAndDiscovery").e(e, "Attempt %d failed", attempt + 1)
                 if (attempt >= 2) {
                     Timber.tag("startSessionAndDiscovery").e("All attempts to start session failed")
-                    _state.update {
-                        it.copy(
-                            error =
-                                ErrorUiModel(
-                                    title =
-                                        UiText.StringResource(R.string.error_view_default_title),
-                                    description =
-                                        UiText.StringResource(
-                                            R.string.error_view_default_description
-                                        ),
-                                )
-                        )
-                    }
+                    _state.update { it.copy(error = e.toKeygenErrorUiModel()) }
                 }
             }
         }
@@ -725,7 +760,7 @@ constructor(
         super.onCleared()
     }
 
-    private suspend fun isSessionStarted(): Boolean {
+    private suspend fun isSessionStarted(sessionId: String): Boolean {
         return try {
             sessionApi.getParticipants(serverUrl, sessionId).isNotEmpty()
         } catch (e: Exception) {

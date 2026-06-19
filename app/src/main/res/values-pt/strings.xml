@@ -809,6 +809,10 @@
     <string name="migration_onboarding_step_1_text_end">e assine mais depressa do que nunca</string>
     <string name="error_view_default_title">Ocorreu um erro</string>
     <string name="error_view_default_description">Um erro ocorreu</string>
+    <string name="keygen_error_timeout_title">Tempo de ligação esgotado</string>
+    <string name="keygen_error_timeout_description">Não foi possível contactar o servidor a tempo. Verifique a sua ligação e tente novamente.</string>
+    <string name="keygen_error_network_title">Problema de ligação</string>
+    <string name="keygen_error_network_description">Não foi possível contactar o servidor. Verifique a sua ligação e tente novamente.</string>
     <string name="keygen_benefit_5_template">Não caia novamente em golpes</string>
     <string name="keygen_benefit_5_emphasized">Uma carteira sem semente,</string>
     <string name="keygen_vault_created_success_part_1">Cofre criado</string>

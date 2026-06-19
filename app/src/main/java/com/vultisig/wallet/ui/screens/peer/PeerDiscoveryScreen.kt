@@ -62,6 +62,7 @@ import app.rive.Fit
 import app.rive.ViewModelSource
 import app.rive.rememberViewModelInstance
 import com.vultisig.wallet.R
+import com.vultisig.wallet.app.isRiveInitialized
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.ShowQrHelperBottomSheet
@@ -486,6 +487,12 @@ private fun QrCodeContainer(
     devicesSize: Int = 0,
     qrCode: BitmapPainter? = null,
 ) {
+    // The QR bitmap is ready well before the Rive frame's AndroidView renders its first frame, so
+    // revealing it immediately shows a bare, un-styled QR that the branded frame then pops in
+    // around (#4954). Wait for the frame's first render before fading the QR in so both appear
+    // together. When Rive is unavailable there is no frame to wait for, so reveal it right away.
+    var frameReady by remember { mutableStateOf(!isRiveInitialized) }
+
     Box(modifier = modifier.aspectRatio(1f)) {
         RiveAnimation(
             animation = R.raw.riv_qr_scanned,
@@ -496,10 +503,11 @@ private fun QrCodeContainer(
                         inputName = "isSucces",
                     )
             },
+            onFirstFrame = { frameReady = true },
         )
         AnimatedVisibility(
             modifier = Modifier.padding(28.dp),
-            visible = qrCode != null,
+            visible = qrCode != null && frameReady,
             enter = fadeIn(),
         ) {
             if (qrCode != null) {

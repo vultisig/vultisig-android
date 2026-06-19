@@ -813,6 +813,10 @@
     <string name="migration_onboarding_step_1_text_end">и подпишите быстрее, чем когда-либо прежде</string>
     <string name="error_view_default_title">Что-то пошло не так</string>
     <string name="error_view_default_description">Произошла ошибка</string>
+    <string name="keygen_error_timeout_title">Превышено время ожидания</string>
+    <string name="keygen_error_timeout_description">Не удалось вовремя связаться с сервером. Проверьте подключение и попробуйте снова.</string>
+    <string name="keygen_error_network_title">Проблема с подключением</string>
+    <string name="keygen_error_network_description">Не удалось связаться с сервером. Проверьте подключение и попробуйте снова.</string>
     <string name="keygen_benefit_5_template">Не дайте себя обмануть снова!</string>
     <string name="keygen_benefit_5_emphasized">Кошелёк без сид-фразы,</string>
     <string name="keygen_vault_created_success_part_1">Хранилище создано</string>

@@ -46,6 +46,7 @@ constructor(
             is BlockChainSpecific.MayaChain,
             is BlockChainSpecific.THORChain,
             is BlockChainSpecific.Ethereum,
+            is BlockChainSpecific.Cosmos,
             is BlockChainSpecific.UTXO -> Unit
 
             else -> error("BlockChainSpecific ${payload.blockChainSpecific} is not supported")

@@ -814,6 +814,10 @@
     <string name="migration_onboarding_step_1_text_end">i prijavite se brže nego ikad prije</string>
     <string name="error_view_default_title">Nešto je pošlo po zlu</string>
     <string name="error_view_default_description">Dogodila se pogreška</string>
+    <string name="keygen_error_timeout_title">Isteklo je vrijeme veze</string>
+    <string name="keygen_error_timeout_description">Poslužitelj nije dosegnut na vrijeme. Provjerite svoju vezu i pokušajte ponovno.</string>
+    <string name="keygen_error_network_title">Problem s vezom</string>
+    <string name="keygen_error_network_description">Poslužitelj nije dosegnut. Provjerite svoju vezu i pokušajte ponovno.</string>
     <string name="keygen_benefit_5_template">Ne dajte se ponovno prevariti</string>
     <string name="keygen_benefit_5_emphasized">Novčanik bez sjemena,</string>
     <string name="keygen_vault_created_success_part_1">Trezor kreiran</string>

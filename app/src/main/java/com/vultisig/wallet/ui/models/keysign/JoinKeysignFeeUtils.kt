@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.keysign
 
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingHelper
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -107,6 +108,40 @@ internal fun KeysignPayload.dappSuppliedNativeFee(
     }
 
     return null
+}
+
+/**
+ * The Cosmos staking / distribution message type URLs whose presence in a signed body marks the
+ * payload as a delegation deposit (delegate / undelegate / redelegate / withdraw-reward).
+ */
+private val COSMOS_STAKING_DEPOSIT_TYPE_URLS =
+    setOf(
+        CosmosStakingHelper.MSG_DELEGATE_TYPE_URL,
+        CosmosStakingHelper.MSG_UNDELEGATE_TYPE_URL,
+        CosmosStakingHelper.MSG_BEGIN_REDELEGATE_TYPE_URL,
+        CosmosStakingHelper.MSG_WITHDRAW_DELEGATOR_REWARD_TYPE_URL,
+    )
+
+/**
+ * True when this Cosmos payload's signed body ([signDirect]) carries a staking / distribution
+ * message. The initiator classifies such transactions as deposits via its local
+ * `DepositTransactionRepository`, which a joining device cannot see — so the joiner recovers the
+ * same classification from the transmitted SignDoc, letting both devices render the
+ * Transaction-complete screen identically (issue #4939). A `null`/unparseable body, or a plain
+ * `MsgSend` / dApp transaction, yields `false`.
+ */
+internal fun KeysignPayload.isCosmosStakingDeposit(
+    parseCosmosMessage: ParseCosmosMessageUseCase
+): Boolean {
+    val direct = signDirect ?: return false
+    val message =
+        try {
+            parseCosmosMessage(direct)
+        } catch (e: IllegalArgumentException) {
+            Timber.w("Failed to parse cosmos message for deposit detection: %s", e.message)
+            return false
+        }
+    return message.messages.any { it.typeUrl in COSMOS_STAKING_DEPOSIT_TYPE_URLS }
 }
 
 /** Sums the raw Cosmos fee amounts, or `null` if any entry is missing or not a valid integer. */

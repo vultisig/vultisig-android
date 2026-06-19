@@ -569,6 +569,10 @@
     <string name="enter_email_screen_next">다음</string>
     <string name="error_view_default_title">문제가 발생했습니다</string>
     <string name="error_view_default_description">오류가 발생했습니다</string>
+    <string name="keygen_error_timeout_title">연결 시간 초과</string>
+    <string name="keygen_error_timeout_description">서버에 제때 연결하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.</string>
+    <string name="keygen_error_network_title">연결 문제</string>
+    <string name="keygen_error_network_description">서버에 연결하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.</string>
     <string name="keygen_vault_created_success_part_1">볼트가</string>
     <string name="vault_created_success_part_2">성공적으로 생성되었습니다</string>
     <string name="vault_backup_screen_paste">붙여넣기</string>

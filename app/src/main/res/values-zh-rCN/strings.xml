@@ -1142,6 +1142,10 @@
     <string name="migration_onboarding_step_1_text_end">签名速度前所未有</string>
     <string name="error_view_default_title">出错了</string>
     <string name="error_view_default_description">发生错误</string>
+    <string name="keygen_error_timeout_title">连接超时</string>
+    <string name="keygen_error_timeout_description">未能及时连接到服务器。请检查您的网络连接并重试。</string>
+    <string name="keygen_error_network_title">连接问题</string>
+    <string name="keygen_error_network_description">未能连接到服务器。请检查您的网络连接并重试。</string>
     <string name="keygen_vault_created_success_part_1">保险库已创建</string>
     <string name="vault_created_success_part_2">成功</string>
     <string name="backup_password_request_no_password_action">无需密码备份</string>

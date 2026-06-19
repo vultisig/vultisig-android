@@ -810,6 +810,10 @@
     <string name="migration_onboarding_step_1_text_end">y firma más rápido que nunca</string>
     <string name="error_view_default_title">Algo salió mal</string>
     <string name="error_view_default_description">Ocurrió un error</string>
+    <string name="keygen_error_timeout_title">Se agotó el tiempo de conexión</string>
+    <string name="keygen_error_timeout_description">No se pudo conectar con el servidor a tiempo. Verifique su conexión e inténtelo de nuevo.</string>
+    <string name="keygen_error_network_title">Problema de conexión</string>
+    <string name="keygen_error_network_description">No se pudo conectar con el servidor. Verifique su conexión e inténtelo de nuevo.</string>
     <string name="keygen_benefit_5_template">No vuelvas a caer en estafas.</string>
     <string name="keygen_benefit_5_emphasized">Una cartera sin semilla</string>
     <string name="keygen_vault_created_success_part_1">Bóveda creada</string>

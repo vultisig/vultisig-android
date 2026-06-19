@@ -30,6 +30,11 @@ internal data class DepositTransactionUiModel(
     val networkFeeTokenValue: String = "",
     val srcAddress: String = "",
     val dstAddress: String = "",
+    // Resolved on the done screen so the Transaction-complete view renders the same From/To labels
+    // and "Add to Address Book" affordance for deposits as it does for sends (issue #4939).
+    val srcVaultName: String? = null,
+    val dstVaultName: String? = null,
+    val dstAddressBookTitle: String? = null,
     val memo: String = "",
     val operation: String = "",
     val thorAddress: String = "",

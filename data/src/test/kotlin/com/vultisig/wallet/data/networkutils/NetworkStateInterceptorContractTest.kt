@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.networkutils
 
 import com.vultisig.wallet.data.testutils.MockHttpClient
+import com.vultisig.wallet.data.utils.NetworkErrorKind
 import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.call.body
@@ -33,7 +34,8 @@ import org.junit.Test
  * 3. `bodyOrThrow()` must report network failures as client-side errors (code 0).
  * 4. Callers using status-code checks must not confuse network failures with server rejections.
  * 5. Existing `catch(Exception)` patterns must still catch network errors.
- * 6. All `IOException` subtypes (SSL, timeout, DNS, connection) are handled uniformly.
+ * 6. All `IOException` subtypes (SSL, timeout, DNS, connection) become a transport-level
+ *    `NetworkException` (httpStatusCode=0), classified by subtype into a `NetworkErrorKind`.
  * 7. Non-network errors (deserialization, business logic) are NOT swallowed.
  */
 class NetworkStateInterceptorContractTest {
@@ -62,33 +64,49 @@ class NetworkStateInterceptorContractTest {
     // ================================================================
 
     @Test
-    fun ioException_becomesNetworkExceptionWithCode0() = runBlocking {
-        assertTransportExceptionBecomesNetworkException(IOException("Connection reset"))
-    }
-
-    @Test
-    fun sslHandshakeException_becomesNetworkExceptionWithCode0() = runBlocking {
-        assertTransportExceptionBecomesNetworkException(SSLHandshakeException("Handshake failed"))
-    }
-
-    @Test
-    fun socketTimeoutException_becomesNetworkExceptionWithCode0() = runBlocking {
-        assertTransportExceptionBecomesNetworkException(SocketTimeoutException("Read timed out"))
-    }
-
-    @Test
-    fun connectException_becomesNetworkExceptionWithCode0() = runBlocking {
-        assertTransportExceptionBecomesNetworkException(ConnectException("Connection refused"))
-    }
-
-    @Test
-    fun unknownHostException_becomesNetworkExceptionWithCode0() = runBlocking {
+    fun ioException_becomesTransportNetworkException() = runBlocking {
         assertTransportExceptionBecomesNetworkException(
-            UnknownHostException("Unable to resolve host")
+            IOException("Connection reset"),
+            expectedKind = NetworkErrorKind.Transport,
         )
     }
 
-    private suspend fun assertTransportExceptionBecomesNetworkException(ioException: IOException) {
+    @Test
+    fun sslHandshakeException_becomesTransportNetworkException() = runBlocking {
+        assertTransportExceptionBecomesNetworkException(
+            SSLHandshakeException("Handshake failed"),
+            expectedKind = NetworkErrorKind.Transport,
+        )
+    }
+
+    @Test
+    fun socketTimeoutException_becomesTimeoutNetworkException() = runBlocking {
+        assertTransportExceptionBecomesNetworkException(
+            SocketTimeoutException("Read timed out"),
+            expectedKind = NetworkErrorKind.Timeout,
+        )
+    }
+
+    @Test
+    fun connectException_becomesTransportNetworkException() = runBlocking {
+        assertTransportExceptionBecomesNetworkException(
+            ConnectException("Connection refused"),
+            expectedKind = NetworkErrorKind.Transport,
+        )
+    }
+
+    @Test
+    fun unknownHostException_becomesNoConnectivityNetworkException() = runBlocking {
+        assertTransportExceptionBecomesNetworkException(
+            UnknownHostException("Unable to resolve host"),
+            expectedKind = NetworkErrorKind.NoConnectivity,
+        )
+    }
+
+    private suspend fun assertTransportExceptionBecomesNetworkException(
+        ioException: IOException,
+        expectedKind: NetworkErrorKind,
+    ) {
         val client = MockHttpClient.throwingIOException(ioException)
         try {
             client.get("https://api.vultisig.com/test")
@@ -99,7 +117,7 @@ class NetworkStateInterceptorContractTest {
                 0,
                 e.httpStatusCode,
             )
-            assertEquals("No internet connection", e.message)
+            assertEquals("transport failure must be classified by subtype", expectedKind, e.kind)
             assertTrue(
                 "cause must be the original IOException (${ioException::class.simpleName})",
                 e.cause is IOException,
@@ -153,7 +171,7 @@ class NetworkStateInterceptorContractTest {
             fail("Expected NetworkException")
         } catch (e: NetworkException) {
             assertEquals(0, e.httpStatusCode)
-            assertEquals("No internet connection", e.message)
+            assertEquals(NetworkErrorKind.Transport, e.kind)
         }
 
         client.close()
