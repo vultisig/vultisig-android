@@ -332,7 +332,9 @@ private fun SlippageCustomRow(isSelected: Boolean, currentBps: Int?, onSelect: (
         snapshotFlow { customState.text.toString() }
             .distinctUntilChanged()
             .collect { text ->
-                val percent = text.toBigDecimalOrNull() ?: return@collect
+                // Normalize comma decimal separators ("0,5") to dot before parsing — locales that
+                // use a comma would otherwise fail toBigDecimalOrNull() and never apply slippage.
+                val percent = text.trim().replace(',', '.').toBigDecimalOrNull() ?: return@collect
                 val bps = percent.movePointRight(2).toDouble().roundToInt()
                 if (bps in 1..MAX_SLIPPAGE_BPS) onSelect(bps)
             }

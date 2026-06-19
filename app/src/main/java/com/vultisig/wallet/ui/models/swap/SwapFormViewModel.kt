@@ -500,8 +500,12 @@ constructor(
     /**
      * Sets the per-swap slippage tolerance in basis points, or null for "Auto". Updates the
      * displayed value and re-fetches the quote with the new tolerance (#4858).
+     *
+     * Out-of-range values are rejected at this state boundary (only null or `1..10_000` bps, i.e.
+     * 0.01%–100%) so no call site can push an invalid tolerance into the quote pipeline.
      */
     fun setSlippageBps(bps: Int?) {
+        if (bps != null && bps !in 1..MAX_SLIPPAGE_BPS) return
         slippageBps.value = bps
         _uiState.update { it.copy(slippageBps = bps) }
     }
@@ -541,5 +545,8 @@ constructor(
     companion object {
         const val ETH_GAS_LIMIT: Long = SwapGasCalculator.ETH_GAS_LIMIT
         const val ARB_GAS_LIMIT: Long = SwapGasCalculator.ARB_GAS_LIMIT
+
+        // Upper bound for slippage tolerance: 10_000 bps = 100%.
+        private const val MAX_SLIPPAGE_BPS = 10_000
     }
 }
