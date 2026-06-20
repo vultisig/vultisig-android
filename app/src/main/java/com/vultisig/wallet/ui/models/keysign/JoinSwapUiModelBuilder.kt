@@ -153,6 +153,10 @@ constructor(
                 else -> provider
             }
 
+        // Surface a custom recipient on the cosigner's verify screen too — null for routes that
+        // don't carry one (#4858 review). Reused across the provider branches below.
+        val externalRecipient = resolveExternalRecipient(payload, swapPayload, dstToken, vault)
+
         return when (swapPayload) {
             is SwapPayload.EVM -> {
                 val oneInchSwapTxJson = swapPayload.data.quote.tx
@@ -336,6 +340,7 @@ constructor(
                         providerFee = quote.fees,
                         providerFeeToken = dstToken,
                         currency = currency,
+                        externalRecipient = externalRecipient,
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -394,6 +399,7 @@ constructor(
                         providerFee = quote.fees,
                         providerFeeToken = dstToken,
                         currency = currency,
+                        externalRecipient = externalRecipient,
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -477,6 +483,7 @@ constructor(
         providerFeeToken: Coin,
         currency: AppCurrency,
         providerLabel: String = provider,
+        externalRecipient: String? = null,
     ): SwapTransactionUiModel {
         val estimatedFee = convertTokenValueToFiat(providerFeeToken, providerFee, currency)
         return SwapTransactionUiModel(
@@ -521,6 +528,32 @@ constructor(
                 ),
             provider = provider,
             providerLabel = providerLabel,
+            externalRecipient = externalRecipient,
         )
+    }
+
+    /**
+     * Recovers the custom external recipient a cosigner would otherwise never see (#4858 review).
+     * Only the native protocols (THORChain / Maya) carry it, as the swap memo's `destination`
+     * field; a value matching the vault's own destination address is the normal case, so only a
+     * differing address is surfaced as an external recipient. Returns null when it can't be
+     * determined (EVM aggregators bake the vault address into calldata; SwapKit's route isn't
+     * recoverable here).
+     */
+    private suspend fun resolveExternalRecipient(
+        payload: KeysignPayload,
+        swapPayload: SwapPayload,
+        dstToken: Coin,
+        vault: Vault,
+    ): String? {
+        if (swapPayload !is SwapPayload.ThorChain && swapPayload !is SwapPayload.MayaChain) {
+            return null
+        }
+        val destination =
+            payload.memo?.split(":")?.getOrNull(2)?.takeIf { it.isNotBlank() } ?: return null
+        val vaultDstAddress =
+            runCatching { chainAccountAddressRepository.getAddress(dstToken, vault).first }
+                .getOrNull() ?: return null
+        return destination.takeIf { !it.equals(vaultDstAddress, ignoreCase = true) }
     }
 }
