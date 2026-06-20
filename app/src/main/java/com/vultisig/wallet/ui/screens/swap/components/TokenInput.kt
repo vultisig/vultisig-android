@@ -210,7 +210,10 @@ internal fun TokenInput(
             }
 
             Text(
-                text = selectedToken?.let { "${it.balance} ${it.title}" } ?: "",
+                text =
+                    selectedToken?.let { token ->
+                        token.balance?.let { balance -> "$balance ${token.title}" }
+                    } ?: "",
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.tertiary,
                 textAlign = TextAlign.End,
