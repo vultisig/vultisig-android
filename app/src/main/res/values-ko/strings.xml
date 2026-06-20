@@ -594,6 +594,7 @@
     <string name="swap_advanced_settings">고급 설정</string>
     <string name="swap_advanced_sheet_title">고급 스왑</string>
     <string name="swap_advanced_slippage_title">슬리피지 허용 범위</string>
+    <string name="swap_advanced_slippage_page_title">슬리피지</string>
     <string name="swap_advanced_gas_limit_title">가스 한도</string>
     <string name="swap_advanced_external_recipient_title">외부 수신자 사용</string>
     <string name="swap_advanced_value_auto">자동</string>

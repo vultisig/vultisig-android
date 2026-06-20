@@ -85,7 +85,7 @@ internal fun AdvancedMenuConfiguredPreview() {
 @Preview
 @Composable
 internal fun AdvancedSlippagePreview() {
-    PreviewAdvancedSheet(title = stringResource(R.string.swap_advanced_slippage_title)) {
+    PreviewAdvancedSheet(title = stringResource(R.string.swap_advanced_slippage_page_title)) {
         SlippagePage(slippageBps = 100, onSelect = {})
     }
 }

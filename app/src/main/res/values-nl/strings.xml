@@ -881,6 +881,7 @@
     <string name="swap_advanced_settings">Geavanceerde instellingen</string>
     <string name="swap_advanced_sheet_title">Geavanceerde swap</string>
     <string name="swap_advanced_slippage_title">Slippage-tolerantie</string>
+    <string name="swap_advanced_slippage_page_title">Slippage</string>
     <string name="swap_advanced_gas_limit_title">Gaslimiet</string>
     <string name="swap_advanced_external_recipient_title">Externe ontvanger gebruiken</string>
     <string name="swap_advanced_value_auto">Auto</string>

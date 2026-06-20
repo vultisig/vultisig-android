@@ -1215,6 +1215,7 @@
     <string name="swap_advanced_settings">高级设置</string>
     <string name="swap_advanced_sheet_title">高级兑换</string>
     <string name="swap_advanced_slippage_title">滑点容差</string>
+    <string name="swap_advanced_slippage_page_title">滑点</string>
     <string name="swap_advanced_gas_limit_title">燃料限制</string>
     <string name="swap_advanced_external_recipient_title">使用外部接收方</string>
     <string name="swap_advanced_value_auto">自动</string>

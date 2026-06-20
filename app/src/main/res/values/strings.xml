@@ -603,6 +603,7 @@
     <string name="swap_advanced_settings">Advanced Settings</string>
     <string name="swap_advanced_sheet_title">Advanced swap</string>
     <string name="swap_advanced_slippage_title">Slippage Tolerance</string>
+    <string name="swap_advanced_slippage_page_title">Slippage</string>
     <string name="swap_advanced_gas_limit_title">Gas Limit</string>
     <string name="swap_advanced_external_recipient_title">Use External Recipient</string>
     <string name="swap_advanced_value_auto">Auto</string>

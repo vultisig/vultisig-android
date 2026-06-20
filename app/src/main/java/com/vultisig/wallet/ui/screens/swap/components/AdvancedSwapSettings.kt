@@ -118,7 +118,7 @@ internal fun AdvancedSwapSettingsSheet(
             stringResource(
                 when (page) {
                     AdvancedPage.Menu -> R.string.swap_advanced_sheet_title
-                    AdvancedPage.Slippage -> R.string.swap_advanced_slippage_title
+                    AdvancedPage.Slippage -> R.string.swap_advanced_slippage_page_title
                     AdvancedPage.GasLimit -> R.string.swap_advanced_gas_limit_title
                     AdvancedPage.ExternalRecipient ->
                         R.string.swap_advanced_external_recipient_title
@@ -286,7 +286,12 @@ internal fun SlippagePage(slippageBps: Int?, onSelect: (Int?) -> Unit) {
             modifier = Modifier.padding(bottom = 16.dp),
         )
 
-        Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))) {
+        Column(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Theme.v2.colors.backgrounds.secondary)
+        ) {
             SlippageOptionRow(
                 label = stringResource(R.string.swap_advanced_value_auto),
                 selected = slippageBps == null,

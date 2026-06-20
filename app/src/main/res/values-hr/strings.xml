@@ -889,6 +889,7 @@
     <string name="swap_advanced_settings">Napredne postavke</string>
     <string name="swap_advanced_sheet_title">Napredna zamjena</string>
     <string name="swap_advanced_slippage_title">Tolerancija proklizavanja</string>
+    <string name="swap_advanced_slippage_page_title">Proklizavanje</string>
     <string name="swap_advanced_gas_limit_title">Ograničenje plina</string>
     <string name="swap_advanced_external_recipient_title">Koristi vanjskog primatelja</string>
     <string name="swap_advanced_value_auto">Auto</string>

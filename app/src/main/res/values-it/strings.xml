@@ -884,6 +884,7 @@
     <string name="swap_advanced_settings">Impostazioni avanzate</string>
     <string name="swap_advanced_sheet_title">Swap avanzato</string>
     <string name="swap_advanced_slippage_title">Tolleranza di slippage</string>
+    <string name="swap_advanced_slippage_page_title">Slippage</string>
     <string name="swap_advanced_gas_limit_title">Limite del gas</string>
     <string name="swap_advanced_external_recipient_title">Usa destinatario esterno</string>
     <string name="swap_advanced_value_auto">Auto</string>
