@@ -56,9 +56,9 @@ class QbtcStakingSignDataResolverTests {
     // MARK: - Bodies match the shared, pubkey-agnostic encoders
 
     @Test
-    fun `delegate body matches the shared encoder and carries qbtc-testnet chainId`() {
+    fun `delegate body matches the shared encoder and carries qbtc chainId`() {
         val result = resolve(CosmosStakingPayload.Delegate(FX.VALIDATOR_A, amount = "100000000"))
-        assertEquals("qbtc-testnet", result.chainId)
+        assertEquals("qbtc", result.chainId)
         assertEquals(FX.ACCOUNT_NUMBER.toString(), result.accountNumber)
         val expectedBody =
             CosmosStakingHelper.buildTxBodyMulti(

@@ -197,7 +197,7 @@ class BuildCosmosStakingKeysignPayloadUseCaseTests {
             )
 
         val signDirect = assertNotNull(result.signDirect)
-        assertEquals("qbtc-testnet", signDirect.chainId)
+        assertEquals("qbtc", signDirect.chainId)
         // The AuthInfo must carry the ML-DSA pubkey `Any` and the QBTC base gas/fee — proving the
         // use case dispatched to `resolveMLDSA`, not the secp256k1 `resolve` (which would have
         // rejected the 1312-byte key).
