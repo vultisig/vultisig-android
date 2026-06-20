@@ -606,6 +606,7 @@
     <string name="swap_gas_limit_field_label">가스 한도</string>
     <string name="swap_advanced_value_on">켜기</string>
     <string name="swap_external_recipient_helper">교환된 자금을 다른 주소로 보냅니다.</string>
+    <string name="swap_external_recipient_field_label">다른 주소로 보내기</string>
     <string name="swap_external_recipient_hint">수신자 주소</string>
     <string name="swap_external_recipient_invalid">수신자 주소가 유효하지 않습니다</string>
     <string name="swap_external_recipient_unsupported">이 스왑에는 외부 수신자를 사용할 수 없습니다. 계속하려면 해제하세요.</string>

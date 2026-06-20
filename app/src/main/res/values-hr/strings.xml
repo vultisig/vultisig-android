@@ -901,6 +901,7 @@
     <string name="swap_gas_limit_field_label">Ograničenje plina</string>
     <string name="swap_advanced_value_on">Uključeno</string>
     <string name="swap_external_recipient_helper">Pošaljite zamijenjena sredstva na drugu adresu.</string>
+    <string name="swap_external_recipient_field_label">Pošalji na drugu adresu</string>
     <string name="swap_external_recipient_hint">Adresa primatelja</string>
     <string name="swap_external_recipient_invalid">Nevažeća adresa primatelja</string>
     <string name="swap_external_recipient_unsupported">Vanjski primatelj nije dostupan za ovu zamjenu. Isključite ga za nastavak.</string>

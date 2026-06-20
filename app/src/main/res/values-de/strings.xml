@@ -898,6 +898,7 @@
     <string name="swap_gas_limit_field_label">Gasgrenze</string>
     <string name="swap_advanced_value_on">Ein</string>
     <string name="swap_external_recipient_helper">Sende die getauschten Mittel an eine andere Adresse.</string>
+    <string name="swap_external_recipient_field_label">An andere Adresse senden</string>
     <string name="swap_external_recipient_hint">Empfängeradresse</string>
     <string name="swap_external_recipient_invalid">Ungültige Empfängeradresse</string>
     <string name="swap_external_recipient_unsupported">Externer Empfänger ist für diesen Swap nicht verfügbar. Deaktiviere ihn, um fortzufahren.</string>

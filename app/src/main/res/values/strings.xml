@@ -615,6 +615,7 @@
     <string name="swap_gas_limit_field_label">Gas limit</string>
     <string name="swap_advanced_value_on">On</string>
     <string name="swap_external_recipient_helper">Send the swapped funds to a different address.</string>
+    <string name="swap_external_recipient_field_label">Send to Different Address</string>
     <string name="swap_external_recipient_hint">Recipient address</string>
     <string name="swap_external_recipient_invalid">Invalid recipient address</string>
     <string name="swap_external_recipient_unsupported">External recipient isn’t available for this swap. Turn it off to continue.</string>

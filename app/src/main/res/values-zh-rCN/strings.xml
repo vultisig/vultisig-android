@@ -1227,6 +1227,7 @@
     <string name="swap_gas_limit_field_label">燃料限制</string>
     <string name="swap_advanced_value_on">开启</string>
     <string name="swap_external_recipient_helper">将兑换后的资金发送到其他地址。</string>
+    <string name="swap_external_recipient_field_label">发送到其他地址</string>
     <string name="swap_external_recipient_hint">接收方地址</string>
     <string name="swap_external_recipient_invalid">收款地址无效</string>
     <string name="swap_external_recipient_unsupported">此兑换不支持外部收款人。请将其关闭以继续。</string>

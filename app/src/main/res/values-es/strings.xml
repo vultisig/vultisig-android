@@ -896,6 +896,7 @@
     <string name="swap_gas_limit_field_label">Límite de gas</string>
     <string name="swap_advanced_value_on">Activado</string>
     <string name="swap_external_recipient_helper">Envía los fondos intercambiados a otra dirección.</string>
+    <string name="swap_external_recipient_field_label">Enviar a otra dirección</string>
     <string name="swap_external_recipient_hint">Dirección del destinatario</string>
     <string name="swap_external_recipient_invalid">Dirección de destinatario no válida</string>
     <string name="swap_external_recipient_unsupported">El destinatario externo no está disponible para este intercambio. Desactívalo para continuar.</string>

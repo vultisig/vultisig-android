@@ -901,6 +901,7 @@
     <string name="swap_gas_limit_field_label">Предел газа</string>
     <string name="swap_advanced_value_on">Вкл.</string>
     <string name="swap_external_recipient_helper">Отправить обменянные средства на другой адрес.</string>
+    <string name="swap_external_recipient_field_label">Отправить на другой адрес</string>
     <string name="swap_external_recipient_hint">Адрес получателя</string>
     <string name="swap_external_recipient_invalid">Недействительный адрес получателя</string>
     <string name="swap_external_recipient_unsupported">Внешний получатель недоступен для этого обмена. Отключите его, чтобы продолжить.</string>

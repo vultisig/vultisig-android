@@ -893,6 +893,7 @@
     <string name="swap_gas_limit_field_label">Gaslimiet</string>
     <string name="swap_advanced_value_on">Aan</string>
     <string name="swap_external_recipient_helper">Stuur de geruilde middelen naar een ander adres.</string>
+    <string name="swap_external_recipient_field_label">Naar ander adres sturen</string>
     <string name="swap_external_recipient_hint">Ontvangeradres</string>
     <string name="swap_external_recipient_invalid">Ongeldig ontvangeradres</string>
     <string name="swap_external_recipient_unsupported">Externe ontvanger is niet beschikbaar voor deze swap. Schakel het uit om door te gaan.</string>
