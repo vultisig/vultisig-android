@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models.deposit
 
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Immutable
@@ -9,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.models.thorchain.RujiStakeBalances
-import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
 import com.vultisig.wallet.data.crypto.getChainName
 import com.vultisig.wallet.data.models.Account
@@ -31,14 +29,10 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
-import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
-import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
-import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
-import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
@@ -47,24 +41,9 @@ import com.vultisig.wallet.ui.models.deposit.load.InboundAddressResult
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.RujiBalancesLoader
 import com.vultisig.wallet.ui.models.deposit.load.SecuredAssetLoader
-import com.vultisig.wallet.ui.models.deposit.submit.AddCacaoPoolStrategy
-import com.vultisig.wallet.ui.models.deposit.submit.AddLiquidityStrategy
-import com.vultisig.wallet.ui.models.deposit.submit.BondStrategy
-import com.vultisig.wallet.ui.models.deposit.submit.CustomStrategy
+import com.vultisig.wallet.ui.models.deposit.submit.DepositStrategyContext
+import com.vultisig.wallet.ui.models.deposit.submit.DepositStrategyFactory
 import com.vultisig.wallet.ui.models.deposit.submit.DepositSubmitStrategies
-import com.vultisig.wallet.ui.models.deposit.submit.DepositSubmitStrategy
-import com.vultisig.wallet.ui.models.deposit.submit.LeaveStrategy
-import com.vultisig.wallet.ui.models.deposit.submit.MergeStrategy
-import com.vultisig.wallet.ui.models.deposit.submit.RemoveCacaoPoolStrategy
-import com.vultisig.wallet.ui.models.deposit.submit.RemoveLiquidityStrategy
-import com.vultisig.wallet.ui.models.deposit.submit.SecuredAssetStrategy
-import com.vultisig.wallet.ui.models.deposit.submit.StakeStrategy
-import com.vultisig.wallet.ui.models.deposit.submit.SwitchStrategy
-import com.vultisig.wallet.ui.models.deposit.submit.TransferIbcStrategy
-import com.vultisig.wallet.ui.models.deposit.submit.UnMergeStrategy
-import com.vultisig.wallet.ui.models.deposit.submit.UnbondStrategy
-import com.vultisig.wallet.ui.models.deposit.submit.UnstakeStrategy
-import com.vultisig.wallet.ui.models.deposit.submit.WithdrawSecuredAssetStrategy
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.navigation.Destination
@@ -204,13 +183,8 @@ constructor(
     private val mayaChainApi: MayaChainApi,
     private val mayachainBondRepository: MayachainBondRepository,
     private val balanceRepository: BalanceRepository,
-    private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase,
-    private val feeServiceComposite: FeeServiceComposite,
     private val vaultRepository: VaultRepository,
-    private val tokenRepository: TokenRepository,
-    private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
-    private val thorChainLpPreflight: ThorChainLpPreflightUseCase,
     private val fieldValidator: DepositFieldValidator,
     private val gasFeeHelper: DepositGasFeeHelper,
     private val liquidityDataLoaderFactory: LiquidityDataLoader.Factory,
@@ -218,6 +192,7 @@ constructor(
     private val cacaoMaturityLoaderFactory: CacaoMaturityLoader.Factory,
     private val rujiBalancesLoaderFactory: RujiBalancesLoader.Factory,
     private val dataLoaderFactory: DepositDataLoader.Factory,
+    private val depositStrategyFactory: DepositStrategyFactory,
 ) : ViewModel() {
 
     private val appCurrency =
@@ -245,18 +220,43 @@ constructor(
 
     private var rujiStakeBalances = MutableStateFlow<RujiStakeBalances?>(null)
 
-    val tokenAmountFieldState = TextFieldState()
-    val fiatAmountFieldState = TextFieldState()
-    val nodeAddressFieldState = TextFieldState()
-    val providerFieldState = TextFieldState()
-    val operatorFeeFieldState = TextFieldState()
-    val customMemoFieldState = TextFieldState()
-    val basisPointsFieldState = TextFieldState()
-    val lpUnitsFieldState = TextFieldState()
-    val assetsFieldState = TextFieldState()
-    val thorAddressFieldState = TextFieldState()
-    val rewardsAmountFieldState = TextFieldState()
-    val slippageFieldState = TextFieldState()
+    private val fields = DepositFieldStates()
+
+    val tokenAmountFieldState
+        get() = fields.tokenAmountFieldState
+
+    val fiatAmountFieldState
+        get() = fields.fiatAmountFieldState
+
+    val nodeAddressFieldState
+        get() = fields.nodeAddressFieldState
+
+    val providerFieldState
+        get() = fields.providerFieldState
+
+    val operatorFeeFieldState
+        get() = fields.operatorFeeFieldState
+
+    val customMemoFieldState
+        get() = fields.customMemoFieldState
+
+    val basisPointsFieldState
+        get() = fields.basisPointsFieldState
+
+    val lpUnitsFieldState
+        get() = fields.lpUnitsFieldState
+
+    val assetsFieldState
+        get() = fields.assetsFieldState
+
+    val thorAddressFieldState
+        get() = fields.thorAddressFieldState
+
+    val rewardsAmountFieldState
+        get() = fields.rewardsAmountFieldState
+
+    val slippageFieldState
+        get() = fields.slippageFieldState
 
     private val _state = MutableStateFlow(DepositFormUiModel())
     val state: StateFlow<DepositFormUiModel> = _state.asStateFlow()
@@ -325,258 +325,27 @@ constructor(
             selectDepositOption = ::selectDepositOption,
         )
 
-    private val bondStrategy: DepositSubmitStrategy =
-        BondStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            stateProvider = { state.value },
-            selectedTokenProvider = ::getSelectedToken,
-            nodeAddressFieldState = nodeAddressFieldState,
-            tokenAmountFieldState = tokenAmountFieldState,
-            providerFieldState = providerFieldState,
-            assetsFieldState = assetsFieldState,
-            lpUnitsFieldState = lpUnitsFieldState,
-            operatorFeeFieldState = operatorFeeFieldState,
-            chainAccountAddressRepository = chainAccountAddressRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            isAssetCharsValid = isAssetCharsValid,
-            isLpUnitCharsValid = fieldValidator::isLpUnitCharsValid,
-            calculateGasFee = ::calculateGasFee,
-            getFeesFiatValue = ::getFeesFiatValue,
-        )
-
-    private val unbondStrategy: DepositSubmitStrategy =
-        UnbondStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            stateProvider = { state.value },
-            selectedTokenProvider = ::getSelectedToken,
-            nodeAddressFieldState = nodeAddressFieldState,
-            tokenAmountFieldState = tokenAmountFieldState,
-            providerFieldState = providerFieldState,
-            assetsFieldState = assetsFieldState,
-            lpUnitsFieldState = lpUnitsFieldState,
-            chainAccountAddressRepository = chainAccountAddressRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            isAssetCharsValid = isAssetCharsValid,
-            isLpUnitCharsValid = fieldValidator::isLpUnitCharsValid,
-            calculateGasFee = ::calculateGasFee,
-            getFeesFiatValue = ::getFeesFiatValue,
-        )
-
-    private val leaveStrategy: DepositSubmitStrategy =
-        LeaveStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            selectedTokenProvider = ::getSelectedToken,
-            nodeAddressFieldState = nodeAddressFieldState,
-            chainAccountAddressRepository = chainAccountAddressRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            calculateGasFee = ::calculateGasFee,
-            getFeesFiatValue = ::getFeesFiatValue,
-        )
-
-    private val stakeStrategy: DepositSubmitStrategy =
-        StakeStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            stateProvider = { state.value },
-            nodeAddressFieldState = nodeAddressFieldState,
-            tokenAmountFieldState = tokenAmountFieldState,
-            accountsRepository = accountsRepository,
-            chainAccountAddressRepository = chainAccountAddressRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            calculateGasFee = ::calculateGasFee,
-            getFeesFiatValue = ::getFeesFiatValue,
-        )
-
-    private val unstakeStrategy: DepositSubmitStrategy =
-        UnstakeStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            stateProvider = { state.value },
-            nodeAddressFieldState = nodeAddressFieldState,
-            tokenAmountFieldState = tokenAmountFieldState,
-            accountsRepository = accountsRepository,
-            chainAccountAddressRepository = chainAccountAddressRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            calculateGasFee = ::calculateGasFee,
-            getFeesFiatValue = ::getFeesFiatValue,
-        )
-
-    private val mergeStrategy: DepositSubmitStrategy =
-        MergeStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            stateProvider = { state.value },
-            addressProvider = { address.value },
-            requireTokenAmount = ::requireTokenAmount,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            calculateGasFee = ::calculateGasFee,
-            getFeesFiatValue = ::getFeesFiatValue,
-        )
-
-    private val unMergeStrategy: DepositSubmitStrategy =
-        UnMergeStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            stateProvider = { state.value },
-            addressProvider = { address.value },
-            rujiMergeBalancesProvider = { rujiBalancesLoader.balances },
-            tokenAmountFieldState = tokenAmountFieldState,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            calculateGasFee = ::calculateGasFee,
-            getFeesFiatValue = ::getFeesFiatValue,
-        )
-
-    private val switchStrategy: DepositSubmitStrategy =
-        SwitchStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            stateProvider = { state.value },
-            addressProvider = { address.value },
-            nodeAddressFieldState = nodeAddressFieldState,
-            thorAddressFieldState = thorAddressFieldState,
-            dstAddressErrorOrNull = fieldValidator::dstAddressErrorOrNull,
-            requireTokenAmount = ::requireTokenAmount,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            calculateGasFee = ::calculateGasFee,
-            getFeesFiatValue = ::getFeesFiatValue,
-        )
-
-    private val transferIbcStrategy: DepositSubmitStrategy =
-        TransferIbcStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            stateProvider = { state.value },
-            addressProvider = { address.value },
-            nodeAddressFieldState = nodeAddressFieldState,
-            customMemoFieldState = customMemoFieldState,
-            dstAddressErrorOrNull = fieldValidator::dstAddressErrorOrNull,
-            requireTokenAmount = ::requireTokenAmount,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            calculateGasFee = ::calculateGasFee,
-            getFeesFiatValue = ::getFeesFiatValue,
-        )
-
-    private val addCacaoPoolStrategy: DepositSubmitStrategy =
-        AddCacaoPoolStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            tokenAmountFieldState = tokenAmountFieldState,
-            accountsRepository = accountsRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            calculateGasFee = ::calculateGasFee,
-            getFeesFiatValue = ::getFeesFiatValue,
-        )
-
-    private val removeCacaoPoolStrategy: DepositSubmitStrategy =
-        RemoveCacaoPoolStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            tokenAmountFieldState = tokenAmountFieldState,
-            accountsRepository = accountsRepository,
-            validateMayaTransactionHeight = validateMayaTransactionHeight,
-            validateBasisPoints = fieldValidator::validateBasisPoints,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            calculateGasFee = ::calculateGasFee,
-            getFeesFiatValue = ::getFeesFiatValue,
-        )
-
-    private val addLiquidityStrategy: DepositSubmitStrategy =
-        AddLiquidityStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            lpPoolIdProvider = { lpPoolId },
-            tokenAmountFieldState = tokenAmountFieldState,
-            accountsRepository = accountsRepository,
-            thorChainLpPreflight = thorChainLpPreflight,
-            resolvePairedAddress = ::resolvePairedAddress,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            calculateGasFee = ::calculateGasFee,
-            getFeesFiatValue = ::getFeesFiatValue,
-        )
-
-    private val removeLiquidityStrategy: DepositSubmitStrategy =
-        RemoveLiquidityStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            lpPoolIdProvider = { lpPoolId },
-            stateProvider = { state.value },
-            accountsRepository = accountsRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            calculateGasFee = ::calculateGasFee,
-            getFeesFiatValue = ::getFeesFiatValue,
-        )
-
-    private val securedAssetStrategy: DepositSubmitStrategy =
-        SecuredAssetStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            thorAddressFieldState = thorAddressFieldState,
-            tokenAmountFieldState = tokenAmountFieldState,
-            selectedAccountProvider = ::getSelectedAccount,
-            resolveInboundAddress = ::requireSecuredAssetInboundAddress,
-            vaultRepository = vaultRepository,
-            feeServiceComposite = feeServiceComposite,
-            tokenRepository = tokenRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            gasFeeToEstimate = gasFeeToEstimate,
-            getBitcoinTransactionPlan = ::getBitcoinTransactionPlan,
-        )
-
-    private val withdrawSecuredAssetStrategy: DepositSubmitStrategy =
-        WithdrawSecuredAssetStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            stateProvider = { state.value },
-            thorAddressFieldState = thorAddressFieldState,
-            tokenAmountFieldState = tokenAmountFieldState,
-            accountsRepository = accountsRepository,
-            vaultRepository = vaultRepository,
-            feeServiceComposite = feeServiceComposite,
-            tokenRepository = tokenRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            gasFeeToEstimate = gasFeeToEstimate,
-        )
-
-    private val customStrategy: DepositSubmitStrategy =
-        CustomStrategy(
-            vaultIdProvider = { vaultId },
-            chainProvider = { chain },
-            selectedTokenProvider = ::getSelectedToken,
-            customMemoFieldState = customMemoFieldState,
-            tokenAmountFieldState = tokenAmountFieldState,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            calculateGasFee = ::calculateGasFee,
-            getFeesFiatValue = ::getFeesFiatValue,
-        )
-
     private val depositStrategies: DepositSubmitStrategies =
-        mapOf(
-                DepositOption.AddCacaoPool to addCacaoPoolStrategy,
-                DepositOption.Bond to bondStrategy,
-                DepositOption.Unbond to unbondStrategy,
-                DepositOption.Leave to leaveStrategy,
-                DepositOption.Custom to customStrategy,
-                DepositOption.Stake to stakeStrategy,
-                DepositOption.Unstake to unstakeStrategy,
-                DepositOption.TransferIbc to transferIbcStrategy,
-                DepositOption.Switch to switchStrategy,
-                DepositOption.Merge to mergeStrategy,
-                DepositOption.UnMerge to unMergeStrategy,
-                DepositOption.RemoveCacaoPool to removeCacaoPoolStrategy,
-                DepositOption.AddLiquidity to addLiquidityStrategy,
-                DepositOption.RemoveLiquidity to removeLiquidityStrategy,
-                DepositOption.SecuredAsset to securedAssetStrategy,
-                DepositOption.WithdrawSecuredAsset to withdrawSecuredAssetStrategy,
+        depositStrategyFactory.create(
+            DepositStrategyContext(
+                vaultId = { vaultId },
+                chain = { chain },
+                state = { state.value },
+                address = { address.value },
+                lpPoolId = { lpPoolId },
+                fields = fields,
+                blockChainSpecificRepository = blockChainSpecificRepository,
+                calculateGasFee = ::calculateGasFee,
+                getFeesFiatValue = ::getFeesFiatValue,
+                selectedToken = ::getSelectedToken,
+                selectedAccount = ::getSelectedAccount,
+                requireTokenAmount = ::requireTokenAmount,
+                resolvePairedAddress = ::resolvePairedAddress,
+                resolveSecuredAssetInboundAddress = ::requireSecuredAssetInboundAddress,
+                getBitcoinTransactionPlan = ::getBitcoinTransactionPlan,
+                rujiMergeBalances = { rujiBalancesLoader.balances },
             )
-            .also { strategies ->
-                check(DepositOption.entries.all { it in strategies }) {
-                    "Missing deposit strategy for: " +
-                        DepositOption.entries.filterNot { it in strategies.keys }
-                }
-            }
+        )
 
     fun loadData(
         vaultId: String,
