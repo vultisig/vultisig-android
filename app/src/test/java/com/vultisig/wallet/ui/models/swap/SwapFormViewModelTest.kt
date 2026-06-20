@@ -2805,7 +2805,12 @@ internal class SwapFormViewModelTest {
             every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
                 listOf(SwapProvider.THORCHAIN)
             coEvery {
+                // 11 matchers: the trailing slippageBps + externalRecipient must be matched
+                // explicitly, else MockK defaults them to null and the non-null recipient set below
+                // never matches, silently running the real method instead of this stub.
                 swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
                     any(),
                     any(),
                     any(),
@@ -2843,7 +2848,10 @@ internal class SwapFormViewModelTest {
             every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
                 listOf(SwapProvider.THORCHAIN)
             coEvery {
+                // 11 matchers — see the note above; a non-null recipient is set in this test too.
                 swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
                     any(),
                     any(),
                     any(),

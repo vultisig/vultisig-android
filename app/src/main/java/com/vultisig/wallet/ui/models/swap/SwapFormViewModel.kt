@@ -30,6 +30,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -151,14 +153,23 @@ constructor(
      */
     private fun observeGasLimitApplicability() {
         viewModelScope.launch {
-            selectedSrc.collect { src ->
-                val applicable = src?.account?.token?.chain?.standard == TokenStandard.EVM
-                if (!applicable && gasLimitOverride.value != null) {
-                    gasLimitOverride.value = null
-                    _uiState.update { it.copy(gasLimitOverride = null) }
+            combine(selectedSrc, quoteState.honorsGasLimitOverride) { src, honors ->
+                    val isEvmSource = src?.account?.token?.chain?.standard == TokenStandard.EVM
+                    // Drop a stale override only when leaving EVM entirely. A non-aggregator route
+                    // (THOR/Maya) just disables the row — its value is kept for when an
+                    // EVM-aggregator route returns, and the builder ignores it meanwhile.
+                    if (!isEvmSource && gasLimitOverride.value != null) {
+                        gasLimitOverride.value = null
+                        _uiState.update { it.copy(gasLimitOverride = null) }
+                    }
+                    // Until a quote resolves (honors == null) stay applicable for an EVM source;
+                    // once resolved, only an EVM-aggregator route honors the override.
+                    isEvmSource && (honors ?: true)
                 }
-                _uiState.update { it.copy(isGasLimitApplicable = applicable) }
-            }
+                .distinctUntilChanged()
+                .collect { applicable ->
+                    _uiState.update { it.copy(isGasLimitApplicable = applicable) }
+                }
         }
     }
 
@@ -399,13 +410,18 @@ constructor(
         val dstToken = selectedDst.value?.account?.token ?: return
         val currentAmount = srcAmount?.movePointRight(srcToken.decimal)?.toBigInteger() ?: return
 
+        // Key on the same effective destination the fetch path used (recipient when set, else the
+        // vault address). Otherwise a recipient-routed quote would be cached under the bare
+        // destination and a later no-recipient lookup could serve it, paying the cleared recipient.
+        val cacheDstAddress = quoteRecipient.value?.takeIf { it.isNotBlank() } ?: dstToken.address
+
         swapQuoteManager.cacheQuote(
             currentQuote,
             currentProvider,
             srcToken.id,
             dstToken.id,
             srcToken.address,
-            dstToken.address,
+            cacheDstAddress,
             currentAmount,
             slippageBps.value,
         )

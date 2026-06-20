@@ -24,6 +24,13 @@ internal class QuoteStateHolder {
     // total back into state during a reset or flip.
     val swapFeeFiat = MutableStateFlow<FiatValue?>(null)
 
+    // Whether the resolved best quote honors the EVM gas-limit override — only the EVM-aggregator
+    // route (SwapQuote.OneInch) applies it at build time; THORChain/Maya ignore it. null until a
+    // quote resolves. Drives the Gas Limit row's applicability so it isn't shown enabled for a
+    // route
+    // that would silently drop the value (#4858 review).
+    val honorsGasLimitOverride = MutableStateFlow<Boolean?>(null)
+
     /**
      * Clears the quote and its swap fee on reset / flip / error. [preFlipState] is owned by the
      * flip gesture and intentionally not cleared here. Network-fee state is gas-coupled (owned by
@@ -33,5 +40,6 @@ internal class QuoteStateHolder {
         quote = null
         provider = null
         swapFeeFiat.value = null
+        honorsGasLimitOverride.value = null
     }
 }

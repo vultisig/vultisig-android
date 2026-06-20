@@ -5,6 +5,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -291,12 +292,15 @@ constructor(
                     showIndicativeRate(input)
                 }
                 .combine(refreshQuoteState) { input, _ -> input }
-                // A slippage change re-fetches the quote silently (like the refresh timer), so the
-                // new tolerance is applied without a spinner flash (#4858).
-                .combine(slippageBps) { input, _ -> input }
-                // An external-recipient change likewise re-fetches so the swap re-routes to the new
-                // address (#4858).
-                .combine(externalRecipient) { input, _ -> input }
+                // A slippage or external-recipient change re-fetches with a different tolerance /
+                // routing, so raise isLoading to disable the Swap button until the new quote lands
+                // —
+                // otherwise the prior, differently-routed quote could be signed (#4858, review
+                // #4969). The onEach rides each flow individually, so the silent refresh timer
+                // above
+                // doesn't flash the spinner.
+                .combine(slippageBps.onEach { isLoading = true }) { input, _ -> input }
+                .combine(externalRecipient.onEach { isLoading = true }) { input, _ -> input }
                 // Percentage / Max / paste skip the debounce (0ms); free typing still coalesces at
                 // 300ms so rapid edits fire a single quote fetch.
                 .debounce { input -> swapQuoteManager.quoteDebounceMillis(input.immediate) }
@@ -353,6 +357,8 @@ constructor(
 
         quoteState.provider = result.provider
         quoteState.quote = result.quote
+        // Only the EVM-aggregator route consumes the gas-limit override at build time.
+        quoteState.honorsGasLimitOverride.value = result.quote is SwapQuote.OneInch
         result.referralCodeToStore?.let { rc -> referralCode.update { rc } }
         quoteState.swapFeeFiat.value = result.swapFeeFiat
 
