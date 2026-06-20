@@ -370,16 +370,31 @@ private fun SlippageCustomRow(isSelected: Boolean, currentBps: Int?, onSelect: (
         )
 
     // Parse percent → bps on each edit and hoist it up; rapid typing coalesces in the quote
-    // pipeline's debounce. Blank/invalid input leaves the selection untouched.
+    // pipeline's debounce.
     LaunchedEffect(Unit) {
+        // Tracks whether a custom value is currently driving the selection, so clearing the field
+        // resets to Auto — but the empty seed shown while a preset is active doesn't clobber it.
+        var hasCustomValue = isSelected
         snapshotFlow { customState.text.toString() }
             .distinctUntilChanged()
-            .collect { text ->
+            .collect { raw ->
                 // Normalize comma decimal separators ("0,5") to dot before parsing — locales that
                 // use a comma would otherwise fail toBigDecimalOrNull() and never apply slippage.
-                val percent = text.trim().replace(',', '.').toBigDecimalOrNull() ?: return@collect
-                val bps = percent.movePointRight(2).toDouble().roundToInt()
-                if (bps in 1..MAX_SLIPPAGE_BPS) onSelect(bps)
+                val text = raw.trim().replace(',', '.')
+                if (text.isEmpty()) {
+                    // Emptying a previously-entered custom value resets to Auto so a blank field
+                    // never keeps silently driving the old, looser tolerance.
+                    if (hasCustomValue) {
+                        hasCustomValue = false
+                        onSelect(null)
+                    }
+                    return@collect
+                }
+                val bps = text.toBigDecimalOrNull()?.movePointRight(2)?.toDouble()?.roundToInt()
+                if (bps != null && bps in 1..MAX_SLIPPAGE_BPS) {
+                    hasCustomValue = true
+                    onSelect(bps)
+                }
             }
     }
 

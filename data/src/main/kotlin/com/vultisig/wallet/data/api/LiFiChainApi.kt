@@ -10,6 +10,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.math.round
@@ -90,7 +91,14 @@ constructor(
                 parameter("fromAddress", fromAddress)
                 parameter("toAddress", toAddress)
                 // LI.FI takes slippage as a fraction (0.01 = 1%); omitted = LI.FI's own default.
-                slippageBps?.let { parameter("slippage", it / 10_000.0) }
+                // Format via BigDecimal plain string: a Double would render tight tolerances (1–9
+                // bps) in scientific notation (e.g. 1.0E-4), which LI.FI rejects as non-numeric.
+                slippageBps?.let {
+                    parameter(
+                        "slippage",
+                        BigDecimal(it).movePointLeft(4).stripTrailingZeros().toPlainString(),
+                    )
+                }
                 if (!isSolanaChainInvolved) {
                     parameter("integrator", LiFiChainApi.INTEGRATOR_ACCOUNT)
                     parameter("fee", updatedFeeIntegrator)
