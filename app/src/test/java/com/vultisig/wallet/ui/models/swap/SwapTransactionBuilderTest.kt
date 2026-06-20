@@ -546,6 +546,55 @@ internal class SwapTransactionBuilderTest {
         }
 
     @Test
+    fun `recomputes the displayed network fee from the gas-limit override`() = runTest {
+        val srcToken =
+            coin(Chain.Ethereum, "USDC", "0xsrc", 6, isNative = false, contract = "0xtoken")
+        val dstToken = coin(Chain.Ethereum, "ETH", "0xdst", 18, isNative = true)
+        val nativeEth = coin(Chain.Ethereum, "ETH", "0xsrc", 18, isNative = true)
+        coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+            ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(10))
+        val tx0 =
+            OneInchSwapTxJson(
+                from = "0xsrc",
+                to = "0xrouter",
+                allowanceTarget = "0xproxy",
+                gas = 21_000,
+                data = "0xdata",
+                value = "0",
+                gasPrice = "1",
+            )
+        val quote =
+            SwapQuote.OneInch(
+                expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
+                fees = TokenValue(BigInteger.valueOf(9), dstToken),
+                expiredAt = Clock.System.now(),
+                data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
+                provider = "1inch",
+            )
+
+        val tx =
+            builder.build(
+                vaultId = "vault-fee",
+                srcToken = srcToken,
+                dstToken = dstToken,
+                srcAddress = "0xsrc",
+                srcTokenValue = TokenValue(BigInteger.valueOf(1_000), srcToken),
+                quote = quote,
+                gasFee = TokenValue(BigInteger.valueOf(1_000_000), nativeEth),
+                gasFeeFiatValue = FiatValue(BigDecimal("3.00"), "USD"),
+                estimatedNetworkFeeTokenValue = null,
+                estimatedNetworkFeeFiatValue = null,
+                gasLimitOverride = 300_000L,
+            )
+
+        // Max-fee = override × maxFeePerGas = 300_000 × 10 = 3_000_000 wei, re-valued via the
+        // native price implied by the baseline (gasFeeFiatValue 3.00 ÷ gasFee 1_000_000) → 9.00.
+        assertEquals(BigInteger.valueOf(3_000_000), tx.gasFees.value)
+        assertEquals("USD", tx.gasFeeFiatValue.currency)
+        assertEquals(0, tx.gasFeeFiatValue.value.compareTo(BigDecimal("9.00")))
+    }
+
+    @Test
     fun `stamps the external recipient on the built transaction for verify-screen surfacing`() =
         runTest {
             val srcToken = coin(Chain.Bitcoin, "BTC", "bc1qsrc", 8, isNative = true)

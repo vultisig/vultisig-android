@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AllowanceRepository
+import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -272,6 +273,30 @@ constructor(
                     } else {
                         specificAndUtxo
                     }
+
+                // The passed-in network fee was estimated for the aggregator's gas limit, so a
+                // user override (#4858) must be reflected in the displayed/verify fee too — else a
+                // lowered limit could show a fee that can't match what executes (review #4969).
+                // Recompute the max-fee from the override (gasLimit × maxFeePerGas) and re-value it
+                // in fiat via the native-token price implied by the matched (gasFee,
+                // gasFeeFiatValue)
+                // pair (fiat ÷ token, gas-independent). Auto (no override) keeps the estimate.
+                val (displayGasFees, displayGasFeeFiat) =
+                    if (
+                        specific is BlockChainSpecific.Ethereum &&
+                            hasGasOverride &&
+                            gasFee.value.signum() > 0
+                    ) {
+                        val overriddenFeeWei = gasLimit.toBigInteger() * specific.maxFeePerGasWei
+                        val overriddenFiat =
+                            gasFeeFiatValue.value
+                                .multiply(overriddenFeeWei.toBigDecimal())
+                                .divide(gasFee.value.toBigDecimal(), 10, RoundingMode.HALF_UP)
+                        gasFee.copy(value = overriddenFeeWei) to
+                            FiatValue(overriddenFiat, gasFeeFiatValue.currency)
+                    } else {
+                        (estimatedNetworkFeeTokenValue ?: gasFee) to gasFeeFiatValue
+                    }
                 val quoteData =
                     if (specific is BlockChainSpecific.Ethereum) {
                         quote.data.copy(
@@ -296,10 +321,10 @@ constructor(
                     expectedDstTokenValue = dstTokenValue,
                     blockChainSpecific = effectiveSpecificAndUtxo,
                     estimatedFees = quote.fees,
-                    gasFees = estimatedNetworkFeeTokenValue ?: gasFee,
+                    gasFees = displayGasFees,
                     memo = null,
                     isApprovalRequired = isApprovalRequired,
-                    gasFeeFiatValue = gasFeeFiatValue,
+                    gasFeeFiatValue = displayGasFeeFiat,
                     externalRecipient = externalRecipient,
                     payload =
                         SwapPayload.EVM(
