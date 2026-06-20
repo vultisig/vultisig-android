@@ -810,6 +810,10 @@
     <string name="onboarding_intro_back">Zurück</string>
     <string name="error_view_default_title">Etwas ist schiefgelaufen</string>
     <string name="error_view_default_description">Ein Fehler ist aufgetreten</string>
+    <string name="keygen_error_timeout_title">Zeitüberschreitung der Verbindung</string>
+    <string name="keygen_error_timeout_description">Der Server konnte nicht rechtzeitig erreicht werden. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.</string>
+    <string name="keygen_error_network_title">Verbindungsproblem</string>
+    <string name="keygen_error_network_description">Der Server konnte nicht erreicht werden. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.</string>
     <string name="migration_onboarding_step_1_text_emphasized">das weltweit schnellste MPC-Protokoll</string>
     <string name="migration_onboarding_step_1_text_end">und schneller als je zuvor signieren</string>
     <string name="keygen_benefit_5_template">Lassen Sie sich nicht erneut betrügen!</string>

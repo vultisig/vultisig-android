@@ -47,7 +47,7 @@ class CosmosStakingConfigTests {
     @Test
     fun `QBTC entry matches pinned values`() {
         val entry = CosmosStakingConfig.entryFor(Chain.Qbtc)
-        assertEquals("qbtc-testnet", entry.chainId)
+        assertEquals("qbtc", entry.chainId)
         // `qbtc` is lowercase and NOT a micro-denom (8 decimals) — verified on the live
         // qbtc-testnet LCD `staking/params.bond_denom`.
         assertEquals("qbtc", entry.bondDenom)

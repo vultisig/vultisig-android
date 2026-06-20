@@ -807,6 +807,10 @@
     <string name="migration_onboarding_step_1_text_end">en onderteken sneller dan ooit tevoren</string>
     <string name="error_view_default_title">Er is iets misgegaan</string>
     <string name="error_view_default_description">Er is een fout opgetreden</string>
+    <string name="keygen_error_timeout_title">Time-out van verbinding</string>
+    <string name="keygen_error_timeout_description">Kon de server niet op tijd bereiken. Controleer uw verbinding en probeer het opnieuw.</string>
+    <string name="keygen_error_network_title">Verbindingsprobleem</string>
+    <string name="keygen_error_network_description">Kon de server niet bereiken. Controleer uw verbinding en probeer het opnieuw.</string>
     <string name="keygen_benefit_5_template">Word niet opnieuw opgelicht</string>
     <string name="keygen_benefit_5_emphasized">Een seedless wallet,</string>
     <string name="keygen_vault_created_success_part_1">Kluis aangemaakt</string>

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.testutils
 
+import com.vultisig.wallet.data.utils.NetworkErrorKind
 import com.vultisig.wallet.data.utils.NetworkException
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -14,6 +15,8 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendIfNameAbsent
 import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import kotlinx.serialization.json.Json
 
 /**
@@ -108,13 +111,24 @@ object MockHttpClient {
         install(HttpCallValidator) {
             handleResponseExceptionWithRequest { cause, _ ->
                 if (cause is IOException) {
-                    throw NetworkException(
-                        httpStatusCode = 0,
-                        message = "No internet connection",
-                        cause = cause,
-                    )
+                    throw cause.toNetworkException()
                 }
             }
         }
     }
+
+    /**
+     * Mirrors the production
+     * [HttpClientConfigurator][com.vultisig.wallet.data.networkutils.HttpClientConfigurator]
+     * classification so transport failures map to the same [NetworkErrorKind] in tests as in
+     * production.
+     */
+    private fun IOException.toNetworkException(): NetworkException =
+        when (this) {
+            is SocketTimeoutException ->
+                NetworkException(0, "Connection timed out", NetworkErrorKind.Timeout, this)
+            is UnknownHostException ->
+                NetworkException(0, "No internet connection", NetworkErrorKind.NoConnectivity, this)
+            else -> NetworkException(0, "Network request failed", NetworkErrorKind.Transport, this)
+        }
 }

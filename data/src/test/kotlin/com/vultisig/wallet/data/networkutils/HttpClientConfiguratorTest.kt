@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.networkutils
 
+import com.vultisig.wallet.data.utils.NetworkErrorKind
 import com.vultisig.wallet.data.utils.NetworkException
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -12,6 +13,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import java.io.IOException
 import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.test.runTest
@@ -198,5 +200,40 @@ class HttpClientConfiguratorTest {
                 // 1 original call + 3 retries
                 assertEquals(4, callCount)
             }
+    }
+
+    /**
+     * A read/socket timeout must surface as [NetworkErrorKind.Timeout] with a timeout message, not
+     * as a generic "No internet connection" — collapsing distinct transport failures into one
+     * message misled both users and log triage (issue #4956).
+     */
+    @Test
+    fun `socketTimeout isClassifiedAsTimeout`() = runTest {
+        configuredClient(MockEngine { throw SocketTimeoutException("Read timed out") }).use { client
+            ->
+            val ex = assertFailsWith<NetworkException> { client.post("http://localhost/test") }
+            assertEquals(NetworkErrorKind.Timeout, ex.kind)
+            assertEquals("Connection timed out", ex.message)
+            assertEquals(0, ex.httpStatusCode)
+        }
+    }
+
+    /** A DNS failure (host unreachable) is classified as a connectivity loss. */
+    @Test
+    fun `unknownHost isClassifiedAsNoConnectivity`() = runTest {
+        configuredClient(MockEngine { throw UnknownHostException("no host") }).use { client ->
+            val ex = assertFailsWith<NetworkException> { client.post("http://localhost/test") }
+            assertEquals(NetworkErrorKind.NoConnectivity, ex.kind)
+            assertEquals("No internet connection", ex.message)
+        }
+    }
+
+    /** Any other transport-level IOException maps to the generic [NetworkErrorKind.Transport]. */
+    @Test
+    fun `genericIOException isClassifiedAsTransport`() = runTest {
+        configuredClient(MockEngine { throw IOException("connection refused") }).use { client ->
+            val ex = assertFailsWith<NetworkException> { client.post("http://localhost/test") }
+            assertEquals(NetworkErrorKind.Transport, ex.kind)
+        }
     }
 }
