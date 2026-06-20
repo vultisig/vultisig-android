@@ -886,7 +886,6 @@
     <string name="swap_mode_market">Tržište</string>
     <string name="swap_mode_limit">Limit</string>
     <string name="swap_limit_coming_soon">Limit nalozi uskoro</string>
-    <string name="swap_advanced_settings">Napredne postavke</string>
     <string name="swap_advanced_sheet_title">Napredna zamjena</string>
     <string name="swap_advanced_slippage_title">Tolerancija proklizavanja</string>
     <string name="swap_advanced_slippage_page_title">Proklizavanje</string>

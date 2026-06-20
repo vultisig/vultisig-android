@@ -27,8 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.PasteIcon
@@ -55,26 +53,6 @@ private const val MAX_SLIPPAGE_BPS = 10_000
 /** Formats a slippage value for display: "Auto" when null, else a trimmed percent like "0.5%". */
 private fun formatSlippage(bps: Int?): String? =
     bps?.let { "${BigDecimal(it).movePointLeft(2).stripTrailingZeros().toPlainString()}%" }
-
-/**
- * The centered, underlined "Advanced Settings" entry shown above the Swap button.
- *
- * The sheet it opens ([AdvancedSwapSettingsSheet]) is hosted separately at the screen-content level
- * rather than next to this link — the link lives in the bottom bar, whose content is swapped by an
- * `AnimatedContent` on keyboard visibility, and hosting the sheet there would unmount it (closing
- * it) the moment a field inside it opens the keyboard (#4858).
- */
-@Composable
-internal fun AdvancedSettingsLink(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Text(
-        text = stringResource(R.string.swap_advanced_settings),
-        style = Theme.brockmann.supplementary.caption,
-        color = Theme.v2.colors.text.tertiary,
-        textAlign = TextAlign.Center,
-        textDecoration = TextDecoration.Underline,
-        modifier = modifier.fillMaxWidth().clickable(onClick = onClick).padding(8.dp),
-    )
-}
 
 private enum class AdvancedPage {
     Menu,

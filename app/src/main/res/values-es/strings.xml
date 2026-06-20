@@ -881,7 +881,6 @@
     <string name="swap_mode_market">Mercado</string>
     <string name="swap_mode_limit">Límite</string>
     <string name="swap_limit_coming_soon">Órdenes de límite próximamente</string>
-    <string name="swap_advanced_settings">Configuración avanzada</string>
     <string name="swap_advanced_sheet_title">Intercambio avanzado</string>
     <string name="swap_advanced_slippage_title">Tolerancia de deslizamiento</string>
     <string name="swap_advanced_slippage_page_title">Deslizamiento</string>

@@ -42,11 +42,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsBasicTextField
 import com.vultisig.wallet.ui.components.rememberKeyboardVisibilityAsState
+import com.vultisig.wallet.ui.components.v2.buttons.DesignType
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
@@ -55,7 +60,6 @@ import com.vultisig.wallet.ui.components.v2.utils.toPx
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.swap.components.AdvancedSettingsLink
 import com.vultisig.wallet.ui.screens.swap.components.AdvancedSwapSettingsSheet
 import com.vultisig.wallet.ui.screens.swap.components.DstTokenInput
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
@@ -156,8 +160,22 @@ internal fun SwapScreen(
         title = stringResource(R.string.chain_account_view_swap),
         onBackClick = onBackClick,
         actions = {
-            if (selectedMode == SwapMode.Market && state.quoteDisplay.expiredAt != null) {
-                QuoteTimer(expiredAt = state.quoteDisplay.expiredAt)
+            // Advanced settings live in the toolbar now (#4858): a sliders button styled like the
+            // back button, sitting just left of the quote countdown. Only Market swaps have
+            // advanced
+            // settings, so it (and the timer) are hidden in Limit mode.
+            if (selectedMode == SwapMode.Market) {
+                VsCircleButton(
+                    onClick = { showAdvancedSettings = true },
+                    icon = R.drawable.ic_settings_slider_ver,
+                    size = VsCircleButtonSize.Small,
+                    type = VsCircleButtonType.Secondary,
+                    designType = DesignType.Shined,
+                )
+                state.quoteDisplay.expiredAt?.let { expiredAt ->
+                    UiSpacer(size = 8.dp)
+                    QuoteTimer(expiredAt = expiredAt)
+                }
             }
         },
         content = {
@@ -343,7 +361,6 @@ internal fun SwapScreen(
                         )
                     } else {
                         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
-                            AdvancedSettingsLink(onClick = { showAdvancedSettings = true })
                             VsButton(
                                 label =
                                     if (srcAmountTextFieldState.text.isEmpty()) {

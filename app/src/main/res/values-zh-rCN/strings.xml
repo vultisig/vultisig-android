@@ -1212,7 +1212,6 @@
     <string name="swap_mode_market">市价</string>
     <string name="swap_mode_limit">限价</string>
     <string name="swap_limit_coming_soon">限价单即将推出</string>
-    <string name="swap_advanced_settings">高级设置</string>
     <string name="swap_advanced_sheet_title">高级兑换</string>
     <string name="swap_advanced_slippage_title">滑点容差</string>
     <string name="swap_advanced_slippage_page_title">滑点</string>

@@ -118,6 +118,7 @@ import com.vultisig.wallet.ui.screens.swap.preview.AdvancedMenuConfiguredPreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedMenuPreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedSlippagePreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapFormQuoteLoadingPreview
+import com.vultisig.wallet.ui.screens.swap.preview.SwapToolbarPreview
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
@@ -177,6 +178,7 @@ class PreviewActivity : ComponentActivity() {
                     "swap_error_before" -> SwapErrorBeforePreview()
                     "swap_error" -> SwapErrorPreview()
                     "swap_quote_loading" -> SwapFormQuoteLoadingPreview()
+                    "swap_toolbar" -> SwapToolbarPreview()
                     "swap_advanced_menu" -> AdvancedMenuPreview()
                     "swap_advanced_menu_configured" -> AdvancedMenuConfiguredPreview()
                     "swap_advanced_slippage" -> AdvancedSlippagePreview()

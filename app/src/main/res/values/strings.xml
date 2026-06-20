@@ -600,7 +600,6 @@
     <string name="swap_mode_market">Market</string>
     <string name="swap_mode_limit">Limit</string>
     <string name="swap_limit_coming_soon">Limit orders coming soon</string>
-    <string name="swap_advanced_settings">Advanced Settings</string>
     <string name="swap_advanced_sheet_title">Advanced swap</string>
     <string name="swap_advanced_slippage_title">Slippage Tolerance</string>
     <string name="swap_advanced_slippage_page_title">Slippage</string>

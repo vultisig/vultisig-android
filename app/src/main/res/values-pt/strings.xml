@@ -880,7 +880,6 @@
     <string name="swap_mode_market">Mercado</string>
     <string name="swap_mode_limit">Limite</string>
     <string name="swap_limit_coming_soon">Ordens limite em breve</string>
-    <string name="swap_advanced_settings">Configurações avançadas</string>
     <string name="swap_advanced_sheet_title">Troca avançada</string>
     <string name="swap_advanced_slippage_title">Tolerância de derrapagem</string>
     <string name="swap_advanced_slippage_page_title">Derrapagem</string>

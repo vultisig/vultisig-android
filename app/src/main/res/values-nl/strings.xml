@@ -878,7 +878,6 @@
     <string name="swap_mode_market">Markt</string>
     <string name="swap_mode_limit">Limiet</string>
     <string name="swap_limit_coming_soon">Limietorders binnenkort</string>
-    <string name="swap_advanced_settings">Geavanceerde instellingen</string>
     <string name="swap_advanced_sheet_title">Geavanceerde swap</string>
     <string name="swap_advanced_slippage_title">Slippage-tolerantie</string>
     <string name="swap_advanced_slippage_page_title">Slippage</string>

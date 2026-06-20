@@ -886,7 +886,6 @@
     <string name="swap_mode_market">Рынок</string>
     <string name="swap_mode_limit">Лимит</string>
     <string name="swap_limit_coming_soon">Лимитные ордера скоро</string>
-    <string name="swap_advanced_settings">Дополнительные настройки</string>
     <string name="swap_advanced_sheet_title">Расширенный обмен</string>
     <string name="swap_advanced_slippage_title">Допустимое проскальзывание</string>
     <string name="swap_advanced_slippage_page_title">Проскальзывание</string>
