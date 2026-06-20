@@ -748,7 +748,7 @@
     <string name="keygen_screen_upgrading_vault">Actualizando la bóveda.</string>
     <string name="keysign_password_enter_your_password">Ingrese su contraseña.</string>
     <string name="migration_password_enter_your_password_to_unlock">Ingrese su contraseña para desbloquear su servidor compartido e iniciar la actualización.</string>
-    <string name="join_key_gen_vault_with_duplicate_name_exists">Existe una bóveda con nombre duplicado</string>
+    <string name="join_key_gen_vault_with_duplicate_name_exists">Ya existe una bóveda con el nombre \"%1$s\"</string>
     <string name="join_key_gen_vault_already_on_device">La bóveda \"%1$s\" ya está en este dispositivo</string>
     <string name="join_key_gen_open_existing_vault">Abrir bóveda</string>
     <string name="join_key_gen_unknown_tssaction">TssAction desconocido</string>

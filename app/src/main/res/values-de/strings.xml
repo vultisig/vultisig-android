@@ -750,7 +750,7 @@
     <string name="keygen_screen_upgrading_vault">Tresor wird aktualisiert.</string>
     <string name="keysign_password_enter_your_password">Passwort eingeben.</string>
     <string name="migration_password_enter_your_password_to_unlock">Geben Sie Ihr Passwort ein, um Ihre Serverfreigabe freizugeben und das Upgrade zu starten.</string>
-    <string name="join_key_gen_vault_with_duplicate_name_exists">Vault mit doppeltem Namen vorhanden</string>
+    <string name="join_key_gen_vault_with_duplicate_name_exists">Ein Vault mit dem Namen \"%1$s\" existiert bereits</string>
     <string name="join_key_gen_vault_already_on_device">Tresor \"%1$s\" ist bereits auf diesem Gerät</string>
     <string name="join_key_gen_open_existing_vault">Tresor öffnen</string>
     <string name="join_key_gen_unknown_tssaction">Unbekannte TssAction</string>
