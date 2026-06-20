@@ -112,6 +112,11 @@ import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheetContent
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
+import com.vultisig.wallet.ui.screens.swap.preview.AdvancedExternalRecipientPreview
+import com.vultisig.wallet.ui.screens.swap.preview.AdvancedGasLimitPreview
+import com.vultisig.wallet.ui.screens.swap.preview.AdvancedMenuConfiguredPreview
+import com.vultisig.wallet.ui.screens.swap.preview.AdvancedMenuPreview
+import com.vultisig.wallet.ui.screens.swap.preview.AdvancedSlippagePreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapFormQuoteLoadingPreview
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
@@ -172,6 +177,11 @@ class PreviewActivity : ComponentActivity() {
                     "swap_error_before" -> SwapErrorBeforePreview()
                     "swap_error" -> SwapErrorPreview()
                     "swap_quote_loading" -> SwapFormQuoteLoadingPreview()
+                    "swap_advanced_menu" -> AdvancedMenuPreview()
+                    "swap_advanced_menu_configured" -> AdvancedMenuConfiguredPreview()
+                    "swap_advanced_slippage" -> AdvancedSlippagePreview()
+                    "swap_advanced_gas_limit" -> AdvancedGasLimitPreview()
+                    "swap_advanced_external_recipient" -> AdvancedExternalRecipientPreview()
                     "import_seedphrase" -> ImportSeedphrasePreview()
                     "defi_account_list" -> DeFiAccountListPreview()
                     "share_qr_keysign" -> ShareQrKeysignPreview()

@@ -199,9 +199,10 @@ internal class SwapQuotePipeline(
                 eligibleProviders
                     .map { p ->
                         async {
-                            val discount = vaultId?.let { id ->
-                                getDiscountBpsUseCase.invoke(id, p).takeIf { bps -> bps != 0 }
-                            }
+                            val discount =
+                                vaultId?.let { id ->
+                                    getDiscountBpsUseCase.invoke(id, p).takeIf { bps -> bps != 0 }
+                                }
                             QuoteCandidate(
                                 provider = p,
                                 vultBPSDiscount = discount,

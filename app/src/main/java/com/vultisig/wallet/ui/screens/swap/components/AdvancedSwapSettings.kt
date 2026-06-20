@@ -52,9 +52,8 @@ private val SLIPPAGE_PRESETS_BPS = listOf(50, 100, 300)
 private const val MAX_SLIPPAGE_BPS = 10_000
 
 /** Formats a slippage value for display: "Auto" when null, else a trimmed percent like "0.5%". */
-private fun formatSlippage(bps: Int?): String? = bps?.let {
-    "${BigDecimal(it).movePointLeft(2).stripTrailingZeros().toPlainString()}%"
-}
+private fun formatSlippage(bps: Int?): String? =
+    bps?.let { "${BigDecimal(it).movePointLeft(2).stripTrailingZeros().toPlainString()}%" }
 
 /**
  * The centered, underlined "Advanced Settings" entry shown above the Swap button.
@@ -181,7 +180,7 @@ internal fun AdvancedSwapSettingsSheet(
 }
 
 @Composable
-private fun AdvancedMenu(
+internal fun AdvancedMenu(
     slippageValue: String,
     gasLimitValue: String,
     isGasLimitApplicable: Boolean,
@@ -218,7 +217,7 @@ private fun AdvancedMenu(
 }
 
 @Composable
-private fun ExternalRecipientPage(
+internal fun ExternalRecipientPage(
     externalRecipient: String?,
     errorText: String?,
     onSelect: (String?) -> Unit,
@@ -271,7 +270,7 @@ private fun ExternalRecipientPage(
 }
 
 @Composable
-private fun SlippagePage(slippageBps: Int?, onSelect: (Int?) -> Unit) {
+internal fun SlippagePage(slippageBps: Int?, onSelect: (Int?) -> Unit) {
     val isCustom = slippageBps != null && slippageBps !in SLIPPAGE_PRESETS_BPS
 
     Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
@@ -398,7 +397,7 @@ private fun AdvancedSwapSettingRow(
 }
 
 @Composable
-private fun GasLimitPage(gasLimitOverride: Long?, onSelect: (Long?) -> Unit) {
+internal fun GasLimitPage(gasLimitOverride: Long?, onSelect: (Long?) -> Unit) {
     // Seed with the current override; blank means Auto (use the aggregator estimate).
     val state = rememberTextFieldState(gasLimitOverride?.toString().orEmpty())
 
