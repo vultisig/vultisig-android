@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.swap.components
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -190,7 +191,11 @@ internal fun AdvancedMenu(
     onExternalRecipientClick: () -> Unit,
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 16.dp).clip(RoundedCornerShape(12.dp))
+        modifier =
+            Modifier.fillMaxWidth()
+                .padding(top = 16.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Theme.v2.colors.backgrounds.secondary)
     ) {
         AdvancedSwapSettingRow(
             icon = R.drawable.thunder,
