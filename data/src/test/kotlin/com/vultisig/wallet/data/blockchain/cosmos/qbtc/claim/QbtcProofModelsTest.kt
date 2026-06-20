@@ -62,7 +62,7 @@ class QbtcProofModelsTest {
         assertEquals("0".repeat(40) + "deadbeef", request.signatureR)
         assertEquals("0".repeat(56) + "cafebabe", request.signatureS)
         assertTrue(request.broadcast)
-        assertEquals("qbtc-testnet", request.chainId)
+        assertEquals("qbtc", request.chainId)
         assertEquals(1, request.utxos.size)
         assertEquals(0, request.utxos.first().vout)
     }

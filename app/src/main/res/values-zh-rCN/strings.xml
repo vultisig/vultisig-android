@@ -910,7 +910,7 @@
     <string name="gas_settings_priority_fee_gwei">优先费用（GWEI）</string>
 
     <!-- Keygen & Keysign -->
-    <string name="join_key_gen_vault_with_duplicate_name_exists">存在重复名称的保险库</string>
+    <string name="join_key_gen_vault_with_duplicate_name_exists">名为 \"%1$s\" 的保险库已存在</string>
     <string name="join_key_gen_vault_already_on_device">保险库 \"%1$s\" 已在此设备上</string>
     <string name="join_key_gen_open_existing_vault">打开保险库</string>
     <string name="join_key_gen_unknown_tssaction">未知的 TSS 操作</string>

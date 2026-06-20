@@ -96,7 +96,7 @@ class QBTCTransactionHelperTest {
     private fun signDirect(
         body: ByteArray = byteArrayOf(1, 2, 3, 4, 5),
         authInfo: ByteArray = byteArrayOf(9, 8, 7),
-        chainId: String = "qbtc-testnet",
+        chainId: String = "qbtc",
         accountNumber: String = "42",
     ) =
         SignDirectProto(

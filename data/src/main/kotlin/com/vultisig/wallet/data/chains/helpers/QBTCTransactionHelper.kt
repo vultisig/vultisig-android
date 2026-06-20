@@ -16,7 +16,7 @@ class QBTCTransactionHelper {
 
     companion object {
         // This is the actual on-chain ID; the network launched with this name
-        private const val CHAIN_ID = "qbtc-testnet"
+        private const val CHAIN_ID = "qbtc"
         private const val DENOM = "qbtc"
         // Higher than typical Cosmos chains — ML-DSA-44 signatures are ~2.4 KB
         internal const val GAS_LIMIT = 300_000L

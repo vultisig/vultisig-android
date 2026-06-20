@@ -42,6 +42,7 @@ import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
+import com.vultisig.wallet.ui.models.deposit.load.DepositDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.InboundAddressResult
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.RujiBalancesLoader
@@ -72,7 +73,6 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
-import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -217,6 +217,7 @@ constructor(
     private val securedAssetLoaderFactory: SecuredAssetLoader.Factory,
     private val cacaoMaturityLoaderFactory: CacaoMaturityLoader.Factory,
     private val rujiBalancesLoaderFactory: RujiBalancesLoader.Factory,
+    private val dataLoaderFactory: DepositDataLoader.Factory,
 ) : ViewModel() {
 
     private val appCurrency =
@@ -266,7 +267,6 @@ constructor(
         }
 
     private val address = MutableStateFlow<Address?>(null)
-    private var addressJob: Job? = null
     private var whitelistJob: Job? = null
     private var switchInboundJob: Job? = null
     private var withdrawSecuredAssetJob: Job? = null
@@ -314,6 +314,15 @@ constructor(
                 _state.update { it.copy(sharesBalance = sharesBalance) }
             },
             setLoading = { isLoading = it },
+        )
+
+    private val dataLoader: DepositDataLoader =
+        dataLoaderFactory.create(
+            scope = viewModelScope,
+            address = address,
+            depositTypeActionProvider = { depositTypeAction },
+            clearDepositTypeAction = { depositTypeAction = null },
+            selectDepositOption = ::selectDepositOption,
         )
 
     private val bondStrategy: DepositSubmitStrategy =
@@ -643,7 +652,7 @@ constructor(
             )
         }
 
-        loadAddress(vaultId, chain)
+        dataLoader.loadAddress(vaultId, chain)
 
         address
             .filterNotNull()
@@ -651,7 +660,17 @@ constructor(
                 val selectedToken = address.accounts.find { it.token.isNativeToken }?.token
                 selectedToken?.let { _state.update { it.copy(selectedToken = selectedToken) } }
                 if (depositTypeAction == DeFiNavActions.ADD_LP.type) {
-                    loadGasFeeForDisplay(address)
+                    gasFeeHelper.loadGasFeeForDisplay(
+                        scope = viewModelScope,
+                        vaultId = vaultId,
+                        chain = chain,
+                        address = address,
+                        onResult = { totalGas, estimatedFee ->
+                            _state.update {
+                                it.copy(totalGas = totalGas, estimatedFee = estimatedFee)
+                            }
+                        },
+                    )
                 }
             }
             .launchIn(viewModelScope)
@@ -705,7 +724,7 @@ constructor(
                     if (depositOption == DepositOption.SecuredAsset) {
                         securedAssetLoader.collectSecuredAssetAddresses()
                     }
-                    setMetadataInfo()
+                    dataLoader.setMetadataInfo()
                 }
         }
 
@@ -746,23 +765,6 @@ constructor(
                 }
                 .collect {}
         }
-    }
-
-    private fun setMetadataInfo() {
-        val action = depositTypeAction?.takeIf { it.isNotEmpty() } ?: return
-        depositTypeAction = null
-
-        val depositOption =
-            when (parseDepositType(action)) {
-                DeFiNavActions.BOND -> DepositOption.Bond
-                DeFiNavActions.UNBOND -> DepositOption.Unbond
-                DeFiNavActions.STAKE_CACAO -> DepositOption.AddCacaoPool
-                DeFiNavActions.UNSTAKE_CACAO -> DepositOption.RemoveCacaoPool
-                DeFiNavActions.ADD_LP -> DepositOption.AddLiquidity
-                DeFiNavActions.REMOVE_LP -> DepositOption.RemoveLiquidity
-                else -> DepositOption.Bond
-            }
-        selectDepositOption(depositOption)
     }
 
     fun selectBondAsset(asset: String) {
@@ -825,47 +827,6 @@ constructor(
                 )
             }
         }
-    }
-
-    private fun loadGasFeeForDisplay(address: Address) {
-        val chain = chain ?: return
-        viewModelScope.safeLaunch {
-            val token = address.accounts.find { it.token.isNativeToken }?.token ?: return@safeLaunch
-            val srcAddress = token.address
-            val gasFee = calculateGasFee(chain, token, srcAddress)
-            val specific =
-                blockChainSpecificRepository.getSpecific(
-                    chain,
-                    srcAddress,
-                    token,
-                    gasFee,
-                    isSwap = false,
-                    isMaxAmountEnabled = false,
-                    isDeposit = true,
-                )
-            val estimatedGasFee = getFeesFiatValue(specific, gasFee, token)
-            _state.update {
-                it.copy(
-                    totalGas = UiText.DynamicString(estimatedGasFee.formattedTokenValue),
-                    estimatedFee = UiText.DynamicString(estimatedGasFee.formattedFiatValue),
-                )
-            }
-        }
-    }
-
-    private fun loadAddress(vaultId: String, chain: Chain) {
-        addressJob?.cancel()
-        addressJob =
-            viewModelScope.launch {
-                try {
-                    accountsRepository.loadAddress(vaultId, chain).collect { address ->
-                        this@DepositFormViewModel.address.value = address
-                    }
-                } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
-                    Timber.e(e)
-                }
-            }
     }
 
     fun selectToken() {

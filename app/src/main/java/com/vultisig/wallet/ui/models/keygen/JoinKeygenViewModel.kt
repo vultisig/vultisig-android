@@ -63,8 +63,8 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 
 internal sealed class JoinKeygenError(val message: UiText) {
-    data object DuplicateVaultName :
-        JoinKeygenError(R.string.join_key_gen_vault_with_duplicate_name_exists.asUiText())
+    data class DuplicateVaultName(val name: String) :
+        JoinKeygenError(R.string.join_key_gen_vault_with_duplicate_name_exists.asUiText(name))
 
     data object InvalidQr : JoinKeygenError(R.string.join_keysign_invalid_qr.asUiText())
 
@@ -347,8 +347,9 @@ constructor(
     }
 
     private fun assertNoVaultNameDuplicates(existingVaults: List<Vault>, name: String) {
-        if (existingVaults.any { it.name == name }) {
-            error(DuplicateVaultName)
+        val conflict = existingVaults.firstOrNull { it.name == name }
+        if (conflict != null) {
+            error(DuplicateVaultName(conflict.name))
         }
     }
 
