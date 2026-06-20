@@ -603,6 +603,7 @@
     <string name="swap_slippage_custom_hint">사용자 지정</string>
     <string name="swap_slippage_custom_value_hint">0.00%</string>
     <string name="swap_gas_limit_helper">이 스왑에 대한 수동 가스 한도를 설정합니다. 자동을 사용하려면 비워 두세요.</string>
+    <string name="swap_gas_limit_field_label">가스 한도</string>
     <string name="swap_advanced_value_on">켜기</string>
     <string name="swap_external_recipient_helper">교환된 자금을 다른 주소로 보냅니다.</string>
     <string name="swap_external_recipient_hint">수신자 주소</string>

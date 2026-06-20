@@ -898,6 +898,7 @@
     <string name="swap_slippage_custom_hint">Prilagođeno</string>
     <string name="swap_slippage_custom_value_hint">0.00%</string>
     <string name="swap_gas_limit_helper">Postavlja ručno ograničenje plina za ovu zamjenu. Ostavite prazno za Auto.</string>
+    <string name="swap_gas_limit_field_label">Ograničenje plina</string>
     <string name="swap_advanced_value_on">Uključeno</string>
     <string name="swap_external_recipient_helper">Pošaljite zamijenjena sredstva na drugu adresu.</string>
     <string name="swap_external_recipient_hint">Adresa primatelja</string>

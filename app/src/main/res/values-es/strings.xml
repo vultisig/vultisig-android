@@ -893,6 +893,7 @@
     <string name="swap_slippage_custom_hint">Personalizado</string>
     <string name="swap_slippage_custom_value_hint">0.00%</string>
     <string name="swap_gas_limit_helper">Establece un límite de gas manual para este intercambio. Déjalo vacío para usar Auto.</string>
+    <string name="swap_gas_limit_field_label">Límite de gas</string>
     <string name="swap_advanced_value_on">Activado</string>
     <string name="swap_external_recipient_helper">Envía los fondos intercambiados a otra dirección.</string>
     <string name="swap_external_recipient_hint">Dirección del destinatario</string>

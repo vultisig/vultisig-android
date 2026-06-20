@@ -418,12 +418,25 @@ internal fun GasLimitPage(gasLimitOverride: Long?, onSelect: (Long?) -> Unit) {
     }
 
     Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-        Text(
-            text = stringResource(R.string.swap_gas_limit_helper),
-            style = Theme.brockmann.body.s.regular,
-            color = Theme.v2.colors.text.tertiary,
-            modifier = Modifier.padding(bottom = 16.dp),
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(bottom = 8.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.swap_gas_limit_field_label),
+                style = Theme.brockmann.body.s.regular,
+                color = Theme.v2.colors.text.tertiary,
+            )
+            // No tooltip infra exists in the app, so the explanation rides on the icon's
+            // accessibility description rather than a popup.
+            UiIcon(
+                drawableResId = R.drawable.ic_info,
+                size = 16.dp,
+                tint = Theme.v2.colors.text.tertiary,
+                contentDescription = stringResource(R.string.swap_gas_limit_helper),
+            )
+        }
         VsBasicTextField(
             textFieldState = state,
             style = Theme.brockmann.body.s.medium,
@@ -434,6 +447,7 @@ internal fun GasLimitPage(gasLimitOverride: Long?, onSelect: (Long?) -> Unit) {
             modifier =
                 Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
+                    .background(Theme.v2.colors.backgrounds.secondary)
                     .padding(horizontal = 16.dp, vertical = 16.dp),
         )
     }

@@ -898,6 +898,7 @@
     <string name="swap_slippage_custom_hint">Свой</string>
     <string name="swap_slippage_custom_value_hint">0.00%</string>
     <string name="swap_gas_limit_helper">Задаёт ручной предел газа для этого обмена. Оставьте пустым для режима «Авто».</string>
+    <string name="swap_gas_limit_field_label">Предел газа</string>
     <string name="swap_advanced_value_on">Вкл.</string>
     <string name="swap_external_recipient_helper">Отправить обменянные средства на другой адрес.</string>
     <string name="swap_external_recipient_hint">Адрес получателя</string>

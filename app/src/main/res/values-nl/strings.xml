@@ -890,6 +890,7 @@
     <string name="swap_slippage_custom_hint">Aangepast</string>
     <string name="swap_slippage_custom_value_hint">0.00%</string>
     <string name="swap_gas_limit_helper">Stelt een handmatige gaslimiet in voor deze swap. Laat leeg voor Auto.</string>
+    <string name="swap_gas_limit_field_label">Gaslimiet</string>
     <string name="swap_advanced_value_on">Aan</string>
     <string name="swap_external_recipient_helper">Stuur de geruilde middelen naar een ander adres.</string>
     <string name="swap_external_recipient_hint">Ontvangeradres</string>

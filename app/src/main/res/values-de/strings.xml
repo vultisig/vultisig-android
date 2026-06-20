@@ -895,6 +895,7 @@
     <string name="swap_slippage_custom_hint">Benutzerdefiniert</string>
     <string name="swap_slippage_custom_value_hint">0.00%</string>
     <string name="swap_gas_limit_helper">Legt ein manuelles Gaslimit für diesen Swap fest. Für Auto leer lassen.</string>
+    <string name="swap_gas_limit_field_label">Gasgrenze</string>
     <string name="swap_advanced_value_on">Ein</string>
     <string name="swap_external_recipient_helper">Sende die getauschten Mittel an eine andere Adresse.</string>
     <string name="swap_external_recipient_hint">Empfängeradresse</string>
