@@ -81,10 +81,15 @@ constructor(
     // (#4858).
     private val gasLimitOverride = MutableStateFlow<Long?>(null)
 
-    // Optional external recipient address: when set, the swap output is routed here instead of the
-    // vault's own destination address. Passed to the pipeline (re-fetches a correctly-routed
-    // quote) and stamped on the built transaction so it is shown on the verify screen (#4858).
+    // Optional external recipient address (exactly as typed): drives the field display and the
+    // swap() pre-flight gate. The swap output is routed here instead of the vault's own destination
+    // address and stamped on the built transaction so it is shown on the verify screen (#4858).
     private val externalRecipient = MutableStateFlow<String?>(null)
+
+    // The recipient actually fed into the quote pipeline: only a present-and-valid address (else
+    // null = route to the vault). Gating here keeps partially-typed / invalid addresses from
+    // triggering native (THOR/Maya) quote calls with a malformed destination (#4858 review).
+    private val quoteRecipient = MutableStateFlow<String?>(null)
 
     // Owns the gas / network-fee state and quote pipeline wiring (#4865). The ViewModel only reads
     // the resolved quote/fee values it exposes for swap(), the flip gesture, and percentage taps.
@@ -97,7 +102,7 @@ constructor(
             selectedDst = selectedDst,
             referralCode = referralCode,
             slippageBps = slippageBps,
-            externalRecipient = externalRecipient,
+            externalRecipient = quoteRecipient,
             srcAmountState = srcAmountState,
             vaultId = { vaultId },
             showError = ::showError,
@@ -164,9 +169,9 @@ constructor(
      */
     private fun observeExternalRecipientValidity() {
         viewModelScope.launch {
-            selectedDst.collect {
-                _uiState.update { it.copy(externalRecipientError = externalRecipientError()) }
-            }
+            // Re-sync routing too: a destination switch can flip the current recipient's validity,
+            // which must add/remove it from the quote pipeline, not just the inline error.
+            selectedDst.collect { syncExternalRecipientRouting() }
         }
     }
 
@@ -524,14 +529,22 @@ constructor(
      * address; it is re-quoted and shown on the verify screen before signing (#4858).
      */
     fun setExternalRecipient(address: String?) {
-        val normalized = address?.trim()?.takeIf { it.isNotEmpty() }
-        externalRecipient.value = normalized
-        _uiState.update {
-            it.copy(
-                externalRecipient = normalized,
-                externalRecipientError = externalRecipientError(),
-            )
-        }
+        externalRecipient.value = address?.trim()?.takeIf { it.isNotEmpty() }
+        syncExternalRecipientRouting()
+    }
+
+    /**
+     * Reconciles the quote-routing recipient and the inline error with the typed recipient for the
+     * current destination. Only a valid recipient is pushed into the quote pipeline; an invalid or
+     * intermediate value routes quotes to the vault (null) instead of firing native quote calls
+     * with a malformed destination (#4858 review). The typed value still drives the field and the
+     * swap() pre-flight gate.
+     */
+    private fun syncExternalRecipientRouting() {
+        val typed = externalRecipient.value
+        val error = externalRecipientError()
+        quoteRecipient.value = typed?.takeIf { error == null }
+        _uiState.update { it.copy(externalRecipient = typed, externalRecipientError = error) }
     }
 
     fun hideError() {

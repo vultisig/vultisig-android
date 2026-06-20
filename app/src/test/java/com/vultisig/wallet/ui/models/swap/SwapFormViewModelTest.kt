@@ -94,6 +94,8 @@ internal class SwapFormViewModelTest {
     private lateinit var fiatValueToString: FiatValueToStringMapper
     private lateinit var convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase
     private lateinit var swapQuoteRepository: SwapQuoteRepository
+    // The recipient flow the ViewModel feeds into the quote pipeline (gated to valid addresses).
+    private var pipelineRecipient: StateFlow<String?>? = null
     private lateinit var allowanceRepository: AllowanceRepository
     private lateinit var appCurrencyRepository: AppCurrencyRepository
     private lateinit var swapTransactionRepository: SwapTransactionRepository
@@ -254,8 +256,11 @@ internal class SwapFormViewModelTest {
                 srcAmountState: TextFieldState,
                 vaultId: () -> String?,
                 showError: (UiText) -> Unit,
-            ) =
-                SwapQuotePipelineController(
+            ): SwapQuotePipelineController {
+                // Capture the recipient flow the ViewModel feeds the pipeline (gated to valid
+                // addresses) so tests can assert what actually reaches quote fetching (#4858).
+                pipelineRecipient = externalRecipient
+                return SwapQuotePipelineController(
                     swapGasCalculator = swapGasCalculator,
                     swapQuoteRepository = swapQuoteRepository,
                     appCurrencyRepository = appCurrencyRepository,
@@ -278,6 +283,7 @@ internal class SwapFormViewModelTest {
                     vaultId = vaultId,
                     showError = showError,
                 )
+            }
         }
 
     private fun createViewModelWithAddresses(
@@ -2738,6 +2744,36 @@ internal class SwapFormViewModelTest {
             vm.setExternalRecipient("bc1qvalidrecipient")
 
             assertNull(vm.uiState.value.externalRecipientError)
+        }
+
+    @Test
+    fun `invalid external recipient is not pushed into the quote pipeline`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(any(), any()) } returns false
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.setExternalRecipient("not-a-valid-address")
+
+            // Gated: an invalid/intermediate address must not reach quote fetching (would otherwise
+            // hit THOR/Maya with a malformed destination), even though the inline error is shown.
+            assertNull(pipelineRecipient?.value)
+            assertEquals(
+                UiText.StringResource(R.string.swap_external_recipient_invalid),
+                vm.uiState.value.externalRecipientError,
+            )
+        }
+
+    @Test
+    fun `valid external recipient is pushed into the quote pipeline`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.setExternalRecipient("bc1qvalidrecipient")
+
+            assertEquals("bc1qvalidrecipient", pipelineRecipient?.value)
         }
 
     @Test
