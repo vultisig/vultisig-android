@@ -88,13 +88,17 @@ private enum class AdvancedPage {
  * slippage / gas-limit / external-recipient selectors (mirroring the Figma back-navigation) rather
  * than stacking modals.
  *
+ * Slippage and gas-limit selections are staged locally and applied together only when the user
+ * confirms with the done button, so tapping through options doesn't fire a quote re-fetch each
+ * time.
+ *
  * @param slippageBps the current slippage tolerance in basis points, or null for "Auto".
- * @param onSlippageSelected invoked with the chosen tolerance (null = Auto) — hoisted to the
- *   ViewModel so the quote re-fetches with the new value.
+ * @param onSlippageSelected invoked on confirm with the chosen tolerance (null = Auto) — hoisted to
+ *   the ViewModel so the quote re-fetches with the new value.
  * @param gasLimitOverride the current EVM gas-limit override (units), or null for "Auto".
  * @param isGasLimitApplicable whether the source chain is EVM; the Gas Limit row is disabled
  *   otherwise.
- * @param onGasLimitSelected invoked with the chosen gas limit (null = Auto).
+ * @param onGasLimitSelected invoked on confirm with the chosen gas limit (null = Auto).
  * @param externalRecipient the current external recipient address, or null/blank = off.
  * @param onExternalRecipientSelected invoked with the entered address (null/blank = off).
  */
@@ -111,6 +115,18 @@ internal fun AdvancedSwapSettingsSheet(
     onDismiss: () -> Unit,
 ) {
     var page by remember { mutableStateOf(AdvancedPage.Menu) }
+
+    // Stage slippage and gas-limit locally so picking an option doesn't fire a quote re-fetch on
+    // every tap/keystroke; both are applied together only when the user confirms with the done
+    // button (#4858). Closing/swiping the sheet discards the staged selection.
+    var stagedSlippageBps by remember { mutableStateOf(slippageBps) }
+    var stagedGasLimit by remember { mutableStateOf(gasLimitOverride) }
+
+    val applyAndDismiss = {
+        if (stagedSlippageBps != slippageBps) onSlippageSelected(stagedSlippageBps)
+        if (stagedGasLimit != gasLimitOverride) onGasLimitSelected(stagedGasLimit)
+        onDismiss()
+    }
 
     V2BottomSheet(
         onDismissRequest = onDismiss,
@@ -142,10 +158,11 @@ internal fun AdvancedSwapSettingsSheet(
             }
         },
         rightAction = {
-            // The "done" check is present on every page in Figma (menu + each selector). Selections
-            // apply live, so it simply confirms and closes the whole sheet.
+            // The "done" check is present on every page in Figma (menu + each selector). It commits
+            // the staged slippage/gas-limit selection — re-fetching the quote — and closes the
+            // sheet.
             VsCircleButton(
-                onClick = onDismiss,
+                onClick = applyAndDismiss,
                 drawableResId = R.drawable.big_tick,
                 size = VsCircleButtonSize.Small,
             )
@@ -155,8 +172,8 @@ internal fun AdvancedSwapSettingsSheet(
         when (page) {
             AdvancedPage.Menu ->
                 AdvancedMenu(
-                    slippageValue = formatSlippage(slippageBps) ?: autoLabel,
-                    gasLimitValue = gasLimitOverride?.toString() ?: autoLabel,
+                    slippageValue = formatSlippage(stagedSlippageBps) ?: autoLabel,
+                    gasLimitValue = stagedGasLimit?.toString() ?: autoLabel,
                     isGasLimitApplicable = isGasLimitApplicable,
                     externalRecipientValue =
                         if (externalRecipient.isNullOrBlank())
@@ -167,9 +184,9 @@ internal fun AdvancedSwapSettingsSheet(
                     onExternalRecipientClick = { page = AdvancedPage.ExternalRecipient },
                 )
             AdvancedPage.Slippage ->
-                SlippagePage(slippageBps = slippageBps, onSelect = onSlippageSelected)
+                SlippagePage(slippageBps = stagedSlippageBps, onSelect = { stagedSlippageBps = it })
             AdvancedPage.GasLimit ->
-                GasLimitPage(gasLimitOverride = gasLimitOverride, onSelect = onGasLimitSelected)
+                GasLimitPage(gasLimitOverride = stagedGasLimit, onSelect = { stagedGasLimit = it })
             AdvancedPage.ExternalRecipient ->
                 ExternalRecipientPage(
                     externalRecipient = externalRecipient,
