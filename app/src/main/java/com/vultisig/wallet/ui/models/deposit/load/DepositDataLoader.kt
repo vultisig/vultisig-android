@@ -3,18 +3,16 @@ package com.vultisig.wallet.ui.models.deposit.load
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import java.io.IOException
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
@@ -64,20 +62,18 @@ constructor(
     fun loadAddress(vaultId: String, chain: Chain) {
         addressJob?.cancel()
         addressJob =
-            scope.launch {
-                try {
-                    accountsRepository.loadAddress(vaultId, chain).collect { loadedAddress ->
-                        address.value = loadedAddress
-                    }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: IOException) {
+            scope.safeLaunch(
+                onError = { e ->
                     Timber.e(
                         e,
                         "Failed to load address for vaultId=%s chain=%s",
                         vaultId,
                         chain.raw,
                     )
+                }
+            ) {
+                accountsRepository.loadAddress(vaultId, chain).collect { loadedAddress ->
+                    address.value = loadedAddress
                 }
             }
     }
