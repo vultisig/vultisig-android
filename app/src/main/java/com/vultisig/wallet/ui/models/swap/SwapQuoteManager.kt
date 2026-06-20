@@ -283,6 +283,7 @@ constructor(
                         tokenValue,
                         vultBPSDiscount,
                         srcNativeToken,
+                        externalRecipient,
                     )
             }
 
@@ -899,17 +900,24 @@ constructor(
         tokenValue: TokenValue,
         vultBPSDiscount: Int?,
         srcNativeToken: Coin,
+        externalRecipient: String?,
     ): Pair<SwapQuote, UiText> {
         // iOS' SwapKit tier-discount formula at this milestone:
         //   max(0, min(1000, 50 - vultTierDiscount))
         // 50 bps base affiliate, clamped to 0..1000 (SwapKit's documented 0..10% range).
         val affiliateBps = (SWAPKIT_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0)).coerceIn(0, 1000)
+        // External recipient (#4858): SwapKit takes the destination as the quote-time `dstAddress`,
+        // so route the output to a user-chosen address (mirrors the THOR/Maya path). It is part of
+        // the cache key so a recipient change re-fetches a correctly-routed quote.
+        val effectiveDst = externalRecipient?.takeIf { it.isNotBlank() }
+        val cacheDstAddress = effectiveDst ?: dstToken.address
+        val requestDstAddress = effectiveDst ?: dst.address.address
         val swapQuote =
             getCachedQuoteOrFetch(
                 srcToken.id,
                 dstToken.id,
                 srcToken.address,
-                dstToken.address,
+                cacheDstAddress,
                 srcTokenValue,
                 SwapProvider.SWAPKIT,
                 // SwapKit uses a server-side slippage floor (no quote-time override, #4858) — keep
@@ -924,7 +932,7 @@ constructor(
                             dstToken = dstToken,
                             tokenValue = tokenValue,
                             srcAddress = src.address.address,
-                            dstAddress = dst.address.address,
+                            dstAddress = requestDstAddress,
                             affiliateBps = affiliateBps,
                         ),
                     )

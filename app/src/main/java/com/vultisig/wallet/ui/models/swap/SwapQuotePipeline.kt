@@ -172,18 +172,22 @@ internal class SwapQuotePipeline(
             val tokenValue = convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
 
             val allEligibleProviders = swapQuoteRepository.getEligibleProviders(srcToken, dstToken)
-            // External recipient (#4858): only the native protocols (THORChain / Maya) route the
-            // output to a custom address — they carry it as the memo `destination`. Every general
-            // aggregator (1inch / Kyber / Jupiter / LI.FI / SwapKit) is dropped when a recipient is
-            // set, never silently misrouting funds. This mirrors the cross-platform decision
-            // (vultisig-sdk#757 / vultisig-windows#4152): threading a recipient through the
-            // aggregators is a deferred follow-up there too.
+            // External recipient (#4858): the native protocols (THORChain / Maya) carry the custom
+            // destination in the memo, and SwapKit takes it as the quote-time `dstAddress` (it
+            // doesn't bake the vault address into calldata), so all three can route the output to a
+            // custom address. The EVM aggregators (1inch / Kyber / Jupiter / LI.FI) bake the vault
+            // address into calldata, so they are dropped when a recipient is set rather than
+            // silently misrouting funds. This mirrors the cross-platform decision (vultisig-sdk#757
+            // / vultisig-windows#4152): threading a recipient through the EVM aggregators is a
+            // deferred follow-up there too.
             val eligibleProviders =
                 if (externalRecipient.isNullOrBlank()) {
                     allEligibleProviders
                 } else {
                     allEligibleProviders.filter {
-                        it == SwapProvider.THORCHAIN || it == SwapProvider.MAYA
+                        it == SwapProvider.THORCHAIN ||
+                            it == SwapProvider.MAYA ||
+                            it == SwapProvider.SWAPKIT
                     }
                 }
             if (eligibleProviders.isEmpty()) {
