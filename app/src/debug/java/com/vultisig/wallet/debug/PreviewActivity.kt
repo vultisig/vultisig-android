@@ -151,6 +151,10 @@ class PreviewActivity : ComponentActivity() {
                 when (screen) {
                     "swap_confirm" -> SwapConfirmPreview()
                     "swap_confirm_disabled" -> SwapConfirmPreview(allConsents = false)
+                    "swap_confirm_external_recipient" ->
+                        SwapConfirmPreview(
+                            externalRecipient = "0x9876543210FeDcBa9876543210FeDcBa98765432"
+                        )
                     "asset_action_button" -> AssetActionButtonPreview()
                     "camera_button" -> CameraButton(onClick = {})
                     "banner" -> BannerPreview()
@@ -304,7 +308,7 @@ private fun CircleUsdcWidgetPreview() {
 }
 
 @Composable
-private fun SwapConfirmPreview(allConsents: Boolean = true) {
+private fun SwapConfirmPreview(allConsents: Boolean = true, externalRecipient: String? = null) {
     val ethCoin = Coins.Ethereum.ETH
     val btcCoin = Coins.Bitcoin.BTC
 
@@ -318,6 +322,7 @@ private fun SwapConfirmPreview(allConsents: Boolean = true) {
             networkFeeFormatted = "0.0024 ETH ($6.15)",
             providerFeeFormatted = "0.0045 ETH ($11.52)",
             hasConsentAllowance = false,
+            externalRecipient = externalRecipient,
         )
 
     VerifySwapScreen(
