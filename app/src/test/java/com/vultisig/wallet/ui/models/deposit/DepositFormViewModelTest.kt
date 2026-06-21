@@ -39,6 +39,7 @@ import com.vultisig.wallet.ui.models.deposit.load.DepositDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.RujiBalancesLoader
 import com.vultisig.wallet.ui.models.deposit.load.SecuredAssetLoader
+import com.vultisig.wallet.ui.models.deposit.submit.DepositStrategyFactory
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -206,6 +207,19 @@ internal class DepositFormViewModelTest {
             tokenPriceRepository = tokenPriceRepository,
             blockChainSpecificRepository = blockChainSpecificRepository,
         )
+    private val depositStrategyFactory: DepositStrategyFactory =
+        DepositStrategyFactory(
+            accountsRepository = accountsRepository,
+            chainAccountAddressRepository = chainAccountAddressRepository,
+            vaultRepository = vaultRepository,
+            tokenRepository = tokenRepository,
+            feeServiceComposite = feeServiceComposite,
+            gasFeeToEstimate = gasFeeToEstimate,
+            thorChainLpPreflight = thorChainLpPreflight,
+            validateMayaTransactionHeight = validateMayaTransactionHeight,
+            isAssetCharsValid = isAssetCharsValid,
+            fieldValidator = fieldValidator,
+        )
 
     @BeforeEach
     fun setUp() {
@@ -233,20 +247,16 @@ internal class DepositFormViewModelTest {
             mayaChainApi = mayaChainApi,
             mayachainBondRepository = mayachainBondRepository,
             balanceRepository = balanceRepository,
-            validateMayaTransactionHeight = validateMayaTransactionHeight,
-            feeServiceComposite = feeServiceComposite,
             vaultRepository = vaultRepository,
-            tokenRepository = tokenRepository,
-            gasFeeToEstimate = gasFeeToEstimate,
             requestAddressBookEntry = requestAddressBookEntry,
             liquidityDataLoaderFactory = liquidityDataLoaderFactory,
             securedAssetLoaderFactory = securedAssetLoaderFactory,
             cacaoMaturityLoaderFactory = cacaoMaturityLoaderFactory,
             rujiBalancesLoaderFactory = rujiBalancesLoaderFactory,
             dataLoaderFactory = dataLoaderFactory,
-            thorChainLpPreflight = thorChainLpPreflight,
             fieldValidator = fieldValidator,
             gasFeeHelper = gasFeeHelper,
+            depositStrategyFactory = depositStrategyFactory,
         )
 
     @Test
