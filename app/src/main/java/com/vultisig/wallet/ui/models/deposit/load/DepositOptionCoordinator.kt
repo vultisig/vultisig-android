@@ -62,8 +62,8 @@ constructor(
     @Assisted private val securedAssetLoader: SecuredAssetLoader,
     @Assisted private val cacaoMaturityLoader: CacaoMaturityLoader,
     @Assisted private val chainProvider: () -> Chain?,
-    @Assisted private val vaultId: () -> String?,
-    @Assisted private val bondAddress: () -> String?,
+    @Assisted("vaultId") private val vaultId: () -> String?,
+    @Assisted("bondAddress") private val bondAddress: () -> String?,
 ) {
 
     /** @see DepositOptionCoordinator */
@@ -82,8 +82,8 @@ constructor(
             securedAssetLoader: SecuredAssetLoader,
             cacaoMaturityLoader: CacaoMaturityLoader,
             chainProvider: () -> Chain?,
-            vaultId: () -> String?,
-            bondAddress: () -> String?,
+            @Assisted("vaultId") vaultId: () -> String?,
+            @Assisted("bondAddress") bondAddress: () -> String?,
         ): DepositOptionCoordinator
     }
 
