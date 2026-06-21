@@ -4,9 +4,11 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.sources.AppDataStore
 import java.text.NumberFormat
+import java.util.Currency
 import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -31,6 +33,7 @@ internal class AppCurrencyRepositoryImpl @Inject constructor(private val dataSto
 
     private val mutex = Mutex()
     private var cachedLocale: Locale? = null
+    private var cachedCurrency: AppCurrency? = null
     private var cachedCurrencyFormat: NumberFormat? = null
 
     override val currency: Flow<AppCurrency>
@@ -49,18 +52,31 @@ internal class AppCurrencyRepositoryImpl @Inject constructor(private val dataSto
         return CURRENCY_LIST
     }
 
-    override suspend fun getCurrencyFormat(): NumberFormat =
-        mutex.withLock {
+    override suspend fun getCurrencyFormat(): NumberFormat {
+        val appCurrency = currency.first()
+        return mutex.withLock {
             val currentLocale = Locale.getDefault()
-            // Update the currency format in a thread-safe manner when the locale changes or the
-            // value is
-            // null
-            if (cachedLocale != currentLocale || cachedCurrencyFormat == null) {
+            // Rebuild when either the device locale or the selected app currency changes. The
+            // locale
+            // drives grouping/decimal conventions while the selected currency drives the symbol, so
+            // a USD vault always renders "$" even when the device locale would otherwise default to
+            // another currency (e.g. en_GB defaults to "£").
+            if (
+                cachedLocale != currentLocale ||
+                    cachedCurrency != appCurrency ||
+                    cachedCurrencyFormat == null
+            ) {
                 cachedLocale = currentLocale
-                cachedCurrencyFormat = NumberFormat.getCurrencyInstance(currentLocale)
+                cachedCurrency = appCurrency
+                cachedCurrencyFormat =
+                    NumberFormat.getCurrencyInstance(currentLocale).apply {
+                        currency = Currency.getInstance(appCurrency.ticker)
+                    }
             }
-            requireNotNull(cachedCurrencyFormat)
+            // Return a clone so concurrent callers never share a mutable NumberFormat instance.
+            requireNotNull(cachedCurrencyFormat).clone() as NumberFormat
         }
+    }
 
     companion object {
         private const val CURRENCY_KEY = "currency_key"
