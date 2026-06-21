@@ -1096,7 +1096,7 @@
     <string name="ton_op_nft_transfer">Transferência de NFT</string>
     <string name="ton_op_excess_gas_refund">Reembolso de gás excedente</string>
     <string name="ton_op_transfer">Transferência</string>
-    <string name="ton_forward_ton_amount">Montante de TON encaminhado</string>
+    <string name="ton_forward_ton_amount">Montante de GRAM encaminhado</string>
     <string name="ton_raw_payload">Payload bruto</string>
 
     <string name="welcome_tip">Dica: Pode usar um browser como dispositivo</string>
