@@ -27,7 +27,6 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
-import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
@@ -39,6 +38,7 @@ import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
 import com.vultisig.wallet.ui.models.deposit.load.DepositDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.InboundAddressResult
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
+import com.vultisig.wallet.ui.models.deposit.load.NodeWhitelistChecker
 import com.vultisig.wallet.ui.models.deposit.load.RujiBalancesLoader
 import com.vultisig.wallet.ui.models.deposit.load.SecuredAssetLoader
 import com.vultisig.wallet.ui.models.deposit.submit.DepositStrategyContext
@@ -71,7 +71,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -79,7 +78,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
 
@@ -181,7 +179,6 @@ constructor(
     private val transactionRepository: DepositTransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val mayaChainApi: MayaChainApi,
-    private val mayachainBondRepository: MayachainBondRepository,
     private val balanceRepository: BalanceRepository,
     private val vaultRepository: VaultRepository,
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
@@ -191,6 +188,7 @@ constructor(
     private val securedAssetLoaderFactory: SecuredAssetLoader.Factory,
     private val cacaoMaturityLoaderFactory: CacaoMaturityLoader.Factory,
     private val rujiBalancesLoaderFactory: RujiBalancesLoader.Factory,
+    private val nodeWhitelistCheckerFactory: NodeWhitelistChecker.Factory,
     private val dataLoaderFactory: DepositDataLoader.Factory,
     private val depositStrategyFactory: DepositStrategyFactory,
 ) : ViewModel() {
@@ -267,7 +265,6 @@ constructor(
         }
 
     private val address = MutableStateFlow<Address?>(null)
-    private var whitelistJob: Job? = null
     private var switchInboundJob: Job? = null
     private var withdrawSecuredAssetJob: Job? = null
     private var depositTypeAction: String? = null
@@ -314,6 +311,15 @@ constructor(
                 _state.update { it.copy(sharesBalance = sharesBalance) }
             },
             setLoading = { isLoading = it },
+        )
+
+    private val nodeWhitelistChecker: NodeWhitelistChecker =
+        nodeWhitelistCheckerFactory.create(
+            scope = viewModelScope,
+            state = _state,
+            address = address,
+            nodeAddressFieldState = nodeAddressFieldState,
+            chainProvider = { chain },
         )
 
     private val dataLoader: DepositDataLoader =
@@ -916,74 +922,14 @@ constructor(
         val nodeAddress = nodeAddressFieldState.text.toString()
         val errorText = fieldValidator.addressErrorOrNull(chain, nodeAddress)
         if (errorText != null) {
-            whitelistJob?.cancel()
+            nodeWhitelistChecker.cancel()
             _state.update { it.copy(nodeAddressError = errorText, isCheckingWhitelist = false) }
             return
         }
         if (chain == Chain.MayaChain && state.value.depositOption == DepositOption.Bond) {
-            whitelistJob?.cancel()
-            _state.update {
-                it.copy(
-                    nodeAddressError = null,
-                    isCheckingWhitelist = true,
-                    isWhitelistFailed = false,
-                )
-            }
-            whitelistJob = viewModelScope.safeLaunch { checkNodeWhitelist(nodeAddress) }
+            nodeWhitelistChecker.check(nodeAddress)
         } else {
             _state.update { it.copy(nodeAddressError = null) }
-        }
-    }
-
-    private suspend fun checkNodeWhitelist(nodeAddress: String) {
-        try {
-            val userAddress =
-                withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
-                    ?.address
-                    ?: run {
-                        _state.update { it.copy(isCheckingWhitelist = false) }
-                        return
-                    }
-            val nodeInfo = mayachainBondRepository.getNodeDetails(nodeAddress)
-            if (
-                nodeAddressFieldState.text.toString() != nodeAddress ||
-                    chain != Chain.MayaChain ||
-                    state.value.depositOption != DepositOption.Bond
-            ) {
-                _state.update { it.copy(isCheckingWhitelist = false) }
-                return
-            }
-            val isWhitelisted =
-                nodeInfo.bondProviders.providers.any { it.bondAddress == userAddress }
-            if (!isWhitelisted) {
-                _state.update {
-                    it.copy(
-                        nodeAddressError =
-                            UiText.StringResource(R.string.bond_not_whitelisted_error),
-                        isCheckingWhitelist = false,
-                        isWhitelistFailed = true,
-                    )
-                }
-            } else {
-                _state.update {
-                    it.copy(
-                        nodeAddressError = null,
-                        isCheckingWhitelist = false,
-                        isWhitelistFailed = false,
-                    )
-                }
-            }
-        } catch (ce: CancellationException) {
-            throw ce
-        } catch (e: Exception) {
-            Timber.w(e, "Whitelist check failed for node %s", nodeAddress)
-            _state.update {
-                it.copy(
-                    nodeAddressError = UiText.StringResource(R.string.dialog_default_error_body),
-                    isCheckingWhitelist = false,
-                    isWhitelistFailed = true,
-                )
-            }
         }
     }
 
@@ -1328,8 +1274,6 @@ constructor(
         )
 
     companion object {
-        private const val ADDRESS_AWAIT_TIMEOUT_MS = 5_000L
-
         /** THORChain inbound-addresses chain key used by the Switch (Gaia/ATOM) deposit option. */
         private const val SWITCH_INBOUND_CHAIN = "GAIA"
     }

@@ -37,6 +37,7 @@ import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
 import com.vultisig.wallet.ui.models.deposit.load.DepositDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
+import com.vultisig.wallet.ui.models.deposit.load.NodeWhitelistChecker
 import com.vultisig.wallet.ui.models.deposit.load.RujiBalancesLoader
 import com.vultisig.wallet.ui.models.deposit.load.SecuredAssetLoader
 import com.vultisig.wallet.ui.models.deposit.submit.DepositStrategyFactory
@@ -177,6 +178,24 @@ internal class DepositFormViewModelTest {
                     setLoading = setLoading,
                 )
         }
+    private val nodeWhitelistCheckerFactory: NodeWhitelistChecker.Factory =
+        object : NodeWhitelistChecker.Factory {
+            override fun create(
+                scope: CoroutineScope,
+                state: MutableStateFlow<DepositFormUiModel>,
+                address: StateFlow<Address?>,
+                nodeAddressFieldState: TextFieldState,
+                chainProvider: () -> Chain?,
+            ): NodeWhitelistChecker =
+                NodeWhitelistChecker(
+                    mayachainBondRepository = mayachainBondRepository,
+                    scope = scope,
+                    state = state,
+                    address = address,
+                    nodeAddressFieldState = nodeAddressFieldState,
+                    chainProvider = chainProvider,
+                )
+        }
     private val dataLoaderFactory: DepositDataLoader.Factory =
         object : DepositDataLoader.Factory {
             override fun create(
@@ -245,7 +264,6 @@ internal class DepositFormViewModelTest {
             transactionRepository = transactionRepository,
             blockChainSpecificRepository = blockChainSpecificRepository,
             mayaChainApi = mayaChainApi,
-            mayachainBondRepository = mayachainBondRepository,
             balanceRepository = balanceRepository,
             vaultRepository = vaultRepository,
             requestAddressBookEntry = requestAddressBookEntry,
@@ -253,6 +271,7 @@ internal class DepositFormViewModelTest {
             securedAssetLoaderFactory = securedAssetLoaderFactory,
             cacaoMaturityLoaderFactory = cacaoMaturityLoaderFactory,
             rujiBalancesLoaderFactory = rujiBalancesLoaderFactory,
+            nodeWhitelistCheckerFactory = nodeWhitelistCheckerFactory,
             dataLoaderFactory = dataLoaderFactory,
             fieldValidator = fieldValidator,
             gasFeeHelper = gasFeeHelper,
