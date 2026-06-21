@@ -287,7 +287,7 @@ constructor(
             balance?.let {
                 val balanceInt = it.toBigIntegerOrNull()
                 if (balanceInt == null) {
-                    Timber.e("Invalid balance format: $it")
+                    Timber.e("Invalid balance format: %s", it)
                     state.update { state -> state.copy(unstakableAmount = null) }
                     return
                 }
