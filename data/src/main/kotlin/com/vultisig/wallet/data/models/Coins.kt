@@ -2962,11 +2962,13 @@ object Coins {
         val TON =
             Coin(
                 chain = Chain.Ton,
-                ticker = "TON",
-                logo = "ton",
+                ticker = "GRAM",
+                logo = "gram",
                 address = "",
                 decimal = 9,
                 hexPublicKey = "",
+                // Keep the CoinGecko id as "the-open-network" until CoinGecko renames it;
+                // changing early would break price lookups (see #4981).
                 priceProviderID = "the-open-network",
                 contractAddress = "",
                 isNativeToken = true,

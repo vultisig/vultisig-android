@@ -94,6 +94,7 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "zsync-era" -> R.drawable.zksync
         "sui" -> R.drawable.sui
         "ton" -> R.drawable.ton
+        "gram" -> R.drawable.gram
         "osmo" -> R.drawable.osmo
         "wif",
         "dogwifhat-wif-logo" -> R.drawable.wif
