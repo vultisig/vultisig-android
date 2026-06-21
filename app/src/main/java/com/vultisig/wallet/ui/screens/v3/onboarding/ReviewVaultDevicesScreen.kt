@@ -114,10 +114,9 @@ internal fun ReviewVaultDevicesScreen(
 
                 UiSpacer(size = 32.dp)
 
-                // Uniqueness of device strings is guaranteed by
-                // ReviewVaultDevicesViewModel.uniqueDevices. The list lives inside the
-                // scrolling parent Column, so a plain Column (not LazyColumn) is used to
-                // avoid nesting two vertical scroll containers. The device count is small.
+                // The list lives inside the scrolling parent Column, so a plain Column
+                // (not LazyColumn) is used to avoid nesting two vertical scroll
+                // containers. The device count is small.
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     uiState.devices.forEachIndexed { index, device ->
                         VaultDeviceItem(
