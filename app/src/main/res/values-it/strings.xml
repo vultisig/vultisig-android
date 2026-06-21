@@ -591,6 +591,13 @@
     <string name="custom_rpc_wrong_chain">Questo endpoint serve una catena diversa</string>
     <string name="custom_rpc_invalid_response">Risposta imprevista da questo endpoint</string>
     <string name="custom_rpc_unreachable">Endpoint non raggiungibile</string>
+    <string name="custom_rpc_gate_description">Indirizza Vultisig verso i tuoi nodi. Query più veloci, limiti di frequenza più alti e piena privacy per ogni catena.</string>
+    <!-- Feature gate (tier-locked feature popup) -->
+    <string name="feature_gate_requires">Richiede</string>
+    <string name="feature_gate_tier_requirement">$VULT %1$s livello o superiore</string>
+    <string name="feature_gate_hold_threshold">Detieni almeno %1$s nella tua cassaforte</string>
+    <string name="feature_gate_your_balance">Il tuo saldo</string>
+    <string name="feature_gate_get_vult">Ottieni $VULT</string>
     <string name="swapkit_error_api_key_missing">Chiave API di SwapKit non configurata</string>
     <string name="swapkit_error_api_key_invalid">La chiave API di SwapKit non è valida</string>
     <string name="swapkit_error_insufficient_balance">Saldo insufficiente per questa rotta</string>
@@ -889,11 +896,6 @@
     <string name="swap_advanced_external_recipient_title">Usa destinatario esterno</string>
     <string name="swap_advanced_locked_title">Impostazioni avanzate dello swap</string>
     <string name="swap_advanced_locked_subtitle">Regola slippage, gas, percorso e destinatario per ogni swap.</string>
-    <string name="swap_advanced_locked_requires">Richiede</string>
-    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s livello o superiore</string>
-    <string name="swap_advanced_locked_tier_subtitle">Detieni almeno %1$s nella tua cassaforte</string>
-    <string name="swap_advanced_locked_your_balance">Il tuo saldo</string>
-    <string name="swap_advanced_locked_get_vult">Ottieni $VULT</string>
     <string name="swap_advanced_value_auto">Auto</string>
     <string name="swap_advanced_value_off">Disattivato</string>
     <string name="swap_slippage_helper">Limita quanto il prezzo può variare prima che l\'esecuzione venga annullata.</string>

@@ -111,6 +111,7 @@ import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
+import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateBottomSheet
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheetContent
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
@@ -184,6 +185,7 @@ class PreviewActivity : ComponentActivity() {
                     "swap_quote_loading" -> SwapFormQuoteLoadingPreview()
                     "swap_toolbar" -> SwapToolbarPreview()
                     "swap_advanced_locked" -> SwapAdvancedLockedPreview()
+                    "custom_rpc_gate" -> CustomRpcGatePreview()
                     "swap_advanced_menu" -> AdvancedMenuPreview()
                     "swap_advanced_menu_configured" -> AdvancedMenuConfiguredPreview()
                     "swap_advanced_slippage" -> AdvancedSlippagePreview()
@@ -266,6 +268,23 @@ private fun SwapAdvancedLockedPreview() {
                     thresholdText = "3,000 VULT",
                     isBelowThreshold = true,
                 ),
+            onGetVult = {},
+            onDismiss = {},
+        )
+    }
+}
+
+@Composable
+private fun CustomRpcGatePreview() {
+    Box(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
+        FeatureGateBottomSheet(
+            featureIcon = R.drawable.settings_globe,
+            featureTitle = stringResource(R.string.custom_rpc_title),
+            featureDescription = stringResource(R.string.custom_rpc_gate_description),
+            requiredTier = TierType.SILVER,
+            balanceText = "2,340 VULT",
+            thresholdText = "3,000 VULT",
+            isBelowThreshold = true,
             onGetVult = {},
             onDismiss = {},
         )

@@ -42,8 +42,8 @@ import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsUiEvent
 import com.vultisig.wallet.ui.models.settings.SettingsUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsViewModel
+import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateBottomSheet
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.ShareLinkBottomSheet
-import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
 import com.vultisig.wallet.ui.utils.asString
@@ -132,10 +132,16 @@ private fun SettingsScreen(
         }
 
         if (state.showCustomRpcUpsell) {
-            TierDiscountBottomSheet(
-                tier = TierType.SILVER,
-                onContinue = onUnlockCustomRpcTier,
-                onDismissRequest = onDismissCustomRpcUpsell,
+            FeatureGateBottomSheet(
+                featureIcon = R.drawable.settings_globe,
+                featureTitle = stringResource(R.string.custom_rpc_title),
+                featureDescription = stringResource(R.string.custom_rpc_gate_description),
+                requiredTier = TierType.SILVER,
+                balanceText = state.customRpcVultBalance,
+                thresholdText = state.customRpcVultThreshold,
+                isBelowThreshold = true,
+                onGetVult = onUnlockCustomRpcTier,
+                onDismiss = onDismissCustomRpcUpsell,
             )
         }
     }

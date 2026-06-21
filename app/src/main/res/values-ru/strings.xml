@@ -592,6 +592,13 @@
     <string name="custom_rpc_wrong_chain">Эта конечная точка обслуживает другую сеть</string>
     <string name="custom_rpc_invalid_response">Неожиданный ответ от этой конечной точки</string>
     <string name="custom_rpc_unreachable">Конечная точка недоступна</string>
+    <string name="custom_rpc_gate_description">Направьте Vultisig на собственные узлы. Более быстрые запросы, выше лимиты и полная конфиденциальность для каждой сети.</string>
+    <!-- Feature gate (tier-locked feature popup) -->
+    <string name="feature_gate_requires">Требуется</string>
+    <string name="feature_gate_tier_requirement">$VULT уровень %1$s или выше</string>
+    <string name="feature_gate_hold_threshold">Держите не менее %1$s в вашем хранилище</string>
+    <string name="feature_gate_your_balance">Ваш баланс</string>
+    <string name="feature_gate_get_vult">Получить $VULT</string>
     <string name="swapkit_error_api_key_missing">API-ключ SwapKit не настроен</string>
     <string name="swapkit_error_api_key_invalid">API-ключ SwapKit недействителен</string>
     <string name="swapkit_error_insufficient_balance">Недостаточно средств для этого маршрута</string>
@@ -894,11 +901,6 @@
     <string name="swap_advanced_external_recipient_title">Использовать внешнего получателя</string>
     <string name="swap_advanced_locked_title">Расширенные настройки обмена</string>
     <string name="swap_advanced_locked_subtitle">Точная настройка проскальзывания, газа, маршрута и получателя для каждого обмена.</string>
-    <string name="swap_advanced_locked_requires">Требуется</string>
-    <string name="swap_advanced_locked_tier_requirement">$VULT уровень %1$s или выше</string>
-    <string name="swap_advanced_locked_tier_subtitle">Держите не менее %1$s в вашем хранилище</string>
-    <string name="swap_advanced_locked_your_balance">Ваш баланс</string>
-    <string name="swap_advanced_locked_get_vult">Получить $VULT</string>
     <string name="swap_advanced_value_auto">Авто</string>
     <string name="swap_advanced_value_off">Выкл.</string>
     <string name="swap_slippage_helper">Ограничивает, насколько может измениться цена до отмены исполнения.</string>

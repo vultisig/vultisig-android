@@ -591,6 +591,13 @@
     <string name="custom_rpc_wrong_chain">Dieser Endpunkt bedient eine andere Blockchain</string>
     <string name="custom_rpc_invalid_response">Unerwartete Antwort von diesem Endpunkt</string>
     <string name="custom_rpc_unreachable">Endpunkt nicht erreichbar</string>
+    <string name="custom_rpc_gate_description">Richte Vultisig auf deine eigenen Nodes aus. Schnellere Abfragen, höhere Ratenlimits und volle Privatsphäre pro Blockchain.</string>
+    <!-- Feature gate (tier-locked feature popup) -->
+    <string name="feature_gate_requires">Erforderlich</string>
+    <string name="feature_gate_tier_requirement">$VULT %1$s Stufe oder höher</string>
+    <string name="feature_gate_hold_threshold">Halte mindestens %1$s in deinem Tresor</string>
+    <string name="feature_gate_your_balance">Dein Guthaben</string>
+    <string name="feature_gate_get_vult">$VULT holen</string>
     <string name="swapkit_error_api_key_missing">SwapKit-API-Schlüssel nicht konfiguriert</string>
     <string name="swapkit_error_api_key_invalid">SwapKit-API-Schlüssel ist ungültig</string>
     <string name="swapkit_error_insufficient_balance">Unzureichendes Guthaben für diese Route</string>
@@ -891,11 +898,6 @@
     <string name="swap_advanced_external_recipient_title">Externen Empfänger verwenden</string>
     <string name="swap_advanced_locked_title">Erweiterte Swap-Einstellungen</string>
     <string name="swap_advanced_locked_subtitle">Feinabstimmung von Slippage, Gas, Routing und Empfänger für jeden Swap.</string>
-    <string name="swap_advanced_locked_requires">Erforderlich</string>
-    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s Stufe oder höher</string>
-    <string name="swap_advanced_locked_tier_subtitle">Halte mindestens %1$s in deinem Tresor</string>
-    <string name="swap_advanced_locked_your_balance">Dein Guthaben</string>
-    <string name="swap_advanced_locked_get_vult">$VULT holen</string>
     <string name="swap_advanced_value_auto">Auto</string>
     <string name="swap_advanced_value_off">Aus</string>
     <string name="swap_slippage_helper">Begrenzt, wie stark sich der Preis vor der Ausführung ändern darf, bevor sie abgebrochen wird.</string>
