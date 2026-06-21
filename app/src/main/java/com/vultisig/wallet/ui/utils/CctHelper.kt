@@ -34,7 +34,7 @@ internal fun Activity.openCct(uri: Uri, onError: () -> Unit = {}) {
  * @param uri the URL to open.
  * @param onError invoked when no activity is available to open the URL.
  */
-private fun Activity.openInBrowser(uri: Uri, onError: () -> Unit) {
+internal fun Activity.openInBrowser(uri: Uri, onError: () -> Unit = {}) {
     val browserIntent = Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE)
     val chooser =
         Intent.createChooser(browserIntent, null)
@@ -46,6 +46,9 @@ private fun Activity.openInBrowser(uri: Uri, onError: () -> Unit) {
         startActivity(chooser)
     } catch (e: ActivityNotFoundException) {
         Timber.e(e, "No browser available to open URI: %s", uri)
+        onError()
+    } catch (e: SecurityException) {
+        Timber.e(e, "Unable to launch browser for URI: %s", uri)
         onError()
     }
 }
