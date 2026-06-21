@@ -23,6 +23,7 @@ import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.swap.SwapTokenSelector.Companion.ARG_SELECTED_DST_TOKEN_ID
 import com.vultisig.wallet.ui.models.swap.SwapTokenSelector.Companion.ARG_SELECTED_SRC_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
@@ -610,13 +611,16 @@ constructor(
         val vaultId = vaultId ?: return
         _uiState.update { it.copy(advancedSettingsGate = null) }
         viewModelScope.launch {
+            // launchSingleTop is forced on every navigation, so popping the current swap first is
+            // what makes the already-open swap actually re-open with the ETH → VULT pair (#4858).
             navigator.route(
                 Route.Swap(
                     vaultId = vaultId,
                     chainId = Chain.Ethereum.id,
                     srcTokenId = Coins.Ethereum.ETH.id,
                     dstTokenId = Coins.Ethereum.VULT.id,
-                )
+                ),
+                NavigationOptions(popUpToRoute = Route.Swap::class, inclusive = true),
             )
         }
     }

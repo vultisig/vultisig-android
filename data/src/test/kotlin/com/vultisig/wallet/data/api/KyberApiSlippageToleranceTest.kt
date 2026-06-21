@@ -132,7 +132,12 @@ class KyberApiSlippageToleranceTest {
         }
 
         val slippage =
-            json.parseToJsonElement(requestBody!!).jsonObject.getValue("slippageTolerance")
+            json
+                .parseToJsonElement(
+                    checkNotNull(requestBody) { "Expected Kyber build request body to be captured" }
+                )
+                .jsonObject
+                .getValue("slippageTolerance")
         assertEquals("300", slippage.jsonPrimitive.content)
     }
 
