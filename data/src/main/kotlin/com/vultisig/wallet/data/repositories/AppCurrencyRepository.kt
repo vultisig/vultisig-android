@@ -70,7 +70,14 @@ internal class AppCurrencyRepositoryImpl @Inject constructor(private val dataSto
                 cachedCurrency = appCurrency
                 cachedCurrencyFormat =
                     NumberFormat.getCurrencyInstance(currentLocale).apply {
-                        currency = Currency.getInstance(appCurrency.ticker)
+                        val selectedCurrency = Currency.getInstance(appCurrency.ticker)
+                        currency = selectedCurrency
+                        // Pin fraction digits to the selected currency's default. Otherwise they
+                        // stay at the device-locale default currency, so a USD vault on a ja_JP /
+                        // ko_KR device (JPY/KRW have 0 fraction digits) would render "$1,235" and
+                        // drop the cents.
+                        minimumFractionDigits = selectedCurrency.defaultFractionDigits
+                        maximumFractionDigits = selectedCurrency.defaultFractionDigits
                     }
             }
             // Return a clone so concurrent callers never share a mutable NumberFormat instance.

@@ -50,6 +50,22 @@ class AppCurrencyRepositoryImplTest {
     }
 
     @Test
+    fun `format keeps the selected currency fraction digits on a zero-decimal device locale`() =
+        runTest {
+            // On ja_JP the device-locale default currency is JPY (0 fraction digits). Without
+            // pinning the fraction digits to the selected currency, a USD vault would render
+            // "$1,235" and drop the cents (#4982 review).
+            Locale.setDefault(Locale.JAPAN)
+            val repository =
+                AppCurrencyRepositoryImpl(FakeCurrencyDataStore(AppCurrency.USD.ticker))
+
+            val formatted = repository.getCurrencyFormat().format(1234.5)
+
+            val usdSymbol = Currency.getInstance("USD").getSymbol(Locale.JAPAN)
+            assertEquals("${usdSymbol}1,234.50", formatted)
+        }
+
+    @Test
     fun `format reflects a currency change between calls`() = runTest {
         Locale.setDefault(Locale.US)
         val dataStore = FakeCurrencyDataStore(AppCurrency.USD.ticker)
