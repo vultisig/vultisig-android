@@ -125,6 +125,7 @@ constructor(
             provider = provider.getSwapProviderId(),
             providerLabel = providerLabel,
             swapId = swapId,
+            externalRecipient = (from as? SwapTransaction.RegularSwapTransaction)?.externalRecipient,
         )
     }
 }

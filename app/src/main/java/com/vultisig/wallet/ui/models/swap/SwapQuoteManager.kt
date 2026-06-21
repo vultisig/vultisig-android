@@ -207,6 +207,8 @@ constructor(
         vultBPSDiscount: Int?,
         referral: String?,
         amount: BigDecimal,
+        slippageBps: Int? = null,
+        externalRecipient: String? = null,
     ): QuoteFetchResult {
         val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
 
@@ -228,6 +230,8 @@ constructor(
                         vultBPSDiscount,
                         referral,
                         amount,
+                        slippageBps,
+                        externalRecipient,
                     )
 
                 SwapProvider.KYBER ->
@@ -239,6 +243,7 @@ constructor(
                         vultBPSDiscount,
                         provider,
                         srcNativeToken,
+                        slippageBps,
                     )
 
                 SwapProvider.ONEINCH ->
@@ -250,6 +255,7 @@ constructor(
                         vultBPSDiscount,
                         provider,
                         srcNativeToken,
+                        slippageBps,
                     )
 
                 SwapProvider.LIFI,
@@ -264,6 +270,7 @@ constructor(
                         tokenValue,
                         vultBPSDiscount,
                         srcNativeToken,
+                        slippageBps,
                     )
 
                 SwapProvider.SWAPKIT ->
@@ -276,6 +283,7 @@ constructor(
                         tokenValue,
                         vultBPSDiscount,
                         srcNativeToken,
+                        externalRecipient,
                     )
             }
 
@@ -378,6 +386,8 @@ constructor(
         tokenValue: TokenValue,
         currency: AppCurrency,
         amount: BigDecimal,
+        slippageBps: Int? = null,
+        externalRecipient: String? = null,
     ): BestQuote {
         if (candidates.isEmpty()) {
             throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
@@ -404,6 +414,8 @@ constructor(
                                                 vultBPSDiscount = candidate.vultBPSDiscount,
                                                 referral = candidate.referral,
                                                 amount = amount,
+                                                slippageBps = slippageBps,
+                                                externalRecipient = externalRecipient,
                                             ),
                                     )
                                 }
@@ -488,6 +500,8 @@ constructor(
         currency: AppCurrency,
         amount: BigDecimal,
         selectedSrcTokenTitle: String?,
+        slippageBps: Int? = null,
+        externalRecipient: String? = null,
     ): QuoteResolution =
         try {
             QuoteResolution.Success(
@@ -501,6 +515,8 @@ constructor(
                     tokenValue = tokenValue,
                     currency = currency,
                     amount = amount,
+                    slippageBps = slippageBps,
+                    externalRecipient = externalRecipient,
                 )
             )
         } catch (e: SwapException) {
@@ -585,8 +601,16 @@ constructor(
         vultBPSDiscount: Int?,
         referral: String?,
         amount: BigDecimal,
+        slippageBps: Int?,
+        externalRecipient: String?,
     ): Pair<SwapQuote, UiText> {
         val isAffiliate = true
+        // External recipient (#4858): route the swap output to a user-chosen address instead of
+        // the vault's own. THORChain/Maya carry it as the memo `destination` (baked by the node).
+        // It is part of the cache key so a recipient change re-fetches a correctly-routed quote.
+        val effectiveDst = externalRecipient?.takeIf { it.isNotBlank() }
+        val cacheDstAddress = effectiveDst ?: dstToken.address
+        val requestDstAddress = effectiveDst ?: dst.address.address
         val (quote, recommendedMinAmountToken) =
             if (provider == SwapProvider.MAYA) {
                 val mayaSwapQuote =
@@ -594,9 +618,10 @@ constructor(
                         srcToken.id,
                         dstToken.id,
                         srcToken.address,
-                        dstToken.address,
+                        cacheDstAddress,
                         srcTokenValue,
                         SwapProvider.MAYA,
+                        slippageBps,
                     ) {
                         swapQuoteRepository
                             .getQuote(
@@ -605,10 +630,11 @@ constructor(
                                     srcToken = srcToken,
                                     dstToken = dstToken,
                                     tokenValue = tokenValue,
-                                    dstAddress = dst.address.address,
+                                    dstAddress = requestDstAddress,
                                     isAffiliate = isAffiliate,
                                     bpsDiscount = vultBPSDiscount ?: 0,
                                     referralCode = referral.orEmpty(),
+                                    slippageBps = slippageBps,
                                 ),
                             )
                             .expectNative(SwapProvider.MAYA)
@@ -621,9 +647,10 @@ constructor(
                         srcToken.id,
                         dstToken.id,
                         srcToken.address,
-                        dstToken.address,
+                        cacheDstAddress,
                         srcTokenValue,
                         SwapProvider.THORCHAIN,
+                        slippageBps,
                     ) {
                         swapQuoteRepository
                             .getQuote(
@@ -632,9 +659,10 @@ constructor(
                                     srcToken = srcToken,
                                     dstToken = dstToken,
                                     tokenValue = tokenValue,
-                                    dstAddress = dst.address.address,
+                                    dstAddress = requestDstAddress,
                                     referralCode = referral.orEmpty(),
                                     bpsDiscount = vultBPSDiscount ?: 0,
+                                    slippageBps = slippageBps,
                                 ),
                             )
                             .expectNative(SwapProvider.THORCHAIN)
@@ -664,6 +692,7 @@ constructor(
         vultBPSDiscount: Int?,
         provider: SwapProvider,
         srcNativeToken: Coin,
+        slippageBps: Int?,
     ): Pair<SwapQuote, UiText> {
         val swapQuote =
             getCachedQuoteOrFetch(
@@ -673,6 +702,7 @@ constructor(
                 dstToken.address,
                 srcTokenValue,
                 SwapProvider.KYBER,
+                slippageBps,
             ) {
                 val apiQuote =
                     swapQuoteRepository
@@ -684,6 +714,7 @@ constructor(
                                 tokenValue = tokenValue,
                                 affiliateBps =
                                     maxOf(0, KYBER_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0)),
+                                slippageBps = slippageBps,
                             ),
                         )
                         .expectEvm(SwapProvider.KYBER)
@@ -721,6 +752,7 @@ constructor(
         vultBPSDiscount: Int?,
         provider: SwapProvider,
         srcNativeToken: Coin,
+        slippageBps: Int?,
     ): Pair<SwapQuote, UiText> {
         val isAffiliate = true
         val swapQuote =
@@ -731,6 +763,7 @@ constructor(
                 dstToken.address,
                 srcTokenValue,
                 SwapProvider.ONEINCH,
+                slippageBps,
             ) {
                 val apiQuote =
                     swapQuoteRepository
@@ -742,6 +775,7 @@ constructor(
                                 tokenValue = tokenValue,
                                 isAffiliate = isAffiliate,
                                 bpsDiscount = vultBPSDiscount ?: 0,
+                                slippageBps = slippageBps,
                             ),
                         )
                         .expectEvm(SwapProvider.ONEINCH)
@@ -777,7 +811,11 @@ constructor(
         tokenValue: TokenValue,
         vultBPSDiscount: Int?,
         srcNativeToken: Coin,
+        slippageBps: Int?,
     ): Pair<SwapQuote, UiText> {
+        // LI.FI accepts a quote-time slippage override (fraction); Jupiter does not, so its cache
+        // key stays slippage-agnostic (#4858).
+        val liFiSlippageBps = slippageBps.takeIf { provider == SwapProvider.LIFI }
         val swapQuote =
             getCachedQuoteOrFetch(
                 srcToken.id,
@@ -786,6 +824,7 @@ constructor(
                 dstToken.address,
                 srcTokenValue,
                 provider,
+                slippageBps = liFiSlippageBps,
             ) {
                 val apiQuote =
                     if (provider == SwapProvider.LIFI)
@@ -799,6 +838,7 @@ constructor(
                                     srcAddress = src.address.address,
                                     dstAddress = dst.address.address,
                                     bpsDiscount = vultBPSDiscount ?: 0,
+                                    slippageBps = slippageBps,
                                 ),
                             )
                             .expectEvm(SwapProvider.LIFI)
@@ -860,19 +900,29 @@ constructor(
         tokenValue: TokenValue,
         vultBPSDiscount: Int?,
         srcNativeToken: Coin,
+        externalRecipient: String?,
     ): Pair<SwapQuote, UiText> {
         // iOS' SwapKit tier-discount formula at this milestone:
         //   max(0, min(1000, 50 - vultTierDiscount))
         // 50 bps base affiliate, clamped to 0..1000 (SwapKit's documented 0..10% range).
         val affiliateBps = (SWAPKIT_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0)).coerceIn(0, 1000)
+        // External recipient (#4858): SwapKit takes the destination as the quote-time `dstAddress`,
+        // so route the output to a user-chosen address (mirrors the THOR/Maya path). It is part of
+        // the cache key so a recipient change re-fetches a correctly-routed quote.
+        val effectiveDst = externalRecipient?.takeIf { it.isNotBlank() }
+        val cacheDstAddress = effectiveDst ?: dstToken.address
+        val requestDstAddress = effectiveDst ?: dst.address.address
         val swapQuote =
             getCachedQuoteOrFetch(
                 srcToken.id,
                 dstToken.id,
                 srcToken.address,
-                dstToken.address,
+                cacheDstAddress,
                 srcTokenValue,
                 SwapProvider.SWAPKIT,
+                // SwapKit uses a server-side slippage floor (no quote-time override, #4858) — keep
+                // its cache key slippage-agnostic.
+                slippageBps = null,
             ) {
                 val result =
                     swapQuoteRepository.getQuote(
@@ -882,7 +932,7 @@ constructor(
                             dstToken = dstToken,
                             tokenValue = tokenValue,
                             srcAddress = src.address.address,
-                            dstAddress = dst.address.address,
+                            dstAddress = requestDstAddress,
                             affiliateBps = affiliateBps,
                         ),
                     )
@@ -1005,8 +1055,18 @@ constructor(
         srcAddress: String,
         dstAddress: String,
         srcAmount: BigInteger,
+        slippageBps: Int?,
     ) {
-        quoteCache.put(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider, quote)
+        quoteCache.put(
+            srcTokenId,
+            dstTokenId,
+            srcAddress,
+            dstAddress,
+            srcAmount,
+            provider,
+            slippageBps,
+            quote,
+        )
     }
 
     private suspend fun getCachedQuoteOrFetch(
@@ -1016,11 +1076,14 @@ constructor(
         dstAddress: String,
         srcAmount: BigInteger,
         provider: SwapProvider,
+        slippageBps: Int?,
         fetch: suspend () -> SwapQuote,
     ): SwapQuote {
-        quoteCache.get(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider)?.let {
-            return it
-        }
+        quoteCache
+            .get(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider, slippageBps)
+            ?.let {
+                return it
+            }
         return fetch().also { fresh ->
             quoteCache.put(
                 srcTokenId,
@@ -1029,6 +1092,7 @@ constructor(
                 dstAddress,
                 srcAmount,
                 provider,
+                slippageBps,
                 fresh,
             )
         }
@@ -1195,6 +1259,10 @@ internal class QuoteCache(private val maxSize: Int = MAX_SIZE) {
         val dstAddress: String,
         val srcAmount: BigInteger,
         val provider: SwapProvider,
+        // Slippage changes the quote (THOR/Maya memo LIM, aggregator calldata), so two slippage
+        // values for the same pair/amount must cache as distinct entries — otherwise a re-fetch
+        // after a slippage change would serve the stale quote built with the old tolerance (#4858).
+        val slippageBps: Int?,
     )
 
     private val lock = Any()
@@ -1207,9 +1275,19 @@ internal class QuoteCache(private val maxSize: Int = MAX_SIZE) {
         dstAddress: String,
         srcAmount: BigInteger,
         provider: SwapProvider,
+        slippageBps: Int?,
     ): SwapQuote? =
         synchronized(lock) {
-            val key = Key(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider)
+            val key =
+                Key(
+                    srcTokenId,
+                    dstTokenId,
+                    srcAddress,
+                    dstAddress,
+                    srcAmount,
+                    provider,
+                    slippageBps,
+                )
             val quote = entries[key] ?: return null
             if (Clock.System.now() < quote.expiredAt) {
                 quote
@@ -1226,11 +1304,20 @@ internal class QuoteCache(private val maxSize: Int = MAX_SIZE) {
         dstAddress: String,
         srcAmount: BigInteger,
         provider: SwapProvider,
+        slippageBps: Int?,
         quote: SwapQuote,
     ) =
         synchronized(lock) {
-            entries[Key(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider)] =
-                quote
+            entries[
+                Key(
+                    srcTokenId,
+                    dstTokenId,
+                    srcAddress,
+                    dstAddress,
+                    srcAmount,
+                    provider,
+                    slippageBps,
+                )] = quote
             evict()
         }
 

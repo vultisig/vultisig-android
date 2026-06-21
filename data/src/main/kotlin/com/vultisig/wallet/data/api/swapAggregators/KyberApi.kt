@@ -32,6 +32,7 @@ interface KyberApi {
         amount: String,
         srcAddress: String,
         affiliateBps: Int,
+        slippageBps: Int? = null,
     ): KyberSwapQuoteDeserialized
 
     suspend fun getKyberSwapQuote(
@@ -40,6 +41,7 @@ interface KyberApi {
         from: String,
         enableGasEstimation: Boolean,
         affiliateBps: Int,
+        slippageBps: Int? = null,
     ): KyberSwapQuoteJson
 }
 
@@ -59,6 +61,7 @@ constructor(
         amount: String,
         srcAddress: String,
         affiliateBps: Int,
+        slippageBps: Int?,
     ): KyberSwapQuoteDeserialized {
         try {
             val sourceAddress = srcTokenContractAddress.ifEmpty { NULL_ADDRESS }
@@ -75,7 +78,10 @@ constructor(
                             append("amountIn", amount)
                             append("saveGas", "false")
                             append("gasInclude", "true")
-                            append("slippageTolerance", SLIPPAGE_TOLERANCE.toString())
+                            append(
+                                "slippageTolerance",
+                                (slippageBps ?: SLIPPAGE_TOLERANCE).toString(),
+                            )
                             if (hasFee) {
                                 append("feeAmount", affiliateBps.toString())
                                 append("chargeFeeBy", "currency_out")
@@ -123,6 +129,7 @@ constructor(
         from: String,
         enableGasEstimation: Boolean,
         affiliateBps: Int,
+        slippageBps: Int?,
     ): KyberSwapQuoteJson {
 
         try {
@@ -132,7 +139,7 @@ constructor(
                     routeSummary = routeSummary,
                     sender = from,
                     recipient = from,
-                    slippageTolerance = SLIPPAGE_TOLERANCE,
+                    slippageTolerance = slippageBps ?: SLIPPAGE_TOLERANCE,
                     deadline = (System.currentTimeMillis() / 1000L + 1200).toInt(),
                     enableGasEstimation = enableGasEstimation,
                     source = CLIENT_ID,
@@ -165,6 +172,7 @@ constructor(
                     from = from,
                     enableGasEstimation = false,
                     affiliateBps = affiliateBps,
+                    slippageBps = slippageBps,
                 )
             }
             if (!response.status.isSuccess()) {

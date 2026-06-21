@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AllowanceRepository
+import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -45,6 +46,8 @@ constructor(
         gasFeeFiatValue: FiatValue,
         estimatedNetworkFeeTokenValue: TokenValue?,
         estimatedNetworkFeeFiatValue: FiatValue?,
+        gasLimitOverride: Long? = null,
+        externalRecipient: String? = null,
     ): RegularSwapTransaction {
         val dstTokenValue = quote.expectedDstValue
 
@@ -90,6 +93,7 @@ constructor(
                     isApprovalRequired = isApprovalRequired,
                     memo = quote.data.memo,
                     gasFeeFiatValue = estimatedNetworkFeeFiatValue ?: gasFeeFiatValue,
+                    externalRecipient = externalRecipient,
                     payload =
                         SwapPayload.ThorChain(
                             THORChainSwapPayload(
@@ -164,6 +168,7 @@ constructor(
                     memo = quote.data.memo,
                     isApprovalRequired = isApprovalRequired,
                     gasFeeFiatValue = estimatedNetworkFeeFiatValue ?: gasFeeFiatValue,
+                    externalRecipient = externalRecipient,
                     payload =
                         SwapPayload.MayaChain(
                             THORChainSwapPayload(
@@ -222,6 +227,7 @@ constructor(
                     memo = quote.data.memo,
                     isApprovalRequired = false,
                     gasFeeFiatValue = estimatedNetworkFeeFiatValue ?: gasFeeFiatValue,
+                    externalRecipient = externalRecipient,
                     payload = SwapPayload.SwapKit(quote.data),
                 )
             }
@@ -249,8 +255,48 @@ constructor(
                 // Aggregators can return tx.gas == 0; fall back to the standard EVM swap unit
                 // so the signed payload never carries a zero gas limit (matches
                 // SwapQuoteManager's fee path).
+                //
+                // A user gas-limit override (#4858) replaces the aggregator estimate. OneInchSwap
+                // signs with maxOf(tx.gas, ethSpecific.gasLimit), so set BOTH to the override —
+                // maxOf(x, x) = x — making it effective whether the user raises or lowers the
+                // limit. Auto (null/non-positive) keeps the estimate and the current behavior.
                 val gasLimit =
-                    quote.data.tx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT
+                    gasLimitOverride?.takeIf { it > 0L }
+                        ?: (quote.data.tx.gas.takeIf { it != 0L }
+                            ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT)
+                val hasGasOverride = gasLimitOverride != null && gasLimitOverride > 0L
+                val effectiveSpecificAndUtxo =
+                    if (specific is BlockChainSpecific.Ethereum && hasGasOverride) {
+                        specificAndUtxo.copy(
+                            blockChainSpecific = specific.copy(gasLimit = gasLimit.toBigInteger())
+                        )
+                    } else {
+                        specificAndUtxo
+                    }
+
+                // The passed-in network fee was estimated for the aggregator's gas limit, so a
+                // user override (#4858) must be reflected in the displayed/verify fee too — else a
+                // lowered limit could show a fee that can't match what executes (review #4969).
+                // Recompute the max-fee from the override (gasLimit × maxFeePerGas) and re-value it
+                // in fiat via the native-token price implied by the matched (gasFee,
+                // gasFeeFiatValue)
+                // pair (fiat ÷ token, gas-independent). Auto (no override) keeps the estimate.
+                val (displayGasFees, displayGasFeeFiat) =
+                    if (
+                        specific is BlockChainSpecific.Ethereum &&
+                            hasGasOverride &&
+                            gasFee.value.signum() > 0
+                    ) {
+                        val overriddenFeeWei = gasLimit.toBigInteger() * specific.maxFeePerGasWei
+                        val overriddenFiat =
+                            gasFeeFiatValue.value
+                                .multiply(overriddenFeeWei.toBigDecimal())
+                                .divide(gasFee.value.toBigDecimal(), 10, RoundingMode.HALF_UP)
+                        gasFee.copy(value = overriddenFeeWei) to
+                            FiatValue(overriddenFiat, gasFeeFiatValue.currency)
+                    } else {
+                        (estimatedNetworkFeeTokenValue ?: gasFee) to gasFeeFiatValue
+                    }
                 val quoteData =
                     if (specific is BlockChainSpecific.Ethereum) {
                         quote.data.copy(
@@ -273,12 +319,13 @@ constructor(
                     dstAddress = dstAddress,
                     approveSpender = approveSpender,
                     expectedDstTokenValue = dstTokenValue,
-                    blockChainSpecific = specificAndUtxo,
+                    blockChainSpecific = effectiveSpecificAndUtxo,
                     estimatedFees = quote.fees,
-                    gasFees = estimatedNetworkFeeTokenValue ?: gasFee,
+                    gasFees = displayGasFees,
                     memo = null,
                     isApprovalRequired = isApprovalRequired,
-                    gasFeeFiatValue = gasFeeFiatValue,
+                    gasFeeFiatValue = displayGasFeeFiat,
+                    externalRecipient = externalRecipient,
                     payload =
                         SwapPayload.EVM(
                             EVMSwapPayloadJson(

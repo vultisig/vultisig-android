@@ -36,8 +36,13 @@ internal fun resolveExternalSwapRecipient(
 
 /**
  * Extracts the `DESTINATION` address from a THORChain/MayaChain swap memo
- * (`SWAP:ASSET:DESTINATION:LIM/…`). `=` and `s`/`SWAP` are interchangeable swap verbs. Returns null
- * for any memo that isn't a swap or doesn't carry a destination segment.
+ * (`SWAP:ASSET:DESTINATION:LIM/…`). `SWAP`, `s` and the `=` shorthand are interchangeable swap
+ * verbs; the shorthand also appears in limit (`=<`) and modify-limit (`m=<`) variants, all of which
+ * keep the destination at the same segment. The destination always sits at `segments[2]`, so any
+ * verb carrying the swap shorthand is accepted (matching the Windows reference, which applies no
+ * verb gate). Non-swap memos — liquidity add (`+`), withdraw (`-`), bond, loan, etc. — are rejected
+ * so a stray memo never surfaces a phantom recipient. Returns null for any memo that isn't a swap
+ * or doesn't carry a destination segment.
  */
 internal fun parseThorchainMemoDestination(memo: String?): String? {
     val trimmed = memo?.trim().orEmpty()
@@ -47,7 +52,7 @@ internal fun parseThorchainMemoDestination(memo: String?): String? {
     if (segments.size < 3) return null
 
     val verb = segments[0].uppercase()
-    val isSwap = verb == "SWAP" || verb == "=" || verb == "S"
+    val isSwap = verb == "SWAP" || verb == "S" || verb.contains("=")
     if (!isSwap) return null
 
     return segments[2].takeIf { it.isNotBlank() }

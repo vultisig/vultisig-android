@@ -266,6 +266,16 @@ private fun VerifySwapScreen(
                         metadata = tx.src.token.address,
                     )
 
+                    // External recipient must be visible before signing — never a silent default
+                    // (#4858). Only shown when the user routed the output to a custom address, and
+                    // given warning emphasis so it reads as a deliberate deviation, not a fee row.
+                    tx.externalRecipient
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { recipient ->
+                            VerifyCardDivider(size = 20.dp)
+                            VerifyExternalRecipientRow(address = recipient)
+                        }
+
                     VerifyCardDivider(size = 20.dp)
 
                     if (tx.provider.isNotBlank()) {
@@ -623,6 +633,34 @@ internal fun VerifyVaultDetails(
                 )
             }
         }
+    }
+}
+
+/**
+ * External-recipient row on the swap verify screen (#4858). Warning-styled so the user registers
+ * that the output is routed to an address other than their own vault — the most security-sensitive
+ * of the advanced overrides — before signing.
+ */
+@Composable
+internal fun VerifyExternalRecipientRow(address: String, modifier: Modifier = Modifier) {
+    val display = if (address.length > 8) "${address.take(6)}...${address.takeLast(6)}" else address
+    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = stringResource(R.string.verify_swap_recipient),
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.v2.colors.alerts.warning,
+            maxLines = 1,
+        )
+
+        Spacer(Modifier.weight(1f))
+
+        Text(
+            text = display,
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.alerts.warning,
+            textAlign = TextAlign.End,
+            maxLines = 1,
+        )
     }
 }
 

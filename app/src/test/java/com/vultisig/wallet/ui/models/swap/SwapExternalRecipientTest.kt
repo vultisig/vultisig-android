@@ -72,6 +72,21 @@ internal class SwapExternalRecipientTest {
     }
 
     @Test
+    fun `resolves destination for limit and modify-limit swap verbs`() {
+        // THORChain limit (`=<`) and modify-limit (`m=<`) swaps keep the destination at segments[2]
+        // just like a plain swap, so the verb gate must not drop them (PR #4988 review).
+        listOf("=<", "m=<", "M=<").forEach { verb ->
+            val memo = "$verb:ETH.USDT-0xdAC17F958D2ee523a2206206994597C13D831ec7:$evmRecipient:0"
+
+            resolveExternalSwapRecipient(
+                memo = memo,
+                destinationChain = Chain.Ethereum,
+                vaultDestinationAddress = ownEvmChecksum,
+            ) shouldBe evmRecipient
+        }
+    }
+
+    @Test
     fun `returns null for non-swap, blank, or malformed memos`() {
         // Liquidity add — not a swap verb.
         resolveExternalSwapRecipient(

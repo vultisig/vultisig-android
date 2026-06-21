@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.swap.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -51,11 +52,14 @@ internal fun QuoteTimer(expiredAt: Instant, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         modifier =
             modifier
+                // Match the 44dp toolbar buttons (back / advanced) so the header row reads as one
+                // consistent height, per Figma (#4858).
+                .height(44.dp)
                 .background(
                     color = Theme.v2.colors.backgrounds.secondary,
                     shape = RoundedCornerShape(99.dp),
                 )
-                .padding(vertical = 6.dp, horizontal = 12.dp),
+                .padding(horizontal = 16.dp),
     ) {
         Text(
             text = timeLeft,

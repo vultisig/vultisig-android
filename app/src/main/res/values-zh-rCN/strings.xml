@@ -623,7 +623,7 @@
     <string name="insufficient_native_token">%1$s 不足以支付 Gas 费用</string>
 
     <!-- Swap Errors -->
-    <string name="swap_error_amount_too_low">交换金额太低</string>
+    <string name="swap_error_amount_too_low">金额太低，不足以支付手续费。请增加金额。</string>
     <string name="swap_error_amount_below_dust_threshold">金额低于粉尘阈值。请增加金额后重试。</string>
     <string name="swap_error_insufficient_balance_and_fees">%1$s 余额不足以支付交换和 Gas 费用。请充值 %1$s 或减少交换金额</string>
     <string name="swap_error_insufficient_source_token">%1$s 余额不足以进行交换</string>
@@ -697,6 +697,7 @@
     <string name="verify_transaction_function_inputs_title">函数参数</string>
     <string name="dapp_hero_unverified_function_title">未验证的功能</string>
     <string name="dapp_hero_unverified_function_subtitle">请在签名前查看下方详情</string>
+    <string name="dapp_unverified_function_done_caution">未验证的功能。请查看交易详情。</string>
     <string name="request_from">请求来自</string>
 
     <!-- Fast Vault Password Reminder -->
@@ -1211,6 +1212,35 @@
     <string name="tx_overview_screen_tx_from">从</string>
     <string name="swap_swap_button">交换</string>
     <string name="swap_swap_button_fill_in_amount">填写金额</string>
+    <string name="swap_mode_market">市价</string>
+    <string name="swap_mode_limit">限价</string>
+    <string name="swap_limit_coming_soon">限价单即将推出</string>
+    <string name="swap_advanced_sheet_title">高级兑换</string>
+    <string name="swap_advanced_slippage_title">滑点容差</string>
+    <string name="swap_advanced_slippage_page_title">滑点</string>
+    <string name="swap_advanced_gas_limit_title">燃料限制</string>
+    <string name="swap_advanced_external_recipient_title">使用外部接收方</string>
+    <string name="swap_advanced_locked_title">高级兑换设置</string>
+    <string name="swap_advanced_locked_subtitle">为每次兑换精细调整滑点、Gas、路由和收款人。</string>
+    <string name="swap_advanced_locked_requires">需要</string>
+    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s 等级或以上</string>
+    <string name="swap_advanced_locked_tier_subtitle">在您的金库中持有至少 %1$s</string>
+    <string name="swap_advanced_locked_your_balance">您的余额</string>
+    <string name="swap_advanced_locked_get_vult">获取 $VULT</string>
+    <string name="swap_advanced_value_auto">自动</string>
+    <string name="swap_advanced_value_off">关闭</string>
+    <string name="swap_slippage_helper">限制价格在执行取消前可变动的幅度。</string>
+    <string name="swap_slippage_custom_hint">自定义</string>
+    <string name="swap_slippage_custom_value_hint">0.00%</string>
+    <string name="swap_gas_limit_helper">为此兑换设置手动燃料限制。留空则使用自动。</string>
+    <string name="swap_gas_limit_field_label">燃料限制</string>
+    <string name="swap_advanced_value_on">开启</string>
+    <string name="swap_external_recipient_helper">将兑换后的资金发送到其他地址。</string>
+    <string name="swap_external_recipient_field_label">发送到其他地址</string>
+    <string name="swap_external_recipient_hint">接收方地址</string>
+    <string name="swap_external_recipient_invalid">收款地址无效</string>
+    <string name="swap_external_recipient_unsupported">此兑换不支持外部收款人。请将其关闭以继续。</string>
+    <string name="verify_swap_recipient">接收方</string>
     <string name="keygen_benefit_1_template">消除单点故障</string>
     <string name="keygen_benefit_1_emphasized">多重身份验证</string>
     <string name="keygen_benefit_2_template">完全掌控您的资产</string>

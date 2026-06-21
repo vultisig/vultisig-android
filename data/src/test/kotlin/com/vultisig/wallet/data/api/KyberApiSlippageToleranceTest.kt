@@ -86,9 +86,60 @@ class KyberApiSlippageToleranceTest {
             }
 
             val slippage =
-                json.parseToJsonElement(requestBody!!).jsonObject.getValue("slippageTolerance")
+                json
+                    .parseToJsonElement(
+                        checkNotNull(requestBody) {
+                            "Expected Kyber build request body to be captured"
+                        }
+                    )
+                    .jsonObject
+                    .getValue("slippageTolerance")
             assertEquals("100", slippage.jsonPrimitive.content)
         }
+
+    @Test
+    fun `getSwapQuote forwards an explicit slippage override on the routes query`() = runTest {
+        var slippageParam: String? = null
+        val api = apiCapturing { slippageParam = it.url.parameters["slippageTolerance"] }
+
+        api.getSwapQuote(
+            chain = Chain.Ethereum,
+            srcTokenContractAddress = "0xsrc",
+            dstTokenContractAddress = "0xdst",
+            amount = "1000",
+            srcAddress = "0xfrom",
+            affiliateBps = 0,
+            slippageBps = 300,
+        )
+
+        assertEquals("300", slippageParam)
+    }
+
+    @Test
+    fun `getKyberSwapQuote forwards an explicit slippage override in the build body`() = runTest {
+        var requestBody: String? = null
+        val api = apiCapturing { requestBody = (it.body as TextContent).text }
+
+        assertThrows<SwapException> {
+            api.getKyberSwapQuote(
+                chain = Chain.Ethereum,
+                routeSummary = routeSummary(),
+                from = "0xfrom",
+                enableGasEstimation = true,
+                affiliateBps = 0,
+                slippageBps = 300,
+            )
+        }
+
+        val slippage =
+            json
+                .parseToJsonElement(
+                    checkNotNull(requestBody) { "Expected Kyber build request body to be captured" }
+                )
+                .jsonObject
+                .getValue("slippageTolerance")
+        assertEquals("300", slippage.jsonPrimitive.content)
+    }
 
     private fun routeSummary() =
         KyberSwapRouteResponse.RouteSummary(

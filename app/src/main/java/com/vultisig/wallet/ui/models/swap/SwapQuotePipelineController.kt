@@ -5,6 +5,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -74,6 +75,8 @@ constructor(
     @Assisted("selectedSrc") private val selectedSrc: StateFlow<SendSrc?>,
     @Assisted("selectedDst") private val selectedDst: StateFlow<SendSrc?>,
     @Assisted private val referralCode: MutableStateFlow<String?>,
+    @Assisted private val slippageBps: StateFlow<Int?>,
+    @Assisted private val externalRecipient: StateFlow<String?>,
     @Assisted private val srcAmountState: TextFieldState,
     @Assisted private val vaultId: () -> String?,
     @Assisted private val showError: (UiText) -> Unit,
@@ -93,6 +96,8 @@ constructor(
             @Assisted("selectedSrc") selectedSrc: StateFlow<SendSrc?>,
             @Assisted("selectedDst") selectedDst: StateFlow<SendSrc?>,
             referralCode: MutableStateFlow<String?>,
+            slippageBps: StateFlow<Int?>,
+            externalRecipient: StateFlow<String?>,
             srcAmountState: TextFieldState,
             vaultId: () -> String?,
             showError: (UiText) -> Unit,
@@ -287,6 +292,15 @@ constructor(
                     showIndicativeRate(input)
                 }
                 .combine(refreshQuoteState) { input, _ -> input }
+                // A slippage or external-recipient change re-fetches with a different tolerance /
+                // routing, so raise isLoading to disable the Swap button until the new quote lands
+                // —
+                // otherwise the prior, differently-routed quote could be signed (#4858, review
+                // #4969). The onEach rides each flow individually, so the silent refresh timer
+                // above
+                // doesn't flash the spinner.
+                .combine(slippageBps.onEach { isLoading = true }) { input, _ -> input }
+                .combine(externalRecipient.onEach { isLoading = true }) { input, _ -> input }
                 // Percentage / Max / paste skip the debounce (0ms); free typing still coalesces at
                 // 300ms so rapid edits fire a single quote fetch.
                 .debounce { input -> swapQuoteManager.quoteDebounceMillis(input.immediate) }
@@ -312,6 +326,8 @@ constructor(
                                 referralCode = referralCode.value,
                                 currentDiscountInfo = uiState.value.discountInfo,
                                 selectedSrcTokenTitle = uiState.value.selectedSrcToken?.title,
+                                slippageBps = slippageBps.value,
+                                externalRecipient = externalRecipient.value,
                             )
                     ) {
                         SwapQuotePipelineResult.Empty -> resetQuoteState()
@@ -341,6 +357,8 @@ constructor(
 
         quoteState.provider = result.provider
         quoteState.quote = result.quote
+        // Only the EVM-aggregator route consumes the gas-limit override at build time.
+        quoteState.honorsGasLimitOverride.value = result.quote is SwapQuote.OneInch
         result.referralCodeToStore?.let { rc -> referralCode.update { rc } }
         quoteState.swapFeeFiat.value = result.swapFeeFiat
 
