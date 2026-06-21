@@ -619,6 +619,7 @@
     <string name="verify_transaction_function_inputs_title">함수 인수</string>
     <string name="dapp_hero_unverified_function_title">확인되지 않은 함수</string>
     <string name="dapp_hero_unverified_function_subtitle">서명 전에 아래 세부정보를 확인하세요</string>
+    <string name="dapp_unverified_function_done_caution">확인되지 않은 함수입니다. 거래 세부정보를 확인하세요.</string>
     <string name="request_from">요청 출처</string>
     <string name="fast_vault_password_reminder_title">비밀번호를 확인하세요:</string>
     <string name="fast_vault_password_reminder_done_button">완료</string>
