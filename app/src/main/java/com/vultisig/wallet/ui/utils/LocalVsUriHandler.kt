@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.utils
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -33,7 +34,22 @@ private class VsUriHandler(private val activity: Activity, private val uriHandle
             if (uri.isCctLink) activity.openCct(uri.toUri()) else uriHandler.openUri(uri)
         } catch (e: IllegalArgumentException) {
             Timber.e(e, "Failed to open URI: $uri")
+        } catch (e: ActivityNotFoundException) {
+            fallbackToBrowser(uri, e)
+        } catch (e: SecurityException) {
+            fallbackToBrowser(uri, e)
         }
+    }
+
+    /**
+     * Logs [error] and retries opening [uri] via a chooser-based browser launch.
+     *
+     * Used when the direct launch is rejected by the platform (e.g. `SecurityException` from
+     * `checkStartAnyActivityPermission`) so the failure degrades gracefully instead of crashing.
+     */
+    private fun fallbackToBrowser(uri: String, error: Exception) {
+        Timber.e(error, "Failed to open URI, falling back to browser: $uri")
+        activity.openInBrowser(uri.toUri())
     }
 
     private val String.isCctLink: Boolean
