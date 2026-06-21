@@ -61,7 +61,7 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
             VaultNotificationSettingsEntity::class,
             TransactionHistoryEntity::class,
         ],
-    version = 33,
+    version = 34,
     exportSchema = false,
 )
 @TypeConverters(

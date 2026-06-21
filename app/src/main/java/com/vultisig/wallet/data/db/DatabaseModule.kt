@@ -40,6 +40,7 @@ import com.vultisig.wallet.data.db.migrations.MIGRATION_2_3
 import com.vultisig.wallet.data.db.migrations.MIGRATION_30_31
 import com.vultisig.wallet.data.db.migrations.MIGRATION_31_32
 import com.vultisig.wallet.data.db.migrations.MIGRATION_32_33
+import com.vultisig.wallet.data.db.migrations.MIGRATION_33_34
 import com.vultisig.wallet.data.db.migrations.MIGRATION_3_4
 import com.vultisig.wallet.data.db.migrations.MIGRATION_4_5
 import com.vultisig.wallet.data.db.migrations.MIGRATION_5_6
@@ -102,6 +103,7 @@ internal interface DatabaseModule {
                     MIGRATION_30_31,
                     MIGRATION_31_32,
                     MIGRATION_32_33,
+                    MIGRATION_33_34,
                 )
                 .build()
 
