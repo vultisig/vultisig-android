@@ -284,6 +284,8 @@
     <string name="share_qr_screen_permission_required">공유 작업을 위해 파일 권한이 필요합니다.</string>
     <string name="token_selection_search_hint">검색…</string>
     <string name="verify_swap_agree_allowance">ERC20 허용량 제공에 동의합니다</string>
+    <string name="verify_swap_external_recipient_title">외부 주소로 전송</string>
+    <string name="verify_swap_external_recipient_description">이 스왑의 출력이 이 볼트에 속하지 않은 주소로 전송됩니다. 서명하기 전에 주소를 확인하세요.</string>
     <string name="deposit_screen_amount_title">금액</string>
     <string name="verify_deposit_memo_title">메모</string>
     <string name="verify_deposit_node_address_title">노드 주소</string>

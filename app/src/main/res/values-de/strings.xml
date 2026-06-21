@@ -209,6 +209,8 @@
     <string name="share_qr_screen_permission_required">Für Freigabevorgänge sind Dateiberechtigungen erforderlich.</string>
     <string name="token_selection_search_hint">Suchen…</string>
     <string name="verify_swap_agree_allowance">Ich bin mit der Bereitstellung eines unbegrenzten ERC20-Kontingents einverstanden</string>
+    <string name="verify_swap_external_recipient_title">Senden an eine externe Adresse</string>
+    <string name="verify_swap_external_recipient_description">Die Ausgabe dieses Swaps wird an eine Adresse außerhalb dieses Tresors geleitet. Stellen Sie sicher, dass Sie sie erkennen, bevor Sie signieren.</string>
     <string name="deposit_screen_amount_title">Betrag</string>
     <string name="verify_deposit_memo_title">Memo</string>
     <string name="verify_deposit_node_address_title">Knotenadresse</string>

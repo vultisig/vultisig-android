@@ -208,6 +208,8 @@
     <string name="share_qr_screen_permission_required">Voor het delen van bewerkingen is bestandsmachtiging vereist.</string>
     <string name="token_selection_search_hint">Zoekopdracht…</string>
     <string name="verify_swap_agree_allowance">Ik ga akkoord met het verstrekken van een onbeperkte ERC20-toelage</string>
+    <string name="verify_swap_external_recipient_title">Verzenden naar een extern adres</string>
+    <string name="verify_swap_external_recipient_description">De uitvoer van deze swap gaat naar een adres dat niet bij deze kluis hoort. Controleer of u het herkent voordat u ondertekent.</string>
     <string name="deposit_screen_amount_title">Bedrag</string>
     <string name="verify_deposit_memo_title">Notitie</string>
     <string name="verify_deposit_node_address_title">Knooppuntadres</string>
