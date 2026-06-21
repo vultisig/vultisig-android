@@ -19,6 +19,7 @@ internal class OneInchQuoteSource @Inject constructor(private val oneInchApi: On
                     amount = request.tokenValue.value.toString(),
                     isAffiliate = request.isAffiliate,
                     bpsDiscount = request.bpsDiscount,
+                    slippageBps = request.slippageBps,
                 )
             }
         return when (response) {

@@ -92,6 +92,7 @@ import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
+import com.vultisig.wallet.ui.models.swap.VultTierGateUiModel
 import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesUiState
 import com.vultisig.wallet.ui.screens.TransactionDoneView
@@ -113,7 +114,14 @@ import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheetContent
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
+import com.vultisig.wallet.ui.screens.swap.components.SwapAdvancedSettingsLockedSheet
+import com.vultisig.wallet.ui.screens.swap.preview.AdvancedExternalRecipientPreview
+import com.vultisig.wallet.ui.screens.swap.preview.AdvancedGasLimitPreview
+import com.vultisig.wallet.ui.screens.swap.preview.AdvancedMenuConfiguredPreview
+import com.vultisig.wallet.ui.screens.swap.preview.AdvancedMenuPreview
+import com.vultisig.wallet.ui.screens.swap.preview.AdvancedSlippagePreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapFormQuoteLoadingPreview
+import com.vultisig.wallet.ui.screens.swap.preview.SwapToolbarPreview
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
@@ -174,6 +182,13 @@ class PreviewActivity : ComponentActivity() {
                     "swap_error_before" -> SwapErrorBeforePreview()
                     "swap_error" -> SwapErrorPreview()
                     "swap_quote_loading" -> SwapFormQuoteLoadingPreview()
+                    "swap_toolbar" -> SwapToolbarPreview()
+                    "swap_advanced_locked" -> SwapAdvancedLockedPreview()
+                    "swap_advanced_menu" -> AdvancedMenuPreview()
+                    "swap_advanced_menu_configured" -> AdvancedMenuConfiguredPreview()
+                    "swap_advanced_slippage" -> AdvancedSlippagePreview()
+                    "swap_advanced_gas_limit" -> AdvancedGasLimitPreview()
+                    "swap_advanced_external_recipient" -> AdvancedExternalRecipientPreview()
                     "import_seedphrase" -> ImportSeedphrasePreview()
                     "defi_account_list" -> DeFiAccountListPreview()
                     "share_qr_keysign" -> ShareQrKeysignPreview()
@@ -238,6 +253,22 @@ class PreviewActivity : ComponentActivity() {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SwapAdvancedLockedPreview() {
+    Box(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
+        SwapAdvancedSettingsLockedSheet(
+            gate =
+                VultTierGateUiModel(
+                    balanceText = "6.65648001 VULT",
+                    thresholdText = "3,000 VULT",
+                    isBelowThreshold = true,
+                ),
+            onGetVult = {},
+            onDismiss = {},
+        )
     }
 }
 

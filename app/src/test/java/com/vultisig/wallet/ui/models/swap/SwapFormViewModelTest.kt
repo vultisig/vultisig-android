@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
@@ -93,6 +94,8 @@ internal class SwapFormViewModelTest {
     private lateinit var fiatValueToString: FiatValueToStringMapper
     private lateinit var convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase
     private lateinit var swapQuoteRepository: SwapQuoteRepository
+    // The recipient flow the ViewModel feeds into the quote pipeline (gated to valid addresses).
+    private var pipelineRecipient: StateFlow<String?>? = null
     private lateinit var allowanceRepository: AllowanceRepository
     private lateinit var appCurrencyRepository: AppCurrencyRepository
     private lateinit var swapTransactionRepository: SwapTransactionRepository
@@ -105,6 +108,7 @@ internal class SwapFormViewModelTest {
     private lateinit var swapQuoteManager: SwapQuoteManager
     private lateinit var tokenSelectorAccountsRepository: AccountsRepository
     private lateinit var tokenBalanceMapper: AccountToTokenBalanceUiModelMapper
+    private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
 
     private val currencyFlow = MutableStateFlow(AppCurrency.USD)
 
@@ -139,6 +143,11 @@ internal class SwapFormViewModelTest {
         swapTransactionRepository = mockk(relaxed = true)
         getDiscountBpsUseCase = mockk(relaxed = true)
         referralRepository = mockk(relaxed = true)
+
+        // Default: any address is valid, so existing tests (which never set an external recipient)
+        // are unaffected. The external-recipient validation tests override this per case.
+        chainAccountAddressRepository = mockk(relaxed = true)
+        every { chainAccountAddressRepository.isValid(any(), any()) } returns true
 
         swapValidator = SwapValidator()
         swapDiscountChecker = mockk(relaxed = true)
@@ -227,6 +236,8 @@ internal class SwapFormViewModelTest {
                     SwapInputCollector(convertTokenAndValueToTokenValue, swapValidator),
                 swapQuotePipelineControllerFactory =
                     swapQuotePipelineControllerFactory(ioDispatcher),
+                chainAccountAddressRepository = chainAccountAddressRepository,
+                getDiscountBpsUseCase = getDiscountBpsUseCase,
             )
             .also { createdViewModels += it }
 
@@ -241,11 +252,16 @@ internal class SwapFormViewModelTest {
                 selectedSrc: StateFlow<SendSrc?>,
                 selectedDst: StateFlow<SendSrc?>,
                 referralCode: MutableStateFlow<String?>,
+                slippageBps: StateFlow<Int?>,
+                externalRecipient: StateFlow<String?>,
                 srcAmountState: TextFieldState,
                 vaultId: () -> String?,
                 showError: (UiText) -> Unit,
-            ) =
-                SwapQuotePipelineController(
+            ): SwapQuotePipelineController {
+                // Capture the recipient flow the ViewModel feeds the pipeline (gated to valid
+                // addresses) so tests can assert what actually reaches quote fetching (#4858).
+                pipelineRecipient = externalRecipient
+                return SwapQuotePipelineController(
                     swapGasCalculator = swapGasCalculator,
                     swapQuoteRepository = swapQuoteRepository,
                     appCurrencyRepository = appCurrencyRepository,
@@ -262,10 +278,13 @@ internal class SwapFormViewModelTest {
                     selectedSrc = selectedSrc,
                     selectedDst = selectedDst,
                     referralCode = referralCode,
+                    slippageBps = slippageBps,
+                    externalRecipient = externalRecipient,
                     srcAmountState = srcAmountState,
                     vaultId = vaultId,
                     showError = showError,
                 )
+            }
         }
 
     private fun createViewModelWithAddresses(
@@ -2692,6 +2711,176 @@ internal class SwapFormViewModelTest {
         val result = BigDecimal("1.123456789").formatFlippedAmount(4)
         assertEquals("1.1234", result)
     }
+
+    // endregion
+
+    // region external recipient validation (#4858)
+
+    @Test
+    fun `invalid external recipient sets the inline error against the destination chain`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(any(), any()) } returns false
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.setExternalRecipient("not-a-valid-address")
+
+            assertEquals(
+                UiText.StringResource(R.string.swap_external_recipient_invalid),
+                vm.uiState.value.externalRecipientError,
+            )
+            // dst is BTC in createViewModelWithSwapTokens — validation must run against it.
+            io.mockk.verify {
+                chainAccountAddressRepository.isValid(Chain.Bitcoin, "not-a-valid-address")
+            }
+        }
+
+    @Test
+    fun `valid external recipient clears the inline error`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.setExternalRecipient("bc1qvalidrecipient")
+
+            assertNull(vm.uiState.value.externalRecipientError)
+        }
+
+    @Test
+    fun `invalid external recipient is not pushed into the quote pipeline`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(any(), any()) } returns false
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.setExternalRecipient("not-a-valid-address")
+
+            // Gated: an invalid/intermediate address must not reach quote fetching (would otherwise
+            // hit THOR/Maya with a malformed destination), even though the inline error is shown.
+            assertNull(pipelineRecipient?.value)
+            assertEquals(
+                UiText.StringResource(R.string.swap_external_recipient_invalid),
+                vm.uiState.value.externalRecipientError,
+            )
+        }
+
+    @Test
+    fun `valid external recipient is pushed into the quote pipeline`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.setExternalRecipient("bc1qvalidrecipient")
+
+            assertEquals("bc1qvalidrecipient", pipelineRecipient?.value)
+        }
+
+    @Test
+    fun `swap is blocked and surfaces an error when the external recipient is invalid`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(any(), any()) } returns false
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.setExternalRecipient("not-a-valid-address")
+            vm.swap()
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.StringResource(R.string.swap_external_recipient_invalid),
+                vm.uiState.value.error,
+            )
+            // The pre-flight gate returns before staging keysign, so no navigation to verify.
+            coVerify(exactly = 0) { navigator.route(any()) }
+        }
+
+    @Test
+    fun `external recipient on a pair with no native route surfaces a recipient-aware unsupported error`() =
+        runTest(mainDispatcher) {
+            // Setting a recipient drops the aggregators and keeps only THORChain/Maya. When the
+            // pair
+            // has no native route at all, the bare "not supported" must instead name the recipient
+            // as the reason (#4858).
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                // 11 matchers: the trailing slippageBps + externalRecipient must be matched
+                // explicitly, else MockK defaults them to null and the non-null recipient set below
+                // never matches, silently running the real method instead of this stub.
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws SwapException.SwapRouteNotAvailable("no route")
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.setExternalRecipient("bc1qrecipientaddress")
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.001")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.StringResource(R.string.swap_external_recipient_unsupported),
+                vm.uiState.value.formError,
+            )
+        }
+
+    @Test
+    fun `a sub-minimum failure keeps its concrete minimum message even with a recipient set`() =
+        runTest(mainDispatcher) {
+            // The concrete "Minimum amount is X" message (SmallSwapAmount) is more actionable than
+            // a
+            // generic recipient note, so the recipient-aware rewrite must NOT mask it (#4858,
+            // #604).
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                // 11 matchers — see the note above; a non-null recipient is set in this test too.
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws SwapException.SmallSwapAmount("0.05")
+            coEvery { swapQuoteManager.mapSwapExceptionToFormError(any(), any(), any()) } returns
+                UiText.FormattedText(R.string.swap_form_minimum_amount, listOf("0.05", "ETH"))
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.setExternalRecipient("bc1qrecipientaddress")
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.001")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.FormattedText(R.string.swap_form_minimum_amount, listOf("0.05", "ETH")),
+                vm.uiState.value.formError,
+            )
+        }
 
     // endregion
 

@@ -140,6 +140,8 @@ internal class SwapQuotePipeline(
         referralCode: String?,
         currentDiscountInfo: DiscountInfo,
         selectedSrcTokenTitle: String?,
+        slippageBps: Int?,
+        externalRecipient: String?,
     ): SwapQuotePipelineResult {
         val (src, dst) = input.address
         val amount = input.amount
@@ -169,7 +171,25 @@ internal class SwapQuotePipeline(
 
             val tokenValue = convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
 
-            val eligibleProviders = swapQuoteRepository.getEligibleProviders(srcToken, dstToken)
+            val allEligibleProviders = swapQuoteRepository.getEligibleProviders(srcToken, dstToken)
+            // External recipient (#4858): the native protocols (THORChain / Maya) carry the custom
+            // destination in the memo, and SwapKit takes it as the quote-time `dstAddress` (it
+            // doesn't bake the vault address into calldata), so all three can route the output to a
+            // custom address. The EVM aggregators (1inch / Kyber / Jupiter / LI.FI) bake the vault
+            // address into calldata, so they are dropped when a recipient is set rather than
+            // silently misrouting funds. This mirrors the cross-platform decision (vultisig-sdk#757
+            // / vultisig-windows#4152): threading a recipient through the EVM aggregators is a
+            // deferred follow-up there too.
+            val eligibleProviders =
+                if (externalRecipient.isNullOrBlank()) {
+                    allEligibleProviders
+                } else {
+                    allEligibleProviders.filter {
+                        it == SwapProvider.THORCHAIN ||
+                            it == SwapProvider.MAYA ||
+                            it == SwapProvider.SWAPKIT
+                    }
+                }
             if (eligibleProviders.isEmpty()) {
                 throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
             }
@@ -209,6 +229,8 @@ internal class SwapQuotePipeline(
                     currency = currency,
                     amount = amount,
                     selectedSrcTokenTitle = selectedSrcTokenTitle,
+                    slippageBps = slippageBps,
+                    externalRecipient = externalRecipient,
                 )
             // Map the sealed result: a typed fetch failure becomes a Failure carrying its
             // already-mapped error; only a Success continues into fee processing.
@@ -216,7 +238,12 @@ internal class SwapQuotePipeline(
                 when (resolution) {
                     is QuoteResolution.Failure ->
                         return SwapQuotePipelineResult.Failure(
-                            error = resolution.formError,
+                            error =
+                                recipientAwareError(
+                                    resolution.formError,
+                                    resolution.cause,
+                                    externalRecipient,
+                                ),
                             cause = resolution.cause,
                             tag = resolution.tag,
                         )
@@ -233,10 +260,14 @@ internal class SwapQuotePipeline(
         } catch (e: SwapException) {
             SwapQuotePipelineResult.Failure(
                 error =
-                    swapQuoteManager.mapSwapExceptionToFormError(
+                    recipientAwareError(
+                        swapQuoteManager.mapSwapExceptionToFormError(
+                            e,
+                            srcToken,
+                            selectedSrcTokenTitle,
+                        ),
                         e,
-                        srcToken,
-                        selectedSrcTokenTitle,
+                        externalRecipient,
                     ),
                 cause = e,
                 tag = "swapError",
@@ -255,6 +286,32 @@ internal class SwapQuotePipeline(
                 cause = e,
                 tag = "swapUnexpectedError",
             )
+        }
+    }
+
+    /**
+     * Rewrites a quote failure into a recipient-aware message when an external recipient is active.
+     *
+     * Setting a recipient narrows the eligible providers to THORChain/Maya (the only protocols that
+     * route output to a custom address — see the native-only filter above). When the pair has no
+     * such route at all, the bare "not supported" error never explains that the recipient is the
+     * cause, so name it (#4858).
+     *
+     * Sub-minimum failures are deliberately NOT rewritten here: THORChain surfaces the concrete
+     * required minimum ("Minimum amount is X") via [SwapException.SmallSwapAmount], which is more
+     * actionable than a generic recipient note and must not be masked.
+     */
+    private fun recipientAwareError(
+        error: UiText,
+        cause: Throwable,
+        externalRecipient: String?,
+    ): UiText {
+        if (externalRecipient.isNullOrBlank()) return error
+        return when (cause) {
+            is SwapException.SwapIsNotSupported,
+            is SwapException.SwapRouteNotAvailable ->
+                UiText.StringResource(R.string.swap_external_recipient_unsupported)
+            else -> error
         }
     }
 

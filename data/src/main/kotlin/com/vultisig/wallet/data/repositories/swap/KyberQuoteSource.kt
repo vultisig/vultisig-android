@@ -26,6 +26,7 @@ internal class KyberQuoteSource @Inject constructor(private val kyberApi: KyberA
                     amount = request.tokenValue.value.toString(),
                     srcAddress = request.srcToken.address,
                     affiliateBps = request.affiliateBps,
+                    slippageBps = request.slippageBps,
                 )
             when (routeResponse) {
                 is KyberSwapQuoteDeserialized.Error ->
@@ -40,6 +41,7 @@ internal class KyberQuoteSource @Inject constructor(private val kyberApi: KyberA
                             from = request.srcToken.address,
                             enableGasEstimation = true,
                             affiliateBps = request.affiliateBps,
+                            slippageBps = request.slippageBps,
                         )
                     SwapQuoteResult.Evm(
                         buildTransaction(
