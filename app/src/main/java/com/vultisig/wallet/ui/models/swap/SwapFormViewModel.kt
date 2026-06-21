@@ -614,6 +614,7 @@ constructor(
                 Route.Swap(
                     vaultId = vaultId,
                     chainId = Chain.Ethereum.id,
+                    srcTokenId = Coins.Ethereum.ETH.id,
                     dstTokenId = Coins.Ethereum.VULT.id,
                 )
             )
