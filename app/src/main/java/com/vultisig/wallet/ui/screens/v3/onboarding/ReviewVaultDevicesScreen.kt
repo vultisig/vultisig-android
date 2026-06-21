@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -47,7 +47,7 @@ internal fun ReviewVaultDevicesScreen(viewModel: ReviewVaultDevicesViewModel = h
 }
 
 @Composable
-private fun ReviewVaultDevicesScreen(
+internal fun ReviewVaultDevicesScreen(
     uiState: ReviewVaultDevicesUiState,
     onEvent: (ReviewVaultDevicesEvent) -> Unit,
 ) {
@@ -84,7 +84,7 @@ private fun ReviewVaultDevicesScreen(
     ) {
         OnboardingResponsiveContainer {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 RiveAnimation(
@@ -115,9 +115,11 @@ private fun ReviewVaultDevicesScreen(
                 UiSpacer(size = 32.dp)
 
                 // Uniqueness of device strings is guaranteed by
-                // ReviewVaultDevicesViewModel.uniqueDevices.
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    itemsIndexed(uiState.devices, key = { _, device -> device }) { index, device ->
+                // ReviewVaultDevicesViewModel.uniqueDevices. The list lives inside the
+                // scrolling parent Column, so a plain Column (not LazyColumn) is used to
+                // avoid nesting two vertical scroll containers. The device count is small.
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    uiState.devices.forEachIndexed { index, device ->
                         VaultDeviceItem(
                             label =
                                 if (device.equals(uiState.localPartyId, ignoreCase = true)) {
@@ -136,6 +138,8 @@ private fun ReviewVaultDevicesScreen(
                         )
                     }
                 }
+
+                UiSpacer(size = 24.dp)
             }
         }
     }
