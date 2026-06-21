@@ -596,6 +596,13 @@
     <string name="swap_advanced_slippage_page_title">슬리피지</string>
     <string name="swap_advanced_gas_limit_title">가스 한도</string>
     <string name="swap_advanced_external_recipient_title">외부 수신자 사용</string>
+    <string name="swap_advanced_locked_title">고급 스왑 설정</string>
+    <string name="swap_advanced_locked_subtitle">모든 스왑에 대해 슬리피지, 가스, 경로, 수신자를 세밀하게 조정하세요.</string>
+    <string name="swap_advanced_locked_requires">필요 조건</string>
+    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s 등급 이상</string>
+    <string name="swap_advanced_locked_tier_subtitle">볼트에 최소 %1$s 보유</string>
+    <string name="swap_advanced_locked_your_balance">내 잔액</string>
+    <string name="swap_advanced_locked_get_vult">$VULT 받기</string>
     <string name="swap_advanced_value_auto">자동</string>
     <string name="swap_advanced_value_off">끄기</string>
     <string name="swap_slippage_helper">실행이 취소되기 전에 가격이 변동할 수 있는 범위를 제한합니다.</string>

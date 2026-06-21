@@ -888,6 +888,13 @@
     <string name="swap_advanced_slippage_page_title">Slippage</string>
     <string name="swap_advanced_gas_limit_title">Gasgrenze</string>
     <string name="swap_advanced_external_recipient_title">Externen Empfänger verwenden</string>
+    <string name="swap_advanced_locked_title">Erweiterte Swap-Einstellungen</string>
+    <string name="swap_advanced_locked_subtitle">Feinabstimmung von Slippage, Gas, Routing und Empfänger für jeden Swap.</string>
+    <string name="swap_advanced_locked_requires">Erforderlich</string>
+    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s Stufe oder höher</string>
+    <string name="swap_advanced_locked_tier_subtitle">Halte mindestens %1$s in deinem Tresor</string>
+    <string name="swap_advanced_locked_your_balance">Dein Guthaben</string>
+    <string name="swap_advanced_locked_get_vult">$VULT holen</string>
     <string name="swap_advanced_value_auto">Auto</string>
     <string name="swap_advanced_value_off">Aus</string>
     <string name="swap_slippage_helper">Begrenzt, wie stark sich der Preis vor der Ausführung ändern darf, bevor sie abgebrochen wird.</string>

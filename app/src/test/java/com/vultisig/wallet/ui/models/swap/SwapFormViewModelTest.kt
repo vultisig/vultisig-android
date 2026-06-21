@@ -237,6 +237,7 @@ internal class SwapFormViewModelTest {
                 swapQuotePipelineControllerFactory =
                     swapQuotePipelineControllerFactory(ioDispatcher),
                 chainAccountAddressRepository = chainAccountAddressRepository,
+                getDiscountBpsUseCase = getDiscountBpsUseCase,
             )
             .also { createdViewModels += it }
 

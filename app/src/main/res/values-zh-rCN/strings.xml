@@ -1217,6 +1217,13 @@
     <string name="swap_advanced_slippage_page_title">滑点</string>
     <string name="swap_advanced_gas_limit_title">燃料限制</string>
     <string name="swap_advanced_external_recipient_title">使用外部接收方</string>
+    <string name="swap_advanced_locked_title">高级兑换设置</string>
+    <string name="swap_advanced_locked_subtitle">为每次兑换精细调整滑点、Gas、路由和收款人。</string>
+    <string name="swap_advanced_locked_requires">需要</string>
+    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s 等级或以上</string>
+    <string name="swap_advanced_locked_tier_subtitle">在您的金库中持有至少 %1$s</string>
+    <string name="swap_advanced_locked_your_balance">您的余额</string>
+    <string name="swap_advanced_locked_get_vult">获取 $VULT</string>
     <string name="swap_advanced_value_auto">自动</string>
     <string name="swap_advanced_value_off">关闭</string>
     <string name="swap_slippage_helper">限制价格在执行取消前可变动的幅度。</string>

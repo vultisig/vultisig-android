@@ -605,6 +605,13 @@
     <string name="swap_advanced_slippage_page_title">Slippage</string>
     <string name="swap_advanced_gas_limit_title">Gas Limit</string>
     <string name="swap_advanced_external_recipient_title">Use External Recipient</string>
+    <string name="swap_advanced_locked_title">Advanced Swap Settings</string>
+    <string name="swap_advanced_locked_subtitle">Fine-tune slippage, gas, routing, and recipient for every swap.</string>
+    <string name="swap_advanced_locked_requires">Requires</string>
+    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s Tier or above</string>
+    <string name="swap_advanced_locked_tier_subtitle">Hold at least %1$s in your vault</string>
+    <string name="swap_advanced_locked_your_balance">Your balance</string>
+    <string name="swap_advanced_locked_get_vult">Get $VULT</string>
     <string name="swap_advanced_value_auto">Auto</string>
     <string name="swap_advanced_value_off">Off</string>
     <string name="swap_slippage_helper">Limits how much the price can change before execution is canceled.</string>

@@ -891,6 +891,13 @@
     <string name="swap_advanced_slippage_page_title">Проскальзывание</string>
     <string name="swap_advanced_gas_limit_title">Предел газа</string>
     <string name="swap_advanced_external_recipient_title">Использовать внешнего получателя</string>
+    <string name="swap_advanced_locked_title">Расширенные настройки обмена</string>
+    <string name="swap_advanced_locked_subtitle">Точная настройка проскальзывания, газа, маршрута и получателя для каждого обмена.</string>
+    <string name="swap_advanced_locked_requires">Требуется</string>
+    <string name="swap_advanced_locked_tier_requirement">$VULT уровень %1$s или выше</string>
+    <string name="swap_advanced_locked_tier_subtitle">Держите не менее %1$s в вашем хранилище</string>
+    <string name="swap_advanced_locked_your_balance">Ваш баланс</string>
+    <string name="swap_advanced_locked_get_vult">Получить $VULT</string>
     <string name="swap_advanced_value_auto">Авто</string>
     <string name="swap_advanced_value_off">Выкл.</string>
     <string name="swap_slippage_helper">Ограничивает, насколько может измениться цена до отмены исполнения.</string>

@@ -891,6 +891,13 @@
     <string name="swap_advanced_slippage_page_title">Proklizavanje</string>
     <string name="swap_advanced_gas_limit_title">Ograničenje plina</string>
     <string name="swap_advanced_external_recipient_title">Koristi vanjskog primatelja</string>
+    <string name="swap_advanced_locked_title">Napredne postavke zamjene</string>
+    <string name="swap_advanced_locked_subtitle">Precizno podesite slippage, gas, rutu i primatelja za svaku zamjenu.</string>
+    <string name="swap_advanced_locked_requires">Zahtijeva</string>
+    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s razina ili viša</string>
+    <string name="swap_advanced_locked_tier_subtitle">Drži barem %1$s u svom trezoru</string>
+    <string name="swap_advanced_locked_your_balance">Tvoj saldo</string>
+    <string name="swap_advanced_locked_get_vult">Nabavi $VULT</string>
     <string name="swap_advanced_value_auto">Auto</string>
     <string name="swap_advanced_value_off">Isključeno</string>
     <string name="swap_slippage_helper">Ograničava koliko se cijena može promijeniti prije nego što se izvršenje otkaže.</string>

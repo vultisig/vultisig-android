@@ -886,6 +886,13 @@
     <string name="swap_advanced_slippage_page_title">Slippage</string>
     <string name="swap_advanced_gas_limit_title">Limite del gas</string>
     <string name="swap_advanced_external_recipient_title">Usa destinatario esterno</string>
+    <string name="swap_advanced_locked_title">Impostazioni avanzate dello swap</string>
+    <string name="swap_advanced_locked_subtitle">Regola slippage, gas, percorso e destinatario per ogni swap.</string>
+    <string name="swap_advanced_locked_requires">Richiede</string>
+    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s livello o superiore</string>
+    <string name="swap_advanced_locked_tier_subtitle">Detieni almeno %1$s nella tua cassaforte</string>
+    <string name="swap_advanced_locked_your_balance">Il tuo saldo</string>
+    <string name="swap_advanced_locked_get_vult">Ottieni $VULT</string>
     <string name="swap_advanced_value_auto">Auto</string>
     <string name="swap_advanced_value_off">Disattivato</string>
     <string name="swap_slippage_helper">Limita quanto il prezzo può variare prima che l\'esecuzione venga annullata.</string>

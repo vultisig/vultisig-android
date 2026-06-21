@@ -29,6 +29,9 @@ interface GetDiscountBpsUseCase {
 
     /** True when the vault holds at least the Silver-tier VULT amount (>= 3000 VULT). */
     suspend fun hasReachedSilverTier(vaultId: String): Boolean
+
+    /** The vault's cached VULT balance in raw token units (18 decimals), or null if unavailable. */
+    suspend fun getVultBalance(vaultId: String): BigInteger?
 }
 
 internal class GetDiscountBpsUseCaseImpl
@@ -62,7 +65,7 @@ constructor(
         return balance >= SILVER_TIER_THRESHOLD
     }
 
-    suspend fun getVultBalance(vaultId: String): BigInteger? {
+    override suspend fun getVultBalance(vaultId: String): BigInteger? {
         try {
             val vault = vaultRepository.get(vaultId) ?: return null
 

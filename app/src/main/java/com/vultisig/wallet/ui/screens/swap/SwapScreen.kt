@@ -66,6 +66,7 @@ import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.screens.swap.components.PercentagePicker
 import com.vultisig.wallet.ui.screens.swap.components.QuoteTimer
 import com.vultisig.wallet.ui.screens.swap.components.SrcTokenInput
+import com.vultisig.wallet.ui.screens.swap.components.SwapAdvancedSettingsLockedSheet
 import com.vultisig.wallet.ui.screens.swap.components.SwapFeeBreakdown
 import com.vultisig.wallet.ui.screens.swap.components.SwapTokenFlipButton
 import com.vultisig.wallet.ui.theme.Theme
@@ -101,6 +102,10 @@ internal fun NavGraphBuilder.swapScreen(navController: NavHostController) {
             onSlippageSelected = model::setSlippageBps,
             onGasLimitSelected = model::setGasLimit,
             onExternalRecipientSelected = model::setExternalRecipient,
+            onAdvancedSettingsClick = model::onAdvancedSettingsClicked,
+            onDismissAdvancedSettings = model::dismissAdvancedSettings,
+            onDismissAdvancedSettingsGate = model::dismissAdvancedSettingsGate,
+            onGetVult = model::onGetVult,
         )
     }
 }
@@ -128,6 +133,10 @@ internal fun SwapScreen(
     onSlippageSelected: (Int?) -> Unit = {},
     onGasLimitSelected: (Long?) -> Unit = {},
     onExternalRecipientSelected: (String?) -> Unit = {},
+    onAdvancedSettingsClick: () -> Unit = {},
+    onDismissAdvancedSettings: () -> Unit = {},
+    onDismissAdvancedSettingsGate: () -> Unit = {},
+    onGetVult: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -135,11 +144,6 @@ internal fun SwapScreen(
     // ViewModel has no stake in it yet. Market hosts the existing swap form; Limit is a
     // placeholder.
     var selectedMode by rememberSaveable { mutableStateOf(SwapMode.Market) }
-
-    // Hosted here (not in the bottom bar) so the Advanced sheet survives the bottom bar's
-    // keyboard-driven AnimatedContent swap — otherwise opening a field's keyboard would unmount and
-    // close the sheet (#4858).
-    var showAdvancedSettings by rememberSaveable { mutableStateOf(false) }
 
     val interactionSource = remember { MutableInteractionSource() }
     val isSrcAmountFocused by interactionSource.collectIsFocusedAsState()
@@ -166,7 +170,7 @@ internal fun SwapScreen(
             // settings, so it (and the timer) are hidden in Limit mode.
             if (selectedMode == SwapMode.Market) {
                 VsCircleButton(
-                    onClick = { showAdvancedSettings = true },
+                    onClick = onAdvancedSettingsClick,
                     icon = R.drawable.ic_settings_slider_ver,
                     size = VsCircleButtonSize.Small,
                     type = VsCircleButtonType.Secondary,
@@ -328,7 +332,7 @@ internal fun SwapScreen(
                     }
                 }
 
-                if (showAdvancedSettings && selectedMode == SwapMode.Market) {
+                if (state.showAdvancedSettings && selectedMode == SwapMode.Market) {
                     AdvancedSwapSettingsSheet(
                         slippageBps = state.slippageBps,
                         onSlippageSelected = onSlippageSelected,
@@ -338,7 +342,16 @@ internal fun SwapScreen(
                         externalRecipient = state.externalRecipient,
                         externalRecipientError = state.externalRecipientError?.asString(),
                         onExternalRecipientSelected = onExternalRecipientSelected,
-                        onDismiss = { showAdvancedSettings = false },
+                        onDismiss = onDismissAdvancedSettings,
+                    )
+                }
+
+                // Below-Silver vaults see the tier-locked upsell instead of the advanced sheet.
+                state.advancedSettingsGate?.let { gate ->
+                    SwapAdvancedSettingsLockedSheet(
+                        gate = gate,
+                        onGetVult = onGetVult,
+                        onDismiss = onDismissAdvancedSettingsGate,
                     )
                 }
             }

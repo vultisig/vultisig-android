@@ -70,4 +70,20 @@ internal data class SwapFormUiModel(
     // Set when [externalRecipient] is not a valid address for the destination chain. Surfaced
     // inline in the recipient sheet and blocks the swap so funds can't go to a malformed address.
     val externalRecipientError: UiText? = null,
+    // Whether the Advanced swap sheet is open. Opened only after the VULT Silver-tier gate passes;
+    // a below-tier vault sees [advancedSettingsGate] instead (#4858).
+    val showAdvancedSettings: Boolean = false,
+    // Non-null when the vault is below the Silver tier required for advanced settings — drives the
+    // tier-locked upsell sheet shown in place of the advanced sheet (#4858).
+    val advancedSettingsGate: VultTierGateUiModel? = null,
+)
+
+/**
+ * Data for the tier-locked upsell sheet shown when a below-Silver vault taps Advanced Settings: the
+ * vault's formatted $VULT balance and whether it falls short of the required threshold (#4858).
+ */
+internal data class VultTierGateUiModel(
+    val balanceText: String,
+    val thresholdText: String,
+    val isBelowThreshold: Boolean,
 )

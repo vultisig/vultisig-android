@@ -10,10 +10,13 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
@@ -26,6 +29,8 @@ import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
+import java.text.DecimalFormat
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,6 +55,7 @@ constructor(
     private val swapInputCollector: SwapInputCollector,
     private val swapQuotePipelineControllerFactory: SwapQuotePipelineController.Factory,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val getDiscountBpsUseCase: GetDiscountBpsUseCase,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -563,6 +569,62 @@ constructor(
         _uiState.update { it.copy(externalRecipient = typed, externalRecipientError = error) }
     }
 
+    /**
+     * Advanced settings are gated behind the Silver VULT tier (>= 3000 VULT), mirroring iOS. An
+     * entitled vault opens the sheet; a below-tier vault sees the upsell gate with its current
+     * $VULT balance instead (#4858).
+     */
+    fun onAdvancedSettingsClicked() {
+        val vaultId = vaultId ?: return
+        viewModelScope.safeLaunch {
+            if (getDiscountBpsUseCase.hasReachedSilverTier(vaultId)) {
+                _uiState.update { it.copy(showAdvancedSettings = true) }
+            } else {
+                val balance = getDiscountBpsUseCase.getVultBalance(vaultId) ?: BigInteger.ZERO
+                _uiState.update {
+                    it.copy(
+                        advancedSettingsGate =
+                            VultTierGateUiModel(
+                                balanceText = formatVultAmount(balance),
+                                thresholdText = formatVultAmount(SILVER_TIER_THRESHOLD),
+                                isBelowThreshold = true,
+                            )
+                    )
+                }
+            }
+        }
+    }
+
+    fun dismissAdvancedSettings() {
+        _uiState.update { it.copy(showAdvancedSettings = false) }
+    }
+
+    fun dismissAdvancedSettingsGate() {
+        _uiState.update { it.copy(advancedSettingsGate = null) }
+    }
+
+    /**
+     * Routes to a swap pre-filled with VULT as the destination so the user can top up their tier.
+     */
+    fun onGetVult() {
+        val vaultId = vaultId ?: return
+        _uiState.update { it.copy(advancedSettingsGate = null) }
+        viewModelScope.launch {
+            navigator.route(
+                Route.Swap(
+                    vaultId = vaultId,
+                    chainId = Chain.Ethereum.id,
+                    dstTokenId = Coins.Ethereum.VULT.id,
+                )
+            )
+        }
+    }
+
+    private fun formatVultAmount(raw: BigInteger): String {
+        val amount = BigDecimal(raw).movePointLeft(Coins.Ethereum.VULT.decimal)
+        return "${VULT_DISPLAY_FORMAT.format(amount)} VULT"
+    }
+
     fun hideError() {
         _uiState.update { it.copy(error = null, formError = null) }
     }
@@ -577,5 +639,10 @@ constructor(
 
         // Upper bound for slippage tolerance: 10_000 bps = 100%.
         private const val MAX_SLIPPAGE_BPS = 10_000
+
+        // Grouped, up-to-8-decimal $VULT amount (e.g. "3,000", "6.65648001"); truncates rather than
+        // rounds up so a displayed balance never overstates what the vault holds.
+        private val VULT_DISPLAY_FORMAT =
+            DecimalFormat("#,##0.########").apply { roundingMode = RoundingMode.DOWN }
     }
 }
