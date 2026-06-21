@@ -30,6 +30,8 @@ import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsOverviewToken
+import com.vultisig.wallet.ui.components.banners.Banner
+import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
@@ -63,6 +65,11 @@ internal fun SendTxOverviewScreen(
     onTransactionDetailVisibleChange: (Boolean) -> Unit,
     dappMetadata: DAppMetadata? = null,
 ) {
+    // #4974: the transaction is already signed on the completed screen, so the pre-signing
+    // "Unverified function" warning hero is wrong here. Drop it to the plain function-name title
+    // and surface the caution as the Figma caution box (amber banner) pinned at the bottom.
+    val isUnverifiedFunction = tx.heroContent == HeroContent.Unverified
+
     TxDoneScaffold(
         transactionHash = transactionHash,
         transactionLink = transactionLink,
@@ -73,17 +80,28 @@ internal fun SendTxOverviewScreen(
         onTransactionDetailVisibleChange = onTransactionDetailVisibleChange,
         dappMetadata = dappMetadata,
         bottomBarContent = {
-            VsButton(
-                label = stringResource(R.string.transaction_done_title),
-                variant = VsButtonVariant.Primary,
-                size = VsButtonSize.Medium,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
-                onClick = onComplete,
-            )
+            Column {
+                if (isUnverifiedFunction) {
+                    Banner(
+                        text = stringResource(R.string.dapp_unverified_function_done_caution),
+                        variant = BannerVariant.Warning,
+                        modifier =
+                            Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 4.dp),
+                    )
+                }
+                VsButton(
+                    label = stringResource(R.string.transaction_done_title),
+                    variant = VsButtonVariant.Primary,
+                    size = VsButtonSize.Medium,
+                    modifier =
+                        Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
+                    onClick = onComplete,
+                )
+            }
         },
         tokenContent = {
             TransactionHero(
-                heroContent = tx.heroContent,
+                heroContent = tx.heroContent.takeUnless { it == HeroContent.Unverified },
                 functionName = tx.functionName,
                 modifier = Modifier.fillMaxWidth(),
             ) {

@@ -657,6 +657,7 @@
     <string name="verify_transaction_function_inputs_title">Function Arguments</string>
     <string name="dapp_hero_unverified_function_title">Unverified function</string>
     <string name="dapp_hero_unverified_function_subtitle">Review the details below before signing</string>
+    <string name="dapp_unverified_function_done_caution">Unverified function. Review the transaction details.</string>
     <string name="request_from">Request from</string>
     <string name="fast_vault_password_reminder_title">Verify your password for:</string>
     <string name="fast_vault_password_reminder_done_button">Done</string>

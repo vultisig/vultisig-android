@@ -418,6 +418,7 @@
     <string name="verify_transaction_function_inputs_title">Functie-argumenten</string>
     <string name="dapp_hero_unverified_function_title">Niet-geverifieerde functie</string>
     <string name="dapp_hero_unverified_function_subtitle">Bekijk de details hieronder voordat je ondertekent</string>
+    <string name="dapp_unverified_function_done_caution">Niet-geverifieerde functie. Bekijk de transactiedetails.</string>
     <string name="request_from">Verzoek van</string>
     <string name="send_shares_currency_hint">Voer aandelen in</string>
     <string name="send_error_max_shares">Bedrag mag het saldo niet overschrijden</string>

@@ -28,7 +28,10 @@ import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsOverviewToken
+import com.vultisig.wallet.ui.components.banners.Banner
+import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.components.hero.TransactionHero
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
@@ -55,6 +58,13 @@ internal fun TransactionDoneView(
 ) {
     BackHandler(onBack = onBack)
 
+    // #4974: on the completed-transaction screen the signature is already on chain, so the
+    // pre-signing "Unverified function" warning hero is wrong. Drop it to the plain function-name
+    // title and surface the caution as the Figma caution box (amber banner) pinned at the bottom.
+    val isUnverifiedFunction =
+        (transactionTypeUiModel as? TransactionTypeUiModel.Send)?.tx?.heroContent ==
+            HeroContent.Unverified
+
     V2Scaffold(
         applyDefaultPaddings = true,
         applyScaffoldPaddings = true,
@@ -80,7 +90,10 @@ internal fun TransactionDoneView(
                         if (transactionTypeUiModel is TransactionTypeUiModel.Send) {
                             val transaction = transactionTypeUiModel.tx
                             TransactionHero(
-                                heroContent = transaction.heroContent,
+                                heroContent =
+                                    transaction.heroContent.takeUnless {
+                                        it == HeroContent.Unverified
+                                    },
                                 functionName = transaction.functionName,
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
@@ -127,11 +140,20 @@ internal fun TransactionDoneView(
             }
         },
         bottomBar = {
-            VsButton(
-                label = stringResource(R.string.transaction_done_complete),
-                onClick = onComplete,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
-            )
+            Column {
+                if (isUnverifiedFunction) {
+                    Banner(
+                        text = stringResource(R.string.dapp_unverified_function_done_caution),
+                        variant = BannerVariant.Warning,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    )
+                }
+                VsButton(
+                    label = stringResource(R.string.transaction_done_complete),
+                    onClick = onComplete,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
+                )
+            }
         },
     )
 }
