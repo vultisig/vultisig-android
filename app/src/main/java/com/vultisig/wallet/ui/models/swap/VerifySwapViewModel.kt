@@ -60,6 +60,9 @@ internal data class SwapTransactionUiModel(
     // SwapKit swap's Success can be gated on the destination-leg `/track` settlement. Null for
     // non-SwapKit providers and for SwapKit rows rebuilt on a cosigning peer without it.
     val swapId: String? = null,
+    // External recipient the swap output is routed to, or null when it goes to the vault's own
+    // address. Shown on the verify screen so the destination is never a silent default (#4858).
+    val externalRecipient: String? = null,
 )
 
 internal data class ValuedToken(

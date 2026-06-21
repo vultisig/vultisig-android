@@ -36,6 +36,7 @@ internal class LiFiQuoteSource @Inject constructor(private val liFiChainApi: LiF
                     fromAddress = request.srcAddress,
                     toAddress = request.dstAddress,
                     bpsDiscount = request.bpsDiscount,
+                    slippageBps = request.slippageBps,
                 )
             }
 

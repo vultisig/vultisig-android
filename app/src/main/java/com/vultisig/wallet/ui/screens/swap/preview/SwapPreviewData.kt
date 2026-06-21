@@ -23,6 +23,7 @@ import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigDecimal
 import java.math.BigInteger
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.datetime.Clock
 
 /**
@@ -164,6 +165,29 @@ internal fun SwapFormQuoteLoadingPreview() {
                 isSwapDisabled = true,
             ),
         srcAmountTextFieldState = TextFieldState("2.5"),
+    )
+}
+
+// Full Swap screen with the quote countdown running, used to verify the top toolbar (back / title /
+// advanced-settings sliders button / timer) and the bottom CTA together (#4858).
+@Preview
+@Composable
+internal fun SwapToolbarPreview() {
+    SwapScreen(
+        state =
+            SwapFormUiModel(
+                selectedSrcToken = longTokenInput,
+                selectedDstToken = tokenInput,
+                srcFiatValue = "5.25",
+                quoteDisplay =
+                    QuoteDisplay(
+                        provider = UiText.DynamicString("ThorSwap"),
+                        estimatedDstTokenValue = "12.80",
+                        estimatedDstFiatValue = "$5.24",
+                        expiredAt = Clock.System.now().plus(36.seconds),
+                    ),
+            ),
+        srcAmountTextFieldState = TextFieldState("1.5"),
     )
 }
 

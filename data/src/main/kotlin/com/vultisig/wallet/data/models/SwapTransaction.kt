@@ -43,6 +43,10 @@ sealed interface SwapTransaction {
         override val payload: SwapPayload,
         override val isApprovalRequired: Boolean,
         override val gasFeeFiatValue: FiatValue,
+        // User-chosen external recipient the output was routed to, or null when it goes to the
+        // vault's own address. Surfaced on the verify screen so the destination is never a silent
+        // default (#4858).
+        val externalRecipient: String? = null,
     ) : SwapTransaction
 
     companion object {
