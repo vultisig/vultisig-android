@@ -36,6 +36,7 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
+import com.vultisig.wallet.ui.models.swap.resolveExternalSwapRecipient
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -336,6 +337,8 @@ constructor(
                         providerFee = quote.fees,
                         providerFeeToken = dstToken,
                         currency = currency,
+                        externalRecipient =
+                            resolveNativeSwapExternalRecipient(payload, dstToken, vault),
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -394,6 +397,8 @@ constructor(
                         providerFee = quote.fees,
                         providerFeeToken = dstToken,
                         currency = currency,
+                        externalRecipient =
+                            resolveNativeSwapExternalRecipient(payload, dstToken, vault),
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -466,6 +471,25 @@ constructor(
         }
     }
 
+    /**
+     * Resolves the external swap recipient for a native THORChain/MayaChain swap by parsing the
+     * signed memo's `DESTINATION` segment and comparing it against this vault's own address on the
+     * destination chain. Returns null for default own-address swaps (#4972).
+     */
+    private suspend fun resolveNativeSwapExternalRecipient(
+        payload: KeysignPayload,
+        dstToken: Coin,
+        vault: Vault,
+    ): String? {
+        val vaultDestinationAddress =
+            chainAccountAddressRepository.getAddress(dstToken.chain, vault).first
+        return resolveExternalSwapRecipient(
+            memo = payload.memo,
+            destinationChain = dstToken.chain,
+            vaultDestinationAddress = vaultDestinationAddress,
+        )
+    }
+
     private suspend fun buildSwapUiModel(
         srcToken: Coin,
         srcTokenValue: TokenValue,
@@ -477,6 +501,7 @@ constructor(
         providerFeeToken: Coin,
         currency: AppCurrency,
         providerLabel: String = provider,
+        externalRecipient: String? = null,
     ): SwapTransactionUiModel {
         val estimatedFee = convertTokenValueToFiat(providerFeeToken, providerFee, currency)
         return SwapTransactionUiModel(
@@ -521,6 +546,7 @@ constructor(
                 ),
             provider = provider,
             providerLabel = providerLabel,
+            externalRecipient = externalRecipient,
         )
     }
 }

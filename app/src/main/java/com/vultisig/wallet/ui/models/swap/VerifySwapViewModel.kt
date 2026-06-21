@@ -60,6 +60,10 @@ internal data class SwapTransactionUiModel(
     // SwapKit swap's Success can be gated on the destination-leg `/track` settlement. Null for
     // non-SwapKit providers and for SwapKit rows rebuilt on a cosigning peer without it.
     val swapId: String? = null,
+    // External recipient resolved from the signed THORChain/MayaChain memo when the swap output is
+    // routed to an address other than this vault's own destination-chain address (issue #4972).
+    // Null for default own-address swaps — the verify screen then shows no warning row.
+    val externalRecipient: String? = null,
 )
 
 internal data class ValuedToken(
@@ -121,18 +125,33 @@ constructor(
                         navigator.back()
                         return@launch
                     }
-            val vaultName = vaultRepository.get(vaultId)?.name
+            val vault = vaultRepository.get(vaultId)
+            val vaultName = vault?.name
             if (vaultName == null) {
                 state.update {
                     it.copy(errorText = UiText.StringResource(R.string.swap_screen_invalid_vault))
                 }
             }
 
+            val externalRecipient =
+                resolveExternalSwapRecipient(
+                    memo = transaction.memo,
+                    destinationChain = transaction.dstToken.chain,
+                    vaultDestinationAddress =
+                        vault
+                            ?.coins
+                            ?.firstOrNull { it.chain == transaction.dstToken.chain }
+                            ?.address
+                            .orEmpty(),
+                )
+
             val consentAllowance = !transaction.isApprovalRequired
             state.update {
                 it.copy(
                     consentAllowance = consentAllowance,
-                    tx = mapTransactionToUiModel(transaction),
+                    tx =
+                        mapTransactionToUiModel(transaction)
+                            .copy(externalRecipient = externalRecipient),
                     vaultName = vaultName?.takeIf { name -> name.isNotEmpty() } ?: "Main Vault",
                 )
             }
