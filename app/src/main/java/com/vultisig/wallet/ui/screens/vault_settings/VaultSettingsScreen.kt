@@ -33,6 +33,8 @@ import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.screens.settings.SettingItem
 import com.vultisig.wallet.ui.screens.settings.SettingsBox
+import com.vultisig.wallet.ui.screens.settings.TierType
+import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -54,6 +56,8 @@ internal fun VaultSettingsScreen() {
         biometricTextFieldState = viewModel.passwordTextFieldState,
         onSaveBiometricsClick = viewModel::onSaveEnableBiometricFastSign,
         onToggleVisibilityClick = viewModel::togglePasswordVisibility,
+        onDismissCustomRpcUpsell = viewModel::onDismissCustomRpcUpsell,
+        onUnlockCustomRpcTier = viewModel::onUnlockCustomRpcTier,
     )
 }
 
@@ -69,6 +73,8 @@ private fun VaultSettingsScreen(
     onServerBackupClick: () -> Unit = {},
     onDismissBackupVaultBottomSheet: () -> Unit = {},
     onToggleVisibilityClick: () -> Unit = {},
+    onDismissCustomRpcUpsell: () -> Unit = {},
+    onUnlockCustomRpcTier: () -> Unit = {},
 ) {
 
     val settingGroups = uiModel.settingGroups
@@ -112,6 +118,20 @@ private fun VaultSettingsScreen(
                     onToggleVisibilityClick,
                     onSaveBiometricsClick,
                     uiModel.biometricsEnableUiModel,
+                )
+            }
+
+            if (uiModel.showCustomRpcUpsell) {
+                FeatureGateBottomSheet(
+                    featureIcon = R.drawable.broadcast,
+                    featureTitle = stringResource(R.string.custom_rpc_title),
+                    featureDescription = stringResource(R.string.custom_rpc_gate_description),
+                    requiredTier = TierType.SILVER,
+                    balanceText = uiModel.customRpcVultBalance,
+                    thresholdText = uiModel.customRpcVultThreshold,
+                    isBelowThreshold = uiModel.customRpcIsBelowThreshold,
+                    onGetVult = onUnlockCustomRpcTier,
+                    onDismiss = onDismissCustomRpcUpsell,
                 )
             }
         }

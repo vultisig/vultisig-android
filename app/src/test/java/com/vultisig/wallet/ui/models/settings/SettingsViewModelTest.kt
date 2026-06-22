@@ -6,11 +6,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.AppLocaleRepository
-import com.vultisig.wallet.data.repositories.CustomRpcConfig
 import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
-import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
-import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -18,18 +15,14 @@ import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
-import java.math.BigInteger
-import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -49,8 +42,6 @@ internal class SettingsViewModelTest {
     private lateinit var appLocaleRepository: AppLocaleRepository
     private lateinit var referralRepository: ReferralCodeSettingsRepositoryContract
     private lateinit var preventScreenshotsRepository: PreventScreenshotsRepository
-    private lateinit var customRpcConfig: CustomRpcConfig
-    private lateinit var getDiscountBps: GetDiscountBpsUseCase
 
     /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
@@ -64,8 +55,6 @@ internal class SettingsViewModelTest {
         appLocaleRepository = mockk(relaxed = true)
         referralRepository = mockk(relaxed = true)
         preventScreenshotsRepository = mockk(relaxed = true)
-        customRpcConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
-        getDiscountBps = mockk(relaxed = true)
     }
 
     /** Cleans up mocks and resets test dispatcher after each test. */
@@ -82,8 +71,6 @@ internal class SettingsViewModelTest {
             appLocaleRepository = appLocaleRepository,
             referralRepository = referralRepository,
             preventScreenshotsRepository = preventScreenshotsRepository,
-            customRpcConfig = customRpcConfig,
-            getDiscountBps = getDiscountBps,
             savedStateHandle = SavedStateHandle(),
         )
 
@@ -124,63 +111,6 @@ internal class SettingsViewModelTest {
             vm.state.value.hasToShowReferralCodeSheet.shouldBeTrue()
             vm.onDismissReferralBottomSheet()
             vm.state.value.hasToShowReferralCodeSheet.shouldBeFalse()
-        }
-
-    /** Silver-tier users (balance at/above the threshold) reach the Custom RPC list directly. */
-    @Test
-    fun `clicking CustomRpc as Silver navigates to CustomRpcList`() =
-        runTest(testDispatcher) {
-            coEvery { getDiscountBps.getVultBalance(VAULT_ID) } returns SILVER_TIER_THRESHOLD
-            val vm = createViewModel()
-            vm.onSettingsItemClick(SettingsItem.CustomRpc)
-            vm.state.value.showCustomRpcUpsell.shouldBeFalse()
-            coVerify { navigator.route(Route.CustomRpcList(VAULT_ID)) }
-        }
-
-    /** Below Silver, the Custom RPC entry shows the Silver upsell dialog. */
-    @Test
-    fun `clicking CustomRpc below Silver shows the upsell dialog`() =
-        runTest(testDispatcher) {
-            coEvery { getDiscountBps.getVultBalance(VAULT_ID) } returns
-                SILVER_TIER_THRESHOLD - BigInteger.ONE
-            val vm = createViewModel()
-            vm.onSettingsItemClick(SettingsItem.CustomRpc)
-            vm.state.value.showCustomRpcUpsell.shouldBeTrue()
-            vm.state.value.customRpcIsBelowThreshold.shouldBeTrue()
-            coVerify(exactly = 0) { navigator.route(Route.CustomRpcList(VAULT_ID)) }
-        }
-
-    /** A failed/unknown balance lookup falls back to the upsell rather than opening the list. */
-    @Test
-    fun `clicking CustomRpc with failing balance lookup falls back to the upsell dialog`() =
-        runTest(testDispatcher) {
-            coEvery { getDiscountBps.getVultBalance(VAULT_ID) } throws RuntimeException("boom")
-            val vm = createViewModel()
-            vm.onSettingsItemClick(SettingsItem.CustomRpc)
-            vm.state.value.showCustomRpcUpsell.shouldBeTrue()
-            coVerify(exactly = 0) { navigator.route(Route.CustomRpcList(VAULT_ID)) }
-        }
-
-    /**
-     * The upsell exposes the balance and threshold as grouped whole-token strings
-     * (formatVultBalance with 18-decimal scaling, no fraction digits). Locale is pinned so grouping
-     * is deterministic.
-     */
-    @Test
-    fun `custom rpc upsell formats balance and threshold as whole VULT tokens`() =
-        runTest(testDispatcher) {
-            val previousLocale = Locale.getDefault()
-            Locale.setDefault(Locale.US)
-            try {
-                val balance = BigInteger("2340") * BigInteger.TEN.pow(18)
-                coEvery { getDiscountBps.getVultBalance(VAULT_ID) } returns balance
-                val vm = createViewModel()
-                vm.onSettingsItemClick(SettingsItem.CustomRpc)
-                vm.state.value.customRpcVultBalance shouldBe "2,340 VULT"
-                vm.state.value.customRpcVultThreshold shouldBe "3,000 VULT"
-            } finally {
-                Locale.setDefault(previousLocale)
-            }
         }
 
     /** Verifies clicking PreventScreenshots calls setEnabled with toggled value. */
@@ -284,32 +214,6 @@ internal class SettingsViewModelTest {
             vm.onVersionClick()
             vm.onVersionClick()
             coVerify(exactly = 0) { navigator.route(Route.Secret) }
-        }
-
-    /** Verifies the Custom RPC row appears when its feature flag is enabled. */
-    @Test
-    fun `custom rpc row is visible when feature flag is enabled`() =
-        runTest(testDispatcher) {
-            every { customRpcConfig.isFeatureEnabled } returns flowOf(true)
-            val vm = createViewModel()
-
-            val hasCustomRpc =
-                vm.state.value.items.flatMap { it.items }.any { it is SettingsItem.CustomRpc }
-
-            hasCustomRpc.shouldBeTrue()
-        }
-
-    /** Verifies the Custom RPC row is hidden when its feature flag is disabled. */
-    @Test
-    fun `custom rpc row is hidden when feature flag is disabled`() =
-        runTest(testDispatcher) {
-            every { customRpcConfig.isFeatureEnabled } returns flowOf(false)
-            val vm = createViewModel()
-
-            val hasCustomRpc =
-                vm.state.value.items.flatMap { it.items }.any { it is SettingsItem.CustomRpc }
-
-            hasCustomRpc.shouldBeFalse()
         }
 
     private companion object {

@@ -7,10 +7,13 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.CustomRpcConfig
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -27,8 +30,11 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import java.math.BigInteger
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -51,6 +57,8 @@ internal class VaultSettingsViewModelTest {
     private lateinit var vaultDataStoreRepository: VaultDataStoreRepository
     private lateinit var vultiSignerRepository: VultiSignerRepository
     private lateinit var snackbarFlow: SnackbarFlow
+    private lateinit var customRpcConfig: CustomRpcConfig
+    private lateinit var getDiscountBps: GetDiscountBpsUseCase
 
     /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
@@ -67,6 +75,8 @@ internal class VaultSettingsViewModelTest {
         vaultDataStoreRepository = mockk(relaxed = true)
         vultiSignerRepository = mockk(relaxed = true)
         snackbarFlow = mockk(relaxed = true)
+        customRpcConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
+        getDiscountBps = mockk(relaxed = true)
         // Function-type-interface mocks need an explicit Boolean stub; otherwise relaxed mode
         // returns a generic Object that fails the implicit cast inside the VM.
         coEvery { isVaultHasFastSignById(any()) } returns false
@@ -90,6 +100,8 @@ internal class VaultSettingsViewModelTest {
             vaultDataStoreRepository = vaultDataStoreRepository,
             vultiSignerRepository = vultiSignerRepository,
             snackbarFlow = snackbarFlow,
+            customRpcConfig = customRpcConfig,
+            getDiscountBps = getDiscountBps,
         )
 
     /** Verifies clicking Advanced sets isAdvanceSetting to true. */
@@ -214,6 +226,99 @@ internal class VaultSettingsViewModelTest {
             val vm = createViewModel()
             vm.onSettingsItemClick(VaultSettingsItem.Sign)
             coVerify { navigator.route(Route.SignMessage(VAULT_ID)) }
+        }
+
+    /** Silver-tier users (balance at/above threshold) reach the Custom RPC picker directly. */
+    @Test
+    fun `clicking CustomRpc as Silver navigates to CustomRpcList`() =
+        runTest(testDispatcher) {
+            coEvery { getDiscountBps.getVultBalance(VAULT_ID) } returns SILVER_TIER_THRESHOLD
+            val vm = createViewModel()
+            vm.onSettingsItemClick(VaultSettingsItem.CustomRpc(true))
+            vm.uiModel.value.showCustomRpcUpsell.shouldBeFalse()
+            coVerify { navigator.route(Route.CustomRpcList(VAULT_ID)) }
+        }
+
+    /** Below Silver, the Custom RPC entry shows the Silver upsell sheet. */
+    @Test
+    fun `clicking CustomRpc below Silver shows the upsell sheet`() =
+        runTest(testDispatcher) {
+            coEvery { getDiscountBps.getVultBalance(VAULT_ID) } returns
+                SILVER_TIER_THRESHOLD - BigInteger.ONE
+            val vm = createViewModel()
+            vm.onSettingsItemClick(VaultSettingsItem.CustomRpc(true))
+            vm.uiModel.value.showCustomRpcUpsell.shouldBeTrue()
+            vm.uiModel.value.customRpcIsBelowThreshold.shouldBeTrue()
+            coVerify(exactly = 0) { navigator.route(Route.CustomRpcList(VAULT_ID)) }
+        }
+
+    /** A failed/unknown balance lookup falls back to the upsell rather than opening the picker. */
+    @Test
+    fun `clicking CustomRpc with failing balance lookup falls back to the upsell sheet`() =
+        runTest(testDispatcher) {
+            coEvery { getDiscountBps.getVultBalance(VAULT_ID) } throws RuntimeException("boom")
+            val vm = createViewModel()
+            vm.onSettingsItemClick(VaultSettingsItem.CustomRpc(true))
+            vm.uiModel.value.showCustomRpcUpsell.shouldBeTrue()
+            coVerify(exactly = 0) { navigator.route(Route.CustomRpcList(VAULT_ID)) }
+        }
+
+    /**
+     * The upsell exposes balance and threshold as grouped whole-token strings (US locale pinned).
+     */
+    @Test
+    fun `custom rpc upsell formats balance and threshold as whole VULT tokens`() =
+        runTest(testDispatcher) {
+            val previousLocale = Locale.getDefault()
+            Locale.setDefault(Locale.US)
+            try {
+                val balance = BigInteger("2340") * BigInteger.TEN.pow(18)
+                coEvery { getDiscountBps.getVultBalance(VAULT_ID) } returns balance
+                val vm = createViewModel()
+                vm.onSettingsItemClick(VaultSettingsItem.CustomRpc(true))
+                vm.uiModel.value.customRpcVultBalance shouldBe "2,340 VULT"
+                vm.uiModel.value.customRpcVultThreshold shouldBe "3,000 VULT"
+            } finally {
+                Locale.setDefault(previousLocale)
+            }
+        }
+
+    /** Tapping Get $VULT dismisses the upsell and routes to the DiscountTiers screen. */
+    @Test
+    fun `onUnlockCustomRpcTier dismisses upsell and routes to DiscountTiers`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onUnlockCustomRpcTier()
+            vm.uiModel.value.showCustomRpcUpsell.shouldBeFalse()
+            coVerify { navigator.route(Route.DiscountTiers(VAULT_ID)) }
+        }
+
+    /** The Custom RPC row is enabled in the Advanced group when its feature flag is on. */
+    @Test
+    fun `custom rpc row is enabled when feature flag is enabled`() =
+        runTest(testDispatcher) {
+            every { customRpcConfig.isFeatureEnabled } returns flowOf(true)
+            val vm = createViewModel()
+            val customRpc =
+                vm.uiModel.value.settingGroups
+                    .flatMap { it.items }
+                    .filterIsInstance<VaultSettingsItem.CustomRpc>()
+                    .single()
+            customRpc.enabled.shouldBeTrue()
+        }
+
+    /** The Custom RPC row is disabled (filtered out of the list) when its feature flag is off. */
+    @Test
+    fun `custom rpc row is disabled when feature flag is disabled`() =
+        runTest(testDispatcher) {
+            every { customRpcConfig.isFeatureEnabled } returns flowOf(false)
+            val vm = createViewModel()
+            val customRpc =
+                vm.uiModel.value.settingGroups
+                    .flatMap { it.items }
+                    .filterIsInstance<VaultSettingsItem.CustomRpc>()
+                    .single()
+            customRpc.enabled.shouldBeFalse()
         }
 
     private companion object {
