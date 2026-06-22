@@ -149,7 +149,7 @@ private fun VerifyExistingVaultSteps(
                     modifier =
                         Modifier.width(16.dp)
                             .height(1.dp)
-                            .background(color = Theme.v2.colors.border.normal)
+                            .background(color = Theme.v2.colors.border.light)
                 )
             }
         }

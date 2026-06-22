@@ -278,7 +278,7 @@ private fun VaultInfoSteps(stepsState: Map<StepType, StepState>) {
 private fun StepSeparator() {
     Box(
         modifier =
-            Modifier.width(16.dp).height(1.dp).background(color = Theme.v2.colors.border.normal)
+            Modifier.width(16.dp).height(1.dp).background(color = Theme.v2.colors.border.light)
     )
 }
 

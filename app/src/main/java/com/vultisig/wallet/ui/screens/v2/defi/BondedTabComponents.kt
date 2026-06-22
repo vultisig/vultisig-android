@@ -78,7 +78,7 @@ internal fun ActiveNodesWidget(
                 .background(Theme.v2.colors.backgrounds.secondary)
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.normal,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(16.dp),
                 )
                 .padding(16.dp)

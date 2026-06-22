@@ -105,7 +105,7 @@ internal fun TronFreezePositionCard(
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
                 .background(Theme.v2.colors.backgrounds.secondary)
-                .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(16.dp))
+                .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(16.dp))
                 .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {

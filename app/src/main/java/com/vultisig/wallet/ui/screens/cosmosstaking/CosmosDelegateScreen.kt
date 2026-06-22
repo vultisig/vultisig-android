@@ -169,7 +169,7 @@ internal fun StakingAmountCard(
                 .clip(RoundedCornerShape(12.dp))
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.normal,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(12.dp),
                 )
                 .padding(16.dp),
@@ -248,7 +248,7 @@ internal fun ValidatorPickerField(selected: CosmosValidator?, onClick: () -> Uni
                 .clip(RoundedCornerShape(12.dp))
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.normal,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(12.dp),
                 )
                 .clickable(onClick = onClick)
@@ -358,7 +358,7 @@ internal fun ValidatorPickerSheet(
                         .background(Theme.v2.colors.backgrounds.surface1)
                         .border(
                             width = 1.dp,
-                            color = Theme.v2.colors.border.normal,
+                            color = Theme.v2.colors.border.light,
                             shape = RoundedCornerShape(99.dp),
                         )
                         .padding(horizontal = 12.dp, vertical = 12.dp),

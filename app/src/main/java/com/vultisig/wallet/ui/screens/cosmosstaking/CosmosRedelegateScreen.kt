@@ -156,7 +156,7 @@ private fun DstValidatorPickerRow(selected: CosmosValidator?, onClick: () -> Uni
                 .clip(RoundedCornerShape(12.dp))
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.normal,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(12.dp),
                 )
                 .clickable(onClick = onClick)

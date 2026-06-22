@@ -161,7 +161,7 @@ private fun SendAddressPill(address: String, modifier: Modifier = Modifier) {
         modifier =
             modifier
                 .background(color = Theme.v2.colors.backgrounds.tertiary_2, shape = shape)
-                .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = shape)
+                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
     )
 }
@@ -182,7 +182,7 @@ private fun SendProviderChip(provider: String, modifier: Modifier = Modifier) {
         modifier =
             modifier
                 .background(color = Theme.v2.colors.backgrounds.tertiary_2, shape = shape)
-                .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = shape)
+                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
                 .padding(horizontal = 12.dp, vertical = 8.dp),
     )
 }

@@ -170,7 +170,7 @@ private fun AddressToggle(
                 modifier =
                     Modifier.border(
                             width = 1.dp,
-                            color = Theme.v2.colors.border.normal,
+                            color = Theme.v2.colors.border.light,
                             shape = RoundedCornerShape(size = 60.dp),
                         )
                         .padding(4.dp)

@@ -66,7 +66,7 @@ internal fun SearchBar(
             type = ContainerType.SECONDARY,
             borderType =
                 if (isFocusedState)
-                    ContainerBorderType.Bordered(color = Theme.v2.colors.border.normal)
+                    ContainerBorderType.Bordered(color = Theme.v2.colors.border.light)
                 else ContainerBorderType.Borderless,
             modifier = Modifier.weight(1f),
             cornerType = CornerType.Circular,

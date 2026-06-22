@@ -147,7 +147,7 @@ private fun UnstakeAmountCard(
                 .clip(RoundedCornerShape(12.dp))
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.normal,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(12.dp),
                 )
                 .padding(16.dp),
@@ -273,7 +273,7 @@ internal fun ValidatorReadonlyBlock(moniker: String, address: String) {
                 .clip(RoundedCornerShape(12.dp))
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.normal,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(12.dp),
                 )
                 .padding(horizontal = 16.dp, vertical = 16.dp),

@@ -22,8 +22,8 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun RoundedBorderWithLeaf(
     modifier: Modifier = Modifier,
     borderSize: Dp = 74.dp,
-    borderColor: Color = Theme.v2.colors.border.normal,
-    leafColor: Color = Theme.v2.colors.border.normal,
+    borderColor: Color = Theme.v2.colors.border.light,
+    leafColor: Color = Theme.v2.colors.border.light,
     checkMarkColor: Color = Theme.v2.colors.alerts.success,
     borderWidth: Dp = 1.5.dp,
     cornerRadius: Dp = 24.dp,

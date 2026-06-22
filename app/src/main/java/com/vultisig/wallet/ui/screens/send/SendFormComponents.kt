@@ -104,7 +104,7 @@ internal fun FoldableSection(
         modifier =
             Modifier.border(
                 width = 1.dp,
-                color = Theme.v2.colors.border.normal,
+                color = Theme.v2.colors.border.light,
                 shape = RoundedCornerShape(12.dp),
             )
     ) {

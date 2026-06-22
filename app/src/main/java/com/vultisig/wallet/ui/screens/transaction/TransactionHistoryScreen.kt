@@ -303,7 +303,7 @@ private fun AssetFilterChip(asset: TransactionAssetUiModel, onRemove: () -> Unit
     Row(
         modifier =
             Modifier.background(color = Theme.v2.colors.backgrounds.tertiary_2, shape = shape)
-                .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = shape)
+                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),

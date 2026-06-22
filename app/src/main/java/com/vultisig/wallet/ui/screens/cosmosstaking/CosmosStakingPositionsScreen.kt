@@ -295,7 +295,7 @@ private fun TotalStakedCard(
                 .clip(RoundedCornerShape(16.dp))
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.normal,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(16.dp),
                 )
                 .padding(16.dp),
@@ -377,7 +377,7 @@ private fun PositionRow(
                 .clip(RoundedCornerShape(12.dp))
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.normal,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(12.dp),
                 )
                 .padding(16.dp),
@@ -566,7 +566,7 @@ internal fun StakingPositionSkeleton() {
                 .clip(RoundedCornerShape(12.dp))
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.normal,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(12.dp),
                 )
                 .padding(16.dp),
@@ -596,7 +596,7 @@ private fun UnbondingCard(unbonding: CosmosUnbondingDelegation) {
                 .clip(RoundedCornerShape(12.dp))
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.normal,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(12.dp),
                 )
                 .padding(12.dp),

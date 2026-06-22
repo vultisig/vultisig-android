@@ -131,7 +131,7 @@ private fun AddLpContent(
                         .clip(RoundedCornerShape(12.dp))
                         .border(
                             width = 1.dp,
-                            color = Theme.v2.colors.border.normal,
+                            color = Theme.v2.colors.border.light,
                             shape = RoundedCornerShape(12.dp),
                         )
                         .padding(16.dp),
