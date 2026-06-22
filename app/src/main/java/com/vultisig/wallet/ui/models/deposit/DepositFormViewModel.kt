@@ -13,13 +13,11 @@ import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
-import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
-import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
@@ -28,9 +26,9 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
-import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
+import com.vultisig.wallet.ui.models.deposit.load.DepositAmountHelper
 import com.vultisig.wallet.ui.models.deposit.load.DepositDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.DepositOptionCoordinator
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
@@ -49,29 +47,22 @@ import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
-import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import wallet.core.jni.proto.Bitcoin
 
 internal enum class DepositOption {
     AddCacaoPool,
@@ -182,6 +173,7 @@ constructor(
     private val nodeWhitelistCheckerFactory: NodeWhitelistChecker.Factory,
     private val dataLoaderFactory: DepositDataLoader.Factory,
     private val depositOptionCoordinatorFactory: DepositOptionCoordinator.Factory,
+    private val depositAmountHelperFactory: DepositAmountHelper.Factory,
     private val depositStrategyFactory: DepositStrategyFactory,
 ) : ViewModel() {
 
@@ -200,10 +192,6 @@ constructor(
                 SharingStarted.WhileSubscribed(),
                 appCurrencyRepository.defaultCurrency.ticker,
             )
-
-    private var lastTokenValueUserInput: String = ""
-    private var lastFiatValueUserInput: String = ""
-    private var amountChangesJob: Job? = null
 
     private var vaultId: String? = null
     private var chain: Chain? = null
@@ -335,6 +323,16 @@ constructor(
             selectDepositOption = ::selectDepositOption,
         )
 
+    private val depositAmountHelper: DepositAmountHelper =
+        depositAmountHelperFactory.create(
+            scope = viewModelScope,
+            fields = fields,
+            appCurrency = appCurrency,
+            state = _state,
+            chain = { chain },
+            vaultId = { vaultId },
+        )
+
     private val depositStrategies: DepositSubmitStrategies =
         depositStrategyFactory.create(
             DepositStrategyContext(
@@ -345,15 +343,15 @@ constructor(
                 lpPoolId = { lpPoolId },
                 fields = fields,
                 blockChainSpecificRepository = blockChainSpecificRepository,
-                calculateGasFee = ::calculateGasFee,
-                getFeesFiatValue = ::getFeesFiatValue,
+                calculateGasFee = depositAmountHelper::calculateGasFee,
+                getFeesFiatValue = depositAmountHelper::getFeesFiatValue,
                 selectedToken = ::getSelectedToken,
                 selectedAccount = ::getSelectedAccount,
-                requireTokenAmount = ::requireTokenAmount,
+                requireTokenAmount = depositAmountHelper::requireTokenAmount,
                 resolvePairedAddress = ::resolvePairedAddress,
                 resolveSecuredAssetInboundAddress =
                     depositOptionCoordinator::requireSecuredAssetInboundAddress,
-                getBitcoinTransactionPlan = ::getBitcoinTransactionPlan,
+                getBitcoinTransactionPlan = depositAmountHelper::getBitcoinTransactionPlan,
                 rujiMergeBalances = { rujiBalancesLoader.balances },
             )
         )
@@ -382,14 +380,14 @@ constructor(
         this.bondAddress = bondAddress
         this.lpPoolId = poolId
 
-        collectAmountChanges()
+        depositAmountHelper.collectAmountChanges()
 
         dataLoader.wireInitialState(
             vaultId = vaultId,
             chain = chain,
             tokensToMerge = tokensToMerge,
             state = _state,
-            updateTokenAmount = ::updateTokenAmount,
+            updateTokenAmount = depositAmountHelper::updateTokenAmount,
             selectDstChain = ::selectDstChain,
             collectSecuredAssetAddresses = securedAssetLoader::collectSecuredAssetAddresses,
             loadGasFeeForDisplay = { vaultId, chain, address ->
@@ -427,45 +425,6 @@ constructor(
 
     fun setRemoveLpPercent(percent: Float) {
         liquidityDataLoader.setRemoveLpPercent(percent)
-    }
-
-    private suspend fun updateTokenAmount(
-        account: Account?,
-        chain: Chain,
-        targetTicker: String?,
-        vaultId: String,
-    ) {
-        if (account != null) {
-            val tokenValue = account.tokenValue
-            if (tokenValue != null) {
-                val value = mapTokenValueToStringWithUnit(tokenValue)
-                _state.update { state ->
-                    state.copy(
-                        amountError = null,
-                        balance = value.asUiText(),
-                        balanceDecimal = tokenValue.decimal,
-                    )
-                }
-            } else {
-                // Account exists in vault but balance not yet loaded — clear stale error and
-                // balance
-                _state.update {
-                    it.copy(amountError = null, balance = UiText.Empty, balanceDecimal = null)
-                }
-            }
-        } else {
-            _state.update {
-                it.copy(
-                    balance = UiText.Empty,
-                    balanceDecimal = null,
-                    amountError =
-                        UiText.FormattedText(
-                            R.string.must_be_enabled_before_proceeding,
-                            listOf(targetTicker.orEmpty()),
-                        ),
-                )
-            }
-        }
     }
 
     fun selectToken() {
@@ -742,60 +701,6 @@ constructor(
         rujiBalancesLoader.loadRujiMergeBalances()
     }
 
-    private fun requireTokenAmount(
-        selectedToken: Coin,
-        selectedAccount: Account,
-        address: Address,
-        gas: TokenValue,
-    ): BigInteger {
-        val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
-
-        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
-        }
-
-        val tokenAmountInt = tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
-
-        val nativeTokenAccount =
-            address.accounts.find { it.token.isNativeToken && it.token.chain == chain }
-        val nativeTokenValue =
-            nativeTokenAccount?.tokenValue?.value
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_token)
-                )
-
-        if (selectedToken.isNativeToken) {
-            // Native-token deposits pay the amount and the gas from the same balance, so validate
-            // amount + gas in-form; otherwise a full-balance amount fails late at signing.
-            if (nativeTokenValue < tokenAmountInt + gas.value) {
-                throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_insufficient_balance)
-                )
-            }
-        } else {
-            if ((selectedAccount.tokenValue?.value ?: BigInteger.ZERO) < tokenAmountInt) {
-
-                // For all other operations, or if the unstakable check failed
-                throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_insufficient_balance)
-                )
-            }
-
-            if (nativeTokenValue < gas.value) {
-                throw InvalidTransactionDataException(
-                    UiText.FormattedText(
-                        R.string.insufficient_native_token,
-                        listOf(nativeTokenAccount.token.ticker),
-                    )
-                )
-            }
-        }
-
-        return tokenAmountInt
-    }
-
     private fun showError(text: UiText) {
         _state.update { it.copy(errorText = text) }
     }
@@ -824,91 +729,12 @@ constructor(
         }
     }
 
-    private suspend fun getFeesFiatValue(
-        specific: BlockChainSpecificAndUtxo,
-        gasFee: TokenValue,
-        selectedToken: Coin,
-    ): EstimatedGasFee = gasFeeHelper.getFeesFiatValue(chain, specific, gasFee, selectedToken)
-
-    private fun collectAmountChanges() {
-        if (amountChangesJob != null) return
-        amountChangesJob =
-            viewModelScope.safeLaunch {
-                combine(
-                        state.map { it.selectedToken }.distinctUntilChanged(),
-                        tokenAmountFieldState.textAsFlow(),
-                        fiatAmountFieldState.textAsFlow(),
-                    ) { selectedToken, tokenFieldValue, fiatFieldValue ->
-                        val tokenString = tokenFieldValue.toString()
-                        val fiatString = fiatFieldValue.toString()
-                        if (lastTokenValueUserInput != tokenString) {
-                            val fiatValue =
-                                convertAmountValue(tokenString, selectedToken) { value, price ->
-                                        value
-                                            .multiply(price)
-                                            .setScale(selectedToken.decimal, RoundingMode.DOWN)
-                                            .stripTrailingZeros()
-                                    }
-                                    ?.takeIf { it.isNotEmpty() } ?: return@combine
-                            lastTokenValueUserInput = tokenString
-                            lastFiatValueUserInput = fiatValue
-                            fiatAmountFieldState.setTextAndPlaceCursorAtEnd(fiatValue)
-                        } else if (lastFiatValueUserInput != fiatString) {
-                            val tokenValue =
-                                convertAmountValue(fiatString, selectedToken) { value, price ->
-                                        value.divide(
-                                            price,
-                                            selectedToken.decimal,
-                                            RoundingMode.DOWN,
-                                        )
-                                    }
-                                    ?.takeIf { it.isNotEmpty() } ?: return@combine
-                            lastTokenValueUserInput = tokenValue
-                            lastFiatValueUserInput = fiatString
-                            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(tokenValue)
-                        }
-                    }
-                    .collect()
-            }
-    }
-
-    private suspend fun convertAmountValue(
-        value: String,
-        token: Coin,
-        transform: (value: BigDecimal, price: BigDecimal) -> BigDecimal,
-    ): String? = gasFeeHelper.convertAmountValue(value, token, appCurrency.value, transform)
-
     fun onSelectSecureAsset(asset: TokenWithdrawSecureAsset) {
         val balance = asset.tokenValue?.let(mapTokenValueToStringWithUnit)
         _state.update {
             it.copy(selectedSecuredAsset = asset, balance = balance?.asUiText() ?: UiText.Empty)
         }
     }
-
-    private suspend fun calculateGasFee(chain: Chain, token: Coin, srcAddress: String): TokenValue =
-        gasFeeHelper.calculateGasFee(
-            vaultId = vaultId ?: error("Vault ID not set"),
-            chain = chain,
-            token = token,
-            srcAddress = srcAddress,
-        )
-
-    private suspend fun getBitcoinTransactionPlan(
-        vaultId: String,
-        selectedToken: Coin,
-        dstAddress: String,
-        tokenAmountInt: BigInteger,
-        specific: BlockChainSpecificAndUtxo,
-        memo: String?,
-    ): Bitcoin.TransactionPlan =
-        gasFeeHelper.getBitcoinTransactionPlan(
-            vaultId = vaultId,
-            selectedToken = selectedToken,
-            dstAddress = dstAddress,
-            tokenAmountInt = tokenAmountInt,
-            specific = specific,
-            memo = memo,
-        )
 }
 
 internal data class TokenMergeInfo(val ticker: String, val contract: String) {
