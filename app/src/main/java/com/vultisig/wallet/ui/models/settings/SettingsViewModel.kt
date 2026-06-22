@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.settings.SettingsItem.AddressBook
 import com.vultisig.wallet.ui.models.settings.SettingsItem.CheckForUpdates
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Currency
@@ -59,6 +60,7 @@ internal data class SettingsUiModel(
     val showCustomRpcUpsell: Boolean = false,
     val customRpcVultBalance: String = "",
     val customRpcVultThreshold: String = "",
+    val customRpcIsBelowThreshold: Boolean = false,
 )
 
 internal data class SettingsGroupUiModel(val title: UiText, val items: List<SettingsItem>)
@@ -357,23 +359,22 @@ constructor(
             CustomRpc -> {
                 // Tier gate at the entry point (parity with iOS): below Silver, show the Silver
                 // upsell dialog instead of the editor. Once inside the list the user edits freely.
-                // A failed/unknown tier lookup falls back to the upsell rather than blocking
-                // access.
-                viewModelScope.launch {
-                    val isSilver =
-                        runCatching { getDiscountBps.hasReachedSilverTier(vaultId) }
-                            .getOrDefault(false)
-                    if (isSilver) {
+                // A failed/unknown balance lookup falls back to the upsell rather than blocking
+                // access. The balance is fetched once and the tier is derived locally so we don't
+                // hit the repository twice per tap.
+                viewModelScope.safeLaunch {
+                    val balanceRaw =
+                        runCatching { getDiscountBps.getVultBalance(vaultId) }.getOrNull()
+                            ?: BigInteger.ZERO
+                    if (balanceRaw >= SILVER_TIER_THRESHOLD) {
                         navigator.route(Route.CustomRpcList(vaultId))
                     } else {
-                        val balanceRaw =
-                            runCatching { getDiscountBps.getVultBalance(vaultId) }.getOrNull()
-                                ?: BigInteger.ZERO
                         state.update {
                             it.copy(
                                 showCustomRpcUpsell = true,
                                 customRpcVultBalance = formatVultBalance(balanceRaw),
                                 customRpcVultThreshold = formatVultBalance(SILVER_TIER_THRESHOLD),
+                                customRpcIsBelowThreshold = balanceRaw < SILVER_TIER_THRESHOLD,
                             )
                         }
                     }

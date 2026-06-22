@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.settings.bottomsheets
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -56,7 +57,7 @@ import com.vultisig.wallet.ui.theme.Theme
  */
 @Composable
 internal fun FeatureGateBottomSheet(
-    featureIcon: Int,
+    @DrawableRes featureIcon: Int,
     featureTitle: String,
     featureDescription: String,
     requiredTier: TierType,

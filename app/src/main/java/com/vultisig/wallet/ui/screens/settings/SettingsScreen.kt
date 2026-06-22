@@ -139,7 +139,7 @@ private fun SettingsScreen(
                 requiredTier = TierType.SILVER,
                 balanceText = state.customRpcVultBalance,
                 thresholdText = state.customRpcVultThreshold,
-                isBelowThreshold = true,
+                isBelowThreshold = state.customRpcIsBelowThreshold,
                 onGetVult = onUnlockCustomRpcTier,
                 onDismiss = onDismissCustomRpcUpsell,
             )
