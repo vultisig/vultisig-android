@@ -238,6 +238,7 @@ class PreviewActivity : ComponentActivity() {
                     "qbtc_detail_claim" -> QbtcDetailClaimPreview()
                     "keysign_devices_plus_before" -> KeysignDevicesCountPreview(allowsMore = true)
                     "keysign_devices_plus_after" -> KeysignDevicesCountPreview(allowsMore = false)
+                    "keygen_peer_discovery" -> KeygenPeerDiscoveryPreview()
                     "staking_verify_before" -> CosmosStakingVerifyCtaPreview(newButtons = false)
                     "staking_verify_after" -> CosmosStakingVerifyCtaPreview(newButtons = true)
                     "staking_verify_qbtc" ->
@@ -333,6 +334,38 @@ private fun KeysignDevicesCountPreview(allowsMore: Boolean) {
         onNextClick = {},
         onDismissQrHelpModal = {},
         showHelp = false,
+    )
+}
+
+/**
+ * Keygen peer-discovery for a 4-of-4 ("4+") vault — the redesigned Scan QR screen (#4968): framed
+ * QR card, animated "Waiting for devices to connect…" header, vertical device cards with the "N of
+ * ∞" badge, and the Continue (m-of-n) CTA. QR bitmap is null in the preview, so the framed card
+ * renders empty.
+ */
+@Composable
+private fun KeygenPeerDiscoveryPreview() {
+    PeerDiscoveryScreen(
+        state =
+            PeerDiscoveryUiModel(
+                localPartyId = "iPhone-A1B",
+                network = NetworkOption.Internet,
+                devices = listOf("MacBook-C2D", "iPhone-E3F", "MacBook-G4H"),
+                selectedDevices = listOf("MacBook-C2D", "iPhone-E3F", "MacBook-G4H"),
+                minimumDevices = 4,
+                minimumDevicesDisplayed = 4,
+                deviceCount = 4,
+                allowsMoreDevices = true,
+                enableNotification = false,
+            ),
+        onResendNotification = {},
+        onBackClick = {},
+        onHelpClick = {},
+        onShareQrClick = {},
+        onSwitchModeClick = {},
+        onDeviceClick = {},
+        onNextClick = {},
+        onDismissQrHelpModal = {},
     )
 }
 

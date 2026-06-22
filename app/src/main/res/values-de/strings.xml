@@ -847,9 +847,6 @@
     <string name="select_vault_type_secure_desc_3">Sichern Sie beliebige Vermögenswerte.</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver signiert sofort</string>
     <string name="peer_discovery_topbar_title">QR-Code scannen</string>
-    <string name="peer_discovery_waiting_for_devices_action">Geräte werden angefordert…</string>
-    <string name="peer_discovery_devices_n_of_n">Geräte (%1$s/%2$s)</string>
-    <string name="peer_discovery_devices_n_of_n_plus">Geräte (%1$s/%2$s+)</string>
     <string name="vault_backup_screen_email_sent_to">An %s gesendet.</string>
     <string name="vault_backup_screen_donot_receive_email">Keine E-Mail erhalten?</string>
     <string name="onboarding_desc_page_5_part_2">separat in einem</string>
@@ -949,7 +946,11 @@
     <string name="onboarding_intro_preview_part_1">Verabschieden Sie sich von</string>
     <string name="onboarding_desc_page_1_part_1">Begrüßen Sie</string>
     <string name="peer_discovery_this_device">Dieses Gerät</string>
-    <string name="peer_discovery_scan_with_n_device">Mit %1$s Gerät scannen</string>
+    <string name="peer_discovery_status_connected">Verbunden</string>
+    <string name="peer_discovery_waiting_title">Geräte werden angefordert</string>
+    <string name="peer_discovery_device_count_badge">%1$s von %2$s</string>
+    <string name="peer_discovery_action_continue_m_of_n">Weiter (%1$d-von-%2$d)</string>
+    <string name="peer_discovery_waiting_for_devices_action">Geräte werden angefordert…</string>
     <string name="select_chain_title">Chain auswählen</string>
     <string name="keygen_benefit_2_emphasized">Selbstverwahrung</string>
     <string name="sign_message_sign_screen_title">Nachricht signieren</string>

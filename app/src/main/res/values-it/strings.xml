@@ -845,9 +845,6 @@
     <string name="select_vault_type_secure_desc_3">Proteggi qualsiasi quantità di risorse</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver co-firma istantaneamente</string>
     <string name="peer_discovery_topbar_title">Scansiona il codice QR</string>
-    <string name="peer_discovery_waiting_for_devices_action">In attesa dei dispositivi…</string>
-    <string name="peer_discovery_devices_n_of_n">Dispositivi (%1$s/%2$s)</string>
-    <string name="peer_discovery_devices_n_of_n_plus">Dispositivi (%1$s/%2$s+)</string>
     <string name="vault_backup_screen_email_sent_to">Inviato a %s.</string>
     <string name="vault_backup_screen_donot_receive_email">Non hai ricevuto un\'email?</string>
     <string name="onboarding_desc_page_5_part_2">separatamente in un</string>
@@ -947,7 +944,11 @@
     <string name="onboarding_intro_preview_part_1">Dì addio a</string>
     <string name="onboarding_desc_page_1_part_1">Dì benvenuto a</string>
     <string name="peer_discovery_this_device">Questo dispositivo</string>
-    <string name="peer_discovery_scan_with_n_device">Scansiona con il dispositivo %1$s</string>
+    <string name="peer_discovery_status_connected">Connesso</string>
+    <string name="peer_discovery_waiting_title">In attesa dei dispositivi</string>
+    <string name="peer_discovery_device_count_badge">%1$s di %2$s</string>
+    <string name="peer_discovery_action_continue_m_of_n">Continua (%1$d-di-%2$d)</string>
+    <string name="peer_discovery_waiting_for_devices_action">In attesa dei dispositivi…</string>
     <string name="select_chain_title">Seleziona catena</string>
     <string name="keygen_benefit_2_emphasized">Autocustodito,</string>
     <string name="sign_message_sign_screen_title">Firma messaggio</string>

@@ -511,10 +511,11 @@
     <string name="peer_discovery_topbar_title">QR 스캔</string>
     <string name="peer_discovery_action_next_title">다음</string>
     <string name="peer_discovery_this_device">이 기기</string>
-    <string name="peer_discovery_scan_with_n_device">%1$s 기기로 스캔</string>
+    <string name="peer_discovery_status_connected">연결됨</string>
+    <string name="peer_discovery_waiting_title">기기 대기 중</string>
+    <string name="peer_discovery_device_count_badge">%2$s 중 %1$s</string>
+    <string name="peer_discovery_action_continue_m_of_n">계속 (%2$d개 중 %1$d)</string>
     <string name="peer_discovery_waiting_for_devices_action">기기 대기 중…</string>
-    <string name="peer_discovery_devices_n_of_n">기기 (%1$s/%2$s)</string>
-    <string name="peer_discovery_devices_n_of_n_plus">기기 (%1$s/%2$s+)</string>
     <string name="scan_qr_code_modal_annotation">다른 기기에서 앱을 열고 \'QR 코드 스캔\'을 탭하여 연결하세요.</string>
     <string name="scan_qr_code_modal_next">스캔 시작</string>
     <string name="scan_qr_code_modal_scan_the">다른 기기에서 QR을 스캔하세요</string>
