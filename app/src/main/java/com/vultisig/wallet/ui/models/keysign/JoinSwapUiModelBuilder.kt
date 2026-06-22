@@ -36,6 +36,7 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
+import com.vultisig.wallet.ui.models.swap.resolveExternalSwapRecipient
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -533,12 +534,13 @@ constructor(
     }
 
     /**
-     * Recovers the custom external recipient a cosigner would otherwise never see (#4858 review).
-     * Only the native protocols (THORChain / Maya) carry it, as the swap memo's `destination`
-     * field; a value matching the vault's own destination address is the normal case, so only a
-     * differing address is surfaced as an external recipient. Returns null when it can't be
-     * determined (EVM aggregators bake the vault address into calldata; SwapKit's route isn't
-     * recoverable here).
+     * Recovers the custom external recipient a cosigner would otherwise never see (#4858
+     * review, #4972). Only the native protocols (THORChain / Maya) carry it, as the swap memo's
+     * `destination` segment; a value matching the vault's own destination address is the normal
+     * case, so only a differing address is surfaced. Parsing and the chain-aware own-address
+     * comparison are delegated to the unit-tested [resolveExternalSwapRecipient]. Returns null when
+     * it can't be determined (EVM aggregators bake the vault address into calldata; SwapKit's route
+     * isn't recoverable here).
      */
     private suspend fun resolveExternalRecipient(
         payload: KeysignPayload,
@@ -549,11 +551,13 @@ constructor(
         if (swapPayload !is SwapPayload.ThorChain && swapPayload !is SwapPayload.MayaChain) {
             return null
         }
-        val destination =
-            payload.memo?.split(":")?.getOrNull(2)?.takeIf { it.isNotBlank() } ?: return null
         val vaultDstAddress =
             runCatching { chainAccountAddressRepository.getAddress(dstToken, vault).first }
                 .getOrNull() ?: return null
-        return destination.takeIf { !it.equals(vaultDstAddress, ignoreCase = true) }
+        return resolveExternalSwapRecipient(
+            memo = payload.memo,
+            destinationChain = dstToken.chain,
+            vaultDestinationAddress = vaultDstAddress,
+        )
     }
 }

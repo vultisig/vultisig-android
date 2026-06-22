@@ -592,6 +592,13 @@
     <string name="custom_rpc_wrong_chain">Ova krajnja točka poslužuje drugi lanac</string>
     <string name="custom_rpc_invalid_response">Neočekivani odgovor s ove krajnje točke</string>
     <string name="custom_rpc_unreachable">Krajnja točka nedostupna</string>
+    <string name="custom_rpc_gate_description">Usmjeri Vultisig na vlastite čvorove. Brži upiti, viša ograničenja zahtjeva i potpuna privatnost po lancu.</string>
+    <!-- Feature gate (tier-locked feature popup) -->
+    <string name="feature_gate_requires">Zahtijeva</string>
+    <string name="feature_gate_tier_requirement">$VULT %1$s razina ili viša</string>
+    <string name="feature_gate_hold_threshold">Drži barem %1$s u svom trezoru</string>
+    <string name="feature_gate_your_balance">Tvoj saldo</string>
+    <string name="feature_gate_get_vult">Nabavi $VULT</string>
     <string name="swapkit_error_api_key_missing">SwapKit API ključ nije postavljen</string>
     <string name="swapkit_error_api_key_invalid">SwapKit API ključ je neispravan</string>
     <string name="swapkit_error_insufficient_balance">Nedovoljno sredstava za ovu rutu</string>
@@ -850,9 +857,6 @@
     <string name="select_vault_type_secure_desc_3">Osigurajte bilo koju količinu imovine</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver supotpisuje odmah</string>
     <string name="peer_discovery_topbar_title">Skenirajte QR</string>
-    <string name="peer_discovery_waiting_for_devices_action">Čekanje na uređaje…</string>
-    <string name="peer_discovery_devices_n_of_n">Uređaji (%1$s/%2$s)</string>
-    <string name="peer_discovery_devices_n_of_n_plus">Uređaji (%1$s/%2$s+)</string>
     <string name="vault_backup_screen_email_sent_to">Poslano na %s.</string>
     <string name="vault_backup_screen_donot_receive_email">Niste primili e-poštu?</string>
     <string name="onboarding_desc_page_5_part_2">odvojeno u</string>
@@ -894,11 +898,6 @@
     <string name="swap_advanced_external_recipient_title">Koristi vanjskog primatelja</string>
     <string name="swap_advanced_locked_title">Napredne postavke zamjene</string>
     <string name="swap_advanced_locked_subtitle">Precizno podesite slippage, gas, rutu i primatelja za svaku zamjenu.</string>
-    <string name="swap_advanced_locked_requires">Zahtijeva</string>
-    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s razina ili viša</string>
-    <string name="swap_advanced_locked_tier_subtitle">Drži barem %1$s u svom trezoru</string>
-    <string name="swap_advanced_locked_your_balance">Tvoj saldo</string>
-    <string name="swap_advanced_locked_get_vult">Nabavi $VULT</string>
     <string name="swap_advanced_value_auto">Auto</string>
     <string name="swap_advanced_value_off">Isključeno</string>
     <string name="swap_slippage_helper">Ograničava koliko se cijena može promijeniti prije nego što se izvršenje otkaže.</string>
@@ -952,7 +951,11 @@
     <string name="onboarding_intro_preview_part_1">Recite zbogom</string>
     <string name="onboarding_desc_page_1_part_1">Recite pozdrav</string>
     <string name="peer_discovery_this_device">Ovaj uređaj</string>
-    <string name="peer_discovery_scan_with_n_device">Skenirajte s %1$s uređajem</string>
+    <string name="peer_discovery_status_connected">Povezano</string>
+    <string name="peer_discovery_waiting_title">Čekanje na uređaje</string>
+    <string name="peer_discovery_device_count_badge">%1$s od %2$s</string>
+    <string name="peer_discovery_action_continue_m_of_n">Nastavi (%1$d-od-%2$d)</string>
+    <string name="peer_discovery_waiting_for_devices_action">Čekanje na uređaje…</string>
     <string name="select_chain_title">Odaberi lanac</string>
     <string name="keygen_benefit_2_emphasized">Samostalno čuvanje,</string>
     <string name="sign_message_sign_screen_title">Potpisivanje poruke</string>

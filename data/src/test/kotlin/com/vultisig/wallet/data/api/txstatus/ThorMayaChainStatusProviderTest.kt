@@ -16,7 +16,9 @@ import org.junit.jupiter.api.Test
  * - `type == "failed"` with no outbound tx yet → [TransactionResult.Failed] (network rejected the
  *   action; refund is a separate outbound that hasn't been observed).
  * - `status == "success"` (non-refund/failed) → [TransactionResult.Confirmed].
- * - empty actions array → [TransactionResult.Pending] (indexer lag).
+ * - empty actions array → native node `cosmos/tx/v1beta1/txs/{hash}` fallback (Midgard doesn't
+ *   index plain transfers or rejected deposits): code 0 → Confirmed, non-zero → Failed, 404 →
+ *   Pending.
  * - network/parse failure → [TransactionResult.Pending] (so polling keeps running).
  */
 class ThorMayaChainStatusProviderTest {
@@ -235,13 +237,84 @@ class ThorMayaChainStatusProviderTest {
     }
 
     @Test
-    fun `empty actions returns Pending`() = runTest {
-        val client = MockHttpClient.respondingWith(HttpStatusCode.OK, """{ "actions": [] }""")
+    fun `no midgard action falls back to native node and maps failed code to Failed`() = runTest {
+        // The reported bug: a native THORChain tx (secured-asset send / rejected wasm deposit) is
+        // never indexed by Midgard, so `/v2/actions` is empty. Previously this stayed Pending
+        // forever; now we resolve it via the node's cosmos/tx endpoint, which reports the failure.
+        val nativeFailed =
+            """
+            {
+              "tx_response": {
+                "code": 11,
+                "codespace": "wasm",
+                "raw_log": "Zeroamount: execute wasm contract failed"
+              }
+            }
+            """
+                .trimIndent()
+        val client =
+            MockHttpClient.respondingWithSequence(
+                HttpStatusCode.OK to """{ "actions": [] }""",
+                HttpStatusCode.OK to nativeFailed,
+            )
+        val provider = ThorMayaChainStatusProvider(client)
+
+        val result = provider.checkStatus("hash", Chain.ThorChain)
+
+        result shouldBe TransactionResult.Failed("Zeroamount: execute wasm contract failed")
+    }
+
+    @Test
+    fun `no midgard action falls back to native node and maps code 0 to Confirmed`() = runTest {
+        val nativeSuccess =
+            """
+            { "tx_response": { "code": 0, "codespace": "", "raw_log": "" } }
+            """
+                .trimIndent()
+        val client =
+            MockHttpClient.respondingWithSequence(
+                HttpStatusCode.OK to """{ "actions": [] }""",
+                HttpStatusCode.OK to nativeSuccess,
+            )
+        val provider = ThorMayaChainStatusProvider(client)
+
+        val result = provider.checkStatus("hash", Chain.MayaChain)
+
+        result shouldBe TransactionResult.Confirmed
+    }
+
+    @Test
+    fun `no midgard action and native node 404 stays Pending`() = runTest {
+        // Node returns 404 until the tx is committed in a block — keep polling.
+        val client =
+            MockHttpClient.respondingWithSequence(
+                HttpStatusCode.OK to """{ "actions": [] }""",
+                HttpStatusCode.NotFound to "",
+            )
         val provider = ThorMayaChainStatusProvider(client)
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
         result shouldBe TransactionResult.Pending
+    }
+
+    @Test
+    fun `failed native code with blank raw_log falls back to default failed reason`() = runTest {
+        val nativeFailed =
+            """
+            { "tx_response": { "code": 5, "codespace": "sdk", "raw_log": "" } }
+            """
+                .trimIndent()
+        val client =
+            MockHttpClient.respondingWithSequence(
+                HttpStatusCode.OK to """{ "actions": [] }""",
+                HttpStatusCode.OK to nativeFailed,
+            )
+        val provider = ThorMayaChainStatusProvider(client)
+
+        val result = provider.checkStatus("hash", Chain.ThorChain)
+
+        result shouldBe TransactionResult.Failed("Transaction failed")
     }
 
     @Test

@@ -111,6 +111,7 @@ import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
+import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateBottomSheet
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheetContent
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
@@ -161,6 +162,10 @@ class PreviewActivity : ComponentActivity() {
                 when (screen) {
                     "swap_confirm" -> SwapConfirmPreview()
                     "swap_confirm_disabled" -> SwapConfirmPreview(allConsents = false)
+                    "swap_confirm_external_recipient" ->
+                        SwapConfirmPreview(
+                            externalRecipient = "0x9876543210FeDcBa9876543210FeDcBa98765432"
+                        )
                     "asset_action_button" -> AssetActionButtonPreview()
                     "camera_button" -> CameraButton(onClick = {})
                     "banner" -> BannerPreview()
@@ -184,6 +189,7 @@ class PreviewActivity : ComponentActivity() {
                     "swap_quote_loading" -> SwapFormQuoteLoadingPreview()
                     "swap_toolbar" -> SwapToolbarPreview()
                     "swap_advanced_locked" -> SwapAdvancedLockedPreview()
+                    "custom_rpc_gate" -> CustomRpcGatePreview()
                     "swap_advanced_menu" -> AdvancedMenuPreview()
                     "swap_advanced_menu_configured" -> AdvancedMenuConfiguredPreview()
                     "swap_advanced_slippage" -> AdvancedSlippagePreview()
@@ -234,6 +240,7 @@ class PreviewActivity : ComponentActivity() {
                     "qbtc_detail_claim" -> QbtcDetailClaimPreview()
                     "keysign_devices_plus_before" -> KeysignDevicesCountPreview(allowsMore = true)
                     "keysign_devices_plus_after" -> KeysignDevicesCountPreview(allowsMore = false)
+                    "keygen_peer_discovery" -> KeygenPeerDiscoveryPreview()
                     "staking_verify_before" -> CosmosStakingVerifyCtaPreview(newButtons = false)
                     "staking_verify_after" -> CosmosStakingVerifyCtaPreview(newButtons = true)
                     "staking_verify_qbtc" ->
@@ -266,6 +273,23 @@ private fun SwapAdvancedLockedPreview() {
                     thresholdText = "3,000 VULT",
                     isBelowThreshold = true,
                 ),
+            onGetVult = {},
+            onDismiss = {},
+        )
+    }
+}
+
+@Composable
+private fun CustomRpcGatePreview() {
+    Box(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
+        FeatureGateBottomSheet(
+            featureIcon = R.drawable.settings_globe,
+            featureTitle = stringResource(R.string.custom_rpc_title),
+            featureDescription = stringResource(R.string.custom_rpc_gate_description),
+            requiredTier = TierType.SILVER,
+            balanceText = "2,340 VULT",
+            thresholdText = "3,000 VULT",
+            isBelowThreshold = true,
             onGetVult = {},
             onDismiss = {},
         )
@@ -332,6 +356,38 @@ private fun KeysignDevicesCountPreview(allowsMore: Boolean) {
     )
 }
 
+/**
+ * Keygen peer-discovery for a 4-of-4 ("4+") vault — the redesigned Scan QR screen (#4968): framed
+ * QR card, animated "Waiting for devices to connect…" header, vertical device cards with the "N of
+ * ∞" badge, and the Continue (m-of-n) CTA. QR bitmap is null in the preview, so the framed card
+ * renders empty.
+ */
+@Composable
+private fun KeygenPeerDiscoveryPreview() {
+    PeerDiscoveryScreen(
+        state =
+            PeerDiscoveryUiModel(
+                localPartyId = "iPhone-A1B",
+                network = NetworkOption.Internet,
+                devices = listOf("MacBook-C2D", "iPhone-E3F", "MacBook-G4H"),
+                selectedDevices = listOf("MacBook-C2D", "iPhone-E3F", "MacBook-G4H"),
+                minimumDevices = 4,
+                minimumDevicesDisplayed = 4,
+                deviceCount = 4,
+                allowsMoreDevices = true,
+                enableNotification = false,
+            ),
+        onResendNotification = {},
+        onBackClick = {},
+        onHelpClick = {},
+        onShareQrClick = {},
+        onSwitchModeClick = {},
+        onDeviceClick = {},
+        onNextClick = {},
+        onDismissQrHelpModal = {},
+    )
+}
+
 @Composable
 private fun CircleUsdcWidgetPreview() {
     Box(
@@ -352,7 +408,7 @@ private fun CircleUsdcWidgetPreview() {
 }
 
 @Composable
-private fun SwapConfirmPreview(allConsents: Boolean = true) {
+private fun SwapConfirmPreview(allConsents: Boolean = true, externalRecipient: String? = null) {
     val ethCoin = Coins.Ethereum.ETH
     val btcCoin = Coins.Bitcoin.BTC
 
@@ -366,6 +422,7 @@ private fun SwapConfirmPreview(allConsents: Boolean = true) {
             networkFeeFormatted = "0.0024 ETH ($6.15)",
             providerFeeFormatted = "0.0045 ETH ($11.52)",
             hasConsentAllowance = false,
+            externalRecipient = externalRecipient,
         )
 
     VerifySwapScreen(

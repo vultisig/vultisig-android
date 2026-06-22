@@ -13,12 +13,10 @@ import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.GOL
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.PLATINUM_DISCOUNT_BPS
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_DISCOUNT_BPS
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.ULTIMATE_DISCOUNT_BPS
-import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.ui.screens.settings.TierType
 import java.math.BigInteger
 import javax.inject.Inject
 import timber.log.Timber
-import wallet.core.jni.CoinType
 
 /**
  * Use case to calculate the discount in basis points (BPS) based on VULT token balance. Fetches the
@@ -123,12 +121,15 @@ constructor(
         const val DIAMOND_DISCOUNT_BPS = 35
         const val ULTIMATE_DISCOUNT_BPS = 50
 
-        val BRONZE_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("1500".toBigInteger())
-        val SILVER_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("3000".toBigInteger())
-        val GOLD_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("7500".toBigInteger())
-        val PLATINUM_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("15000".toBigInteger())
-        val DIAMOND_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("100000".toBigInteger())
-        val ULTIMATE_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("1000000".toBigInteger())
+        // VULT has 18 decimals; scale whole-token thresholds to raw units with pure BigInteger
+        // math so they stay usable from unit tests (avoids the TrustWallet Core native lib).
+        private val VULT_UNIT = BigInteger.TEN.pow(Coins.Ethereum.VULT.decimal)
+        val BRONZE_TIER_THRESHOLD = "1500".toBigInteger() * VULT_UNIT
+        val SILVER_TIER_THRESHOLD = "3000".toBigInteger() * VULT_UNIT
+        val GOLD_TIER_THRESHOLD = "7500".toBigInteger() * VULT_UNIT
+        val PLATINUM_TIER_THRESHOLD = "15000".toBigInteger() * VULT_UNIT
+        val DIAMOND_TIER_THRESHOLD = "100000".toBigInteger() * VULT_UNIT
+        val ULTIMATE_TIER_THRESHOLD = "1000000".toBigInteger() * VULT_UNIT
 
         private val supportedProviders =
             setOf(
