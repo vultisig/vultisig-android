@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.repositories.swap
 
+import androidx.annotation.VisibleForTesting
 import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
@@ -879,13 +880,22 @@ constructor(
                 ?: throw SwapKitError.NoRoutes(
                     "SwapKit asset identifier missing chain prefix for ${coin.chain.raw}"
                 )
-        val ticker = coin.ticker
+        val ticker = swapSymbol(coin)
         return if (coin.isNativeToken || coin.contractAddress.isBlank()) {
             "$prefix.$ticker"
         } else {
             "$prefix.$ticker-${coin.contractAddress}"
         }
     }
+
+    /**
+     * SwapKit lists the native TON asset as "TON"; the Toncoin → GRAM rebrand (#4984) renamed only
+     * the display ticker, so a GRAM-ticker'd native must still swap as TON. Mirrors iOS'
+     * `SwapKitService.swapSymbol(chain:ticker:isNativeToken:)`.
+     */
+    @VisibleForTesting
+    internal fun swapSymbol(coin: Coin): String =
+        if (coin.chain == Chain.Ton && coin.isNativeToken) "TON" else coin.ticker
 
     private fun chainPrefix(chain: Chain): String? =
         when (chain) {
