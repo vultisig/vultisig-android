@@ -1152,7 +1152,7 @@
     <string name="ton_op_nft_transfer">NFT 전송</string>
     <string name="ton_op_excess_gas_refund">초과 가스 환불</string>
     <string name="ton_op_transfer">전송</string>
-    <string name="ton_forward_ton_amount">전달된 TON 금액</string>
+    <string name="ton_forward_ton_amount">전달된 GRAM 금액</string>
     <string name="ton_raw_payload">원시 Payload</string>
 
     <string name="review_vault_devices_title">볼트 기기 확인</string>

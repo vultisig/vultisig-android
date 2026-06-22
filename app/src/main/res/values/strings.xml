@@ -1200,7 +1200,7 @@
     <string name="ton_op_nft_transfer">NFT Transfer</string>
     <string name="ton_op_excess_gas_refund">Excess Gas Refund</string>
     <string name="ton_op_transfer">Transfer</string>
-    <string name="ton_forward_ton_amount">Forward TON Amount</string>
+    <string name="ton_forward_ton_amount">Forward GRAM Amount</string>
     <string name="ton_raw_payload">Raw Payload</string>
     <string name="key_import_error_title">Key Import Failed</string>
     <string name="key_import_error_description">Unable to import vault from seed phrase. Please check your seed phrase and try again.</string>

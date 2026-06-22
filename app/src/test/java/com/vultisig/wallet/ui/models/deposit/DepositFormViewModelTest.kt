@@ -36,6 +36,7 @@ import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
 import com.vultisig.wallet.ui.models.deposit.load.DepositDataLoader
+import com.vultisig.wallet.ui.models.deposit.load.DepositOptionCoordinator
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.NodeWhitelistChecker
 import com.vultisig.wallet.ui.models.deposit.load.RujiBalancesLoader
@@ -214,6 +215,36 @@ internal class DepositFormViewModelTest {
                     selectDepositOption = selectDepositOption,
                 )
         }
+    private val depositOptionCoordinatorFactory: DepositOptionCoordinator.Factory =
+        object : DepositOptionCoordinator.Factory {
+            override fun create(
+                scope: CoroutineScope,
+                state: MutableStateFlow<DepositFormUiModel>,
+                address: StateFlow<Address?>,
+                fields: DepositFieldStates,
+                liquidityDataLoader: LiquidityDataLoader,
+                securedAssetLoader: SecuredAssetLoader,
+                cacaoMaturityLoader: CacaoMaturityLoader,
+                chainProvider: () -> Chain?,
+                vaultId: () -> String?,
+                bondAddress: () -> String?,
+            ): DepositOptionCoordinator =
+                DepositOptionCoordinator(
+                    mayaChainApi = mayaChainApi,
+                    accountsRepository = accountsRepository,
+                    mapTokenValueToStringWithUnit = mapTokenValueToStringWithUnit,
+                    scope = scope,
+                    state = state,
+                    address = address,
+                    fields = fields,
+                    liquidityDataLoader = liquidityDataLoader,
+                    securedAssetLoader = securedAssetLoader,
+                    cacaoMaturityLoader = cacaoMaturityLoader,
+                    chainProvider = chainProvider,
+                    vaultId = vaultId,
+                    bondAddress = bondAddress,
+                )
+        }
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase = mockk(relaxed = true)
     private val fieldValidator: DepositFieldValidator =
         DepositFieldValidatorImpl(chainAccountAddressRepository)
@@ -263,7 +294,6 @@ internal class DepositFormViewModelTest {
             chainAccountAddressRepository = chainAccountAddressRepository,
             transactionRepository = transactionRepository,
             blockChainSpecificRepository = blockChainSpecificRepository,
-            mayaChainApi = mayaChainApi,
             balanceRepository = balanceRepository,
             vaultRepository = vaultRepository,
             requestAddressBookEntry = requestAddressBookEntry,
@@ -273,6 +303,7 @@ internal class DepositFormViewModelTest {
             rujiBalancesLoaderFactory = rujiBalancesLoaderFactory,
             nodeWhitelistCheckerFactory = nodeWhitelistCheckerFactory,
             dataLoaderFactory = dataLoaderFactory,
+            depositOptionCoordinatorFactory = depositOptionCoordinatorFactory,
             fieldValidator = fieldValidator,
             gasFeeHelper = gasFeeHelper,
             depositStrategyFactory = depositStrategyFactory,

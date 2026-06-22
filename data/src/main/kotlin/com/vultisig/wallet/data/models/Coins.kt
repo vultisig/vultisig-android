@@ -2962,8 +2962,8 @@ object Coins {
         val TON =
             Coin(
                 chain = Chain.Ton,
-                ticker = "TON",
-                logo = "ton",
+                ticker = "GRAM",
+                logo = "gram",
                 address = "",
                 decimal = 9,
                 hexPublicKey = "",

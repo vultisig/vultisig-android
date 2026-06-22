@@ -6,10 +6,8 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.models.thorchain.RujiStakeBalances
 import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
-import com.vultisig.wallet.data.crypto.getChainName
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AddressBookEntry
@@ -18,7 +16,6 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.models.isSecuredAsset
 import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -36,7 +33,7 @@ import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
 import com.vultisig.wallet.ui.models.deposit.load.DepositDataLoader
-import com.vultisig.wallet.ui.models.deposit.load.InboundAddressResult
+import com.vultisig.wallet.ui.models.deposit.load.DepositOptionCoordinator
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.NodeWhitelistChecker
 import com.vultisig.wallet.ui.models.deposit.load.RujiBalancesLoader
@@ -178,7 +175,6 @@ constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val transactionRepository: DepositTransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
-    private val mayaChainApi: MayaChainApi,
     private val balanceRepository: BalanceRepository,
     private val vaultRepository: VaultRepository,
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
@@ -190,6 +186,7 @@ constructor(
     private val rujiBalancesLoaderFactory: RujiBalancesLoader.Factory,
     private val nodeWhitelistCheckerFactory: NodeWhitelistChecker.Factory,
     private val dataLoaderFactory: DepositDataLoader.Factory,
+    private val depositOptionCoordinatorFactory: DepositOptionCoordinator.Factory,
     private val depositStrategyFactory: DepositStrategyFactory,
 ) : ViewModel() {
 
@@ -265,8 +262,6 @@ constructor(
         }
 
     private val address = MutableStateFlow<Address?>(null)
-    private var switchInboundJob: Job? = null
-    private var withdrawSecuredAssetJob: Job? = null
     private var depositTypeAction: String? = null
     private var bondAddress: String? = null
     private var lpPoolId: String? = null
@@ -299,6 +294,20 @@ constructor(
                     it.copy(isUnstakeMature = isMature, unstakeUnlocksInText = unlocksInText)
                 }
             },
+        )
+
+    private val depositOptionCoordinator: DepositOptionCoordinator =
+        depositOptionCoordinatorFactory.create(
+            scope = viewModelScope,
+            state = _state,
+            address = address,
+            fields = fields,
+            liquidityDataLoader = liquidityDataLoader,
+            securedAssetLoader = securedAssetLoader,
+            cacaoMaturityLoader = cacaoMaturityLoader,
+            chainProvider = { chain },
+            vaultId = { vaultId },
+            bondAddress = { bondAddress },
         )
 
     private val rujiBalancesLoader: RujiBalancesLoader =
@@ -347,7 +356,8 @@ constructor(
                 selectedAccount = ::getSelectedAccount,
                 requireTokenAmount = ::requireTokenAmount,
                 resolvePairedAddress = ::resolvePairedAddress,
-                resolveSecuredAssetInboundAddress = ::requireSecuredAssetInboundAddress,
+                resolveSecuredAssetInboundAddress =
+                    depositOptionCoordinator::requireSecuredAssetInboundAddress,
                 getBitcoinTransactionPlan = ::getBitcoinTransactionPlan,
                 rujiMergeBalances = { rujiBalancesLoader.balances },
             )
@@ -629,214 +639,7 @@ constructor(
     }
 
     fun selectDepositOption(option: DepositOption) {
-        // Stop any in-flight Remove LP fetch so it can't write stale state into the new option.
-        liquidityDataLoader.cancelLoad()
-        // Stop any in-flight Switch inbound fetch so a late callback can't overwrite the
-        // freshly reset dstAddressError or keep writing to thorAddressFieldState from a stale
-        // Switch context.
-        switchInboundJob?.cancel()
-        // Stop the previous WithdrawSecuredAsset address collector so re-selecting the option does
-        // not leak an additional permanent collector running handleWithdrawSecuredAsset.
-        withdrawSecuredAssetJob?.cancel()
-        viewModelScope.launch {
-            resetTextFields()
-            _state.update { it.copy(depositOption = option) }
-
-            when (option) {
-                DepositOption.Switch -> {
-                    switchInboundJob =
-                        viewModelScope.launch {
-                            val vaultId = vaultId ?: return@launch
-                            try {
-                                when (
-                                    val result =
-                                        securedAssetLoader.fetchThorChainInboundForChain(
-                                            SWITCH_INBOUND_CHAIN
-                                        )
-                                ) {
-                                    is InboundAddressResult.Available -> {
-                                        nodeAddressFieldState.setTextAndPlaceCursorAtEnd(
-                                            result.address
-                                        )
-                                        _state.update { it.copy(dstAddressError = null) }
-                                    }
-                                    InboundAddressResult.Halted ->
-                                        _state.update {
-                                            it.copy(
-                                                dstAddressError =
-                                                    UiText.FormattedText(
-                                                        R.string
-                                                            .deposit_error_thorchain_chain_halted,
-                                                        listOf(Chain.GaiaChain.raw),
-                                                    )
-                                            )
-                                        }
-                                    InboundAddressResult.FetchFailed,
-                                    InboundAddressResult.Unsupported ->
-                                        _state.update {
-                                            it.copy(
-                                                dstAddressError =
-                                                    UiText.StringResource(
-                                                        R.string
-                                                            .deposit_error_thorchain_inbound_unavailable
-                                                    )
-                                            )
-                                        }
-                                }
-                                accountsRepository.loadAddress(vaultId, Chain.ThorChain).collect {
-                                    addresses ->
-                                    thorAddressFieldState.setTextAndPlaceCursorAtEnd(
-                                        addresses.address
-                                    )
-                                }
-                            } catch (e: Exception) {
-                                if (e is kotlinx.coroutines.CancellationException) throw e
-                                Timber.e(e)
-                            }
-                        }
-                }
-
-                DepositOption.Bond,
-                DepositOption.Unbond -> {
-                    val defaultBondToken =
-                        if (chain == Chain.MayaChain) Coins.MayaChain.CACAO
-                        else Coins.ThorChain.RUNE
-                    _state.update {
-                        it.copy(selectedToken = defaultBondToken, unstakableAmount = null)
-                    }
-                    if (chain == Chain.MayaChain) {
-                        liquidityDataLoader.loadMayaBondableAssets()
-                    }
-                }
-
-                DepositOption.Leave -> {
-                    val leaveToken =
-                        if (chain == Chain.MayaChain) Coins.MayaChain.CACAO
-                        else Coins.ThorChain.RUNE
-                    _state.update { it.copy(selectedToken = leaveToken, unstakableAmount = null) }
-                }
-
-                DepositOption.RemoveCacaoPool -> {
-                    handleRemoveCacaoOption()
-                }
-
-                DepositOption.AddLiquidity -> {
-                    val token =
-                        if (chain == Chain.MayaChain) Coins.MayaChain.CACAO
-                        else Coins.ThorChain.RUNE
-                    _state.update { it.copy(selectedToken = token, unstakableAmount = null) }
-                }
-
-                DepositOption.RemoveLiquidity -> {
-                    val token =
-                        if (chain == Chain.MayaChain) Coins.MayaChain.CACAO
-                        else Coins.ThorChain.RUNE
-                    _state.update { it.copy(selectedToken = token, unstakableAmount = null) }
-                    when (chain) {
-                        Chain.MayaChain -> liquidityDataLoader.loadRemoveLpData()
-                        Chain.ThorChain -> liquidityDataLoader.loadThorChainRemoveLpData()
-                        else -> Unit
-                    }
-                }
-
-                DepositOption.WithdrawSecuredAsset -> {
-                    withdrawSecuredAssetJob =
-                        viewModelScope.launch {
-                            this@DepositFormViewModel.address.filterNotNull().collect { address ->
-                                handleWithdrawSecuredAsset(address)
-                            }
-                        }
-                }
-
-                else -> Unit
-            }
-
-            if (!bondAddress.isNullOrEmpty()) {
-                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress!!)
-            }
-        }
-    }
-
-    private fun handleWithdrawSecuredAsset(address: Address) {
-        thorAddressFieldState.setTextAndPlaceCursorAtEnd(address.address)
-        val availableSecuredAssets =
-            address.accounts
-                .filter { account -> account.token.isSecuredAsset() }
-                .map {
-                    TokenWithdrawSecureAsset(
-                        ticker = it.token.ticker,
-                        contract = it.token.contractAddress,
-                        coin = it.token,
-                        tokenValue = it.tokenValue,
-                    )
-                }
-        val selectedSecuredAsset = availableSecuredAssets.firstOrNull()
-        val balance = selectedSecuredAsset?.tokenValue?.let(mapTokenValueToStringWithUnit)
-        _state.update {
-            it.copy(
-                availableSecuredAssets = availableSecuredAssets,
-                securedAssetsLoaded = true,
-                selectedSecuredAsset = selectedSecuredAsset ?: TokenWithdrawSecureAsset.EMPTY,
-                balance = balance?.asUiText() ?: UiText.Empty,
-            )
-        }
-    }
-
-    /**
-     * Resolves the THORChain inbound vault address for a secured-asset deposit of [selectedToken],
-     * translating halt/unsupported/fetch-failure outcomes into user-facing errors.
-     *
-     * @param selectedToken the UTXO/asset token being deposited.
-     * @return the inbound vault address to deposit to.
-     */
-    private suspend fun requireSecuredAssetInboundAddress(selectedToken: Coin): String =
-        when (val result = securedAssetLoader.fetchSecuredAssetInboundAddress()) {
-            is InboundAddressResult.Available -> result.address
-            InboundAddressResult.Halted ->
-                throw InvalidTransactionDataException(
-                    UiText.FormattedText(
-                        R.string.deposit_error_thorchain_chain_halted,
-                        listOf(selectedToken.getChainName()),
-                    )
-                )
-            InboundAddressResult.Unsupported ->
-                throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.deposit_error_not_secured_asset)
-                )
-            InboundAddressResult.FetchFailed ->
-                throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.deposit_error_thorchain_inbound_unavailable)
-                )
-        }
-
-    private suspend fun handleRemoveCacaoOption() {
-        val addressValue = address.value?.address ?: return
-        cacaoMaturityLoader.loadCacaoMaturityStatus(addressValue)
-        try {
-            val balance = mayaChainApi.getUnStakeCacaoBalance(addressValue)
-            balance?.let {
-                val balanceInt = it.toBigIntegerOrNull()
-                if (balanceInt == null) {
-                    Timber.e("Invalid balance format: $it")
-                    _state.update { state -> state.copy(unstakableAmount = null) }
-                    return
-                }
-                val unstakableAmount =
-                    mapTokenValueToStringWithUnit(
-                        TokenValue(value = balanceInt, token = Coins.MayaChain.CACAO)
-                    )
-                _state.update { state -> state.copy(unstakableAmount = unstakableAmount) }
-            } ?: run { _state.update { state -> state.copy(unstakableAmount = null) } }
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.e(e, "Failed to fetch unstakable CACAO balance")
-            _state.update { state ->
-                state.copy(
-                    unstakableAmount = null,
-                    errorText = UiText.StringResource(R.string.dialog_default_error_body),
-                )
-            }
-        }
+        depositOptionCoordinator.selectDepositOption(option)
     }
 
     fun selectDstChain(chain: Chain) {
@@ -864,26 +667,6 @@ constructor(
             onLoadRujiMergeBalances()
         } else {
             rujiBalancesLoader.setUnMergeTokenSharesField(unmergeInfo)
-        }
-    }
-
-    private fun resetTextFields() {
-        tokenAmountFieldState.clearText()
-        nodeAddressFieldState.clearText()
-        providerFieldState.clearText()
-        operatorFeeFieldState.clearText()
-        customMemoFieldState.clearText()
-        basisPointsFieldState.clearText()
-        lpUnitsFieldState.clearText()
-        assetsFieldState.clearText()
-        rewardsAmountFieldState.clearText()
-        _state.update {
-            it.copy(
-                tokenAmountError = null,
-                nodeAddressError = null,
-                dstAddressError = null,
-                thorAddressError = null,
-            )
         }
     }
 
@@ -1272,11 +1055,6 @@ constructor(
             specific = specific,
             memo = memo,
         )
-
-    companion object {
-        /** THORChain inbound-addresses chain key used by the Switch (Gaia/ATOM) deposit option. */
-        private const val SWITCH_INBOUND_CHAIN = "GAIA"
-    }
 }
 
 internal data class TokenMergeInfo(val ticker: String, val contract: String) {
