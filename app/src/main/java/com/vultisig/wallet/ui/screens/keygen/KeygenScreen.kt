@@ -147,6 +147,8 @@ private fun KeygenScreen(state: KeygenUiModel, onTryAgainClick: () -> Unit) {
                         ErrorView(
                             title = error.title.asString(),
                             description = error.description.asString(),
+                            errorState = error.errorState,
+                            rawError = error.rawError,
                             modifier = Modifier.fillMaxWidth(),
                             buttonUiModel =
                                 ErrorViewButtonUiModel(

@@ -185,7 +185,6 @@
     <string name="vault_accounts_account_assets">%1$s Vermögenswerte</string>
     <string name="chain_token_screen_address_copied">%1$s in die Zwischenablage kopiert</string>
     <string name="s_of_s_vault">%1$s von %2$s Tresor</string>
-    <string name="camera_permission_denied">Kameraberechtigung nicht erteilt. Bitte aktivieren Sie sie in den Einstellungen.</string>
     <string name="camera_permission_open_settings">Einstellungen öffnen</string>
     <string name="verify_transaction_value">Wert</string>
     <string name="send_error_no_address">Adresse ist ungültig</string>
@@ -811,6 +810,22 @@
     <string name="onboarding_intro_back">Zurück</string>
     <string name="error_view_default_title">Etwas ist schiefgelaufen</string>
     <string name="error_view_default_description">Ein Fehler ist aufgetreten</string>
+    <!-- Friendly error screen (issue #4996) -->
+    <string name="signing_error_transaction_failed_title">Transaktion fehlgeschlagen</string>
+    <string name="signing_error_transaction_failed_description">Eines deiner Geräte hat nicht rechtzeitig geantwortet. Überprüfe deine Verbindung und versuche es erneut.</string>
+    <string name="error_insufficient_funds_title">Unzureichendes Guthaben</string>
+    <string name="error_same_vault_share_title">Dieselbe Tresorfreigabe</string>
+    <string name="error_same_vault_share_description">Bitte ändern Sie die Freigabe zum Signieren. Zwei Geräte können nicht dieselbe Tresorfreigabe zum gemeinsamen Signieren verwenden.</string>
+    <string name="error_vault_not_loaded_title">Tresor ist nicht geladen</string>
+    <string name="error_vault_not_loaded_description">Bitte importieren Sie die richtige Freigabe.</string>
+    <string name="error_vault_name_in_use_title">Tresorname bereits vergeben</string>
+    <string name="error_vault_name_in_use_description">Bitte wählen Sie einen anderen Tresornamen.</string>
+    <string name="error_camera_permission_title">Kameraberechtigung nicht erteilt</string>
+    <string name="error_camera_permission_description">Kameraberechtigung ist erforderlich, um fortzufahren. Bitte aktivieren Sie sie in den Einstellungen.</string>
+    <string name="error_message_sheet_title">Fehlermeldung</string>
+    <string name="error_message_copy">Kopieren</string>
+    <string name="error_message_report_bug">Fehler melden</string>
+    <string name="error_message_show_exact">Genauen Fehler anzeigen</string>
     <string name="keygen_error_timeout_title">Zeitüberschreitung der Verbindung</string>
     <string name="keygen_error_timeout_description">Der Server konnte nicht rechtzeitig erreicht werden. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.</string>
     <string name="keygen_error_network_title">Verbindungsproblem</string>

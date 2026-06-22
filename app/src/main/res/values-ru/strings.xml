@@ -124,7 +124,6 @@
     <string name="verify_transaction_consent_address">Я отправляю на правильный адрес</string>
     <string name="verify_transaction_consent_amount">Сумма верна</string>
     <string name="verify_transaction_error_not_enough_consent">Пожалуйста, проверьте все согласия</string>
-    <string name="camera_permission_denied">Разрешение на камеру не предоставлено. Пожалуйста, включите его в настройках.</string>
     <string name="camera_permission_open_settings">Открыть настройки</string>
     <string name="join_keysign_discovering_session_id">Обнаружение ID сессии</string>
     <string name="transaction_done_title">Готово</string>
@@ -814,6 +813,22 @@
     <string name="migration_onboarding_step_1_text_end">и подпишите быстрее, чем когда-либо прежде</string>
     <string name="error_view_default_title">Что-то пошло не так</string>
     <string name="error_view_default_description">Произошла ошибка</string>
+    <!-- Friendly error screen (issue #4996) -->
+    <string name="signing_error_transaction_failed_title">Транзакция не удалась</string>
+    <string name="signing_error_transaction_failed_description">Одно из ваших устройств не ответило вовремя. Проверьте соединение и попробуйте снова.</string>
+    <string name="error_insufficient_funds_title">Недостаточно средств</string>
+    <string name="error_same_vault_share_title">Тот же общий доступ к хранилищу</string>
+    <string name="error_same_vault_share_description">Пожалуйста, измените общий доступ для подписи. Два устройства не могут использовать один и тот же общий доступ к хранилищу для совместной подписи.</string>
+    <string name="error_vault_not_loaded_title">Хранилище не загружено</string>
+    <string name="error_vault_not_loaded_description">Пожалуйста, импортируйте правильный общий доступ.</string>
+    <string name="error_vault_name_in_use_title">Имя хранилища уже используется</string>
+    <string name="error_vault_name_in_use_description">Пожалуйста, выберите другое имя хранилища.</string>
+    <string name="error_camera_permission_title">Разрешение на камеру не предоставлено</string>
+    <string name="error_camera_permission_description">Для продолжения требуется разрешение на камеру. Пожалуйста, включите его в настройках.</string>
+    <string name="error_message_sheet_title">Сообщение об ошибке</string>
+    <string name="error_message_copy">Копировать</string>
+    <string name="error_message_report_bug">Сообщить об ошибке</string>
+    <string name="error_message_show_exact">Показать точную ошибку</string>
     <string name="keygen_error_timeout_title">Превышено время ожидания</string>
     <string name="keygen_error_timeout_description">Не удалось вовремя связаться с сервером. Проверьте подключение и попробуйте снова.</string>
     <string name="keygen_error_network_title">Проблема с подключением</string>
