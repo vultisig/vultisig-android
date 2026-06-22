@@ -62,6 +62,8 @@ internal data class SwapTransactionUiModel(
     val swapId: String? = null,
     // External recipient the swap output is routed to, or null when it goes to the vault's own
     // address. Shown on the verify screen so the destination is never a silent default (#4858).
+    // For native THORChain/MayaChain swaps this is resolved from the signed memo's destination
+    // segment rather than form state, so it reflects what's actually signed (#4972).
     val externalRecipient: String? = null,
 )
 
@@ -124,18 +126,38 @@ constructor(
                         navigator.back()
                         return@launch
                     }
-            val vaultName = vaultRepository.get(vaultId)?.name
+            val vault = vaultRepository.get(vaultId)
+            val vaultName = vault?.name
             if (vaultName == null) {
                 state.update {
                     it.copy(errorText = UiText.StringResource(R.string.swap_screen_invalid_vault))
                 }
             }
 
+            // Recipient parsed from the signed THORChain/MayaChain memo (#4972). Null for swaps
+            // whose memo can't carry one (EVM aggregators sign calldata, not a memo) — those fall
+            // back to the form-state recipient already mapped onto the UI model (#4858).
+            val memoExternalRecipient =
+                resolveExternalSwapRecipient(
+                    memo = transaction.memo,
+                    destinationChain = transaction.dstToken.chain,
+                    vaultDestinationAddress =
+                        vault
+                            ?.coins
+                            ?.firstOrNull { it.chain == transaction.dstToken.chain }
+                            ?.address
+                            .orEmpty(),
+                )
+
+            val mappedTx = mapTransactionToUiModel(transaction)
             val consentAllowance = !transaction.isApprovalRequired
             state.update {
                 it.copy(
                     consentAllowance = consentAllowance,
-                    tx = mapTransactionToUiModel(transaction),
+                    tx =
+                        mappedTx.copy(
+                            externalRecipient = memoExternalRecipient ?: mappedTx.externalRecipient
+                        ),
                     vaultName = vaultName?.takeIf { name -> name.isNotEmpty() } ?: "Main Vault",
                 )
             }
