@@ -358,6 +358,16 @@ constructor(
             )
         )
 
+    /**
+     * Screen-entry hook: records the navigation arguments, starts amount-field collection, then
+     * delegates all init-time flow wiring to [DepositDataLoader.wireInitialState].
+     *
+     * @param vaultId active vault id.
+     * @param chainId raw chain identifier, parsed into a [Chain].
+     * @param depositType optional deep-link deposit action (e.g. ADD_LP) consumed during wiring.
+     * @param bondAddress optional pre-filled bond address.
+     * @param poolId optional liquidity pool id.
+     */
     fun loadData(
         vaultId: String,
         chainId: String,
