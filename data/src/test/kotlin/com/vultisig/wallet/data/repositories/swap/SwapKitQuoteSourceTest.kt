@@ -639,6 +639,62 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `swapSymbol maps the GRAM-ticker'd native TON coin back to the TON protocol symbol`() {
+        // After the Toncoin -> GRAM rebrand (#4984) the native coin's display ticker is "GRAM", but
+        // SwapKit only knows the native TON asset as "TON" — sending GRAM yields noRoutesFound for
+        // TON.GRAM -> .... Mirrors iOS' SwapKitService.swapSymbol (vultisig-ios#4629).
+        val gram = tonCoin().copy(ticker = "GRAM")
+
+        assertEquals("TON", source().swapSymbol(gram))
+    }
+
+    @Test
+    fun `swapSymbol leaves an already-TON native TON coin unchanged`() {
+        assertEquals("TON", source().swapSymbol(tonCoin()))
+    }
+
+    @Test
+    fun `swapSymbol leaves a non-native TON jetton ticker unchanged`() {
+        // The remap is native-only: a TON jetton (e.g. USDT) keeps its own ticker so the
+        // CHAIN.TICKER-CONTRACT identifier still resolves.
+        val usdtJetton =
+            tonCoin()
+                .copy(
+                    ticker = "USDT",
+                    isNativeToken = false,
+                    contractAddress = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sD",
+                )
+
+        assertEquals("USDT", source().swapSymbol(usdtJetton))
+    }
+
+    @Test
+    fun `swapSymbol leaves non-TON native coins unchanged`() {
+        assertEquals("ETH", source().swapSymbol(ethCoin()))
+        assertEquals("BTC", source().swapSymbol(btcCoin()))
+    }
+
+    @Test
+    fun `fetch sends TON-TON sellAsset for the GRAM-ticker'd native TON coin`() = runTest {
+        // End-to-end pin of the noRoutesFound fix: a GRAM-ticker'd native must hit the wire as
+        // TON.TON, not TON.GRAM.
+        every { config.isFeatureEnabled } returns flowOf(true)
+
+        val captured = slot<SwapKitQuoteRequest>()
+        coEvery { api.quote(capture(captured)) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r", providers = listOf("CHAINFLIP"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns evmSwapResponse()
+
+        val gram = tonCoin().copy(ticker = "GRAM")
+        source().fetch(request(srcToken = gram))
+
+        assertEquals("TON.TON", captured.captured.sellAsset)
+    }
+
+    @Test
     fun `fetch passes affiliateBps from the request through to the SwapKit quote call`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
 
