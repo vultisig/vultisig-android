@@ -524,6 +524,7 @@
     <string name="peer_discovery_waiting_title">Waiting for devices to connect</string>
     <string name="peer_discovery_device_count_badge">%1$s of %2$s</string>
     <string name="peer_discovery_action_continue_m_of_n">Continue (%1$d-of-%2$d)</string>
+    <string name="peer_discovery_waiting_for_devices_action">Waiting for devices to connect…</string>
     <string name="scan_qr_code_modal_annotation">On your other device, open the app and tap \"Scan QR\" to connect it.</string>
     <string name="scan_qr_code_modal_next">Start scanning</string>
     <string name="scan_qr_code_modal_scan_the">Scan the QR on your other devices</string>

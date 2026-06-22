@@ -953,6 +953,7 @@
     <string name="peer_discovery_waiting_title">Čekanje na uređaje</string>
     <string name="peer_discovery_device_count_badge">%1$s od %2$s</string>
     <string name="peer_discovery_action_continue_m_of_n">Nastavi (%1$d-od-%2$d)</string>
+    <string name="peer_discovery_waiting_for_devices_action">Čekanje na uređaje…</string>
     <string name="select_chain_title">Odaberi lanac</string>
     <string name="keygen_benefit_2_emphasized">Samostalno čuvanje,</string>
     <string name="sign_message_sign_screen_title">Potpisivanje poruke</string>

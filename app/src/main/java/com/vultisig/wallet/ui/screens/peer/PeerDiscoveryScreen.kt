@@ -235,12 +235,21 @@ internal fun PeerDiscoveryScreen(
                     // flows that always auto-advance (QBTC claim co-sign).
                     if (showNext && (state.deviceCount == null || state.deviceCount > 3)) {
                         VsButton(
+                            // Until the peer threshold is met the m-of-n is not yet known (e.g.
+                            // keysign reuses this screen with no selected peers, which would
+                            // otherwise misstate the vault as "Continue (1-of-1)"), so keep the
+                            // neutral waiting prompt and only show the m-of-n once enabled.
                             label =
-                                stringResource(
-                                    R.string.peer_discovery_action_continue_m_of_n,
-                                    Utils.getThreshold(selectedDevicesSize),
-                                    selectedDevicesSize,
-                                ),
+                                if (hasEnoughDevices)
+                                    stringResource(
+                                        R.string.peer_discovery_action_continue_m_of_n,
+                                        Utils.getThreshold(selectedDevicesSize),
+                                        selectedDevicesSize,
+                                    )
+                                else
+                                    stringResource(
+                                        R.string.peer_discovery_waiting_for_devices_action
+                                    ),
                             state =
                                 if (hasEnoughDevices) VsButtonState.Enabled
                                 else VsButtonState.Disabled,
@@ -312,13 +321,19 @@ internal fun PeerDiscoveryScreen(
                             )
 
                             state.devices.forEachIndexed { index, device ->
+                                val isSelected = device in state.selectedDevices
                                 DevicePeerCard(
                                     name = device.toDeviceDisplayName(),
+                                    // Selected peers read "Connected"; unselected ones show their
+                                    // raw id (iOS PeerCell parity) — the only cue distinguishing
+                                    // two devices of the same model.
                                     status =
-                                        stringResource(R.string.peer_discovery_status_connected),
+                                        if (isSelected)
+                                            stringResource(R.string.peer_discovery_status_connected)
+                                        else device,
                                     index = index + 2,
                                     maxLabel = deviceBadgeMax,
-                                    selected = device in state.selectedDevices,
+                                    selected = isSelected,
                                     onClick = { onDeviceClick(device) },
                                 )
                             }
@@ -565,7 +580,10 @@ private fun DevicePeerCard(
             Text(
                 text = status,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.alerts.success,
+                color =
+                    if (selected) Theme.v2.colors.alerts.success
+                    else Theme.v2.colors.text.secondary,
+                overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
             )
         }
