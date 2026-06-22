@@ -59,6 +59,7 @@ import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.ExtractMasterKeysUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.components.canAuthenticateBiometric
+import com.vultisig.wallet.ui.components.errors.ErrorState
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -1034,11 +1035,15 @@ constructor(
                     title = UiText.StringResource(R.string.import_seedphrase_already_imported),
                     description =
                         UiText.StringResource(R.string.import_seedphrase_duplicate_description),
+                    errorState = ErrorState.WARNING,
+                    rawError = e.message,
                 )
             } else {
                 ErrorUiModel(
                     title = UiText.StringResource(R.string.generating_key_screen_keygen_failed),
                     description = e.message or R.string.unknown_error,
+                    errorState = ErrorState.CRITICAL,
+                    rawError = e.message,
                 )
             }
         }
@@ -1059,6 +1064,8 @@ constructor(
                 } else {
                     e.message or R.string.unknown_error
                 },
+            errorState = if (isThresholdError) ErrorState.WARNING else ErrorState.CRITICAL,
+            rawError = e.message,
         )
     }
 

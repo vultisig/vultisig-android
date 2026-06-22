@@ -41,6 +41,7 @@ import com.vultisig.wallet.data.usecases.tss.ParticipantName
 import com.vultisig.wallet.data.utils.NetworkErrorKind
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.toNetworkErrorKind
+import com.vultisig.wallet.ui.components.errors.ErrorState
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -242,11 +243,15 @@ constructor(
                 ErrorUiModel(
                     title = UiText.StringResource(R.string.keygen_error_timeout_title),
                     description = UiText.StringResource(R.string.keygen_error_timeout_description),
+                    errorState = ErrorState.WARNING,
+                    rawError = message,
                 )
             NetworkErrorKind.NoConnectivity ->
                 ErrorUiModel(
                     title = UiText.StringResource(R.string.keygen_error_network_title),
                     description = UiText.StringResource(R.string.keygen_error_network_description),
+                    errorState = ErrorState.WARNING,
+                    rawError = message,
                 )
             NetworkErrorKind.Transport,
             NetworkErrorKind.Http,
@@ -254,6 +259,8 @@ constructor(
                 ErrorUiModel(
                     title = UiText.StringResource(R.string.error_view_default_title),
                     description = UiText.StringResource(R.string.error_view_default_description),
+                    errorState = ErrorState.CRITICAL,
+                    rawError = message,
                 )
         }
 

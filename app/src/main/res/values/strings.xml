@@ -200,7 +200,6 @@
     <string name="verify_transaction_consent_address">I’m sending to the right address</string>
     <string name="verify_transaction_consent_amount">The amount is correct</string>
     <string name="verify_transaction_error_not_enough_consent">Please check all consents</string>
-    <string name="camera_permission_denied">Camera permission not granted. Please, enable it in the settings.</string>
     <string name="camera_permission_open_settings">Open Settings</string>
     <string name="join_keysign_discovering_session_id">Discovering Session ID</string>
     <string name="transaction_done_title">Done</string>
@@ -579,6 +578,22 @@
     <string name="enter_email_screen_next">Next</string>
     <string name="error_view_default_title">Something went wrong</string>
     <string name="error_view_default_description">An error occurred</string>
+    <!-- Friendly error screen (issue #4996) -->
+    <string name="signing_error_transaction_failed_title">Transaction failed</string>
+    <string name="signing_error_transaction_failed_description">One of your devices didn\'t respond in time. Check your connection and try again.</string>
+    <string name="error_insufficient_funds_title">Insufficient funds</string>
+    <string name="error_same_vault_share_title">Same vault share</string>
+    <string name="error_same_vault_share_description">Please change the share to sign. Two devices cannot use the same vault share for co-signing.</string>
+    <string name="error_vault_not_loaded_title">Vault is not loaded</string>
+    <string name="error_vault_not_loaded_description">Please import the correct share.</string>
+    <string name="error_vault_name_in_use_title">Vault name already in use</string>
+    <string name="error_vault_name_in_use_description">Please choose a different Vault name.</string>
+    <string name="error_camera_permission_title">Camera permission not granted</string>
+    <string name="error_camera_permission_description">Camera permission is required to proceed. Please enable it in Settings.</string>
+    <string name="error_message_sheet_title">Error message</string>
+    <string name="error_message_copy">Copy</string>
+    <string name="error_message_report_bug">Report Bug</string>
+    <string name="error_message_show_exact">Show exact error</string>
     <string name="keygen_error_timeout_title">Connection timed out</string>
     <string name="keygen_error_timeout_description">Couldn\'t reach the server in time. Check your connection and try again.</string>
     <string name="keygen_error_network_title">Connection problem</string>

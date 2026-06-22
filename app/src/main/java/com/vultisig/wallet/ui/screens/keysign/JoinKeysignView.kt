@@ -14,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.errors.ErrorState
 import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
@@ -186,12 +187,27 @@ internal fun JoinKeysignView() {
 
             is Error -> {
                 val error = state as Error
-                val errorLabel: String
+                val title: String
+                val description: String?
+                val errorState: ErrorState
                 val buttonText: String
+                var rawError: String? = null
                 when (error.errorType) {
-                    is JoinKeysignError.WrongVaultShare,
-                    is JoinKeysignError.WrongVault -> {
-                        errorLabel = error.errorType.message.asString()
+                    is JoinKeysignError.WrongVaultShare -> {
+                        title = stringResource(R.string.error_same_vault_share_title)
+                        description = stringResource(R.string.error_same_vault_share_description)
+                        errorState = ErrorState.WARNING
+                        buttonText =
+                            stringResource(
+                                R.string.join_keysign_error_wrong_vault_share_try_again_button
+                            )
+                    }
+
+                    is JoinKeysignError.WrongVault,
+                    is JoinKeysignError.MissingRequiredVault -> {
+                        title = stringResource(R.string.error_vault_not_loaded_title)
+                        description = stringResource(R.string.error_vault_not_loaded_description)
+                        errorState = ErrorState.WARNING
                         buttonText =
                             stringResource(
                                 R.string.join_keysign_error_wrong_vault_share_try_again_button
@@ -199,17 +215,20 @@ internal fun JoinKeysignView() {
                     }
 
                     else -> {
-                        errorLabel =
-                            stringResource(
-                                R.string.signing_error_please_try_again_s,
-                                error.errorType.message.asString(),
-                            )
+                        val rawMessage = error.errorType.message.asString()
+                        val signingError = resolveSigningError(rawMessage)
+                        title = signingError.title
+                        description = signingError.description
+                        errorState = signingError.errorState
+                        rawError = rawMessage.ifBlank { null }
                         buttonText = stringResource(R.string.try_again)
                     }
                 }
                 ErrorView(
-                    title = errorLabel,
-                    description = null,
+                    title = title,
+                    description = description,
+                    errorState = errorState,
+                    rawError = rawError,
                     buttonUiModel =
                         ErrorViewButtonUiModel(text = buttonText, onClick = viewModel::tryAgain),
                 )

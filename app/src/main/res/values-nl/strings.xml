@@ -124,7 +124,6 @@
     <string name="verify_transaction_consent_address">Ik stuur naar het juiste adres</string>
     <string name="verify_transaction_consent_amount">Het bedrag is correct</string>
     <string name="verify_transaction_error_not_enough_consent">Controleer alle toestemmingen</string>
-    <string name="camera_permission_denied">Cameratoestemming niet verleend. Schakel deze in de instellingen in.</string>
     <string name="camera_permission_open_settings">Instellingen openen</string>
     <string name="join_keysign_discovering_session_id">Sessienummer ontdekken</string>
     <string name="transaction_done_title">Gedaan</string>
@@ -815,6 +814,22 @@
     <string name="migration_onboarding_step_1_text_end">en onderteken sneller dan ooit tevoren</string>
     <string name="error_view_default_title">Er is iets misgegaan</string>
     <string name="error_view_default_description">Er is een fout opgetreden</string>
+    <!-- Friendly error screen (issue #4996) -->
+    <string name="signing_error_transaction_failed_title">Transactie mislukt</string>
+    <string name="signing_error_transaction_failed_description">Een van je apparaten reageerde niet op tijd. Controleer je verbinding en probeer het opnieuw.</string>
+    <string name="error_insufficient_funds_title">Onvoldoende saldo</string>
+    <string name="error_same_vault_share_title">Zelfde kluisshare</string>
+    <string name="error_same_vault_share_description">Verander de share om te ondertekenen. Twee apparaten kunnen niet dezelfde kluisshare gebruiken voor mede-ondertekening.</string>
+    <string name="error_vault_not_loaded_title">Kluis is niet geladen</string>
+    <string name="error_vault_not_loaded_description">Importeer de juiste share.</string>
+    <string name="error_vault_name_in_use_title">Kluisnaam al in gebruik</string>
+    <string name="error_vault_name_in_use_description">Kies een andere kluisnaam.</string>
+    <string name="error_camera_permission_title">Cameratoestemming niet verleend</string>
+    <string name="error_camera_permission_description">Cameratoestemming is vereist om door te gaan. Schakel deze in de instellingen in.</string>
+    <string name="error_message_sheet_title">Foutmelding</string>
+    <string name="error_message_copy">Kopiëren</string>
+    <string name="error_message_report_bug">Bug melden</string>
+    <string name="error_message_show_exact">Toon exacte fout</string>
     <string name="keygen_error_timeout_title">Time-out van verbinding</string>
     <string name="keygen_error_timeout_description">Kon de server niet op tijd bereiken. Controleer uw verbinding en probeer het opnieuw.</string>
     <string name="keygen_error_network_title">Verbindingsprobleem</string>

@@ -278,7 +278,8 @@ private fun ScanQrScreen(
                 }
             } else {
                 ErrorView(
-                    title = stringResource(R.string.camera_permission_denied),
+                    title = stringResource(R.string.error_camera_permission_title),
+                    description = stringResource(R.string.error_camera_permission_description),
                     buttonUiModel =
                         ErrorViewButtonUiModel(
                             text = stringResource(R.string.camera_permission_open_settings),

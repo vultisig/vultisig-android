@@ -199,7 +199,6 @@
     <string name="verify_transaction_consent_address">올바른 주소로 보내고 있습니다</string>
     <string name="verify_transaction_consent_amount">금액이 정확합니다</string>
     <string name="verify_transaction_error_not_enough_consent">모든 동의 항목을 확인해 주세요</string>
-    <string name="camera_permission_denied">카메라 권한이 부여되지 않았습니다. 설정에서 활성화해 주세요.</string>
     <string name="camera_permission_open_settings">설정 열기</string>
     <string name="join_keysign_discovering_session_id">세션 ID 검색 중</string>
     <string name="transaction_done_title">완료</string>
@@ -570,6 +569,22 @@
     <string name="enter_email_screen_next">다음</string>
     <string name="error_view_default_title">문제가 발생했습니다</string>
     <string name="error_view_default_description">오류가 발생했습니다</string>
+    <!-- Friendly error screen (issue #4996) -->
+    <string name="signing_error_transaction_failed_title">거래 실패</string>
+    <string name="signing_error_transaction_failed_description">기기 중 하나가 제때 응답하지 않았습니다. 연결을 확인하고 다시 시도해 주세요.</string>
+    <string name="error_insufficient_funds_title">잔액 부족</string>
+    <string name="error_same_vault_share_title">동일한 볼트 공유</string>
+    <string name="error_same_vault_share_description">서명할 공유를 변경해 주세요. 두 기기는 공동 서명에 동일한 볼트 공유를 사용할 수 없습니다.</string>
+    <string name="error_vault_not_loaded_title">볼트가 로드되지 않았습니다</string>
+    <string name="error_vault_not_loaded_description">올바른 공유를 가져와 주세요.</string>
+    <string name="error_vault_name_in_use_title">이미 사용 중인 볼트 이름</string>
+    <string name="error_vault_name_in_use_description">다른 볼트 이름을 선택해 주세요.</string>
+    <string name="error_camera_permission_title">카메라 권한이 부여되지 않음</string>
+    <string name="error_camera_permission_description">계속하려면 카메라 권한이 필요합니다. 설정에서 활성화해 주세요.</string>
+    <string name="error_message_sheet_title">오류 메시지</string>
+    <string name="error_message_copy">복사</string>
+    <string name="error_message_report_bug">버그 신고</string>
+    <string name="error_message_show_exact">정확한 오류 보기</string>
     <string name="keygen_error_timeout_title">연결 시간 초과</string>
     <string name="keygen_error_timeout_description">서버에 제때 연결하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.</string>
     <string name="keygen_error_network_title">연결 문제</string>

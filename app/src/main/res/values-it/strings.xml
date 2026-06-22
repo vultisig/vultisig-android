@@ -185,7 +185,6 @@
     <string name="vault_accounts_account_assets">%1$s risorse</string>
     <string name="chain_token_screen_address_copied">%1$s copiato negli appunti</string>
     <string name="s_of_s_vault">%1$s del caveau %2$s</string>
-    <string name="camera_permission_denied">Autorizzazione della telecamera non concessa. Abilitala nelle impostazioni.</string>
     <string name="camera_permission_open_settings">Apri impostazioni</string>
     <string name="verify_transaction_value">Valor</string>
     <string name="send_error_no_address">L\'indirizzo non è valido</string>
@@ -818,6 +817,22 @@
     <string name="migration_onboarding_step_1_text_end">e firma più velocemente che mai</string>
     <string name="error_view_default_title">Qualcosa è andato storto</string>
     <string name="error_view_default_description">Si è verificato un errore</string>
+    <!-- Friendly error screen (issue #4996) -->
+    <string name="signing_error_transaction_failed_title">Transazione fallita</string>
+    <string name="signing_error_transaction_failed_description">Uno dei tuoi dispositivi non ha risposto in tempo. Controlla la connessione e riprova.</string>
+    <string name="error_insufficient_funds_title">Fondi insufficienti</string>
+    <string name="error_same_vault_share_title">Stessa condivisione del vault</string>
+    <string name="error_same_vault_share_description">Modifica la condivisione per firmare. Due dispositivi non possono usare la stessa condivisione del vault per la co-firma.</string>
+    <string name="error_vault_not_loaded_title">Il vault non è caricato</string>
+    <string name="error_vault_not_loaded_description">Importa la condivisione corretta.</string>
+    <string name="error_vault_name_in_use_title">Nome del vault già in uso</string>
+    <string name="error_vault_name_in_use_description">Scegli un nome del vault diverso.</string>
+    <string name="error_camera_permission_title">Autorizzazione della telecamera non concessa</string>
+    <string name="error_camera_permission_description">L\'autorizzazione della telecamera è necessaria per procedere. Abilitala nelle impostazioni.</string>
+    <string name="error_message_sheet_title">Messaggio di errore</string>
+    <string name="error_message_copy">Copia</string>
+    <string name="error_message_report_bug">Segnala bug</string>
+    <string name="error_message_show_exact">Mostra l\'errore esatto</string>
     <string name="keygen_error_timeout_title">Connessione scaduta</string>
     <string name="keygen_error_timeout_description">Impossibile raggiungere il server in tempo. Controlla la tua connessione e riprova.</string>
     <string name="keygen_error_network_title">Problema di connessione</string>

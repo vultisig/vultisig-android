@@ -185,7 +185,6 @@
     <string name="vault_accounts_account_assets">Ativos de %1$s</string>
     <string name="chain_token_screen_address_copied">%1$s copiado para a área de transferência</string>
     <string name="s_of_s_vault">%1$s do cofre %2$s</string>
-    <string name="camera_permission_denied">Permissão de câmera não concedida. Por favor, habilite-a nas configurações.</string>
     <string name="camera_permission_open_settings">Abrir configurações</string>
     <string name="verify_transaction_value">Valor</string>
     <string name="send_error_no_address">Endereço inválido</string>
@@ -817,6 +816,22 @@
     <string name="migration_onboarding_step_1_text_end">e assine mais depressa do que nunca</string>
     <string name="error_view_default_title">Ocorreu um erro</string>
     <string name="error_view_default_description">Um erro ocorreu</string>
+    <!-- Friendly error screen (issue #4996) -->
+    <string name="signing_error_transaction_failed_title">Transação falhou</string>
+    <string name="signing_error_transaction_failed_description">Um dos seus dispositivos não respondeu a tempo. Verifique a sua conexão e tente novamente.</string>
+    <string name="error_insufficient_funds_title">Fundos insuficientes</string>
+    <string name="error_same_vault_share_title">A mesma partilha do cofre</string>
+    <string name="error_same_vault_share_description">Por favor, altere a partilha para assinar. Dois dispositivos não podem usar a mesma partilha do cofre para co-assinar.</string>
+    <string name="error_vault_not_loaded_title">O cofre não está carregado</string>
+    <string name="error_vault_not_loaded_description">Por favor, importe a partilha correta.</string>
+    <string name="error_vault_name_in_use_title">Nome do cofre já em uso</string>
+    <string name="error_vault_name_in_use_description">Por favor, escolha um nome de cofre diferente.</string>
+    <string name="error_camera_permission_title">Permissão de câmera não concedida</string>
+    <string name="error_camera_permission_description">A permissão de câmera é necessária para continuar. Por favor, habilite-a nas configurações.</string>
+    <string name="error_message_sheet_title">Mensagem de erro</string>
+    <string name="error_message_copy">Copiar</string>
+    <string name="error_message_report_bug">Reportar bug</string>
+    <string name="error_message_show_exact">Mostrar erro exato</string>
     <string name="keygen_error_timeout_title">Tempo de ligação esgotado</string>
     <string name="keygen_error_timeout_description">Não foi possível contactar o servidor a tempo. Verifique a sua ligação e tente novamente.</string>
     <string name="keygen_error_network_title">Problema de ligação</string>

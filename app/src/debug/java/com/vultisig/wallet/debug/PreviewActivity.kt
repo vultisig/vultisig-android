@@ -57,6 +57,9 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.errors.ErrorState
+import com.vultisig.wallet.ui.components.errors.ErrorView
+import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.components.hero.HeroCoinAmount
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheetContent
@@ -256,11 +259,35 @@ class PreviewActivity : ComponentActivity() {
                     "sign_message_before" -> VerifySignMessageCtaPreview(newButtons = false)
                     "sign_message_after" -> VerifySignMessageCtaPreview(newButtons = true)
                     "review_vault_devices" -> ReviewVaultDevicesPreview()
+                    "error_screen_after" -> ErrorScreenAfterPreview()
                     else -> SwapConfirmPreview()
                 }
             }
         }
     }
+}
+
+// Redesigned shared error screen (#4996): neutral title + subtitle, red-cross critical hero, and
+// the
+// "Show exact error" disclosure that opens the raw-trace sheet. Rendered as the "Transaction
+// failed"
+// critical case with a real stack trace so the disclosure row is visible.
+@Composable
+private fun ErrorScreenAfterPreview() {
+    ErrorView(
+        title = stringResource(R.string.signing_error_transaction_failed_title),
+        description = stringResource(R.string.signing_error_transaction_failed_description),
+        errorState = ErrorState.CRITICAL,
+        rawError =
+            "javax.crypto.AEADBadTagException: error:1e000065:Cipher functions:" +
+                "OPENSSL_internal:BAD_DECRYPT\n" +
+                "  at java.lang.reflect.Constructor.newInstance0(Native Method)\n" +
+                "  at com.android.org.conscrypt.OpenSSLAeadCipher.engineDoFinal" +
+                "(OpenSSLAeadCipher.java:283)",
+        buttonUiModel =
+            ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = {}),
+        onBack = {},
+    )
 }
 
 @Composable
