@@ -170,7 +170,7 @@ constructor(
     private fun isValidRpcUrl(url: String): Boolean =
         runCatching {
                 val uri = URI(url)
-                uri.scheme?.lowercase() in setOf("http", "https") && !uri.host.isNullOrBlank()
+                uri.scheme?.lowercase() == "https" && !uri.host.isNullOrBlank()
             }
             .getOrDefault(false)
 }
