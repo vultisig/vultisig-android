@@ -172,6 +172,7 @@ private fun MainActivityContent(
                         qrCodeData = notification.qrCodeData,
                         vaultName = notification.vaultName,
                         transactionSummary = notification.transactionSummary,
+                        isActive = foregroundNotification != null,
                         onTap = onBannerTap,
                         onDismiss = onBannerDismiss,
                     )
