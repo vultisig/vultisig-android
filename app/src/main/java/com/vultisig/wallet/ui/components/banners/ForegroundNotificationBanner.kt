@@ -83,6 +83,7 @@ internal fun ForegroundNotificationBanner(
     qrCodeData: String,
     vaultName: String,
     transactionSummary: UiText,
+    isActive: Boolean,
     onTap: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
@@ -97,9 +98,12 @@ internal fun ForegroundNotificationBanner(
     val offsetX = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
 
-    // Reset any residual swipe offset when a new (or re-shown) request is bound,
-    // so a previously dismissed banner doesn't reappear off-screen.
-    LaunchedEffect(qrCodeData) { offsetX.snapTo(0f) }
+    // Re-center only when a live request (re)enters. A new or re-broadcast push produces a fresh
+    // state instance, so `isActive` flips true and resets any residual swipe offset. Crucially we
+    // do NOT reset on dismissal: after a successful swipe the banner must stay off-screen while the
+    // parent's vertical exit transition plays out, otherwise the snap-back rides that exit and the
+    // banner visibly re-centers then slides up (#5001).
+    LaunchedEffect(qrCodeData, isActive) { if (isActive) offsetX.snapTo(0f) }
 
     Box(
         modifier =
@@ -120,12 +124,11 @@ internal fun ForegroundNotificationBanner(
                                         if (offsetX.value > 0) size.width.toFloat()
                                         else -size.width.toFloat()
                                     offsetX.animateTo(target)
+                                    // Leave the banner off-screen and clear the request; the
+                                    // retained offset keeps it hidden through the parent's vertical
+                                    // exit transition. The LaunchedEffect above re-centers it only
+                                    // when a fresh request next (re)enters.
                                     onDismiss()
-                                    // Reset the retained offset: when the same signing session
-                                    // re-broadcasts, MainActivityContent reuses this subtree
-                                    // (keyed by qrCodeData), so LaunchedEffect(qrCodeData) won't
-                                    // re-fire and the banner would otherwise reappear off-screen.
-                                    offsetX.snapTo(0f)
                                 } else {
                                     offsetX.animateTo(0f)
                                 }
@@ -214,6 +217,7 @@ private fun ForegroundNotificationBannerPreview() {
         qrCodeData = "preview",
         vaultName = "Vault #2",
         transactionSummary = UiText.DynamicString("Swap 10 ETH → USDC"),
+        isActive = true,
         onTap = {},
         onDismiss = {},
     )
