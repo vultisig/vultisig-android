@@ -292,8 +292,6 @@
     <string name="share_qr_screen_permission_required">File permission is required for share operations.</string>
     <string name="token_selection_search_hint">Search…</string>
     <string name="verify_swap_agree_allowance">I agree with providing ERC20 allowance</string>
-    <string name="verify_swap_external_recipient_title">Sending to an external address</string>
-    <string name="verify_swap_external_recipient_description">This swap\'s output is routed to an address that isn\'t this vault. Make sure you recognize it before signing.</string>
     <string name="deposit_screen_amount_title">Amount</string>
     <string name="verify_deposit_memo_title">Memo</string>
     <string name="verify_deposit_node_address_title">Node Address</string>

@@ -210,8 +210,6 @@
     <string name="share_qr_screen_permission_required">A permissão de ficheiro é necessária para operações de partilha.</string>
     <string name="token_selection_search_hint">Pesquisa…</string>
     <string name="verify_swap_agree_allowance">Concordo em fornecer subsídio ERC20 ilimitado</string>
-    <string name="verify_swap_external_recipient_title">Enviando para um endereço externo</string>
-    <string name="verify_swap_external_recipient_description">A saída desta troca é encaminhada para um endereço que não pertence a este cofre. Certifique-se de reconhecê-lo antes de assinar.</string>
     <string name="deposit_screen_amount_title">Montante</string>
     <string name="verify_deposit_memo_title">Memorando</string>
     <string name="verify_deposit_node_address_title">Endereço do nó</string>

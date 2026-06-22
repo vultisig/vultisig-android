@@ -209,8 +209,6 @@
     <string name="share_qr_screen_permission_required">Per le operazioni di condivisione è richiesta l\'autorizzazione del file.</string>
     <string name="token_selection_search_hint">Ricerca…</string>
     <string name="verify_swap_agree_allowance">Sono d\'accordo con la fornitura di un\'indennità ERC20 illimitata</string>
-    <string name="verify_swap_external_recipient_title">Invio a un indirizzo esterno</string>
-    <string name="verify_swap_external_recipient_description">L\'output di questo swap è indirizzato a un indirizzo che non appartiene a questa cassaforte. Assicurati di riconoscerlo prima di firmare.</string>
     <string name="deposit_screen_amount_title">Quantità</string>
     <string name="verify_deposit_memo_title">Promemoria</string>
     <string name="verify_deposit_node_address_title">Indirizzo del nodo</string>

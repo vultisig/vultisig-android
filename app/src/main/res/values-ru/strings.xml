@@ -209,8 +209,6 @@
     <string name="share_qr_screen_permission_required">Для операций обмена требуется разрешение на доступ к файлу.</string>
     <string name="token_selection_search_hint">Поиск…</string>
     <string name="verify_swap_agree_allowance">Я согласен с предоставлением неограниченного лимита ERC20</string>
-    <string name="verify_swap_external_recipient_title">Отправка на внешний адрес</string>
-    <string name="verify_swap_external_recipient_description">Вывод этого обмена направляется на адрес, не принадлежащий этому хранилищу. Убедитесь, что вы узнаёте его, прежде чем подписывать.</string>
     <string name="deposit_screen_amount_title">Количество</string>
     <string name="verify_deposit_gas_title">Комиссия сети</string>
     <string name="custom_token_enter_contract_address">Введите адрес контракта</string>

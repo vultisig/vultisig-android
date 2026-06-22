@@ -300,10 +300,6 @@ private fun VerifySwapScreen(
                     )
                 }
 
-                tx.externalRecipient?.let { recipient ->
-                    ExternalRecipientWarning(address = recipient)
-                }
-
                 if (isConsentsEnabled) {
                     Column {
                         VsCheckField(
@@ -459,59 +455,6 @@ internal fun SwapToken(
                     )
                 }
             }
-        }
-    }
-}
-
-/**
- * Emphasized amber warning shown when a swap's output is routed to an address other than this
- * vault's own destination-chain address (issue #4972). Sourced from the signed memo so a co-signing
- * device that never filled the form still sees where the funds are going.
- */
-@Composable
-private fun ExternalRecipientWarning(address: String, modifier: Modifier = Modifier) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.Top,
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .background(
-                    color = Theme.v2.colors.alerts.warning.copy(alpha = 0.12f),
-                    shape = RoundedCornerShape(16.dp),
-                )
-                .border(
-                    width = 1.dp,
-                    color = Theme.v2.colors.alerts.warning,
-                    shape = RoundedCornerShape(16.dp),
-                )
-                .padding(16.dp),
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_triangle_alert),
-            contentDescription = null,
-            tint = Theme.v2.colors.alerts.warning,
-            modifier = Modifier.size(20.dp),
-        )
-
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = stringResource(R.string.verify_swap_external_recipient_title),
-                style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.alerts.warning,
-            )
-
-            Text(
-                text = stringResource(R.string.verify_swap_external_recipient_description),
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.secondary,
-            )
-
-            Text(
-                text = address,
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary,
-            )
         }
     }
 }
