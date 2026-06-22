@@ -1127,7 +1127,7 @@
     <string name="ton_op_nft_transfer">NFT-Überweisung</string>
     <string name="ton_op_excess_gas_refund">Erstattung überschüssiger Gasgebühren</string>
     <string name="ton_op_transfer">Überweisung</string>
-    <string name="ton_forward_ton_amount">Weitergeleiteter TON-Betrag</string>
+    <string name="ton_forward_ton_amount">Weitergeleiteter GRAM-Betrag</string>
     <string name="ton_raw_payload">Rohes Payload</string>
 
     <string name="welcome_tip">Tipp: Sie können einen Browser als Gerät verwenden</string>

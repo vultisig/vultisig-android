@@ -94,6 +94,7 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VultTierGateUiModel
 import com.vultisig.wallet.ui.models.toNetworkUiModel
+import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesUiState
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingPositionsContent
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingVerifyContent
@@ -133,6 +134,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.UpgradeBanner
 import com.vultisig.wallet.ui.screens.v2.home.pager.container.HomePagePagerContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.ReviewVaultDevicesScreen
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
@@ -250,6 +252,7 @@ class PreviewActivity : ComponentActivity() {
                     "cosmos_staking_position_skeleton" -> StakingPositionSkeletonPreview()
                     "sign_message_before" -> VerifySignMessageCtaPreview(newButtons = false)
                     "sign_message_after" -> VerifySignMessageCtaPreview(newButtons = true)
+                    "review_vault_devices" -> ReviewVaultDevicesPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -286,6 +289,20 @@ private fun AssetActionButtonPreview() {
 @Composable
 private fun BannerPreview() {
     HomePagePagerContainer { UpgradeBanner {} }
+}
+
+// Review-your-vault-devices onboarding screen (#4958). Rendered with a 3-device
+// vault so the list is the primary, height-adaptive content even on short screens.
+@Composable
+private fun ReviewVaultDevicesPreview() {
+    ReviewVaultDevicesScreen(
+        uiState =
+            ReviewVaultDevicesUiState(
+                localPartyId = "iPhone",
+                devices = listOf("iPhone", "Extension", "MacBook"),
+            ),
+        onEvent = {},
+    )
 }
 
 /**

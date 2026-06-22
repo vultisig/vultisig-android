@@ -36,7 +36,9 @@ import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
 import com.vultisig.wallet.ui.models.deposit.load.DepositDataLoader
+import com.vultisig.wallet.ui.models.deposit.load.DepositOptionCoordinator
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
+import com.vultisig.wallet.ui.models.deposit.load.NodeWhitelistChecker
 import com.vultisig.wallet.ui.models.deposit.load.RujiBalancesLoader
 import com.vultisig.wallet.ui.models.deposit.load.SecuredAssetLoader
 import com.vultisig.wallet.ui.models.deposit.submit.DepositStrategyFactory
@@ -177,6 +179,24 @@ internal class DepositFormViewModelTest {
                     setLoading = setLoading,
                 )
         }
+    private val nodeWhitelistCheckerFactory: NodeWhitelistChecker.Factory =
+        object : NodeWhitelistChecker.Factory {
+            override fun create(
+                scope: CoroutineScope,
+                state: MutableStateFlow<DepositFormUiModel>,
+                address: StateFlow<Address?>,
+                nodeAddressFieldState: TextFieldState,
+                chainProvider: () -> Chain?,
+            ): NodeWhitelistChecker =
+                NodeWhitelistChecker(
+                    mayachainBondRepository = mayachainBondRepository,
+                    scope = scope,
+                    state = state,
+                    address = address,
+                    nodeAddressFieldState = nodeAddressFieldState,
+                    chainProvider = chainProvider,
+                )
+        }
     private val dataLoaderFactory: DepositDataLoader.Factory =
         object : DepositDataLoader.Factory {
             override fun create(
@@ -193,6 +213,36 @@ internal class DepositFormViewModelTest {
                     depositTypeActionProvider = depositTypeActionProvider,
                     clearDepositTypeAction = clearDepositTypeAction,
                     selectDepositOption = selectDepositOption,
+                )
+        }
+    private val depositOptionCoordinatorFactory: DepositOptionCoordinator.Factory =
+        object : DepositOptionCoordinator.Factory {
+            override fun create(
+                scope: CoroutineScope,
+                state: MutableStateFlow<DepositFormUiModel>,
+                address: StateFlow<Address?>,
+                fields: DepositFieldStates,
+                liquidityDataLoader: LiquidityDataLoader,
+                securedAssetLoader: SecuredAssetLoader,
+                cacaoMaturityLoader: CacaoMaturityLoader,
+                chainProvider: () -> Chain?,
+                vaultId: () -> String?,
+                bondAddress: () -> String?,
+            ): DepositOptionCoordinator =
+                DepositOptionCoordinator(
+                    mayaChainApi = mayaChainApi,
+                    accountsRepository = accountsRepository,
+                    mapTokenValueToStringWithUnit = mapTokenValueToStringWithUnit,
+                    scope = scope,
+                    state = state,
+                    address = address,
+                    fields = fields,
+                    liquidityDataLoader = liquidityDataLoader,
+                    securedAssetLoader = securedAssetLoader,
+                    cacaoMaturityLoader = cacaoMaturityLoader,
+                    chainProvider = chainProvider,
+                    vaultId = vaultId,
+                    bondAddress = bondAddress,
                 )
         }
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase = mockk(relaxed = true)
@@ -244,8 +294,6 @@ internal class DepositFormViewModelTest {
             chainAccountAddressRepository = chainAccountAddressRepository,
             transactionRepository = transactionRepository,
             blockChainSpecificRepository = blockChainSpecificRepository,
-            mayaChainApi = mayaChainApi,
-            mayachainBondRepository = mayachainBondRepository,
             balanceRepository = balanceRepository,
             vaultRepository = vaultRepository,
             requestAddressBookEntry = requestAddressBookEntry,
@@ -253,7 +301,9 @@ internal class DepositFormViewModelTest {
             securedAssetLoaderFactory = securedAssetLoaderFactory,
             cacaoMaturityLoaderFactory = cacaoMaturityLoaderFactory,
             rujiBalancesLoaderFactory = rujiBalancesLoaderFactory,
+            nodeWhitelistCheckerFactory = nodeWhitelistCheckerFactory,
             dataLoaderFactory = dataLoaderFactory,
+            depositOptionCoordinatorFactory = depositOptionCoordinatorFactory,
             fieldValidator = fieldValidator,
             gasFeeHelper = gasFeeHelper,
             depositStrategyFactory = depositStrategyFactory,

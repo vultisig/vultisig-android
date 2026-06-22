@@ -773,3 +773,54 @@ internal val MIGRATION_32_33 =
             db.execSQL("ALTER TABLE transaction_history ADD COLUMN broadcastBlockNumber INTEGER")
         }
     }
+
+// Rebrands the native Ton token from TON to GRAM (#4981). Coins are persisted per-vault and
+// reconstructed directly from the stored columns, so the registry change alone never reaches
+// vaults that already enabled TON — they would keep ticker="TON" + the old logo forever.
+//
+// The rebrand flips Coin.id ("${ticker}-${chain.id}") from TON-Ton → GRAM-Ton, and that id is a
+// cross-table key. Updating only ticker/logo on `coin` would desync every cache keyed by the id,
+// so the native row is migrated across all referencing tables together:
+//   - coin       : id, ticker, logo (native row only: contractAddress = '')
+//   - tokenValue : ticker (PK is chain,address,ticker; tokenId = "$ticker-$chain")
+//   - tokenPrice : tokenId (cache keyed by Coin.id)
+//   - disabledCoin: coinId (TON-Ton → GRAM-Ton)
+// GRAM-Ton is a brand-new id, so none of these updates can collide with an existing PK.
+// Chain identity, priceProviderID ("the-open-network") and decimals are intentionally unchanged.
+internal val MIGRATION_33_34 =
+    object : Migration(33, 34) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            UPDATE coin
+            SET id = 'GRAM-Ton', ticker = 'GRAM', logo = 'gram'
+            WHERE chain = 'Ton' AND ticker = 'TON' AND contractAddress = ''
+            """
+                    .trimIndent()
+            )
+            db.execSQL(
+                """
+            UPDATE tokenValue
+            SET ticker = 'GRAM'
+            WHERE chain = 'Ton' AND ticker = 'TON'
+            """
+                    .trimIndent()
+            )
+            db.execSQL(
+                """
+            UPDATE tokenPrice
+            SET tokenId = 'GRAM-Ton'
+            WHERE tokenId = 'TON-Ton'
+            """
+                    .trimIndent()
+            )
+            db.execSQL(
+                """
+            UPDATE disabledCoin
+            SET coinId = 'GRAM-Ton'
+            WHERE chain = 'Ton' AND coinId = 'TON-Ton'
+            """
+                    .trimIndent()
+            )
+        }
+    }
