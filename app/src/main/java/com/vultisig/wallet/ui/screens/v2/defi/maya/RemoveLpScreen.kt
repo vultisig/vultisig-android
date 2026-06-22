@@ -90,7 +90,7 @@ internal fun RemoveLpScreenContent(
                     .clip(amountCardShape)
                     .border(
                         width = 1.dp,
-                        color = Theme.v2.colors.border.normal,
+                        color = Theme.v2.colors.border.light,
                         shape = amountCardShape,
                     )
                     .padding(16.dp),

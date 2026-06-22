@@ -136,7 +136,7 @@ private fun SummaryCard(state: CosmosStakingVerifyUiState) {
                 .clip(RoundedCornerShape(16.dp))
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.normal,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(16.dp),
                 )
                 .padding(24.dp),

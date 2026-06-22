@@ -183,7 +183,7 @@ private fun CandidateRow(
                 .clip(RoundedCornerShape(12.dp))
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.normal,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(12.dp),
                 )
                 .clickable(onClick = onToggle)
@@ -237,7 +237,7 @@ private fun androidx.compose.foundation.layout.BoxScope.FooterSummary(
                 .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.normal,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
                 )
                 .padding(16.dp),

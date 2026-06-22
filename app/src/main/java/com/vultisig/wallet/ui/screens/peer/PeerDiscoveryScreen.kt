@@ -301,7 +301,7 @@ internal fun PeerDiscoveryScreen(
                                         )
                                         .border(
                                             width = 1.dp,
-                                            color = Theme.v2.colors.border.normal,
+                                            color = Theme.v2.colors.border.light,
                                             shape = RoundedCornerShape(8.dp),
                                         )
                                         .padding(horizontal = 12.dp, vertical = 6.dp)

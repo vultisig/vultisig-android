@@ -482,5 +482,5 @@ internal fun GasLimitPage(gasLimitOverride: Long?, onSelect: (Long?) -> Unit) {
 
 @Composable
 private fun AdvancedSwapSettingDivider() {
-    HorizontalDivider(thickness = 1.dp, color = Theme.v2.colors.border.normal)
+    HorizontalDivider(thickness = 1.dp, color = Theme.v2.colors.border.light)
 }
