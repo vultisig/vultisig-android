@@ -520,10 +520,11 @@
     <string name="peer_discovery_topbar_title">Scan QR</string>
     <string name="peer_discovery_action_next_title">Next</string>
     <string name="peer_discovery_this_device">This Device</string>
-    <string name="peer_discovery_scan_with_n_device">Scan with %1$s device</string>
+    <string name="peer_discovery_status_connected">Connected</string>
+    <string name="peer_discovery_waiting_title">Waiting for devices to connect</string>
+    <string name="peer_discovery_device_count_badge">%1$s of %2$s</string>
+    <string name="peer_discovery_action_continue_m_of_n">Continue (%1$d-of-%2$d)</string>
     <string name="peer_discovery_waiting_for_devices_action">Waiting for devices to connect…</string>
-    <string name="peer_discovery_devices_n_of_n">Devices (%1$s/%2$s)</string>
-    <string name="peer_discovery_devices_n_of_n_plus">Devices (%1$s/%2$s+)</string>
     <string name="scan_qr_code_modal_annotation">On your other device, open the app and tap \"Scan QR\" to connect it.</string>
     <string name="scan_qr_code_modal_next">Start scanning</string>
     <string name="scan_qr_code_modal_scan_the">Scan the QR on your other devices</string>
@@ -607,11 +608,6 @@
     <string name="swap_advanced_external_recipient_title">Use External Recipient</string>
     <string name="swap_advanced_locked_title">Advanced Swap Settings</string>
     <string name="swap_advanced_locked_subtitle">Fine-tune slippage, gas, routing, and recipient for every swap.</string>
-    <string name="swap_advanced_locked_requires">Requires</string>
-    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s Tier or above</string>
-    <string name="swap_advanced_locked_tier_subtitle">Hold at least %1$s in your vault</string>
-    <string name="swap_advanced_locked_your_balance">Your balance</string>
-    <string name="swap_advanced_locked_get_vult">Get $VULT</string>
     <string name="swap_advanced_value_auto">Auto</string>
     <string name="swap_advanced_value_off">Off</string>
     <string name="swap_slippage_helper">Limits how much the price can change before execution is canceled.</string>
@@ -819,6 +815,13 @@
     <string name="custom_rpc_wrong_chain">This endpoint serves a different chain</string>
     <string name="custom_rpc_invalid_response">Unexpected response from this endpoint</string>
     <string name="custom_rpc_unreachable">Endpoint unreachable</string>
+    <string name="custom_rpc_gate_description">Point Vultisig at your own nodes. Faster queries, higher rate limits, and full privacy per chain.</string>
+    <!-- Feature gate (tier-locked feature popup) -->
+    <string name="feature_gate_requires">Requires</string>
+    <string name="feature_gate_tier_requirement">$VULT %1$s Tier or above</string>
+    <string name="feature_gate_hold_threshold">Hold at least %1$s in your vault</string>
+    <string name="feature_gate_your_balance">Your balance</string>
+    <string name="feature_gate_get_vult">Get $VULT</string>
     <string name="swapkit_error_api_key_missing">SwapKit API key not configured</string>
     <string name="swapkit_error_api_key_invalid">SwapKit API key is invalid</string>
     <string name="swapkit_error_insufficient_balance">Insufficient balance for this route</string>

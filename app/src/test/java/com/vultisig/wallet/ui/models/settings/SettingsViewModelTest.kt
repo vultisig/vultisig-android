@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.repositories.CustomRpcConfig
 import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -23,6 +24,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import java.math.BigInteger
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -123,13 +126,14 @@ internal class SettingsViewModelTest {
             vm.state.value.hasToShowReferralCodeSheet.shouldBeFalse()
         }
 
-    /** Silver-tier users reach the Custom RPC list directly. */
+    /** Silver-tier users (balance at/above the threshold) reach the Custom RPC list directly. */
     @Test
     fun `clicking CustomRpc as Silver navigates to CustomRpcList`() =
         runTest(testDispatcher) {
-            coEvery { getDiscountBps.hasReachedSilverTier(VAULT_ID) } returns true
+            coEvery { getDiscountBps.getVultBalance(VAULT_ID) } returns SILVER_TIER_THRESHOLD
             val vm = createViewModel()
             vm.onSettingsItemClick(SettingsItem.CustomRpc)
+            vm.state.value.showCustomRpcUpsell.shouldBeFalse()
             coVerify { navigator.route(Route.CustomRpcList(VAULT_ID)) }
         }
 
@@ -137,23 +141,46 @@ internal class SettingsViewModelTest {
     @Test
     fun `clicking CustomRpc below Silver shows the upsell dialog`() =
         runTest(testDispatcher) {
-            coEvery { getDiscountBps.hasReachedSilverTier(VAULT_ID) } returns false
+            coEvery { getDiscountBps.getVultBalance(VAULT_ID) } returns
+                SILVER_TIER_THRESHOLD - BigInteger.ONE
+            val vm = createViewModel()
+            vm.onSettingsItemClick(SettingsItem.CustomRpc)
+            vm.state.value.showCustomRpcUpsell.shouldBeTrue()
+            vm.state.value.customRpcIsBelowThreshold.shouldBeTrue()
+            coVerify(exactly = 0) { navigator.route(Route.CustomRpcList(VAULT_ID)) }
+        }
+
+    /** A failed/unknown balance lookup falls back to the upsell rather than opening the list. */
+    @Test
+    fun `clicking CustomRpc with failing balance lookup falls back to the upsell dialog`() =
+        runTest(testDispatcher) {
+            coEvery { getDiscountBps.getVultBalance(VAULT_ID) } throws RuntimeException("boom")
             val vm = createViewModel()
             vm.onSettingsItemClick(SettingsItem.CustomRpc)
             vm.state.value.showCustomRpcUpsell.shouldBeTrue()
             coVerify(exactly = 0) { navigator.route(Route.CustomRpcList(VAULT_ID)) }
         }
 
-    /** A failed tier lookup falls back to the upsell rather than opening the list. */
+    /**
+     * The upsell exposes the balance and threshold as grouped whole-token strings
+     * (formatVultBalance with 18-decimal scaling, no fraction digits). Locale is pinned so grouping
+     * is deterministic.
+     */
     @Test
-    fun `clicking CustomRpc with failing tier lookup falls back to the upsell dialog`() =
+    fun `custom rpc upsell formats balance and threshold as whole VULT tokens`() =
         runTest(testDispatcher) {
-            coEvery { getDiscountBps.hasReachedSilverTier(VAULT_ID) } throws
-                RuntimeException("boom")
-            val vm = createViewModel()
-            vm.onSettingsItemClick(SettingsItem.CustomRpc)
-            vm.state.value.showCustomRpcUpsell.shouldBeTrue()
-            coVerify(exactly = 0) { navigator.route(Route.CustomRpcList(VAULT_ID)) }
+            val previousLocale = Locale.getDefault()
+            Locale.setDefault(Locale.US)
+            try {
+                val balance = BigInteger("2340") * BigInteger.TEN.pow(18)
+                coEvery { getDiscountBps.getVultBalance(VAULT_ID) } returns balance
+                val vm = createViewModel()
+                vm.onSettingsItemClick(SettingsItem.CustomRpc)
+                vm.state.value.customRpcVultBalance shouldBe "2,340 VULT"
+                vm.state.value.customRpcVultThreshold shouldBe "3,000 VULT"
+            } finally {
+                Locale.setDefault(previousLocale)
+            }
         }
 
     /** Verifies clicking PreventScreenshots calls setEnabled with toggled value. */

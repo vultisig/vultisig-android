@@ -592,6 +592,13 @@
     <string name="custom_rpc_wrong_chain">Эта конечная точка обслуживает другую сеть</string>
     <string name="custom_rpc_invalid_response">Неожиданный ответ от этой конечной точки</string>
     <string name="custom_rpc_unreachable">Конечная точка недоступна</string>
+    <string name="custom_rpc_gate_description">Направьте Vultisig на собственные узлы. Более быстрые запросы, выше лимиты и полная конфиденциальность для каждой сети.</string>
+    <!-- Feature gate (tier-locked feature popup) -->
+    <string name="feature_gate_requires">Требуется</string>
+    <string name="feature_gate_tier_requirement">$VULT уровень %1$s или выше</string>
+    <string name="feature_gate_hold_threshold">Держите не менее %1$s в вашем хранилище</string>
+    <string name="feature_gate_your_balance">Ваш баланс</string>
+    <string name="feature_gate_get_vult">Получить $VULT</string>
     <string name="swapkit_error_api_key_missing">API-ключ SwapKit не настроен</string>
     <string name="swapkit_error_api_key_invalid">API-ключ SwapKit недействителен</string>
     <string name="swapkit_error_insufficient_balance">Недостаточно средств для этого маршрута</string>
@@ -850,9 +857,6 @@
     <string name="select_vault_type_secure_desc_3">Защитите любое количество активов</string>
     <string name="select_vault_type_fast_desc_3">Vultisig мгновенно подписывается</string>
     <string name="peer_discovery_topbar_title">Сканируйте QR-код</string>
-    <string name="peer_discovery_waiting_for_devices_action">Ожидание устройств…</string>
-    <string name="peer_discovery_devices_n_of_n">Устройства (%1$s/%2$s)</string>
-    <string name="peer_discovery_devices_n_of_n_plus">Устройства (%1$s/%2$s+)</string>
     <string name="vault_backup_screen_email_sent_to">Отправлено %s.</string>
     <string name="vault_backup_screen_donot_receive_email">Не получили письмо?</string>
     <string name="onboarding_desc_page_5_part_2">отдельно в</string>
@@ -894,11 +898,6 @@
     <string name="swap_advanced_external_recipient_title">Использовать внешнего получателя</string>
     <string name="swap_advanced_locked_title">Расширенные настройки обмена</string>
     <string name="swap_advanced_locked_subtitle">Точная настройка проскальзывания, газа, маршрута и получателя для каждого обмена.</string>
-    <string name="swap_advanced_locked_requires">Требуется</string>
-    <string name="swap_advanced_locked_tier_requirement">$VULT уровень %1$s или выше</string>
-    <string name="swap_advanced_locked_tier_subtitle">Держите не менее %1$s в вашем хранилище</string>
-    <string name="swap_advanced_locked_your_balance">Ваш баланс</string>
-    <string name="swap_advanced_locked_get_vult">Получить $VULT</string>
     <string name="swap_advanced_value_auto">Авто</string>
     <string name="swap_advanced_value_off">Выкл.</string>
     <string name="swap_slippage_helper">Ограничивает, насколько может измениться цена до отмены исполнения.</string>
@@ -952,7 +951,11 @@
     <string name="onboarding_intro_preview_part_1">Попрощайтесь с</string>
     <string name="onboarding_desc_page_1_part_1">Поздоровайтесь с</string>
     <string name="peer_discovery_this_device">Это устройство</string>
-    <string name="peer_discovery_scan_with_n_device">Сканируйте с помощью устройства %1$s</string>
+    <string name="peer_discovery_status_connected">Подключено</string>
+    <string name="peer_discovery_waiting_title">Ожидание устройств</string>
+    <string name="peer_discovery_device_count_badge">%1$s из %2$s</string>
+    <string name="peer_discovery_action_continue_m_of_n">Продолжить (%1$d-из-%2$d)</string>
+    <string name="peer_discovery_waiting_for_devices_action">Ожидание устройств…</string>
     <string name="select_chain_title">Выбрать сеть</string>
     <string name="keygen_benefit_2_emphasized">Самостоятельное хранение,</string>
     <string name="sign_message_sign_screen_title">Подписать сообщение</string>

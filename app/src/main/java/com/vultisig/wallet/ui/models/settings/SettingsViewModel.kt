@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.models.settings.AppLanguage
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -14,6 +15,8 @@ import com.vultisig.wallet.data.repositories.CustomRpcConfig
 import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.settings.SettingsItem.AddressBook
 import com.vultisig.wallet.ui.models.settings.SettingsItem.CheckForUpdates
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Currency
@@ -40,6 +43,9 @@ import com.vultisig.wallet.ui.utils.MultipleClicksDetector
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigInteger
+import java.text.NumberFormat
+import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,6 +58,9 @@ internal data class SettingsUiModel(
     val hasToShowReferralCodeSheet: Boolean = false,
     val showShareBottomSheet: Boolean = false,
     val showCustomRpcUpsell: Boolean = false,
+    val customRpcVultBalance: String = "",
+    val customRpcVultThreshold: String = "",
+    val customRpcIsBelowThreshold: Boolean = false,
 )
 
 internal data class SettingsGroupUiModel(val title: UiText, val items: List<SettingsItem>)
@@ -350,16 +359,24 @@ constructor(
             CustomRpc -> {
                 // Tier gate at the entry point (parity with iOS): below Silver, show the Silver
                 // upsell dialog instead of the editor. Once inside the list the user edits freely.
-                // A failed/unknown tier lookup falls back to the upsell rather than blocking
-                // access.
-                viewModelScope.launch {
-                    val isSilver =
-                        runCatching { getDiscountBps.hasReachedSilverTier(vaultId) }
-                            .getOrDefault(false)
-                    if (isSilver) {
+                // A failed/unknown balance lookup falls back to the upsell rather than blocking
+                // access. The balance is fetched once and the tier is derived locally so we don't
+                // hit the repository twice per tap.
+                viewModelScope.safeLaunch {
+                    val balanceRaw =
+                        runCatching { getDiscountBps.getVultBalance(vaultId) }.getOrNull()
+                            ?: BigInteger.ZERO
+                    if (balanceRaw >= SILVER_TIER_THRESHOLD) {
                         navigator.route(Route.CustomRpcList(vaultId))
                     } else {
-                        state.update { it.copy(showCustomRpcUpsell = true) }
+                        state.update {
+                            it.copy(
+                                showCustomRpcUpsell = true,
+                                customRpcVultBalance = formatVultBalance(balanceRaw),
+                                customRpcVultThreshold = formatVultBalance(SILVER_TIER_THRESHOLD),
+                                customRpcIsBelowThreshold = balanceRaw < SILVER_TIER_THRESHOLD,
+                            )
+                        }
                     }
                 }
             }
@@ -553,4 +570,12 @@ constructor(
         state.update { it.copy(showCustomRpcUpsell = false) }
         viewModelScope.launch { navigator.route(Route.DiscountTiers(vaultId)) }
     }
+}
+
+/** Formats a raw VULT balance (18 decimals) as a grouped, whole-token string e.g. "2,340 VULT". */
+private fun formatVultBalance(raw: BigInteger): String {
+    val whole = raw.toBigDecimal().movePointLeft(Coins.Ethereum.VULT.decimal)
+    val numberFormat = NumberFormat.getNumberInstance(Locale.getDefault())
+    numberFormat.maximumFractionDigits = 0
+    return "${numberFormat.format(whole)} VULT"
 }

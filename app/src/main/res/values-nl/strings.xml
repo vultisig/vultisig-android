@@ -588,6 +588,13 @@
     <string name="custom_rpc_wrong_chain">Dit endpoint bedient een andere blockchain</string>
     <string name="custom_rpc_invalid_response">Onverwacht antwoord van dit endpoint</string>
     <string name="custom_rpc_unreachable">Endpoint onbereikbaar</string>
+    <string name="custom_rpc_gate_description">Richt Vultisig op je eigen nodes. Snellere query\'s, hogere ratelimieten en volledige privacy per blockchain.</string>
+    <!-- Feature gate (tier-locked feature popup) -->
+    <string name="feature_gate_requires">Vereist</string>
+    <string name="feature_gate_tier_requirement">$VULT %1$s niveau of hoger</string>
+    <string name="feature_gate_hold_threshold">Houd ten minste %1$s in je kluis</string>
+    <string name="feature_gate_your_balance">Je saldo</string>
+    <string name="feature_gate_get_vult">$VULT kopen</string>
     <string name="swapkit_error_api_key_missing">SwapKit API-sleutel niet geconfigureerd</string>
     <string name="swapkit_error_api_key_invalid">SwapKit API-sleutel is ongeldig</string>
     <string name="swapkit_error_insufficient_balance">Onvoldoende saldo voor deze route</string>
@@ -842,9 +849,6 @@
     <string name="select_vault_type_secure_desc_3">Beveilig elk bedrag aan activa</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver ondertekent direct</string>
     <string name="peer_discovery_topbar_title">QR scannen</string>
-    <string name="peer_discovery_waiting_for_devices_action">Wachten op apparaten…</string>
-    <string name="peer_discovery_devices_n_of_n">Apparaten (%1$s/%2$s)</string>
-    <string name="peer_discovery_devices_n_of_n_plus">Apparaten (%1$s/%2$s+)</string>
     <string name="vault_backup_screen_email_sent_to">Verzonden naar %s.</string>
     <string name="vault_backup_screen_donot_receive_email">Geen email ontvangen?</string>
     <string name="onboarding_desc_page_5_part_2">Afzonderlijk in een</string>
@@ -886,11 +890,6 @@
     <string name="swap_advanced_external_recipient_title">Externe ontvanger gebruiken</string>
     <string name="swap_advanced_locked_title">Geavanceerde swap-instellingen</string>
     <string name="swap_advanced_locked_subtitle">Stem slippage, gas, routering en ontvanger af voor elke swap.</string>
-    <string name="swap_advanced_locked_requires">Vereist</string>
-    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s niveau of hoger</string>
-    <string name="swap_advanced_locked_tier_subtitle">Houd ten minste %1$s in je kluis</string>
-    <string name="swap_advanced_locked_your_balance">Je saldo</string>
-    <string name="swap_advanced_locked_get_vult">$VULT kopen</string>
     <string name="swap_advanced_value_auto">Auto</string>
     <string name="swap_advanced_value_off">Uit</string>
     <string name="swap_slippage_helper">Beperkt hoeveel de prijs mag veranderen voordat de uitvoering wordt geannuleerd.</string>
@@ -944,7 +943,11 @@
     <string name="onboarding_intro_preview_part_1">Zeg vaarwel tegen</string>
     <string name="onboarding_desc_page_1_part_1">Zeg hallo tegen</string>
     <string name="peer_discovery_this_device">Dit apparaat</string>
-    <string name="peer_discovery_scan_with_n_device">Scan met %1$s apparaat</string>
+    <string name="peer_discovery_status_connected">Verbonden</string>
+    <string name="peer_discovery_waiting_title">Wachten op apparaten</string>
+    <string name="peer_discovery_device_count_badge">%1$s van %2$s</string>
+    <string name="peer_discovery_action_continue_m_of_n">Doorgaan (%1$d-van-%2$d)</string>
+    <string name="peer_discovery_waiting_for_devices_action">Wachten op apparaten…</string>
     <string name="select_chain_title">Selecteer keten</string>
     <string name="keygen_benefit_2_emphasized">Zelfbeheer,</string>
     <string name="sign_message_sign_screen_title">Bericht ondertekenen</string>

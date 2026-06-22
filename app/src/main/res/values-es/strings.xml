@@ -593,6 +593,13 @@
     <string name="custom_rpc_wrong_chain">Este endpoint sirve una cadena diferente</string>
     <string name="custom_rpc_invalid_response">Respuesta inesperada de este endpoint</string>
     <string name="custom_rpc_unreachable">Endpoint inaccesible</string>
+    <string name="custom_rpc_gate_description">Conecta Vultisig a tus propios nodos. Consultas más rápidas, mayores límites de tasa y privacidad total por cadena.</string>
+    <!-- Feature gate (tier-locked feature popup) -->
+    <string name="feature_gate_requires">Requiere</string>
+    <string name="feature_gate_tier_requirement">$VULT %1$s Nivel o superior</string>
+    <string name="feature_gate_hold_threshold">Mantén al menos %1$s en tu bóveda</string>
+    <string name="feature_gate_your_balance">Tu saldo</string>
+    <string name="feature_gate_get_vult">Obtén $VULT</string>
     <string name="swapkit_error_api_key_missing">La clave de API de SwapKit no está configurada</string>
     <string name="swapkit_error_api_key_invalid">La clave de API de SwapKit no es válida</string>
     <string name="swapkit_error_insufficient_balance">Saldo insuficiente para esta ruta</string>
@@ -845,9 +852,6 @@
     <string name="select_vault_type_secure_desc_3">Protege cualquier cantidad de activos</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver firma automáticamente</string>
     <string name="peer_discovery_topbar_title">Escanear código QR</string>
-    <string name="peer_discovery_waiting_for_devices_action">Esperando dispositivos…</string>
-    <string name="peer_discovery_devices_n_of_n">Dispositivos (%1$s/%2$s)</string>
-    <string name="peer_discovery_devices_n_of_n_plus">Dispositivos (%1$s/%2$s+)</string>
     <string name="vault_backup_screen_email_sent_to">Enviado a %s.</string>
     <string name="vault_backup_screen_donot_receive_email">¿No recibiste un correo?</string>
     <string name="onboarding_desc_page_5_part_2">por separado en un</string>
@@ -889,11 +893,6 @@
     <string name="swap_advanced_external_recipient_title">Usar destinatario externo</string>
     <string name="swap_advanced_locked_title">Ajustes avanzados de swap</string>
     <string name="swap_advanced_locked_subtitle">Ajusta el deslizamiento, el gas, la ruta y el destinatario en cada swap.</string>
-    <string name="swap_advanced_locked_requires">Requiere</string>
-    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s Nivel o superior</string>
-    <string name="swap_advanced_locked_tier_subtitle">Mantén al menos %1$s en tu bóveda</string>
-    <string name="swap_advanced_locked_your_balance">Tu saldo</string>
-    <string name="swap_advanced_locked_get_vult">Obtén $VULT</string>
     <string name="swap_advanced_value_auto">Auto</string>
     <string name="swap_advanced_value_off">Desactivado</string>
     <string name="swap_slippage_helper">Limita cuánto puede cambiar el precio antes de cancelar la ejecución.</string>
@@ -947,7 +946,11 @@
     <string name="onboarding_intro_preview_part_1">Dile adiós a</string>
     <string name="onboarding_desc_page_1_part_1">Dile hola a</string>
     <string name="peer_discovery_this_device">Este dispositivo</string>
-    <string name="peer_discovery_scan_with_n_device">Escanear con el dispositivo de %1$s</string>
+    <string name="peer_discovery_status_connected">Conectado</string>
+    <string name="peer_discovery_waiting_title">Esperando dispositivos</string>
+    <string name="peer_discovery_device_count_badge">%1$s de %2$s</string>
+    <string name="peer_discovery_action_continue_m_of_n">Continuar (%1$d-de-%2$d)</string>
+    <string name="peer_discovery_waiting_for_devices_action">Esperando dispositivos…</string>
     <string name="select_chain_title">Seleccionar cadena</string>
     <string name="keygen_benefit_2_emphasized">Autocustodia</string>
     <string name="sign_message_sign_screen_title">Firmar mensaje</string>
