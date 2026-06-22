@@ -592,6 +592,13 @@
     <string name="custom_rpc_wrong_chain">Ova krajnja točka poslužuje drugi lanac</string>
     <string name="custom_rpc_invalid_response">Neočekivani odgovor s ove krajnje točke</string>
     <string name="custom_rpc_unreachable">Krajnja točka nedostupna</string>
+    <string name="custom_rpc_gate_description">Usmjeri Vultisig na vlastite čvorove. Brži upiti, viša ograničenja zahtjeva i potpuna privatnost po lancu.</string>
+    <!-- Feature gate (tier-locked feature popup) -->
+    <string name="feature_gate_requires">Zahtijeva</string>
+    <string name="feature_gate_tier_requirement">$VULT %1$s razina ili viša</string>
+    <string name="feature_gate_hold_threshold">Drži barem %1$s u svom trezoru</string>
+    <string name="feature_gate_your_balance">Tvoj saldo</string>
+    <string name="feature_gate_get_vult">Nabavi $VULT</string>
     <string name="swapkit_error_api_key_missing">SwapKit API ključ nije postavljen</string>
     <string name="swapkit_error_api_key_invalid">SwapKit API ključ je neispravan</string>
     <string name="swapkit_error_insufficient_balance">Nedovoljno sredstava za ovu rutu</string>
@@ -891,11 +898,6 @@
     <string name="swap_advanced_external_recipient_title">Koristi vanjskog primatelja</string>
     <string name="swap_advanced_locked_title">Napredne postavke zamjene</string>
     <string name="swap_advanced_locked_subtitle">Precizno podesite slippage, gas, rutu i primatelja za svaku zamjenu.</string>
-    <string name="swap_advanced_locked_requires">Zahtijeva</string>
-    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s razina ili viša</string>
-    <string name="swap_advanced_locked_tier_subtitle">Drži barem %1$s u svom trezoru</string>
-    <string name="swap_advanced_locked_your_balance">Tvoj saldo</string>
-    <string name="swap_advanced_locked_get_vult">Nabavi $VULT</string>
     <string name="swap_advanced_value_auto">Auto</string>
     <string name="swap_advanced_value_off">Isključeno</string>
     <string name="swap_slippage_helper">Ograničava koliko se cijena može promijeniti prije nego što se izvršenje otkaže.</string>

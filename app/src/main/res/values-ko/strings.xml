@@ -599,11 +599,6 @@
     <string name="swap_advanced_external_recipient_title">외부 수신자 사용</string>
     <string name="swap_advanced_locked_title">고급 스왑 설정</string>
     <string name="swap_advanced_locked_subtitle">모든 스왑에 대해 슬리피지, 가스, 경로, 수신자를 세밀하게 조정하세요.</string>
-    <string name="swap_advanced_locked_requires">필요 조건</string>
-    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s 등급 이상</string>
-    <string name="swap_advanced_locked_tier_subtitle">볼트에 최소 %1$s 보유</string>
-    <string name="swap_advanced_locked_your_balance">내 잔액</string>
-    <string name="swap_advanced_locked_get_vult">$VULT 받기</string>
     <string name="swap_advanced_value_auto">자동</string>
     <string name="swap_advanced_value_off">끄기</string>
     <string name="swap_slippage_helper">실행이 취소되기 전에 가격이 변동할 수 있는 범위를 제한합니다.</string>
@@ -809,6 +804,13 @@
     <string name="custom_rpc_wrong_chain">이 엔드포인트는 다른 체인을 제공합니다</string>
     <string name="custom_rpc_invalid_response">이 엔드포인트에서 예기치 않은 응답</string>
     <string name="custom_rpc_unreachable">엔드포인트에 연결할 수 없음</string>
+    <string name="custom_rpc_gate_description">Vultisig를 자체 노드에 연결하세요. 더 빠른 쿼리, 더 높은 요청 한도, 체인별 완전한 프라이버시를 제공합니다.</string>
+    <!-- Feature gate (tier-locked feature popup) -->
+    <string name="feature_gate_requires">필요 조건</string>
+    <string name="feature_gate_tier_requirement">$VULT %1$s 등급 이상</string>
+    <string name="feature_gate_hold_threshold">볼트에 최소 %1$s 보유</string>
+    <string name="feature_gate_your_balance">내 잔액</string>
+    <string name="feature_gate_get_vult">$VULT 받기</string>
     <string name="swapkit_error_api_key_missing">SwapKit API 키가 구성되지 않았습니다</string>
     <string name="swapkit_error_api_key_invalid">SwapKit API 키가 유효하지 않습니다</string>
     <string name="swapkit_error_insufficient_balance">이 경로에 사용할 잔액이 부족합니다</string>

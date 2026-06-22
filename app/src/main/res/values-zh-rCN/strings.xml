@@ -841,6 +841,13 @@
     <string name="custom_rpc_wrong_chain">此端点服务于其他链</string>
     <string name="custom_rpc_invalid_response">此端点返回意外响应</string>
     <string name="custom_rpc_unreachable">端点无法访问</string>
+    <string name="custom_rpc_gate_description">将 Vultisig 指向您自己的节点。更快的查询、更高的速率限制，以及每条链的完全隐私。</string>
+    <!-- Feature gate (tier-locked feature popup) -->
+    <string name="feature_gate_requires">需要</string>
+    <string name="feature_gate_tier_requirement">$VULT %1$s 等级或以上</string>
+    <string name="feature_gate_hold_threshold">在您的金库中持有至少 %1$s</string>
+    <string name="feature_gate_your_balance">您的余额</string>
+    <string name="feature_gate_get_vult">获取 $VULT</string>
     <string name="swapkit_error_api_key_missing">SwapKit API 密钥未配置</string>
     <string name="swapkit_error_api_key_invalid">SwapKit API 密钥无效</string>
     <string name="swapkit_error_insufficient_balance">余额不足,无法完成此路径</string>
@@ -1217,11 +1224,6 @@
     <string name="swap_advanced_external_recipient_title">使用外部接收方</string>
     <string name="swap_advanced_locked_title">高级兑换设置</string>
     <string name="swap_advanced_locked_subtitle">为每次兑换精细调整滑点、Gas、路由和收款人。</string>
-    <string name="swap_advanced_locked_requires">需要</string>
-    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s 等级或以上</string>
-    <string name="swap_advanced_locked_tier_subtitle">在您的金库中持有至少 %1$s</string>
-    <string name="swap_advanced_locked_your_balance">您的余额</string>
-    <string name="swap_advanced_locked_get_vult">获取 $VULT</string>
     <string name="swap_advanced_value_auto">自动</string>
     <string name="swap_advanced_value_off">关闭</string>
     <string name="swap_slippage_helper">限制价格在执行取消前可变动的幅度。</string>

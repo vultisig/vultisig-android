@@ -589,6 +589,13 @@
     <string name="custom_rpc_wrong_chain">Este endpoint serve uma cadeia diferente</string>
     <string name="custom_rpc_invalid_response">Resposta inesperada deste endpoint</string>
     <string name="custom_rpc_unreachable">Endpoint inacessível</string>
+    <string name="custom_rpc_gate_description">Aponte o Vultisig para os seus próprios nós. Consultas mais rápidas, limites de taxa maiores e total privacidade por cadeia.</string>
+    <!-- Feature gate (tier-locked feature popup) -->
+    <string name="feature_gate_requires">Requer</string>
+    <string name="feature_gate_tier_requirement">$VULT %1$s nível ou superior</string>
+    <string name="feature_gate_hold_threshold">Mantenha pelo menos %1$s no seu cofre</string>
+    <string name="feature_gate_your_balance">Seu saldo</string>
+    <string name="feature_gate_get_vult">Obter $VULT</string>
     <string name="swapkit_error_api_key_missing">Chave de API do SwapKit não configurada</string>
     <string name="swapkit_error_api_key_invalid">A chave de API do SwapKit é inválida</string>
     <string name="swapkit_error_insufficient_balance">Saldo insuficiente para esta rota</string>
@@ -885,11 +892,6 @@
     <string name="swap_advanced_external_recipient_title">Usar destinatário externo</string>
     <string name="swap_advanced_locked_title">Configurações avançadas de swap</string>
     <string name="swap_advanced_locked_subtitle">Ajuste slippage, gas, rota e destinatário em cada swap.</string>
-    <string name="swap_advanced_locked_requires">Requer</string>
-    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s nível ou superior</string>
-    <string name="swap_advanced_locked_tier_subtitle">Mantenha pelo menos %1$s no seu cofre</string>
-    <string name="swap_advanced_locked_your_balance">Seu saldo</string>
-    <string name="swap_advanced_locked_get_vult">Obter $VULT</string>
     <string name="swap_advanced_value_auto">Auto</string>
     <string name="swap_advanced_value_off">Desligado</string>
     <string name="swap_slippage_helper">Limita quanto o preço pode mudar antes de a execução ser cancelada.</string>

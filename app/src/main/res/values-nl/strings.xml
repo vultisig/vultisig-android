@@ -588,6 +588,13 @@
     <string name="custom_rpc_wrong_chain">Dit endpoint bedient een andere blockchain</string>
     <string name="custom_rpc_invalid_response">Onverwacht antwoord van dit endpoint</string>
     <string name="custom_rpc_unreachable">Endpoint onbereikbaar</string>
+    <string name="custom_rpc_gate_description">Richt Vultisig op je eigen nodes. Snellere query\'s, hogere ratelimieten en volledige privacy per blockchain.</string>
+    <!-- Feature gate (tier-locked feature popup) -->
+    <string name="feature_gate_requires">Vereist</string>
+    <string name="feature_gate_tier_requirement">$VULT %1$s niveau of hoger</string>
+    <string name="feature_gate_hold_threshold">Houd ten minste %1$s in je kluis</string>
+    <string name="feature_gate_your_balance">Je saldo</string>
+    <string name="feature_gate_get_vult">$VULT kopen</string>
     <string name="swapkit_error_api_key_missing">SwapKit API-sleutel niet geconfigureerd</string>
     <string name="swapkit_error_api_key_invalid">SwapKit API-sleutel is ongeldig</string>
     <string name="swapkit_error_insufficient_balance">Onvoldoende saldo voor deze route</string>
@@ -883,11 +890,6 @@
     <string name="swap_advanced_external_recipient_title">Externe ontvanger gebruiken</string>
     <string name="swap_advanced_locked_title">Geavanceerde swap-instellingen</string>
     <string name="swap_advanced_locked_subtitle">Stem slippage, gas, routering en ontvanger af voor elke swap.</string>
-    <string name="swap_advanced_locked_requires">Vereist</string>
-    <string name="swap_advanced_locked_tier_requirement">$VULT %1$s niveau of hoger</string>
-    <string name="swap_advanced_locked_tier_subtitle">Houd ten minste %1$s in je kluis</string>
-    <string name="swap_advanced_locked_your_balance">Je saldo</string>
-    <string name="swap_advanced_locked_get_vult">$VULT kopen</string>
     <string name="swap_advanced_value_auto">Auto</string>
     <string name="swap_advanced_value_off">Uit</string>
     <string name="swap_slippage_helper">Beperkt hoeveel de prijs mag veranderen voordat de uitvoering wordt geannuleerd.</string>
