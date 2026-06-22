@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
@@ -35,6 +36,7 @@ import com.vultisig.wallet.data.usecases.ThorChainLpPreflightBlock
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
+import com.vultisig.wallet.ui.models.deposit.load.DepositAmountHelper
 import com.vultisig.wallet.ui.models.deposit.load.DepositDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.DepositOptionCoordinator
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
@@ -257,6 +259,27 @@ internal class DepositFormViewModelTest {
             tokenPriceRepository = tokenPriceRepository,
             blockChainSpecificRepository = blockChainSpecificRepository,
         )
+    private val depositAmountHelperFactory: DepositAmountHelper.Factory =
+        object : DepositAmountHelper.Factory {
+            override fun create(
+                scope: CoroutineScope,
+                fields: DepositFieldStates,
+                appCurrency: StateFlow<AppCurrency>,
+                state: MutableStateFlow<DepositFormUiModel>,
+                chain: () -> Chain?,
+                vaultId: () -> String?,
+            ): DepositAmountHelper =
+                DepositAmountHelper(
+                    mapTokenValueToStringWithUnit = mapTokenValueToStringWithUnit,
+                    gasFeeHelper = gasFeeHelper,
+                    scope = scope,
+                    fields = fields,
+                    appCurrency = appCurrency,
+                    state = state,
+                    chain = chain,
+                    vaultId = vaultId,
+                )
+        }
     private val depositStrategyFactory: DepositStrategyFactory =
         DepositStrategyFactory(
             accountsRepository = accountsRepository,
@@ -304,6 +327,7 @@ internal class DepositFormViewModelTest {
             nodeWhitelistCheckerFactory = nodeWhitelistCheckerFactory,
             dataLoaderFactory = dataLoaderFactory,
             depositOptionCoordinatorFactory = depositOptionCoordinatorFactory,
+            depositAmountHelperFactory = depositAmountHelperFactory,
             fieldValidator = fieldValidator,
             gasFeeHelper = gasFeeHelper,
             depositStrategyFactory = depositStrategyFactory,
