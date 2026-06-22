@@ -42,7 +42,6 @@ import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsUiEvent
 import com.vultisig.wallet.ui.models.settings.SettingsUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsViewModel
-import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateBottomSheet
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.ShareLinkBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
@@ -72,8 +71,6 @@ fun SettingsScreen() {
         onShareVaultQrClick = viewModel::onShareVaultQrClick,
         onDismissShareLink = viewModel::onDismissShareLinkBottomSheet,
         onVersionClick = viewModel::onVersionClick,
-        onUnlockCustomRpcTier = viewModel::onUnlockCustomRpcTier,
-        onDismissCustomRpcUpsell = viewModel::onDismissCustomRpcUpsell,
     )
 }
 
@@ -87,8 +84,6 @@ private fun SettingsScreen(
     onDismissReferral: () -> Unit,
     onDismissShareLink: () -> Unit,
     onVersionClick: () -> Unit,
-    onUnlockCustomRpcTier: () -> Unit,
-    onDismissCustomRpcUpsell: () -> Unit,
 ) {
     V2Scaffold(
         title = stringResource(R.string.settings_screen_title),
@@ -129,20 +124,6 @@ private fun SettingsScreen(
 
         if (state.showShareBottomSheet) {
             ShareLinkBottomSheet(onDismissRequest = onDismissShareLink)
-        }
-
-        if (state.showCustomRpcUpsell) {
-            FeatureGateBottomSheet(
-                featureIcon = R.drawable.settings_globe,
-                featureTitle = stringResource(R.string.custom_rpc_title),
-                featureDescription = stringResource(R.string.custom_rpc_gate_description),
-                requiredTier = TierType.SILVER,
-                balanceText = state.customRpcVultBalance,
-                thresholdText = state.customRpcVultThreshold,
-                isBelowThreshold = state.customRpcIsBelowThreshold,
-                onGetVult = onUnlockCustomRpcTier,
-                onDismiss = onDismissCustomRpcUpsell,
-            )
         }
     }
 }
@@ -206,11 +187,24 @@ internal fun SettingItem(
             }
 
             Column {
-                Text(
-                    text = item.title.asString(),
-                    style = Theme.brockmann.headings.subtitle,
-                    color = tint ?: Theme.v2.colors.text.primary,
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = item.title.asString(),
+                        style = Theme.brockmann.headings.subtitle,
+                        color = tint ?: Theme.v2.colors.text.primary,
+                    )
+
+                    item.titleBadge?.let { badge ->
+                        Text(
+                            text = badge.asString(),
+                            style = Theme.brockmann.supplementary.caption,
+                            color = Theme.v2.colors.primary.accent4,
+                        )
+                    }
+                }
 
                 item.subTitle?.let {
                     Text(
@@ -309,8 +303,6 @@ internal fun SettingsScreenPreview() {
         onShareVaultQrClick = {},
         onDismissShareLink = {},
         onVersionClick = {},
-        onUnlockCustomRpcTier = {},
-        onDismissCustomRpcUpsell = {},
     )
 }
 

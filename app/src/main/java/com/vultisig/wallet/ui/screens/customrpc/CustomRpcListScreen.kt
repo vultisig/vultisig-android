@@ -2,17 +2,22 @@ package com.vultisig.wallet.ui.screens.customrpc
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,11 +32,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
+import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
+import com.vultisig.wallet.ui.models.customrpc.CustomRpcChainUiModel
 import com.vultisig.wallet.ui.models.customrpc.CustomRpcListUiState
 import com.vultisig.wallet.ui.models.customrpc.CustomRpcListViewModel
-import com.vultisig.wallet.ui.models.customrpc.CustomRpcRowUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -41,7 +49,8 @@ internal fun CustomRpcListScreen() {
 
     CustomRpcListScreen(
         state = state,
-        onRowClick = viewModel::onRowClick,
+        searchTextFieldState = viewModel.searchTextFieldState,
+        onChainClick = viewModel::onChainClick,
         onBackClick = viewModel::back,
     )
 }
@@ -49,28 +58,36 @@ internal fun CustomRpcListScreen() {
 @Composable
 private fun CustomRpcListScreen(
     state: CustomRpcListUiState,
-    onRowClick: (String) -> Unit,
+    searchTextFieldState: TextFieldState,
+    onChainClick: (String) -> Unit,
     onBackClick: () -> Unit,
 ) {
     V2Scaffold(title = stringResource(R.string.custom_rpc_title), onBackClick = onBackClick) {
-        Column {
+        Column(modifier = Modifier.fillMaxSize()) {
             Text(
-                text = stringResource(R.string.custom_rpc_list_subtitle),
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.tertiary,
+                text = stringResource(R.string.custom_rpc_select_chain),
+                style = Theme.brockmann.headings.title2,
+                color = Theme.v2.colors.text.primary,
             )
-            UiSpacer(size = 12.dp)
-            LazyColumn(
-                modifier =
-                    Modifier.clip(RoundedCornerShape(size = 12.dp))
-                        .background(color = Theme.v2.colors.backgrounds.surface1)
-            ) {
-                itemsIndexed(state.rows, key = { _, row -> row.chainId }) { index, row ->
-                    CustomRpcRow(
-                        row = row,
-                        onClick = { onRowClick(row.chainId) },
-                        isLastItem = index == state.rows.lastIndex,
-                    )
+
+            UiSpacer(size = 16.dp)
+
+            SearchBar(state = searchTextFieldState, isInitiallyFocused = false)
+
+            UiSpacer(size = 24.dp)
+
+            if (state.chains.isEmpty()) {
+                NoFoundContent(message = stringResource(R.string.custom_rpc_no_results))
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(4),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    items(state.chains, key = { it.chainId }) { chain ->
+                        CustomRpcChainTile(chain = chain, onClick = { onChainClick(chain.chainId) })
+                    }
                 }
             }
         }
@@ -78,63 +95,62 @@ private fun CustomRpcListScreen(
 }
 
 @Composable
-private fun CustomRpcRow(row: CustomRpcRowUiModel, onClick: () -> Unit, isLastItem: Boolean) {
-    Column {
-        Row(
+private fun CustomRpcChainTile(chain: CustomRpcChainUiModel, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier.clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
             modifier =
                 Modifier.fillMaxWidth()
-                    .clickable(onClick = onClick)
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Theme.v2.colors.backgrounds.surface1)
+                    .then(
+                        if (chain.isCustom)
+                            Modifier.border(
+                                width = 1.5.dp,
+                                color = Theme.v2.colors.border.light,
+                                shape = RoundedCornerShape(24.dp),
+                            )
+                        else Modifier
+                    ),
         ) {
             Image(
-                painter = painterResource(id = row.logo),
-                contentDescription = null,
-                modifier = Modifier.size(32.dp).clip(RoundedCornerShape(99.dp)),
+                painter = painterResource(id = chain.logo),
+                contentDescription = chain.chainName,
+                modifier = Modifier.size(40.dp),
             )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = row.chainName,
-                    style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.text.primary,
-                )
-                if (row.customUrl != null) {
-                    UiSpacer(size = 2.dp)
-                    Text(
-                        text = row.customUrl,
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.tertiary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+
+            if (chain.isCustom) {
+                Box(
+                    modifier =
+                        Modifier.align(Alignment.BottomEnd)
+                            .clip(RoundedCornerShape(topStart = 16.dp, bottomEnd = 24.dp))
+                            .background(Theme.v2.colors.border.light)
+                            .padding(8.dp)
+                ) {
+                    UiIcon(
+                        drawableResId = R.drawable.ic_edit_pencil,
+                        size = 12.dp,
+                        tint = Theme.v2.colors.text.primary,
                     )
                 }
             }
-            CustomRpcStatusChip(isCustom = row.isCustom)
         }
-        if (!isLastItem) {
-            HorizontalDivider(color = Theme.v2.colors.border.light, thickness = 1.dp)
-        }
-    }
-}
 
-@Composable
-private fun CustomRpcStatusChip(isCustom: Boolean) {
-    val label =
-        if (isCustom) stringResource(R.string.custom_rpc_chip_custom)
-        else stringResource(R.string.custom_rpc_chip_default)
-    val color = if (isCustom) Theme.v2.colors.alerts.success else Theme.v2.colors.text.tertiary
-    Text(
-        text = label,
-        style = Theme.brockmann.supplementary.caption,
-        color = color,
-        modifier =
-            Modifier.background(
-                    color = Theme.v2.colors.backgrounds.surface2,
-                    shape = RoundedCornerShape(size = 99.dp),
-                )
-                .padding(horizontal = 10.dp, vertical = 4.dp),
-    )
+        UiSpacer(size = 11.dp)
+
+        Text(
+            text = chain.chainName,
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.v2.colors.text.primary,
+            modifier = Modifier.widthIn(max = 74.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
 }
 
 @Preview
@@ -143,23 +159,36 @@ private fun CustomRpcListScreenPreview() {
     CustomRpcListScreen(
         state =
             CustomRpcListUiState(
-                rows =
+                chains =
                     listOf(
-                        CustomRpcRowUiModel(
+                        CustomRpcChainUiModel(
                             chainId = "Ethereum",
                             chainName = "Ethereum",
                             logo = R.drawable.ethereum,
-                            customUrl = "https://my-node.example/eth",
+                            isCustom = true,
                         ),
-                        CustomRpcRowUiModel(
-                            chainId = "Cosmos",
-                            chainName = "Cosmos",
-                            logo = R.drawable.atom,
-                            customUrl = null,
+                        CustomRpcChainUiModel(
+                            chainId = "Arbitrum",
+                            chainName = "Arbitrum",
+                            logo = R.drawable.arbitrum,
+                            isCustom = false,
+                        ),
+                        CustomRpcChainUiModel(
+                            chainId = "Base",
+                            chainName = "Base",
+                            logo = R.drawable.base,
+                            isCustom = false,
+                        ),
+                        CustomRpcChainUiModel(
+                            chainId = "Akash",
+                            chainName = "Akash",
+                            logo = R.drawable.akash,
+                            isCustom = false,
                         ),
                     )
             ),
-        onRowClick = {},
+        searchTextFieldState = TextFieldState(),
+        onChainClick = {},
         onBackClick = {},
     )
 }

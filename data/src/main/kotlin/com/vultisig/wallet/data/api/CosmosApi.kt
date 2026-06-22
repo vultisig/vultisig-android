@@ -78,19 +78,7 @@ constructor(
     private val customRpcRepository: CustomRpcRepository,
 ) : CosmosApiFactory {
     override fun createCosmosApi(chain: Chain): CosmosApi {
-        val defaultApiUrl =
-            when (chain) {
-                Chain.GaiaChain -> "https://cosmos-rest.publicnode.com"
-                Chain.Kujira -> "https://kujira-api.polkachu.com"
-                Chain.Dydx -> "https://dydx-rest.publicnode.com"
-                Chain.Osmosis -> "https://osmosis-rest.publicnode.com"
-                Chain.Terra -> "https://terra-lcd.publicnode.com"
-                Chain.TerraClassic -> "https://terra-classic-lcd.publicnode.com"
-                Chain.Noble -> "https://noble-api.polkachu.com"
-                Chain.Akash -> "https://akash-rest.publicnode.com"
-                Chain.Qbtc -> "https://api.vultisig.com/qbtc-rpc"
-                else -> throw IllegalArgumentException("Unsupported chain $chain")
-            }
+        val defaultApiUrl = CustomRpcDefaultEndpoint.cosmosUrl(chain)
 
         // App-wide custom RPC override (#4787): only honor overrides for chains in the supported
         // set so an excluded chain (e.g. Qbtc, a Vultisig proxy with no real-node equivalent)
