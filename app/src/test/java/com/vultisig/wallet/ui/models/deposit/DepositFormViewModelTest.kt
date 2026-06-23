@@ -38,6 +38,7 @@ import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
 import com.vultisig.wallet.ui.models.deposit.load.DepositAmountHelper
 import com.vultisig.wallet.ui.models.deposit.load.DepositDataLoader
+import com.vultisig.wallet.ui.models.deposit.load.DepositFieldInputCoordinator
 import com.vultisig.wallet.ui.models.deposit.load.DepositOptionCoordinator
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.NodeWhitelistChecker
@@ -250,6 +251,28 @@ internal class DepositFormViewModelTest {
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase = mockk(relaxed = true)
     private val fieldValidator: DepositFieldValidator =
         DepositFieldValidatorImpl(chainAccountAddressRepository)
+    private val depositFieldInputCoordinatorFactory: DepositFieldInputCoordinator.Factory =
+        object : DepositFieldInputCoordinator.Factory {
+            override fun create(
+                scope: CoroutineScope,
+                state: MutableStateFlow<DepositFormUiModel>,
+                fields: DepositFieldStates,
+                nodeWhitelistChecker: NodeWhitelistChecker,
+                chainProvider: () -> Chain?,
+                vaultId: () -> String?,
+            ): DepositFieldInputCoordinator =
+                DepositFieldInputCoordinator(
+                    fieldValidator = fieldValidator,
+                    isAssetCharsValid = isAssetCharsValid,
+                    accountsRepository = accountsRepository,
+                    scope = scope,
+                    state = state,
+                    fields = fields,
+                    nodeWhitelistChecker = nodeWhitelistChecker,
+                    chainProvider = chainProvider,
+                    vaultId = vaultId,
+                )
+        }
     private val gasFeeHelper: DepositGasFeeHelper =
         DepositGasFeeHelper(
             vaultRepository = vaultRepository,
@@ -311,8 +334,6 @@ internal class DepositFormViewModelTest {
             requestQrScan = requestQrScan,
             appCurrencyRepository = appCurrencyRepository,
             mapTokenValueToStringWithUnit = mapTokenValueToStringWithUnit,
-            accountsRepository = accountsRepository,
-            isAssetCharsValid = isAssetCharsValid,
             requestResultRepository = requestResultRepository,
             chainAccountAddressRepository = chainAccountAddressRepository,
             transactionRepository = transactionRepository,
@@ -327,8 +348,8 @@ internal class DepositFormViewModelTest {
             nodeWhitelistCheckerFactory = nodeWhitelistCheckerFactory,
             dataLoaderFactory = dataLoaderFactory,
             depositOptionCoordinatorFactory = depositOptionCoordinatorFactory,
+            depositFieldInputCoordinatorFactory = depositFieldInputCoordinatorFactory,
             depositAmountHelperFactory = depositAmountHelperFactory,
-            fieldValidator = fieldValidator,
             gasFeeHelper = gasFeeHelper,
             depositStrategyFactory = depositStrategyFactory,
         )
