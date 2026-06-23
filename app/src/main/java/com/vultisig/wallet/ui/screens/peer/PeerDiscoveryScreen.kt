@@ -296,6 +296,7 @@ internal fun PeerDiscoveryScreen(
 
                     Column(
                         modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(24.dp),
                     ) {
                         WaitingForDevicesHeader()
