@@ -1376,6 +1376,10 @@
     <string name="qbtc_claim_banner_subtitle">Same Bitcoin. Quantum-safe.</string>
     <string name="qbtc_claim_banner_title">Claim your QBTC</string>
     <string name="qbtc_claim_banner_cta">Claim Now</string>
+    <string name="qbtc_claim_cosign_description">Another device started a QBTC claim. Approving will co-sign it with your Bitcoin key. Review the accounts below before you continue.</string>
+    <string name="qbtc_claim_cosign_btc_account">Bitcoin account</string>
+    <string name="qbtc_claim_cosign_qbtc_account">QBTC account</string>
+    <string name="qbtc_claim_cosign_approve">Approve &amp; co-sign</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Claim</string>
     <string name="cosmos_staking_action_delegate">Stake</string>

@@ -1648,6 +1648,10 @@
     <string name="qbtc_claim_banner_subtitle">同样的 Bitcoin。抗量子。</string>
     <string name="qbtc_claim_banner_title">提取您的 QBTC</string>
     <string name="qbtc_claim_banner_cta">立即提取</string>
+    <string name="qbtc_claim_cosign_description">另一台设备发起了 QBTC 提取。批准后将使用您的 Bitcoin 密钥共同签署。请在继续前查看以下账户。</string>
+    <string name="qbtc_claim_cosign_btc_account">Bitcoin 账户</string>
+    <string name="qbtc_claim_cosign_qbtc_account">QBTC 账户</string>
+    <string name="qbtc_claim_cosign_approve">批准并共同签署</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">领取</string>
     <string name="cosmos_staking_action_delegate">质押</string>

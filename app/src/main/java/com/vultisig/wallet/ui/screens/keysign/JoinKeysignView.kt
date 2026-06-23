@@ -3,17 +3,37 @@ package com.vultisig.wallet.ui.screens.keysign
 import android.content.Context
 import android.net.nsd.NsdManager
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.errors.ErrorState
 import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
@@ -26,6 +46,7 @@ import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.Error
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.JoinKeysign
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.Keysign
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.QbtcClaim
+import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.QbtcClaimConsent
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.WaitingForKeysignStart
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
@@ -34,6 +55,7 @@ import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.sign.VerifySignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -147,6 +169,15 @@ internal fun JoinKeysignView() {
 
             JoinKeysign -> Unit // handled above, before the JoinKeysignScreen wrapper
 
+            is QbtcClaimConsent -> {
+                val consent = state as QbtcClaimConsent
+                QbtcClaimConsentContent(
+                    btcAddress = consent.btcAddress,
+                    qbtcAddress = consent.qbtcAddress,
+                    onApprove = viewModel::joinKeysign,
+                )
+            }
+
             is QbtcClaim -> {
                 val claim = state as QbtcClaim
                 KeysignLoadingScreen(
@@ -234,6 +265,79 @@ internal fun JoinKeysignView() {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun QbtcClaimConsentContent(
+    btcAddress: String,
+    qbtcAddress: String,
+    onApprove: () -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text(
+            text = stringResource(R.string.qbtc_claim_cosign_description),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.secondary,
+        )
+
+        UiSpacer(size = 24.dp)
+
+        val shape = RoundedCornerShape(16.dp)
+        Column(
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            modifier =
+                Modifier.fillMaxWidth()
+                    .clip(shape)
+                    .background(Theme.v2.colors.backgrounds.surface1)
+                    .border(1.dp, Theme.v2.colors.border.light, shape)
+                    .padding(16.dp),
+        ) {
+            QbtcClaimAccountRow(
+                logo = painterResource(R.drawable.bitcoin),
+                label = stringResource(R.string.qbtc_claim_cosign_btc_account),
+                address = btcAddress,
+            )
+            QbtcClaimAccountRow(
+                logo = painterResource(R.drawable.qbtc),
+                label = stringResource(R.string.qbtc_claim_cosign_qbtc_account),
+                address = qbtcAddress,
+            )
+        }
+
+        UiSpacer(weight = 1f)
+
+        VsButton(
+            label = stringResource(R.string.qbtc_claim_cosign_approve),
+            onClick = onApprove,
+            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+        )
+    }
+}
+
+@Composable
+private fun QbtcClaimAccountRow(logo: Painter, label: String, address: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Image(
+                painter = logo,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp).clip(RoundedCornerShape(50)),
+            )
+            Text(
+                text = label,
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.tertiary,
+            )
+        }
+        Text(
+            text = address,
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.primary,
+        )
     }
 }
 

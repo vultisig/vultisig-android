@@ -207,11 +207,34 @@ sealed interface JoinKeysignState {
     data object Keysign : JoinKeysignState
 
     /**
+     * QBTC claim co-sign approval gate: shown after the pairing QR is scanned and before any
+     * signing starts, so the co-signer reviews the accounts being claimed against and explicitly
+     * approves. Confirming routes through [JoinKeysignViewModel.joinKeysign].
+     */
+    data class QbtcClaimConsent(val btcAddress: String, val qbtcAddress: String) : JoinKeysignState
+
+    /**
      * QBTC claim co-sign: [txHash] null while signing, set once the initiator pushes the result.
      */
     data class QbtcClaim(val txHash: String?, val totalSats: Long?) : JoinKeysignState
 
     data class Error(val errorType: JoinKeysignError) : JoinKeysignState
+}
+
+/**
+ * Builds the QBTC claim approval gate from a vault's [coins]. A vault missing the Bitcoin or QBTC
+ * account it needs to recompute the claim hash resolves to a
+ * [JoinKeysignError.MissingQbtcClaimAccount] error state — surfaced here, before signing, rather
+ * than mid-co-sign.
+ */
+internal fun buildQbtcClaimConsentState(coins: List<Coin>): JoinKeysignState {
+    val btc = coins.firstOrNull { it.chain == Chain.Bitcoin }
+    val qbtc = coins.firstOrNull { it.chain == Chain.Qbtc }
+    return if (btc == null || qbtc == null) {
+        JoinKeysignState.Error(JoinKeysignError.MissingQbtcClaimAccount)
+    } else {
+        JoinKeysignState.QbtcClaimConsent(btcAddress = btc.address, qbtcAddress = qbtc.address)
+    }
 }
 
 internal sealed class VerifyUiModel {
@@ -432,7 +455,7 @@ constructor(
                         }
                     }
                     if (_keysignPayload?.isQbtcClaim == true) {
-                        startQbtcClaimCosign()
+                        showQbtcClaimConsent()
                     } else {
                         _currentState.value = JoinKeysignState.JoinKeysign
                     }
@@ -937,6 +960,16 @@ constructor(
     }
 
     /**
+     * Shows the QBTC claim approval gate. The claim hash is recomputed locally from this vault's
+     * own Bitcoin + QBTC accounts during the co-sign (never trusted from the QR), so the gate
+     * surfaces those two accounts for review before any signing starts. A vault missing either
+     * account fails here — before signing — instead of mid-co-sign.
+     */
+    private fun showQbtcClaimConsent() {
+        _currentState.value = buildQbtcClaimConsentState(_currentVault.coins)
+    }
+
+    /**
      * Drives the QBTC claim co-sign: flips into [JoinKeysignState.QbtcClaim], delegates the suspend
      * co-sign work to [qbtcClaimCosign], then surfaces the broadcast result. A missing Bitcoin/QBTC
      * account maps to [JoinKeysignError.MissingQbtcClaimAccount]; any other failure to
@@ -970,6 +1003,12 @@ constructor(
     }
 
     fun joinKeysign() {
+        // A QBTC claim has no relay keysign session to join — confirming the approval gate kicks
+        // off the local co-sign instead. startQbtcClaimCosign() owns its own join guard.
+        if (_keysignPayload?.isQbtcClaim == true) {
+            startQbtcClaimCosign()
+            return
+        }
         if (!isJoiningKeysign.compareAndSet(false, true)) return
         viewModelScope.safeLaunch {
             withContext(Dispatchers.IO) {

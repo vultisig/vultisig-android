@@ -1323,6 +1323,10 @@
     <string name="qbtc_claim_banner_subtitle">El mismo Bitcoin. A prueba de cuántica.</string>
     <string name="qbtc_claim_banner_title">Reclama tu QBTC</string>
     <string name="qbtc_claim_banner_cta">Reclamar ahora</string>
+    <string name="qbtc_claim_cosign_description">Otro dispositivo inició un reclamo de QBTC. Al aprobar, lo cofirmarás con tu clave de Bitcoin. Revisa las cuentas a continuación antes de continuar.</string>
+    <string name="qbtc_claim_cosign_btc_account">Cuenta de Bitcoin</string>
+    <string name="qbtc_claim_cosign_qbtc_account">Cuenta de QBTC</string>
+    <string name="qbtc_claim_cosign_approve">Aprobar y cofirmar</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Reclamar</string>
     <string name="cosmos_staking_action_delegate">Apostar</string>
