@@ -8,12 +8,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.repositories.CustomRpcConfig
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
@@ -26,6 +30,9 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.math.BigInteger
+import java.text.NumberFormat
+import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
@@ -57,6 +64,10 @@ internal data class VaultSettingsState(
     val isBackupVaultBottomSheetVisible: Boolean = false,
     val isBiometricFastSignBottomSheetVisible: Boolean = false,
     val biometricsEnableUiModel: BiometricsEnableUiModel = BiometricsEnableUiModel(),
+    val showCustomRpcUpsell: Boolean = false,
+    val customRpcVultBalance: String = "",
+    val customRpcVultThreshold: String = "",
+    val customRpcIsBelowThreshold: Boolean = false,
 )
 
 internal sealed class VaultSettingsItem(
@@ -185,6 +196,19 @@ internal sealed class VaultSettingsItem(
                     leadingIcon = R.drawable.delete,
                 )
         )
+
+    data class CustomRpc(val isEnabled: Boolean) :
+        VaultSettingsItem(
+            value =
+                SettingsItemUiModel(
+                    title = UiText.StringResource(R.string.custom_rpc_title),
+                    titleBadge = UiText.StringResource(R.string.custom_rpc_tier_badge),
+                    subTitle = UiText.StringResource(R.string.custom_rpc_advanced_subtitle),
+                    trailingIcon = R.drawable.ic_small_caret_right,
+                    leadingIcon = R.drawable.broadcast,
+                ),
+            enabled = isEnabled,
+        )
 }
 
 @HiltViewModel
@@ -200,6 +224,8 @@ constructor(
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val vultiSignerRepository: VultiSignerRepository,
     private val snackbarFlow: SnackbarFlow,
+    private val customRpcConfig: CustomRpcConfig,
+    private val getDiscountBps: GetDiscountBpsUseCase,
 ) : ViewModel() {
 
     val settingGroups =
@@ -234,6 +260,7 @@ constructor(
                         VaultSettingsItem.DilithiumKeygen(false),
                         VaultSettingsItem.Sign,
                         VaultSettingsItem.OnChainSecurity,
+                        VaultSettingsItem.CustomRpc(false),
                     ),
                 isVisible = false,
             ),
@@ -329,6 +356,30 @@ constructor(
                 }
         }
 
+        // The Custom RPC entry (#4997) stays behind the Advanced Settings → Custom RPC feature
+        // flag (#4787 kill-switch). When on, the row appears in this Advanced group, tier-gated.
+        viewModelScope.launch {
+            customRpcConfig.isFeatureEnabled.collect { enabled ->
+                uiModel.update {
+                    it.copy(
+                        settingGroups =
+                            it.settingGroups.map { group ->
+                                group.copy(
+                                    items =
+                                        group.items.map { item ->
+                                            when (item) {
+                                                is VaultSettingsItem.CustomRpc ->
+                                                    item.copy(isEnabled = enabled)
+                                                else -> item
+                                            }
+                                        }
+                                )
+                            }
+                    )
+                }
+            }
+        }
+
         validateEachTextChange()
     }
 
@@ -376,7 +427,43 @@ constructor(
             is VaultSettingsItem.Reshare -> navigateToReshareStartScreen()
             is VaultSettingsItem.DilithiumKeygen -> navigateToDilithiumKeygen()
             VaultSettingsItem.Sign -> signMessage()
+            is VaultSettingsItem.CustomRpc -> onCustomRpcClick()
         }
+    }
+
+    /**
+     * Tier gate at the entry point (parity with iOS): below Silver, show the Silver upsell sheet
+     * instead of the editor. Once inside the picker the user edits freely. A failed/unknown balance
+     * lookup falls back to the upsell rather than granting access. The balance is fetched once and
+     * the tier derived locally so we don't hit the repository twice per tap.
+     */
+    private fun onCustomRpcClick() {
+        viewModelScope.safeLaunch {
+            val balanceRaw =
+                runCatching { getDiscountBps.getVultBalance(vaultId) }.getOrNull()
+                    ?: BigInteger.ZERO
+            if (balanceRaw >= SILVER_TIER_THRESHOLD) {
+                navigator.route(Route.CustomRpcList(vaultId))
+            } else {
+                uiModel.update {
+                    it.copy(
+                        showCustomRpcUpsell = true,
+                        customRpcVultBalance = formatVultBalance(balanceRaw),
+                        customRpcVultThreshold = formatVultBalance(SILVER_TIER_THRESHOLD),
+                        customRpcIsBelowThreshold = true,
+                    )
+                }
+            }
+        }
+    }
+
+    fun onDismissCustomRpcUpsell() {
+        uiModel.update { it.copy(showCustomRpcUpsell = false) }
+    }
+
+    fun onUnlockCustomRpcTier() {
+        uiModel.update { it.copy(showCustomRpcUpsell = false) }
+        viewModelScope.launch { navigator.route(Route.DiscountTiers(vaultId)) }
     }
 
     private fun updateBiometricFastSignUiModel(
@@ -592,4 +679,12 @@ constructor(
             }
         snackbarFlow.showMessage(context.getString(messageRes))
     }
+}
+
+/** Formats a raw VULT balance (18 decimals) as a grouped, whole-token string e.g. "2,340 VULT". */
+private fun formatVultBalance(raw: BigInteger): String {
+    val whole = raw.toBigDecimal().movePointLeft(Coins.Ethereum.VULT.decimal)
+    val numberFormat = NumberFormat.getNumberInstance(Locale.getDefault())
+    numberFormat.maximumFractionDigits = 0
+    return "${numberFormat.format(whole)} VULT"
 }

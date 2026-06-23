@@ -91,7 +91,7 @@ internal fun TransactionDetailsSection(
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(top = 12.dp)
-                        .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp))
+                        .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(12.dp))
                         .padding(16.dp),
             ) {
                 functionSignature?.let {

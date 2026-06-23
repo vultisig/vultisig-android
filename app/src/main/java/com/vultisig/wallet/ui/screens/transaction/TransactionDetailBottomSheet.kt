@@ -78,7 +78,7 @@ internal fun TransactionDetailBottomSheet(
                     )
                     .border(
                         width = 1.dp,
-                        color = Theme.v2.colors.border.normal,
+                        color = Theme.v2.colors.border.light,
                         shape = RoundedCornerShape(topStart = 34.dp, topEnd = 34.dp),
                     )
                     .background(Theme.v2.colors.variables.backgroundsSurface1)

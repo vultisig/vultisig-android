@@ -216,7 +216,7 @@ private fun ChooseVaultScreen(
                     }
 
                     UiSpacer(16.dp)
-                    val borderColor = Theme.v2.colors.border.normal
+                    val borderColor = Theme.v2.colors.border.light
                     Column(
                         Modifier.fillMaxWidth()
                             .clip(RoundedCornerShape(15.dp))

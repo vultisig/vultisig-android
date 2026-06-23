@@ -23,6 +23,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
+import com.vultisig.wallet.ui.models.keygen.JoinKeygenError
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenUiModel
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenViewModel
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
@@ -52,15 +53,23 @@ internal fun JoinKeygenScreen(model: JoinKeygenViewModel = hiltViewModel()) {
                     ),
             )
 
-        error != null ->
+        error != null -> {
+            val isDuplicateName = error is JoinKeygenError.DuplicateVaultName
             ErrorView(
-                title = error.message.asString(),
+                title =
+                    if (isDuplicateName) stringResource(R.string.error_vault_name_in_use_title)
+                    else error.message.asString(),
+                description =
+                    if (isDuplicateName)
+                        stringResource(R.string.error_vault_name_in_use_description)
+                    else null,
                 buttonUiModel =
                     ErrorViewButtonUiModel(
                         text = stringResource(R.string.scan_qr_code_error_button),
                         onClick = model::navigateBack,
                     ),
             )
+        }
 
         else -> JoinKeygenScreen(state = state)
     }

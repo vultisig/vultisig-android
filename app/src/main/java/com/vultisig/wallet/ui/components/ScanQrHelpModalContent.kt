@@ -99,7 +99,7 @@ private fun BoxScope.HandlerLine() {
                 .padding(top = 12.dp)
                 .width(36.dp)
                 .height(5.dp)
-                .background(color = Theme.v2.colors.border.normal, shape = CircleShape)
+                .background(color = Theme.v2.colors.border.light, shape = CircleShape)
     )
 }
 

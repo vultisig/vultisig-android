@@ -147,7 +147,7 @@ private fun TokenRowConnector() {
                 Modifier.padding(start = 11.5.dp)
                     .width(1.dp)
                     .height(12.dp)
-                    .background(color = Theme.v2.colors.border.normal)
+                    .background(color = Theme.v2.colors.border.light)
         )
     }
 }
@@ -176,7 +176,7 @@ private fun ViaBadge(provider: String, providerLogo: ImageModel?, modifier: Modi
         modifier =
             modifier
                 .background(color = Theme.v2.colors.backgrounds.tertiary_2, shape = shape)
-                .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = shape)
+                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
                 .padding(start = 8.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
     ) {
         if (providerLogo != null) {

@@ -11,7 +11,7 @@
     <plurals name="push_notification_partial_failure">
         <item quantity="other">已更新 %2$d 个保险库中的 %1$d 个，%3$d 个失败</item>
     </plurals>
-    <string name="push_notifications_sent">通知发送成功</string>
+    <string name="push_notifications_sent">通知发送成功！</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">当需要您的签名或设备请求访问时，您将收到通知。</string>
     <string name="keysign_notification_channel_name">签名请求</string>
     <string name="keysign_notification_title">签署交易</string>
@@ -227,7 +227,6 @@
     <string name="verify_transaction_error_not_enough_consent">请检查所有同意项</string>
 
     <!-- Camera & QR -->
-    <string name="camera_permission_denied">相机权限未授予。请在设置中启用。</string>
     <string name="camera_permission_open_settings">打开设置</string>
     <string name="join_keysign_discovering_session_id">发现会话 ID</string>
 
@@ -826,18 +825,18 @@
     <string name="settings_advanced_swapkit_toggle">SwapKit 聚合器</string>
     <string name="settings_advanced_custom_rpc_toggle">自定义 RPC</string>
     <string name="custom_rpc_title">自定义 RPC</string>
-    <string name="custom_rpc_list_subtitle">将链指向您自己的节点。保留默认值则使用 Vultisig 的端点。</string>
-    <string name="custom_rpc_chip_custom">自定义</string>
-    <string name="custom_rpc_chip_default">默认</string>
-    <string name="custom_rpc_url_label">RPC URL</string>
-    <string name="custom_rpc_url_hint">https://your-node.example</string>
+    <string name="custom_rpc_tier_badge">VULT TIER</string>
+    <string name="custom_rpc_advanced_subtitle">为每条链使用您自己的节点</string>
+    <string name="custom_rpc_select_chain">选择链</string>
+    <string name="custom_rpc_no_results">未找到链</string>
+    <string name="custom_rpc_detail_title">%1$s RPC</string>
+    <string name="custom_rpc_endpoint_label">RPC 端点</string>
+    <string name="custom_rpc_endpoint_helper">点按以编辑。仅支持 HTTPS 端点。</string>
+    <string name="custom_rpc_default_endpoint_label">默认端点</string>
+    <string name="custom_rpc_save_rpc">保存 RPC</string>
+    <string name="custom_rpc_save_success">自定义 RPC 已保存</string>
     <string name="custom_rpc_invalid_url">请输入有效的 http(s) URL</string>
-    <string name="custom_rpc_test_button">测试</string>
-    <string name="custom_rpc_save_button">保存</string>
     <string name="custom_rpc_reset_button">重置为默认</string>
-    <string name="custom_rpc_testing">测试中…</string>
-    <string name="custom_rpc_reachable">可访问 · %1$d 毫秒</string>
-    <string name="custom_rpc_reachable_unverified">可访问 · %1$d 毫秒 — 网络身份未验证</string>
     <string name="custom_rpc_wrong_chain">此端点服务于其他链</string>
     <string name="custom_rpc_invalid_response">此端点返回意外响应</string>
     <string name="custom_rpc_unreachable">端点无法访问</string>
@@ -1179,6 +1178,22 @@
     <string name="migration_onboarding_step_1_text_end">签名速度前所未有</string>
     <string name="error_view_default_title">出错了</string>
     <string name="error_view_default_description">发生错误</string>
+    <!-- Friendly error screen (issue #4996) -->
+    <string name="signing_error_transaction_failed_title">交易失败</string>
+    <string name="signing_error_transaction_failed_description">您的某个设备未及时响应。请检查您的连接并重试。</string>
+    <string name="error_insufficient_funds_title">余额不足</string>
+    <string name="error_same_vault_share_title">相同的保险库份额</string>
+    <string name="error_same_vault_share_description">请更改份额以签名。两台设备不能使用相同的保险库份额进行联合签名。</string>
+    <string name="error_vault_not_loaded_title">保险库未加载</string>
+    <string name="error_vault_not_loaded_description">请导入正确的份额。</string>
+    <string name="error_vault_name_in_use_title">保险库名称已被使用</string>
+    <string name="error_vault_name_in_use_description">请选择其他保险库名称。</string>
+    <string name="error_camera_permission_title">相机权限未授予</string>
+    <string name="error_camera_permission_description">需要相机权限才能继续。请在设置中启用。</string>
+    <string name="error_message_sheet_title">错误信息</string>
+    <string name="error_message_copy">复制</string>
+    <string name="error_message_report_bug">报告错误</string>
+    <string name="error_message_show_exact">显示具体错误</string>
     <string name="keygen_error_timeout_title">连接超时</string>
     <string name="keygen_error_timeout_description">未能及时连接到服务器。请检查您的网络连接并重试。</string>
     <string name="keygen_error_network_title">连接问题</string>

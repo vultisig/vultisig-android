@@ -279,7 +279,7 @@ private fun MayaBondFormContent(
         modifier =
             Modifier.fillMaxWidth()
                 .background(Theme.v2.colors.backgrounds.primary, cardShape)
-                .border(1.dp, Theme.v2.colors.border.normal, cardShape)
+                .border(1.dp, Theme.v2.colors.border.light, cardShape)
                 .padding(horizontal = 12.dp, vertical = 16.dp)
     ) {
         Row(
@@ -360,7 +360,7 @@ private fun MayaBondFormContent(
         modifier =
             Modifier.fillMaxWidth()
                 .background(Theme.v2.colors.backgrounds.primary, cardShape)
-                .border(1.dp, Theme.v2.colors.border.normal, cardShape)
+                .border(1.dp, Theme.v2.colors.border.light, cardShape)
                 .padding(12.dp),
     ) {
         Row(

@@ -109,23 +109,7 @@ constructor(
     private val customRpcRepository: CustomRpcRepository,
 ) : EvmApiFactory {
     override fun createEvmApi(chain: Chain): EvmApi {
-        val defaultRpcUrl =
-            when (chain) {
-                Chain.Ethereum -> "https://api.vultisig.com/eth/"
-                Chain.BscChain -> "https://api.vultisig.com/bnb/"
-                Chain.Avalanche -> "https://api.vultisig.com/avax/"
-                Chain.Polygon -> "https://api.vultisig.com/polygon/"
-                Chain.Optimism -> "https://api.vultisig.com/opt/"
-                Chain.CronosChain -> "https://cronos-evm-rpc.publicnode.com"
-                Chain.Blast -> "https://api.vultisig.com/blast/"
-                Chain.Base -> "https://api.vultisig.com/base/"
-                Chain.Arbitrum -> "https://api.vultisig.com/arb/"
-                Chain.ZkSync -> "https://api.vultisig.com/zksync/"
-                Chain.Mantle -> "https://api.vultisig.com/mantle/"
-                Chain.Sei -> "https://evm-rpc.sei-apis.com/"
-                Chain.Hyperliquid -> "https://api.vultisig.com/hyperevm/"
-                else -> throw IllegalArgumentException("Unsupported chain $chain")
-            }
+        val defaultRpcUrl = CustomRpcDefaultEndpoint.evmUrl(chain)
 
         // App-wide custom RPC override (#4787): only honor overrides for chains in the supported
         // set, falling back to the default when unset, keeping behaviour byte-identical for users

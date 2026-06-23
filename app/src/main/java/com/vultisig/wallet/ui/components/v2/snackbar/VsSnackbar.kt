@@ -55,7 +55,7 @@ private fun VsSnackBarContent(modifier: Modifier, snackbarState: ProgressState) 
     V2Container(
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
         type = ContainerType.TERTIARY,
-        borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.normal),
+        borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.light),
         cornerType = CornerType.RoundedCornerShape(size = 24.dp),
     ) {
         Column(

@@ -138,7 +138,7 @@ private fun ImportFileScreen(
                                     uiModel.error != null -> Theme.v2.colors.alerts.error
                                     !uiModel.fileName.isNullOrBlank() ->
                                         Theme.v2.colors.alerts.success
-                                    else -> Theme.v2.colors.border.normal
+                                    else -> Theme.v2.colors.border.light
                                 },
                             cornerRadius = 12.dp,
                             dashLength = 4.dp,

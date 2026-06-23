@@ -403,7 +403,7 @@ fun CounterYearExpiration(
             modifier =
                 Modifier.weight(1f)
                     .height(height = 60.dp)
-                    .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp)),
+                    .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(12.dp)),
         ) {
             Icon(painter = painterResource(R.drawable.circle_minus), contentDescription = null)
         }
@@ -412,7 +412,7 @@ fun CounterYearExpiration(
             modifier =
                 Modifier.weight(1f)
                     .height(height = 60.dp)
-                    .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp)),
+                    .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(12.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Text(
@@ -433,7 +433,7 @@ fun CounterYearExpiration(
             modifier =
                 Modifier.weight(1f)
                     .height(height = 60.dp)
-                    .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp)),
+                    .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(12.dp)),
         ) {
             Icon(painter = painterResource(R.drawable.circle_plus), contentDescription = null)
         }

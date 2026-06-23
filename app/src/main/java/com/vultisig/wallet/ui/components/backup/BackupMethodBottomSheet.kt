@@ -91,7 +91,7 @@ private fun BackupOption(
     V2Container(
         modifier = Modifier.fillMaxWidth().clickOnce(onClick = onClick),
         type = ContainerType.SECONDARY,
-        borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.normal),
+        borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.light),
     ) {
         Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             UiIcon(drawableResId = icon, size = 24.dp, tint = Theme.v2.colors.primary.accent4)

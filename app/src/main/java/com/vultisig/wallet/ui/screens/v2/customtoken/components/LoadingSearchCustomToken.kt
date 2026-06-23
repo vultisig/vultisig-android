@@ -25,7 +25,7 @@ internal fun LoadingSearchCustomToken() {
     V2Container(
         type = ContainerType.TERTIARY,
         cornerType = CornerType.RoundedCornerShape(size = 24.dp),
-        borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.normal),
+        borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.light),
     ) {
         Column(
             modifier = Modifier.Companion.fillMaxWidth().padding(all = 16.dp),

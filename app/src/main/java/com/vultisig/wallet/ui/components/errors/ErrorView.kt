@@ -2,15 +2,23 @@ package com.vultisig.wallet.ui.components.errors
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -22,7 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.AppVersionText
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
@@ -42,11 +50,14 @@ internal fun ErrorView(
     errorState: ErrorState = ErrorState.WARNING,
     buttonUiModel: ErrorViewButtonUiModel?,
     secondaryButtonUiModel: ErrorViewButtonUiModel? = null,
+    rawError: String? = null,
     onBack: (() -> Unit)? = null,
 ) {
+    var showRawError by remember { mutableStateOf(false) }
+
     Box(modifier = modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
@@ -54,18 +65,24 @@ internal fun ErrorView(
 
             ErrorWaves(title = title, description = description, errorState = errorState)
 
-            buttonUiModel?.let {
-                UiSpacer(30.dp)
+            if (rawError != null) {
+                UiSpacer(37.dp)
+                ShowExactErrorRow(onClick = { showRawError = true })
+            }
+
+            UiSpacer(weight = 1f)
+
+            secondaryButtonUiModel?.let {
                 VsButton(
                     variant = VsButtonVariant.Secondary,
                     label = it.text,
                     modifier = Modifier.fillMaxWidth(),
                     onClick = it.onClick,
                 )
+                UiSpacer(12.dp)
             }
 
-            secondaryButtonUiModel?.let {
-                UiSpacer(if (buttonUiModel != null) 12.dp else 30.dp)
+            buttonUiModel?.let {
                 VsButton(
                     variant = VsButtonVariant.CTA,
                     label = it.text,
@@ -74,11 +91,7 @@ internal fun ErrorView(
                 )
             }
 
-            UiSpacer(weight = 1f)
-
-            AppVersionText()
-
-            UiSpacer(size = 50.dp)
+            UiSpacer(size = 24.dp)
         }
 
         if (onBack != null) {
@@ -92,6 +105,43 @@ internal fun ErrorView(
             )
         }
     }
+
+    if (showRawError && rawError != null) {
+        ErrorMessageBottomSheet(rawError = rawError, onDismissRequest = { showRawError = false })
+    }
+}
+
+@Composable
+private fun ShowExactErrorRow(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(
+                    color = Theme.v2.colors.backgrounds.surface1,
+                    shape = RoundedCornerShape(16.dp),
+                )
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.light,
+                    shape = RoundedCornerShape(16.dp),
+                )
+                .clickable(onClick = onClick)
+                .padding(20.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.error_message_show_exact),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.secondary,
+        )
+        UiIcon(
+            drawableResId = R.drawable.ic_chevron_down_small,
+            size = 24.dp,
+            tint = Theme.v2.colors.text.secondary,
+        )
+    }
 }
 
 @Composable
@@ -101,10 +151,9 @@ internal fun ErrorWaves(
     description: String? = null,
     errorState: ErrorState = ErrorState.WARNING,
 ) {
-
     val waveCircleColor = Theme.v2.colors.border.light
     Column(
-        modifier = modifier.padding(bottom = 56.dp),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -142,21 +191,17 @@ internal fun ErrorWaves(
 
         Text(
             text = title,
-            style = Theme.brockmann.headings.title2,
-            color =
-                when (errorState) {
-                    ErrorState.CRITICAL -> Theme.v2.colors.alerts.error
-                    ErrorState.WARNING -> Theme.v2.colors.alerts.warning
-                },
+            style = Theme.brockmann.headings.title3,
+            color = Theme.v2.colors.text.primary,
             textAlign = TextAlign.Center,
         )
 
         description?.let {
-            UiSpacer(12.dp)
+            UiSpacer(8.dp)
             Text(
                 text = description,
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.tertiary,
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.secondary,
                 textAlign = TextAlign.Center,
             )
         }
@@ -170,33 +215,25 @@ enum class ErrorState {
 
 @Preview
 @Composable
-fun WarningErrorViewPreview() {
+private fun CriticalErrorViewPreview() {
     ErrorView(
-        title = "Something went wrong",
-        description = "Please try again later",
+        title = "Transaction failed",
+        description =
+            "One of your devices didn't respond in time. Check your connection and try again.",
+        errorState = ErrorState.CRITICAL,
+        rawError = "javax.crypto.AEADBadTagException: error:1e000065:Cipher functions",
+        buttonUiModel = ErrorViewButtonUiModel(text = "Try Again", onClick = {}),
+        onBack = {},
+    )
+}
+
+@Preview
+@Composable
+private fun WarningErrorViewPreview() {
+    ErrorView(
+        title = "Insufficient funds",
+        description = "Insufficient funds to execute the swap. Please fund the wallet.",
         errorState = ErrorState.WARNING,
-        buttonUiModel =
-            ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = {}),
-    )
-}
-
-@Preview
-@Composable
-fun WarningErrorViewPreview2() {
-    ErrorView(
-        title = "Something went wrong",
-        errorState = ErrorState.CRITICAL,
-        buttonUiModel =
-            ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = {}),
-    )
-}
-
-@Preview
-@Composable
-fun WarningErrorViewPreview3() {
-    ErrorView(
-        title = "Something went wrong",
-        errorState = ErrorState.CRITICAL,
-        buttonUiModel = null,
+        buttonUiModel = ErrorViewButtonUiModel(text = "Try Again", onClick = {}),
     )
 }

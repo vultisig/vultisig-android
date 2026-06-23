@@ -119,6 +119,8 @@ internal fun KeygenPeerDiscoveryScreen(model: KeygenPeerDiscoveryViewModel = hil
             ErrorView(
                 title = warning.title.asString(),
                 description = warning.description.asString(),
+                errorState = warning.errorState,
+                rawError = warning.rawError,
                 buttonUiModel =
                     ErrorViewButtonUiModel(
                         text = stringResource(R.string.try_again),
@@ -294,6 +296,7 @@ internal fun PeerDiscoveryScreen(
 
                     Column(
                         modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(24.dp),
                     ) {
                         WaitingForDevicesHeader()
@@ -773,6 +776,8 @@ private fun Error(state: ErrorUiModel, onTryAgainClick: () -> Unit) {
         ErrorView(
             title = state.title.asString(),
             description = state.description.asString(),
+            errorState = state.errorState,
+            rawError = state.rawError,
             modifier = Modifier.fillMaxWidth(),
             buttonUiModel =
                 ErrorViewButtonUiModel(
