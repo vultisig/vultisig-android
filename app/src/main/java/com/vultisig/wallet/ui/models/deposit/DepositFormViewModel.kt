@@ -13,9 +13,7 @@ import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
-import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.ticker
-import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
@@ -23,13 +21,13 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
 import com.vultisig.wallet.ui.models.deposit.load.DepositAmountHelper
 import com.vultisig.wallet.ui.models.deposit.load.DepositDataLoader
+import com.vultisig.wallet.ui.models.deposit.load.DepositFieldInputCoordinator
 import com.vultisig.wallet.ui.models.deposit.load.DepositOptionCoordinator
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.NodeWhitelistChecker
@@ -57,7 +55,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -155,8 +152,6 @@ constructor(
     private val requestQrScan: RequestQrScanUseCase,
     appCurrencyRepository: AppCurrencyRepository,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
-    private val accountsRepository: AccountsRepository,
-    private val isAssetCharsValid: DepositMemoAssetsValidatorUseCase,
     private val requestResultRepository: RequestResultRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val transactionRepository: DepositTransactionRepository,
@@ -164,7 +159,6 @@ constructor(
     private val balanceRepository: BalanceRepository,
     private val vaultRepository: VaultRepository,
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
-    private val fieldValidator: DepositFieldValidator,
     private val gasFeeHelper: DepositGasFeeHelper,
     private val liquidityDataLoaderFactory: LiquidityDataLoader.Factory,
     private val securedAssetLoaderFactory: SecuredAssetLoader.Factory,
@@ -173,6 +167,7 @@ constructor(
     private val nodeWhitelistCheckerFactory: NodeWhitelistChecker.Factory,
     private val dataLoaderFactory: DepositDataLoader.Factory,
     private val depositOptionCoordinatorFactory: DepositOptionCoordinator.Factory,
+    private val depositFieldInputCoordinatorFactory: DepositFieldInputCoordinator.Factory,
     private val depositAmountHelperFactory: DepositAmountHelper.Factory,
     private val depositStrategyFactory: DepositStrategyFactory,
 ) : ViewModel() {
@@ -312,6 +307,16 @@ constructor(
             address = address,
             nodeAddressFieldState = nodeAddressFieldState,
             chainProvider = { chain },
+        )
+
+    private val fieldInputCoordinator: DepositFieldInputCoordinator =
+        depositFieldInputCoordinatorFactory.create(
+            scope = viewModelScope,
+            state = _state,
+            fields = fields,
+            nodeWhitelistChecker = nodeWhitelistChecker,
+            chainProvider = { chain },
+            vaultId = { vaultId },
         )
 
     private val dataLoader: DepositDataLoader =
@@ -455,20 +460,11 @@ constructor(
         depositOptionCoordinator.selectDepositOption(option)
     }
 
-    fun selectDstChain(chain: Chain) {
-        nodeAddressFieldState.clearText()
-
-        _state.update { it.copy(selectedDstChain = chain, dstAddressError = null) }
-
-        viewModelScope.launch {
-            val vaultId = vaultId ?: return@launch
-            val address = accountsRepository.loadAddress(vaultId, chain).firstOrNull()
-
-            if (address != null) {
-                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(address.address)
-            }
-        }
-    }
+    /**
+     * Selects [chain] as the deposit destination; see
+     * [DepositFieldInputCoordinator.selectDstChain].
+     */
+    fun selectDstChain(chain: Chain) = fieldInputCoordinator.selectDstChain(chain)
 
     fun selectMergeToken(mergeInfo: TokenMergeInfo) {
         _state.update { it.copy(selectedCoin = mergeInfo) }
@@ -484,140 +480,74 @@ constructor(
     }
 
     /**
-     * Validates the destination address shown on the IBC Transfer and Switch sub-forms against the
-     * appropriate chain (selected destination chain for IBC, source/Gaia chain for Switch),
-     * surfacing inline errors via [DepositFormUiModel.dstAddressError]. Other deposit options leave
-     * the field error untouched.
+     * Validates the destination-address field; see
+     * [DepositFieldInputCoordinator.validateDstAddress].
      */
-    fun validateDstAddress() {
-        val depositOption = state.value.depositOption
-        val validationChain =
-            when (depositOption) {
-                DepositOption.TransferIbc -> state.value.selectedDstChain
-                DepositOption.Switch -> chain
-                else -> return
-            }
-        val dstAddress = nodeAddressFieldState.text.toString()
-        // For Switch the dst field is auto-populated from the THORChain inbound vault. When the
-        // fetch returns halt/unavailable, the field is left blank and dstAddressError carries the
-        // actionable reason; running the generic blank-check here would clobber that context.
-        // Only skip when dstAddressError is already set (halt/unavailable) — if it's null the user
-        // manually cleared the field in the healthy path, so we must validate and surface the blank
-        // error to block Continue.
-        if (
-            depositOption == DepositOption.Switch &&
-                dstAddress.isBlank() &&
-                state.value.dstAddressError != null
-        )
-            return
-        val error = fieldValidator.dstAddressErrorOrNull(validationChain, dstAddress)
-        _state.update { it.copy(dstAddressError = error) }
-    }
+    fun validateDstAddress() = fieldInputCoordinator.validateDstAddress()
 
-    fun validateNodeAddress() {
-        val nodeAddress = nodeAddressFieldState.text.toString()
-        val errorText = fieldValidator.addressErrorOrNull(chain, nodeAddress)
-        if (errorText != null) {
-            nodeWhitelistChecker.cancel()
-            _state.update { it.copy(nodeAddressError = errorText, isCheckingWhitelist = false) }
-            return
-        }
-        if (chain == Chain.MayaChain && state.value.depositOption == DepositOption.Bond) {
-            nodeWhitelistChecker.check(nodeAddress)
-        } else {
-            _state.update { it.copy(nodeAddressError = null) }
-        }
-    }
+    /** Validates the node-address field; see [DepositFieldInputCoordinator.validateNodeAddress]. */
+    fun validateNodeAddress() = fieldInputCoordinator.validateNodeAddress()
 
-    fun validateTokenAmount() {
-        val errorText = fieldValidator.validateTokenAmount(tokenAmountFieldState.text.toString())
-        _state.update { it.copy(tokenAmountError = errorText) }
-    }
+    /** Validates the token-amount field; see [DepositFieldInputCoordinator.validateTokenAmount]. */
+    fun validateTokenAmount() = fieldInputCoordinator.validateTokenAmount()
 
+    /** Validates the token amount and triggers [deposit] only when the field has no error. */
     fun validateAndDeposit() {
-        validateTokenAmount()
+        fieldInputCoordinator.validateTokenAmount()
         if (state.value.tokenAmountError == null) {
             deposit()
         }
     }
 
-    fun validateProvider() {
-        val errorText = fieldValidator.addressErrorOrNull(chain, providerFieldState.text.toString())
-        _state.update { it.copy(providerError = errorText) }
-    }
+    /**
+     * Validates the provider-address field; see [DepositFieldInputCoordinator.validateProvider].
+     */
+    fun validateProvider() = fieldInputCoordinator.validateProvider()
 
-    fun validateOperatorFee() {
-        val text = operatorFeeFieldState.text.toString()
-        if (text.isNotEmpty()) {
-            val errorText = fieldValidator.validateBasisPoints(text.toIntOrNull())
-            _state.update { it.copy(operatorFeeError = errorText) }
-        }
-    }
+    /** Validates the operator-fee field; see [DepositFieldInputCoordinator.validateOperatorFee]. */
+    fun validateOperatorFee() = fieldInputCoordinator.validateOperatorFee()
 
-    fun validateCustomMemo() {
-        val errorText = fieldValidator.validateCustomMemo(customMemoFieldState.text.toString())
-        _state.update { it.copy(customMemoError = errorText) }
-    }
+    /** Validates the custom-memo field; see [DepositFieldInputCoordinator.validateCustomMemo]. */
+    fun validateCustomMemo() = fieldInputCoordinator.validateCustomMemo()
 
-    fun validateBasisPoints() {
-        val text = basisPointsFieldState.text.toString()
-        if (text.isNotEmpty()) {
-            val errorText = fieldValidator.validateBasisPoints(text.toIntOrNull())
-            _state.update { it.copy(basisPointsError = errorText) }
-        }
-    }
+    /** Validates the basis-points field; see [DepositFieldInputCoordinator.validateBasisPoints]. */
+    fun validateBasisPoints() = fieldInputCoordinator.validateBasisPoints()
 
-    fun validateSlippage() {
-        val text = slippageFieldState.text.toString()
-        val errorText = fieldValidator.validateSlippage(text)
-        _state.update { it.copy(slippageError = errorText) }
-    }
+    /** Validates the slippage field; see [DepositFieldInputCoordinator.validateSlippage]. */
+    fun validateSlippage() = fieldInputCoordinator.validateSlippage()
 
-    fun setProvider(provider: String) {
-        providerFieldState.setTextAndPlaceCursorAtEnd(provider)
-    }
-
-    fun setNodeAddress(address: String) {
-        nodeAddressFieldState.setTextAndPlaceCursorAtEnd(address)
-        validateNodeAddress()
-    }
-
-    /** Sets the destination address on the IBC Transfer / Switch sub-forms and revalidates. */
-    fun setDstAddress(address: String) {
-        nodeAddressFieldState.setTextAndPlaceCursorAtEnd(address)
-        validateDstAddress()
-    }
+    /** Sets the provider-address field; see [DepositFieldInputCoordinator.setProvider]. */
+    fun setProvider(provider: String) = fieldInputCoordinator.setProvider(provider)
 
     /**
-     * Validates the destination THORChain address on the Switch sub-form against ThorChain,
-     * surfacing inline errors via [DepositFormUiModel.thorAddressError]. No-op outside the Switch
-     * flow so SECURE+ auto-populated values do not trigger inline errors.
+     * Sets the node-address field and revalidates; see
+     * [DepositFieldInputCoordinator.setNodeAddress].
      */
-    fun validateThorAddress() {
-        if (state.value.depositOption != DepositOption.Switch) return
-        val errorText =
-            fieldValidator.addressErrorOrNull(
-                Chain.ThorChain,
-                thorAddressFieldState.text.toString(),
-            )
-        _state.update { it.copy(thorAddressError = errorText) }
-    }
+    fun setNodeAddress(address: String) = fieldInputCoordinator.setNodeAddress(address)
 
-    /** Sets the THORChain destination address on the Switch sub-form and revalidates. */
-    fun setThorAddress(address: String) {
-        thorAddressFieldState.setTextAndPlaceCursorAtEnd(address)
-        validateThorAddress()
-    }
+    /**
+     * Sets the destination-address field and revalidates; see
+     * [DepositFieldInputCoordinator.setDstAddress].
+     */
+    fun setDstAddress(address: String) = fieldInputCoordinator.setDstAddress(address)
 
-    private fun setSlippage(slippage: String) {
-        slippageFieldState.setTextAndPlaceCursorAtEnd(slippage)
-    }
+    /**
+     * Validates the THORChain destination address; see
+     * [DepositFieldInputCoordinator.validateThorAddress].
+     */
+    fun validateThorAddress() = fieldInputCoordinator.validateThorAddress()
+
+    /**
+     * Sets the THORChain destination address and revalidates; see
+     * [DepositFieldInputCoordinator.setThorAddress].
+     */
+    fun setThorAddress(address: String) = fieldInputCoordinator.setThorAddress(address)
 
     fun scan() {
         viewModelScope.launch {
             val qr = requestQrScan()
             if (!qr.isNullOrBlank()) {
-                setNodeAddress(qr)
+                fieldInputCoordinator.setNodeAddress(qr)
             }
         }
     }
@@ -629,7 +559,7 @@ constructor(
             val address: AddressBookEntry =
                 requestAddressBookEntry(chainId = chainId, excludeVaultId = vaultId)
                     ?: return@launch
-            setNodeAddress(address.address)
+            fieldInputCoordinator.setNodeAddress(address.address)
         }
     }
 
@@ -705,29 +635,11 @@ constructor(
         _state.update { it.copy(errorText = text) }
     }
 
-    fun validateAssets() {
-        val assets = assetsFieldState.text.toString()
-        _state.update {
-            it.copy(
-                assetsError =
-                    if (!isAssetCharsValid(assets))
-                        UiText.StringResource(R.string.deposit_error_invalid_assets)
-                    else null
-            )
-        }
-    }
+    /** Validates the assets field; see [DepositFieldInputCoordinator.validateAssets]. */
+    fun validateAssets() = fieldInputCoordinator.validateAssets()
 
-    fun validateLpUnits() {
-        val lpUnits = lpUnitsFieldState.text.toString()
-        _state.update {
-            it.copy(
-                lpUnitsError =
-                    if (!fieldValidator.isLpUnitCharsValid(lpUnits))
-                        UiText.StringResource(R.string.deposit_error_invalid_lpunits)
-                    else null
-            )
-        }
-    }
+    /** Validates the LP-units field; see [DepositFieldInputCoordinator.validateLpUnits]. */
+    fun validateLpUnits() = fieldInputCoordinator.validateLpUnits()
 
     fun onSelectSecureAsset(asset: TokenWithdrawSecureAsset) {
         val balance = asset.tokenValue?.let(mapTokenValueToStringWithUnit)
@@ -736,54 +648,3 @@ constructor(
         }
     }
 }
-
-internal data class TokenMergeInfo(val ticker: String, val contract: String) {
-
-    val denom: String
-        get() = "thor.$ticker".lowercase()
-}
-
-internal data class TokenWithdrawSecureAsset(
-    val ticker: String,
-    val contract: String,
-    val coin: Coin,
-    val tokenValue: TokenValue?,
-) {
-    companion object {
-        val EMPTY =
-            TokenWithdrawSecureAsset(
-                ticker = "Select Asset",
-                contract = "",
-                coin = Coin.EMPTY,
-                tokenValue = null,
-            )
-    }
-}
-
-private val tokensToMerge =
-    listOf(
-        TokenMergeInfo(
-            ticker = "KUJI",
-            contract = "thor14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s3p2nzy",
-        ),
-        TokenMergeInfo(
-            ticker = "rKUJI",
-            contract = "thor1yyca08xqdgvjz0psg56z67ejh9xms6l436u8y58m82npdqqhmmtqrsjrgh",
-        ),
-        TokenMergeInfo(
-            ticker = "FUZN",
-            contract = "thor1suhgf5svhu4usrurvxzlgn54ksxmn8gljarjtxqnapv8kjnp4nrsw5xx2d",
-        ),
-        TokenMergeInfo(
-            ticker = "NSTK",
-            contract = "thor1cnuw3f076wgdyahssdkd0g3nr96ckq8cwa2mh029fn5mgf2fmcmsmam5ck",
-        ),
-        TokenMergeInfo(
-            ticker = "WINK",
-            contract = "thor1yw4xvtc43me9scqfr2jr2gzvcxd3a9y4eq7gaukreugw2yd2f8tsz3392y",
-        ),
-        TokenMergeInfo(
-            ticker = "LVN",
-            contract = "thor1ltd0maxmte3xf4zshta9j5djrq9cl692ctsp9u5q0p9wss0f5lms7us4yf",
-        ),
-    )
