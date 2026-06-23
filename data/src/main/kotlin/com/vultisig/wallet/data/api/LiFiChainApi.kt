@@ -2,8 +2,6 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteError
-import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.utils.LiFiSwapQuoteResponseSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -69,10 +67,6 @@ constructor(
         bpsDiscount: Int,
         slippageBps: Int?,
     ): LiFiSwapQuoteDeserialized {
-        val isSolanaChainInvolved =
-            fromChain.toLong() == Chain.Solana.oneInchChainId() ||
-                toChain.toLong() == Chain.Solana.oneInchChainId()
-
         val bpsDiscountFee = round(bpsDiscount.toDouble()) / LiFiChainApi.BPS_DENOMINATOR_INT
         val updatedFeeIntegrator =
             (round(
@@ -99,10 +93,8 @@ constructor(
                         BigDecimal(it).movePointLeft(4).stripTrailingZeros().toPlainString(),
                     )
                 }
-                if (!isSolanaChainInvolved) {
-                    parameter("integrator", LiFiChainApi.INTEGRATOR_ACCOUNT)
-                    parameter("fee", updatedFeeIntegrator)
-                }
+                parameter("integrator", LiFiChainApi.INTEGRATOR_ACCOUNT)
+                parameter("fee", updatedFeeIntegrator)
             }
         return try {
             json.decodeFromString(liFiSwapQuoteResponseSerializer, response.bodyAsText())
