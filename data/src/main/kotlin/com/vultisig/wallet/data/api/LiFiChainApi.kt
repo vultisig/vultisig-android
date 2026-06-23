@@ -93,10 +93,6 @@ constructor(
                         BigDecimal(it).movePointLeft(4).stripTrailingZeros().toPlainString(),
                     )
                 }
-                // Always collect the (VULT-discounted) integrator fee, Solana routes included.
-                // LI.FI rejected the `integrator`/`fee` params on Solana routes when Solana support
-                // landed (#1535, Jan 2025), so they were omitted there; LI.FI has since added fee
-                // support for Solana, so the fee + discount now apply uniformly across all chains.
                 parameter("integrator", LiFiChainApi.INTEGRATOR_ACCOUNT)
                 parameter("fee", updatedFeeIntegrator)
             }
