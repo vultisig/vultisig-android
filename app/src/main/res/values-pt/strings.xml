@@ -367,7 +367,7 @@
         <item quantity="one">%1$d de %2$d cofres atualizados, %3$d falhou</item>
         <item quantity="other">%1$d de %2$d cofres atualizados, %3$d falharam</item>
     </plurals>
-    <string name="push_notifications_sent">Notificação enviada com sucesso</string>
+    <string name="push_notifications_sent">Notificação enviada com sucesso!</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Receba uma notificação quando a sua assinatura for necessária ou um dispositivo solicitar acesso.</string>
     <string name="keysign_notification_channel_name">Solicitações de assinatura</string>
     <string name="keysign_notification_title">Assinar transação</string>

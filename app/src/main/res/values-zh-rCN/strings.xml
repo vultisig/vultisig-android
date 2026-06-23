@@ -11,7 +11,7 @@
     <plurals name="push_notification_partial_failure">
         <item quantity="other">已更新 %2$d 个保险库中的 %1$d 个，%3$d 个失败</item>
     </plurals>
-    <string name="push_notifications_sent">通知发送成功</string>
+    <string name="push_notifications_sent">通知发送成功！</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">当需要您的签名或设备请求访问时，您将收到通知。</string>
     <string name="keysign_notification_channel_name">签名请求</string>
     <string name="keysign_notification_title">签署交易</string>
