@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -40,6 +41,10 @@ val BOTH_CRYPTO_CONNECTION_TYPES = listOf(CryptoConnectionType.Wallet, CryptoCon
 
 val ONLY_WALLET = listOf(CryptoConnectionType.Wallet)
 
+// QBTC adds a third Governance pill alongside Wallet + DeFi.
+val QBTC_CRYPTO_CONNECTION_TYPES =
+    listOf(CryptoConnectionType.Wallet, CryptoConnectionType.Defi, CryptoConnectionType.Governance)
+
 @Composable
 internal fun CryptoConnectionSelect(
     modifier: Modifier = Modifier,
@@ -47,7 +52,13 @@ internal fun CryptoConnectionSelect(
     availableCryptoTypes: List<CryptoConnectionType> = BOTH_CRYPTO_CONNECTION_TYPES,
     onTypeClick: (CryptoConnectionType) -> Unit,
 ) {
-    val isWalletSelected = activeType == CryptoConnectionType.Wallet
+    // Highlight pill slides to the active type's slot. Bias maps slot index → [-1f, 1f] so the
+    // single sliding box positions correctly for any number of pills (2 for Wallet/DeFi, 3 for
+    // QBTC's Wallet/DeFi/Governance).
+    val activeIndex = availableCryptoTypes.indexOf(activeType).coerceAtLeast(0)
+    val highlightBias =
+        if (availableCryptoTypes.size <= 1) 0f
+        else (2f * activeIndex / (availableCryptoTypes.size - 1)) - 1f
 
     LookaheadScope {
         val c1 = Color(0xFF284570)
@@ -82,9 +93,7 @@ internal fun CryptoConnectionSelect(
                             )
                             .fillMaxHeight()
                             .fillMaxWidth(1f / availableCryptoTypes.size)
-                            .align(
-                                if (isWalletSelected) Alignment.CenterStart else Alignment.CenterEnd
-                            )
+                            .align(BiasAlignment(horizontalBias = highlightBias, verticalBias = 0f))
                 )
 
                 Row(
@@ -92,39 +101,37 @@ internal fun CryptoConnectionSelect(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    when (availableCryptoTypes) {
-                        BOTH_CRYPTO_CONNECTION_TYPES -> {
-                            WalletEarnOption(
-                                modifier = Modifier.weight(1f),
-                                onClick = { onTypeClick(CryptoConnectionType.Wallet) },
-                                text = stringResource(R.string.wallet),
-                                icon = R.drawable.wallet,
-                                enabled = isWalletSelected,
-                            )
-
-                            WalletEarnOption(
-                                modifier = Modifier.weight(1f),
-                                onClick = { onTypeClick(CryptoConnectionType.Defi) },
-                                text = stringResource(R.string.defi),
-                                icon = R.drawable.coins_add,
-                                enabled = !isWalletSelected,
-                            )
-                        }
-                        ONLY_WALLET -> {
-                            WalletEarnOption(
-                                modifier = Modifier.weight(1f),
-                                onClick = { onTypeClick(CryptoConnectionType.Wallet) },
-                                text = stringResource(R.string.wallet),
-                                icon = R.drawable.wallet,
-                                enabled = true,
-                            )
-                        }
+                    availableCryptoTypes.forEach { type ->
+                        WalletEarnOption(
+                            modifier = Modifier.weight(1f),
+                            onClick = { onTypeClick(type) },
+                            text = stringResource(type.labelRes),
+                            icon = type.iconRes,
+                            enabled = type == activeType,
+                        )
                     }
                 }
             }
         }
     }
 }
+
+@get:DrawableRes
+private val CryptoConnectionType.iconRes: Int
+    get() =
+        when (this) {
+            CryptoConnectionType.Wallet -> R.drawable.wallet
+            CryptoConnectionType.Defi -> R.drawable.coins_add
+            CryptoConnectionType.Governance -> R.drawable.ic_megaphone
+        }
+
+private val CryptoConnectionType.labelRes: Int
+    get() =
+        when (this) {
+            CryptoConnectionType.Wallet -> R.string.wallet
+            CryptoConnectionType.Defi -> R.string.defi
+            CryptoConnectionType.Governance -> R.string.governance
+        }
 
 @Composable
 private fun WalletEarnOption(

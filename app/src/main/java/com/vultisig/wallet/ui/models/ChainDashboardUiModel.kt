@@ -18,6 +18,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.screens.v2.home.components.BOTH_CRYPTO_CONNECTION_TYPES
 import com.vultisig.wallet.ui.screens.v2.home.components.ONLY_WALLET
+import com.vultisig.wallet.ui.screens.v2.home.components.QBTC_CRYPTO_CONNECTION_TYPES
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.reflect.typeOf
@@ -87,6 +88,11 @@ constructor(
                 chainId = args.route.chainId
             }
 
+            is ChainDashboardRoute.PositionGovernance -> {
+                vaultId = args.route.vaultId
+                chainId = args.route.chainId
+            }
+
             is ChainDashboardRoute.Wallet -> {
                 vaultId = args.route.vaultId
                 chainId = args.route.chainId
@@ -96,20 +102,17 @@ constructor(
 
     private fun initAvailableCryptoTypes() {
         val availableCryptoTypes =
-            if (
-                chainId in
-                    listOf(
-                        Chain.ThorChain.id,
-                        Chain.Ethereum.id,
-                        Chain.MayaChain.id,
-                        Chain.Tron.id,
-                        Chain.Terra.id,
-                        Chain.TerraClassic.id,
-                        Chain.Qbtc.id,
-                    )
-            )
-                BOTH_CRYPTO_CONNECTION_TYPES
-            else ONLY_WALLET
+            when (chainId) {
+                // QBTC adds a Governance sub-tab alongside Wallet + DeFi.
+                Chain.Qbtc.id -> QBTC_CRYPTO_CONNECTION_TYPES
+                Chain.ThorChain.id,
+                Chain.Ethereum.id,
+                Chain.MayaChain.id,
+                Chain.Tron.id,
+                Chain.Terra.id,
+                Chain.TerraClassic.id -> BOTH_CRYPTO_CONNECTION_TYPES
+                else -> ONLY_WALLET
+            }
 
         uiState.update { it.copy(availableCryptoTypes = availableCryptoTypes) }
     }
@@ -151,9 +154,33 @@ constructor(
                                 else -> ChainDashboardRoute.PositionCircle(vaultId = vaultId)
                             }
                         }
+
+                        // Governance is QBTC-only. The active connection type is held app-wide, so
+                        // a
+                        // stale Governance selection carried onto a non-QBTC chain falls back to
+                        // the
+                        // wallet view rather than rendering an unsupported screen.
+                        CryptoConnectionType.Governance ->
+                            if (chainId == Chain.Qbtc.id)
+                                ChainDashboardRoute.PositionGovernance(
+                                    vaultId = vaultId,
+                                    chainId = requireNotNull(chainId),
+                                )
+                            else
+                                ChainDashboardRoute.Wallet(
+                                    vaultId = vaultId,
+                                    chainId = requireNotNull(chainId),
+                                )
                     }
+                // Clamp the highlighted pill to a type this chain actually offers, so a stale
+                // app-wide selection (e.g. Governance carried onto a Wallet/DeFi-only chain)
+                // doesn't
+                // leave the selector with nothing highlighted.
+                val effectiveType =
+                    if (type in uiState.value.availableCryptoTypes) type
+                    else CryptoConnectionType.Wallet
                 uiState.update { state ->
-                    state.copy(route = activeRoute, cryptoConnectionType = type)
+                    state.copy(route = activeRoute, cryptoConnectionType = effectiveType)
                 }
             }
             .launchIn(viewModelScope)
@@ -168,6 +195,20 @@ constructor(
     }
 
     fun back() {
-        viewModelScope.launch { navigator.back() }
+        viewModelScope.launch {
+            // A sub-tab reached via the in-dashboard selector (the dashboard was opened at the
+            // Wallet view) returns to that Wallet view. A dashboard opened directly at a DeFi
+            // position from the DeFi portfolio pops as before, back to where it was opened from.
+            val enteredAtWallet = args.route is ChainDashboardRoute.Wallet
+            if (
+                enteredAtWallet && uiState.value.cryptoConnectionType != CryptoConnectionType.Wallet
+            ) {
+                cryptoConnectionTypeRepository.setActiveCryptoConnection(
+                    CryptoConnectionType.Wallet
+                )
+            } else {
+                navigator.back()
+            }
+        }
     }
 }
