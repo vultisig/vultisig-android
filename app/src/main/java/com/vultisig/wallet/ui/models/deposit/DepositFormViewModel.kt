@@ -460,6 +460,10 @@ constructor(
         depositOptionCoordinator.selectDepositOption(option)
     }
 
+    /**
+     * Selects [chain] as the deposit destination; see
+     * [DepositFieldInputCoordinator.selectDstChain].
+     */
     fun selectDstChain(chain: Chain) = fieldInputCoordinator.selectDstChain(chain)
 
     fun selectMergeToken(mergeInfo: TokenMergeInfo) {
@@ -475,12 +479,19 @@ constructor(
         }
     }
 
+    /**
+     * Validates the destination-address field; see
+     * [DepositFieldInputCoordinator.validateDstAddress].
+     */
     fun validateDstAddress() = fieldInputCoordinator.validateDstAddress()
 
+    /** Validates the node-address field; see [DepositFieldInputCoordinator.validateNodeAddress]. */
     fun validateNodeAddress() = fieldInputCoordinator.validateNodeAddress()
 
+    /** Validates the token-amount field; see [DepositFieldInputCoordinator.validateTokenAmount]. */
     fun validateTokenAmount() = fieldInputCoordinator.validateTokenAmount()
 
+    /** Validates the token amount and triggers [deposit] only when the field has no error. */
     fun validateAndDeposit() {
         fieldInputCoordinator.validateTokenAmount()
         if (state.value.tokenAmountError == null) {
@@ -488,24 +499,48 @@ constructor(
         }
     }
 
+    /**
+     * Validates the provider-address field; see [DepositFieldInputCoordinator.validateProvider].
+     */
     fun validateProvider() = fieldInputCoordinator.validateProvider()
 
+    /** Validates the operator-fee field; see [DepositFieldInputCoordinator.validateOperatorFee]. */
     fun validateOperatorFee() = fieldInputCoordinator.validateOperatorFee()
 
+    /** Validates the custom-memo field; see [DepositFieldInputCoordinator.validateCustomMemo]. */
     fun validateCustomMemo() = fieldInputCoordinator.validateCustomMemo()
 
+    /** Validates the basis-points field; see [DepositFieldInputCoordinator.validateBasisPoints]. */
     fun validateBasisPoints() = fieldInputCoordinator.validateBasisPoints()
 
+    /** Validates the slippage field; see [DepositFieldInputCoordinator.validateSlippage]. */
     fun validateSlippage() = fieldInputCoordinator.validateSlippage()
 
+    /** Sets the provider-address field; see [DepositFieldInputCoordinator.setProvider]. */
     fun setProvider(provider: String) = fieldInputCoordinator.setProvider(provider)
 
+    /**
+     * Sets the node-address field and revalidates; see
+     * [DepositFieldInputCoordinator.setNodeAddress].
+     */
     fun setNodeAddress(address: String) = fieldInputCoordinator.setNodeAddress(address)
 
+    /**
+     * Sets the destination-address field and revalidates; see
+     * [DepositFieldInputCoordinator.setDstAddress].
+     */
     fun setDstAddress(address: String) = fieldInputCoordinator.setDstAddress(address)
 
+    /**
+     * Validates the THORChain destination address; see
+     * [DepositFieldInputCoordinator.validateThorAddress].
+     */
     fun validateThorAddress() = fieldInputCoordinator.validateThorAddress()
 
+    /**
+     * Sets the THORChain destination address and revalidates; see
+     * [DepositFieldInputCoordinator.setThorAddress].
+     */
     fun setThorAddress(address: String) = fieldInputCoordinator.setThorAddress(address)
 
     fun scan() {
@@ -600,8 +635,10 @@ constructor(
         _state.update { it.copy(errorText = text) }
     }
 
+    /** Validates the assets field; see [DepositFieldInputCoordinator.validateAssets]. */
     fun validateAssets() = fieldInputCoordinator.validateAssets()
 
+    /** Validates the LP-units field; see [DepositFieldInputCoordinator.validateLpUnits]. */
     fun validateLpUnits() = fieldInputCoordinator.validateLpUnits()
 
     fun onSelectSecureAsset(asset: TokenWithdrawSecureAsset) {

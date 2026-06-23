@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.TokenValue
  */
 internal data class TokenMergeInfo(val ticker: String, val contract: String) {
 
+    /** The THORChain denom for this token, e.g. `thor.kuji`. */
     val denom: String
         get() = "thor.$ticker".lowercase()
 }
@@ -31,6 +32,7 @@ internal data class TokenWithdrawSecureAsset(
     val tokenValue: TokenValue?,
 ) {
     companion object {
+        /** Placeholder shown before the user has picked a secured asset to withdraw. */
         val EMPTY =
             TokenWithdrawSecureAsset(
                 ticker = "Select Asset",
