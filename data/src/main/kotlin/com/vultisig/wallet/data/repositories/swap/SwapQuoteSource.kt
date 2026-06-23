@@ -69,14 +69,15 @@ sealed class SwapQuoteResult {
 }
 
 /**
- * Minimum-output tolerance (basis points) sent on every THORChain/Maya quote request as
- * `tolerance_bps`. The node bakes a real `LIM` into the returned swap memo — `expected_amount_out ×
- * (1 − toleranceBps/10_000)` — protecting the user from adverse pool moves and front-running
- * between quote and execution. Without it the memo carries no limit (unbounded slippage). 100 bps
- * (1%) is a conservative default aligned with the streaming-upgrade threshold; there is no per-swap
- * user slippage control yet. Mirrors iOS `SwapService.defaultThorchainToleranceBps`.
+ * "Auto" slippage default for THORChain/Maya quotes. 0 → `tolerance_bps` is omitted, so the node
+ * sets no `LIM` and never rejects the quote. A nonzero default blocks legitimate swaps: the node
+ * gates `tolerance_bps` on the single-swap (full-size) emit rather than the streamed output, so any
+ * swap whose price impact exceeds it is refused (`emit asset X less than price limit Y`). Slippage
+ * stays mitigated by the rapid→streaming upgrade and the node's own auto-streaming. A user-set
+ * slippage overrides this and flows straight through. Mirrors iOS
+ * `SwapService.defaultThorchainToleranceBps` (vultisig-ios#4640).
  */
-internal const val DEFAULT_THORCHAIN_TOLERANCE_BPS = 100
+internal const val DEFAULT_THORCHAIN_TOLERANCE_BPS = 0
 
 /** Common contract for every per-provider quote source. */
 interface SwapQuoteSource {
