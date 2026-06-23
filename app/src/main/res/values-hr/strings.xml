@@ -1333,6 +1333,10 @@
     <string name="qbtc_claim_banner_subtitle">Isti Bitcoin. Kvantno-siguran.</string>
     <string name="qbtc_claim_banner_title">Preuzmite svoj QBTC</string>
     <string name="qbtc_claim_banner_cta">Preuzmi sada</string>
+    <string name="qbtc_claim_cosign_description">Drugi uređaj je pokrenuo preuzimanje QBTC-a. Odobravanjem ćete ga supotpisati svojim Bitcoin ključem. Pregledajte račune u nastavku prije nego što nastavite.</string>
+    <string name="qbtc_claim_cosign_btc_account">Bitcoin račun</string>
+    <string name="qbtc_claim_cosign_qbtc_account">QBTC račun</string>
+    <string name="qbtc_claim_cosign_approve">Odobri i supotpiši</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Preuzmi</string>
     <string name="cosmos_staking_action_delegate">Ulog</string>

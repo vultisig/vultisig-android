@@ -1321,6 +1321,10 @@
     <string name="qbtc_claim_banner_subtitle">O mesmo Bitcoin. Resistente à computação quântica.</string>
     <string name="qbtc_claim_banner_title">Resgate o seu QBTC</string>
     <string name="qbtc_claim_banner_cta">Resgatar agora</string>
+    <string name="qbtc_claim_cosign_description">Outro dispositivo iniciou um resgate de QBTC. Ao aprovar, irá coassiná-lo com a sua chave Bitcoin. Reveja as contas abaixo antes de continuar.</string>
+    <string name="qbtc_claim_cosign_btc_account">Conta Bitcoin</string>
+    <string name="qbtc_claim_cosign_qbtc_account">Conta QBTC</string>
+    <string name="qbtc_claim_cosign_approve">Aprovar e coassinar</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Reivindicar</string>
     <string name="cosmos_staking_action_delegate">Stake</string>
