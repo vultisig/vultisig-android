@@ -63,11 +63,9 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
 /**
- * QBTC governance proposals. Hosted inside `ChainDashboardScreen`'s content slot (which supplies a
- * minimal top bar + the bottom selector), so this owns its own header. Proposals are filtered by an
- * Active / Passed / Rejected tab row; only active proposals whose voting window is open expose a
- * vote CTA (a [V2BottomSheet] with the four cosmos-gov options), which stages a
- * `QBTC_VOTE:<OPTION>:<id>` transaction into the shared Verify-Deposit → keysign flow.
+ * QBTC governance proposals, hosted inside `ChainDashboardScreen`'s content slot (so it owns its
+ * own header). Only open Active proposals expose a vote CTA, which stages a transaction into the
+ * shared Verify-Deposit → keysign flow.
  */
 @Composable
 internal fun GovernanceScreen(vaultId: String, viewModel: GovernanceViewModel = hiltViewModel()) {

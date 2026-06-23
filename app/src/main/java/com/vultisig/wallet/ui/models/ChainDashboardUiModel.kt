@@ -103,7 +103,6 @@ constructor(
     private fun initAvailableCryptoTypes() {
         val availableCryptoTypes =
             when (chainId) {
-                // QBTC adds a Governance sub-tab alongside Wallet + DeFi.
                 Chain.Qbtc.id -> QBTC_CRYPTO_CONNECTION_TYPES
                 Chain.ThorChain.id,
                 Chain.Ethereum.id,
@@ -155,11 +154,8 @@ constructor(
                             }
                         }
 
-                        // Governance is QBTC-only. The active connection type is held app-wide, so
-                        // a
-                        // stale Governance selection carried onto a non-QBTC chain falls back to
-                        // the
-                        // wallet view rather than rendering an unsupported screen.
+                        // Governance is QBTC-only; a stale app-wide selection on another chain
+                        // falls back to the wallet view.
                         CryptoConnectionType.Governance ->
                             if (chainId == Chain.Qbtc.id)
                                 ChainDashboardRoute.PositionGovernance(
@@ -172,10 +168,8 @@ constructor(
                                     chainId = requireNotNull(chainId),
                                 )
                     }
-                // Clamp the highlighted pill to a type this chain actually offers, so a stale
-                // app-wide selection (e.g. Governance carried onto a Wallet/DeFi-only chain)
-                // doesn't
-                // leave the selector with nothing highlighted.
+                // Highlight a type this chain actually offers, so a stale app-wide selection
+                // doesn't leave the selector with nothing highlighted.
                 val effectiveType =
                     if (type in uiState.value.availableCryptoTypes) type
                     else CryptoConnectionType.Wallet

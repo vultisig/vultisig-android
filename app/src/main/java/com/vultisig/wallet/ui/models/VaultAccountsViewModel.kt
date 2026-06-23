@@ -392,9 +392,7 @@ constructor(
         viewModelScope.launch {
             when (uiState.value.cryptoConnectionType) {
                 CryptoConnectionType.Wallet,
-                // Governance is a QBTC-only sub-tab reached from the chain dashboard, never from
-                // the
-                // vault-home account list — treat it like Wallet here so the enum stays exhaustive.
+                // Governance is a QBTC-only chain-dashboard sub-tab; treat it like Wallet here.
                 CryptoConnectionType.Governance -> {
                     navigator.route(
                         Route.ChainDashboard(

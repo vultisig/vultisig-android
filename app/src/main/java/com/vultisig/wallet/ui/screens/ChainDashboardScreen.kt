@@ -50,8 +50,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionSelect
 internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewModel()) {
     val uiModel by viewModel.uiState.collectAsState()
 
-    // System back from a sub-tab (DeFi / Governance) returns to the Wallet view instead of popping
-    // the whole dashboard, matching the on-screen back button.
+    // System back from a sub-tab returns to the Wallet view, matching the on-screen back button.
     BackHandler(enabled = uiModel.route !is Wallet) { viewModel.back() }
 
     ChainDashboardScreen(

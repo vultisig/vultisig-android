@@ -41,7 +41,6 @@ val BOTH_CRYPTO_CONNECTION_TYPES = listOf(CryptoConnectionType.Wallet, CryptoCon
 
 val ONLY_WALLET = listOf(CryptoConnectionType.Wallet)
 
-// QBTC adds a third Governance pill alongside Wallet + DeFi.
 val QBTC_CRYPTO_CONNECTION_TYPES =
     listOf(CryptoConnectionType.Wallet, CryptoConnectionType.Defi, CryptoConnectionType.Governance)
 
@@ -52,9 +51,7 @@ internal fun CryptoConnectionSelect(
     availableCryptoTypes: List<CryptoConnectionType> = BOTH_CRYPTO_CONNECTION_TYPES,
     onTypeClick: (CryptoConnectionType) -> Unit,
 ) {
-    // Highlight pill slides to the active type's slot. Bias maps slot index → [-1f, 1f] so the
-    // single sliding box positions correctly for any number of pills (2 for Wallet/DeFi, 3 for
-    // QBTC's Wallet/DeFi/Governance).
+    // Slide the highlight to the active pill; bias maps slot index → [-1f, 1f] for any pill count.
     val activeIndex = availableCryptoTypes.indexOf(activeType).coerceAtLeast(0)
     val highlightBias =
         if (availableCryptoTypes.size <= 1) 0f

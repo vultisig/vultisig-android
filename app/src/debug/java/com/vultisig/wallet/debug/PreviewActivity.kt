@@ -345,8 +345,6 @@ private fun BannerPreview() {
     HomePagePagerContainer { UpgradeBanner {} }
 }
 
-// QBTC governance proposals (Active tab): hero, tally bars, "You voted" chip, vote CTA. Mock data
-// matches the shape the ViewModel produces from the gov v1 RPC.
 @Composable
 private fun GovernancePreview() {
     val tally =

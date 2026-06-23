@@ -43,7 +43,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import vultisig.keysign.v1.TransactionType
 
-/** On-chain governance vote option — [wireName] is the value embedded in the QBTC_VOTE memo. */
 enum class VoteOption(val wireName: String, @StringRes val labelRes: Int) {
     YES("YES", R.string.governance_vote_yes),
     NO("NO", R.string.governance_vote_no),
@@ -51,7 +50,6 @@ enum class VoteOption(val wireName: String, @StringRes val labelRes: Int) {
     NO_WITH_VETO("NO_WITH_VETO", R.string.governance_vote_no_with_veto);
 
     companion object {
-        /** Maps the cosmos `VOTE_OPTION_*` enum string to a [VoteOption], or `null` if unknown. */
         fun fromWire(value: String?): VoteOption? =
             when (value) {
                 "VOTE_OPTION_YES" -> YES
@@ -69,7 +67,6 @@ enum class ProposalStatus {
     Rejected,
 }
 
-/** Per-option share of the final tally, as fractions (0..1) for the bar and pre-formatted %s. */
 @Immutable
 data class TallyUi(
     val yesFraction: Float = 0f,
@@ -81,7 +78,6 @@ data class TallyUi(
     val abstainPercent: String = "0%",
     val vetoPercent: String = "0%",
     val hasVotes: Boolean = false,
-    // The winning option + its share, for the bold result headline on the card.
     val leadingOption: VoteOption? = null,
     val leadingPercent: String = "",
 )
@@ -122,13 +118,7 @@ data class GovernanceUiState(
 /**
  * Lists QBTC governance proposals (active / passed / rejected) and stages a vote into the existing
  * deposit → verify → keysign pipeline. Only active proposals whose voting window is still open are
- * votable — closed proposals are read-only (the chain rejects late votes), which is the structural
- * fix for the "voting on an elapsed proposal fails" report.
- *
- * A vote is encoded as a `QBTC_VOTE:<OPTION>:<proposalId>` memo on a
- * [TransactionType.TRANSACTION_TYPE_VOTE] Cosmos `BlockChainSpecific`; signing lives in the shared
- * keysign flow, so this view-model only fetches proposals + the user's existing votes and persists
- * the staged transaction before navigating to [Route.VerifyDeposit].
+ * votable — the chain rejects late votes.
  */
 @HiltViewModel
 internal class GovernanceViewModel
@@ -193,10 +183,8 @@ constructor(
                         Triple(a.await(), p.await(), r.await())
                     }
 
-                // A total failure (offline / RPC down) must surface as an error, not a misleading
-                // empty "no proposals" state. Once any list is on screen, transient per-status
-                // failures degrade to empty — mirroring CosmosStakingPositionsViewModel's
-                // primary/auxiliary split.
+                // Surface a total failure as an error rather than a misleading empty state; once
+                // any list has loaded, transient per-status failures degrade to empty.
                 val results = listOf(activeResult, passedResult, rejectedResult)
                 val current = _state.value
                 val hadData =
