@@ -100,7 +100,6 @@ internal fun CosmosStakingPositionsScreen(
     // load. Collect it directly instead.
     val isRefreshing by viewModel.isRefreshing.collectAsState()
 
-    // QBTC pairs staking with an on-chain governance tab; other cosmos chains show only Staked.
     val showGovernance = chainId.equals(Chain.Qbtc.id, ignoreCase = true)
     val governanceState by governanceViewModel.state.collectAsState()
     var isGovernanceTab by rememberSaveable { mutableStateOf(false) }
@@ -111,7 +110,6 @@ internal fun CosmosStakingPositionsScreen(
         if (showGovernance) governanceViewModel.setData(vaultId)
     }
 
-    // System back from the Governance tab returns to Staked rather than leaving the chain.
     BackHandler(enabled = governanceActive) { isGovernanceTab = false }
 
     // Reload when the screen comes back to the foreground — e.g. after returning from a completed
@@ -119,7 +117,6 @@ internal fun CosmosStakingPositionsScreen(
     // without a manual pull. The first resume is a no-op in the VM (#4815).
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onScreenResumed() }
 
-    // The Manage-Positions top-bar action only applies to the Staked tab.
     if (!governanceActive) {
         RegisterChainDashboardTopBarAction(
             icon = R.drawable.ic_shapes_plus_x_square_circle,
@@ -150,7 +147,7 @@ internal fun CosmosStakingPositionsScreen(
         onVoteProposal = governanceViewModel::openVoteSheet,
     )
 
-    if (showGovernance) {
+    if (governanceActive) {
         val sheetProposal = governanceState.voteSheetProposal
         if (sheetProposal != null) {
             GovernanceVoteSheet(
@@ -221,8 +218,7 @@ internal fun CosmosStakingPositionsContent(
                     }
 
                     // Single manage-positions control: the ChainDashboard top-bar action above. The
-                    // inline edit-chains button that used to sit here duplicated it (#4821). QBTC
-                    // adds a Governance tab next to Staked.
+                    // inline edit-chains button that used to sit here duplicated it (#4821).
                     item {
                         if (governanceState != null) {
                             VsTabGroup(index = if (isGovernanceTab) 1 else 0) {

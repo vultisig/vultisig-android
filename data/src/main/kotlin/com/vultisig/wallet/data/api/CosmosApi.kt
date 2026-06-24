@@ -270,6 +270,8 @@ internal class CosmosApiImp(
                 Timber.w(e, "Failed to fetch gov vote for proposal %s", proposalId)
             }
             null
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.w(e, "Unexpected error fetching gov vote for proposal %s", proposalId)
             null

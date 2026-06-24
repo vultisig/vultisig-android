@@ -49,9 +49,8 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 /**
- * Renders the QBTC governance proposals as `LazyColumn` items so they can sit inside the DeFi
- * (staking-positions) screen under a "Governance" tab next to "Staked". Proposals are grouped into
- * Active / Passed / Rejected sections; only open Active proposals expose a vote CTA.
+ * QBTC governance proposals as `LazyColumn` items (Active / Passed / Rejected sections) for the
+ * DeFi screen's Governance tab. Only open Active proposals expose a vote CTA.
  */
 internal fun LazyListScope.governanceProposalItems(
     state: GovernanceUiState,

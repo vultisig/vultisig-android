@@ -85,7 +85,6 @@ data class TallyUi(
 @Immutable
 data class ProposalUi(
     val id: String,
-    // Raw on-chain title; blank proposals fall back to a numbered label in the UI layer.
     val title: String,
     val summary: String,
     val status: ProposalStatus,
@@ -149,7 +148,6 @@ constructor(
     private fun load(isRefresh: Boolean) {
         val vaultId = vaultId ?: return
         _state.update { it.copy(isRefreshing = isRefresh, isLoading = !isRefresh && it.isEmpty) }
-        // Cancel any in-flight load so a slow earlier response can't land last and pin stale data.
         loadJob?.cancel()
         loadJob =
             viewModelScope.safeLaunch(
@@ -185,20 +183,16 @@ constructor(
                 val passed = passedResult.getOrDefault(emptyList())
                 val rejected = rejectedResult.getOrDefault(emptyList())
 
-                // Active proposals need the live `/tally` (final_tally_result is zero until a
-                // proposal closes) and the voter's current vote. Closed proposals already carry
-                // final_tally_result and have their votes pruned, so they're mapped without extra
-                // calls.
+                // Active proposals need the live `/tally` — final_tally_result is zero until a
+                // proposal closes — plus the voter's vote; closed proposals already carry both.
                 val extras =
                     withContext(ioDispatcher) {
                         active
                             .map { proposal ->
                                 async {
-                                    val tally =
-                                        runCatching { api.getGovTally(proposal.id) }.getOrNull()
+                                    val tally = api.getGovTally(proposal.id)
                                     val vote =
-                                        runCatching { api.getGovVote(proposal.id, coin.address) }
-                                            .getOrNull()
+                                        api.getGovVote(proposal.id, coin.address)
                                             ?.options
                                             ?.firstOrNull()
                                             ?.option
@@ -254,8 +248,8 @@ constructor(
 
     fun castVote(proposalId: String, option: VoteOption) {
         val vaultId = vaultId ?: return
-        // Re-validate the window: it can close while the vote sheet is open, and the chain rejects
-        // a late vote, so abort before burning a keysign on a guaranteed-reject transaction.
+        if (_state.value.isSubmitting) return
+        // The window can close while the sheet is open; a late vote is rejected on-chain.
         val proposal = _state.value.active.firstOrNull { it.id == proposalId }
         if (proposal == null || proposal.votingEndTime?.isAfter(Instant.now()) != true) {
             _state.update {
@@ -279,9 +273,8 @@ constructor(
             }
         ) {
             val coin = resolveCoin(vaultId)
-            // QBTC's verified `min_tx_fee` floor. min_gas_price is 0 on the chain, so this flat
-            // amount is the entire fee — and `CosmosFeeService` returns 7_500 for QBTC, which
-            // overpays this 800 floor ~9x (see the QBTC entry in CosmosStakingConfig).
+            // QBTC's verified min_tx_fee floor (min_gas_price is 0, so this flat amount is the
+            // whole fee); CosmosFeeService returns 7_500 for QBTC, ~9x this.
             val feeAmount = BigInteger.valueOf(CosmosStakingConfig.feeAmountFor(Chain.Qbtc))
             val gasFee = TokenValue(value = feeAmount, token = coin)
 
@@ -338,8 +331,8 @@ constructor(
             summary = summary.orEmpty(),
             status = status,
             timeLabel = timeLabel(status, end, now, votingOpen),
-            // Votable only while the proposal is in its voting period AND the window is still open,
-            // so a status that lags the on-chain clock can't offer a guaranteed-reject vote.
+            // Votable only while still within the voting window (the status can lag the chain
+            // clock).
             isVotable = status == ProposalStatus.Active && votingOpen,
             votingEndTime = end,
             tally = (liveTally ?: finalTallyResult).toTally(),
