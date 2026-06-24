@@ -64,6 +64,7 @@ internal class VerifySwapViewModelTest {
     private lateinit var securityScannerService: SecurityScannerContract
     private lateinit var vaultRepository: VaultRepository
 
+    /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
@@ -82,6 +83,7 @@ internal class VerifySwapViewModelTest {
         coEvery { vaultRepository.get(VAULT_ID) } returns mockk<Vault>(relaxed = true)
     }
 
+    /** Cleans up mocks and resets test dispatcher after each test. */
     @AfterEach
     fun tearDown() {
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
