@@ -690,10 +690,6 @@
     <string name="home_portfolio_balance">Stanje portfelja</string>
     <string name="wallet">Novčanik</string>
     <string name="governance">Upravljanje</string>
-    <string name="governance_subtitle_default">QBTC on-chain prijedlozi</string>
-    <string name="governance_count_active">%1$d aktivnih</string>
-    <string name="governance_count_passed">%1$d prihvaćeno</string>
-    <string name="governance_count_rejected">%1$d odbijeno</string>
     <string name="governance_status_active">Aktivno</string>
     <string name="governance_status_passed">Prihvaćeno</string>
     <string name="governance_status_rejected">Odbijeno</string>
@@ -718,6 +714,7 @@
     <string name="governance_error_title">Nešto je pošlo po zlu</string>
     <string name="governance_error_load_proposals">Učitavanje prijedloga nije uspjelo</string>
     <string name="governance_error_submit_vote">Slanje vašeg glasa nije uspjelo</string>
+    <string name="governance_voting_closed">Glasanje za ovaj prijedlog je završeno</string>
     <string name="hide_balance">Sakrij stanje</string>
     <string name="show_balance">Prikaži stanje</string>
     <string name="no_chains_found">Nisu pronađeni lanci</string>

@@ -25,6 +25,9 @@ data class CosmosGovTallyResult(
     @SerialName("no_with_veto_count") val noWithVetoCount: String? = null,
 )
 
+@Serializable
+data class CosmosGovTallyResponse(@SerialName("tally") val tally: CosmosGovTallyResult? = null)
+
 @Serializable data class CosmosGovVoteResponse(@SerialName("vote") val vote: CosmosGovVote? = null)
 
 @Serializable

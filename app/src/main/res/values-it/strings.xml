@@ -687,10 +687,6 @@
     <string name="home_portfolio_balance">Saldo del portafoglio</string>
     <string name="wallet">Portafoglio</string>
     <string name="governance">Governance</string>
-    <string name="governance_subtitle_default">Proposte on-chain QBTC</string>
-    <string name="governance_count_active">%1$d attive</string>
-    <string name="governance_count_passed">%1$d approvate</string>
-    <string name="governance_count_rejected">%1$d respinte</string>
     <string name="governance_status_active">Attivo</string>
     <string name="governance_status_passed">Approvata</string>
     <string name="governance_status_rejected">Respinta</string>
@@ -715,6 +711,7 @@
     <string name="governance_error_title">Qualcosa è andato storto</string>
     <string name="governance_error_load_proposals">Impossibile caricare le proposte</string>
     <string name="governance_error_submit_vote">Impossibile inviare il tuo voto</string>
+    <string name="governance_voting_closed">La votazione per questa proposta è terminata</string>
     <string name="hide_balance">Nascondi saldo</string>
     <string name="show_balance">Mostra saldo</string>
     <string name="no_chains_found">Nessuna catena trovata</string>

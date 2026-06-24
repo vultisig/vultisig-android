@@ -391,9 +391,7 @@ constructor(
 
         viewModelScope.launch {
             when (uiState.value.cryptoConnectionType) {
-                CryptoConnectionType.Wallet,
-                // Governance is a QBTC-only chain-dashboard sub-tab; treat it like Wallet here.
-                CryptoConnectionType.Governance -> {
+                CryptoConnectionType.Wallet -> {
                     navigator.route(
                         Route.ChainDashboard(
                             route = ChainDashboardRoute.Wallet(vaultId = vaultId, chainId = chainId)
@@ -490,8 +488,7 @@ constructor(
                         accounts
                             .filter {
                                 when (cryptoConnectionType) {
-                                    CryptoConnectionType.Wallet,
-                                    CryptoConnectionType.Governance -> true
+                                    CryptoConnectionType.Wallet -> true
                                     CryptoConnectionType.Defi ->
                                         cryptoConnectionTypeRepository.hasDeFiPositionsScreen(
                                             it.chain

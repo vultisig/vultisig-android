@@ -118,6 +118,36 @@ class CosmosGovApiTest {
         assertEquals("/cosmos/gov/v1/proposals/1/votes/qbtc%2Fabc", capturedPath)
     }
 
+    @Test
+    fun `getGovTally parses the live tally on 200`() = runTest {
+        val api =
+            cosmosApi(
+                MockEngine {
+                    respond(
+                        content =
+                            """{"tally":{"yes_count":"1000","no_count":"0",""" +
+                                """"abstain_count":"0","no_with_veto_count":"0"}}""",
+                        status = HttpStatusCode.OK,
+                        headers = jsonHeaders,
+                    )
+                }
+            )
+
+        assertEquals("1000", api.getGovTally("1")?.yesCount)
+    }
+
+    @Test
+    fun `getGovTally returns null on 5xx without throwing`() = runTest {
+        val api =
+            cosmosApi(
+                MockEngine {
+                    respond(content = "boom", status = HttpStatusCode.InternalServerError)
+                }
+            )
+
+        assertNull(api.getGovTally("1"))
+    }
+
     private fun cosmosApi(engine: MockEngine): CosmosApi {
         val json = Json { ignoreUnknownKeys = true }
         return CosmosApiImp(

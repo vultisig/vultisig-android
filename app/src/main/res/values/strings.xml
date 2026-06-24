@@ -928,10 +928,6 @@
     <string name="wallet">Wallet</string>
     <string name="governance">Governance</string>
     <!-- QBTC Governance -->
-    <string name="governance_subtitle_default">QBTC on-chain proposals</string>
-    <string name="governance_count_active">%1$d active</string>
-    <string name="governance_count_passed">%1$d passed</string>
-    <string name="governance_count_rejected">%1$d rejected</string>
     <string name="governance_status_active">Active</string>
     <string name="governance_status_passed">Passed</string>
     <string name="governance_status_rejected">Rejected</string>
@@ -956,6 +952,7 @@
     <string name="governance_error_title">Something went wrong</string>
     <string name="governance_error_load_proposals">Couldn\'t load proposals</string>
     <string name="governance_error_submit_vote">Couldn\'t submit your vote</string>
+    <string name="governance_voting_closed">Voting has ended for this proposal</string>
     <string name="hide_balance">Hide balance</string>
     <string name="show_balance">Show balance</string>
     <string name="no_chains_found">No chains found</string>

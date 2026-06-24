@@ -19,6 +19,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import java.math.BigInteger
@@ -73,6 +74,7 @@ internal class GovernanceViewModelTest {
         coEvery { cosmosApiFactory.createCosmosApi(Chain.Qbtc) } returns cosmosApi
         coEvery { cosmosApi.getGovProposals(any()) } returns emptyList()
         coEvery { cosmosApi.getGovVote(any(), any()) } returns null
+        coEvery { cosmosApi.getGovTally(any()) } returns null
     }
 
     @AfterEach
@@ -104,7 +106,7 @@ internal class GovernanceViewModelTest {
         )
 
     @Test
-    fun `setData groups proposals by status and selects the first non-empty tab`() = runTest {
+    fun `setData groups proposals by status`() = runTest {
         coEvery { cosmosApi.getGovProposals(3) } returns listOf(proposal("1"))
 
         val model = vm()
@@ -112,7 +114,29 @@ internal class GovernanceViewModelTest {
 
         model.state.value.passed.size shouldBe 1
         model.state.value.active.size shouldBe 0
-        model.state.value.selectedTab shouldBe ProposalStatus.Passed
+        model.state.value.rejected.size shouldBe 0
+    }
+
+    @Test
+    fun `an active proposal reads the live tally endpoint, not final_tally_result`() = runTest {
+        // final_tally_result stays zero during the voting period, so the active card must read the
+        // running counts from /tally instead.
+        coEvery { cosmosApi.getGovProposals(2) } returns
+            listOf(proposal("9", tally = null, endsInDays = 3))
+        coEvery { cosmosApi.getGovTally("9") } returns
+            CosmosGovTallyResult(
+                yesCount = "1000",
+                noCount = "0",
+                abstainCount = "0",
+                noWithVetoCount = "0",
+            )
+
+        val model = vm()
+        model.setData("v1")
+
+        val ui = model.state.value.active.first().tally
+        ui.hasVotes shouldBe true
+        ui.yesPercent shouldBe "100%"
     }
 
     @Test
@@ -167,6 +191,7 @@ internal class GovernanceViewModelTest {
 
     @Test
     fun `castVote stages a QBTC_VOTE deposit with the 800 fee and routes to verify`() = runTest {
+        coEvery { cosmosApi.getGovProposals(2) } returns listOf(proposal("42", endsInDays = 3))
         val model = vm()
         model.setData("v1")
 
@@ -181,6 +206,18 @@ internal class GovernanceViewModelTest {
         txSlot.captured.estimatedFees.value shouldBe BigInteger.valueOf(800)
         txSlot.captured.srcAddress shouldBe "qbtc1voter"
         (routeSlot.captured as Route.VerifyDeposit).transactionId shouldBe txSlot.captured.id
+    }
+
+    @Test
+    fun `castVote is rejected when the proposal is not an open active one`() = runTest {
+        // The window can close while the sheet is open; the late vote must not burn a keysign.
+        val model = vm()
+        model.setData("v1")
+
+        model.castVote("42", VoteOption.YES)
+
+        coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
+        model.state.value.error shouldNotBe null
     }
 
     @Test

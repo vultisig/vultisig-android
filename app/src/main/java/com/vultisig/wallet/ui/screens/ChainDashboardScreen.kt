@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,7 +36,6 @@ import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.PositionMaya
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.PositionTokens
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.PositionTron
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.Wallet
-import com.vultisig.wallet.ui.screens.governance.GovernanceScreen
 import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.defi.circle.CircleDeFiPositionsScreen
 import com.vultisig.wallet.ui.screens.v2.defi.maya.MayachainDefiPositionsScreen
@@ -49,9 +47,6 @@ import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionSelect
 @Composable
 internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewModel()) {
     val uiModel by viewModel.uiState.collectAsState()
-
-    // System back from a sub-tab returns to the Wallet view, matching the on-screen back button.
-    BackHandler(enabled = uiModel.route !is Wallet) { viewModel.back() }
 
     ChainDashboardScreen(
         uiModel = uiModel,
@@ -70,8 +65,6 @@ internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewM
                         vaultId = route.vaultId,
                         chainId = route.chainId,
                     )
-                is ChainDashboardRoute.PositionGovernance ->
-                    GovernanceScreen(vaultId = route.vaultId)
                 is Wallet ->
                     ChainTokensScreen(
                         vaultId = route.vaultId,

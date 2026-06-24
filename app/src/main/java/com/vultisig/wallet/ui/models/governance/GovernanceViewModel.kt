@@ -91,6 +91,7 @@ data class ProposalUi(
     val status: ProposalStatus,
     val timeLabel: UiText,
     val isVotable: Boolean,
+    val votingEndTime: Instant?,
     val tally: TallyUi,
     val yourVote: VoteOption?,
 )
@@ -99,7 +100,6 @@ data class ProposalUi(
 data class GovernanceUiState(
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
-    val selectedTab: ProposalStatus = ProposalStatus.Active,
     val active: List<ProposalUi> = emptyList(),
     val passed: List<ProposalUi> = emptyList(),
     val rejected: List<ProposalUi> = emptyList(),
@@ -107,12 +107,8 @@ data class GovernanceUiState(
     val isSubmitting: Boolean = false,
     val error: UiText? = null,
 ) {
-    fun proposalsFor(tab: ProposalStatus): List<ProposalUi> =
-        when (tab) {
-            ProposalStatus.Active -> active
-            ProposalStatus.Passed -> passed
-            ProposalStatus.Rejected -> rejected
-        }
+    val isEmpty: Boolean
+        get() = active.isEmpty() && passed.isEmpty() && rejected.isEmpty()
 }
 
 /**
@@ -134,7 +130,6 @@ constructor(
 
     private var vaultId: String? = null
     private var voterCoin: Coin? = null
-    private var userPickedTab = false
     private var loadJob: Job? = null
 
     private val _state = MutableStateFlow(GovernanceUiState())
@@ -153,10 +148,7 @@ constructor(
 
     private fun load(isRefresh: Boolean) {
         val vaultId = vaultId ?: return
-        _state.update {
-            val firstLoad = it.active.isEmpty() && it.passed.isEmpty() && it.rejected.isEmpty()
-            it.copy(isRefreshing = isRefresh, isLoading = !isRefresh && firstLoad)
-        }
+        _state.update { it.copy(isRefreshing = isRefresh, isLoading = !isRefresh && it.isEmpty) }
         // Cancel any in-flight load so a slow earlier response can't land last and pin stale data.
         loadJob?.cancel()
         loadJob =
@@ -186,42 +178,44 @@ constructor(
                 // Surface a total failure as an error rather than a misleading empty state; once
                 // any list has loaded, transient per-status failures degrade to empty.
                 val results = listOf(activeResult, passedResult, rejectedResult)
-                val current = _state.value
-                val hadData =
-                    current.active.isNotEmpty() ||
-                        current.passed.isNotEmpty() ||
-                        current.rejected.isNotEmpty()
-                if (results.all { it.isFailure } && !hadData) {
+                if (results.all { it.isFailure } && _state.value.isEmpty) {
                     throw results.firstNotNullOf { it.exceptionOrNull() }
                 }
                 val active = activeResult.getOrDefault(emptyList())
                 val passed = passedResult.getOrDefault(emptyList())
                 val rejected = rejectedResult.getOrDefault(emptyList())
 
-                // The voter's current vote — only for active proposals. The chain prunes votes once
-                // a proposal closes, so closed-proposal lookups would 404 on every load.
-                val votes =
+                // Active proposals need the live `/tally` (final_tally_result is zero until a
+                // proposal closes) and the voter's current vote. Closed proposals already carry
+                // final_tally_result and have their votes pruned, so they're mapped without extra
+                // calls.
+                val extras =
                     withContext(ioDispatcher) {
                         active
                             .map { proposal ->
                                 async {
-                                    val option =
+                                    val tally =
+                                        runCatching { api.getGovTally(proposal.id) }.getOrNull()
+                                    val vote =
                                         runCatching { api.getGovVote(proposal.id, coin.address) }
                                             .getOrNull()
                                             ?.options
                                             ?.firstOrNull()
                                             ?.option
-                                    proposal.id to VoteOption.fromWire(option)
+                                    proposal.id to ActiveExtras(tally, VoteOption.fromWire(vote))
                                 }
                             }
                             .awaitAll()
                             .toMap()
                     }
 
-                val activeUi = active.map { it.toUi(ProposalStatus.Active, now, votes[it.id]) }
-                val passedUi = passed.map { it.toUi(ProposalStatus.Passed, now, yourVote = null) }
-                val rejectedUi =
-                    rejected.map { it.toUi(ProposalStatus.Rejected, now, yourVote = null) }
+                val activeUi =
+                    active.map {
+                        val extra = extras[it.id]
+                        it.toUi(ProposalStatus.Active, now, extra?.vote, extra?.tally)
+                    }
+                val passedUi = passed.map { it.toUi(ProposalStatus.Passed, now, null, null) }
+                val rejectedUi = rejected.map { it.toUi(ProposalStatus.Rejected, now, null, null) }
 
                 _state.update {
                     it.copy(
@@ -231,9 +225,6 @@ constructor(
                         active = activeUi,
                         passed = passedUi,
                         rejected = rejectedUi,
-                        selectedTab =
-                            if (userPickedTab) it.selectedTab
-                            else firstNonEmptyTab(activeUi, passedUi, rejectedUi),
                     )
                 }
             }
@@ -252,11 +243,6 @@ constructor(
         return coin
     }
 
-    fun onTabSelected(tab: ProposalStatus) {
-        userPickedTab = true
-        _state.update { it.copy(selectedTab = tab) }
-    }
-
     fun openVoteSheet(proposal: ProposalUi) {
         if (!proposal.isVotable) return
         _state.update { it.copy(voteSheetProposal = proposal) }
@@ -268,6 +254,18 @@ constructor(
 
     fun castVote(proposalId: String, option: VoteOption) {
         val vaultId = vaultId ?: return
+        // Re-validate the window: it can close while the vote sheet is open, and the chain rejects
+        // a late vote, so abort before burning a keysign on a guaranteed-reject transaction.
+        val proposal = _state.value.active.firstOrNull { it.id == proposalId }
+        if (proposal == null || proposal.votingEndTime?.isAfter(Instant.now()) != true) {
+            _state.update {
+                it.copy(
+                    voteSheetProposal = null,
+                    error = R.string.governance_voting_closed.asUiText(),
+                )
+            }
+            return
+        }
         _state.update { it.copy(isSubmitting = true, error = null) }
         viewModelScope.safeLaunch(
             onError = {
@@ -288,16 +286,18 @@ constructor(
             val gasFee = TokenValue(value = feeAmount, token = coin)
 
             val specific =
-                blockChainSpecificRepository.getSpecific(
-                    chain = Chain.Qbtc,
-                    address = coin.address,
-                    token = coin,
-                    gasFee = gasFee,
-                    isSwap = false,
-                    isMaxAmountEnabled = false,
-                    isDeposit = true,
-                    transactionType = TransactionType.TRANSACTION_TYPE_VOTE,
-                )
+                withContext(ioDispatcher) {
+                    blockChainSpecificRepository.getSpecific(
+                        chain = Chain.Qbtc,
+                        address = coin.address,
+                        token = coin,
+                        gasFee = gasFee,
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = true,
+                        transactionType = TransactionType.TRANSACTION_TYPE_VOTE,
+                    )
+                }
 
             val tx =
                 DepositTransaction(
@@ -324,22 +324,11 @@ constructor(
         _state.update { it.copy(error = null) }
     }
 
-    private fun firstNonEmptyTab(
-        active: List<ProposalUi>,
-        passed: List<ProposalUi>,
-        rejected: List<ProposalUi>,
-    ): ProposalStatus =
-        when {
-            active.isNotEmpty() -> ProposalStatus.Active
-            passed.isNotEmpty() -> ProposalStatus.Passed
-            rejected.isNotEmpty() -> ProposalStatus.Rejected
-            else -> ProposalStatus.Active
-        }
-
     private fun CosmosGovProposal.toUi(
         status: ProposalStatus,
         now: Instant,
         yourVote: VoteOption?,
+        liveTally: CosmosGovTallyResult?,
     ): ProposalUi {
         val end = runCatching { votingEndTime?.let { Instant.parse(it) } }.getOrNull()
         val votingOpen = end?.isAfter(now) ?: false
@@ -352,7 +341,8 @@ constructor(
             // Votable only while the proposal is in its voting period AND the window is still open,
             // so a status that lags the on-chain clock can't offer a guaranteed-reject vote.
             isVotable = status == ProposalStatus.Active && votingOpen,
-            tally = finalTallyResult.toTally(),
+            votingEndTime = end,
+            tally = (liveTally ?: finalTallyResult).toTally(),
             yourVote = yourVote,
         )
     }
@@ -415,6 +405,8 @@ constructor(
             leadingPercent = leading?.let { percent(it.second) } ?: "",
         )
     }
+
+    private data class ActiveExtras(val tally: CosmosGovTallyResult?, val vote: VoteOption?)
 
     private companion object {
         const val STATUS_VOTING_PERIOD = 2

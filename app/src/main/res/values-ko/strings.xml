@@ -908,10 +908,6 @@
     <string name="home_portfolio_balance">포트폴리오 잔액</string>
     <string name="wallet">지갑</string>
     <string name="governance">거버넌스</string>
-    <string name="governance_subtitle_default">QBTC 온체인 제안</string>
-    <string name="governance_count_active">활성 %1$d개</string>
-    <string name="governance_count_passed">통과 %1$d개</string>
-    <string name="governance_count_rejected">거부 %1$d개</string>
     <string name="governance_status_active">활성</string>
     <string name="governance_status_passed">통과됨</string>
     <string name="governance_status_rejected">거부됨</string>
@@ -936,6 +932,7 @@
     <string name="governance_error_title">문제가 발생했습니다</string>
     <string name="governance_error_load_proposals">제안을 불러올 수 없습니다</string>
     <string name="governance_error_submit_vote">투표를 제출할 수 없습니다</string>
+    <string name="governance_voting_closed">이 제안에 대한 투표가 종료되었습니다</string>
     <string name="hide_balance">잔액 숨기기</string>
     <string name="show_balance">잔액 표시</string>
     <string name="no_chains_found">체인을 찾을 수 없습니다</string>

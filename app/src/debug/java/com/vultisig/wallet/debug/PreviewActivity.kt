@@ -108,7 +108,6 @@ import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingPositionsConten
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingVerifyContent
 import com.vultisig.wallet.ui.screens.cosmosstaking.StakingPositionSkeleton
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
-import com.vultisig.wallet.ui.screens.governance.GovernanceContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
@@ -361,51 +360,73 @@ private fun GovernancePreview() {
             leadingOption = VoteOption.YES,
             leadingPercent = "72%",
         )
-    GovernanceContent(
+    val governanceState =
+        GovernanceUiState(
+            active =
+                listOf(
+                    ProposalUi(
+                        id = "12",
+                        title = "Increase the block reward to incentivise validators",
+                        summary = "Raise the per-block reward from 1.0 to 1.5 QBTC over 30 days.",
+                        status = ProposalStatus.Active,
+                        timeLabel = UiText.DynamicString("Ends in 2d"),
+                        isVotable = true,
+                        votingEndTime = null,
+                        tally = tally,
+                        yourVote = VoteOption.YES,
+                    ),
+                    ProposalUi(
+                        id = "8",
+                        title = "Fund public RPC infrastructure",
+                        summary = "Allocate treasury to maintain public QBTC RPC nodes.",
+                        status = ProposalStatus.Active,
+                        timeLabel = UiText.DynamicString("Ends in 5h"),
+                        isVotable = true,
+                        votingEndTime = null,
+                        tally = tally,
+                        yourVote = null,
+                    ),
+                ),
+            passed =
+                listOf(
+                    ProposalUi(
+                        id = "1",
+                        title = "Claim UTXO to reserve",
+                        summary = "Claim more UTXO to reserve",
+                        status = ProposalStatus.Passed,
+                        timeLabel = UiText.DynamicString("Ended 22 Jun 2026"),
+                        isVotable = false,
+                        votingEndTime = null,
+                        tally = tally,
+                        yourVote = null,
+                    )
+                ),
+        )
+    CosmosStakingPositionsContent(
+        chainId = "QBTC",
         state =
-            GovernanceUiState(
-                selectedTab = ProposalStatus.Active,
-                active =
-                    listOf(
-                        ProposalUi(
-                            id = "12",
-                            title = "Increase the block reward to incentivise validators",
-                            summary =
-                                "Raise the per-block reward from 1.0 to 1.5 QBTC over 30 days.",
-                            status = ProposalStatus.Active,
-                            timeLabel = UiText.DynamicString("Ends in 2d"),
-                            isVotable = true,
-                            tally = tally,
-                            yourVote = VoteOption.YES,
-                        ),
-                        ProposalUi(
-                            id = "8",
-                            title = "Fund public RPC infrastructure",
-                            summary = "Allocate treasury to maintain public QBTC RPC nodes.",
-                            status = ProposalStatus.Active,
-                            timeLabel = UiText.DynamicString("Ends in 5h"),
-                            isVotable = true,
-                            tally = tally,
-                            yourVote = null,
-                        ),
-                    ),
-                passed =
-                    listOf(
-                        ProposalUi(
-                            id = "1",
-                            title = "Claim UTXO to reserve",
-                            summary = "Claim more UTXO to reserve",
-                            status = ProposalStatus.Passed,
-                            timeLabel = UiText.DynamicString("Ended 22 Jun 2026"),
-                            isVotable = false,
-                            tally = tally,
-                            yourVote = null,
-                        )
-                    ),
+            CosmosStakingPositionsUiState(
+                ticker = "QBTC",
+                selectedPositions = listOf("QBTC"),
+                totalAmountPrice = "$0.00",
+                totalStakedFiat = "$0.00",
             ),
-        onTabSelected = {},
+        isRefreshing = false,
         onRefresh = {},
-        onVoteClick = {},
+        onManagePositions = {},
+        onClaim = {},
+        onDelegateToNewValidator = {},
+        onUnstake = {},
+        onMove = {},
+        onStakeMore = {},
+        onPositionSelectionChange = { _, _ -> },
+        onPositionSelectionDone = {},
+        onDismissDialog = {},
+        governanceState = governanceState,
+        isGovernanceTab = true,
+        onStakedTabClick = {},
+        onGovernanceTabClick = {},
+        onVoteProposal = {},
     )
 }
 

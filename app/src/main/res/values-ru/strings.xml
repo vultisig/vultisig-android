@@ -690,10 +690,6 @@
     <string name="home_portfolio_balance">Баланс портфеля</string>
     <string name="wallet">Кошелек</string>
     <string name="governance">Управление</string>
-    <string name="governance_subtitle_default">Ончейн-предложения QBTC</string>
-    <string name="governance_count_active">%1$d активных</string>
-    <string name="governance_count_passed">%1$d принято</string>
-    <string name="governance_count_rejected">%1$d отклонено</string>
     <string name="governance_status_active">Активно</string>
     <string name="governance_status_passed">Принято</string>
     <string name="governance_status_rejected">Отклонено</string>
@@ -718,6 +714,7 @@
     <string name="governance_error_title">Что-то пошло не так</string>
     <string name="governance_error_load_proposals">Не удалось загрузить предложения</string>
     <string name="governance_error_submit_vote">Не удалось отправить ваш голос</string>
+    <string name="governance_voting_closed">Голосование по этому предложению завершено</string>
     <string name="hide_balance">Скрыть баланс</string>
     <string name="show_balance">Показать баланс</string>
     <string name="no_chains_found">Сети не найдены.</string>

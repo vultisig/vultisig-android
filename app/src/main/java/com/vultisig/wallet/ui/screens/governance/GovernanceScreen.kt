@@ -7,25 +7,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,15 +27,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -50,170 +40,50 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
-import com.vultisig.wallet.ui.components.v2.tab.VsTab
-import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.governance.GovernanceUiState
-import com.vultisig.wallet.ui.models.governance.GovernanceViewModel
 import com.vultisig.wallet.ui.models.governance.ProposalStatus
 import com.vultisig.wallet.ui.models.governance.ProposalUi
 import com.vultisig.wallet.ui.models.governance.TallyUi
 import com.vultisig.wallet.ui.models.governance.VoteOption
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
 /**
- * QBTC governance proposals, hosted inside `ChainDashboardScreen`'s content slot (so it owns its
- * own header). Only open Active proposals expose a vote CTA, which stages a transaction into the
- * shared Verify-Deposit → keysign flow.
+ * Renders the QBTC governance proposals as `LazyColumn` items so they can sit inside the DeFi
+ * (staking-positions) screen under a "Governance" tab next to "Staked". Proposals are grouped into
+ * Active / Passed / Rejected sections; only open Active proposals expose a vote CTA.
  */
-@Composable
-internal fun GovernanceScreen(vaultId: String, viewModel: GovernanceViewModel = hiltViewModel()) {
-    val state by viewModel.state.collectAsState()
-
-    LaunchedEffect(vaultId) { viewModel.setData(vaultId = vaultId) }
-
-    GovernanceContent(
-        state = state,
-        onTabSelected = viewModel::onTabSelected,
-        onRefresh = viewModel::refresh,
-        onVoteClick = viewModel::openVoteSheet,
-    )
-
-    val sheetProposal = state.voteSheetProposal
-    if (sheetProposal != null) {
-        VoteBottomSheet(
-            proposal = sheetProposal,
-            isSubmitting = state.isSubmitting,
-            onDismiss = viewModel::dismissVoteSheet,
-            onConfirm = { option -> viewModel.castVote(sheetProposal.id, option) },
-        )
-    }
-
-    val error = state.error
-    if (error != null) {
-        UiAlertDialog(
-            title = stringResource(R.string.governance_error_title),
-            text = error.asString(),
-            onDismiss = viewModel::dismissError,
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun GovernanceContent(
+internal fun LazyListScope.governanceProposalItems(
     state: GovernanceUiState,
-    onTabSelected: (ProposalStatus) -> Unit,
-    onRefresh: () -> Unit,
     onVoteClick: (ProposalUi) -> Unit,
 ) {
-    PullToRefreshBox(
-        isRefreshing = state.isRefreshing,
-        onRefresh = onRefresh,
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        Column(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
-            GovernanceHeader(
-                activeCount = state.active.size,
-                passedCount = state.passed.size,
-                rejectedCount = state.rejected.size,
-            )
-
-            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                VsTabGroup(index = state.selectedTab.ordinal) {
-                    ProposalStatus.entries.forEach { status ->
-                        tab {
-                            VsTab(
-                                label = stringResource(status.labelRes),
-                                onClick = { onTabSelected(status) },
-                            )
-                        }
-                    }
-                }
-            }
-
-            val proposals = state.proposalsFor(state.selectedTab)
-            Box(modifier = Modifier.fillMaxWidth().weight(1f).padding(top = 12.dp)) {
-                when {
-                    state.isLoading && proposals.isEmpty() -> GovernanceSkeletonList()
-                    proposals.isEmpty() -> GovernanceEmptyState()
-                    else ->
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding =
-                                PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            items(proposals, key = { it.id }) { proposal ->
-                                ProposalCard(
-                                    proposal = proposal,
-                                    onVoteClick = { onVoteClick(proposal) },
-                                )
-                            }
-                        }
-                }
-            }
+    when {
+        state.isLoading && state.isEmpty ->
+            items(count = 2, key = { "gov-skeleton-$it" }) { ProposalSkeletonCard() }
+        state.isEmpty -> item(key = "gov-empty") { GovernanceEmptyState() }
+        else -> {
+            proposalSection("active", state.active, onVoteClick)
+            proposalSection("passed", state.passed, onVoteClick)
+            proposalSection("rejected", state.rejected, onVoteClick)
         }
     }
 }
 
-@Composable
-private fun GovernanceHeader(activeCount: Int, passedCount: Int, rejectedCount: Int) {
-    val teal = Theme.v2.colors.buttons.primary
-    val subtitle =
-        listOfNotNull(
-                activeCount
-                    .takeIf { it > 0 }
-                    ?.let { stringResource(R.string.governance_count_active, it) },
-                passedCount
-                    .takeIf { it > 0 }
-                    ?.let { stringResource(R.string.governance_count_passed, it) },
-                rejectedCount
-                    .takeIf { it > 0 }
-                    ?.let { stringResource(R.string.governance_count_rejected, it) },
-            )
-            .joinToString(" · ")
-            .ifEmpty { stringResource(R.string.governance_subtitle_default) }
-
-    Row(
-        modifier =
-            Modifier.fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 16.dp)
-                .clip(RoundedCornerShape(18.dp))
-                .background(
-                    Brush.horizontalGradient(listOf(teal.copy(alpha = 0.14f), Color.Transparent))
-                )
-                .border(1.dp, teal.copy(alpha = 0.22f), RoundedCornerShape(18.dp))
-                .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier =
-                Modifier.size(44.dp)
-                    .clip(CircleShape)
-                    .background(Theme.v2.colors.gradients.primary),
-            contentAlignment = Alignment.Center,
-        ) {
-            UiIcon(
-                drawableResId = R.drawable.ic_megaphone,
-                size = 22.dp,
-                tint = Theme.v2.colors.text.button.dark,
-            )
-        }
-        UiSpacer(size = 12.dp)
-        Column {
-            Text(
-                text = stringResource(R.string.governance),
-                style = Theme.brockmann.headings.title3,
-                color = Theme.v2.colors.text.primary,
-            )
-            Text(
-                text = subtitle,
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.secondary,
-            )
-        }
+private fun LazyListScope.proposalSection(
+    key: String,
+    proposals: List<ProposalUi>,
+    onVoteClick: (ProposalUi) -> Unit,
+) {
+    if (proposals.isEmpty()) return
+    item(key = "gov-header-$key") {
+        Text(
+            text = stringResource(proposals.first().status.labelRes),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.secondary,
+        )
+    }
+    items(proposals, key = { "gov-$key-${it.id}" }) { proposal ->
+        ProposalCard(proposal = proposal, onVoteClick = { onVoteClick(proposal) })
     }
 }
 
@@ -438,7 +308,7 @@ private fun YourVoteBadge(option: VoteOption) {
 }
 
 @Composable
-private fun VoteBottomSheet(
+internal fun GovernanceVoteSheet(
     proposal: ProposalUi,
     isSubmitting: Boolean,
     onDismiss: () -> Unit,
@@ -524,16 +394,6 @@ private fun VoteOptionRow(
 }
 
 @Composable
-private fun GovernanceSkeletonList() {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        repeat(3) { ProposalSkeletonCard() }
-    }
-}
-
-@Composable
 private fun ProposalSkeletonCard() {
     Column(
         modifier =
@@ -552,25 +412,26 @@ private fun ProposalSkeletonCard() {
 
 @Composable
 private fun GovernanceEmptyState() {
-    Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            UiIcon(
-                drawableResId = R.drawable.ic_megaphone,
-                size = 28.dp,
-                tint = Theme.v2.colors.text.tertiary,
-            )
-            UiSpacer(size = 8.dp)
-            Text(
-                text = stringResource(R.string.governance_empty),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.tertiary,
-            )
-        }
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        UiIcon(
+            drawableResId = R.drawable.ic_megaphone,
+            size = 28.dp,
+            tint = Theme.v2.colors.text.tertiary,
+        )
+        UiSpacer(size = 8.dp)
+        Text(
+            text = stringResource(R.string.governance_empty),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.tertiary,
+        )
     }
 }
 
 @get:StringRes
-private val ProposalStatus.labelRes: Int
+internal val ProposalStatus.labelRes: Int
     get() =
         when (this) {
             ProposalStatus.Active -> R.string.governance_status_active
@@ -594,58 +455,3 @@ private fun VoteOption.voteColor(): Color =
         VoteOption.ABSTAIN -> Theme.v2.colors.text.tertiary
         VoteOption.NO_WITH_VETO -> Theme.v2.colors.alerts.warning
     }
-
-@Preview
-@Composable
-private fun GovernanceContentPreview() {
-    val tally =
-        TallyUi(
-            yesFraction = 0.72f,
-            noFraction = 0.18f,
-            abstainFraction = 0.06f,
-            vetoFraction = 0.04f,
-            yesPercent = "72%",
-            noPercent = "18%",
-            abstainPercent = "6%",
-            vetoPercent = "4%",
-            hasVotes = true,
-            leadingOption = VoteOption.YES,
-            leadingPercent = "72%",
-        )
-    GovernanceContent(
-        state =
-            GovernanceUiState(
-                selectedTab = ProposalStatus.Active,
-                active =
-                    listOf(
-                        ProposalUi(
-                            id = "12",
-                            title = "Increase the block reward to incentivise validators",
-                            summary =
-                                "Raise the per-block reward from 1.0 to 1.5 QBTC over 30 days.",
-                            status = ProposalStatus.Active,
-                            timeLabel = UiText.DynamicString("Ends in 2d"),
-                            isVotable = true,
-                            tally = tally,
-                            yourVote = VoteOption.YES,
-                        )
-                    ),
-                passed =
-                    listOf(
-                        ProposalUi(
-                            id = "1",
-                            title = "Claim UTXO to reserve",
-                            summary = "Claim more UTXO to reserve",
-                            status = ProposalStatus.Passed,
-                            timeLabel = UiText.DynamicString("Ended 22 Jun 2026"),
-                            isVotable = false,
-                            tally = tally,
-                            yourVote = null,
-                        )
-                    ),
-            ),
-        onTabSelected = {},
-        onRefresh = {},
-        onVoteClick = {},
-    )
-}

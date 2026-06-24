@@ -18,7 +18,6 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.screens.v2.home.components.BOTH_CRYPTO_CONNECTION_TYPES
 import com.vultisig.wallet.ui.screens.v2.home.components.ONLY_WALLET
-import com.vultisig.wallet.ui.screens.v2.home.components.QBTC_CRYPTO_CONNECTION_TYPES
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.reflect.typeOf
@@ -88,11 +87,6 @@ constructor(
                 chainId = args.route.chainId
             }
 
-            is ChainDashboardRoute.PositionGovernance -> {
-                vaultId = args.route.vaultId
-                chainId = args.route.chainId
-            }
-
             is ChainDashboardRoute.Wallet -> {
                 vaultId = args.route.vaultId
                 chainId = args.route.chainId
@@ -102,16 +96,20 @@ constructor(
 
     private fun initAvailableCryptoTypes() {
         val availableCryptoTypes =
-            when (chainId) {
-                Chain.Qbtc.id -> QBTC_CRYPTO_CONNECTION_TYPES
-                Chain.ThorChain.id,
-                Chain.Ethereum.id,
-                Chain.MayaChain.id,
-                Chain.Tron.id,
-                Chain.Terra.id,
-                Chain.TerraClassic.id -> BOTH_CRYPTO_CONNECTION_TYPES
-                else -> ONLY_WALLET
-            }
+            if (
+                chainId in
+                    listOf(
+                        Chain.ThorChain.id,
+                        Chain.Ethereum.id,
+                        Chain.MayaChain.id,
+                        Chain.Tron.id,
+                        Chain.Terra.id,
+                        Chain.TerraClassic.id,
+                        Chain.Qbtc.id,
+                    )
+            )
+                BOTH_CRYPTO_CONNECTION_TYPES
+            else ONLY_WALLET
 
         uiState.update { it.copy(availableCryptoTypes = availableCryptoTypes) }
     }
@@ -153,28 +151,9 @@ constructor(
                                 else -> ChainDashboardRoute.PositionCircle(vaultId = vaultId)
                             }
                         }
-
-                        // Governance is QBTC-only; a stale app-wide selection on another chain
-                        // falls back to the wallet view.
-                        CryptoConnectionType.Governance ->
-                            if (chainId == Chain.Qbtc.id)
-                                ChainDashboardRoute.PositionGovernance(
-                                    vaultId = vaultId,
-                                    chainId = requireNotNull(chainId),
-                                )
-                            else
-                                ChainDashboardRoute.Wallet(
-                                    vaultId = vaultId,
-                                    chainId = requireNotNull(chainId),
-                                )
                     }
-                // Highlight a type this chain actually offers, so a stale app-wide selection
-                // doesn't leave the selector with nothing highlighted.
-                val effectiveType =
-                    if (type in uiState.value.availableCryptoTypes) type
-                    else CryptoConnectionType.Wallet
                 uiState.update { state ->
-                    state.copy(route = activeRoute, cryptoConnectionType = effectiveType)
+                    state.copy(route = activeRoute, cryptoConnectionType = type)
                 }
             }
             .launchIn(viewModelScope)
@@ -189,20 +168,6 @@ constructor(
     }
 
     fun back() {
-        viewModelScope.launch {
-            // A sub-tab reached via the in-dashboard selector (the dashboard was opened at the
-            // Wallet view) returns to that Wallet view. A dashboard opened directly at a DeFi
-            // position from the DeFi portfolio pops as before, back to where it was opened from.
-            val enteredAtWallet = args.route is ChainDashboardRoute.Wallet
-            if (
-                enteredAtWallet && uiState.value.cryptoConnectionType != CryptoConnectionType.Wallet
-            ) {
-                cryptoConnectionTypeRepository.setActiveCryptoConnection(
-                    CryptoConnectionType.Wallet
-                )
-            } else {
-                navigator.back()
-            }
-        }
+        viewModelScope.launch { navigator.back() }
     }
 }

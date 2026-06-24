@@ -608,10 +608,6 @@ sealed interface ChainDashboardRoute {
     @Serializable
     data class PositionCosmosStaking(val vaultId: String, val chainId: String) :
         ChainDashboardRoute
-
-    /** QBTC governance proposals + voting. QBTC-only sub-tab alongside Wallet + DeFi. */
-    @Serializable
-    data class PositionGovernance(val vaultId: String, val chainId: String) : ChainDashboardRoute
 }
 
 internal val BackupTypeNavType = createNavType<BackupType>()

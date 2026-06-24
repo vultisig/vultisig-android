@@ -1063,10 +1063,6 @@
     <string name="home_portfolio_balance">投资组合余额</string>
     <string name="wallet">钱包</string>
     <string name="governance">治理</string>
-    <string name="governance_subtitle_default">QBTC 链上提案</string>
-    <string name="governance_count_active">%1$d 个进行中</string>
-    <string name="governance_count_passed">%1$d 个已通过</string>
-    <string name="governance_count_rejected">%1$d 个已拒绝</string>
     <string name="governance_status_active">进行中</string>
     <string name="governance_status_passed">已通过</string>
     <string name="governance_status_rejected">已拒绝</string>
@@ -1091,6 +1087,7 @@
     <string name="governance_error_title">出错了</string>
     <string name="governance_error_load_proposals">无法加载提案</string>
     <string name="governance_error_submit_vote">无法提交您的投票</string>
+    <string name="governance_voting_closed">此提案的投票已结束</string>
     <string name="hide_balance">隐藏余额</string>
     <string name="show_balance">显示余额</string>
     <string name="no_chains_found">未找到区块链</string>

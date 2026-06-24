@@ -689,10 +689,6 @@
     <string name="home_portfolio_balance">Saldo de la cartera</string>
     <string name="wallet">Monedero</string>
     <string name="governance">Gobernanza</string>
-    <string name="governance_subtitle_default">Propuestas on-chain de QBTC</string>
-    <string name="governance_count_active">%1$d activas</string>
-    <string name="governance_count_passed">%1$d aprobadas</string>
-    <string name="governance_count_rejected">%1$d rechazadas</string>
     <string name="governance_status_active">Activo</string>
     <string name="governance_status_passed">Aprobada</string>
     <string name="governance_status_rejected">Rechazada</string>
@@ -717,6 +713,7 @@
     <string name="governance_error_title">Algo salió mal</string>
     <string name="governance_error_load_proposals">No se pudieron cargar las propuestas</string>
     <string name="governance_error_submit_vote">No se pudo enviar tu voto</string>
+    <string name="governance_voting_closed">La votación de esta propuesta ha finalizado</string>
     <string name="hide_balance">Ocultar saldo</string>
     <string name="show_balance">Mostrar saldo</string>
     <string name="no_chains_found">No se encontraron cadenas</string>

@@ -8,6 +8,8 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosGovProposal
 import com.vultisig.wallet.data.api.models.cosmos.CosmosGovProposalsResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosGovTallyResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosGovTallyResult
 import com.vultisig.wallet.data.api.models.cosmos.CosmosGovVote
 import com.vultisig.wallet.data.api.models.cosmos.CosmosGovVoteResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceDenomTraceJson
@@ -74,6 +76,13 @@ interface CosmosApi {
      * typically return `null`.
      */
     suspend fun getGovVote(proposalId: String, voter: String): CosmosGovVote?
+
+    /**
+     * Live tally for [proposalId] from the `/tally` endpoint. cosmos-sdk leaves
+     * `final_tally_result` at zero until a proposal closes, so active proposals must read the
+     * running counts here. Null on failure.
+     */
+    suspend fun getGovTally(proposalId: String): CosmosGovTallyResult?
 
     /**
      * Terra Classic's live proportional burn-tax rate from the `x/tax` module
@@ -263,6 +272,21 @@ internal class CosmosApiImp(
             null
         } catch (e: Exception) {
             Timber.w(e, "Unexpected error fetching gov vote for proposal %s", proposalId)
+            null
+        }
+    }
+
+    override suspend fun getGovTally(proposalId: String): CosmosGovTallyResult? {
+        val encoded = URLEncoder.encode(proposalId, Charsets.UTF_8.name())
+        return try {
+            httpClient
+                .get("$rpcEndpoint/cosmos/gov/v1/proposals/$encoded/tally")
+                .bodyOrThrow<CosmosGovTallyResponse>()
+                .tally
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to fetch gov tally for proposal %s", proposalId)
             null
         }
     }
