@@ -188,10 +188,7 @@ constructor(
     }
 
     private fun keysign(keysignInitType: KeysignInitType) {
-        val hasAllConsents =
-            state.value.let { it.consentReceiveAmount && it.consentAmount && it.consentAllowance }
-
-        if (hasAllConsents) {
+        if (state.value.hasAllConsents) {
             viewModelScope.launch {
                 launchKeysign(
                     keysignInitType,
