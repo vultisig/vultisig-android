@@ -204,7 +204,7 @@ constructor(
                     parameter("streaming_interval", MAYA_STREAMING_INTERVAL)
                     parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
                     parameter("affiliate_bps", if (isAffiliate) affiliateFeeRate else "0")
-                    toleranceBps?.let { parameter("tolerance_bps", it) }
+                    toleranceBps?.takeIf { it > 0 }?.let { parameter("tolerance_bps", it) }
                     header(xClientID, xClientIDValue)
                 }
             val responseRawString = response.bodyAsText()
