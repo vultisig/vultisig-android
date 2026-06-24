@@ -235,7 +235,7 @@ constructor(
                 parameter("destination", request.address)
                 parameter("streaming_interval", request.interval)
                 request.streamingQuantity?.let { parameter("streaming_quantity", it) }
-                request.toleranceBps?.let { parameter("tolerance_bps", it) }
+                request.toleranceBps?.takeIf { it > 0 }?.let { parameter("tolerance_bps", it) }
                 if (affiliateParams.isNotEmpty()) {
                     affiliateParams.forEach { (key, value) ->
                         when (key) {

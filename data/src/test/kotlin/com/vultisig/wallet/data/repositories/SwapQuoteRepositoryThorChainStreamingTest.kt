@@ -231,22 +231,25 @@ class SwapQuoteRepositoryThorChainStreamingTest {
     }
 
     @Test
-    fun `rapid request carries 1 percent tolerance_bps so the memo gets a real limit`() = runTest {
-        coEvery { thorChainApi.getSwapQuotes(match { it.interval == "0" }) } returns
-            THORChainSwapQuoteDeserialized.Result(
-                thorQuote(expectedAmountOut = "9950", feesTotal = "50")
-            )
+    fun `rapid request carries the Auto tolerance_bps default of 0 so the node sets no limit`() =
+        runTest {
+            coEvery { thorChainApi.getSwapQuotes(match { it.interval == "0" }) } returns
+                THORChainSwapQuoteDeserialized.Result(
+                    thorQuote(expectedAmountOut = "9950", feesTotal = "50")
+                )
 
-        fetchQuote()
+            fetchQuote()
 
-        coVerify(exactly = 1) {
-            thorChainApi.getSwapQuotes(match { it.interval == "0" && it.toleranceBps == 100 })
+            // Auto (no user slippage) → 0, which the API omits so the quote is never rejected.
+            coVerify(exactly = 1) {
+                thorChainApi.getSwapQuotes(match { it.interval == "0" && it.toleranceBps == 0 })
+            }
         }
-    }
 
     @Test
     fun `streaming fallback request also carries tolerance_bps`() = runTest {
-        // High slippage forces a streaming fetch; the .copy() must preserve toleranceBps.
+        // High slippage forces a streaming fetch; the .copy() must preserve toleranceBps (0 =
+        // Auto).
         val rapidData =
             thorQuote(expectedAmountOut = "6000", feesTotal = "4000", maxStreamingQuantity = 5)
         val streamingData = thorQuote(expectedAmountOut = "7500", feesTotal = "500")
@@ -259,7 +262,7 @@ class SwapQuoteRepositoryThorChainStreamingTest {
         fetchQuote()
 
         coVerify(exactly = 1) {
-            thorChainApi.getSwapQuotes(match { it.interval == "1" && it.toleranceBps == 100 })
+            thorChainApi.getSwapQuotes(match { it.interval == "1" && it.toleranceBps == 0 })
         }
     }
 
