@@ -1364,6 +1364,10 @@
     <string name="qbtc_claim_banner_subtitle">Тот же Bitcoin. Квантово-устойчивый.</string>
     <string name="qbtc_claim_banner_title">Получите свой QBTC</string>
     <string name="qbtc_claim_banner_cta">Получить сейчас</string>
+    <string name="qbtc_claim_cosign_description">Другое устройство начало получение QBTC. При одобрении вы вместе подпишете его своим ключом Bitcoin. Проверьте счета ниже, прежде чем продолжить.</string>
+    <string name="qbtc_claim_cosign_btc_account">Счёт Bitcoin</string>
+    <string name="qbtc_claim_cosign_qbtc_account">Счёт QBTC</string>
+    <string name="qbtc_claim_cosign_approve">Одобрить и подписать</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Получить</string>
     <string name="cosmos_staking_action_delegate">Стейк</string>

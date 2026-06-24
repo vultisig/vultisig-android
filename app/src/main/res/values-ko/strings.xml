@@ -1371,6 +1371,10 @@
     <string name="qbtc_claim_banner_subtitle">같은 Bitcoin. 양자 내성.</string>
     <string name="qbtc_claim_banner_title">QBTC를 청구하세요</string>
     <string name="qbtc_claim_banner_cta">지금 청구</string>
+    <string name="qbtc_claim_cosign_description">다른 기기에서 QBTC 청구를 시작했습니다. 승인하면 Bitcoin 키로 공동 서명합니다. 계속하기 전에 아래 계정을 확인하세요.</string>
+    <string name="qbtc_claim_cosign_btc_account">Bitcoin 계정</string>
+    <string name="qbtc_claim_cosign_qbtc_account">QBTC 계정</string>
+    <string name="qbtc_claim_cosign_approve">승인 및 공동 서명</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">청구</string>
     <string name="cosmos_staking_action_delegate">스테이킹</string>

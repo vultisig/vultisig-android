@@ -1354,6 +1354,10 @@
     <string name="qbtc_claim_banner_subtitle">Dasselbe Bitcoin. Quantensicher.</string>
     <string name="qbtc_claim_banner_title">Rufen Sie Ihr QBTC ab</string>
     <string name="qbtc_claim_banner_cta">Jetzt abrufen</string>
+    <string name="qbtc_claim_cosign_description">Ein anderes Gerät hat einen QBTC-Abruf gestartet. Mit dem Genehmigen signieren Sie ihn mit Ihrem Bitcoin-Schlüssel mit. Überprüfen Sie die folgenden Konten, bevor Sie fortfahren.</string>
+    <string name="qbtc_claim_cosign_btc_account">Bitcoin-Konto</string>
+    <string name="qbtc_claim_cosign_qbtc_account">QBTC-Konto</string>
+    <string name="qbtc_claim_cosign_approve">Genehmigen &amp; mitsignieren</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Einfordern</string>
     <string name="cosmos_staking_action_delegate">Staken</string>
