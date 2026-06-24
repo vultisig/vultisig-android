@@ -68,7 +68,7 @@ class ThorChainAffiliateHelperTest {
     }
 
     @Test
-    fun `discount of 50 bps short-circuits to clean referral with zero affiliate fee`() {
+    fun `full discount without referral code zeroes the affiliate fee`() {
         val params =
             ThorChainAffiliateHelper.buildAffiliateParams(referralCode = "", discountBps = 50)
 
@@ -77,22 +77,21 @@ class ThorChainAffiliateHelperTest {
     }
 
     @Test
-    fun `discount of 50 bps short-circuits even when a referral code is provided`() {
+    fun `full discount keeps the referral split and still pays the referrer`() {
         val params =
             ThorChainAffiliateHelper.buildAffiliateParams(referralCode = "alice", discountBps = 50)
 
-        // Clean-referral branch ignores the code and emits the flat (non-nested) form.
-        assertEquals(THORChainSwaps.AFFILIATE_FEE_ADDRESS, params["affiliate"])
-        assertEquals("0", params["affiliate_bps"])
+        assertEquals("alice/${THORChainSwaps.AFFILIATE_FEE_ADDRESS}", params["affiliate"])
+        assertEquals("${THORChainSwaps.REFERRED_USER_FEE_RATE_BP}/0", params["affiliate_bps"])
     }
 
     @Test
-    fun `discount above 50 bps continues to short-circuit`() {
+    fun `discount beyond the referred affiliate base still preserves the referrer share`() {
         val params =
             ThorChainAffiliateHelper.buildAffiliateParams(referralCode = "alice", discountBps = 100)
 
-        assertEquals(THORChainSwaps.AFFILIATE_FEE_ADDRESS, params["affiliate"])
-        assertEquals("0", params["affiliate_bps"])
+        assertEquals("alice/${THORChainSwaps.AFFILIATE_FEE_ADDRESS}", params["affiliate"])
+        assertEquals("${THORChainSwaps.REFERRED_USER_FEE_RATE_BP}/0", params["affiliate_bps"])
     }
 
     @Test
