@@ -24,6 +24,7 @@ interface JupiterApi {
         fromToken: String,
         toToken: String,
         fromAddress: String,
+        slippageBps: Int?,
     ): QuoteSwapTotalDataJson
 }
 
@@ -35,12 +36,14 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Jupite
         fromToken: String,
         toToken: String,
         fromAddress: String,
+        slippageBps: Int?,
     ): QuoteSwapTotalDataJson {
         val quoteResponse =
             httpClient.get("$JUPITER_URL/swap/v1/quote") {
                 parameter("inputMint", fromToken)
                 parameter("outputMint", toToken)
                 parameter("amount", fromAmount)
+                parameter("slippageBps", slippageBps ?: DEFAULT_SLIPPAGE_BPS)
             }
         if (quoteResponse.status == HttpStatusCode.TooManyRequests) {
             throw SwapException.RateLimitExceeded("[Jupiter] Too many requests")
@@ -97,6 +100,9 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Jupite
         val MIN_FEE_PRICE_SWAP = "150000".toBigInteger()
         val MAX_PRIORITY_FEE_LAMPORTS = 6000000
         val PRIORITY_LEVEL = "high"
+
+        /** Quote slippage (0.5%) used when the user leaves slippage on Auto; matches 1inch. */
+        private const val DEFAULT_SLIPPAGE_BPS = 50
 
         val JUPITER_URL = "https://api.vultisig.com/jup"
     }

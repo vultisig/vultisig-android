@@ -21,6 +21,7 @@ internal class JupiterQuoteSource @Inject constructor(private val jupiterApi: Ju
                     toToken = toToken,
                     fromAmount = request.tokenValue.value.toString(),
                     fromAddress = request.srcAddress,
+                    slippageBps = request.slippageBps,
                 )
             }
 

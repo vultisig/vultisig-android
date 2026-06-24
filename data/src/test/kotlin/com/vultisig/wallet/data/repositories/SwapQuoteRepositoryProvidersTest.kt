@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.repositories.swap.OneInchQuoteSource
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigInteger
 import kotlinx.coroutines.runBlocking
@@ -304,7 +305,7 @@ class SwapQuoteRepositoryProvidersTest {
 
     @Test
     fun `jupiter happy path with matching feeMint returns swap fee from route`() = runTest {
-        coEvery { jupiterApi.getSwapQuote(any(), any(), any(), any()) } returns
+        coEvery { jupiterApi.getSwapQuote(any(), any(), any(), any(), any()) } returns
             jupiterQuoteResponse(feeMint = SOL_MINT, feeAmount = "1234")
 
         // Native SOL → empty contract address triggers SOL default mint mapping
@@ -329,7 +330,7 @@ class SwapQuoteRepositoryProvidersTest {
 
     @Test
     fun `jupiter no matching feeMint returns zero swap fee`() = runTest {
-        coEvery { jupiterApi.getSwapQuote(any(), any(), any(), any()) } returns
+        coEvery { jupiterApi.getSwapQuote(any(), any(), any(), any(), any()) } returns
             jupiterQuoteResponse(feeMint = "differentMint", feeAmount = "9999")
 
         val sol = coin(Chain.Solana, "SOL", contractAddress = "")
@@ -353,7 +354,7 @@ class SwapQuoteRepositoryProvidersTest {
 
     @Test
     fun `jupiter api throws is wrapped in SwapException`() = runTest {
-        coEvery { jupiterApi.getSwapQuote(any(), any(), any(), any()) } throws
+        coEvery { jupiterApi.getSwapQuote(any(), any(), any(), any(), any()) } throws
             RuntimeException("rate limited")
 
         val sol = coin(Chain.Solana, "SOL", contractAddress = "")
@@ -369,6 +370,28 @@ class SwapQuoteRepositoryProvidersTest {
                     )
                 )
             }
+        }
+    }
+
+    @Test
+    fun `jupiter forwards the request slippage to the api`() = runTest {
+        coEvery { jupiterApi.getSwapQuote(any(), any(), any(), any(), any()) } returns
+            jupiterQuoteResponse(feeMint = SOL_MINT, feeAmount = "1234")
+
+        val sol = coin(Chain.Solana, "SOL", contractAddress = "")
+        val usdc = coin(Chain.Solana, "USDC", contractAddress = USDC_MINT)
+        jupiterSource.fetch(
+            SwapQuoteRequest(
+                srcToken = sol,
+                dstToken = usdc,
+                tokenValue = TokenValue(value = BigInteger("1000"), token = sol),
+                srcAddress = "WALLET",
+                slippageBps = 250,
+            )
+        )
+
+        coVerify(exactly = 1) {
+            jupiterApi.getSwapQuote(any(), any(), any(), any(), slippageBps = 250)
         }
     }
 
