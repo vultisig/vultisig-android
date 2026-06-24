@@ -78,6 +78,11 @@ import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyValidatorRow
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
+import com.vultisig.wallet.ui.models.governance.GovernanceUiState
+import com.vultisig.wallet.ui.models.governance.ProposalStatus
+import com.vultisig.wallet.ui.models.governance.ProposalUi
+import com.vultisig.wallet.ui.models.governance.TallyUi
+import com.vultisig.wallet.ui.models.governance.VoteOption
 import com.vultisig.wallet.ui.models.keygen.ImportSeedphraseUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultBackupState
 import com.vultisig.wallet.ui.models.keygen.VerifyPinState
@@ -241,6 +246,7 @@ class PreviewActivity : ComponentActivity() {
                     "circle_usdc_widget" -> CircleUsdcWidgetPreview()
                     "btc_detail_claim" -> BtcDetailClaimPreview()
                     "qbtc_detail_claim" -> QbtcDetailClaimPreview()
+                    "governance" -> GovernancePreview()
                     "keysign_devices_plus_before" -> KeysignDevicesCountPreview(allowsMore = true)
                     "keysign_devices_plus_after" -> KeysignDevicesCountPreview(allowsMore = false)
                     "keygen_peer_discovery" -> KeygenPeerDiscoveryPreview()
@@ -336,6 +342,92 @@ private fun AssetActionButtonPreview() {
 @Composable
 private fun BannerPreview() {
     HomePagePagerContainer { UpgradeBanner {} }
+}
+
+@Composable
+private fun GovernancePreview() {
+    val tally =
+        TallyUi(
+            yesFraction = 0.72f,
+            noFraction = 0.18f,
+            abstainFraction = 0.06f,
+            vetoFraction = 0.04f,
+            yesPercent = "72%",
+            noPercent = "18%",
+            abstainPercent = "6%",
+            vetoPercent = "4%",
+            hasVotes = true,
+            leadingOption = VoteOption.YES,
+            leadingPercent = "72%",
+        )
+    val governanceState =
+        GovernanceUiState(
+            active =
+                listOf(
+                    ProposalUi(
+                        id = "12",
+                        title = "Increase the block reward to incentivise validators",
+                        summary = "Raise the per-block reward from 1.0 to 1.5 QBTC over 30 days.",
+                        status = ProposalStatus.Active,
+                        timeLabel = UiText.DynamicString("Ends in 2d"),
+                        isVotable = true,
+                        votingEndTime = null,
+                        tally = tally,
+                        yourVote = VoteOption.YES,
+                    ),
+                    ProposalUi(
+                        id = "8",
+                        title = "Fund public RPC infrastructure",
+                        summary = "Allocate treasury to maintain public QBTC RPC nodes.",
+                        status = ProposalStatus.Active,
+                        timeLabel = UiText.DynamicString("Ends in 5h"),
+                        isVotable = true,
+                        votingEndTime = null,
+                        tally = tally,
+                        yourVote = null,
+                    ),
+                ),
+            passed =
+                listOf(
+                    ProposalUi(
+                        id = "1",
+                        title = "Claim UTXO to reserve",
+                        summary = "Claim more UTXO to reserve",
+                        status = ProposalStatus.Passed,
+                        timeLabel = UiText.DynamicString("Ended 22 Jun 2026"),
+                        isVotable = false,
+                        votingEndTime = null,
+                        tally = tally,
+                        yourVote = null,
+                    )
+                ),
+        )
+    CosmosStakingPositionsContent(
+        chainId = "QBTC",
+        state =
+            CosmosStakingPositionsUiState(
+                ticker = "QBTC",
+                selectedPositions = listOf("QBTC"),
+                totalAmountPrice = "$0.00",
+                totalStakedFiat = "$0.00",
+            ),
+        isRefreshing = false,
+        onRefresh = {},
+        onManagePositions = {},
+        onClaim = {},
+        onDelegateToNewValidator = {},
+        onUnstake = {},
+        onMove = {},
+        onStakeMore = {},
+        onPositionSelectionChange = { _, _ -> },
+        onPositionSelectionDone = {},
+        onDismissDialog = {},
+        governanceState = governanceState,
+        isGovernanceTab = true,
+        onStakedTabClick = {},
+        onGovernanceTabClick = {},
+        onVoteProposal = {},
+    )
 }
 
 // Review-your-vault-devices onboarding screen (#4958). Rendered with a 3-device

@@ -6,6 +6,12 @@ import com.vultisig.wallet.data.api.models.DenomMetadata
 import com.vultisig.wallet.data.api.models.MetadataResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosGovProposal
+import com.vultisig.wallet.data.api.models.cosmos.CosmosGovProposalsResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosGovTallyResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosGovTallyResult
+import com.vultisig.wallet.data.api.models.cosmos.CosmosGovVote
+import com.vultisig.wallet.data.api.models.cosmos.CosmosGovVoteResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceDenomTraceJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
@@ -19,6 +25,7 @@ import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -55,6 +62,27 @@ interface CosmosApi {
     suspend fun getLatestBlock(): String
 
     suspend fun getTxStatus(txHash: String): CosmosTxStatusJson?
+
+    /**
+     * Governance proposals filtered by `proposal_status` (2 = voting period, 3 = passed, 4 =
+     * rejected). Used by the QBTC governance screen. Returns an empty list when the chain has none
+     * for that status.
+     */
+    suspend fun getGovProposals(status: Int): List<CosmosGovProposal>
+
+    /**
+     * The voter's current vote on [proposalId], or `null` when they haven't voted (404) or the
+     * lookup fails. Cosmos prunes votes once a proposal's voting period ends, so closed proposals
+     * typically return `null`.
+     */
+    suspend fun getGovVote(proposalId: String, voter: String): CosmosGovVote?
+
+    /**
+     * Live tally for [proposalId] from the `/tally` endpoint. cosmos-sdk leaves
+     * `final_tally_result` at zero until a proposal closes, so active proposals must read the
+     * running counts here. Null on failure.
+     */
+    suspend fun getGovTally(proposalId: String): CosmosGovTallyResult?
 
     /**
      * Terra Classic's live proportional burn-tax rate from the `x/tax` module
@@ -210,6 +238,59 @@ internal class CosmosApiImp(
         val response = httpClient.get("$rpcEndpoint/cosmos/tx/v1beta1/txs/$txHash")
         if (response.status.value == 404) return null
         return response.bodyOrThrow<CosmosTxStatusJson>()
+    }
+
+    override suspend fun getGovProposals(status: Int): List<CosmosGovProposal> {
+        return httpClient
+            .get("$rpcEndpoint/cosmos/gov/v1/proposals") {
+                parameter("proposal_status", status)
+                // Newest-first single page; QBTC has very few proposals per status, so paging past
+                // the first 20 is a follow-up if the chain ever grows beyond that.
+                parameter("pagination.limit", 20)
+                parameter("pagination.count_total", true)
+                parameter("pagination.reverse", true)
+            }
+            .bodyOrThrow<CosmosGovProposalsResponse>()
+            .proposals
+    }
+
+    override suspend fun getGovVote(proposalId: String, voter: String): CosmosGovVote? {
+        val encodedProposalId = URLEncoder.encode(proposalId, Charsets.UTF_8.name())
+        val encodedVoter = URLEncoder.encode(voter, Charsets.UTF_8.name())
+        return try {
+            httpClient
+                .get("$rpcEndpoint/cosmos/gov/v1/proposals/$encodedProposalId/votes/$encodedVoter")
+                .bodyOrThrow<CosmosGovVoteResponse>()
+                .vote
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: NetworkException) {
+            // 404 is the expected "no vote cast" / pruned-after-tally response.
+            if (e.httpStatusCode != HttpStatusCode.NotFound.value) {
+                Timber.w(e, "Failed to fetch gov vote for proposal %s", proposalId)
+            }
+            null
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Unexpected error fetching gov vote for proposal %s", proposalId)
+            null
+        }
+    }
+
+    override suspend fun getGovTally(proposalId: String): CosmosGovTallyResult? {
+        val encoded = URLEncoder.encode(proposalId, Charsets.UTF_8.name())
+        return try {
+            httpClient
+                .get("$rpcEndpoint/cosmos/gov/v1/proposals/$encoded/tally")
+                .bodyOrThrow<CosmosGovTallyResponse>()
+                .tally
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to fetch gov tally for proposal %s", proposalId)
+            null
+        }
     }
 
     override suspend fun getTerraClassicBurnTaxRate(): String? {
