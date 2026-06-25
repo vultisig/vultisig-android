@@ -813,9 +813,8 @@ constructor(
         srcNativeToken: Coin,
         slippageBps: Int?,
     ): Pair<SwapQuote, UiText> {
-        // LI.FI accepts a quote-time slippage override (fraction); Jupiter does not, so its cache
-        // key stays slippage-agnostic (#4858).
-        val liFiSlippageBps = slippageBps.takeIf { provider == SwapProvider.LIFI }
+        // LI.FI and Jupiter both take a quote-time slippage override, so slippage is part of the
+        // cache key — two values for the same pair must not collide on a stale quote (#4858).
         val swapQuote =
             getCachedQuoteOrFetch(
                 srcToken.id,
@@ -824,7 +823,7 @@ constructor(
                 dstToken.address,
                 srcTokenValue,
                 provider,
-                slippageBps = liFiSlippageBps,
+                slippageBps = slippageBps,
             ) {
                 val apiQuote =
                     if (provider == SwapProvider.LIFI)
@@ -851,6 +850,7 @@ constructor(
                                     dstToken = dstToken,
                                     tokenValue = tokenValue,
                                     srcAddress = src.address.address,
+                                    slippageBps = slippageBps,
                                 ),
                             )
                             .expectEvm(SwapProvider.JUPITER)
