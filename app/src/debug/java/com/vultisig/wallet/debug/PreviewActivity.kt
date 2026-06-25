@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -71,8 +72,10 @@ import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
+import com.vultisig.wallet.ui.models.DeviceMeta
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
+import com.vultisig.wallet.ui.models.VaultDetailUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyUiState
@@ -104,6 +107,7 @@ import com.vultisig.wallet.ui.models.swap.VultTierGateUiModel
 import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesUiState
 import com.vultisig.wallet.ui.screens.TransactionDoneView
+import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingPositionsContent
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingVerifyContent
 import com.vultisig.wallet.ui.screens.cosmosstaking.StakingPositionSkeleton
@@ -265,6 +269,8 @@ class PreviewActivity : ComponentActivity() {
                     "sign_message_before" -> VerifySignMessageCtaPreview(newButtons = false)
                     "sign_message_after" -> VerifySignMessageCtaPreview(newButtons = true)
                     "review_vault_devices" -> ReviewVaultDevicesPreview()
+                    "vault_detail_no_mldsa" -> VaultDetailPreview(withMldsa = false)
+                    "vault_detail_mldsa" -> VaultDetailPreview(withMldsa = true)
                     "error_screen_after" -> ErrorScreenAfterPreview()
                     else -> SwapConfirmPreview()
                 }
@@ -441,6 +447,41 @@ private fun ReviewVaultDevicesPreview() {
                 devices = listOf("iPhone", "Extension", "MacBook"),
             ),
         onEvent = {},
+    )
+}
+
+/**
+ * Vault details screen for a 2-of-2 vault. [withMldsa] = false renders the Keys section as it looks
+ * today (only ECDSA and EdDSA rows); true adds the post-quantum "MLDSA key" row that shows for
+ * vaults holding an MLDSA public key (#5038).
+ */
+@Composable
+private fun VaultDetailPreview(withMldsa: Boolean) {
+    VaultDetailScreen(
+        state =
+            VaultDetailUiModel(
+                name = "Main Vault",
+                vaultPart = "1",
+                vaultSize = "2",
+                pubKeyECDSA = "0274d5e2f5c5b2c3a1b8e9d0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1",
+                pubKeyEDDSA = "9f8e7d6c5b4a39281706f5e4d3c2b1a09f8e7d6c5b4a39281706f5e4d3c2b1a0",
+                pubKeyMLDSA =
+                    if (withMldsa)
+                        "a3f1c0b29d8e76543210fedcba9876540123456789abcdef" +
+                            "fedcba98765432100123456789abcdefa3f1c0b29d8e7654" +
+                            "3210fedcba9876540123456789abcdef"
+                    else "",
+                libType = "DKLS",
+                deviceList =
+                    listOf(
+                        DeviceMeta(name = "iPhone", isThisDevice = true),
+                        DeviceMeta(name = "MacBook", isThisDevice = false),
+                    ),
+            ),
+        snackBarState = rememberVsSnackbarState(),
+        graphicsLayer = rememberGraphicsLayer(),
+        onShareClick = {},
+        onBackClick = {},
     )
 }
 

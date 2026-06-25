@@ -141,6 +141,8 @@
     <string name="vault_detail_screen_vault_name">Kluisnaam</string>
     <string name="vault_detail_screen_ecdsa_key_copied">ECDSA-sleutel gekopieerd</string>
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA-sleutel gekopieerd</string>
+    <string name="vault_detail_screen_mldsa_key">MLDSA-sleutel</string>
+    <string name="vault_detail_screen_mldsa_key_copied">MLDSA-sleutel gekopieerd</string>
     <string name="welcome_screen_skip">Overslaan</string>
     <string name="keysign_screen_preparing_vault">Kluis voorbereiden…</string>
     <string name="vault_settings_delete_vault_caution1">Ik ben me ervan bewust dat de kluis permanent zal worden verwijderd</string>
