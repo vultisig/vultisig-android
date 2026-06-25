@@ -123,10 +123,6 @@ constructor(
         bpsDiscount: Int,
         slippageBps: Int?,
     ) {
-        val bpsDiscountTransformed = round(bpsDiscount.toDouble()) / 100.0
-        val referrerFeeUpdated =
-            round((ONEINCH_REFERRER_FEE - bpsDiscountTransformed) * 100) / 100.0
-
         // bps → percent (100 bps = 1%); Auto (null) keeps 1inch's historical 0.5% default.
         val slippagePercent = slippageBps?.let { it.toDouble() / 100.0 } ?: ONEINCH_DEFAULT_SLIPPAGE
 
@@ -138,7 +134,7 @@ constructor(
         parameter("disableEstimate", true)
         parameter("includeGas", true)
         parameter("referrer", ONEINCH_REFERRER_ADDRESS)
-        parameter("fee", if (isAffiliate) referrerFeeUpdated else "0")
+        parameter("fee", if (isAffiliate) discountedReferrerFee(bpsDiscount) else "0")
     }
 
     override suspend fun getTokens(chain: Chain): OneInchTokensJson =
@@ -174,5 +170,16 @@ constructor(
         private const val ONEINCH_NULL_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         /** 1inch's historical default slippage (percent) used when the user leaves it on Auto. */
         private const val ONEINCH_DEFAULT_SLIPPAGE = 0.5
+
+        /**
+         * The affiliate fee percent sent to 1inch, reduced by the VULT [bpsDiscount] and clamped at
+         * zero so a discount larger than [ONEINCH_REFERRER_FEE] never produces a negative fee
+         * (which 1inch rejects). Mirrors iOS' `bps(for:)` and the zero-clamp every other provider
+         * applies.
+         */
+        internal fun discountedReferrerFee(bpsDiscount: Int): Double {
+            val discountPercent = round(bpsDiscount.toDouble()) / 100.0
+            return round(maxOf(ONEINCH_REFERRER_FEE - discountPercent, 0.0) * 100) / 100.0
+        }
     }
 }

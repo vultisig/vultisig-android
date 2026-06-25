@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.cosmosstaking
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +25,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -38,7 +42,9 @@ import coil.compose.AsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosUnbondingDelegation
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiGradientHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -50,10 +56,17 @@ import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsViewModel
+import com.vultisig.wallet.ui.models.governance.GovernanceUiState
+import com.vultisig.wallet.ui.models.governance.GovernanceViewModel
+import com.vultisig.wallet.ui.models.governance.ProposalUi
 import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
+import com.vultisig.wallet.ui.screens.governance.GovernanceVoteSheet
+import com.vultisig.wallet.ui.screens.governance.governanceProposalItems
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -79,6 +92,7 @@ internal fun CosmosStakingPositionsScreen(
     vaultId: String,
     chainId: String,
     viewModel: CosmosStakingPositionsViewModel = hiltViewModel(),
+    governanceViewModel: GovernanceViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
     // The VM owns the refresh flag: a cache-seeded refresh keeps `isLoading` false, so deriving the
@@ -86,23 +100,37 @@ internal fun CosmosStakingPositionsScreen(
     // load. Collect it directly instead.
     val isRefreshing by viewModel.isRefreshing.collectAsState()
 
+    val showGovernance = chainId.equals(Chain.Qbtc.id, ignoreCase = true)
+    val governanceState by governanceViewModel.state.collectAsState()
+    var isGovernanceTab by rememberSaveable { mutableStateOf(false) }
+    val governanceActive = showGovernance && isGovernanceTab
+
     LaunchedEffect(vaultId, chainId) { viewModel.setData(vaultId = vaultId, chainId = chainId) }
+    LaunchedEffect(vaultId, showGovernance) {
+        if (showGovernance) governanceViewModel.setData(vaultId)
+    }
+
+    BackHandler(enabled = governanceActive) { isGovernanceTab = false }
 
     // Reload when the screen comes back to the foreground — e.g. after returning from a completed
     // delegate / undelegate / redelegate / claim — so Total Staked and the positions reflect the tx
     // without a manual pull. The first resume is a no-op in the VM (#4815).
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onScreenResumed() }
 
-    RegisterChainDashboardTopBarAction(
-        icon = R.drawable.ic_shapes_plus_x_square_circle,
-        onClick = { viewModel.setPositionSelectionDialogVisibility(true) },
-    )
+    if (!governanceActive) {
+        RegisterChainDashboardTopBarAction(
+            icon = R.drawable.ic_shapes_plus_x_square_circle,
+            onClick = { viewModel.setPositionSelectionDialogVisibility(true) },
+        )
+    }
 
     CosmosStakingPositionsContent(
         state = state,
         chainId = chainId,
-        isRefreshing = isRefreshing,
-        onRefresh = viewModel::refresh,
+        isRefreshing = if (governanceActive) governanceState.isRefreshing else isRefreshing,
+        onRefresh = {
+            if (governanceActive) governanceViewModel.refresh() else viewModel.refresh()
+        },
         onManagePositions = { viewModel.setPositionSelectionDialogVisibility(true) },
         onClaim = viewModel::claimAll,
         onDelegateToNewValidator = viewModel::stakeMore,
@@ -112,7 +140,32 @@ internal fun CosmosStakingPositionsScreen(
         onPositionSelectionChange = viewModel::onPositionSelectionChange,
         onPositionSelectionDone = viewModel::onPositionSelectionDone,
         onDismissDialog = { viewModel.setPositionSelectionDialogVisibility(false) },
+        governanceState = if (showGovernance) governanceState else null,
+        isGovernanceTab = isGovernanceTab,
+        onStakedTabClick = { isGovernanceTab = false },
+        onGovernanceTabClick = { isGovernanceTab = true },
+        onVoteProposal = governanceViewModel::openVoteSheet,
     )
+
+    if (governanceActive) {
+        val sheetProposal = governanceState.voteSheetProposal
+        if (sheetProposal != null) {
+            GovernanceVoteSheet(
+                proposal = sheetProposal,
+                isSubmitting = governanceState.isSubmitting,
+                onDismiss = governanceViewModel::dismissVoteSheet,
+                onConfirm = { option -> governanceViewModel.castVote(sheetProposal.id, option) },
+            )
+        }
+        val error = governanceState.error
+        if (error != null) {
+            UiAlertDialog(
+                title = stringResource(R.string.governance_error_title),
+                text = error.asString(),
+                onDismiss = governanceViewModel::dismissError,
+            )
+        }
+    }
 }
 
 /**
@@ -137,6 +190,11 @@ internal fun CosmosStakingPositionsContent(
     onPositionSelectionChange: (String, Boolean) -> Unit,
     onPositionSelectionDone: () -> Unit,
     onDismissDialog: () -> Unit,
+    governanceState: GovernanceUiState? = null,
+    isGovernanceTab: Boolean = false,
+    onStakedTabClick: () -> Unit = {},
+    onGovernanceTabClick: () -> Unit = {},
+    onVoteProposal: (ProposalUi) -> Unit = {},
 ) {
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -162,103 +220,143 @@ internal fun CosmosStakingPositionsContent(
                     // Single manage-positions control: the ChainDashboard top-bar action above. The
                     // inline edit-chains button that used to sit here duplicated it (#4821).
                     item {
-                        VsTabGroup(index = 0) {
-                            COSMOS_STAKING_TABS.forEach { tab ->
+                        if (governanceState != null) {
+                            VsTabGroup(index = if (isGovernanceTab) 1 else 0) {
                                 tab {
-                                    VsTab(label = stringResource(tab.displayNameRes), onClick = {})
+                                    VsTab(
+                                        label = stringResource(DeFiTab.STAKED.displayNameRes),
+                                        onClick = onStakedTabClick,
+                                    )
+                                }
+                                tab {
+                                    VsTab(
+                                        label = stringResource(R.string.governance),
+                                        onClick = onGovernanceTabClick,
+                                    )
+                                }
+                            }
+                        } else {
+                            VsTabGroup(index = 0) {
+                                COSMOS_STAKING_TABS.forEach { tab ->
+                                    tab {
+                                        VsTab(
+                                            label = stringResource(tab.displayNameRes),
+                                            onClick = {},
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
 
-                    if (!state.isPositionEnabled) {
-                        item { NoPositionsContainer(onManagePositionsClick = onManagePositions) }
+                    if (governanceState != null && isGovernanceTab) {
+                        governanceProposalItems(
+                            state = governanceState,
+                            onVoteClick = onVoteProposal,
+                        )
                     } else {
-                        item {
-                            TotalStakedCard(
-                                coinLogo = state.coinLogo,
-                                ticker = state.ticker,
-                                totalStaked = formatStakeAmount(state.totalStaked),
-                                totalFiat = state.totalStakedFiat,
-                                hasClaimableRewards = state.hasClaimableRewards,
-                                onClaim = onClaim,
-                                onDelegateToNewValidator = onDelegateToNewValidator,
-                            )
-                        }
-
-                        if (state.positions.isNotEmpty()) {
+                        if (!state.isPositionEnabled) {
                             item {
-                                Text(
-                                    text =
-                                        stringResource(R.string.cosmos_staking_active_delegations),
-                                    style = Theme.brockmann.body.s.medium,
-                                    color = Theme.v2.colors.text.secondary,
-                                )
+                                NoPositionsContainer(onManagePositionsClick = onManagePositions)
                             }
-                            items(
-                                state.positions,
-                                // Prefix the key: a validator can appear in BOTH this list and the
-                                // pending-unbondings list below (partial unstake keeps the rest
-                                // delegated), and LazyColumn keys must be unique across the whole
-                                // list — a bare validatorAddress would collide and crash on scroll.
-                                key = { "position-${it.validatorAddress}" },
-                            ) { position ->
-                                PositionRow(
-                                    position = position,
-                                    ticker = state.ticker,
-                                    fiat = position.stakedFiatDisplay,
-                                    onUnstake = { onUnstake(position) },
-                                    onMove = { onMove(position) },
-                                    onStakeMore = onStakeMore,
-                                )
-                            }
-                        } else if (state.isLoading) {
-                            // First fetch in flight with nothing cached: show skeleton placeholder
-                            // cards instead of plain text, which reads as "stuck" for the second or
-                            // two the fan-out takes (#4815).
-                            items(count = 2, key = { "skeleton-$it" }) { StakingPositionSkeleton() }
                         } else {
-                            // Fetch settled with no delegations: empty-state (the screen would
-                            // otherwise render only the zeroed Total Staked card).
                             item {
-                                Text(
-                                    text =
-                                        stringResource(
-                                            R.string.cosmos_staking_empty_positions,
-                                            state.ticker,
-                                        ),
-                                    style = Theme.brockmann.body.s.medium,
-                                    color = Theme.v2.colors.text.secondary,
+                                TotalStakedCard(
+                                    coinLogo = state.coinLogo,
+                                    ticker = state.ticker,
+                                    totalStaked = formatStakeAmount(state.totalStaked),
+                                    totalFiat = state.totalStakedFiat,
+                                    hasClaimableRewards = state.hasClaimableRewards,
+                                    onClaim = onClaim,
+                                    onDelegateToNewValidator = onDelegateToNewValidator,
                                 )
+                            }
+
+                            if (state.positions.isNotEmpty()) {
+                                item {
+                                    Text(
+                                        text =
+                                            stringResource(
+                                                R.string.cosmos_staking_active_delegations
+                                            ),
+                                        style = Theme.brockmann.body.s.medium,
+                                        color = Theme.v2.colors.text.secondary,
+                                    )
+                                }
+                                items(
+                                    state.positions,
+                                    // Prefix the key: a validator can appear in BOTH this list and
+                                    // the
+                                    // pending-unbondings list below (partial unstake keeps the rest
+                                    // delegated), and LazyColumn keys must be unique across the
+                                    // whole
+                                    // list — a bare validatorAddress would collide and crash on
+                                    // scroll.
+                                    key = { "position-${it.validatorAddress}" },
+                                ) { position ->
+                                    PositionRow(
+                                        position = position,
+                                        ticker = state.ticker,
+                                        fiat = position.stakedFiatDisplay,
+                                        onUnstake = { onUnstake(position) },
+                                        onMove = { onMove(position) },
+                                        onStakeMore = onStakeMore,
+                                    )
+                                }
+                            } else if (state.isLoading) {
+                                // First fetch in flight with nothing cached: show skeleton
+                                // placeholder
+                                // cards instead of plain text, which reads as "stuck" for the
+                                // second or
+                                // two the fan-out takes (#4815).
+                                items(count = 2, key = { "skeleton-$it" }) {
+                                    StakingPositionSkeleton()
+                                }
+                            } else {
+                                // Fetch settled with no delegations: empty-state (the screen would
+                                // otherwise render only the zeroed Total Staked card).
+                                item {
+                                    Text(
+                                        text =
+                                            stringResource(
+                                                R.string.cosmos_staking_empty_positions,
+                                                state.ticker,
+                                            ),
+                                        style = Theme.brockmann.body.s.medium,
+                                        color = Theme.v2.colors.text.secondary,
+                                    )
+                                }
+                            }
+
+                            if (state.pendingUnbondings.isNotEmpty()) {
+                                item {
+                                    Text(
+                                        text =
+                                            stringResource(
+                                                R.string.cosmos_staking_pending_unbondings
+                                            ),
+                                        style = Theme.brockmann.body.s.medium,
+                                        color = Theme.v2.colors.text.primary,
+                                    )
+                                }
+                                items(
+                                    state.pendingUnbondings,
+                                    key = { "unbonding-${it.validatorAddress}" },
+                                ) { unbonding ->
+                                    UnbondingCard(unbonding = unbonding)
+                                }
                             }
                         }
 
-                        if (state.pendingUnbondings.isNotEmpty()) {
+                        val errorMessage = state.errorMessage
+                        if (errorMessage != null) {
                             item {
                                 Text(
-                                    text =
-                                        stringResource(R.string.cosmos_staking_pending_unbondings),
-                                    style = Theme.brockmann.body.s.medium,
-                                    color = Theme.v2.colors.text.primary,
+                                    text = errorMessage,
+                                    style = Theme.brockmann.supplementary.caption,
+                                    color = Theme.v2.colors.alerts.error,
                                 )
                             }
-                            items(
-                                state.pendingUnbondings,
-                                key = { "unbonding-${it.validatorAddress}" },
-                            ) { unbonding ->
-                                UnbondingCard(unbonding = unbonding)
-                            }
-                        }
-                    }
-
-                    val errorMessage = state.errorMessage
-                    if (errorMessage != null) {
-                        item {
-                            Text(
-                                text = errorMessage,
-                                style = Theme.brockmann.supplementary.caption,
-                                color = Theme.v2.colors.alerts.error,
-                            )
                         }
                     }
                 }

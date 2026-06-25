@@ -43,7 +43,7 @@ internal fun QuoteTimer(expiredAt: Instant, modifier: Modifier = Modifier) {
             val now = Clock.System.now()
             val left = expiredAt - now
             timeLeft = formatDurationAsMinutesSeconds(left)
-            progress = (left / expiredAfter).toFloat()
+            progress = quoteTimerProgress(left, expiredAfter)
         }
     }
 
@@ -85,3 +85,11 @@ private fun formatDurationAsMinutesSeconds(duration: Duration): String {
     val seconds = totalSeconds % 60
     return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
 }
+
+/**
+ * Fraction of the quote's lifetime still remaining, clamped to the 0f..1f range
+ * [CircularProgressIndicator] requires. [remaining] goes negative once the quote expires before it
+ * is replaced, so the raw ratio is coerced rather than passed straight to the indicator.
+ */
+internal fun quoteTimerProgress(remaining: Duration, lifetime: Duration): Float =
+    (remaining / lifetime).toFloat().coerceIn(0f, 1f)

@@ -235,26 +235,26 @@ class UtxoHelperTest {
         verifySwapOpReturn(memo)
     }
 
+    @Test
+    fun `getSwapPreSigningInputData - applies the payload byte fee, not a placeholder`() {
+        val helper = UtxoHelper(CoinType.BITCOIN, "", "")
+        val payload =
+            utxoPayload(
+                byteFee = BigInteger.valueOf(7L),
+                memo = "SWAP:BTC.BTC:$btcAddress:0:t:0:30",
+                swapPayload = thorChainSwapPayload(),
+            )
+        try {
+            val input = helper.getSwapPreSigningInputData(payload)
+            assertEquals(7L, input.byteFee)
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
     private fun verifySwapOpReturn(memo: String) {
         val helper = UtxoHelper(CoinType.BITCOIN, "", "")
-        val swapPayload =
-            SwapPayload.ThorChain(
-                THORChainSwapPayload(
-                    fromAddress = btcAddress,
-                    fromCoin = btcCoin,
-                    toCoin = btcCoin,
-                    vaultAddress = btcAddress,
-                    routerAddress = null,
-                    fromAmount = BigInteger.valueOf(10_000L),
-                    toAmountDecimal = BigDecimal.ZERO,
-                    toAmountLimit = "0",
-                    streamingInterval = "0",
-                    streamingQuantity = "0",
-                    expirationTime = 0uL,
-                    isAffiliate = false,
-                )
-            )
-        val payload = utxoPayload(memo = memo, swapPayload = swapPayload)
+        val payload = utxoPayload(memo = memo, swapPayload = thorChainSwapPayload())
         try {
             val input = helper.getSwapPreSigningInputData(payload)
             assertEquals(ByteString.copyFromUtf8(memo), input.outputOpReturn)
@@ -262,6 +262,24 @@ class UtxoHelperTest {
             skipIfJniUnavailable(e)
         }
     }
+
+    private fun thorChainSwapPayload(): SwapPayload.ThorChain =
+        SwapPayload.ThorChain(
+            THORChainSwapPayload(
+                fromAddress = btcAddress,
+                fromCoin = btcCoin,
+                toCoin = btcCoin,
+                vaultAddress = btcAddress,
+                routerAddress = null,
+                fromAmount = BigInteger.valueOf(10_000L),
+                toAmountDecimal = BigDecimal.ZERO,
+                toAmountLimit = "0",
+                streamingInterval = "0",
+                streamingQuantity = "0",
+                expirationTime = 0uL,
+                isAffiliate = false,
+            )
+        )
 
     // BIP-143 sighash tests — exercise the new from-scratch PSBT signing path against the
     // canonical test vectors from https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki
