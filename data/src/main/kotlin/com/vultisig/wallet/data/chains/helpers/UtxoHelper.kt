@@ -72,13 +72,14 @@ class UtxoHelper(
         require(thorChainSwapPayload.data.vaultAddress.isNotEmpty()) {
             "Vault address is required for THORChain swap"
         }
+        val utxo = keysignPayload.blockChainSpecific as BlockChainSpecific.UTXO
         val input =
             Bitcoin.SigningInput.newBuilder()
                 .setHashType(BitcoinScript.hashTypeForCoin(coinType))
                 .setAmount(thorChainSwapPayload.data.fromAmount.toLong())
                 .setToAddress(thorChainSwapPayload.data.vaultAddress)
                 .setChangeAddress(keysignPayload.coin.address)
-                .setByteFee(1L)
+                .setByteFee(utxo.byteFee.toLong())
                 .setCoinType(coinType.value())
                 .setUseMaxAmount(false)
                 .setOutputOpReturn( // output index is the latest by default
