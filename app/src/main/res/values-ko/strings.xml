@@ -216,6 +216,8 @@
     <string name="vault_detail_screen_vault_name">볼트 이름</string>
     <string name="vault_detail_screen_ecdsa_key_copied">ECDSA 키 복사됨</string>
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA 키 복사됨</string>
+    <string name="vault_detail_screen_mldsa_key">MLDSA 키</string>
+    <string name="vault_detail_screen_mldsa_key_copied">MLDSA 키 복사됨</string>
     <string name="welcome_screen_skip">건너뛰기</string>
     <string name="keysign_screen_preparing_vault">볼트 준비 중…</string>
     <string name="vault_settings_delete_vault_caution1">볼트가 영구적으로 삭제된다는 것을 알고 있습니다</string>

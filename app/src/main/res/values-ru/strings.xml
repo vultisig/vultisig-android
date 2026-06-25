@@ -141,6 +141,8 @@
     <string name="vault_detail_screen_vault_name">Имя хранилища</string>
     <string name="vault_detail_screen_ecdsa_key_copied">Ключ ECDSA скопирован</string>
     <string name="vault_detail_screen_eddsa_key_copied">Ключ EdDSA скопирован</string>
+    <string name="vault_detail_screen_mldsa_key">Ключ MLDSA</string>
+    <string name="vault_detail_screen_mldsa_key_copied">Ключ MLDSA скопирован</string>
     <string name="welcome_screen_skip">Пропустить</string>
     <string name="keysign_screen_preparing_vault">Подготовка хранилища…</string>
     <string name="vault_settings_delete_vault_caution1">Я понимаю, что хранилище будет удалено навсегда</string>

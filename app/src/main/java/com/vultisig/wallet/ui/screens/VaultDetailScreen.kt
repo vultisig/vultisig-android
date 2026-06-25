@@ -63,7 +63,7 @@ internal fun VaultDetailScreen(
 }
 
 @Composable
-private fun VaultDetailScreen(
+internal fun VaultDetailScreen(
     state: VaultDetailUiModel,
     snackBarState: VSSnackbarState,
     onBackClick: () -> Unit,
@@ -72,6 +72,7 @@ private fun VaultDetailScreen(
 ) {
     val ecdsaKeyCopiedMessage = stringResource(R.string.vault_detail_screen_ecdsa_key_copied)
     val eddsaKeyCopiedMessage = stringResource(R.string.vault_detail_screen_eddsa_key_copied)
+    val mldsaKeyCopiedMessage = stringResource(R.string.vault_detail_screen_mldsa_key_copied)
 
     Box(modifier = Modifier.fillMaxSize()) {
         V2Scaffold(
@@ -120,6 +121,13 @@ private fun VaultDetailScreen(
                         value = state.pubKeyEDDSA,
                         onCopyCompleted = { snackBarState.show(eddsaKeyCopiedMessage) },
                     )
+                    if (state.pubKeyMLDSA.isNotBlank()) {
+                        KeyItem(
+                            type = stringResource(R.string.vault_detail_screen_mldsa_key),
+                            value = state.pubKeyMLDSA,
+                            onCopyCompleted = { snackBarState.show(mldsaKeyCopiedMessage) },
+                        )
+                    }
                 }
 
                 UiSpacer(24.dp)

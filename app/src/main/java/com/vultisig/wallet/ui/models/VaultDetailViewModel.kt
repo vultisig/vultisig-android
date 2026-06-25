@@ -28,6 +28,7 @@ internal data class VaultDetailUiModel(
     val vaultSize: String = "",
     val pubKeyECDSA: String = "",
     val pubKeyEDDSA: String = "",
+    val pubKeyMLDSA: String = "",
     val deviceList: List<DeviceMeta> = emptyList(),
     val libType: String? = "",
 )
@@ -63,6 +64,7 @@ constructor(
                         vaultSize = vault.signers.size.toString(),
                         pubKeyECDSA = vault.pubKeyECDSA,
                         pubKeyEDDSA = vault.pubKeyEDDSA,
+                        pubKeyMLDSA = vault.pubKeyMLDSA,
                         deviceList =
                             vault.signers.map {
                                 DeviceMeta(name = it, isThisDevice = it == vault.localPartyID)

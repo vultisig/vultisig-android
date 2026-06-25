@@ -258,6 +258,8 @@
     <string name="vault_detail_screen_vault_name">保险库名称</string>
     <string name="vault_detail_screen_ecdsa_key_copied">ECDSA 密钥已复制</string>
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA 密钥已复制</string>
+    <string name="vault_detail_screen_mldsa_key">MLDSA 密钥</string>
+    <string name="vault_detail_screen_mldsa_key_copied">MLDSA 密钥已复制</string>
 
     <!-- Welcome Screen -->
     <string name="welcome_screen_skip">跳过</string>

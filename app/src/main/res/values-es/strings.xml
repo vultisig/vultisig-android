@@ -141,6 +141,8 @@
     <string name="vault_detail_screen_vault_name">Nombre de la Bóveda</string>
     <string name="vault_detail_screen_ecdsa_key_copied">Clave ECDSA Copiada</string>
     <string name="vault_detail_screen_eddsa_key_copied">Clave EdDSA Copiada</string>
+    <string name="vault_detail_screen_mldsa_key">Clave MLDSA</string>
+    <string name="vault_detail_screen_mldsa_key_copied">Clave MLDSA Copiada</string>
     <string name="welcome_screen_skip">Saltar</string>
     <string name="keysign_screen_preparing_vault">PREPARANDO BÓVEDA..</string>
     <string name="vault_settings_delete_vault_caution1">Soy consciente de que la bóveda será eliminada permanentemente</string>
