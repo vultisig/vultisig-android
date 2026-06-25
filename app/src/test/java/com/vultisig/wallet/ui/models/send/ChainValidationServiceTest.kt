@@ -12,7 +12,6 @@ import java.math.BigInteger
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
@@ -23,12 +22,18 @@ internal class ChainValidationServiceTest {
 
     @Test
     fun `validateSlippage - null returns required error`() {
-        assertTrue(service.validateSlippage(null) is UiText.StringResource)
+        assertEquals(
+            R.string.slippage_required_error,
+            (service.validateSlippage(null) as UiText.StringResource).resId,
+        )
     }
 
     @Test
     fun `validateSlippage - blank returns required error`() {
-        assertTrue(service.validateSlippage("  ") is UiText.StringResource)
+        assertEquals(
+            R.string.slippage_required_error,
+            (service.validateSlippage("  ") as UiText.StringResource).resId,
+        )
     }
 
     @Test
@@ -38,17 +43,26 @@ internal class ChainValidationServiceTest {
 
     @Test
     fun `validateSlippage - value above 100 returns invalid error`() {
-        assertTrue(service.validateSlippage("101") is UiText.StringResource)
+        assertEquals(
+            R.string.slippage_invalid_error,
+            (service.validateSlippage("101") as UiText.StringResource).resId,
+        )
     }
 
     @Test
     fun `validateSlippage - negative value returns invalid error`() {
-        assertTrue(service.validateSlippage("-1") is UiText.StringResource)
+        assertEquals(
+            R.string.slippage_invalid_error,
+            (service.validateSlippage("-1") as UiText.StringResource).resId,
+        )
     }
 
     @Test
     fun `validateSlippage - non-numeric returns format error`() {
-        assertTrue(service.validateSlippage("abc") is UiText.StringResource)
+        assertEquals(
+            R.string.slippage_format_error,
+            (service.validateSlippage("abc") as UiText.StringResource).resId,
+        )
     }
 
     @Test
@@ -271,6 +285,55 @@ internal class ChainValidationServiceTest {
                 assumeTrue(false, "WalletCore JNI not available: ${e.message}")
             } else throw e
         }
+    }
+
+    /**
+     * Below the dust threshold every BTC-like chain throws the same FormattedText. The threshold
+     * and the chain symbol are resolved through WalletCore, so the path is skipped when the native
+     * library is unavailable in a JVM run, mirroring the Bitcoin case above.
+     */
+    private fun assertBelowDustThrowsMinAmountMessage(chain: Chain) {
+        try {
+            service.validateBtcLikeAmount(
+                tokenAmountInt = BigInteger.valueOf(100L),
+                chain = chain,
+                plan = null,
+            )
+            fail("Expected InvalidTransactionDataException to be thrown")
+        } catch (e: InvalidTransactionDataException) {
+            assertEquals(
+                R.string.send_form_minimum_send_amount_is_requires_this,
+                (e.text as UiText.FormattedText).resId,
+            )
+        } catch (e: Throwable) {
+            if (
+                e is UnsatisfiedLinkError ||
+                    e is ExceptionInInitializerError ||
+                    e is NoClassDefFoundError
+            ) {
+                assumeTrue(false, "WalletCore JNI not available: ${e.message}")
+            } else throw e
+        }
+    }
+
+    @Test
+    fun `validateBtcLikeAmount - amount below Dogecoin dust throws minimum send amount message`() {
+        assertBelowDustThrowsMinAmountMessage(Chain.Dogecoin)
+    }
+
+    @Test
+    fun `validateBtcLikeAmount - amount below Litecoin dust throws minimum send amount message`() {
+        assertBelowDustThrowsMinAmountMessage(Chain.Litecoin)
+    }
+
+    @Test
+    fun `validateBtcLikeAmount - amount below Dash dust throws minimum send amount message`() {
+        assertBelowDustThrowsMinAmountMessage(Chain.Dash)
+    }
+
+    @Test
+    fun `validateBtcLikeAmount - amount below Zcash dust throws minimum send amount message`() {
+        assertBelowDustThrowsMinAmountMessage(Chain.Zcash)
     }
 
     // selectUtxosIfNeeded tests (non-UTXO pass-through and null plan)
