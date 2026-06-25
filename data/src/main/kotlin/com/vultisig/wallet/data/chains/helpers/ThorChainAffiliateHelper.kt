@@ -10,14 +10,6 @@ object ThorChainAffiliateHelper {
      * @param discountBps discount in basis points to subtract from the base affiliate fee
      */
     fun buildAffiliateParams(referralCode: String, discountBps: Int): Map<String, String> {
-        // Full discount: drop all affiliate fees and ignore the referral code.
-        if (discountBps >= 50) {
-            return mapOf(
-                "affiliate" to THORChainSwaps.AFFILIATE_FEE_ADDRESS,
-                "affiliate_bps" to "0",
-            )
-        }
-
         return if (referralCode.isNotEmpty()) {
             val affiliateFeeRateBp =
                 calculateBpsAfterDiscount(
