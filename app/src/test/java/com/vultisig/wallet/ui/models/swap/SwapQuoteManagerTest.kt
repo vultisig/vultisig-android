@@ -4,7 +4,9 @@ package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.Fees
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -16,6 +18,7 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
@@ -32,6 +35,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import java.math.BigDecimal
 import java.math.BigInteger
+import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.time.Duration.Companion.minutes
@@ -696,6 +700,78 @@ internal class SwapQuoteManagerTest {
         val success = assertIs<QuoteResolution.Success>(result)
         assertEquals(SwapProvider.THORCHAIN, success.best.candidate.provider)
     }
+
+    @Test
+    fun `fetchQuote forwards the user-set slippage to the Jupiter request`() = runTest {
+        // The Jupiter request is built inside SwapQuoteManager; pin that it now carries the chosen
+        // slippage so a user-set tolerance actually reaches the Solana quote (the data-layer wiring
+        // is moot if the caller never populates it). Throw after capture to stay off the fee path.
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, "USD")
+        val requestSlot = slot<SwapQuoteRequest>()
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.JUPITER, capture(requestSlot)) } throws
+            SwapException.SwapRouteNotAvailable("stop after capture")
+
+        assertFailsWith<SwapException.SwapRouteNotAvailable> {
+            fetchJupiterQuote(createManager(), slippageBps = 250)
+        }
+
+        assertEquals(250, requestSlot.captured.slippageBps)
+    }
+
+    @Test
+    fun `Jupiter quotes that differ only in slippage do not collide in the cache`() = runTest {
+        // Slippage is part of the quote cache key, so a re-fetch after a slippage change must miss
+        // and re-quote rather than serve the stale tolerance. Two identical-slippage calls share
+        // one
+        // network call; a third at a different slippage adds a second — three calls, two fetches.
+        val sol = coin(Chain.Solana, "SOL", "SoLsrc", 9)
+        coEvery { tokenRepository.getNativeToken(any()) } returns sol
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, "USD")
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.JUPITER, any()) } returns
+            SwapQuoteResult.Evm(jupiterEvmQuote())
+
+        val manager = createManager()
+        fetchJupiterQuote(manager, slippageBps = 100)
+        fetchJupiterQuote(manager, slippageBps = 100)
+        fetchJupiterQuote(manager, slippageBps = 200)
+
+        coVerify(exactly = 2) { swapQuoteRepository.getQuote(SwapProvider.JUPITER, any()) }
+    }
+
+    private suspend fun fetchJupiterQuote(manager: SwapQuoteManager, slippageBps: Int?) =
+        manager.fetchQuote(
+            provider = SwapProvider.JUPITER,
+            src = mockk(relaxed = true),
+            dst = mockk(relaxed = true),
+            srcToken = coin(Chain.Solana, "SOL", "SoLsrc", 9),
+            dstToken = coin(Chain.Solana, "USDC", "UsdcDst", 6),
+            srcTokenValue = BigInteger.ONE,
+            tokenValue = TokenValue(BigInteger.ONE, coin(Chain.Solana, "SOL", "SoLsrc", 9)),
+            currency = AppCurrency.USD,
+            vultBPSDiscount = null,
+            referral = null,
+            amount = BigDecimal.ONE,
+            slippageBps = slippageBps,
+        )
+
+    private fun jupiterEvmQuote() =
+        EVMSwapQuoteJson(
+            dstAmount = "1000",
+            tx =
+                OneInchSwapTxJson(
+                    from = "",
+                    to = "",
+                    gas = 0,
+                    data = "AQID",
+                    value = "0",
+                    gasPrice = "0",
+                    swapFee = "0",
+                    swapFeeTokenContract = "",
+                ),
+        )
 
     private fun coin(chain: Chain, ticker: String, address: String, decimals: Int) =
         Coin(
