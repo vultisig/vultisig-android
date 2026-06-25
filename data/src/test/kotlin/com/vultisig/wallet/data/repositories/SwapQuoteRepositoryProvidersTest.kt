@@ -1,11 +1,24 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.JupiterApi
+import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.Fees
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapErrorResponse
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteData
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapEstimateJson
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapFeeCostJson
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteError
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapTokenJson
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTotalDataJson
 import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTransactionJson
@@ -14,12 +27,15 @@ import com.vultisig.wallet.data.api.models.quotes.SwapInfoJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
+import com.vultisig.wallet.data.api.swapAggregators.KyberApi
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.swap.JupiterQuoteSource
+import com.vultisig.wallet.data.repositories.swap.KyberQuoteSource
+import com.vultisig.wallet.data.repositories.swap.LiFiQuoteSource
 import com.vultisig.wallet.data.repositories.swap.MayaQuoteSource
 import com.vultisig.wallet.data.repositories.swap.OneInchQuoteSource
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
@@ -39,10 +55,14 @@ class SwapQuoteRepositoryProvidersTest {
     private val oneInchApi: OneInchApi = mockk()
     private val mayaChainApi: MayaChainApi = mockk()
     private val jupiterApi: JupiterApi = mockk()
+    private val kyberApi: KyberApi = mockk()
+    private val liFiChainApi: LiFiChainApi = mockk()
 
     private val oneInchSource = OneInchQuoteSource(oneInchApi)
     private val mayaSource = MayaQuoteSource(mayaChainApi)
     private val jupiterSource = JupiterQuoteSource(jupiterApi)
+    private val kyberSource = KyberQuoteSource(kyberApi)
+    private val liFiSource = LiFiQuoteSource(liFiChainApi)
 
     private fun coin(
         chain: Chain,
@@ -370,6 +390,190 @@ class SwapQuoteRepositoryProvidersTest {
                     )
                 )
             }
+        }
+    }
+
+    // ---------- Kyber ----------
+
+    private fun kyberRoute() =
+        KyberSwapRouteResponse(
+            code = 0,
+            message = "OK",
+            data =
+                KyberSwapRouteResponse.RouteData(
+                    routeSummary =
+                        KyberSwapRouteResponse.RouteSummary(
+                            tokenIn = "0xEth",
+                            amountIn = "1000000",
+                            amountInUsd = "1.0",
+                            tokenOut = "0xUsdc",
+                            amountOut = "990000",
+                            amountOutUsd = "0.99",
+                            gas = "150000",
+                            gasPrice = "5",
+                            gasUsd = "0.5",
+                            route = emptyList(),
+                            routeID = "route-1",
+                            checksum = "checksum-1",
+                            timestamp = 1,
+                        ),
+                    routerAddress = "0xRouter",
+                ),
+            requestId = "req-1",
+        )
+
+    private fun kyberTx() =
+        KyberSwapQuoteJson(
+            code = 0,
+            message = "OK",
+            data =
+                KyberSwapQuoteData(
+                    amountIn = "1000000",
+                    amountInUsd = "1.0",
+                    amountOut = "990000",
+                    amountOutUsd = "0.99",
+                    gas = "210000",
+                    gasUsd = "0.5",
+                    data = "0xkyberdata",
+                    routerAddress = "0xRouter",
+                    transactionValue = "0",
+                ),
+            requestId = "req-1",
+        )
+
+    private fun kyberRequest() =
+        SwapQuoteRequest(
+            srcToken = coin(Chain.Ethereum, "ETH"),
+            dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xUsdc"),
+            tokenValue =
+                TokenValue(value = BigInteger("1000000"), token = coin(Chain.Ethereum, "ETH")),
+            isAffiliate = true,
+        )
+
+    @Test
+    fun `kyber happy path returns mapped evm quote`() = runTest {
+        coEvery { kyberApi.getSwapQuote(any(), any(), any(), any(), any(), any(), any()) } returns
+            KyberSwapQuoteDeserialized.Result(kyberRoute())
+        coEvery { kyberApi.getKyberSwapQuote(any(), any(), any(), any(), any(), any()) } returns
+            kyberTx()
+
+        val result = (kyberSource.fetch(kyberRequest()) as SwapQuoteResult.Evm).data
+
+        assertEquals("990000", result.dstAmount)
+        assertEquals("0xRouter", result.tx.to)
+        assertEquals("0xkyberdata", result.tx.data)
+        assertEquals("5", result.tx.gasPrice)
+        // Ethereum doubles the response gas (multiplier 20/10): 210000 → 420000.
+        assertEquals(420000L, result.tx.gas)
+        // No extraFee on the route → swapFee stays "0"; tokenOut becomes the fee token contract.
+        assertEquals("0", result.tx.swapFee)
+        assertEquals("0xUsdc", result.tx.swapFeeTokenContract)
+    }
+
+    @Test
+    fun `kyber deserialization error throws mapped SwapException`() = runTest {
+        coEvery { kyberApi.getSwapQuote(any(), any(), any(), any(), any(), any(), any()) } returns
+            KyberSwapQuoteDeserialized.Error(KyberSwapErrorResponse("insufficient funds for swap"))
+
+        assertThrows<SwapException.InsufficientFunds> {
+            runBlocking { kyberSource.fetch(kyberRequest()) }
+        }
+    }
+
+    @Test
+    fun `kyber api failure is wrapped in mapped SwapException`() = runTest {
+        coEvery { kyberApi.getSwapQuote(any(), any(), any(), any(), any(), any(), any()) } throws
+            RuntimeException("too many requests")
+
+        assertThrows<SwapException.RateLimitExceeded> {
+            runBlocking { kyberSource.fetch(kyberRequest()) }
+        }
+    }
+
+    // ---------- LiFi ----------
+
+    private fun liFiQuote(message: String? = null) =
+        LiFiSwapQuoteJson(
+            estimate =
+                LiFiSwapEstimateJson(
+                    toAmount = "2500000",
+                    feeCosts =
+                        listOf(
+                            LiFiSwapFeeCostJson(
+                                amount = "1250",
+                                included = false,
+                                name = "LIFI Fixed Fee",
+                                token = LiFiSwapTokenJson(address = "0xFeeToken"),
+                            )
+                        ),
+                ),
+            transactionRequest =
+                // LiFi returns the numeric tx fields as hex strings (decoded via
+                // convertToBigIntegerOrZero): 0x5208 = 21000, 0x3b9aca00 = 1e9 wei.
+                LiFiSwapTxJson(
+                    from = "0xWallet",
+                    to = "0xLifiRouter",
+                    gasLimit = "0x5208",
+                    data = "0xlifidata",
+                    value = "0x0",
+                    gasPrice = "0x3b9aca00",
+                ),
+            message = message,
+        )
+
+    private fun liFiRequest() =
+        SwapQuoteRequest(
+            srcToken = coin(Chain.Ethereum, "ETH"),
+            dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xUsdc"),
+            tokenValue =
+                TokenValue(value = BigInteger("1000000"), token = coin(Chain.Ethereum, "ETH")),
+            srcAddress = "0xWallet",
+            dstAddress = "0xDest",
+        )
+
+    @Test
+    fun `lifi happy path returns mapped evm quote with fee`() = runTest {
+        coEvery {
+            liFiChainApi.getSwapQuote(any(), any(), any(), any(), any(), any(), any(), any(), any())
+        } returns LiFiSwapQuoteDeserialized.Result(liFiQuote())
+
+        val result = (liFiSource.fetch(liFiRequest()) as SwapQuoteResult.Evm).data
+
+        assertEquals("2500000", result.dstAmount)
+        assertEquals("0xWallet", result.tx.from)
+        assertEquals("0xLifiRouter", result.tx.to)
+        assertEquals("0xlifidata", result.tx.data)
+        // Hex tx fields are decoded to decimal: 0x5208 → 21000, 0x3b9aca00 → 1e9.
+        assertEquals(21000L, result.tx.gas)
+        assertEquals("0", result.tx.value)
+        assertEquals("1000000000", result.tx.gasPrice)
+        // The "LIFI Fixed Fee" cost surfaces as the swap fee in the destination token.
+        assertEquals("1250", result.tx.swapFee)
+        assertEquals("0xFeeToken", result.tx.swapFeeTokenContract)
+    }
+
+    @Test
+    fun `lifi deserialization error throws mapped SwapException`() = runTest {
+        coEvery {
+            liFiChainApi.getSwapQuote(any(), any(), any(), any(), any(), any(), any(), any(), any())
+        } returns
+            LiFiSwapQuoteDeserialized.Error(
+                LiFiSwapQuoteError("no available quotes for the requested route")
+            )
+
+        assertThrows<SwapException.SwapRouteNotAvailable> {
+            runBlocking { liFiSource.fetch(liFiRequest()) }
+        }
+    }
+
+    @Test
+    fun `lifi inner message error throws mapped SwapException`() = runTest {
+        coEvery {
+            liFiChainApi.getSwapQuote(any(), any(), any(), any(), any(), any(), any(), any(), any())
+        } returns LiFiSwapQuoteDeserialized.Result(liFiQuote(message = "price impact too high"))
+
+        assertThrows<SwapException.HighPriceImpact> {
+            runBlocking { liFiSource.fetch(liFiRequest()) }
         }
     }
 
