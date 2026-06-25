@@ -217,6 +217,8 @@
     <string name="vault_detail_screen_vault_name">Vault Name</string>
     <string name="vault_detail_screen_ecdsa_key_copied">ECDSA Key Copied</string>
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA Key Copied</string>
+    <string name="vault_detail_screen_mldsa_key">MLDSA key</string>
+    <string name="vault_detail_screen_mldsa_key_copied">MLDSA Key Copied</string>
     <string name="welcome_screen_skip">Skip</string>
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
     <string name="vault_settings_delete_vault_caution1">I am aware that the vault will be deleted permanently</string>
