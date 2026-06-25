@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -43,6 +44,9 @@ import com.vultisig.wallet.ui.models.DeviceMeta
 import com.vultisig.wallet.ui.models.VaultDetailUiModel
 import com.vultisig.wallet.ui.models.VaultDetailViewModel
 import com.vultisig.wallet.ui.theme.Theme
+
+/** Caps the height of the long MLDSA public key row before it ellipsizes. */
+private const val MLDSA_KEY_MAX_LINES = 4
 
 @Composable
 internal fun VaultDetailScreen(
@@ -125,6 +129,10 @@ internal fun VaultDetailScreen(
                         KeyItem(
                             type = stringResource(R.string.vault_detail_screen_mldsa_key),
                             value = state.pubKeyMLDSA,
+                            // The MLDSA public key is far longer than the ECDSA/EdDSA keys; cap its
+                            // height and ellipsize so it doesn't blow up the row. The full value is
+                            // still copyable via the copy icon.
+                            maxValueLines = MLDSA_KEY_MAX_LINES,
                             onCopyCompleted = { snackBarState.show(mldsaKeyCopiedMessage) },
                         )
                     }
@@ -242,7 +250,12 @@ internal fun Modifier.itemModifier(): Modifier =
         .padding(vertical = 24.dp, horizontal = 20.dp)
 
 @Composable
-private fun KeyItem(type: String, value: String, onCopyCompleted: (String) -> Unit = {}) {
+private fun KeyItem(
+    type: String,
+    value: String,
+    maxValueLines: Int = Int.MAX_VALUE,
+    onCopyCompleted: (String) -> Unit = {},
+) {
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -259,6 +272,8 @@ private fun KeyItem(type: String, value: String, onCopyCompleted: (String) -> Un
                 text = value,
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.tertiary,
+                maxLines = maxValueLines,
+                overflow = TextOverflow.Ellipsis,
             )
         }
         UiSpacer(16.dp)
