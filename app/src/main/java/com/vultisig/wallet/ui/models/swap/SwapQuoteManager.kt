@@ -53,10 +53,15 @@ internal data class QuoteFetchResult(
     val estimatedDstTokenValue: String,
     // Displayed destination fiat: market value clamped to the source fiat (#4878).
     val estimatedDstFiatValue: String,
-    // Unclamped market value (dstAmount × dstMarketPrice) used only for cross-provider ranking.
-    val estimatedDstFiat: FiatValue,
+    // Net destination output used only for cross-provider ranking: the unclamped market value
+    // (dstAmount × dstMarketPrice), less any fee charged on the output. A dstAmount that is already
+    // net (every provider except LI.FI) leaves this equal to the market value.
+    val comparableDstFiat: BigDecimal,
     val feeText: String,
     val swapFeeFiat: FiatValue,
+    // Source-chain gas (gas × gasPrice) in native wei for same-chain EVM aggregator quotes; used
+    // only as the in-band lower-gas tie-break. Null when no comparable gas estimate is exposed.
+    val sourceGasWei: BigInteger? = null,
     val outboundFeeText: String? = null,
     val swapFeePercent: String? = null,
 )
@@ -361,6 +366,14 @@ constructor(
             resolvedSwapFeeFiat = fiatFees
         }
 
+        // Only LI.FI quotes the gross output and charges its integrator fee on top of it; every
+        // other provider's dstAmount is already net, so subtract the fee for LI.FI alone.
+        val comparableDstFiat =
+            when (provider) {
+                SwapProvider.LIFI -> marketDstFiatValue.value - resolvedSwapFeeFiat.value
+                else -> marketDstFiatValue.value
+            }
+
         return QuoteFetchResult(
             quote = quote,
             provider = provider,
@@ -368,9 +381,10 @@ constructor(
             srcFiatValueText = srcFiatValueText,
             estimatedDstTokenValue = estimatedDstTokenValue,
             estimatedDstFiatValue = fiatValueToString(estimatedDstFiatValue),
-            estimatedDstFiat = marketDstFiatValue,
+            comparableDstFiat = comparableDstFiat,
             feeText = resolvedFeeText,
             swapFeeFiat = resolvedSwapFeeFiat,
+            sourceGasWei = sourceGasWei(provider, quote),
             outboundFeeText = outboundFeeText,
             swapFeePercent = swapFeePercent,
         )
@@ -459,25 +473,41 @@ constructor(
             else selected
         }
 
-        // Rank on estimatedDstFiat alone — this represents the destination amount
-        // the user expects to receive. Subtracting swapFeeFiat would double-count
-        // for THOR/MAYA (their expectedAmountOut is already net of protocol fees)
-        // and mix apples-to-oranges since swapFeeFiat is gas for 1inch/Kyber but
-        // an integrator fee for LI.FI.
-        //
-        // On top of that metric a banded provider-preference layer applies: among
-        // quotes within PROVIDER_PREFERENCE_BAND (1%) of the best output, the
-        // highest-priority provider wins instead of the raw maximum. This keeps
-        // near-tie routes on the more trusted/integrated provider without ever
-        // trading away a materially better rate (anything outside the band loses
-        // on output). iOS is the cross-platform anchor for this rule; the canonical
-        // spec lives in vultisig-sdk and other platforms mirror this implementation.
-        val best = successes.maxBy { it.result.estimatedDstFiat.value }
-        val floor = best.result.estimatedDstFiat.value * (BigDecimal.ONE - PROVIDER_PREFERENCE_BAND)
-        val inBand = successes.filter { it.result.estimatedDstFiat.value >= floor }
+        return selectBestQuote(successes)
+    }
+
+    /**
+     * Picks the winning quote across providers. The ranking metric is net destination output
+     * ([QuoteFetchResult.comparableDstFiat]) — every provider in a candidate set swaps to the same
+     * destination token, so the values are directly comparable. On top of that metric a banded
+     * provider-preference layer applies: among quotes within [PROVIDER_PREFERENCE_BAND] of the best
+     * net output — economically tied on rate — a lower source-chain gas cost wins first (only when
+     * both quotes expose [QuoteFetchResult.sourceGasWei], in the same native-wei unit), then the
+     * higher-priority provider, then the higher net output. A gas-unknown quote can never win the
+     * lower-gas check and falls through to provider preference, so a near-tie stays on the cheaper
+     * or more trusted route without ever trading away a materially better rate (anything outside
+     * the band loses on output).
+     *
+     * Assumes [successes] is non-empty (the caller has already surfaced the all-failed case).
+     */
+    internal fun selectBestQuote(successes: List<BestQuote>): BestQuote {
+        val best = successes.maxBy { it.result.comparableDstFiat }
+        val floor = best.result.comparableDstFiat * (BigDecimal.ONE - PROVIDER_PREFERENCE_BAND)
+        val inBand = successes.filter { it.result.comparableDstFiat >= floor }
         return inBand.minWithOrNull(
-            compareBy<BestQuote> { providerPriority(it.candidate.provider) }
-                .thenByDescending { it.result.estimatedDstFiat.value }
+            Comparator<BestQuote> { lhs, rhs ->
+                val lhsGas = lhs.result.sourceGasWei
+                val rhsGas = rhs.result.sourceGasWei
+                if (lhsGas != null && rhsGas != null && lhsGas != rhsGas) {
+                    lhsGas.compareTo(rhsGas)
+                } else {
+                    val byPriority =
+                        providerPriority(lhs.candidate.provider)
+                            .compareTo(providerPriority(rhs.candidate.provider))
+                    if (byPriority != 0) byPriority
+                    else rhs.result.comparableDstFiat.compareTo(lhs.result.comparableDstFiat)
+                }
+            }
         ) ?: best
     }
 
@@ -555,6 +585,29 @@ constructor(
             SwapProvider.ONEINCH -> 4
             SwapProvider.LIFI -> 5
             SwapProvider.JUPITER -> 6
+        }
+
+    /**
+     * Source-chain gas (`gas × gasPrice`) in native wei for same-chain EVM aggregator quotes, used
+     * only as the in-band lower-gas tie-break in [selectBestQuote]. A zero or absent gas/gasPrice
+     * reads as "gas unknown" (null) so a quote with no usable gas estimate never wins the
+     * cheapest-gas comparison.
+     */
+    private fun sourceGasWei(provider: SwapProvider, quote: SwapQuote): BigInteger? =
+        when (provider) {
+            SwapProvider.ONEINCH,
+            SwapProvider.KYBER,
+            SwapProvider.LIFI -> {
+                val tx = (quote as? SwapQuote.OneInch)?.data?.tx
+                val gasPrice = tx?.gasPrice?.toBigIntegerOrNull()
+                if (tx != null && gasPrice != null && gasPrice > BigInteger.ZERO && tx.gas > 0L)
+                    gasPrice * tx.gas.toBigInteger()
+                else null
+            }
+            SwapProvider.THORCHAIN,
+            SwapProvider.MAYA,
+            SwapProvider.SWAPKIT,
+            SwapProvider.JUPITER -> null
         }
 
     /**
@@ -1239,11 +1292,11 @@ constructor(
          */
         private const val MAX_INDICATIVE_DECIMALS = 8
         /**
-         * Width of the priority band, as a fraction of the best output. Quotes whose output lands
-         * within this band of the best are treated as effectively tied on rate, so the
-         * higher-priority provider is preferred over a marginally larger raw output. 1%.
+         * Width of the priority band, as a fraction of the best net output. Quotes within this band
+         * of the best are treated as tied on rate, so a cheaper or higher-priority provider is
+         * preferred over a marginally larger raw output.
          */
-        private val PROVIDER_PREFERENCE_BAND = BigDecimal("0.01")
+        private val PROVIDER_PREFERENCE_BAND = BigDecimal("0.005")
     }
 }
 
