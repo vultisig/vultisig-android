@@ -192,6 +192,7 @@ internal class CosmosApiImp(
                 .gasInfo
                 ?.gasUsed
                 ?.toLongOrNull()
+                ?.takeIf { it > 0 }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

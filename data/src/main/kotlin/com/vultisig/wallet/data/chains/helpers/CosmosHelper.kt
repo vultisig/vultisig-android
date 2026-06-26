@@ -332,17 +332,20 @@ class CosmosHelper(
             .build()
     }
 
-    private fun buildCosmosFee(atomData: BlockChainSpecific.Cosmos): Cosmos.Fee.Builder? =
-        Cosmos.Fee.newBuilder()
-            .setGas(gasLimit)
-            .addAllAmounts(
-                listOf(
-                    Cosmos.Amount.newBuilder()
-                        .setDenom(denom)
-                        .setAmount(atomData.gas.toString())
-                        .build()
-                )
+    private fun buildCosmosFee(atomData: BlockChainSpecific.Cosmos): Cosmos.Fee.Builder {
+        val fee = Cosmos.Fee.newBuilder().setGas(gasLimit)
+        // A zero fee amount yields an empty fee: the `/simulate` tx must not declare a fee, or the
+        // AnteHandler's DeductFee charges it and fails MAX / near-balance sends.
+        if (atomData.gas.signum() > 0) {
+            fee.addAmounts(
+                Cosmos.Amount.newBuilder()
+                    .setDenom(denom)
+                    .setAmount(atomData.gas.toString())
+                    .build()
             )
+        }
+        return fee
+    }
 
     fun getSignedTransaction(
         input: ByteArray,

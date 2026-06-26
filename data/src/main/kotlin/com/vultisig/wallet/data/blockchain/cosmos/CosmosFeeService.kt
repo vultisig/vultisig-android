@@ -31,10 +31,27 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
 
     private data class CachedBurnTaxRate(val rate: BigDecimal, val fetchedAtMs: Long)
 
+    /**
+     * Simulated `gas_used` for a native bank send is effectively constant per chain (it doesn't
+     * vary with the amount or recipient), so cache it for a short TTL to keep the debounced fee
+     * path off `getAccountNumber`/`/simulate` on every keystroke — the same reason
+     * [cachedBurnTaxRate] exists. A single `@Volatile` reference makes the read/publish atomic; a
+     * stale entry is harmless given the [GAS_ADJUSTMENT_PERCENT] headroom.
+     */
+    @Volatile private var cachedSimulatedGas: CachedSimulatedGas? = null
+
+    private data class CachedSimulatedGas(
+        val chain: Chain,
+        val gasUsed: Long,
+        val fetchedAtMs: Long,
+    )
+
     companion object {
         internal const val OSMOSIS_MIN_FEE_UOSMO = 25_000L
 
         private const val BURN_TAX_RATE_TTL_MS = 5 * 60 * 1000L
+
+        private const val SIMULATED_GAS_TTL_MS = 60 * 1000L
 
         // `gasLimit * gasPrice` lands below what Akash's validators accept: the
         // chain-registry price (0.025 uakt/gas) on a ~300k-gas delegation yields
@@ -47,8 +64,8 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
         private const val GAS_ADJUSTMENT_PERCENT = 30
 
         // Osmosis/Akash static fees are flat minimum-fee floors, not per-gas rates. The simulated
-        // path sizes the fee from the chains' real mainnet min gas price (0.025) and lets
-        // minFeeFloor cap the result instead of treating the floor as a rate.
+        // path sizes the fee from the chains' real mainnet min gas price (0.025) and lets the
+        // static-fee floor cap the result instead of treating the floor as a rate.
         private val OSMOSIS_MIN_GAS_PRICE = BigDecimal("0.025")
         private val AKASH_MIN_GAS_PRICE = BigDecimal("0.025")
 
@@ -83,13 +100,16 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
             (limit.toBigDecimal() * simulatedGasPrice(chain, staticFees, staticLimit))
                 .setScale(0, RoundingMode.CEILING)
                 .toBigInteger()
-                .max(minFeeFloor(chain))
+                // The broadcast tx still declares the static `getChainGasLimit`, so the fee must
+                // cover at least the static per-chain amount (`minGasPrice × staticLimit`) or the
+                // mempool rejects it; never drop below that floor (issue #4847).
+                .max(staticFees.amount)
         return GasFees(limit = limit, amount = amount)
     }
 
     /**
      * Static per-chain gas limit + fee amount, used as the fallback when `/simulate` is unavailable
-     * and as the gas-price source for the simulated path. Mirrors the previously-hardcoded values.
+     * and as the gas-price source for the simulated path.
      */
     private suspend fun staticGasFees(
         transaction: BlockchainTransaction,
@@ -99,7 +119,7 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
         when (chain) {
             Chain.Osmosis ->
                 // Osmosis uses EIP-1559 dynamic fees; OSMOSIS_MIN_FEE_UOSMO matches iOS and covers
-                // the 300k gas × 0.03 uosmo/gas minimum with headroom for base fee spikes.
+                // the 300k gas × 0.025 uosmo/gas minimum with headroom for base fee spikes.
                 GasFees(
                     limit = gasLimit.toBigInteger(),
                     amount = OSMOSIS_MIN_FEE_UOSMO.toBigInteger(),
@@ -124,9 +144,9 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
     /**
      * Per-gas price (in the chain's fee denom) used to size the fee from simulated gas. Chains
      * whose [staticGasFees] amount is a flat minimum-fee floor rather than a per-gas rate (Osmosis,
-     * Akash) expose their real min gas price here, so the floor only caps the result via
-     * [minFeeFloor] instead of inflating it; for every other chain the static `amount / limit`
-     * ratio already is the per-gas rate.
+     * Akash) expose their real min gas price here, so the static-fee floor in
+     * [calculateDefaultFees] only caps the result instead of inflating it; for every other chain
+     * the static `amount / limit` ratio already is the per-gas rate.
      */
     private fun simulatedGasPrice(
         chain: Chain,
@@ -142,14 +162,6 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
                     .divide(staticLimit.toBigDecimal(), MathContext.DECIMAL64)
         }
 
-    /** Minimum fee a chain's mempool accepts regardless of simulated gas, or zero when none. */
-    private fun minFeeFloor(chain: Chain): BigInteger =
-        when (chain) {
-            Chain.Osmosis -> OSMOSIS_MIN_FEE_UOSMO.toBigInteger()
-            Chain.Akash -> AKASH_MIN_FEE_UAKT.toBigInteger()
-            else -> BigInteger.ZERO
-        }
-
     /**
      * Simulates the unsigned transaction and returns `gas_info.gas_used`, or `null` to fall back to
      * the static gas limit. Only the chains whose sends WalletCore builds as native bank `MsgSend`
@@ -161,6 +173,10 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
         val chain = coin.chain
         if (chain !in SIMULATION_SUPPORTED_CHAINS) return null
         if (transaction !is Transfer) return null
+        val now = System.currentTimeMillis()
+        cachedSimulatedGas?.let {
+            if (it.chain == chain && now - it.fetchedAtMs < SIMULATED_GAS_TTL_MS) return it.gasUsed
+        }
         return try {
             val staticLimit = CosmosHelper.getChainGasLimit(chain)
             val api = cosmosApiFactory.createCosmosApi(chain)
@@ -177,12 +193,11 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
                     .getZeroSignedTransaction(
                         buildSimulationPayload(
                             transaction = transaction,
-                            gasLimit = staticLimit,
                             accountNumber = BigInteger(account.accountNumber ?: "0"),
                             sequence = BigInteger(account.sequence ?: "0"),
                         )
                     )
-            api.simulate(txBytes)
+            api.simulate(txBytes)?.also { cachedSimulatedGas = CachedSimulatedGas(chain, it, now) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -193,11 +208,12 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
 
     /**
      * Minimal keysign payload for a native send. [accountNumber] and [sequence] must be the live
-     * on-chain values because `/simulate` runs the AnteHandler and rejects a stale sequence.
+     * on-chain values because `/simulate` runs the AnteHandler and rejects a stale sequence. The
+     * fee amount is left at zero so the AnteHandler's DeductFee charges nothing — otherwise a
+     * declared fee fails MAX / near-balance sends and silently reverts to the static fee.
      */
     private fun buildSimulationPayload(
         transaction: Transfer,
-        gasLimit: Long,
         accountNumber: BigInteger,
         sequence: BigInteger,
     ): KeysignPayload =
@@ -209,7 +225,7 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
                 BlockChainSpecific.Cosmos(
                     accountNumber = accountNumber,
                     sequence = sequence,
-                    gas = gasLimit.toBigInteger(),
+                    gas = BigInteger.ZERO,
                     ibcDenomTraces = null,
                     transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
                 ),
