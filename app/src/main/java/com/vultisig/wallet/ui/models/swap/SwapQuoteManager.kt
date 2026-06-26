@@ -283,6 +283,7 @@ constructor(
                         tokenValue,
                         vultBPSDiscount,
                         srcNativeToken,
+                        slippageBps,
                         externalRecipient,
                     )
             }
@@ -900,6 +901,7 @@ constructor(
         tokenValue: TokenValue,
         vultBPSDiscount: Int?,
         srcNativeToken: Coin,
+        slippageBps: Int?,
         externalRecipient: String?,
     ): Pair<SwapQuote, UiText> {
         // iOS' SwapKit tier-discount formula at this milestone:
@@ -920,9 +922,10 @@ constructor(
                 cacheDstAddress,
                 srcTokenValue,
                 SwapProvider.SWAPKIT,
-                // SwapKit uses a server-side slippage floor (no quote-time override, #4858) — keep
-                // its cache key slippage-agnostic.
-                slippageBps = null,
+                // Slippage is part of the cache key so a tolerance change re-fetches a correctly
+                // routed quote rather than serving the stale one built at the old tolerance
+                // (#5050).
+                slippageBps = slippageBps,
             ) {
                 val result =
                     swapQuoteRepository.getQuote(
@@ -934,6 +937,7 @@ constructor(
                             srcAddress = src.address.address,
                             dstAddress = requestDstAddress,
                             affiliateBps = affiliateBps,
+                            slippageBps = slippageBps,
                         ),
                     )
                 val evmResult =

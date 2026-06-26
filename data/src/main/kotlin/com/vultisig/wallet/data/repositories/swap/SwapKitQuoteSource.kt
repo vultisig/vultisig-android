@@ -153,6 +153,10 @@ constructor(
                     sourceAddress = request.srcAddress.ifBlank { null },
                     destinationAddress = request.dstAddress.ifBlank { null },
                     affiliateFee = request.affiliateBps,
+                    // User-set tolerance as a percentage (100 bps = 1%); omitted on Auto so NEAR
+                    // Intents / Chainflip keep negotiating their own per-route slippage. Mirrors
+                    // iOS SwapKitService.fetchBestRoute (#5050).
+                    slippage = request.slippageBps?.let { it / SLIPPAGE_BPS_PER_PERCENT },
                 )
             )
 
@@ -981,6 +985,9 @@ constructor(
 
         /** ERC20 `approve(address,uint256)` 4-byte function selector (hex, no `0x`). */
         private const val APPROVE_SELECTOR = "095ea7b3"
+
+        /** bps→percent divisor for SwapKit's `slippage` field (100 bps = 1%). */
+        private const val SLIPPAGE_BPS_PER_PERCENT = 100.0
 
         /**
          * Sub-provider ids (lower-cased, underscored — matches the wire format of SwapKit's
