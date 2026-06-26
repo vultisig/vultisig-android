@@ -9,11 +9,16 @@ import kotlinx.serialization.Serializable
  * amount.
  */
 @Serializable
-data class CosmosSimulateResponse(@SerialName("gas_info") val gasInfo: GasInfo? = null) {
+data class CosmosSimulateResponse(
+    /** Gas-accounting block from the simulation, or `null` when the node omits it. */
+    @SerialName("gas_info") val gasInfo: GasInfo? = null
+) {
     /** Gas-accounting block from a simulation; `gas_used` is the gas the tx actually consumed. */
     @Serializable
     data class GasInfo(
+        /** Gas the simulator was allowed to use (`gas_wanted`); unused by the fee path. */
         @SerialName("gas_wanted") val gasWanted: String? = null,
+        /** Gas the simulated tx actually consumed (`gas_used`); drives the dynamic gas limit. */
         @SerialName("gas_used") val gasUsed: String? = null,
     )
 }
