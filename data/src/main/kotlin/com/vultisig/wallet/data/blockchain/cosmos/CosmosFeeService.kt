@@ -6,9 +6,18 @@ import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Transfer
+import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.utils.increaseByPercent
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.MathContext
+import java.math.RoundingMode
+import kotlin.coroutines.cancellation.CancellationException
+import timber.log.Timber
+import vultisig.keysign.v1.TransactionType
 
 class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeService {
 
@@ -33,6 +42,21 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
         // fee. Floor the injected fee to 0.025 AKT — the minimum Akash accepts.
         // Mirrors vultisig-windows `keplrMinInjectedFee.Akash` (PR #4025).
         internal const val AKASH_MIN_FEE_UAKT = 25_000L
+
+        // gasLimit = gasUsed × 1.3 — headroom so the broadcast tx isn't rejected out-of-gas-bound.
+        private const val GAS_ADJUSTMENT_PERCENT = 30
+
+        // Chains whose sends WalletCore assembles as a native bank `MsgSend` (routed through
+        // CosmosHelper in SigningHelper), so the simulated unsigned tx matches the broadcast tx.
+        private val SIMULATION_SUPPORTED_CHAINS =
+            setOf(
+                Chain.GaiaChain,
+                Chain.Kujira,
+                Chain.Dydx,
+                Chain.Osmosis,
+                Chain.Noble,
+                Chain.Akash,
+            )
     }
 
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
@@ -41,47 +65,121 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
         val chain = transaction.coin.chain
-        val gasLimit =
-            when (chain) {
-                Chain.Qbtc, // ML-DSA-44 signatures are ~2.4 KB, needs more gas
-                Chain.Terra,
-                Chain.TerraClassic,
-                Chain.Osmosis -> 300000L
-                else -> 200000L
-            }
-        return when (chain) {
-            Chain.Osmosis -> {
+        val staticLimit = CosmosHelper.getChainGasLimit(chain)
+        val staticFees = staticGasFees(transaction, chain, staticLimit)
+
+        // Derive gas from an actual `/cosmos/tx/simulate`; fall back to the static per-chain values
+        // when simulation is unavailable (issue #4847).
+        val gasUsed = simulatedGasUsed(transaction) ?: return staticFees
+
+        val limit = gasUsed.toBigInteger().increaseByPercent(GAS_ADJUSTMENT_PERCENT)
+        // Reuse the static fee/limit ratio as the chain's gas price so the simulated gas scales the
+        // fee while preserving each chain's economics; floor it at the chain minimum.
+        val gasPrice =
+            staticFees.amount
+                .toBigDecimal()
+                .divide(staticLimit.toBigDecimal(), MathContext.DECIMAL64)
+        val amount =
+            (limit.toBigDecimal() * gasPrice)
+                .setScale(0, RoundingMode.CEILING)
+                .toBigInteger()
+                .max(minFeeFloor(chain))
+        return GasFees(limit = limit, amount = amount)
+    }
+
+    /**
+     * Static per-chain gas limit + fee amount, used as the fallback when `/simulate` is unavailable
+     * and as the gas-price source for the simulated path. Mirrors the previously-hardcoded values.
+     */
+    private suspend fun staticGasFees(
+        transaction: BlockchainTransaction,
+        chain: Chain,
+        gasLimit: Long,
+    ): GasFees =
+        when (chain) {
+            Chain.Osmosis ->
                 // Osmosis uses EIP-1559 dynamic fees; OSMOSIS_MIN_FEE_UOSMO matches iOS and covers
                 // the 300k gas × 0.03 uosmo/gas minimum with headroom for base fee spikes.
                 GasFees(
                     limit = gasLimit.toBigInteger(),
                     amount = OSMOSIS_MIN_FEE_UOSMO.toBigInteger(),
                 )
-            }
-            Chain.Akash -> {
+            Chain.Akash ->
                 GasFees(limit = gasLimit.toBigInteger(), amount = AKASH_MIN_FEE_UAKT.toBigInteger())
-            }
             Chain.GaiaChain,
             Chain.Kujira,
             Chain.Terra,
-            Chain.Qbtc -> {
-                GasFees(limit = gasLimit.toBigInteger(), amount = 7500.toBigInteger())
-            }
-            Chain.Noble -> {
-                GasFees(limit = gasLimit.toBigInteger(), amount = 20000L.toBigInteger())
-            }
-            Chain.TerraClassic -> {
+            Chain.Qbtc -> GasFees(limit = gasLimit.toBigInteger(), amount = 7500.toBigInteger())
+            Chain.Noble -> GasFees(limit = gasLimit.toBigInteger(), amount = 20000L.toBigInteger())
+            Chain.TerraClassic ->
                 GasFees(
                     limit = gasLimit.toBigInteger(),
                     amount = terraClassicFeeAmount(transaction),
                 )
-            }
-            Chain.Dydx -> {
+            Chain.Dydx ->
                 GasFees(limit = gasLimit.toBigInteger(), amount = 2500000000000000L.toBigInteger())
-            }
             else -> error("Chain Not Supported: ${chain.name}")
         }
+
+    /** Minimum fee a chain's mempool accepts regardless of simulated gas, or zero when none. */
+    private fun minFeeFloor(chain: Chain): BigInteger =
+        when (chain) {
+            Chain.Osmosis -> OSMOSIS_MIN_FEE_UOSMO.toBigInteger()
+            Chain.Akash -> AKASH_MIN_FEE_UAKT.toBigInteger()
+            else -> BigInteger.ZERO
+        }
+
+    /**
+     * Simulates the unsigned transaction and returns `gas_info.gas_used`, or `null` to fall back to
+     * the static gas limit. Only the chains whose sends WalletCore builds as native bank `MsgSend`
+     * are simulated; Terra/TerraClassic (TerraHelper, burn tax) and Qbtc (ML-DSA) keep their static
+     * values.
+     */
+    private suspend fun simulatedGasUsed(transaction: BlockchainTransaction): Long? {
+        val coin = transaction.coin
+        val chain = coin.chain
+        if (chain !in SIMULATION_SUPPORTED_CHAINS) return null
+        if (transaction !is Transfer) return null
+        return try {
+            val staticLimit = CosmosHelper.getChainGasLimit(chain)
+            val txBytes =
+                CosmosHelper(
+                        coinType = coin.coinType,
+                        denom = chain.feeUnit,
+                        gasLimit = staticLimit,
+                    )
+                    .getZeroSignedTransaction(buildSimulationPayload(transaction, staticLimit))
+            cosmosApiFactory.createCosmosApi(chain).simulate(txBytes)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Cosmos simulate failed; falling back to static gas")
+            null
+        }
     }
+
+    /**
+     * Minimal keysign payload (account/sequence are irrelevant to simulation) for a native send.
+     */
+    private fun buildSimulationPayload(transaction: Transfer, gasLimit: Long): KeysignPayload =
+        KeysignPayload(
+            coin = transaction.coin,
+            toAddress = transaction.to,
+            toAmount = transaction.amount,
+            blockChainSpecific =
+                BlockChainSpecific.Cosmos(
+                    accountNumber = BigInteger.ZERO,
+                    sequence = BigInteger.ZERO,
+                    gas = gasLimit.toBigInteger(),
+                    ibcDenomTraces = null,
+                    transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+                ),
+            memo = transaction.memo,
+            vaultPublicKeyECDSA = transaction.vault.vaultHexPublicKey,
+            vaultLocalPartyID = "",
+            libType = null,
+            wasmExecuteContractPayload = null,
+        )
 
     /**
      * Terra Classic fee = base gas + proportional burn tax. The base gas is denominated in the same
