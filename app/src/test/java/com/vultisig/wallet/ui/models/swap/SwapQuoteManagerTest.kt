@@ -653,6 +653,26 @@ internal class SwapQuoteManagerTest {
     }
 
     @Test
+    fun `selectBestQuote winner is independent of candidate order for mixed-gas in-band quotes`() {
+        // A gas-unknown quote in band alongside two gas-exposing aggregators must resolve to the
+        // same winner regardless of order — ranking is a single total order, not an order-sensitive
+        // pairwise comparison.
+        val quotes =
+            listOf(
+                rankable(SwapProvider.SWAPKIT, "0.0299"),
+                rankable(SwapProvider.KYBER, "0.0299", sourceGasWei = 6_000_000_000_000_000),
+                rankable(SwapProvider.ONEINCH, "0.03", sourceGasWei = 3_000_000_000_000_000),
+            )
+        val manager = createManager()
+
+        val forward = manager.selectBestQuote(quotes).candidate.provider
+        val reversed = manager.selectBestQuote(quotes.reversed()).candidate.provider
+
+        assertEquals(SwapProvider.SWAPKIT, forward)
+        assertEquals(forward, reversed)
+    }
+
+    @Test
     fun `selectBestQuote returns the only quote`() {
         val best = createManager().selectBestQuote(listOf(rankable(SwapProvider.LIFI, "0.03")))
 

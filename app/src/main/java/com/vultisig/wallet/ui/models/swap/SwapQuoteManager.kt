@@ -481,34 +481,26 @@ constructor(
      * ([QuoteFetchResult.comparableDstFiat]) — every provider in a candidate set swaps to the same
      * destination token, so the values are directly comparable. On top of that metric a banded
      * provider-preference layer applies: among quotes within [PROVIDER_PREFERENCE_BAND] of the best
-     * net output — economically tied on rate — a lower source-chain gas cost wins first (only when
-     * both quotes expose [QuoteFetchResult.sourceGasWei], in the same native-wei unit), then the
-     * higher-priority provider, then the higher net output. A gas-unknown quote can never win the
-     * lower-gas check and falls through to provider preference, so a near-tie stays on the cheaper
-     * or more trusted route without ever trading away a materially better rate (anything outside
-     * the band loses on output).
+     * net output — economically tied on rate — a deterministic total order picks the winner. Quotes
+     * that expose source gas (same-chain EVM aggregators) are ordered by lower gas; quotes that do
+     * not are ordered by provider priority and rank ahead of the gas-exposing ones, so a near-tie
+     * stays on the cheaper or more trusted route. Provider priority, then higher net output, break
+     * any remaining ties. Anything outside the band loses on output.
      *
      * Assumes [successes] is non-empty (the caller has already surfaced the all-failed case).
      */
     internal fun selectBestQuote(successes: List<BestQuote>): BestQuote {
         val best = successes.maxBy { it.result.comparableDstFiat }
         val floor = best.result.comparableDstFiat * (BigDecimal.ONE - PROVIDER_PREFERENCE_BAND)
-        val inBand = successes.filter { it.result.comparableDstFiat >= floor }
-        return inBand.minWithOrNull(
-            Comparator<BestQuote> { lhs, rhs ->
-                val lhsGas = lhs.result.sourceGasWei
-                val rhsGas = rhs.result.sourceGasWei
-                if (lhsGas != null && rhsGas != null && lhsGas != rhsGas) {
-                    lhsGas.compareTo(rhsGas)
-                } else {
-                    val byPriority =
-                        providerPriority(lhs.candidate.provider)
-                            .compareTo(providerPriority(rhs.candidate.provider))
-                    if (byPriority != 0) byPriority
-                    else rhs.result.comparableDstFiat.compareTo(lhs.result.comparableDstFiat)
-                }
-            }
-        ) ?: best
+        // A single total order makes the winner independent of input order; gas-unknown quotes
+        // (nullsFirst) rank ahead of the gas-exposing aggregators, which sort by cheaper gas.
+        return successes
+            .filter { it.result.comparableDstFiat >= floor }
+            .minWithOrNull(
+                compareBy<BestQuote, BigInteger?>(nullsFirst()) { it.result.sourceGasWei }
+                    .thenBy { providerPriority(it.candidate.provider) }
+                    .thenByDescending { it.result.comparableDstFiat }
+            ) ?: best
     }
 
     /**
@@ -597,13 +589,13 @@ constructor(
         when (provider) {
             SwapProvider.ONEINCH,
             SwapProvider.KYBER,
-            SwapProvider.LIFI -> {
-                val tx = (quote as? SwapQuote.OneInch)?.data?.tx
-                val gasPrice = tx?.gasPrice?.toBigIntegerOrNull()
-                if (tx != null && gasPrice != null && gasPrice > BigInteger.ZERO && tx.gas > 0L)
-                    gasPrice * tx.gas.toBigInteger()
-                else null
-            }
+            SwapProvider.LIFI ->
+                (quote as? SwapQuote.OneInch)?.data?.tx?.let { tx ->
+                    tx.gasPrice
+                        .toBigIntegerOrNull()
+                        ?.takeIf { it > BigInteger.ZERO && tx.gas > 0L }
+                        ?.let { gasPrice -> gasPrice * tx.gas.toBigInteger() }
+                }
             SwapProvider.THORCHAIN,
             SwapProvider.MAYA,
             SwapProvider.SWAPKIT,
