@@ -26,8 +26,9 @@ data class SwapQuoteRequest(
      * User-chosen slippage tolerance in basis points (100 = 1%), or null for "Auto" — in which case
      * each provider keeps its own default ([DEFAULT_THORCHAIN_TOLERANCE_BPS] for THORChain/Maya,
      * 0.5% for 1inch and Jupiter, 1% for Kyber, LI.FI's and SwapKit's own server defaults).
-     * Honoured by every provider; SwapKit converts it to a percentage and omits it on Auto so NEAR
-     * Intents / Chainflip can negotiate their own per-route tolerance. See #4858, #5050.
+     * Honoured by every provider; each converts it to its native unit (bps, percent, or fraction),
+     * and SwapKit omits it on Auto so NEAR Intents / Chainflip can negotiate their own per-route
+     * tolerance.
      */
     val slippageBps: Int? = null,
 )

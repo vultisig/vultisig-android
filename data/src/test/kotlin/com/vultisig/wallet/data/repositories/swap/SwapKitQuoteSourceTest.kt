@@ -171,8 +171,9 @@ internal class SwapKitQuoteSourceTest {
 
     @Test
     fun `fetch forwards the user slippage to the quote request as a percentage`() = runTest {
-        // SwapKit takes slippage as a percentage (100 bps = 1%); a user override must reach the
-        // /v3/quote body so the route is built to the chosen tolerance (mirrors iOS, #5050).
+        // SwapKit takes slippage as a percentage, so a user override must reach the /v3/quote body
+        // converted from basis points (150 bps = 1.5%). A non-round value pins the division so a
+        // truncating or wrong-divisor regression can't pass.
         every { config.isFeatureEnabled } returns flowOf(true)
         val quoteRequest = slot<SwapKitQuoteRequest>()
         coEvery { api.quote(capture(quoteRequest)) } returns
@@ -181,16 +182,15 @@ internal class SwapKitQuoteSourceTest {
             )
         coEvery { api.swap(any()) } returns evmSwapResponse()
 
-        source().fetch(request(slippageBps = 100))
+        source().fetch(request(slippageBps = 150))
 
-        assertEquals(1.0, quoteRequest.captured.slippage)
+        assertEquals(1.5, quoteRequest.captured.slippage)
     }
 
     @Test
     fun `fetch omits slippage from the quote request on Auto`() = runTest {
-        // Auto (null) must omit slippage entirely so NEAR Intents / Chainflip keep negotiating
-        // their
-        // own per-route tolerance rather than failing noRoutesFound on an imposed cap (#5050).
+        // Auto (null) must omit slippage so NEAR Intents / Chainflip keep negotiating their own
+        // per-route tolerance instead of failing noRoutesFound on an imposed cap.
         every { config.isFeatureEnabled } returns flowOf(true)
         val quoteRequest = slot<SwapKitQuoteRequest>()
         coEvery { api.quote(capture(quoteRequest)) } returns

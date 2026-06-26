@@ -743,8 +743,7 @@ internal class SwapQuoteManagerTest {
 
     @Test
     fun `fetchQuote forwards the user-set slippage to the SwapKit request`() = runTest {
-        // SwapKit silently dropped the user tolerance before #5050 (the request was built without a
-        // slippage). Pin that the chosen value now reaches the request the source forwards to
+        // Pin that the chosen tolerance reaches the request the source forwards to SwapKit's
         // /v3/quote. Throw after capture to stay off the fee path.
         coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
             FiatValue(BigDecimal.ZERO, "USD")
@@ -761,11 +760,10 @@ internal class SwapQuoteManagerTest {
 
     @Test
     fun `SwapKit quotes that differ only in slippage do not collide in the cache`() = runTest {
-        // Slippage is now part of the SwapKit cache key, so a re-fetch after a tolerance change
-        // must
-        // miss and re-quote rather than serve the stale route. Two identical-slippage calls share
-        // one network call; a third at a different slippage adds a second — three calls, two
-        // fetches.
+        // Slippage is part of the SwapKit cache key, so a re-fetch after a tolerance change must
+        // miss and re-quote rather than serve a route built for the old tolerance. Two
+        // identical-slippage calls share one network call; a third at a different slippage adds a
+        // second — three calls, two fetches.
         val eth = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
         coEvery { tokenRepository.getNativeToken(any()) } returns eth
         coEvery { convertTokenValueToFiat(any(), any(), any()) } returns

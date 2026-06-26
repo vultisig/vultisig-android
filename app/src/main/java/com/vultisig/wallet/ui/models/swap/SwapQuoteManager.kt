@@ -922,9 +922,8 @@ constructor(
                 cacheDstAddress,
                 srcTokenValue,
                 SwapProvider.SWAPKIT,
-                // Slippage is part of the cache key so a tolerance change re-fetches a correctly
-                // routed quote rather than serving the stale one built at the old tolerance
-                // (#5050).
+                // Keyed by slippage so a tolerance change re-fetches instead of serving a quote
+                // routed to the previous tolerance.
                 slippageBps = slippageBps,
             ) {
                 val result =
