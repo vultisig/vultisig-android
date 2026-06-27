@@ -488,14 +488,15 @@ private fun QrCodeContainer(
             }
         }
 
-        // Anchor the expand affordance to the card's top-right corner so it reads as part of the
-        // QR instead of a stray, detached button. The bitmap is generated with a quiet-zone margin,
-        // so the top-right finder pattern is inset from the corner and the control stays clear of
-        // it, keeping the code reliably scannable.
+        // Sit the expand affordance on the card's top-right corner so it reads as part of the QR
+        // instead of a stray, detached button. The small outward offset lands the visual on the
+        // corner despite the 48.dp interactive box centering it; the bitmap's quiet-zone margin
+        // keeps the top-right finder pattern inset and clear of the control, so the code stays
+        // reliably scannable.
         if (qrCode != null) {
             ExpandQrButton(
                 onClick = onClick,
-                modifier = Modifier.align(Alignment.TopEnd).offset(x = 24.dp, y = (-24).dp),
+                modifier = Modifier.align(Alignment.TopEnd).offset(x = 6.dp, y = (-6).dp),
             )
         }
     }
