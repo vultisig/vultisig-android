@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -29,6 +30,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -49,6 +51,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
@@ -458,42 +461,99 @@ private fun QrCodeContainer(
     val outerShape = RoundedCornerShape(24.75.dp)
     val innerShape = RoundedCornerShape(18.56.dp)
 
+    Box(modifier = modifier) {
+        Box(
+            modifier =
+                Modifier.clip(outerShape)
+                    .background(brush = QrFrameGradient, shape = outerShape)
+                    .clickable(onClick = onClick)
+                    .padding(6.19.dp)
+        ) {
+            Box(
+                modifier =
+                    Modifier.background(
+                            color = Theme.v2.colors.backgrounds.surface1,
+                            shape = innerShape,
+                        )
+                        .border(
+                            width = 0.77.dp,
+                            color = Theme.v2.colors.border.normal,
+                            shape = innerShape,
+                        )
+                        .padding(12.38.dp)
+            ) {
+                // Reserve the QR footprint so the framed card keeps its size while the bitmap is
+                // still being generated, then fade the QR in once it is ready.
+                QrCodeImage(qrCode = qrCode)
+            }
+        }
+
+        // Sit the expand affordance on the card's top-right corner so it reads as part of the QR
+        // instead of a stray, detached button. The small outward offset lands the visual on the
+        // corner despite the 48.dp interactive box centering it; the bitmap's quiet-zone margin
+        // keeps the top-right finder pattern inset and clear of the control, so the code stays
+        // reliably scannable.
+        if (qrCode != null) {
+            ExpandQrButton(
+                onClick = onClick,
+                modifier = Modifier.align(Alignment.TopEnd).offset(x = 6.dp, y = (-6).dp),
+            )
+        }
+    }
+}
+
+/**
+ * Reserves the QR footprint and fades the generated QR bitmap in once it is ready.
+ *
+ * Kept as a standalone composable so [AnimatedVisibility] resolves to the non-scoped overload
+ * instead of the enclosing [Column]'s [ColumnScope] extension.
+ *
+ * @param qrCode the QR painter, or null while it is still being generated.
+ */
+@Composable
+private fun QrCodeImage(qrCode: BitmapPainter?, modifier: Modifier = Modifier) {
+    Box(modifier = modifier.size(185.dp), contentAlignment = Alignment.Center) {
+        AnimatedVisibility(visible = qrCode != null, enter = fadeIn()) {
+            if (qrCode != null) {
+                Image(
+                    painter = qrCode,
+                    contentDescription = null,
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Circular icon button anchored to the QR card's top-right corner that opens the full-screen QR
+ * overlay.
+ *
+ * Exposes a labelled [Role.Button] semantics node and reserves at least a 48.dp touch target so it
+ * stays usable with TalkBack and easy to hit.
+ *
+ * @param onClick invoked when the expand affordance is tapped.
+ */
+@Composable
+private fun ExpandQrButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier =
             modifier
-                .clip(outerShape)
-                .background(brush = QrFrameGradient, shape = outerShape)
-                .clickable(onClick = onClick)
-                .padding(6.19.dp)
+                .minimumInteractiveComponentSize()
+                .clip(CircleShape)
+                .background(color = Theme.v2.colors.backgrounds.surface1, shape = CircleShape)
+                .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = CircleShape)
+                .clickable(onClick = onClick, role = Role.Button)
+                .padding(6.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        Box(
-            modifier =
-                Modifier.background(
-                        color = Theme.v2.colors.backgrounds.surface1,
-                        shape = innerShape,
-                    )
-                    .border(
-                        width = 0.77.dp,
-                        color = Theme.v2.colors.border.normal,
-                        shape = innerShape,
-                    )
-                    .padding(12.38.dp)
-        ) {
-            // Reserve the QR footprint so the framed card keeps its size while the bitmap is still
-            // being generated, then fade the QR in once it is ready.
-            Box(modifier = Modifier.size(185.dp), contentAlignment = Alignment.Center) {
-                AnimatedVisibility(visible = qrCode != null, enter = fadeIn()) {
-                    if (qrCode != null) {
-                        Image(
-                            painter = qrCode,
-                            contentDescription = null,
-                            contentScale = ContentScale.FillWidth,
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    }
-                }
-            }
-        }
+        UiIcon(
+            drawableResId = R.drawable.ic_expand,
+            size = 16.dp,
+            tint = Theme.v2.colors.text.primary,
+            contentDescription = stringResource(R.string.peer_discovery_expand_qr),
+        )
     }
 }
 

@@ -12,6 +12,12 @@ import javax.inject.Inject
 private const val QR_CODE_SCALE_FACTOR = 8
 private const val QR_CODE_VS_LOGO_SCALE_FACTOR = 4
 
+// Quiet-zone margin, in modules, baked into the matrix so the finder patterns are inset from the
+// edges instead of running flush to the corners. Required for reliable scanning — especially when
+// the code is shown edge-to-edge full-screen, and so corner overlays (e.g. the expand control) keep
+// clear of the finder patterns. The QR spec recommends 4 modules.
+private const val QR_CODE_QUIET_ZONE = 4
+
 interface GenerateQrBitmap : (String, Color, Color, Bitmap?) -> Bitmap
 
 internal class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
@@ -21,7 +27,7 @@ internal class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
         backgroundColor: Color,
         logo: Bitmap?,
     ): Bitmap {
-        val hintMap = mapOf(EncodeHintType.MARGIN to 0)
+        val hintMap = mapOf(EncodeHintType.MARGIN to QR_CODE_QUIET_ZONE)
 
         val qrCodeWriter = QRCodeWriter()
         val bitmapMatrix = qrCodeWriter.encode(qrCodeContent, BarcodeFormat.QR_CODE, 0, 0, hintMap)
@@ -46,7 +52,15 @@ internal class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
         }
 
         if (logo == null) {
-            return bitmap
+            // Upscale module-resolution matrix with nearest-neighbor so the shared/exported
+            // image is full-resolution instead of the raw module-resolution bitmap.
+            val noLogoWidth = bitmap.width * QR_CODE_SCALE_FACTOR
+            val noLogoHeight = bitmap.height * QR_CODE_SCALE_FACTOR
+            val scaledNoLogoBitmap = bitmap.scale(noLogoWidth, noLogoHeight, false)
+            if (bitmap != scaledNoLogoBitmap) {
+                bitmap.recycle()
+            }
+            return scaledNoLogoBitmap
         }
 
         val scaledWidth = bitmap.width * QR_CODE_SCALE_FACTOR

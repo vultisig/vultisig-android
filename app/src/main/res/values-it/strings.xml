@@ -895,6 +895,7 @@
     <string name="select_vault_type_secure_desc_3">Proteggi qualsiasi quantità di risorse</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver co-firma istantaneamente</string>
     <string name="peer_discovery_topbar_title">Scansiona il codice QR</string>
+    <string name="peer_discovery_expand_qr">Espandi codice QR</string>
     <string name="vault_backup_screen_email_sent_to">Inviato a %s.</string>
     <string name="vault_backup_screen_donot_receive_email">Non hai ricevuto un\'email?</string>
     <string name="onboarding_desc_page_5_part_2">separatamente in un</string>

@@ -900,6 +900,7 @@
     <string name="select_vault_type_secure_desc_3">Защитите любое количество активов</string>
     <string name="select_vault_type_fast_desc_3">Vultisig мгновенно подписывается</string>
     <string name="peer_discovery_topbar_title">Сканируйте QR-код</string>
+    <string name="peer_discovery_expand_qr">Увеличить QR-код</string>
     <string name="vault_backup_screen_email_sent_to">Отправлено %s.</string>
     <string name="vault_backup_screen_donot_receive_email">Не получили письмо?</string>
     <string name="onboarding_desc_page_5_part_2">отдельно в</string>

@@ -895,6 +895,7 @@
     <string name="select_vault_type_secure_desc_3">Protege cualquier cantidad de activos</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver firma automáticamente</string>
     <string name="peer_discovery_topbar_title">Escanear código QR</string>
+    <string name="peer_discovery_expand_qr">Ampliar código QR</string>
     <string name="vault_backup_screen_email_sent_to">Enviado a %s.</string>
     <string name="vault_backup_screen_donot_receive_email">¿No recibiste un correo?</string>
     <string name="onboarding_desc_page_5_part_2">por separado en un</string>

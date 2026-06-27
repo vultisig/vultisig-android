@@ -519,6 +519,7 @@
 
 
     <string name="peer_discovery_topbar_title">Scan QR</string>
+    <string name="peer_discovery_expand_qr">Expand QR code</string>
     <string name="peer_discovery_action_next_title">Next</string>
     <string name="peer_discovery_this_device">This Device</string>
     <string name="peer_discovery_status_connected">Connected</string>
