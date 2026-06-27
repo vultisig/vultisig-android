@@ -23,12 +23,11 @@ data class SwapKitQuoteRequest(
     /** Limits the liquidity providers considered. Omit to let SwapKit pick from all available. */
     @SerialName("providers") val providers: List<String>? = null,
     /**
-     * Max slippage as a percentage (`1` == 1%, NOT bps). Nullable and omitted from the wire when
-     * unset: the shared Json sets `explicitNulls = false`, so a null is dropped — the same
-     * mechanism the sibling [sourceAddress] / [destinationAddress] fields rely on. iOS sends no
-     * slippage, and the Phase 0 spike found an explicit slippage makes NEAR Intents / Chainflip
-     * return `noRoutesFound` on some pairs, so the default is to send nothing and let SwapKit
-     * choose.
+     * Max slippage as a percentage (`1` == 1%, NOT bps), or null to omit it from the wire — the
+     * shared Json sets `explicitNulls = false`, so a null is dropped, like the sibling
+     * [sourceAddress] / [destinationAddress] fields. Omitting it lets SwapKit pick its own
+     * per-route tolerance: forcing an explicit slippage makes NEAR Intents / Chainflip reject some
+     * pairs with `noRoutesFound`, so a value is sent only when the user overrides the default.
      */
     @SerialName("slippage") val slippage: Double? = null,
     /** Affiliate fee override in basis points (range 0..1000, max 10%). */

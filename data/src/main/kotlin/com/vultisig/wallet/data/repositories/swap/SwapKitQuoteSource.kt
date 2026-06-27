@@ -153,6 +153,10 @@ constructor(
                     sourceAddress = request.srcAddress.ifBlank { null },
                     destinationAddress = request.dstAddress.ifBlank { null },
                     affiliateFee = request.affiliateBps,
+                    // SwapKit expects slippage as a percentage, so convert from basis points (100
+                    // bps = 1%). A null tolerance is omitted from the wire so NEAR Intents /
+                    // Chainflip negotiate their own per-route slippage instead of being capped.
+                    slippage = request.slippageBps?.let { it / 100.0 },
                 )
             )
 

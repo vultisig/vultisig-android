@@ -352,6 +352,49 @@ internal class SwapFormViewModelTest {
 
     // endregion
 
+    @Test
+    fun `setSlippageBps stores an in-range tolerance`() =
+        runTest(mainDispatcher) {
+            val vm = createViewModel()
+
+            vm.setSlippageBps(300)
+
+            assertEquals(300, vm.uiState.value.slippageBps)
+        }
+
+    @Test
+    fun `setSlippageBps clears the tolerance to Auto on null`() =
+        runTest(mainDispatcher) {
+            val vm = createViewModel()
+            vm.setSlippageBps(300)
+
+            vm.setSlippageBps(null)
+
+            assertNull(vm.uiState.value.slippageBps)
+        }
+
+    @Test
+    fun `setSlippageBps rejects a non-positive tolerance and keeps the previous value`() =
+        runTest(mainDispatcher) {
+            val vm = createViewModel()
+            vm.setSlippageBps(300)
+
+            vm.setSlippageBps(0)
+
+            assertEquals(300, vm.uiState.value.slippageBps)
+        }
+
+    @Test
+    fun `setSlippageBps rejects a tolerance above 100 percent and keeps the previous value`() =
+        runTest(mainDispatcher) {
+            val vm = createViewModel()
+            vm.setSlippageBps(300)
+
+            vm.setSlippageBps(10_001)
+
+            assertEquals(300, vm.uiState.value.slippageBps)
+        }
+
     // region back
 
     @Test

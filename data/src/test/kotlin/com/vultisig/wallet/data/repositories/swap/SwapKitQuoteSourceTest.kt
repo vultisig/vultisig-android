@@ -170,6 +170,41 @@ internal class SwapKitQuoteSourceTest {
         }
 
     @Test
+    fun `fetch forwards the user slippage to the quote request as a percentage`() = runTest {
+        // SwapKit takes slippage as a percentage, so a user override must reach the /v3/quote body
+        // converted from basis points (150 bps = 1.5%). A non-round value pins the division so a
+        // truncating or wrong-divisor regression can't pass.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        val quoteRequest = slot<SwapKitQuoteRequest>()
+        coEvery { api.quote(capture(quoteRequest)) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "winner", providers = listOf("CHAINFLIP")))
+            )
+        coEvery { api.swap(any()) } returns evmSwapResponse()
+
+        source().fetch(request(slippageBps = 150))
+
+        assertEquals(1.5, quoteRequest.captured.slippage)
+    }
+
+    @Test
+    fun `fetch omits slippage from the quote request on Auto`() = runTest {
+        // Auto (null) must omit slippage so NEAR Intents / Chainflip keep negotiating their own
+        // per-route tolerance instead of failing noRoutesFound on an imposed cap.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        val quoteRequest = slot<SwapKitQuoteRequest>()
+        coEvery { api.quote(capture(quoteRequest)) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "winner", providers = listOf("CHAINFLIP")))
+            )
+        coEvery { api.swap(any()) } returns evmSwapResponse()
+
+        source().fetch(request(slippageBps = null))
+
+        assertNull(quoteRequest.captured.slippage)
+    }
+
+    @Test
     fun `fetch throws RouteFiltered when every route is filtered out including streaming variants`() =
         runTest {
             // Upstream returned candidates but the client Thor/Maya/multi-hop filter emptied them.
@@ -1830,6 +1865,7 @@ internal class SwapKitQuoteSourceTest {
         dstToken: Coin = solanaCoin(),
         tokenValue: TokenValue = TokenValue(value = BigInteger.ONE, token = srcToken),
         affiliateBps: Int = 0,
+        slippageBps: Int? = null,
     ) =
         SwapQuoteRequest(
             srcToken = srcToken,
@@ -1838,6 +1874,7 @@ internal class SwapKitQuoteSourceTest {
             srcAddress = "0xsrc",
             dstAddress = "0xdst",
             affiliateBps = affiliateBps,
+            slippageBps = slippageBps,
         )
 
     private fun route(

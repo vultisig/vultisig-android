@@ -741,6 +741,61 @@ internal class SwapQuoteManagerTest {
         coVerify(exactly = 2) { swapQuoteRepository.getQuote(SwapProvider.JUPITER, any()) }
     }
 
+    @Test
+    fun `fetchQuote forwards the user-set slippage to the SwapKit request`() = runTest {
+        // Pin that the chosen tolerance reaches the request the source forwards to SwapKit's
+        // /v3/quote. Throw after capture to stay off the fee path.
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, "USD")
+        val requestSlot = slot<SwapQuoteRequest>()
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.SWAPKIT, capture(requestSlot)) } throws
+            SwapException.SwapRouteNotAvailable("stop after capture")
+
+        assertFailsWith<SwapException.SwapRouteNotAvailable> {
+            fetchSwapKitQuote(createManager(), slippageBps = 250)
+        }
+
+        assertEquals(250, requestSlot.captured.slippageBps)
+    }
+
+    @Test
+    fun `SwapKit quotes that differ only in slippage do not collide in the cache`() = runTest {
+        // Slippage is part of the SwapKit cache key, so a re-fetch after a tolerance change must
+        // miss and re-quote rather than serve a route built for the old tolerance. Two
+        // identical-slippage calls share one network call; a third at a different slippage adds a
+        // second — three calls, two fetches.
+        val eth = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
+        coEvery { tokenRepository.getNativeToken(any()) } returns eth
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, "USD")
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.SWAPKIT, any()) } returns
+            SwapQuoteResult.Evm(jupiterEvmQuote())
+
+        val manager = createManager()
+        fetchSwapKitQuote(manager, slippageBps = 100)
+        fetchSwapKitQuote(manager, slippageBps = 100)
+        fetchSwapKitQuote(manager, slippageBps = 200)
+
+        coVerify(exactly = 2) { swapQuoteRepository.getQuote(SwapProvider.SWAPKIT, any()) }
+    }
+
+    private suspend fun fetchSwapKitQuote(manager: SwapQuoteManager, slippageBps: Int?) =
+        manager.fetchQuote(
+            provider = SwapProvider.SWAPKIT,
+            src = mockk(relaxed = true),
+            dst = mockk(relaxed = true),
+            srcToken = coin(Chain.Ethereum, "ETH", "0xsrc", 18),
+            dstToken = coin(Chain.Ethereum, "USDC", "0xdst", 6),
+            srcTokenValue = BigInteger.ONE,
+            tokenValue = TokenValue(BigInteger.ONE, coin(Chain.Ethereum, "ETH", "0xsrc", 18)),
+            currency = AppCurrency.USD,
+            vultBPSDiscount = null,
+            referral = null,
+            amount = BigDecimal.ONE,
+            slippageBps = slippageBps,
+        )
+
     private suspend fun fetchJupiterQuote(manager: SwapQuoteManager, slippageBps: Int?) =
         manager.fetchQuote(
             provider = SwapProvider.JUPITER,
