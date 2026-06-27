@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.peer
 
+import android.graphics.Bitmap
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -44,6 +46,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
@@ -66,6 +70,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import app.rive.Fit
 import app.rive.ViewModelSource
 import app.rive.rememberViewModelInstance
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.qrcode.QRCodeWriter
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
@@ -461,17 +468,19 @@ private fun QrCodeContainer(
     val outerShape = RoundedCornerShape(24.75.dp)
     val innerShape = RoundedCornerShape(18.56.dp)
 
-    Box(modifier = modifier) {
+    Box(modifier = modifier.fillMaxWidth()) {
         Box(
             modifier =
-                Modifier.clip(outerShape)
+                Modifier.fillMaxWidth()
+                    .clip(outerShape)
                     .background(brush = QrFrameGradient, shape = outerShape)
                     .clickable(onClick = onClick)
                     .padding(6.19.dp)
         ) {
             Box(
                 modifier =
-                    Modifier.background(
+                    Modifier.fillMaxWidth()
+                        .background(
                             color = Theme.v2.colors.backgrounds.surface1,
                             shape = innerShape,
                         )
@@ -512,7 +521,7 @@ private fun QrCodeContainer(
  */
 @Composable
 private fun QrCodeImage(qrCode: BitmapPainter?, modifier: Modifier = Modifier) {
-    Box(modifier = modifier.size(185.dp), contentAlignment = Alignment.Center) {
+    Box(modifier = modifier.fillMaxWidth().aspectRatio(1f), contentAlignment = Alignment.Center) {
         AnimatedVisibility(visible = qrCode != null, enter = fadeIn()) {
             if (qrCode != null) {
                 Image(
@@ -848,6 +857,32 @@ private fun Error(state: ErrorUiModel, onTryAgainClick: () -> Unit) {
     }
 }
 
+/**
+ * Builds a real QR painter so the static @Preview renders the framed card with actual content. In
+ * production the QR comes from a Hilt-provided generator backed by an Android context, which the
+ * preview renderer does not have — so the bitmap is encoded inline here with the same quiet-zone
+ * margin used by the app.
+ */
+@Composable
+private fun rememberPreviewQr(content: String): BitmapPainter =
+    remember(content) {
+        val matrix =
+            QRCodeWriter()
+                .encode(content, BarcodeFormat.QR_CODE, 0, 0, mapOf(EncodeHintType.MARGIN to 4))
+        val bitmap = Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888)
+        for (x in 0 until matrix.width) {
+            for (y in 0 until matrix.height) {
+                bitmap.setPixel(
+                    x,
+                    y,
+                    if (matrix.get(x, y)) android.graphics.Color.WHITE
+                    else android.graphics.Color.TRANSPARENT,
+                )
+            }
+        }
+        BitmapPainter(bitmap.asImageBitmap(), filterQuality = FilterQuality.None)
+    }
+
 @Preview
 @Composable
 private fun PeerDiscoveryScreenPreview() {
@@ -856,6 +891,20 @@ private fun PeerDiscoveryScreenPreview() {
             PeerDiscoveryUiModel(
                 localPartyId = "iPhone-A1B",
                 network = NetworkOption.Internet,
+                qr =
+                    rememberPreviewQr(
+                        // A production-sized keygen payload (session id, chain code, relay service,
+                        // encryption key, vault metadata) so the preview QR renders at realistic
+                        // density rather than a sparse low-version code.
+                        "https://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
+                            "eyJzZXNzaW9uSWQiOiJDRkE5RTM3Qy0xN0I4LTRGMkEtOUQwMS0yQjNDNEQ1RTZG" +
+                            "N0EiLCJoZXhDaGFpbkNvZGUiOiI5ZjFhMmIzYzRkNWU2ZjdhOGI5YzBkMWUyZjNh" +
+                            "NGI1YzZkN2U4ZjlhMGIxYzJkM2U0ZjVhNmI3YzhkOWUwZjFhMmIzYyIsInNlcnZp" +
+                            "Y2VOYW1lIjoiVnVsdGlzaWctNEY3QSIsImVuY3J5cHRpb25LZXlIZXgiOiJhMWIy" +
+                            "YzNkNGU1ZjZhN2I4YzlkMGUxZjJhM2I0YzVkNmU3ZjhhOWIwYzFkMmUzZjRhNWI2" +
+                            "YzdkOGU5ZjBhMWIyYzNkNGU1ZjYiLCJ1c2VWdWx0aXNpZ1JlbGF5Ijp0cnVlLCJ2" +
+                            "YXVsdE5hbWUiOiJNYWluIFZhdWx0IiwibGlicmFyeVR5cGUiOiJES0xTIn0="
+                    ),
                 devices = listOf("MacBook-C2D", "iPhone-E3F"),
                 selectedDevices = listOf("MacBook-C2D", "iPhone-E3F"),
                 minimumDevices = 4,
