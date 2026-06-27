@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.repositories.swap.EmptySwapPoolEligibility
 import com.vultisig.wallet.data.repositories.swap.KyberQuoteSource
 import com.vultisig.wallet.data.repositories.swap.LiFiQuoteSource
 import com.vultisig.wallet.data.repositories.swap.SwapProviderTableImpl
@@ -34,7 +35,7 @@ class SwapQuoteRepositoryTest {
     private val kyberApi: KyberApi = mockk()
     private val liFiChainApi: LiFiChainApi = mockk()
 
-    private val providerTable = SwapProviderTableImpl()
+    private val providerTable = SwapProviderTableImpl(EmptySwapPoolEligibility)
     private val kyberSource = KyberQuoteSource(kyberApi)
     private val liFiSource = LiFiQuoteSource(liFiChainApi)
 

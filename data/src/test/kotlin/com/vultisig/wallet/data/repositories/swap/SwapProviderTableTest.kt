@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
  */
 internal class SwapProviderTableTest {
 
-    private val table = SwapProviderTableImpl()
+    private val table = SwapProviderTableImpl(EmptySwapPoolEligibility)
 
     @Test
     fun `SwapKit is offered on every Phase 1 SwapKit chain`() {
