@@ -292,6 +292,7 @@ internal fun PeerDiscoveryScreen(
                     QrCodeContainer(
                         qrCode = state.qr,
                         onClick = { if (state.qr != null) isExpanded = true },
+                        onExpandClick = { if (state.qr != null) isExpanded = true },
                     )
 
                     Column(
@@ -453,6 +454,7 @@ private fun buildNetworkModeText(network: NetworkOption, onSwitchModeClick: () -
 private fun QrCodeContainer(
     qrCode: BitmapPainter?,
     onClick: () -> Unit,
+    onExpandClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val outerShape = RoundedCornerShape(24.75.dp)
@@ -494,6 +496,40 @@ private fun QrCodeContainer(
                 }
             }
         }
+
+        // Visible affordance so users discover that the QR can be enlarged for reliable scanning
+        // from a second device. Tapping it opens the same full-screen overlay as tapping the card.
+        if (qrCode != null) {
+            ExpandQrButton(
+                onClick = onExpandClick,
+                modifier = Modifier.align(Alignment.TopEnd).padding(10.dp),
+            )
+        }
+    }
+}
+
+/**
+ * Circular icon button overlaid on the QR card that opens the full-screen QR overlay.
+ *
+ * @param onClick invoked when the expand affordance is tapped.
+ */
+@Composable
+private fun ExpandQrButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier =
+            modifier
+                .clip(CircleShape)
+                .background(color = Theme.v2.colors.backgrounds.surface1, shape = CircleShape)
+                .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = CircleShape)
+                .clickable(onClick = onClick)
+                .padding(6.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        UiIcon(
+            drawableResId = R.drawable.ic_expand,
+            size = 16.dp,
+            tint = Theme.v2.colors.text.primary,
+        )
     }
 }
 
