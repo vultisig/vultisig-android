@@ -491,18 +491,31 @@ private fun QrCodeContainer(
             ) {
                 // Reserve the QR footprint so the framed card keeps its size while the bitmap is
                 // still being generated, then fade the QR in once it is ready.
-                Box(modifier = Modifier.size(185.dp), contentAlignment = Alignment.Center) {
-                    AnimatedVisibility(visible = qrCode != null, enter = fadeIn()) {
-                        if (qrCode != null) {
-                            Image(
-                                painter = qrCode,
-                                contentDescription = null,
-                                contentScale = ContentScale.FillWidth,
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
-                    }
-                }
+                QrCodeImage(qrCode = qrCode)
+            }
+        }
+    }
+}
+
+/**
+ * Reserves the QR footprint and fades the generated QR bitmap in once it is ready.
+ *
+ * Kept as a standalone composable so [AnimatedVisibility] resolves to the non-scoped overload
+ * instead of the enclosing [Column]'s [ColumnScope] extension.
+ *
+ * @param qrCode the QR painter, or null while it is still being generated.
+ */
+@Composable
+private fun QrCodeImage(qrCode: BitmapPainter?, modifier: Modifier = Modifier) {
+    Box(modifier = modifier.size(185.dp), contentAlignment = Alignment.Center) {
+        AnimatedVisibility(visible = qrCode != null, enter = fadeIn()) {
+            if (qrCode != null) {
+                Image(
+                    painter = qrCode,
+                    contentDescription = null,
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
         }
     }
