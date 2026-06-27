@@ -294,7 +294,6 @@ internal fun PeerDiscoveryScreen(
                     QrCodeContainer(
                         qrCode = state.qr,
                         onClick = { if (state.qr != null) isExpanded = true },
-                        onExpandClick = { if (state.qr != null) isExpanded = true },
                     )
 
                     Column(
@@ -456,7 +455,6 @@ private fun buildNetworkModeText(network: NetworkOption, onSwitchModeClick: () -
 private fun QrCodeContainer(
     qrCode: BitmapPainter?,
     onClick: () -> Unit,
-    onExpandClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val outerShape = RoundedCornerShape(24.75.dp)
@@ -467,7 +465,7 @@ private fun QrCodeContainer(
         // bitmap. The code is generated with a zero-module margin, so its finder patterns sit flush
         // in the corners and must stay unobstructed for reliable scanning.
         if (qrCode != null) {
-            ExpandQrButton(onClick = onExpandClick)
+            ExpandQrButton(onClick = onClick)
             UiSpacer(size = 8.dp)
         }
 

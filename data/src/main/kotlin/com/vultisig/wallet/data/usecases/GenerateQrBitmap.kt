@@ -46,8 +46,8 @@ internal class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
         }
 
         if (logo == null) {
-            // Upscale module-resolution matrix with nearest-neighbor so dense codes stay crisp when
-            // displayed full-screen, rather than relying on blurry display-layer upscaling.
+            // Upscale module-resolution matrix with nearest-neighbor so the shared/exported
+            // image is full-resolution instead of the raw module-resolution bitmap.
             val noLogoWidth = bitmap.width * QR_CODE_SCALE_FACTOR
             val noLogoHeight = bitmap.height * QR_CODE_SCALE_FACTOR
             val scaledNoLogoBitmap = bitmap.scale(noLogoWidth, noLogoHeight, false)
