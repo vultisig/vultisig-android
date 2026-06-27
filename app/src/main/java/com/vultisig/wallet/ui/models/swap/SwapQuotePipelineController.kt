@@ -152,9 +152,29 @@ constructor(
 
     /** Launches the gas calculation, quote pipeline, and total-fee observers on [scope]. */
     fun start() {
+        warmEligibilityCache()
         calculateGas()
         observeQuotePipeline()
         collectTotalFee()
+    }
+
+    /**
+     * Pre-warm the live THORChain / MayaChain pool eligibility cache the moment the swap screen
+     * opens, so the synchronous [SwapQuoteRepository.getEligibleProviders] reads in
+     * [updatePairSupport] / [showIndicativeRate] see freshly fetched routes instead of falling back
+     * to the static table for a newly-available pair. Best-effort: a failed fetch keeps the
+     * last-good (static) set, so the form stays usable offline.
+     */
+    private fun warmEligibilityCache() {
+        scope.launch {
+            try {
+                swapQuoteRepository.refreshSwapEligibility()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "warmEligibilityCache")
+            }
+        }
     }
 
     private fun calculateGas() {
