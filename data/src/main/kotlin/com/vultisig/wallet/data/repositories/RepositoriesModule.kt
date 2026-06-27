@@ -20,6 +20,8 @@ import com.vultisig.wallet.data.repositories.swap.SwapKitConfigImpl
 import com.vultisig.wallet.data.repositories.swap.SwapKitProviderCache
 import com.vultisig.wallet.data.repositories.swap.SwapKitProviderCacheImpl
 import com.vultisig.wallet.data.repositories.swap.SwapKitQuoteSource
+import com.vultisig.wallet.data.repositories.swap.SwapPoolEligibilityRepository
+import com.vultisig.wallet.data.repositories.swap.SwapPoolEligibilityRepositoryImpl
 import com.vultisig.wallet.data.repositories.swap.SwapProviderKey
 import com.vultisig.wallet.data.repositories.swap.SwapProviderTable
 import com.vultisig.wallet.data.repositories.swap.SwapProviderTableImpl
@@ -175,6 +177,12 @@ internal interface RepositoriesModule {
     fun bindSwapQuoteRepository(impl: SwapQuoteRepositoryImpl): SwapQuoteRepository
 
     @Binds @Reusable fun bindSwapProviderTable(impl: SwapProviderTableImpl): SwapProviderTable
+
+    @Binds
+    @Singleton
+    fun bindSwapPoolEligibilityRepository(
+        impl: SwapPoolEligibilityRepositoryImpl
+    ): SwapPoolEligibilityRepository
 
     @Binds
     @IntoMap

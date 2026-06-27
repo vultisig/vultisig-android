@@ -4,11 +4,13 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.swap.SwapKitQuoteSource
+import com.vultisig.wallet.data.repositories.swap.SwapPoolEligibilityRepository
 import com.vultisig.wallet.data.repositories.swap.SwapProviderTable
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteSource
 import javax.inject.Inject
+import kotlinx.coroutines.flow.StateFlow
 
 interface SwapQuoteRepository {
 
@@ -22,6 +24,19 @@ interface SwapQuoteRepository {
     suspend fun getSwapKitInboundFee(request: SwapQuoteRequest): TokenValue
 
     fun getEligibleProviders(srcToken: Coin, dstToken: Coin): List<SwapProvider>
+
+    /**
+     * Pre-warms the live THORChain / MayaChain pool eligibility cache so the first synchronous
+     * [getEligibleProviders] read (run the moment a pair is selected) sees freshly fetched routes
+     * instead of only the static fallback. Safe to call repeatedly; a fresh-enough cache no-ops.
+     */
+    suspend fun refreshSwapEligibility()
+
+    /**
+     * Increments once, from 0 to 1, when the live pool eligibility first populates after a cold
+     * start, so a pair selected before [refreshSwapEligibility] landed can be re-evaluated.
+     */
+    val swapEligibilityVersion: StateFlow<Int>
 }
 
 internal class SwapQuoteRepositoryImpl
@@ -30,6 +45,7 @@ constructor(
     private val sources: Map<SwapProvider, @JvmSuppressWildcards SwapQuoteSource>,
     private val swapKitQuoteSource: SwapKitQuoteSource,
     private val providerTable: SwapProviderTable,
+    private val poolEligibility: SwapPoolEligibilityRepository,
 ) : SwapQuoteRepository {
 
     override suspend fun getQuote(
@@ -45,4 +61,9 @@ constructor(
 
     override fun getEligibleProviders(srcToken: Coin, dstToken: Coin): List<SwapProvider> =
         providerTable.eligibleProvidersFor(srcToken, dstToken)
+
+    override suspend fun refreshSwapEligibility() = poolEligibility.refresh()
+
+    override val swapEligibilityVersion: StateFlow<Int>
+        get() = poolEligibility.eligibilityVersion
 }

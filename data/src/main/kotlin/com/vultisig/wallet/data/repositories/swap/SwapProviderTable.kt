@@ -11,8 +11,12 @@ interface SwapProviderTable {
     fun eligibleProvidersFor(srcToken: Coin, dstToken: Coin): List<SwapProvider>
 }
 
-internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
+internal class SwapProviderTableImpl
+@Inject
+constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapProviderTable {
 
+    // Static *Tokens sets are the cold-start / offline fallback only. Live eligibility comes from
+    // [poolEligibility]; a fetched Available pool can only ADD a route on top of these sets.
     private val thorEthTokens =
         setOf(
             "ETH",
@@ -90,13 +94,17 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
             Chain.Ethereum -> ethereumProviders(ticker)
 
             Chain.BscChain ->
-                if (ticker in thorBscTokens) thorchainPlusEvmAggregators else evmAggregators
+                if (isThorEligible(Chain.BscChain, ticker, thorBscTokens))
+                    thorchainPlusEvmAggregators
+                else evmAggregators
 
             Chain.Avalanche ->
-                if (ticker in thorAvaxTokens) thorchainPlusEvmAggregators else evmAggregators
+                if (isThorEligible(Chain.Avalanche, ticker, thorAvaxTokens))
+                    thorchainPlusEvmAggregators
+                else evmAggregators
 
             Chain.Base ->
-                if (ticker in thorBaseTokens)
+                if (isThorEligible(Chain.Base, ticker, thorBaseTokens))
                     setOf(SwapProvider.LIFI, SwapProvider.THORCHAIN, SwapProvider.SWAPKIT)
                 else setOf(SwapProvider.LIFI, SwapProvider.SWAPKIT)
 
@@ -125,7 +133,8 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
             Chain.Zcash -> setOf(SwapProvider.MAYA, SwapProvider.SWAPKIT)
 
             Chain.Arbitrum ->
-                if (ticker in mayaArbTokens) mayaPlusEvmAggregators else evmAggregators
+                if (isMayaEligible(Chain.Arbitrum, ticker, mayaArbTokens)) mayaPlusEvmAggregators
+                else evmAggregators
 
             Chain.Blast,
             Chain.CronosChain -> setOf(SwapProvider.LIFI)
@@ -187,9 +196,23 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
         }
     }
 
+    /**
+     * True if [ticker] on [chain] is THORChain-routable via a live Available pool or the
+     * [fallback].
+     */
+    private fun isThorEligible(chain: Chain, ticker: String, fallback: Set<String>): Boolean =
+        ticker in fallback || poolEligibility.isThorEligible(chain, ticker)
+
+    /**
+     * True if [ticker] on [chain] is MayaChain-routable via a live Available pool or the
+     * [fallback].
+     */
+    private fun isMayaEligible(chain: Chain, ticker: String, fallback: Set<String>): Boolean =
+        ticker in fallback || poolEligibility.isMayaEligible(chain, ticker)
+
     private fun ethereumProviders(ticker: String): Set<SwapProvider> {
-        val isThor = ticker in thorEthTokens
-        val isMaya = ticker in mayaEthTokens
+        val isThor = isThorEligible(Chain.Ethereum, ticker, thorEthTokens)
+        val isMaya = isMayaEligible(Chain.Ethereum, ticker, mayaEthTokens)
         // SwapKit is included in every Ethereum branch: the per-token-pair eligibility is
         // negotiated downstream at `/v3/quote` time (and gated by the SwapKit feature flag +
         // provider cache inside SwapKitQuoteSource), so the table only needs to surface SwapKit
