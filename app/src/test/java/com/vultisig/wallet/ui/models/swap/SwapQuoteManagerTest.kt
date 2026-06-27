@@ -680,41 +680,46 @@ internal class SwapQuoteManagerTest {
     }
 
     @Test
-    fun `fetchQuote subtracts the LI_FI integrator fee from the comparable net output`() = runTest {
-        // LI.FI quotes the gross output and charges its integrator fee on the destination side, so
-        // the ranked net must drop the fee (#5011). The catch-all prices every conversion as the
-        // fee; the dst market value is stubbed specifically.
-        val eth = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
-        val usdc = coin(Chain.Ethereum, "USDC", "0xdst", 6)
-        val dstValue = TokenValue(BigInteger.valueOf(1_000_000), usdc)
-        coEvery { tokenRepository.getNativeToken(any()) } returns eth
-        coEvery { swapQuoteRepository.getQuote(SwapProvider.LIFI, any()) } returns
-            SwapQuoteResult.Evm(evmQuote(dstAmount = "1000000"))
-        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
-            FiatValue(BigDecimal("0.5"), "USD")
-        coEvery { convertTokenValueToFiat(any(), dstValue, AppCurrency.USD) } returns
-            FiatValue(BigDecimal("100"), "USD")
-        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+    fun `fetchQuote ranks LI_FI on its net dstAmount without re-subtracting the integrator fee`() =
+        runTest {
+            // LI.FI's quoted dstAmount is already net of its integrator fee (the fee is deducted
+            // from
+            // the quoted toAmount), so the ranking metric is the plain market value —
+            // re-subtracting
+            // the fee would double-count. The catch-all prices the fee at a non-zero 0.5 so any
+            // stray
+            // subtraction would surface; the dst market value is stubbed specifically.
+            val eth = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
+            val usdc = coin(Chain.Ethereum, "USDC", "0xdst", 6)
+            val dstValue = TokenValue(BigInteger.valueOf(1_000_000), usdc)
+            coEvery { tokenRepository.getNativeToken(any()) } returns eth
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.LIFI, any()) } returns
+                SwapQuoteResult.Evm(evmQuote(dstAmount = "1000000"))
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+                FiatValue(BigDecimal("0.5"), "USD")
+            coEvery { convertTokenValueToFiat(any(), dstValue, AppCurrency.USD) } returns
+                FiatValue(BigDecimal("100"), "USD")
+            every { mapTokenValueToDecimalUiString(any()) } returns "0"
 
-        val result =
-            createManager()
-                .fetchQuote(
-                    provider = SwapProvider.LIFI,
-                    src = mockk(relaxed = true),
-                    dst = mockk(relaxed = true),
-                    srcToken = eth,
-                    dstToken = usdc,
-                    srcTokenValue = BigInteger.ONE,
-                    tokenValue = TokenValue(BigInteger.ONE, eth),
-                    currency = AppCurrency.USD,
-                    vultBPSDiscount = null,
-                    referral = null,
-                    amount = BigDecimal.ONE,
-                )
+            val result =
+                createManager()
+                    .fetchQuote(
+                        provider = SwapProvider.LIFI,
+                        src = mockk(relaxed = true),
+                        dst = mockk(relaxed = true),
+                        srcToken = eth,
+                        dstToken = usdc,
+                        srcTokenValue = BigInteger.ONE,
+                        tokenValue = TokenValue(BigInteger.ONE, eth),
+                        currency = AppCurrency.USD,
+                        vultBPSDiscount = null,
+                        referral = null,
+                        amount = BigDecimal.ONE,
+                    )
 
-        // 100 market value − 0.5 integrator fee = 99.5 net.
-        result.comparableDstFiat shouldBe BigDecimal("99.5")
-    }
+            // Market value passes through untouched; the 0.5 fee is not subtracted again.
+            result.comparableDstFiat shouldBe BigDecimal("100")
+        }
 
     @Test
     fun `fetchQuote does not subtract THORChain fees from the comparable net output`() = runTest {

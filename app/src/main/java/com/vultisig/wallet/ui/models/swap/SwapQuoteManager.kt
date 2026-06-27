@@ -54,8 +54,8 @@ internal data class QuoteFetchResult(
     // Displayed destination fiat: market value clamped to the source fiat (#4878).
     val estimatedDstFiatValue: String,
     // Net destination output used only for cross-provider ranking: the unclamped market value
-    // (dstAmount × dstMarketPrice), less any fee charged on the output. A dstAmount that is already
-    // net (every provider except LI.FI) leaves this equal to the market value.
+    // (dstAmount × dstMarketPrice). Every provider quotes a dstAmount already net of its own
+    // swap/integrator fee, so this is directly comparable across providers.
     val comparableDstFiat: BigDecimal,
     val feeText: String,
     val swapFeeFiat: FiatValue,
@@ -366,14 +366,6 @@ constructor(
             resolvedSwapFeeFiat = fiatFees
         }
 
-        // Only LI.FI quotes the gross output and charges its integrator fee on top of it; every
-        // other provider's dstAmount is already net, so subtract the fee for LI.FI alone.
-        val comparableDstFiat =
-            when (provider) {
-                SwapProvider.LIFI -> marketDstFiatValue.value - resolvedSwapFeeFiat.value
-                else -> marketDstFiatValue.value
-            }
-
         return QuoteFetchResult(
             quote = quote,
             provider = provider,
@@ -381,7 +373,7 @@ constructor(
             srcFiatValueText = srcFiatValueText,
             estimatedDstTokenValue = estimatedDstTokenValue,
             estimatedDstFiatValue = fiatValueToString(estimatedDstFiatValue),
-            comparableDstFiat = comparableDstFiat,
+            comparableDstFiat = marketDstFiatValue.value,
             feeText = resolvedFeeText,
             swapFeeFiat = resolvedSwapFeeFiat,
             sourceGasWei = sourceGasWei(provider, quote),
@@ -479,25 +471,30 @@ constructor(
     /**
      * Picks the winning quote across providers. The ranking metric is net destination output
      * ([QuoteFetchResult.comparableDstFiat]) — every provider in a candidate set swaps to the same
-     * destination token, so the values are directly comparable. On top of that metric a banded
-     * provider-preference layer applies: among quotes within [PROVIDER_PREFERENCE_BAND] of the best
-     * net output — economically tied on rate — a deterministic total order picks the winner. Quotes
-     * that expose source gas (same-chain EVM aggregators) are ordered by lower gas; quotes that do
-     * not are ordered by provider priority and rank ahead of the gas-exposing ones, so a near-tie
-     * stays on the cheaper or more trusted route. Provider priority, then higher net output, break
-     * any remaining ties. Anything outside the band loses on output.
+     * destination token, so the values are directly comparable. Among quotes within
+     * [PROVIDER_PREFERENCE_BAND] of the best net output (economically tied on rate) a banded
+     * preference picks the winner by the iOS canonical rule: source gas decides only when both
+     * quotes expose it (same-chain EVM aggregators), then provider priority, then higher net
+     * output. Only the aggregators expose gas and their priorities form one contiguous block, so no
+     * gas-unknown provider's priority falls between two gas-exposing ones — the comparator is a
+     * strict weak order for every realizable candidate set and the winner is independent of input
+     * order. Anything outside the band loses on output.
      *
      * Assumes [successes] is non-empty (the caller has already surfaced the all-failed case).
      */
     internal fun selectBestQuote(successes: List<BestQuote>): BestQuote {
         val best = successes.maxBy { it.result.comparableDstFiat }
         val floor = best.result.comparableDstFiat * (BigDecimal.ONE - PROVIDER_PREFERENCE_BAND)
-        // A single total order makes the winner independent of input order; gas-unknown quotes
-        // (nullsFirst) rank ahead of the gas-exposing aggregators, which sort by cheaper gas.
         return successes
             .filter { it.result.comparableDstFiat >= floor }
             .minWithOrNull(
-                compareBy<BestQuote, BigInteger?>(nullsFirst()) { it.result.sourceGasWei }
+                // Source gas decides only when both quotes expose it; otherwise this ties and
+                // selection falls through to provider priority, then higher net output.
+                Comparator<BestQuote> { lhs, rhs ->
+                        val lhsGas = lhs.result.sourceGasWei
+                        val rhsGas = rhs.result.sourceGasWei
+                        if (lhsGas != null && rhsGas != null) lhsGas.compareTo(rhsGas) else 0
+                    }
                     .thenBy { providerPriority(it.candidate.provider) }
                     .thenByDescending { it.result.comparableDstFiat }
             ) ?: best
