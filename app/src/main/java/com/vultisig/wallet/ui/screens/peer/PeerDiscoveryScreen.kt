@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -461,17 +462,19 @@ private fun QrCodeContainer(
     val outerShape = RoundedCornerShape(24.75.dp)
     val innerShape = RoundedCornerShape(18.56.dp)
 
-    Box(modifier = modifier) {
+    Box(modifier = modifier.fillMaxWidth()) {
         Box(
             modifier =
-                Modifier.clip(outerShape)
+                Modifier.fillMaxWidth()
+                    .clip(outerShape)
                     .background(brush = QrFrameGradient, shape = outerShape)
                     .clickable(onClick = onClick)
                     .padding(6.19.dp)
         ) {
             Box(
                 modifier =
-                    Modifier.background(
+                    Modifier.fillMaxWidth()
+                        .background(
                             color = Theme.v2.colors.backgrounds.surface1,
                             shape = innerShape,
                         )
@@ -512,7 +515,7 @@ private fun QrCodeContainer(
  */
 @Composable
 private fun QrCodeImage(qrCode: BitmapPainter?, modifier: Modifier = Modifier) {
-    Box(modifier = modifier.size(185.dp), contentAlignment = Alignment.Center) {
+    Box(modifier = modifier.fillMaxWidth().aspectRatio(1f), contentAlignment = Alignment.Center) {
         AnimatedVisibility(visible = qrCode != null, enter = fadeIn()) {
             if (qrCode != null) {
                 Image(
