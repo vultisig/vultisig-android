@@ -274,6 +274,10 @@ constructor(
                     src to dst
                 }
                 .distinctUntilChanged()
+                // Re-emit the current pair once the warm-up pool fetch first populates, so a pair
+                // picked before it landed (e.g. CACAO → ETH.USDT) is re-evaluated against the live
+                // routes instead of latching "no route" from the cold static-only snapshot (#4975).
+                .combine(swapQuoteRepository.swapEligibilityVersion) { pair, _ -> pair }
                 .onEach { (src, dst) ->
                     // A freshly selected pair has no quote yet, and a token switch never clears the
                     // previous pair's destination value. Reset it so the skeleton shows while the

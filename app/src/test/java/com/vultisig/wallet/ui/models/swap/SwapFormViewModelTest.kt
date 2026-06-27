@@ -135,6 +135,9 @@ internal class SwapFormViewModelTest {
         swapQuoteRepository = mockk(relaxed = true)
         every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
             listOf(SwapProvider.THORCHAIN)
+        // The quote pipeline combines this into pair-support evaluation; a relaxed-mock StateFlow
+        // never emits, which would stall the whole pipeline, so back it with a real flow.
+        every { swapQuoteRepository.swapEligibilityVersion } returns MutableStateFlow(0)
         allowanceRepository = mockk(relaxed = true)
 
         appCurrencyRepository = mockk(relaxed = true)
@@ -995,6 +998,35 @@ internal class SwapFormViewModelTest {
             val vm = createViewModelWithSwapTokens()
             advanceUntilIdle()
 
+            assertNull(vm.uiState.value.formError)
+        }
+
+    @Test
+    fun `pair picked before warm-up completes re-evaluates support once pools populate`() =
+        runTest(mainDispatcher) {
+            // Cold start: the static-only snapshot has no route for the freshly picked pair (e.g.
+            // CACAO -> ETH.USDT), and the warm-up fetch has not landed yet (version still 0).
+            val eligibilityVersion = MutableStateFlow(0)
+            every { swapQuoteRepository.swapEligibilityVersion } returns eligibilityVersion
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns emptyList()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            // First pass reads the empty snapshot and latches "no route".
+            assertEquals(
+                UiText.StringResource(R.string.swap_route_not_available),
+                vm.uiState.value.formError,
+            )
+
+            // Warm-up fetch lands: the live pools now route this pair and the version flips 0 -> 1.
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.MAYA)
+            eligibilityVersion.value = 1
+            advanceUntilIdle()
+
+            // The re-evaluation clears the stale guidance instead of latching it until the pair is
+            // changed and reselected (#4975 acceptance criterion #1).
             assertNull(vm.uiState.value.formError)
         }
 

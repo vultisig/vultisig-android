@@ -4,6 +4,9 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.isSwapSupported
+import com.vultisig.wallet.data.models.swapAssetName
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -195,6 +198,25 @@ internal class SwapProviderTableTest {
     }
 
     @Test
+    fun `live Maya pool adds MAYA for ETH USDT that the static fallback omits`() {
+        // USDT is not in the static mayaEthTokens fallback, so with no live pools the Ethereum
+        // branch never offers MAYA for it.
+        assertFalse(
+            SwapProvider.MAYA in table.providersFor(coin(Chain.Ethereum, "USDT", isNative = false)),
+            "MAYA should be absent for ETH.USDT under the static-only fallback",
+        )
+
+        // Once the live MayaChain pool for ETH.USDT reports Available, the table must add MAYA —
+        // the issue's concrete trigger (#4975).
+        val liveTable = SwapProviderTableImpl(FakeEligibility(maya = setOf("ETH.USDT")))
+        assertTrue(
+            SwapProvider.MAYA in
+                liveTable.providersFor(coin(Chain.Ethereum, "USDT", isNative = false)),
+            "MAYA should be offered for ETH.USDT once its Maya pool is Available",
+        )
+    }
+
+    @Test
     fun `SwapKit is eligible alongside the same-chain aggregators on a same-chain pair`() {
         // Same-chain ETH→ETH: nothing is filtered, so SWAPKIT coexists with ONEINCH/KYBER.
         val eligible =
@@ -205,6 +227,27 @@ internal class SwapProviderTableTest {
 
         assertTrue(SwapProvider.SWAPKIT in eligible, "SWAPKIT missing same-chain: $eligible")
         assertTrue(SwapProvider.ONEINCH in eligible, "ONEINCH missing same-chain: $eligible")
+    }
+
+    /**
+     * In-memory eligibility whose live `CHAIN.TICKER` sets stand in for fetched Available pools.
+     */
+    private class FakeEligibility(
+        private val thor: Set<String> = emptySet(),
+        private val maya: Set<String> = emptySet(),
+    ) : SwapPoolEligibilityRepository {
+        override fun isThorEligible(chain: Chain, ticker: String): Boolean =
+            key(chain, ticker) in thor
+
+        override fun isMayaEligible(chain: Chain, ticker: String): Boolean =
+            key(chain, ticker) in maya
+
+        override val eligibilityVersion: StateFlow<Int> = MutableStateFlow(1)
+
+        override suspend fun refresh() = Unit
+
+        private fun key(chain: Chain, ticker: String) =
+            "${chain.swapAssetName().uppercase()}.${ticker.uppercase()}"
     }
 
     private fun coin(chain: Chain, ticker: String, isNative: Boolean, contract: String = "") =

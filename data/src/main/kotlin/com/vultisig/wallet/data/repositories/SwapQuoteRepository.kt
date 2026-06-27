@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteSource
 import javax.inject.Inject
+import kotlinx.coroutines.flow.StateFlow
 
 interface SwapQuoteRepository {
 
@@ -30,6 +31,12 @@ interface SwapQuoteRepository {
      * instead of only the static fallback. Safe to call repeatedly; a fresh-enough cache no-ops.
      */
     suspend fun refreshSwapEligibility()
+
+    /**
+     * Increments once, from 0 to 1, when the live pool eligibility first populates after a cold
+     * start, so a pair selected before [refreshSwapEligibility] landed can be re-evaluated.
+     */
+    val swapEligibilityVersion: StateFlow<Int>
 }
 
 internal class SwapQuoteRepositoryImpl
@@ -56,4 +63,7 @@ constructor(
         providerTable.eligibleProvidersFor(srcToken, dstToken)
 
     override suspend fun refreshSwapEligibility() = poolEligibility.refresh()
+
+    override val swapEligibilityVersion: StateFlow<Int>
+        get() = poolEligibility.eligibilityVersion
 }
