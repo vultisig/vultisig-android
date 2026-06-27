@@ -166,14 +166,8 @@ constructor(
      * last-good (static) set, so the form stays usable offline.
      */
     private fun warmEligibilityCache() {
-        scope.launch {
-            try {
-                swapQuoteRepository.refreshSwapEligibility()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e, "warmEligibilityCache")
-            }
+        scope.safeLaunch(onError = { Timber.e(it, "warmEligibilityCache") }) {
+            swapQuoteRepository.refreshSwapEligibility()
         }
     }
 

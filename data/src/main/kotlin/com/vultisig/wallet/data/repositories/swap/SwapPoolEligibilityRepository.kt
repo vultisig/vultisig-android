@@ -52,6 +52,7 @@ constructor(private val thorChainApi: ThorChainApi, private val mayaChainApi: Ma
     @Volatile private var thorPools: Set<String> = emptySet()
     @Volatile private var mayaPools: Set<String> = emptySet()
     @Volatile private var lastRefreshMs: Long = 0L
+    @Volatile private var lastRefreshAttemptMs: Long = 0L
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val isRefreshing = AtomicBoolean(false)
@@ -76,8 +77,10 @@ constructor(private val thorChainApi: ThorChainApi, private val mayaChainApi: Ma
     }
 
     private fun ensureFresh() {
-        if (System.currentTimeMillis() - lastRefreshMs < CACHE_TTL_MS) return
+        val now = System.currentTimeMillis()
+        if (now - lastRefreshAttemptMs < CACHE_TTL_MS) return
         if (!isRefreshing.compareAndSet(false, true)) return
+        lastRefreshAttemptMs = now
         scope.launch {
             try {
                 refreshInternal()
