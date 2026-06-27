@@ -14,6 +14,8 @@ import com.vultisig.wallet.data.models.transactionHash
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import tss.KeysignResponse
 import vultisig.keysign.v1.SignAmino
 import vultisig.keysign.v1.TransactionType
@@ -40,6 +42,7 @@ class CosmosHelper(
 
         fun getChainGasLimit(chain: Chain): Long =
             when (chain) {
+                Chain.Qbtc, // ML-DSA-44 signatures are ~2.4 KB, needs more gas
                 Chain.Terra,
                 Chain.TerraClassic,
                 Chain.Osmosis -> 300000L
@@ -47,6 +50,31 @@ class CosmosHelper(
             }
 
         const val ATOM_DENOM = "uatom"
+
+        // Cosmos `/simulate` skips signature verification, so a dummy r||s of the secp256k1
+        // signature size is enough for the ante handler to meter gas.
+        private const val SECP256K1_SIGNATURE_SIZE = 64
+    }
+
+    /**
+     * Builds the base64 `tx_bytes` of a zero-signature Cosmos transaction for
+     * `/cosmos/tx/v1beta1/simulate`. The node skips signature verification while simulating, so a
+     * dummy [SECP256K1_SIGNATURE_SIZE]-byte signature is enough to let the ante handler meter gas.
+     *
+     * @return the `tx_bytes` field of WalletCore's broadcast payload.
+     */
+    fun getZeroSignedTransaction(keysignPayload: KeysignPayload): String {
+        val input = getPreSignedInputData(keysignPayload)
+        val publicKey =
+            PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+        val allSignatures = DataVector().apply { add(ByteArray(SECP256K1_SIGNATURE_SIZE)) }
+        val allPublicKeys = DataVector().apply { add(publicKey.data()) }
+        val compiled = compileWithSignatures(coinType, input, allSignatures, allPublicKeys)
+        val output = Cosmos.SigningOutput.parseFrom(compiled).checkError()
+        return Json.parseToJsonElement(output.serialized)
+            .jsonObject["tx_bytes"]
+            ?.jsonPrimitive
+            ?.content ?: error("Simulate payload missing tx_bytes")
     }
 
     fun getSwapPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
@@ -304,17 +332,20 @@ class CosmosHelper(
             .build()
     }
 
-    private fun buildCosmosFee(atomData: BlockChainSpecific.Cosmos): Cosmos.Fee.Builder? =
-        Cosmos.Fee.newBuilder()
-            .setGas(gasLimit)
-            .addAllAmounts(
-                listOf(
-                    Cosmos.Amount.newBuilder()
-                        .setDenom(denom)
-                        .setAmount(atomData.gas.toString())
-                        .build()
-                )
+    private fun buildCosmosFee(atomData: BlockChainSpecific.Cosmos): Cosmos.Fee.Builder {
+        val fee = Cosmos.Fee.newBuilder().setGas(gasLimit)
+        // A zero fee amount yields an empty fee: the `/simulate` tx must not declare a fee, or the
+        // AnteHandler's DeductFee charges it and fails MAX / near-balance sends.
+        if (atomData.gas.signum() > 0) {
+            fee.addAmounts(
+                Cosmos.Amount.newBuilder()
+                    .setDenom(denom)
+                    .setAmount(atomData.gas.toString())
+                    .build()
             )
+        }
+        return fee
+    }
 
     fun getSignedTransaction(
         input: ByteArray,

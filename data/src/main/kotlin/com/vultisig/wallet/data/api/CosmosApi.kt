@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosGovVote
 import com.vultisig.wallet.data.api.models.cosmos.CosmosGovVoteResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceDenomTraceJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceJson
+import com.vultisig.wallet.data.api.models.cosmos.CosmosSimulateResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTxStatusJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
@@ -38,8 +39,10 @@ import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import timber.log.Timber
 
 interface CosmosApi {
@@ -48,6 +51,14 @@ interface CosmosApi {
     suspend fun getAccountNumber(address: String): THORChainAccountValue
 
     suspend fun broadcastTransaction(tx: String): String?
+
+    /**
+     * Simulates [txBytes] (the base64 `tx_bytes` of an unsigned transaction) via
+     * `/cosmos/tx/v1beta1/simulate` and returns the reported `gas_info.gas_used`, or `null` when
+     * simulation is unavailable so the caller can fall back to a static per-chain gas limit. Fails
+     * closed on any error.
+     */
+    suspend fun simulate(txBytes: String): Long?
 
     suspend fun getWasmTokenBalance(address: String, contractAddress: String): CosmosBalance
 
@@ -167,6 +178,26 @@ internal class CosmosApiImp(
                 Timber.tag("CosmosApiService").e(e, "Error broadcasting transaction")
             }
             throw e
+        }
+    }
+
+    override suspend fun simulate(txBytes: String): Long? {
+        return try {
+            httpClient
+                .post("$rpcEndpoint/cosmos/tx/v1beta1/simulate") {
+                    contentType(ContentType.Application.Json)
+                    setBody(buildJsonObject { put("tx_bytes", txBytes) })
+                }
+                .bodyOrThrow<CosmosSimulateResponse>()
+                .gasInfo
+                ?.gasUsed
+                ?.toLongOrNull()
+                ?.takeIf { it > 0 }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Cosmos simulate failed; falling back to static gas limit")
+            null
         }
     }
 
