@@ -218,12 +218,14 @@ internal class SwapQuoteManagerTest {
         }
 
     @Test
-    fun `fetchBestQuote picks the highest estimatedDstFiat, not the candidate order`() = runTest {
+    fun `fetchBestQuote picks the highest net output, not the candidate order`() = runTest {
         // The provider table hands candidates back in a fixed set order (THORCHAIN before SWAPKIT
-        // on Bitcoin), but selection is `successes.maxBy { estimatedDstFiat }` — the route the user
-        // receives the most on. Pin that: SWAPKIT is listed second yet prices the dst higher, so it
-        // must win. This is what makes SwapKit reachable on any BTC pair it out-prices, regardless
-        // of where it sits in the eligibility set.
+        // on Bitcoin), but selection is `maxBy { comparableDstFiat }` — the route the user receives
+        // the most on. Pin that: SWAPKIT is listed second yet prices the dst higher, so it must
+        // win.
+        // This is what makes SwapKit reachable on any BTC pair it out-prices, regardless of where
+        // it
+        // sits in the eligibility set.
         val btc = coin(Chain.Bitcoin, "BTC", address = "bc1qsrc", decimals = 8)
         val eth = coin(Chain.Ethereum, "ETH", address = "0xdst", decimals = 18)
 
@@ -300,7 +302,7 @@ internal class SwapQuoteManagerTest {
                 )
 
         assertEquals(SwapProvider.SWAPKIT, best.candidate.provider)
-        assertEquals(BigDecimal("200"), best.result.estimatedDstFiat.value)
+        assertEquals(BigDecimal("200"), best.result.comparableDstFiat)
     }
 
     @Test
@@ -356,8 +358,8 @@ internal class SwapQuoteManagerTest {
 
         // Displayed destination fiat clamps to the source fiat, not the inflated $13.18 mark.
         result.estimatedDstFiatValue shouldBe "5.26"
-        // Ranking still sees the unclamped market value.
-        result.estimatedDstFiat.value shouldBe BigDecimal("13.18")
+        // Ranking still sees the unclamped market value (SwapKit dstAmount is already net).
+        result.comparableDstFiat shouldBe BigDecimal("13.18")
     }
 
     @Test
@@ -410,31 +412,30 @@ internal class SwapQuoteManagerTest {
                 )
 
         result.estimatedDstFiatValue shouldBe "95"
-        result.estimatedDstFiat.value shouldBe BigDecimal("95")
+        result.comparableDstFiat shouldBe BigDecimal("95")
     }
 
     @Test
-    fun `fetchBestQuote prefers higher-priority provider on a near-tie within the 1pct band`() =
+    fun `fetchBestQuote prefers higher-priority provider on a near-tie within the 50bps band`() =
         runTest {
             // THORChain (priority 0) prices the dst slightly lower than SwapKit (priority 2), but
-            // within the 1% band (99.5 vs 100, floor = 99). Both are in-band, so the banded layer
-            // tilts to the higher-priority THORChain instead of the marginally larger raw output.
-            val best = rankTwoProviders(thorFiat = "99.5", swapKitFiat = "100")
+            // within the 50bps band (99.7 vs 100, floor = 99.5). Both are in-band, so the banded
+            // layer tilts to the higher-priority THORChain instead of the marginally larger output.
+            val best = rankTwoProviders(thorFiat = "99.7", swapKitFiat = "100")
 
             assertEquals(SwapProvider.THORCHAIN, best.candidate.provider)
-            assertEquals(BigDecimal("99.5"), best.result.estimatedDstFiat.value)
+            assertEquals(BigDecimal("99.7"), best.result.comparableDstFiat)
         }
 
     @Test
-    fun `fetchBestQuote keeps the materially-better quote when it is outside the 1pct band`() =
+    fun `fetchBestQuote keeps the materially-better quote when it is outside the 50bps band`() =
         runTest {
-            // THORChain prices 2% below SwapKit (98 vs 100, floor = 99). THORChain falls outside
-            // the
-            // band, so the priority preference does not apply and the better-rate SwapKit wins.
-            val best = rankTwoProviders(thorFiat = "98", swapKitFiat = "100")
+            // THORChain prices 0.8% below SwapKit (99.2 vs 100, floor = 99.5), outside the band, so
+            // the priority preference does not apply and the better-rate SwapKit wins.
+            val best = rankTwoProviders(thorFiat = "99.2", swapKitFiat = "100")
 
             assertEquals(SwapProvider.SWAPKIT, best.candidate.provider)
-            assertEquals(BigDecimal("100"), best.result.estimatedDstFiat.value)
+            assertEquals(BigDecimal("100"), best.result.comparableDstFiat)
         }
 
     /**
@@ -517,6 +518,343 @@ internal class SwapQuoteManagerTest {
                 amount = BigDecimal.ONE,
             )
     }
+
+    // selectBestQuote — net-output ranking, banded provider preference, and the in-band lower-gas
+    // tie-break. Each case pins one boundary of the rule (#5011).
+
+    @Test
+    fun `selectBestQuote picks the highest net output`() {
+        // THORChain leads the eligibility order for ETH/USDC, but the candidate with the highest
+        // net
+        // output must win regardless of provider order.
+        val best =
+            createManager()
+                .selectBestQuote(
+                    listOf(
+                        rankable(SwapProvider.THORCHAIN, "0.0029"),
+                        rankable(SwapProvider.ONEINCH, "0.0030"),
+                        rankable(SwapProvider.LIFI, "0.0029"),
+                    )
+                )
+
+        assertEquals(SwapProvider.ONEINCH, best.candidate.provider)
+    }
+
+    @Test
+    fun `selectBestQuote prefers the higher-priority provider within the band`() {
+        // 1inch's net is marginally higher but THORChain sits inside the 50bps band (floor
+        // 0.02985),
+        // so the higher-priority THORChain wins. Neither exposes gas, so the lower-gas check is
+        // skipped and selection falls to provider priority.
+        val best =
+            createManager()
+                .selectBestQuote(
+                    listOf(
+                        rankable(SwapProvider.ONEINCH, "0.03"),
+                        rankable(SwapProvider.THORCHAIN, "0.0299"),
+                    )
+                )
+
+        assertEquals(SwapProvider.THORCHAIN, best.candidate.provider)
+    }
+
+    @Test
+    fun `selectBestQuote treats the exact band floor as in-band`() {
+        // A quote exactly at best * 0.995 (0.03 -> 0.02985) is included and, being higher priority,
+        // wins.
+        val best =
+            createManager()
+                .selectBestQuote(
+                    listOf(
+                        rankable(SwapProvider.ONEINCH, "0.03"),
+                        rankable(SwapProvider.THORCHAIN, "0.02985"),
+                    )
+                )
+
+        assertEquals(SwapProvider.THORCHAIN, best.candidate.provider)
+    }
+
+    @Test
+    fun `selectBestQuote keeps the better rate just outside the band`() {
+        // THORChain at 0.0296 is below the floor (0.02985), so only 1inch is in band and the better
+        // rate wins — the priority preference must not reach outside the band.
+        val best =
+            createManager()
+                .selectBestQuote(
+                    listOf(
+                        rankable(SwapProvider.ONEINCH, "0.03"),
+                        rankable(SwapProvider.THORCHAIN, "0.0296"),
+                    )
+                )
+
+        assertEquals(SwapProvider.ONEINCH, best.candidate.provider)
+    }
+
+    @Test
+    fun `selectBestQuote prefers the lower-gas route among in-band EVM aggregators`() {
+        // KyberSwap has the marginally higher net AND higher priority, but burns more source gas;
+        // 1inch is in band (floor 0.02985) with cheaper gas. The lower-gas quote wins, beating both
+        // the higher output and the higher provider priority.
+        val best =
+            createManager()
+                .selectBestQuote(
+                    listOf(
+                        rankable(SwapProvider.KYBER, "0.03", sourceGasWei = 6_000_000_000_000_000),
+                        rankable(
+                            SwapProvider.ONEINCH,
+                            "0.02995",
+                            sourceGasWei = 3_000_000_000_000_000,
+                        ),
+                    )
+                )
+
+        assertEquals(SwapProvider.ONEINCH, best.candidate.provider)
+    }
+
+    @Test
+    fun `selectBestQuote keeps the materially-better rate even when it costs more gas`() {
+        // A rate outside the band must win even with far more source gas — the lower-gas tie-break
+        // only applies among in-band, economically-tied quotes.
+        val best =
+            createManager()
+                .selectBestQuote(
+                    listOf(
+                        rankable(SwapProvider.KYBER, "0.03", sourceGasWei = 12_000_000_000_000_000),
+                        rankable(
+                            SwapProvider.ONEINCH,
+                            "0.029",
+                            sourceGasWei = 2_000_000_000_000_000,
+                        ),
+                    )
+                )
+
+        assertEquals(SwapProvider.KYBER, best.candidate.provider)
+    }
+
+    @Test
+    fun `selectBestQuote does not let a gas-unknown quote win the lower-gas tie-break`() {
+        // THORChain exposes no source gas, so the lower-gas check cannot fire even though 1inch has
+        // a known (cheap) gas. Both are in band, so selection falls to provider priority and the
+        // higher-priority THORChain wins.
+        val best =
+            createManager()
+                .selectBestQuote(
+                    listOf(
+                        rankable(
+                            SwapProvider.ONEINCH,
+                            "0.03",
+                            sourceGasWei = 3_000_000_000_000_000,
+                        ),
+                        rankable(SwapProvider.THORCHAIN, "0.0299"),
+                    )
+                )
+
+        assertEquals(SwapProvider.THORCHAIN, best.candidate.provider)
+    }
+
+    @Test
+    fun `selectBestQuote winner is independent of candidate order for mixed-gas in-band quotes`() {
+        // A gas-unknown quote in band alongside two gas-exposing aggregators must resolve to the
+        // same winner regardless of order — ranking is a single total order, not an order-sensitive
+        // pairwise comparison.
+        val quotes =
+            listOf(
+                rankable(SwapProvider.SWAPKIT, "0.0299"),
+                rankable(SwapProvider.KYBER, "0.0299", sourceGasWei = 6_000_000_000_000_000),
+                rankable(SwapProvider.ONEINCH, "0.03", sourceGasWei = 3_000_000_000_000_000),
+            )
+        val manager = createManager()
+
+        val forward = manager.selectBestQuote(quotes).candidate.provider
+        val reversed = manager.selectBestQuote(quotes.reversed()).candidate.provider
+
+        assertEquals(SwapProvider.SWAPKIT, forward)
+        assertEquals(forward, reversed)
+    }
+
+    @Test
+    fun `selectBestQuote returns the only quote`() {
+        val best = createManager().selectBestQuote(listOf(rankable(SwapProvider.LIFI, "0.03")))
+
+        assertEquals(SwapProvider.LIFI, best.candidate.provider)
+    }
+
+    @Test
+    fun `fetchQuote ranks LI_FI on its net dstAmount without re-subtracting the integrator fee`() =
+        runTest {
+            // LI.FI's quoted dstAmount is already net of its integrator fee (the fee is deducted
+            // from
+            // the quoted toAmount), so the ranking metric is the plain market value —
+            // re-subtracting
+            // the fee would double-count. The catch-all prices the fee at a non-zero 0.5 so any
+            // stray
+            // subtraction would surface; the dst market value is stubbed specifically.
+            val eth = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
+            val usdc = coin(Chain.Ethereum, "USDC", "0xdst", 6)
+            val dstValue = TokenValue(BigInteger.valueOf(1_000_000), usdc)
+            coEvery { tokenRepository.getNativeToken(any()) } returns eth
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.LIFI, any()) } returns
+                SwapQuoteResult.Evm(evmQuote(dstAmount = "1000000"))
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+                FiatValue(BigDecimal("0.5"), "USD")
+            coEvery { convertTokenValueToFiat(any(), dstValue, AppCurrency.USD) } returns
+                FiatValue(BigDecimal("100"), "USD")
+            every { mapTokenValueToDecimalUiString(any()) } returns "0"
+
+            val result =
+                createManager()
+                    .fetchQuote(
+                        provider = SwapProvider.LIFI,
+                        src = mockk(relaxed = true),
+                        dst = mockk(relaxed = true),
+                        srcToken = eth,
+                        dstToken = usdc,
+                        srcTokenValue = BigInteger.ONE,
+                        tokenValue = TokenValue(BigInteger.ONE, eth),
+                        currency = AppCurrency.USD,
+                        vultBPSDiscount = null,
+                        referral = null,
+                        amount = BigDecimal.ONE,
+                    )
+
+            // Market value passes through untouched; the 0.5 fee is not subtracted again.
+            result.comparableDstFiat shouldBe BigDecimal("100")
+        }
+
+    @Test
+    fun `fetchQuote does not subtract THORChain fees from the comparable net output`() = runTest {
+        // THORChain expectedAmountOut is already net of affiliate + outbound fees, so subtracting
+        // the displayed swap fee again would understate it and wrongly tilt selection to an
+        // aggregator (#5011). Non-zero fee fiat would surface any stray subtraction.
+        val btc = coin(Chain.Bitcoin, "BTC", "bc1qsrc", 8)
+        val eth = coin(Chain.Ethereum, "ETH", "0xdst", 18)
+        val thorDst = TokenValue(BigInteger.valueOf(100), eth)
+        val thorQuote =
+            SwapQuote.ThorChain(
+                expectedDstValue = thorDst,
+                fees = TokenValue(BigInteger.valueOf(7), eth),
+                expiredAt = Clock.System.now().plus(5.minutes),
+                recommendedMinTokenValue = TokenValue(BigInteger.ZERO, eth),
+                data =
+                    THORChainSwapQuote(
+                        dustThreshold = null,
+                        expectedAmountOut = "100",
+                        expiry = BigInteger.ZERO,
+                        fees = Fees(affiliate = "3", asset = "0", outbound = "4", total = "7"),
+                        inboundAddress = "thorinbound",
+                        inboundConfirmationBlocks = null,
+                        inboundConfirmationSeconds = null,
+                        maxStreamingQuantity = 0,
+                        memo = "memo",
+                        notes = "",
+                        outboundDelayBlocks = BigInteger.ZERO,
+                        outboundDelaySeconds = BigInteger.ZERO,
+                        recommendedMinAmountIn = "0",
+                        streamingSwapBlocks = BigInteger.ZERO,
+                        totalSwapSeconds = 0L,
+                        warning = "",
+                        router = null,
+                        error = null,
+                    ),
+            )
+        coEvery { tokenRepository.getNativeToken(any()) } returns btc
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } returns
+            SwapQuoteResult.Native(thorQuote)
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal("5"), "USD")
+        coEvery { convertTokenValueToFiat(any(), thorDst, any()) } returns
+            FiatValue(BigDecimal("100"), "USD")
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+
+        val result =
+            createManager()
+                .fetchQuote(
+                    provider = SwapProvider.THORCHAIN,
+                    src = mockk(relaxed = true),
+                    dst = mockk(relaxed = true),
+                    srcToken = btc,
+                    dstToken = eth,
+                    srcTokenValue = BigInteger.ONE,
+                    tokenValue = TokenValue(BigInteger.ONE, btc),
+                    currency = AppCurrency.USD,
+                    vultBPSDiscount = null,
+                    referral = null,
+                    amount = BigDecimal.ONE,
+                )
+
+        // Market value passes through untouched (100), and THORChain exposes no source gas.
+        result.comparableDstFiat shouldBe BigDecimal("100")
+        result.sourceGasWei shouldBe null
+    }
+
+    @Test
+    fun `fetchQuote exposes source gas as gas times gasPrice for an EVM aggregator`() = runTest {
+        // gas 150_000 × gasPrice 20 gwei = 3e15 wei — the value the in-band lower-gas tie-break
+        // compares.
+        val eth = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
+        val usdc = coin(Chain.Ethereum, "USDC", "0xdst", 6)
+        coEvery { tokenRepository.getNativeToken(any()) } returns eth
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.ONEINCH, any()) } returns
+            SwapQuoteResult.Evm(
+                evmQuote(dstAmount = "1000000", gas = 150_000, gasPrice = "20000000000")
+            )
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, "USD")
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+
+        val result =
+            createManager()
+                .fetchQuote(
+                    provider = SwapProvider.ONEINCH,
+                    src = mockk(relaxed = true),
+                    dst = mockk(relaxed = true),
+                    srcToken = eth,
+                    dstToken = usdc,
+                    srcTokenValue = BigInteger.ONE,
+                    tokenValue = TokenValue(BigInteger.ONE, eth),
+                    currency = AppCurrency.USD,
+                    vultBPSDiscount = null,
+                    referral = null,
+                    amount = BigDecimal.ONE,
+                )
+
+        result.sourceGasWei shouldBe BigInteger("3000000000000000")
+    }
+
+    @Test
+    fun `fetchQuote reports no source gas when the aggregator returns a zero gas estimate`() =
+        runTest {
+            // A zero gas estimate (which some aggregators return) must read as gas-unknown so it
+            // never wins the cheapest-gas tie-break.
+            val eth = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
+            val usdc = coin(Chain.Ethereum, "USDC", "0xdst", 6)
+            coEvery { tokenRepository.getNativeToken(any()) } returns eth
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.ONEINCH, any()) } returns
+                SwapQuoteResult.Evm(
+                    evmQuote(dstAmount = "1000000", gas = 0, gasPrice = "20000000000")
+                )
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+                FiatValue(BigDecimal.ZERO, "USD")
+            every { mapTokenValueToDecimalUiString(any()) } returns "0"
+
+            val result =
+                createManager()
+                    .fetchQuote(
+                        provider = SwapProvider.ONEINCH,
+                        src = mockk(relaxed = true),
+                        dst = mockk(relaxed = true),
+                        srcToken = eth,
+                        dstToken = usdc,
+                        srcTokenValue = BigInteger.ONE,
+                        tokenValue = TokenValue(BigInteger.ONE, eth),
+                        currency = AppCurrency.USD,
+                        vultBPSDiscount = null,
+                        referral = null,
+                        amount = BigDecimal.ONE,
+                    )
+
+            result.sourceGasWei shouldBe null
+        }
 
     @Test
     fun `computeIndicativeQuote derives dst from cached spot prices`() = runTest {
@@ -813,18 +1151,45 @@ internal class SwapQuoteManagerTest {
         )
 
     private fun jupiterEvmQuote() =
+        evmQuote(dstAmount = "1000", gas = 0, gasPrice = "0", data = "AQID")
+
+    private fun evmQuote(
+        dstAmount: String,
+        gas: Long = 200_000L,
+        gasPrice: String = "20000000000",
+        data: String = "0x",
+    ) =
         EVMSwapQuoteJson(
-            dstAmount = "1000",
+            dstAmount = dstAmount,
             tx =
                 OneInchSwapTxJson(
                     from = "",
                     to = "",
-                    gas = 0,
-                    data = "AQID",
+                    gas = gas,
+                    data = data,
                     value = "0",
-                    gasPrice = "0",
+                    gasPrice = gasPrice,
                     swapFee = "0",
                     swapFeeTokenContract = "",
+                ),
+        )
+
+    /** A pre-fetched [BestQuote] with a known net output (and optional source gas) for ranking. */
+    private fun rankable(provider: SwapProvider, netFiat: String, sourceGasWei: Long? = null) =
+        BestQuote(
+            candidate = QuoteCandidate(provider, vultBPSDiscount = null, referral = null),
+            result =
+                QuoteFetchResult(
+                    quote = mockk(relaxed = true),
+                    provider = provider,
+                    providerUiText = UiText.DynamicString(provider.name),
+                    srcFiatValueText = "",
+                    estimatedDstTokenValue = "",
+                    estimatedDstFiatValue = "",
+                    comparableDstFiat = BigDecimal(netFiat),
+                    feeText = "",
+                    swapFeeFiat = FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker),
+                    sourceGasWei = sourceGasWei?.let { BigInteger.valueOf(it) },
                 ),
         )
 
