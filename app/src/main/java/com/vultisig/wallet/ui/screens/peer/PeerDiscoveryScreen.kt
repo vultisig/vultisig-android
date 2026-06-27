@@ -489,9 +489,9 @@ private fun QrCodeContainer(
         }
 
         // Anchor the expand affordance to the card's top-right corner so it reads as part of the
-        // QR instead of a stray, detached button. Centering it on the corner keeps the control
-        // within the card's frame padding and clear of the top-right finder pattern (the bitmap is
-        // generated with a zero-module margin), so the code stays reliably scannable.
+        // QR instead of a stray, detached button. The bitmap is generated with a quiet-zone margin,
+        // so the top-right finder pattern is inset from the corner and the control stays clear of
+        // it, keeping the code reliably scannable.
         if (qrCode != null) {
             ExpandQrButton(
                 onClick = onClick,
