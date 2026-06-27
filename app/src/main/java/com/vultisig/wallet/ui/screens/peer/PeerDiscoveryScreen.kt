@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -460,15 +461,7 @@ private fun QrCodeContainer(
     val outerShape = RoundedCornerShape(24.75.dp)
     val innerShape = RoundedCornerShape(18.56.dp)
 
-    Column(modifier = modifier, horizontalAlignment = Alignment.End) {
-        // Keep the expand affordance in reserved space above the card so it never overlaps the QR
-        // bitmap. The code is generated with a zero-module margin, so its finder patterns sit flush
-        // in the corners and must stay unobstructed for reliable scanning.
-        if (qrCode != null) {
-            ExpandQrButton(onClick = onClick)
-            UiSpacer(size = 8.dp)
-        }
-
+    Box(modifier = modifier) {
         Box(
             modifier =
                 Modifier.clip(outerShape)
@@ -493,6 +486,17 @@ private fun QrCodeContainer(
                 // still being generated, then fade the QR in once it is ready.
                 QrCodeImage(qrCode = qrCode)
             }
+        }
+
+        // Anchor the expand affordance to the card's top-right corner so it reads as part of the
+        // QR instead of a stray, detached button. Centering it on the corner keeps the control
+        // within the card's frame padding and clear of the top-right finder pattern (the bitmap is
+        // generated with a zero-module margin), so the code stays reliably scannable.
+        if (qrCode != null) {
+            ExpandQrButton(
+                onClick = onClick,
+                modifier = Modifier.align(Alignment.TopEnd).offset(x = 24.dp, y = (-24).dp),
+            )
         }
     }
 }
@@ -522,7 +526,8 @@ private fun QrCodeImage(qrCode: BitmapPainter?, modifier: Modifier = Modifier) {
 }
 
 /**
- * Circular icon button above the QR card that opens the full-screen QR overlay.
+ * Circular icon button anchored to the QR card's top-right corner that opens the full-screen QR
+ * overlay.
  *
  * Exposes a labelled [Role.Button] semantics node and reserves at least a 48.dp touch target so it
  * stays usable with TalkBack and easy to hit.
