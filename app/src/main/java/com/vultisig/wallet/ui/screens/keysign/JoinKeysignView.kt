@@ -52,6 +52,7 @@ import com.vultisig.wallet.ui.models.keysign.JoinKeysignViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.VerifyUiModel
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
+import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimDoneContent
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.sign.VerifySignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
@@ -132,6 +133,22 @@ internal fun JoinKeysignView() {
         return
     }
 
+    val currentState = state
+    if (currentState is QbtcClaim && currentState.txHash != null) {
+        // QbtcClaimDoneContent owns its TxDoneScaffold + toolbar, so render it directly instead of
+        // nesting it inside JoinKeysignScreen — avoids the double scaffold/toolbar this file
+        // already
+        // works around for the other full-screen flows.
+        BackHandler(onBack = viewModel::complete)
+        QbtcClaimDoneContent(
+            txHash = currentState.txHash,
+            explorerUrl = currentState.explorerUrl.orEmpty(),
+            totalSats = currentState.totalSats ?: 0L,
+            onComplete = viewModel::complete,
+        )
+        return
+    }
+
     val title =
         stringResource(
             when {
@@ -179,12 +196,9 @@ internal fun JoinKeysignView() {
             }
 
             is QbtcClaim -> {
-                val claim = state as QbtcClaim
-                KeysignLoadingScreen(
-                    text =
-                        if (claim.txHash == null) stringResource(R.string.qbtc_claim_proving)
-                        else stringResource(R.string.qbtc_claim_success_title)
-                )
+                // The done state (txHash != null) is rendered before the JoinKeysignScreen wrapper;
+                // here the claim is still proving/broadcasting.
+                KeysignLoadingScreen(text = stringResource(R.string.qbtc_claim_proving))
             }
 
             Keysign -> {
