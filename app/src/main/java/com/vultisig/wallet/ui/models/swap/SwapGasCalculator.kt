@@ -316,20 +316,17 @@ constructor(
         routeGas: Long,
     ): GasCalculationResult? {
         if (routeGas <= 0L || baselineGasFee.value <= BigInteger.ZERO) return null
-        // OP-stack L2s fold an L1 data-fee component into baselineGasFee (EthereumFeeService adds
-        // it
-        // only for isOpStackL2 chains); rescaling the whole amount by the gas-limit ratio would
-        // wrongly scale that L1 part. Separating it is disproportionate for L2s whose fees are
-        // tiny,
-        // so keep the gas-pass estimate there. Non-OP-stack EVM (Ethereum/Arbitrum/…) carry no L1,
-        // so the rescale below is exact (issue #5056).
+        // OP-stack L2s fold an L1 data-fee component into baselineGasFee (EthereumFeeService
+        // adds it only for isOpStackL2 chains), so rescaling the whole amount by the gas-limit
+        // ratio would wrongly scale that L1 part. Separating the component is disproportionate
+        // for L2s whose fees are tiny, so keep the gas-pass estimate there. Non-OP-stack EVM
+        // (Ethereum/Arbitrum/…) carry no L1, so the rescale below is exact (issue #5056).
         if (srcToken.chain.isOpStackL2) return null
         val signedGasLimit =
             maxOf(routeGas.toBigInteger(), getGasLimit(srcToken) ?: DEFAULT_SWAP_LIMIT)
         if (signedGasLimit == DEFAULT_SWAP_LIMIT) return null
 
-        val nativeCoin =
-            withContext(Dispatchers.IO) { tokenRepository.getNativeToken(srcToken.chain.id) }
+        val nativeCoin = tokenRepository.getNativeToken(srcToken.chain.id)
         val rebasedFee =
             TokenValue(
                 value = baselineGasFee.value * signedGasLimit / DEFAULT_SWAP_LIMIT,

@@ -88,13 +88,9 @@ constructor(
         // fee mirrors the initiator's route-gas estimate instead of the flat 600k (#5056). Native
         // protocol deposits (THORChain / Maya) have no route gas, so this stays null.
         val aggregatorRouteGas =
-            (swapPayload as? SwapPayload.EVM)
-                ?.data
-                ?.quote
-                ?.tx
-                ?.gas
-                ?.takeIf { it > 0L }
-                ?.toBigInteger()
+            (swapPayload as? SwapPayload.EVM)?.let {
+                it.data.quote.tx.gas.takeIf { gas -> gas > 0L }?.toBigInteger()
+            }
         val gasFee =
             when {
                 chain.standard == TokenStandard.UTXO && chain != Chain.Cardano -> {

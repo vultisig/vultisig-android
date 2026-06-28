@@ -274,20 +274,16 @@ constructor(
                         specificAndUtxo
                     }
 
-                // The passed-in network fee was estimated for the aggregator's gas limit, so a
-                // user override (#4858) must be reflected in the displayed/verify fee too — else a
+                // The passed-in network fee was estimated for the aggregator's gas limit, so a user
+                // override (#4858) must also be reflected in the displayed/verify fee — else a
                 // lowered limit could show a fee that can't match what executes (review #4969).
                 // Recompute the max-fee from the override (gasLimit × maxFeePerGas) and re-value it
-                // in fiat via the native-token price implied by the displayed fee pair
-                // (estimatedNetworkFeeFiatValue ÷ estimatedNetworkFeeTokenValue, gas-independent).
-                // That pair is re-based onto the route gas for aggregator swaps (#5056); using
-                // gasFee
-                // /gasFeeFiatValue (the flat-600k baseline) would skew the implied price. Auto (no
-                // override) keeps the estimate.
-                // Pair the displayed token fee with its own fiat so the override price ratio (and
-                // the staged fee) never mixes the route-gas estimate with the flat-600k baseline
-                // (#5056). The two estimated values move together in production; pairing them here
-                // keeps the builder correct even if only one is supplied.
+                // in fiat via the native price implied by the displayed fee pair. For aggregator
+                // swaps that pair is re-based onto the route gas (#5056), so reference
+                // estimatedNetworkFeeTokenValue with its own estimatedNetworkFeeFiatValue — the
+                // flat-600k gasFee/gasFeeFiatValue baseline would skew the price, and pairing the
+                // token with its matching fiat avoids a mismatch when only one estimate is present.
+                // Auto (no override) keeps the estimate.
                 val (priceReferenceFee, priceReferenceFiat) =
                     if (estimatedNetworkFeeTokenValue != null) {
                         estimatedNetworkFeeTokenValue to

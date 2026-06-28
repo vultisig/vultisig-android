@@ -4,6 +4,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
@@ -48,6 +49,15 @@ internal sealed interface NetworkFeeUpdate {
         val formattedFiatValue: String,
     ) : NetworkFeeUpdate
 }
+
+/** Maps a resolved [EstimatedGasFee] onto the network-fee update written into the form state. */
+private fun EstimatedGasFee.toNetworkFeeSet() =
+    NetworkFeeUpdate.Set(
+        tokenValue = tokenValue,
+        fiatValue = fiatValue,
+        formattedTokenValue = formattedTokenValue,
+        formattedFiatValue = formattedFiatValue,
+    )
 
 /**
  * Outcome of [SwapQuotePipeline.resolveNetworkFee]: the network-fee mutation to apply (or `null` to
@@ -464,13 +474,7 @@ internal class SwapQuotePipeline(
                         )
                 ) {
                     is UtxoPlanFeeResult.Success -> {
-                        networkFee =
-                            NetworkFeeUpdate.Set(
-                                tokenValue = planFee.estimated.tokenValue,
-                                fiatValue = planFee.estimated.fiatValue,
-                                formattedTokenValue = planFee.estimated.formattedTokenValue,
-                                formattedFiatValue = planFee.estimated.formattedFiatValue,
-                            )
+                        networkFee = planFee.estimated.toNetworkFeeSet()
                         effectiveNetworkFeeTokenValue = planFee.estimated.tokenValue
                         isSwapDisabled = false
                     }
@@ -509,13 +513,7 @@ internal class SwapQuotePipeline(
                     )
                 }
             if (rebased != null) {
-                networkFee =
-                    NetworkFeeUpdate.Set(
-                        tokenValue = rebased.estimated.tokenValue,
-                        fiatValue = rebased.estimated.fiatValue,
-                        formattedTokenValue = rebased.estimated.formattedTokenValue,
-                        formattedFiatValue = rebased.estimated.formattedFiatValue,
-                    )
+                networkFee = rebased.estimated.toNetworkFeeSet()
                 effectiveNetworkFeeTokenValue = rebased.estimated.tokenValue
             }
         }
