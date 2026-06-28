@@ -158,7 +158,8 @@ constructor(
             // The claim needs a Bitcoin and a QBTC coin, but neither chain has to be enabled in the
             // vault — they're derived on the fly when missing so the claim works regardless of
             // which
-            // chains the user has added, matching the other platforms.
+            // chains the user has added (as Windows does; iOS currently blocks when the coin is
+            // absent — see https://github.com/vultisig/vultisig-ios/issues/4679).
             val coins =
                 if (loadedVault == null) null
                 else
