@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.api.models.SendTransactionJson
 import com.vultisig.wallet.data.api.models.ZkGasFee
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.EthereumRlpEncoder
+import com.vultisig.wallet.data.chains.helpers.Multicall3
 import com.vultisig.wallet.data.common.convertToBigIntegerOrZero
 import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.common.toKeccak256
@@ -78,6 +79,21 @@ interface EvmApi {
 
     suspend fun getERC20Balance(address: String, contractAddress: String): BigInteger
 
+    /**
+     * Batch-fetches balances for [address] across [contractAddresses] in a single Multicall3
+     * `aggregate3` round-trip (was one `eth_call` per token). An empty string requests the native
+     * balance (via `Multicall3.getEthBalance`); non-empty entries request `ERC20.balanceOf`.
+     *
+     * Returns a map keyed by each input contract address (the native "" key included) to its
+     * balance, with failed sub-calls decoded as [BigInteger.ZERO]. Falls back to per-token
+     * [getERC20Balance]/[getBalance] on chains without a canonical Multicall3, for a single
+     * address, or when the multicall errors — keeping results byte-identical to the per-token path.
+     */
+    suspend fun getBalances(
+        address: String,
+        contractAddresses: List<String>,
+    ): Map<String, BigInteger>
+
     suspend fun getTxStatus(txHash: String): EvmRpcResponseJson<EvmTxStatusJson>?
 
     /**
@@ -120,11 +136,15 @@ constructor(
             } else {
                 defaultRpcUrl
             }
-        return EvmApiImp(httpClient, rpcUrl)
+        return EvmApiImp(httpClient, rpcUrl, chain)
     }
 }
 
-class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmApi {
+class EvmApiImp(
+    private val http: HttpClient,
+    private val rpcUrl: String,
+    private val chain: Chain,
+) : EvmApi {
 
     override suspend fun getBalance(coin: Coin): BigInteger {
         return try {
@@ -179,6 +199,76 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
                 BigInteger.ZERO
             }
     }
+
+    override suspend fun getBalances(
+        address: String,
+        contractAddresses: List<String>,
+    ): Map<String, BigInteger> {
+        if (contractAddresses.isEmpty()) return emptyMap()
+
+        val multicallAddress = Multicall3.addressFor(chain)
+        // No canonical Multicall3, or nothing to batch — the per-token path is identical and avoids
+        // an eth_call to a contract that may not exist on this chain.
+        if (multicallAddress == null || contractAddresses.size == 1) {
+            return fetchBalancesPerToken(address, contractAddresses)
+        }
+
+        val calls =
+            contractAddresses.map { contract ->
+                if (contract.isEmpty()) Multicall3.getEthBalanceCall(multicallAddress, address)
+                else Multicall3.balanceOfCall(contract, address)
+            }
+
+        val rpcResp =
+            try {
+                fetch<RpcResponse>(
+                    "eth_call",
+                    buildJsonArray {
+                        addJsonObject {
+                            put("to", multicallAddress)
+                            put("data", Multicall3.encodeAggregate3(calls))
+                        }
+                        add("latest")
+                    },
+                )
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Timber.d("multicall balances failed, falling back per-token: %s", e.message)
+                return fetchBalancesPerToken(address, contractAddresses)
+            }
+
+        val result = rpcResp.result
+        if (rpcResp.error != null || result.isNullOrBlank() || result == "0x") {
+            Timber.d("multicall balances empty/error, falling back per-token")
+            return fetchBalancesPerToken(address, contractAddresses)
+        }
+
+        val decoded =
+            try {
+                Multicall3.decodeAggregate3(result).also {
+                    require(it.size == contractAddresses.size) { "result count mismatch" }
+                }
+            } catch (e: Exception) {
+                Timber.d("multicall decode failed, falling back per-token: %s", e.message)
+                return fetchBalancesPerToken(address, contractAddresses)
+            }
+
+        return contractAddresses
+            .mapIndexed { index, contract ->
+                val r = decoded[index]
+                contract to
+                    if (r.success) Multicall3.decodeUint256Word(r.returnData) else BigInteger.ZERO
+            }
+            .toMap()
+    }
+
+    private suspend fun fetchBalancesPerToken(
+        address: String,
+        contractAddresses: List<String>,
+    ): Map<String, BigInteger> =
+        contractAddresses.associateWith { contract ->
+            if (contract.isEmpty()) getETHBalance(address) else getERC20Balance(address, contract)
+        }
 
     private suspend fun getETHBalance(address: String): BigInteger {
         val rpcResp =
