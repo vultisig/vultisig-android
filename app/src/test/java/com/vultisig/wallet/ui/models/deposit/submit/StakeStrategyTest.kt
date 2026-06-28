@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.models.deposit.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
 import com.vultisig.wallet.data.api.chains.ton.TonStakingPoolInfoJson
 import com.vultisig.wallet.data.models.Account
@@ -18,6 +19,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
+import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigInteger
@@ -86,7 +88,11 @@ internal class StakeStrategyTest {
         nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
         tokenAmount.setTextAndPlaceCursorAtEnd("100")
 
-        assertFailsWith<InvalidTransactionDataException> { stake().build() }
+        val ex = assertFailsWith<InvalidTransactionDataException> { stake().build() }
+        assertEquals(
+            R.string.ton_stake_error_unsupported_pool,
+            (ex.text as UiText.StringResource).resId,
+        )
     }
 
     @Test
@@ -96,7 +102,11 @@ internal class StakeStrategyTest {
         nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
         tokenAmount.setTextAndPlaceCursorAtEnd("100")
 
-        assertFailsWith<InvalidTransactionDataException> { stake().build() }
+        val ex = assertFailsWith<InvalidTransactionDataException> { stake().build() }
+        assertEquals(
+            R.string.ton_stake_error_unsupported_pool,
+            (ex.text as UiText.StringResource).resId,
+        )
     }
 
     @Test
@@ -108,7 +118,8 @@ internal class StakeStrategyTest {
         // 50 TON < min_stake (50) + 1 TON commission.
         tokenAmount.setTextAndPlaceCursorAtEnd("50")
 
-        assertFailsWith<InvalidTransactionDataException> { stake().build() }
+        val ex = assertFailsWith<InvalidTransactionDataException> { stake().build() }
+        assertEquals(R.string.ton_stake_error_min_amount, (ex.text as UiText.FormattedText).resId)
     }
 
     @Test
@@ -213,7 +224,9 @@ internal class StakeStrategyTest {
                 isSwap = any(),
                 isMaxAmountEnabled = any(),
                 isDeposit = any(),
-                dstAddress = any(),
+                // Pin the bounceable EQ destination so the test fails if the strategy stops
+                // forwarding it into the spec.
+                dstAddress = "EQ_0:pool",
             )
         } returns
             BlockChainSpecificAndUtxo(

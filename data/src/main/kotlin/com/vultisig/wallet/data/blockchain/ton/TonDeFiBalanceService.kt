@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.genera
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
+import com.vultisig.wallet.data.utils.NetworkException
 import java.io.IOException
 import java.math.BigInteger
 import timber.log.Timber
@@ -34,8 +35,7 @@ class TonDeFiBalanceService(
                     ?: return persistAndEmpty(vaultId)
 
             val staked = primary.stakedTotal()
-            // APY decoration is best-effort: a missing pool info must not drop the position.
-            val apr = tonStakingApi.getStakingPool(primary.pool)?.apy
+            val apr = fetchPoolApr(primary.pool)
 
             persistStakedBalance(vaultId, staked, apr)
 
@@ -44,11 +44,28 @@ class TonDeFiBalanceService(
             } else {
                 listOf(tonDeFiBalance(staked))
             }
+        } catch (e: NetworkException) {
+            Timber.w(e, "TonDeFiBalanceService: Network error fetching nominator-pool balance")
+            // Keep the last-known stake rather than erasing it; the empty result would otherwise be
+            // cached by BalanceRepository and hide the position until the next invalidation.
+            getCacheDeFiBalance(address, vaultId)
         } catch (e: IOException) {
             Timber.w(e, "TonDeFiBalanceService: Network error fetching nominator-pool balance")
-            emptyList()
+            getCacheDeFiBalance(address, vaultId)
         }
     }
+
+    /** Best-effort pool APY; a decoration failure must not drop an otherwise-valid position. */
+    private suspend fun fetchPoolApr(poolAddress: String): Double? =
+        try {
+            tonStakingApi.getStakingPool(poolAddress)?.apy
+        } catch (e: NetworkException) {
+            Timber.w(e, "TonDeFiBalanceService: Failed to decorate TON staking APY")
+            null
+        } catch (e: IOException) {
+            Timber.w(e, "TonDeFiBalanceService: Failed to decorate TON staking APY")
+            null
+        }
 
     override suspend fun getCacheDeFiBalance(address: String, vaultId: String): List<DeFiBalance> {
         val cached = stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Ton.TON.id)

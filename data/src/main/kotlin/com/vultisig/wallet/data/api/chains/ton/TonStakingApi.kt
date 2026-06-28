@@ -1,9 +1,11 @@
 package com.vultisig.wallet.data.api.chains.ton
 
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.http.HttpStatusCode
 import javax.inject.Inject
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -25,7 +27,9 @@ interface TonStakingApi {
 
     /**
      * Computed pool info (name, APY, min stake, implementation, cycle end) for a single pool. Used
-     * to decorate a held position. Returns `null` when the pool is unknown or the response drifts.
+     * to decorate a held position and to gate a deposit/withdraw. Returns `null` only when the pool
+     * is genuinely unknown (HTTP 404); transient/network failures propagate so a caller can tell an
+     * outage apart from an unsupported pool.
      */
     suspend fun getStakingPool(poolAddress: String): TonStakingPoolInfoJson?
 
@@ -45,13 +49,17 @@ internal class TonStakingApiImpl @Inject constructor(private val http: HttpClien
             .pools
 
     override suspend fun getStakingPool(poolAddress: String): TonStakingPoolInfoJson? =
-        runCatching {
-                http
-                    .get("$BASE_URL/v2/staking/pool/$poolAddress")
-                    .bodyOrThrow<TonStakingPoolResponseJson>()
-                    .pool
-            }
-            .getOrNull()
+        try {
+            http
+                .get("$BASE_URL/v2/staking/pool/$poolAddress")
+                .bodyOrThrow<TonStakingPoolResponseJson>()
+                .pool
+        } catch (e: NetworkException) {
+            // A 404 means the pool isn't known to tonapi — surface that as null; let every other
+            // failure (timeout, 5xx, transport) propagate so callers don't mistake an outage for an
+            // unsupported pool.
+            if (e.httpStatusCode == HttpStatusCode.NotFound.value) null else throw e
+        }
 
     override suspend fun getNominatorPools(address: String): List<TonAccountStakingInfoJson> =
         http

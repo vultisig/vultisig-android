@@ -136,7 +136,9 @@ internal class UnstakeStrategyTest {
                 isSwap = any(),
                 isMaxAmountEnabled = any(),
                 isDeposit = any(),
-                dstAddress = any(),
+                // Pin the bounceable EQ destination so the test fails if the strategy stops
+                // forwarding it into the spec.
+                dstAddress = "EQ_0:pool",
             )
         } returns
             BlockChainSpecificAndUtxo(
