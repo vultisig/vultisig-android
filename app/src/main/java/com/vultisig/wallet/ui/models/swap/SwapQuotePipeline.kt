@@ -99,6 +99,9 @@ internal sealed interface SwapQuotePipelineResult {
         val feeText: String,
         val outboundFeeText: String?,
         val swapFeePercent: String?,
+        // Pre-formatted Price Impact row: signed percentage + tier, or null when unavailable.
+        val priceImpactPercent: String?,
+        val priceImpactLevel: PriceImpactLevel?,
         // Below: inputs for resolveNetworkFee().
         val isUtxoSwap: Boolean,
         val utxoDstAddress: String?,
@@ -380,6 +383,8 @@ internal class SwapQuotePipeline(
             if (isSwapKitUtxoSwap) fiatValueToString(effectiveSwapFeeFiat, asFee = true)
             else quoteResult.feeText
 
+        val priceImpactDisplay = formatPriceImpact(quoteResult.priceImpact)
+
         // Determine destination address and memo for UTXO plan fee computation.
         val utxoFeeData: Pair<String, String?>? =
             when (quote) {
@@ -416,6 +421,8 @@ internal class SwapQuotePipeline(
             feeText = feeText,
             outboundFeeText = quoteResult.outboundFeeText,
             swapFeePercent = quoteResult.swapFeePercent,
+            priceImpactPercent = priceImpactDisplay?.percent,
+            priceImpactLevel = priceImpactDisplay?.level,
             isUtxoSwap = isUtxoSwap,
             utxoDstAddress = utxoFeeData?.first,
             utxoMemo = utxoFeeData?.second,
