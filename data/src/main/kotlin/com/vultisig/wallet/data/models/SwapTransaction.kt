@@ -21,6 +21,19 @@ sealed interface SwapTransaction {
     val expectedDstTokenValue: TokenValue
     val blockChainSpecific: BlockChainSpecificAndUtxo
     val estimatedFees: TokenValue
+    /**
+     * Affiliate (swap) fee portion of [estimatedFees], denominated in [dstToken]. Non-null only for
+     * providers that report a fee breakdown (THORChain / MayaChain); null for aggregators whose
+     * [estimatedFees] is a single opaque total. Lets the verify/overview screen show the same
+     * affiliate-only "Swap Fee" the swap form shows instead of the full total (#5061).
+     */
+    val swapFee: TokenValue?
+    /**
+     * Outbound fee portion of [estimatedFees], denominated in [dstToken]. Non-null alongside
+     * [swapFee] for THORChain / MayaChain; rendered as its own "Outbound Fee" row so the verify
+     * screen reconciles to the same breakdown the swap form shows (#5061).
+     */
+    val outboundFee: TokenValue?
     val gasFees: TokenValue
     val memo: String?
     val payload: SwapPayload
@@ -38,6 +51,8 @@ sealed interface SwapTransaction {
         override val expectedDstTokenValue: TokenValue,
         override val blockChainSpecific: BlockChainSpecificAndUtxo,
         override val estimatedFees: TokenValue,
+        override val swapFee: TokenValue? = null,
+        override val outboundFee: TokenValue? = null,
         override val gasFees: TokenValue,
         override val memo: String?,
         override val payload: SwapPayload,

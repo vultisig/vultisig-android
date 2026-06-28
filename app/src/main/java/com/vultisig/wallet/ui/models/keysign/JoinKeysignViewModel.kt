@@ -11,7 +11,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ZcashApi
-import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
@@ -21,7 +20,6 @@ import com.vultisig.wallet.data.common.normalizeMessageFormat
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionHistoryData
@@ -35,6 +33,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
@@ -91,7 +90,6 @@ import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
 import vultisig.keysign.v1.KeysignMessage
 import vultisig.keysign.v1.TransactionType
-import wallet.core.jni.TONAddressConverter
 
 sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
@@ -215,27 +213,29 @@ sealed interface JoinKeysignState {
 
     /**
      * QBTC claim co-sign: [txHash] null while signing, set once the initiator pushes the result.
+     * [explorerUrl] is the QBTC explorer link for [txHash], populated alongside it so the peer's
+     * done screen can link out the same way the initiator's does.
      */
-    data class QbtcClaim(val txHash: String?, val totalSats: Long?) : JoinKeysignState
+    data class QbtcClaim(
+        val txHash: String?,
+        val totalSats: Long?,
+        val explorerUrl: String? = null,
+    ) : JoinKeysignState
 
     data class Error(val errorType: JoinKeysignError) : JoinKeysignState
 }
 
 /**
- * Builds the QBTC claim approval gate from a vault's [coins]. A vault missing the Bitcoin or QBTC
- * account it needs to recompute the claim hash resolves to a
- * [JoinKeysignError.MissingQbtcClaimAccount] error state — surfaced here, before signing, rather
- * than mid-co-sign.
+ * Builds the QBTC claim approval gate from the resolved [coins], surfacing the two accounts the
+ * claim hash is recomputed from for review before any signing starts. The accounts are resolved
+ * (and derived when not enabled) by [ResolveQbtcClaimCoinsUseCase]; a vault that can't produce them
+ * fails earlier with [JoinKeysignError.MissingQbtcClaimAccount].
  */
-internal fun buildQbtcClaimConsentState(coins: List<Coin>): JoinKeysignState {
-    val btc = coins.firstOrNull { it.chain == Chain.Bitcoin }
-    val qbtc = coins.firstOrNull { it.chain == Chain.Qbtc }
-    return if (btc == null || qbtc == null) {
-        JoinKeysignState.Error(JoinKeysignError.MissingQbtcClaimAccount)
-    } else {
-        JoinKeysignState.QbtcClaimConsent(btcAddress = btc.address, qbtcAddress = qbtc.address)
-    }
-}
+internal fun buildQbtcClaimConsentState(coins: QbtcClaimCoins): JoinKeysignState =
+    JoinKeysignState.QbtcClaimConsent(
+        btcAddress = coins.btc.address,
+        qbtcAddress = coins.qbtc.address,
+    )
 
 internal sealed class VerifyUiModel {
 
@@ -268,12 +268,14 @@ constructor(
     private val sessionApi: SessionApi,
     private val zcashApi: ZcashApi,
     private val routerApi: RouterApi,
-    private val tonApi: TonApi,
     private val securityScannerService: SecurityScannerContract,
     private val keysignViewModelFactory: KeysignViewModel.Factory,
     private val blockaidSimulationService: BlockaidSimulationService,
     private val buildHeroContent: BuildHeroContentUseCase,
     private val qbtcClaimCosign: QbtcClaimCosignUseCase,
+    private val tonDappHeroResolver: TonDappHeroResolver,
+    private val resolveQbtcClaimCoins: ResolveQbtcClaimCoinsUseCase,
+    private val explorerLinkRepository: ExplorerLinkRepository,
     private val joinSwapUiModelBuilder: JoinSwapUiModelBuilder,
     private val joinDepositUiModelBuilder: JoinDepositUiModelBuilder,
     private val joinSendUiModelBuilder: JoinSendUiModelBuilder,
@@ -734,84 +736,10 @@ constructor(
                 onError = { Timber.w(it, "TON dApp hero resolution failed during dApp signing") }
             ) {
                 val hero =
-                    withContext(Dispatchers.IO) {
-                        // Prefer the "You're swapping" hero for a gated DEX swap; otherwise fall
-                        // back
-                        // to the single-sided jetton-transfer hero. Both are best-effort.
-                        resolveTonSwapHero(
-                            messages = messages,
-                            nativeTon =
-                                TonHeroCoin(
-                                    ticker = Coins.Ton.TON.ticker,
-                                    decimals = Coins.Ton.TON.decimal,
-                                    logo = Coins.Ton.TON.logo,
-                                ),
-                            toUserFriendly = {
-                                TONAddressConverter.toUserFriendly(it, true, false)
-                            },
-                            resolveCoinByWallet = { wallet ->
-                                resolveTonCoinByWallet(wallet, vaultCoins)
-                            },
-                            resolveDedustOutputCoin = { pool ->
-                                resolveTonDedustOutputCoin(pool, vaultCoins)
-                            },
-                        )
-                            ?: resolveTonJettonHero(messages, vaultCoins) { wallet ->
-                                    tonApi.getJettonMasterAddress(wallet)
-                                }
-                                ?.let { HeroContent.Send(title = null, coin = it) }
-                    } ?: return@safeLaunch
+                    withContext(Dispatchers.IO) { tonDappHeroResolver(payload, vaultCoins) }
+                        ?: return@safeLaunch
                 pushTonHero(hero)
             }
-    }
-
-    /**
-     * Resolve a jetton wallet to its display coin for a swap leg: vault-tracked tokens first
-     * (richest metadata), then the on-chain jetton master. Returns `null` when the wallet maps to
-     * no known token, so the swap hero degrades rather than mislabelling the asset.
-     */
-    private suspend fun resolveTonCoinByWallet(
-        wallet: String,
-        vaultCoins: List<Coin>,
-    ): TonHeroCoin? {
-        val master = tonApi.getJettonMasterAddress(wallet) ?: return null
-        return resolveTonCoinByMaster(master, vaultCoins)
-    }
-
-    /**
-     * Resolve a DeDust swap's output token. The swap addresses the liquidity **pool**, not the
-     * output jetton wallet, so the output master is read from the pool's `get_assets`.
-     */
-    private suspend fun resolveTonDedustOutputCoin(
-        poolAddress: String,
-        vaultCoins: List<Coin>,
-    ): TonHeroCoin? {
-        val master = tonApi.getDedustPoolOutputMaster(poolAddress) ?: return null
-        return resolveTonCoinByMaster(master, vaultCoins)
-    }
-
-    /**
-     * Resolve a jetton master to its display coin: vault-tracked tokens first (richest metadata),
-     * then the built-in [Coins] registry, then on-chain metadata. Returns `null` when nothing
-     * resolves, so the swap hero degrades rather than mislabelling the asset. [masterAddress] may
-     * be raw or user-friendly; it is canonicalized for comparison against the friendly-form
-     * contract addresses the registry/vault store.
-     */
-    private suspend fun resolveTonCoinByMaster(
-        masterAddress: String,
-        vaultCoins: List<Coin>,
-    ): TonHeroCoin? {
-        val master = TONAddressConverter.toUserFriendly(masterAddress, true, false) ?: masterAddress
-        (vaultCoins.asSequence() + Coins.coins[Chain.Ton].orEmpty().asSequence())
-            .firstOrNull {
-                it.chain == Chain.Ton && !it.isNativeToken && it.contractAddress == master
-            }
-            ?.let {
-                return TonHeroCoin(ticker = it.ticker, decimals = it.decimal, logo = it.logo)
-            }
-        return tonApi.getJettonMetadata(master)?.let {
-            TonHeroCoin(ticker = it.ticker, decimals = it.decimals, logo = it.logo ?: "")
-        }
     }
 
     /**
@@ -965,8 +893,13 @@ constructor(
      * surfaces those two accounts for review before any signing starts. A vault missing either
      * account fails here — before signing — instead of mid-co-sign.
      */
-    private fun showQbtcClaimConsent() {
-        _currentState.value = buildQbtcClaimConsentState(_currentVault.coins)
+    private suspend fun showQbtcClaimConsent() {
+        _currentState.value =
+            try {
+                buildQbtcClaimConsentState(resolveQbtcClaimCoins(_currentVault))
+            } catch (_: MissingQbtcClaimAccountException) {
+                JoinKeysignState.Error(JoinKeysignError.MissingQbtcClaimAccount)
+            }
     }
 
     /**
@@ -998,7 +931,14 @@ constructor(
                     encryptionKeyHex = _encryptionKeyHex,
                 )
             _currentState.value =
-                JoinKeysignState.QbtcClaim(txHash = result.txHash, totalSats = result.totalSats)
+                JoinKeysignState.QbtcClaim(
+                    txHash = result.txHash,
+                    totalSats = result.totalSats,
+                    explorerUrl =
+                        result.txHash?.let {
+                            explorerLinkRepository.getTransactionLink(Chain.Qbtc, it)
+                        },
+                )
         }
     }
 
