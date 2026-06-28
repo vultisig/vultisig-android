@@ -13,8 +13,10 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
 import io.mockk.coEvery
 import io.mockk.coJustRun
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
@@ -98,9 +100,10 @@ internal class AccountsRepositoryImplTest {
         coEvery { balanceRepository.getCachedTokenBalances(any(), any()) } returns
             listOf(wrapped(amount = CACHED, coin = eth), wrapped(amount = CACHED, coin = sol))
 
-        // ETH resolves immediately; SOL is gated (simulating a slow chain).
-        every { balanceRepository.getTokenBalanceAndPrice(ETH_ADDRESS, eth) } returns
-            flowOf(balance(amount = ETH_NETWORK, coin = eth))
+        // ETH (EVM) resolves immediately via the batched Multicall3 path; SOL is gated (slow
+        // chain).
+        coEvery { balanceRepository.getEvmTokenBalancesAndPrices(ETH_ADDRESS, any()) } returns
+            mapOf(eth.id to balance(amount = ETH_NETWORK, coin = eth))
         val solanaGate = CompletableDeferred<Unit>()
         every { balanceRepository.getTokenBalanceAndPrice(SOL_ADDRESS, sol) } returns
             gatedBalance(solanaGate, amount = SOL_NETWORK, coin = sol)
@@ -147,8 +150,8 @@ internal class AccountsRepositoryImplTest {
         coEvery { balanceRepository.getCachedTokenBalances(any(), any()) } returns
             listOf(wrapped(amount = CACHED, coin = eth), wrapped(amount = CACHED, coin = sol))
 
-        every { balanceRepository.getTokenBalanceAndPrice(ETH_ADDRESS, eth) } returns
-            flowOf(balance(amount = ETH_NETWORK, coin = eth))
+        coEvery { balanceRepository.getEvmTokenBalancesAndPrices(ETH_ADDRESS, any()) } returns
+            mapOf(eth.id to balance(amount = ETH_NETWORK, coin = eth))
         val solanaGate = CompletableDeferred<Unit>()
         every { balanceRepository.getTokenBalanceAndPrice(SOL_ADDRESS, sol) } returns
             gatedBalance(solanaGate, amount = SOL_NETWORK, coin = sol)
@@ -202,6 +205,47 @@ internal class AccountsRepositoryImplTest {
         assertEquals(NETWORK, listEmissions.last().solValue())
         listJob.cancel()
         balanceJob.cancel()
+    }
+
+    @Test
+    fun `EVM chain fetches all token balances through a single batched multicall`() = runTest {
+        val eth = Coins.Ethereum.ETH.copy(address = ETH_ADDRESS)
+        val aave = Coins.Ethereum.AAVE.copy(address = ETH_ADDRESS)
+        stubVault(eth, aave)
+        coJustRun { tokenPriceRepository.refresh(any()) }
+        coEvery { balanceRepository.getCachedTokenBalances(any(), any()) } returns
+            listOf(wrapped(amount = CACHED, coin = eth), wrapped(amount = CACHED, coin = aave))
+
+        // One batched call resolves every EVM token on the chain.
+        coEvery {
+            balanceRepository.getEvmTokenBalancesAndPrices(ETH_ADDRESS, listOf(eth, aave))
+        } returns
+            mapOf(
+                eth.id to balance(amount = ETH_NETWORK, coin = eth),
+                aave.id to balance(amount = NETWORK, coin = aave),
+            )
+
+        val emissions = mutableListOf<List<Address>>()
+        val job = launch { repository.loadAddresses(VAULT_ID).collect(emissions::add) }
+        advanceUntilIdle()
+
+        val ethAccounts =
+            emissions.last().firstOrNull { it.chain == Chain.Ethereum }?.accounts.orEmpty()
+        assertEquals(
+            ETH_NETWORK,
+            ethAccounts.firstOrNull { it.token.id == eth.id }?.tokenValue?.value?.toLong(),
+        )
+        assertEquals(
+            NETWORK,
+            ethAccounts.firstOrNull { it.token.id == aave.id }?.tokenValue?.value?.toLong(),
+        )
+
+        // Exactly one batched RPC for the chain, and the per-token path is never used for EVM.
+        coVerify(exactly = 1) {
+            balanceRepository.getEvmTokenBalancesAndPrices(ETH_ADDRESS, listOf(eth, aave))
+        }
+        verify(exactly = 0) { balanceRepository.getTokenBalanceAndPrice(ETH_ADDRESS, any()) }
+        job.cancel()
     }
 
     private fun stubVault(vararg coins: Coin) {
