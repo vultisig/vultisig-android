@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.isDeFiSupported
@@ -110,26 +111,47 @@ constructor(
                                     val address = account.address
                                     loadPrices.await()
 
-                                    val newAccounts = supervisorScope {
-                                        account.accounts
-                                            .map {
-                                                async {
-                                                    val balance =
-                                                        balanceRepository
-                                                            .getTokenBalanceAndPrice(
-                                                                address,
-                                                                it.token,
-                                                            )
-                                                            .first()
-
-                                                    it.applyBalance(
+                                    val newAccounts =
+                                        if (account.chain.standard == TokenStandard.EVM) {
+                                            // One Multicall3 round-trip per (chain, address) for
+                                            // all balances, instead of N+1 eth_calls fanned out
+                                            // per token. Falls back per-token inside the repo on
+                                            // chains without a canonical Multicall3.
+                                            val balancesAndPrices =
+                                                balanceRepository.getEvmTokenBalancesAndPrices(
+                                                    address,
+                                                    account.accounts.map { it.token },
+                                                )
+                                            account.accounts.map { acc ->
+                                                balancesAndPrices[acc.token.id]?.let { balance ->
+                                                    acc.applyBalance(
                                                         balance.tokenBalance,
                                                         balance.price,
                                                     )
-                                                }
+                                                } ?: acc
                                             }
-                                            .awaitAll()
-                                    }
+                                        } else {
+                                            supervisorScope {
+                                                account.accounts
+                                                    .map {
+                                                        async {
+                                                            val balance =
+                                                                balanceRepository
+                                                                    .getTokenBalanceAndPrice(
+                                                                        address,
+                                                                        it.token,
+                                                                    )
+                                                                    .first()
+
+                                                            it.applyBalance(
+                                                                balance.tokenBalance,
+                                                                balance.price,
+                                                            )
+                                                        }
+                                                    }
+                                                    .awaitAll()
+                                            }
+                                        }
 
                                     addresses[index] = account.copy(accounts = newAccounts)
                                     // Stream each chain's balance as soon as it resolves rather
