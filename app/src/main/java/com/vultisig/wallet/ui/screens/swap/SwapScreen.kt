@@ -189,10 +189,6 @@ internal fun SwapScreen(
             var bottomCenter by remember { mutableStateOf(Offset.Zero) }
             val space = 8.dp
 
-            // The flip button reports its bottom-center in its own parent's space, but the error
-            // hint is offset in the outer Box's space. Adding the input block's top-left translates
-            // the anchor into that outer space so the hint sits directly under the red error circle
-            // instead of floating too high and overlapping the From/To rows (#5062).
             var flipButtonBottomCenter by remember { mutableStateOf(Offset.Zero) }
             var inputBlockTopLeft by remember { mutableStateOf(Offset.Zero) }
 
