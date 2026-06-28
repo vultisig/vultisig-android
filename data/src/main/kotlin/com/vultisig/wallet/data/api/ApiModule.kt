@@ -4,6 +4,8 @@ import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.SuiApiImpl
 import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.chains.ton.TonApiImpl
+import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
+import com.vultisig.wallet.data.api.chains.ton.TonStakingApiImpl
 import com.vultisig.wallet.data.api.swapAggregators.KyberApi
 import com.vultisig.wallet.data.api.swapAggregators.KyberApiImpl
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
@@ -63,6 +65,8 @@ internal interface ApiModule {
     @Binds @Singleton fun bindSuiApi(impl: SuiApiImpl): SuiApi
 
     @Binds @Singleton fun bindTonApi(impl: TonApiImpl): TonApi
+
+    @Binds @Singleton fun bindTonStakingApi(impl: TonStakingApiImpl): TonStakingApi
 
     @Binds @Singleton fun bindRippleApi(impl: RippleApiImp): RippleApi
 

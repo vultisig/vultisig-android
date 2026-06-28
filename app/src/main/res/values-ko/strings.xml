@@ -466,6 +466,8 @@
     </plurals>
     <string name="send_form_ripple_reaping_warning">수수료를 충당할 충분한 자금을 남겨두세요. 계정 잔액이 1 XRP(최소 예치금) 아래로 떨어지면 계정이 비활성화(수확)되고 남은 자금이 손실됩니다. 언제든지 최소 예치금보다 큰 새 입금으로 주소를 재활성화할 수 있습니다. 그러나 손실된 자금은 복구되지 않습니다.</string>
     <string name="error_invalid_chain">체인이 유효하지 않습니다</string>
+    <string name="ton_stake_error_unsupported_pool">이 스테이킹 풀은 지원되지 않습니다</string>
+    <string name="ton_stake_error_min_amount">이 풀의 최소 스테이킹 금액은 %1$s TON입니다</string>
     <string name="send_error_invalid_plan_fee">유효하지 않은 플랜 수수료</string>
     <string name="send_error_same_address">받는 주소는 보내는 주소와 달라야 합니다</string>
     <string name="select_vault_type_secure">보안</string>
