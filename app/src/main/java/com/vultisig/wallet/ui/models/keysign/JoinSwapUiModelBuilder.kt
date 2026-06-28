@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.SwapProvider
+import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
@@ -27,6 +28,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
+import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -330,6 +332,7 @@ constructor(
                             ),
                         )
                         .expectNative(SwapProvider.THORCHAIN)
+                val rawFees = (quote as? SwapQuote.ThorChain)?.data?.fees
                 val swapTransactionUiModel =
                     buildSwapUiModel(
                         srcToken = srcToken,
@@ -342,6 +345,8 @@ constructor(
                         providerFeeToken = dstToken,
                         currency = currency,
                         externalRecipient = externalRecipient,
+                        swapFee = rawFees?.let { dstToken.convertToTokenValue(it.affiliate) },
+                        outboundFee = rawFees?.let { dstToken.convertToTokenValue(it.outbound) },
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -389,6 +394,7 @@ constructor(
                             ),
                         )
                         .expectNative(SwapProvider.MAYA)
+                val rawFees = (quote as? SwapQuote.MayaChain)?.data?.fees
                 val swapTransactionUiModel =
                     buildSwapUiModel(
                         srcToken = srcToken,
@@ -401,6 +407,8 @@ constructor(
                         providerFeeToken = dstToken,
                         currency = currency,
                         externalRecipient = externalRecipient,
+                        swapFee = rawFees?.let { dstToken.convertToTokenValue(it.affiliate) },
+                        outboundFee = rawFees?.let { dstToken.convertToTokenValue(it.outbound) },
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -485,8 +493,28 @@ constructor(
         currency: AppCurrency,
         providerLabel: String = provider,
         externalRecipient: String? = null,
+        swapFee: TokenValue? = null,
+        outboundFee: TokenValue? = null,
     ): SwapTransactionUiModel {
         val estimatedFee = convertTokenValueToFiat(providerFeeToken, providerFee, currency)
+
+        // Affiliate / outbound breakdown for THORChain / MayaChain so the co-signer's verify screen
+        // shows the same affiliate-only "Swap Fee" + separate "Outbound Fee" as the initiator,
+        // rather than folding the outbound fee into "Swap Fee" (#5061). Null for providers without
+        // a
+        // breakdown, which keep showing the single estimated-fees total.
+        val swapFeeFiat = swapFee?.let { convertTokenValueToFiat(providerFeeToken, it, currency) }
+        val outboundFeeFiat =
+            outboundFee?.let { convertTokenValueToFiat(providerFeeToken, it, currency) }
+        val displaySwapFee = swapFeeFiat ?: estimatedFee
+        // Total mirrors the swap form: gas + affiliate + outbound (liquidity already in dst
+        // amount).
+        val feesFiatForTotal =
+            if (swapFeeFiat != null) {
+                outboundFeeFiat?.let { swapFeeFiat + it } ?: swapFeeFiat
+            } else {
+                estimatedFee
+            }
         return SwapTransactionUiModel(
             src =
                 ValuedToken(
@@ -516,15 +544,16 @@ constructor(
             providerFee =
                 ValuedToken(
                     token = providerFeeToken,
-                    value = providerFee.value.toString(),
-                    fiatValue = fiatValueToStringMapper(estimatedFee, asFee = true),
+                    value = (swapFee ?: providerFee).value.toString(),
+                    fiatValue = fiatValueToStringMapper(displaySwapFee, asFee = true),
                 ),
+            outboundFee = outboundFeeFiat?.let { fiatValueToStringMapper(it, asFee = true) },
             networkFeeFormatted =
                 mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
                     " ${estimatedNetworkGasFee.tokenValue.unit}",
             totalFee =
                 fiatValueToStringMapper(
-                    estimatedFee + estimatedNetworkGasFee.fiatValue,
+                    feesFiatForTotal + estimatedNetworkGasFee.fiatValue,
                     asFee = true,
                 ),
             provider = provider,
