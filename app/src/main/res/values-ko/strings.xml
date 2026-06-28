@@ -1354,7 +1354,6 @@
     <string name="qbtc_claim_cta_all">모두 청구</string>
     <string name="qbtc_claim_cta_partial">%2$d개 중 %1$d개 청구</string>
     <string name="qbtc_claim_proving">증명 생성 및 브로드캐스트 중…</string>
-    <string name="qbtc_claim_success_title">QBTC 청구 완료</string>
     <string name="qbtc_claim_successful">QBTC 청구 성공</string>
     <string name="qbtc_claim_password_title">볼트 비밀번호 입력</string>
     <string name="qbtc_claim_failed">청구 실패</string>

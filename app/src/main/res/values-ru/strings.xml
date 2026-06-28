@@ -1347,7 +1347,6 @@
     <string name="qbtc_claim_cta_all">Получить всё</string>
     <string name="qbtc_claim_cta_partial">Получить %1$d из %2$d</string>
     <string name="qbtc_claim_proving">Генерация доказательства и отправка…</string>
-    <string name="qbtc_claim_success_title">QBTC получен</string>
     <string name="qbtc_claim_successful">QBTC успешно получен</string>
     <string name="qbtc_claim_password_title">Введите пароль хранилища</string>
     <string name="qbtc_claim_failed">Получение не удалось</string>

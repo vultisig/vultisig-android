@@ -63,7 +63,6 @@ import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
-import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
@@ -71,8 +70,6 @@ import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimViewModel
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
-import com.vultisig.wallet.ui.screens.transaction.TransactionStatusRow
-import com.vultisig.wallet.ui.screens.transaction.TxDoneScaffold
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -351,50 +348,12 @@ private fun QbtcClaimUtxoRow(
 
 @Composable
 private fun ClaimDoneScreen(state: QbtcClaimUiState.Done, onComplete: () -> Unit) {
-    var detailsVisible by remember { mutableStateOf(false) }
-    TxDoneScaffold(
-        transactionHash = state.txHash,
-        transactionLink = state.explorerUrl,
-        transactionStatus = TransactionStatus.Confirmed,
-        isTransactionDetailVisible = detailsVisible,
-        onTransactionDetailVisibleChange = { detailsVisible = it },
-        onBack = onComplete,
-        successTitle = stringResource(R.string.qbtc_claim_successful),
-        tokenContent = { ClaimedAmountCard(state.totalSats) },
-        detailContent = { TransactionStatusRow(TransactionStatus.Confirmed) },
-        bottomBarContent = {
-            VsButton(
-                label = stringResource(R.string.transaction_done_complete),
-                onClick = onComplete,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
-            )
-        },
+    QbtcClaimDoneContent(
+        txHash = state.txHash,
+        explorerUrl = state.explorerUrl,
+        totalSats = state.totalSats,
+        onComplete = onComplete,
     )
-}
-
-@Composable
-private fun ClaimedAmountCard(totalSats: Long) {
-    val shape = RoundedCornerShape(24.dp)
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier =
-            Modifier.fillMaxWidth()
-                .background(color = Theme.v2.colors.backgrounds.secondary, shape = shape)
-                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
-                .padding(horizontal = 16.dp, vertical = 24.dp),
-    ) {
-        Image(
-            painter = painterResource(R.drawable.qbtc),
-            contentDescription = null,
-            modifier = Modifier.size(48.dp),
-        )
-        Text(
-            text = QbtcClaimAmountFormatter.formatQbtc(totalSats),
-            style = Theme.satoshi.price.title1,
-            color = Theme.v2.colors.text.primary,
-        )
-    }
 }
 
 @Composable

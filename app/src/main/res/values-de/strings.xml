@@ -1337,7 +1337,6 @@
     <string name="qbtc_claim_cta_all">Alle abrufen</string>
     <string name="qbtc_claim_cta_partial">%1$d von %2$d abrufen</string>
     <string name="qbtc_claim_proving">Nachweis wird erstellt und gesendet…</string>
-    <string name="qbtc_claim_success_title">QBTC abgerufen</string>
     <string name="qbtc_claim_successful">QBTC erfolgreich abgerufen</string>
     <string name="qbtc_claim_password_title">Tresorpasswort eingeben</string>
     <string name="qbtc_claim_failed">Abruf fehlgeschlagen</string>
