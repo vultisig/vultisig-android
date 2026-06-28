@@ -498,11 +498,7 @@ constructor(
     ): SwapTransactionUiModel {
         val estimatedFee = convertTokenValueToFiat(providerFeeToken, providerFee, currency)
 
-        // Affiliate / outbound breakdown for THORChain / MayaChain so the co-signer's verify screen
-        // shows the same affiliate-only "Swap Fee" + separate "Outbound Fee" as the initiator,
-        // rather than folding the outbound fee into "Swap Fee" (#5061). Null for providers without
-        // a
-        // breakdown, which keep showing the single estimated-fees total.
+        // Affiliate-only "Swap Fee" + separate "Outbound Fee" breakdown for the co-signer (#5061).
         val swapFeeFiat = swapFee?.let { convertTokenValueToFiat(providerFeeToken, it, currency) }
         val outboundFeeFiat =
             outboundFee?.let { convertTokenValueToFiat(providerFeeToken, it, currency) }
