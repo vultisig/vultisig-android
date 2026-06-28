@@ -298,17 +298,10 @@ constructor(
     }
 
     /**
-     * Re-bases the displayed network fee for an EVM aggregator swap onto the gas limit the swap tx
-     * is actually signed with — the route's own `tx.gas`, floored by the same per-chain limit the
-     * signing path applies ([getGasLimit] for native ETH/Arbitrum, otherwise [DEFAULT_SWAP_LIMIT])
-     * — instead of the flat [DEFAULT_SWAP_LIMIT] worst case used by [calculateGasFee] before the
-     * quote lands (issue #5056).
-     *
-     * [baselineGasFee] is the `maxFeePerGas × DEFAULT_SWAP_LIMIT` fee from [calculateGasFee];
-     * rescaling it by the real limit keeps the per-gas price untouched, so this is exact for chains
-     * with no L1 component (Ethereum/Arbitrum). Returns null when there is no usable route gas, or
-     * when the limit lands back on [DEFAULT_SWAP_LIMIT] — then the baseline already matches (and
-     * any OP-stack L1 component it carries is preserved unscaled).
+     * Re-bases the flat-[DEFAULT_SWAP_LIMIT] swap fee from [calculateGasFee] onto the gas an EVM
+     * aggregator tx is actually signed with — the route's [routeGas] floored by [getGasLimit] — so
+     * the estimate matches the bond, not a worst case (#5056). Null when there is no usable route
+     * gas or the limit lands back on [DEFAULT_SWAP_LIMIT] (the baseline already matches).
      */
     suspend fun rebaseEvmSwapNetworkFee(
         srcToken: Coin,
@@ -316,11 +309,8 @@ constructor(
         routeGas: Long,
     ): GasCalculationResult? {
         if (routeGas <= 0L || baselineGasFee.value <= BigInteger.ZERO) return null
-        // OP-stack L2s fold an L1 data-fee component into baselineGasFee (EthereumFeeService
-        // adds it only for isOpStackL2 chains), so rescaling the whole amount by the gas-limit
-        // ratio would wrongly scale that L1 part. Separating the component is disproportionate
-        // for L2s whose fees are tiny, so keep the gas-pass estimate there. Non-OP-stack EVM
-        // (Ethereum/Arbitrum/…) carry no L1, so the rescale below is exact (issue #5056).
+        // Skip OP-stack L2s: their baseline folds in an L1 data fee the gas-limit ratio can't
+        // scale.
         if (srcToken.chain.isOpStackL2) return null
         val signedGasLimit =
             maxOf(routeGas.toBigInteger(), getGasLimit(srcToken) ?: DEFAULT_SWAP_LIMIT)

@@ -498,11 +498,9 @@ internal class SwapQuotePipeline(
                 effectiveNetworkFeeTokenValue = null
             }
         } else if (quote is SwapQuote.OneInch && srcToken.chain.standard == TokenStandard.EVM) {
-            // EVM aggregator routes (1inch / Kyber / LI.FI / SwapKit) sign with the route's own gas
-            // limit, but the gas pass computed the displayed fee from the flat DEFAULT_SWAP_LIMIT
-            // before the quote landed. Re-base it onto the route gas so the estimate matches the
-            // signed/paid fee instead of a worst-case ~2x over-estimate (#5056). A route with no
-            // usable gas (e.g. Jupiter's Solana quotes) leaves the gas-pass value untouched.
+            // Re-base the gas-pass's flat estimate onto the EVM aggregator route's real gas
+            // (#5056);
+            // a route with no usable gas (e.g. Jupiter's Solana quotes) keeps the gas-pass value.
             val currentGasFee = gasFee?.takeIf { gasFeeChain == srcToken.chain }
             val rebased =
                 currentGasFee?.let {

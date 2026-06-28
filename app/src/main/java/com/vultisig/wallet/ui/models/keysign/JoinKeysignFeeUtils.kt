@@ -38,20 +38,13 @@ internal fun computeJoinKeysignNetworkFee(
     }
 
 /**
- * Swap-only fee helper. Only [BlockChainSpecific.Ethereum] and [BlockChainSpecific.THORChain] are
- * reachable in the swap branch — every other subtype goes through `feeServiceComposite`.
+ * Swap-only fee helper — only [BlockChainSpecific.Ethereum] and [BlockChainSpecific.THORChain]
+ * reach the swap branch; everything else goes through `feeServiceComposite`.
  *
- * For EVM the joiner re-bases the displayed fee onto the gas limit the swap tx is signed with: an
- * EVM aggregator route (1inch / Kyber / LI.FI / SwapKit) carries its own [aggregatorRouteGas],
- * which the signer floors by the payload's [BlockChainSpecific.Ethereum.gasLimit], so the joiner
- * mirrors `maxFeePerGas × maxOf(routeGas, gasLimit)` to match the initiator (issue #5056).
- * Native-protocol deposits (THORChain / Maya EVM) carry no route gas, so they keep
- * [EthereumFeeService.DEFAULT_SWAP_LIMIT] — matching the initiator's flat swap-fee display instead
- * of being ~15× lower for native ETH/Arb.
- *
- * The [error] branch is the safety net for [JoinKeysignViewModel.loadTransaction]'s swap path: if a
- * new [BlockChainSpecific] subtype is ever added to that branch's type check, this helper crashes
- * loudly instead of silently shipping a zero fee.
+ * For an EVM aggregator route the joiner mirrors the initiator by valuing the fee at `maxFeePerGas
+ * × maxOf([aggregatorRouteGas], gasLimit)` — the gas the tx is signed with (#5056); native-protocol
+ * deposits carry no route gas and keep [EthereumFeeService.DEFAULT_SWAP_LIMIT]. The [error] branch
+ * guards against a new subtype reaching this path with a silent zero fee.
  */
 internal fun computeJoinKeysignSwapNetworkFee(
     blockChainSpecific: BlockChainSpecific,

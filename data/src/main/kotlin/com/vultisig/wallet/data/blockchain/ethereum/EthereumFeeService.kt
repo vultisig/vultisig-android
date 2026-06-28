@@ -229,13 +229,10 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
 
     private fun calculateBaseNetworkPrice(baseNetworkPrice: BigInteger, swap: Boolean): BigInteger {
         if (swap) {
-            // Swap calldata embeds a short deadline (1inch ~1–5 min, Kyber 20 min), so the
-            // committed base is bumped 10% and calculateMaxFeePerGas adds a further 20%, giving a
-            // broadcast ceiling of baseFee × 1.32 + priorityFee — enough headroom to survive a
-            // base-fee climb during the MPC review + sign window without inflating the fee. This
-            // matches iOS (FeeService: baseFee × 1.1 × 1.2 + tip) so the same route prices the
-            // same across platforms; the previous Ethereum-only × 1.5 over-bumped the bond ~36%
-            // above iOS for no inclusion benefit it doesn't already accept (issue #5056).
+            // Swaps embed a short DEX deadline; the 10% base bump plus the 20% in
+            // calculateMaxFeePerGas gives a baseFee × 1.32 + priorityFee ceiling, matching iOS. The
+            // old Ethereum-only × 1.5 over-bumped the bond ~36% above iOS for no gain (issue
+            // #5056).
             return baseNetworkPrice.increaseByPercent(SWAP_BASE_FEE_BUMP_PERCENT)
         }
         // Non-swap transfers: bump the committed base so the broadcast ceiling
@@ -353,8 +350,7 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         // survives a base-fee climb during the MPC review + sign window without stalling.
         private const val NON_SWAP_BASE_FEE_BUMP_PERCENT = 25
 
-        // Committed-base bump for swaps; the further 20% in calculateMaxFeePerGas then yields a
-        // baseFee × 1.32 + priorityFee broadcast ceiling, matching iOS (issue #5056).
+        // Swap committed-base bump; ×1.2 in calculateMaxFeePerGas → baseFee × 1.32 ceiling (#5056).
         private const val SWAP_BASE_FEE_BUMP_PERCENT = 10
 
         private val DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2 = "20".toBigInteger()

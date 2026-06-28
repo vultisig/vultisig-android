@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
+import java.math.BigInteger
 import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
@@ -279,43 +280,15 @@ constructor(
                         specificAndUtxo
                     }
 
-                // The passed-in network fee was estimated for the aggregator's gas limit, so a user
-                // override (#4858) must also be reflected in the displayed/verify fee — else a
-                // lowered limit could show a fee that can't match what executes (review #4969).
-                // Recompute the max-fee from the override (gasLimit × maxFeePerGas) and re-value it
-                // in fiat via the native price implied by the displayed fee pair. For aggregator
-                // swaps that pair is re-based onto the route gas (#5056), so reference
-                // estimatedNetworkFeeTokenValue with its own estimatedNetworkFeeFiatValue — the
-                // flat-600k gasFee/gasFeeFiatValue baseline would skew the price, and pairing the
-                // token with its matching fiat avoids a mismatch when only one estimate is present.
-                // Auto (no override) keeps the estimate.
-                val (priceReferenceFee, priceReferenceFiat) =
-                    if (estimatedNetworkFeeTokenValue != null) {
-                        estimatedNetworkFeeTokenValue to
-                            (estimatedNetworkFeeFiatValue ?: gasFeeFiatValue)
-                    } else {
-                        gasFee to gasFeeFiatValue
-                    }
                 val (displayGasFees, displayGasFeeFiat) =
-                    if (
-                        specific is BlockChainSpecific.Ethereum &&
-                            hasGasOverride &&
-                            priceReferenceFee.value.signum() > 0
-                    ) {
-                        val overriddenFeeWei = gasLimit.toBigInteger() * specific.maxFeePerGasWei
-                        val overriddenFiat =
-                            priceReferenceFiat.value
-                                .multiply(overriddenFeeWei.toBigDecimal())
-                                .divide(
-                                    priceReferenceFee.value.toBigDecimal(),
-                                    10,
-                                    RoundingMode.HALF_UP,
-                                )
-                        gasFee.copy(value = overriddenFeeWei) to
-                            FiatValue(overriddenFiat, priceReferenceFiat.currency)
-                    } else {
-                        priceReferenceFee to priceReferenceFiat
-                    }
+                    displayedSwapGasFee(
+                        specific = specific,
+                        overrideGasLimit = gasLimitOverride?.takeIf { it > 0L },
+                        gasFee = gasFee,
+                        gasFeeFiatValue = gasFeeFiatValue,
+                        estimatedNetworkFeeTokenValue = estimatedNetworkFeeTokenValue,
+                        estimatedNetworkFeeFiatValue = estimatedNetworkFeeFiatValue,
+                    )
                 val quoteData =
                     if (specific is BlockChainSpecific.Ethereum) {
                         quote.data.copy(
@@ -361,5 +334,44 @@ constructor(
                 )
             }
         }
+    }
+
+    /**
+     * Displayed/staged EVM swap network fee (never the signed tx): the route-gas estimate when
+     * present, else the gas-pass baseline, re-priced to a user gas-limit override (#4858) at the
+     * native price that estimate implies. Token and fiat stay a matched pair (#5056).
+     */
+    private fun displayedSwapGasFee(
+        specific: BlockChainSpecific,
+        overrideGasLimit: Long?,
+        gasFee: TokenValue,
+        gasFeeFiatValue: FiatValue,
+        estimatedNetworkFeeTokenValue: TokenValue?,
+        estimatedNetworkFeeFiatValue: FiatValue?,
+    ): Pair<TokenValue, FiatValue> {
+        val referenceFee = estimatedNetworkFeeTokenValue ?: gasFee
+        val referenceFiat =
+            if (estimatedNetworkFeeTokenValue != null)
+                estimatedNetworkFeeFiatValue ?: gasFeeFiatValue
+            else gasFeeFiatValue
+        if (
+            specific !is BlockChainSpecific.Ethereum ||
+                overrideGasLimit == null ||
+                referenceFee.value.signum() <= 0
+        ) {
+            return referenceFee to referenceFiat
+        }
+        val overriddenFeeWei = overrideGasLimit.toBigInteger() * specific.maxFeePerGasWei
+        return gasFee.copy(value = overriddenFeeWei) to
+            repriceFee(overriddenFeeWei, referenceFee, referenceFiat)
+    }
+
+    /** Re-values [feeWei] at the native price implied by the matched [refFee]/[refFiat] pair. */
+    private fun repriceFee(feeWei: BigInteger, refFee: TokenValue, refFiat: FiatValue): FiatValue {
+        val value =
+            refFiat.value
+                .multiply(feeWei.toBigDecimal())
+                .divide(refFee.value.toBigDecimal(), 10, RoundingMode.HALF_UP)
+        return FiatValue(value, refFiat.currency)
     }
 }

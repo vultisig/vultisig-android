@@ -86,9 +86,7 @@ constructor(
 
         val chain = srcToken.chain
         val blockChainSpecific = payload.blockChainSpecific
-        // EVM aggregator routes carry their own signed gas limit; pass it so the joiner's network
-        // fee mirrors the initiator's route-gas estimate instead of the flat 600k (#5056). Native
-        // protocol deposits (THORChain / Maya) have no route gas, so this stays null.
+        // EVM aggregator route gas (so the joiner matches the initiator); null for native deposits.
         val aggregatorRouteGas =
             (swapPayload as? SwapPayload.EVM)?.let {
                 it.data.quote.tx.gas.takeIf { gas -> gas > 0L }?.toBigInteger()
