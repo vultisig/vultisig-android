@@ -66,7 +66,9 @@ internal class TonDappHeroResolver @Inject constructor(private val tonApi: TonAp
             },
         )
             ?: resolveTonJettonHero(messages, vaultCoins) { wallet ->
-                    tonApi.getJettonMasterAddress(wallet)
+                    tonApi.getJettonMasterAddress(wallet)?.let { master ->
+                        toUserFriendly(master) ?: master
+                    }
                 }
                 ?.let { HeroContent.Send(title = null, coin = it) }
     }
