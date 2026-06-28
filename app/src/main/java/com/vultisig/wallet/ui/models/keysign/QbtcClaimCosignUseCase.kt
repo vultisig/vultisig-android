@@ -7,9 +7,9 @@ import com.vultisig.wallet.data.qbtc.QbtcClaimPeerRoundRunner
 import com.vultisig.wallet.data.qbtc.QbtcClaimResultPoller
 import javax.inject.Inject
 
-/** Thrown when a QBTC claim co-sign cannot find the [chain] account it needs in this vault. */
-internal class MissingQbtcClaimAccountException(chain: Chain) :
-    Exception("Missing ${chain.raw} account for QBTC claim co-sign")
+/** Thrown when a QBTC claim co-sign cannot find or derive the [chain] account it needs. */
+internal class MissingQbtcClaimAccountException(chain: Chain, cause: Throwable? = null) :
+    Exception("Missing ${chain.raw} account for QBTC claim co-sign", cause)
 
 /** The broadcast result of a QBTC claim co-sign, or nulls while the initiator hasn't pushed it. */
 internal data class QbtcClaimCosignResult(val txHash: String?, val totalSats: Long?)

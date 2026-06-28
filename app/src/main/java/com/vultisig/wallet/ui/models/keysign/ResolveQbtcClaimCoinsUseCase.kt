@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 
 /** The Bitcoin and QBTC accounts a QBTC claim is derived from. */
 internal data class QbtcClaimCoins(val btc: Coin, val qbtc: Coin)
@@ -34,12 +35,17 @@ constructor(
             ?.let {
                 return it
             }
-        return runCatching {
-                val nativeToken = tokenRepository.getNativeToken(chain.id)
-                val (address, derivedPublicKey) =
-                    chainAccountAddressRepository.getAddress(nativeToken, vault)
-                nativeToken.copy(address = address, hexPublicKey = derivedPublicKey)
+        // Repository/template errors propagate as themselves — only a failure to derive the address
+        // (the vault lacks the key material for this chain) is the genuine "missing account" case.
+        val nativeToken = tokenRepository.getNativeToken(chain.id)
+        val (address, derivedPublicKey) =
+            try {
+                chainAccountAddressRepository.getAddress(nativeToken, vault)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw MissingQbtcClaimAccountException(chain, e)
             }
-            .getOrElse { throw MissingQbtcClaimAccountException(chain) }
+        return nativeToken.copy(address = address, hexPublicKey = derivedPublicKey)
     }
 }

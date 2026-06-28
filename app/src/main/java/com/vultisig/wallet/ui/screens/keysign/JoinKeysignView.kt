@@ -133,6 +133,22 @@ internal fun JoinKeysignView() {
         return
     }
 
+    val currentState = state
+    if (currentState is QbtcClaim && currentState.txHash != null) {
+        // QbtcClaimDoneContent owns its TxDoneScaffold + toolbar, so render it directly instead of
+        // nesting it inside JoinKeysignScreen — avoids the double scaffold/toolbar this file
+        // already
+        // works around for the other full-screen flows.
+        BackHandler(onBack = viewModel::complete)
+        QbtcClaimDoneContent(
+            txHash = currentState.txHash,
+            explorerUrl = currentState.explorerUrl.orEmpty(),
+            totalSats = currentState.totalSats ?: 0L,
+            onComplete = viewModel::complete,
+        )
+        return
+    }
+
     val title =
         stringResource(
             when {
@@ -180,17 +196,9 @@ internal fun JoinKeysignView() {
             }
 
             is QbtcClaim -> {
-                val claim = state as QbtcClaim
-                if (claim.txHash == null) {
-                    KeysignLoadingScreen(text = stringResource(R.string.qbtc_claim_proving))
-                } else {
-                    QbtcClaimDoneContent(
-                        txHash = claim.txHash,
-                        explorerUrl = claim.explorerUrl.orEmpty(),
-                        totalSats = claim.totalSats ?: 0L,
-                        onComplete = viewModel::complete,
-                    )
-                }
+                // The done state (txHash != null) is rendered before the JoinKeysignScreen wrapper;
+                // here the claim is still proving/broadcasting.
+                KeysignLoadingScreen(text = stringResource(R.string.qbtc_claim_proving))
             }
 
             Keysign -> {

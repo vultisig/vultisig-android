@@ -85,4 +85,15 @@ internal class ResolveQbtcClaimCoinsUseCaseTest {
 
         shouldThrow<MissingQbtcClaimAccountException> { useCase(vault) }
     }
+
+    /** A repository/template failure propagates as itself, not as a missing-account error. */
+    @Test
+    fun `propagates template fetch failures`() = runTest {
+        val vault = Vault(id = "v", name = "v", coins = emptyList())
+
+        coEvery { tokenRepository.getNativeToken(Chain.Bitcoin.id) } throws
+            IllegalStateException("token repo down")
+
+        shouldThrow<IllegalStateException> { useCase(vault) }
+    }
 }

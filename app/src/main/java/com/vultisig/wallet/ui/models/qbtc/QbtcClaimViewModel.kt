@@ -167,7 +167,14 @@ constructor(
                     } catch (_: MissingQbtcClaimAccountException) {
                         null
                     }
-            if (loadedVault == null || coins == null) {
+            if (loadedVault == null) {
+                uiState.value =
+                    QbtcClaimUiState.Blocked(
+                        QbtcClaimBlockedReason.UtxoFetchFailed("Vault not found")
+                    )
+                return@safeLaunch
+            }
+            if (coins == null) {
                 uiState.value =
                     QbtcClaimUiState.Blocked(
                         QbtcClaimBlockedReason.UtxoFetchFailed("Missing Bitcoin or QBTC account")
