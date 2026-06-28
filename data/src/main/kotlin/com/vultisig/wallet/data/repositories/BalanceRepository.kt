@@ -584,6 +584,9 @@ constructor(
         if (coins.isEmpty()) return emptyMap()
 
         val chain = coins.first().chain
+        require(coins.all { it.chain == chain }) {
+            "getEvmTokenBalancesAndPrices: coins must share one chain"
+        }
         require(chain.standard == TokenStandard.EVM) {
             "getEvmTokenBalancesAndPrices: non-EVM $chain"
         }

@@ -217,7 +217,9 @@ internal class AccountsRepositoryImplTest {
             listOf(wrapped(amount = CACHED, coin = eth), wrapped(amount = CACHED, coin = aave))
 
         // One batched call resolves every EVM token on the chain.
-        coEvery { balanceRepository.getEvmTokenBalancesAndPrices(ETH_ADDRESS, any()) } returns
+        coEvery {
+            balanceRepository.getEvmTokenBalancesAndPrices(ETH_ADDRESS, listOf(eth, aave))
+        } returns
             mapOf(
                 eth.id to balance(amount = ETH_NETWORK, coin = eth),
                 aave.id to balance(amount = NETWORK, coin = aave),
@@ -239,7 +241,9 @@ internal class AccountsRepositoryImplTest {
         )
 
         // Exactly one batched RPC for the chain, and the per-token path is never used for EVM.
-        coVerify(exactly = 1) { balanceRepository.getEvmTokenBalancesAndPrices(ETH_ADDRESS, any()) }
+        coVerify(exactly = 1) {
+            balanceRepository.getEvmTokenBalancesAndPrices(ETH_ADDRESS, listOf(eth, aave))
+        }
         verify(exactly = 0) { balanceRepository.getTokenBalanceAndPrice(ETH_ADDRESS, any()) }
         job.cancel()
     }

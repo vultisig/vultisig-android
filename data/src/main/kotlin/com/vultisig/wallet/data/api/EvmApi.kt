@@ -267,7 +267,22 @@ class EvmApiImp(
         contractAddresses: List<String>,
     ): Map<String, BigInteger> =
         contractAddresses.associateWith { contract ->
-            if (contract.isEmpty()) getETHBalance(address) else getERC20Balance(address, contract)
+            try {
+                if (contract.isEmpty()) getETHBalance(address)
+                else getERC20Balance(address, contract)
+            } catch (e: SocketTimeoutException) {
+                Timber.d("per-token balance timeout, contract=%s address=%s", contract, address)
+                BigInteger.ZERO
+            } catch (e: NetworkException) {
+                Timber.d(
+                    "per-token balance RPC error, contract=%s address=%s status=%d message=%s",
+                    contract,
+                    address,
+                    e.httpStatusCode,
+                    e.message,
+                )
+                BigInteger.ZERO
+            }
         }
 
     private suspend fun getETHBalance(address: String): BigInteger {
