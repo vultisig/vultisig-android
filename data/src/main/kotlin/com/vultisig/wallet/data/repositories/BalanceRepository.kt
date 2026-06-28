@@ -63,6 +63,8 @@ import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.TokenBalanceAndPrice
 import com.vultisig.wallet.data.models.TokenBalanceWrapped
+import com.vultisig.wallet.data.models.TokenId
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.utils.SimpleCache
 import com.vultisig.wallet.data.utils.scaledFor
@@ -101,6 +103,18 @@ interface BalanceRepository {
     fun getTokenBalanceAndPrice(address: String, coin: Coin): Flow<TokenBalanceAndPrice>
 
     fun getTokenValue(address: String, coin: Coin): Flow<TokenValue>
+
+    /**
+     * Batch-fetches balances for every coin in [coins] (all sharing one EVM [address] and chain) in
+     * a single Multicall3 round-trip, persists each to the Room cache (mirroring [getTokenValue]'s
+     * write), and returns them keyed by [Coin.id] alongside the already-refreshed price. Collapses
+     * the previous N+1 `eth_call`s per chain to one; falls back internally to per-token calls on
+     * chains without a canonical Multicall3.
+     */
+    suspend fun getEvmTokenBalancesAndPrices(
+        address: String,
+        coins: List<Coin>,
+    ): Map<TokenId, TokenBalanceAndPrice>
 
     fun getDefiTokenBalanceAndPrice(
         address: String,
@@ -562,6 +576,54 @@ constructor(
                     )
                 )
             }
+
+    override suspend fun getEvmTokenBalancesAndPrices(
+        address: String,
+        coins: List<Coin>,
+    ): Map<TokenId, TokenBalanceAndPrice> {
+        if (coins.isEmpty()) return emptyMap()
+
+        val chain = coins.first().chain
+        require(chain.standard == TokenStandard.EVM) {
+            "getEvmTokenBalancesAndPrices: non-EVM $chain"
+        }
+
+        val balances =
+            evmApiFactory.createEvmApi(chain).getBalances(address, coins.map { it.contractAddress })
+
+        val currency = appCurrencyRepository.currency.first()
+
+        return coins.associate { coin ->
+            val rawBalance = balances[coin.contractAddress] ?: BigInteger.ZERO
+
+            tokenValueDao.insertTokenValue(
+                TokenValueEntity(
+                    chain = coin.chain.id,
+                    address = address,
+                    ticker = coin.ticker,
+                    tokenValue = rawBalance.toString(),
+                )
+            )
+
+            val tokenValue =
+                TokenValue(value = rawBalance, unit = coin.ticker, decimals = coin.decimal)
+            val price = tokenPriceRepository.getPrice(coin, currency).first()
+
+            coin.id to
+                TokenBalanceAndPrice(
+                    tokenBalance =
+                        TokenBalance(
+                            tokenValue = tokenValue,
+                            fiatValue =
+                                FiatValue(
+                                    value = tokenValue.decimal.multiply(price).scaledFor(currency),
+                                    currency = currency.ticker,
+                                ),
+                        ),
+                    price = FiatValue(value = price.scaledFor(currency), currency = currency.ticker),
+                )
+        }
+    }
 
     override suspend fun getMergeTokenValue(address: String, chain: Chain): List<MergeAccount> {
         return thorChainApi.getRujiMergeBalances(address)
