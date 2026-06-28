@@ -262,6 +262,9 @@ constructor(
                     defiAccounts = emptyList(),
                     totalFiatValue = null,
                     totalDeFiValue = null,
+                    // Upgrade banner is vault-scoped (GG20-only); clear it eagerly so the previous
+                    // vault's CTA can't flash before collectBannerVisibility re-evaluates libType.
+                    showUpgradeBanner = false,
                 )
             }
         }
