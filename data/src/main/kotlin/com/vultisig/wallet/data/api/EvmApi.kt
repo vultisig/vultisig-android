@@ -278,9 +278,10 @@ class EvmApiImp(
                             else getERC20Balance(address, contract)
                         } catch (e: SocketTimeoutException) {
                             Timber.d(
-                                "per-token balance timeout, contract=%s address=%s",
+                                "per-token balance timeout, contract=%s address=%s message=%s",
                                 contract,
                                 address,
+                                e.message,
                             )
                             BigInteger.ZERO
                         } catch (e: NetworkException) {
