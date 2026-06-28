@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.getPubKeyByChain
+import com.vultisig.wallet.data.models.isOpStackL2
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
@@ -315,6 +316,14 @@ constructor(
         routeGas: Long,
     ): GasCalculationResult? {
         if (routeGas <= 0L || baselineGasFee.value <= BigInteger.ZERO) return null
+        // OP-stack L2s fold an L1 data-fee component into baselineGasFee (EthereumFeeService adds
+        // it
+        // only for isOpStackL2 chains); rescaling the whole amount by the gas-limit ratio would
+        // wrongly scale that L1 part. Separating it is disproportionate for L2s whose fees are
+        // tiny,
+        // so keep the gas-pass estimate there. Non-OP-stack EVM (Ethereum/Arbitrum/…) carry no L1,
+        // so the rescale below is exact (issue #5056).
+        if (srcToken.chain.isOpStackL2) return null
         val signedGasLimit =
             maxOf(routeGas.toBigInteger(), getGasLimit(srcToken) ?: DEFAULT_SWAP_LIMIT)
         if (signedGasLimit == DEFAULT_SWAP_LIMIT) return null

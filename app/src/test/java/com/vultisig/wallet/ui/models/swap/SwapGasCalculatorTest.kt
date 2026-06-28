@@ -616,6 +616,24 @@ internal class SwapGasCalculatorTest {
             assertEquals(BigInteger.valueOf(9_000_000), capturedParams.captured.gasFee.value)
         }
 
+    /**
+     * OP-stack L2s (Base/Optimism/Blast) fold an L1 data fee into the baseline, which the gas-limit
+     * ratio must not scale — so the rebase is skipped there even when route gas exceeds 600k
+     * (#5056, CodeRabbit). Base native floors at 600k via getGasLimit==null, and routeGas 900k
+     * would otherwise rebase up.
+     */
+    @Test
+    fun `rebaseEvmSwapNetworkFee skips OP-stack L2 chains to avoid scaling the L1 fee`() = runTest {
+        val baseCoin = nativeCoinFor(Chain.Base)
+        val result =
+            calculator.rebaseEvmSwapNetworkFee(
+                srcToken = baseCoin,
+                baselineGasFee = TokenValue(BigInteger.valueOf(6_000_000), baseCoin),
+                routeGas = 900_000L,
+            )
+        assertNull(result)
+    }
+
     /** Native Arbitrum floors the route gas at its 400k limit: 6_000_000 × 400_000 / 600_000. */
     @Test
     fun `rebaseEvmSwapNetworkFee floors a native arbitrum swap at the arbitrum limit`() = runTest {
