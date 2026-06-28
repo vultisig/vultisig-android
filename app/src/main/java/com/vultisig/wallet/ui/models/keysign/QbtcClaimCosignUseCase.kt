@@ -28,6 +28,7 @@ internal class QbtcClaimCosignUseCase
 @Inject
 constructor(
     private val computeQbtcClaimMessageHash: ComputeQbtcClaimMessageHashUseCase,
+    private val resolveQbtcClaimCoins: ResolveQbtcClaimCoinsUseCase,
     private val qbtcClaimPeerRoundRunner: QbtcClaimPeerRoundRunner,
     private val qbtcClaimResultPoller: QbtcClaimResultPoller,
 ) {
@@ -43,12 +44,7 @@ constructor(
         sessionId: String,
         encryptionKeyHex: String,
     ): QbtcClaimCosignResult {
-        val btc =
-            vault.coins.firstOrNull { it.chain == Chain.Bitcoin }
-                ?: throw MissingQbtcClaimAccountException(Chain.Bitcoin)
-        val qbtc =
-            vault.coins.firstOrNull { it.chain == Chain.Qbtc }
-                ?: throw MissingQbtcClaimAccountException(Chain.Qbtc)
+        val (btc, qbtc) = resolveQbtcClaimCoins(vault)
         val messageHashHex =
             computeQbtcClaimMessageHash(btc.address, btc.hexPublicKey, qbtc.address)
         val session =

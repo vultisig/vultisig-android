@@ -21,12 +21,15 @@ internal class QbtcClaimConsentStateTest {
             isNativeToken = true,
         )
 
-    /** Both accounts present → the consent gate exposes their addresses for review. */
+    /** The consent gate exposes the resolved accounts' addresses for review. */
     @Test
     fun `builds consent state with btc and qbtc addresses`() {
         val state =
             buildQbtcClaimConsentState(
-                listOf(coin(Chain.Bitcoin, "btcAddr"), coin(Chain.Qbtc, "qbtcAddr"))
+                QbtcClaimCoins(
+                    btc = coin(Chain.Bitcoin, "btcAddr"),
+                    qbtc = coin(Chain.Qbtc, "qbtcAddr"),
+                )
             )
 
         val consent = state.shouldBeInstanceOf<JoinKeysignState.QbtcClaimConsent>()
@@ -39,36 +42,12 @@ internal class QbtcClaimConsentStateTest {
     fun `consent state is not the signing state`() {
         val state =
             buildQbtcClaimConsentState(
-                listOf(coin(Chain.Bitcoin, "btcAddr"), coin(Chain.Qbtc, "qbtcAddr"))
+                QbtcClaimCoins(
+                    btc = coin(Chain.Bitcoin, "btcAddr"),
+                    qbtc = coin(Chain.Qbtc, "qbtcAddr"),
+                )
             )
 
         (state is JoinKeysignState.QbtcClaim) shouldBe false
-    }
-
-    /** Missing the Bitcoin account fails before signing rather than mid-co-sign. */
-    @Test
-    fun `missing bitcoin account yields missing-account error`() {
-        val state = buildQbtcClaimConsentState(listOf(coin(Chain.Qbtc, "qbtcAddr")))
-
-        val error = state.shouldBeInstanceOf<JoinKeysignState.Error>()
-        error.errorType shouldBe JoinKeysignError.MissingQbtcClaimAccount
-    }
-
-    /** Missing the QBTC account fails before signing rather than mid-co-sign. */
-    @Test
-    fun `missing qbtc account yields missing-account error`() {
-        val state = buildQbtcClaimConsentState(listOf(coin(Chain.Bitcoin, "btcAddr")))
-
-        val error = state.shouldBeInstanceOf<JoinKeysignState.Error>()
-        error.errorType shouldBe JoinKeysignError.MissingQbtcClaimAccount
-    }
-
-    /** An empty vault also fails closed. */
-    @Test
-    fun `empty coins yields missing-account error`() {
-        val state = buildQbtcClaimConsentState(emptyList())
-
-        state.shouldBeInstanceOf<JoinKeysignState.Error>().errorType shouldBe
-            JoinKeysignError.MissingQbtcClaimAccount
     }
 }

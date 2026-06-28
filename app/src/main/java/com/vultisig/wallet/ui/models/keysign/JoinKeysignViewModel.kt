@@ -222,20 +222,16 @@ sealed interface JoinKeysignState {
 }
 
 /**
- * Builds the QBTC claim approval gate from a vault's [coins]. A vault missing the Bitcoin or QBTC
- * account it needs to recompute the claim hash resolves to a
- * [JoinKeysignError.MissingQbtcClaimAccount] error state — surfaced here, before signing, rather
- * than mid-co-sign.
+ * Builds the QBTC claim approval gate from the resolved [coins], surfacing the two accounts the
+ * claim hash is recomputed from for review before any signing starts. The accounts are resolved
+ * (and derived when not enabled) by [ResolveQbtcClaimCoinsUseCase]; a vault that can't produce them
+ * fails earlier with [JoinKeysignError.MissingQbtcClaimAccount].
  */
-internal fun buildQbtcClaimConsentState(coins: List<Coin>): JoinKeysignState {
-    val btc = coins.firstOrNull { it.chain == Chain.Bitcoin }
-    val qbtc = coins.firstOrNull { it.chain == Chain.Qbtc }
-    return if (btc == null || qbtc == null) {
-        JoinKeysignState.Error(JoinKeysignError.MissingQbtcClaimAccount)
-    } else {
-        JoinKeysignState.QbtcClaimConsent(btcAddress = btc.address, qbtcAddress = qbtc.address)
-    }
-}
+internal fun buildQbtcClaimConsentState(coins: QbtcClaimCoins): JoinKeysignState =
+    JoinKeysignState.QbtcClaimConsent(
+        btcAddress = coins.btc.address,
+        qbtcAddress = coins.qbtc.address,
+    )
 
 internal sealed class VerifyUiModel {
 
@@ -274,6 +270,7 @@ constructor(
     private val blockaidSimulationService: BlockaidSimulationService,
     private val buildHeroContent: BuildHeroContentUseCase,
     private val qbtcClaimCosign: QbtcClaimCosignUseCase,
+    private val resolveQbtcClaimCoins: ResolveQbtcClaimCoinsUseCase,
     private val joinSwapUiModelBuilder: JoinSwapUiModelBuilder,
     private val joinDepositUiModelBuilder: JoinDepositUiModelBuilder,
     private val joinSendUiModelBuilder: JoinSendUiModelBuilder,
@@ -965,8 +962,13 @@ constructor(
      * surfaces those two accounts for review before any signing starts. A vault missing either
      * account fails here — before signing — instead of mid-co-sign.
      */
-    private fun showQbtcClaimConsent() {
-        _currentState.value = buildQbtcClaimConsentState(_currentVault.coins)
+    private suspend fun showQbtcClaimConsent() {
+        _currentState.value =
+            try {
+                buildQbtcClaimConsentState(resolveQbtcClaimCoins(_currentVault))
+            } catch (_: MissingQbtcClaimAccountException) {
+                JoinKeysignState.Error(JoinKeysignError.MissingQbtcClaimAccount)
+            }
     }
 
     /**
