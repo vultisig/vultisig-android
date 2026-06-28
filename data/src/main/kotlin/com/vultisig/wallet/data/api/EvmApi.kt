@@ -30,6 +30,9 @@ import io.ktor.client.statement.bodyAsText
 import java.math.BigInteger
 import java.net.SocketTimeoutException
 import javax.inject.Inject
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
@@ -265,25 +268,36 @@ class EvmApiImp(
     private suspend fun fetchBalancesPerToken(
         address: String,
         contractAddresses: List<String>,
-    ): Map<String, BigInteger> =
-        contractAddresses.associateWith { contract ->
-            try {
-                if (contract.isEmpty()) getETHBalance(address)
-                else getERC20Balance(address, contract)
-            } catch (e: SocketTimeoutException) {
-                Timber.d("per-token balance timeout, contract=%s address=%s", contract, address)
-                BigInteger.ZERO
-            } catch (e: NetworkException) {
-                Timber.d(
-                    "per-token balance RPC error, contract=%s address=%s status=%d message=%s",
-                    contract,
-                    address,
-                    e.httpStatusCode,
-                    e.message,
-                )
-                BigInteger.ZERO
+    ): Map<String, BigInteger> = coroutineScope {
+        contractAddresses
+            .map { contract ->
+                async {
+                    contract to
+                        try {
+                            if (contract.isEmpty()) getETHBalance(address)
+                            else getERC20Balance(address, contract)
+                        } catch (e: SocketTimeoutException) {
+                            Timber.d(
+                                "per-token balance timeout, contract=%s address=%s",
+                                contract,
+                                address,
+                            )
+                            BigInteger.ZERO
+                        } catch (e: NetworkException) {
+                            Timber.d(
+                                "per-token balance RPC error, contract=%s address=%s status=%d message=%s",
+                                contract,
+                                address,
+                                e.httpStatusCode,
+                                e.message,
+                            )
+                            BigInteger.ZERO
+                        }
+                }
             }
-        }
+            .awaitAll()
+            .toMap()
+    }
 
     private suspend fun getETHBalance(address: String): BigInteger {
         val rpcResp =
