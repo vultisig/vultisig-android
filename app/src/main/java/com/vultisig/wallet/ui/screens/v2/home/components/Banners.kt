@@ -11,21 +11,22 @@ import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 @Composable
 internal fun Banners(
     modifier: Modifier,
-    hasMigration: Boolean,
-    showSessionBanners: Boolean,
+    showUpgrade: Boolean,
+    showFollowX: Boolean,
     showBuyVult: Boolean,
     onMigrateClick: () -> Unit,
     onBuyVultClick: () -> Unit,
     onBuyVultDismiss: () -> Unit,
     context: Context,
-    onDismissBanner: () -> Unit,
+    onUpgradeDismiss: () -> Unit,
+    onFollowXDismiss: () -> Unit,
 ) {
     HomepagePager(
         modifier = modifier,
         params =
             HomepagePagerParams(
-                hasMigration = hasMigration,
-                showSessionBanners = showSessionBanners,
+                showUpgrade = showUpgrade,
+                showFollowX = showFollowX,
                 showBuyVult = showBuyVult,
             ),
         onUpgradeClick = onMigrateClick,
@@ -34,6 +35,7 @@ internal fun Banners(
         },
         onBuyVultClick = onBuyVultClick,
         onBuyVultDismiss = onBuyVultDismiss,
-        onCloseClick = onDismissBanner,
+        onUpgradeDismiss = onUpgradeDismiss,
+        onFollowXDismiss = onFollowXDismiss,
     )
 }

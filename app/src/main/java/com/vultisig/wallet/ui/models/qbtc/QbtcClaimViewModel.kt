@@ -47,6 +47,8 @@ import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.keysign.MissingQbtcClaimAccountException
+import com.vultisig.wallet.ui.models.keysign.ResolveQbtcClaimCoinsUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -118,6 +120,7 @@ constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
+    private val resolveQbtcClaimCoins: ResolveQbtcClaimCoinsUseCase,
     private val loadClaimableUtxos: LoadClaimableQbtcUtxosUseCase,
     private val proofService: QbtcProofService,
     private val fastVaultRoundRunner: QbtcClaimFastVaultRoundRunner,
@@ -152,9 +155,27 @@ constructor(
         uiState.value = QbtcClaimUiState.Loading
         viewModelScope.safeLaunch {
             val loadedVault = vaultRepository.get(vaultId)
-            val btc = loadedVault?.coins?.firstOrNull { it.chain == Chain.Bitcoin }
-            val qbtc = loadedVault?.coins?.firstOrNull { it.chain == Chain.Qbtc }
-            if (loadedVault == null || btc == null || qbtc == null) {
+            // The claim needs a Bitcoin and a QBTC coin, but neither chain has to be enabled in the
+            // vault — they're derived on the fly when missing so the claim works regardless of
+            // which
+            // chains the user has added (as Windows does; iOS currently blocks when the coin is
+            // absent — see https://github.com/vultisig/vultisig-ios/issues/4679).
+            val coins =
+                if (loadedVault == null) null
+                else
+                    try {
+                        resolveQbtcClaimCoins(loadedVault)
+                    } catch (_: MissingQbtcClaimAccountException) {
+                        null
+                    }
+            if (loadedVault == null) {
+                uiState.value =
+                    QbtcClaimUiState.Blocked(
+                        QbtcClaimBlockedReason.UtxoFetchFailed("Vault not found")
+                    )
+                return@safeLaunch
+            }
+            if (coins == null) {
                 uiState.value =
                     QbtcClaimUiState.Blocked(
                         QbtcClaimBlockedReason.UtxoFetchFailed("Missing Bitcoin or QBTC account")
@@ -162,10 +183,10 @@ constructor(
                 return@safeLaunch
             }
             vault = loadedVault
-            btcCoin = btc
-            qbtcCoin = qbtc
+            btcCoin = coins.btc
+            qbtcCoin = coins.qbtc
 
-            when (val result = loadClaimableUtxos(btc.address)) {
+            when (val result = loadClaimableUtxos(coins.btc.address)) {
                 is QbtcClaimLoadResult.Blocked -> {
                     uiState.value = QbtcClaimUiState.Blocked(result.reason)
                 }

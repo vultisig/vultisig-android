@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AllowanceRepository
+import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
@@ -89,6 +90,8 @@ constructor(
                     expectedDstTokenValue = dstTokenValue,
                     blockChainSpecific = specificAndUtxo,
                     estimatedFees = quote.fees,
+                    swapFee = dstToken.convertToTokenValue(quote.data.fees.affiliate),
+                    outboundFee = dstToken.convertToTokenValue(quote.data.fees.outbound),
                     gasFees = estimatedNetworkFeeTokenValue ?: gasFee,
                     isApprovalRequired = isApprovalRequired,
                     memo = quote.data.memo,
@@ -164,6 +167,8 @@ constructor(
                     expectedDstTokenValue = dstTokenValue,
                     blockChainSpecific = specificAndUtxo,
                     estimatedFees = quote.fees,
+                    swapFee = dstToken.convertToTokenValue(quote.data.fees.affiliate),
+                    outboundFee = dstToken.convertToTokenValue(quote.data.fees.outbound),
                     gasFees = estimatedNetworkFeeTokenValue ?: gasFee,
                     memo = quote.data.memo,
                     isApprovalRequired = isApprovalRequired,

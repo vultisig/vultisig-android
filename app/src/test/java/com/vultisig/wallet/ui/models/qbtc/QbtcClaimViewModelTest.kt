@@ -25,6 +25,9 @@ import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
+import com.vultisig.wallet.ui.models.keysign.MissingQbtcClaimAccountException
+import com.vultisig.wallet.ui.models.keysign.QbtcClaimCoins
+import com.vultisig.wallet.ui.models.keysign.ResolveQbtcClaimCoinsUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -56,6 +59,7 @@ internal class QbtcClaimViewModelTest {
 
     private lateinit var navigator: Navigator<Destination>
     private lateinit var vaultRepository: VaultRepository
+    private lateinit var resolveQbtcClaimCoins: ResolveQbtcClaimCoinsUseCase
     private lateinit var loadClaimableUtxos: LoadClaimableQbtcUtxosUseCase
     private lateinit var proofService: QbtcProofService
     private lateinit var roundRunner: QbtcClaimFastVaultRoundRunner
@@ -78,6 +82,7 @@ internal class QbtcClaimViewModelTest {
             Route.QbtcClaim(vaultId = VAULT_ID)
         navigator = mockk(relaxed = true)
         vaultRepository = mockk(relaxed = true)
+        resolveQbtcClaimCoins = mockk()
         loadClaimableUtxos = mockk(relaxed = true)
         proofService = mockk(relaxed = true)
         roundRunner = mockk(relaxed = true)
@@ -92,6 +97,8 @@ internal class QbtcClaimViewModelTest {
         protoBuf = mockk(relaxed = true)
         json = mockk(relaxed = true)
         coEvery { vaultRepository.get(VAULT_ID) } returns fastVault()
+        coEvery { resolveQbtcClaimCoins(any()) } returns
+            QbtcClaimCoins(btc = btcCoin(), qbtc = qbtcCoin())
         every { explorerLinkRepository.getTransactionLink(Chain.Qbtc, any()) } returns ""
     }
 
@@ -106,6 +113,7 @@ internal class QbtcClaimViewModelTest {
             savedStateHandle = SavedStateHandle(),
             navigator = navigator,
             vaultRepository = vaultRepository,
+            resolveQbtcClaimCoins = resolveQbtcClaimCoins,
             loadClaimableUtxos = loadClaimableUtxos,
             proofService = proofService,
             fastVaultRoundRunner = roundRunner,
@@ -166,10 +174,12 @@ internal class QbtcClaimViewModelTest {
         }
 
     @Test
-    fun `load blocks when the vault has no QBTC account`() =
+    fun `load blocks when the claim accounts cannot be resolved`() =
         runTest(testDispatcher) {
-            coEvery { vaultRepository.get(VAULT_ID) } returns
-                fastVault().copy(coins = listOf(btcCoin()))
+            // Neither chain is enabled and derivation can't produce the account → resolver throws.
+            coEvery { vaultRepository.get(VAULT_ID) } returns fastVault().copy(coins = emptyList())
+            coEvery { resolveQbtcClaimCoins(any()) } throws
+                MissingQbtcClaimAccountException(Chain.Qbtc)
 
             val vm = viewModel()
             advanceUntilIdle()

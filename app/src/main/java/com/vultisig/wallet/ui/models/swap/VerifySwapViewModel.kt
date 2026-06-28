@@ -44,6 +44,10 @@ internal data class SwapTransactionUiModel(
     val dst: ValuedToken = ValuedToken.Empty,
     val networkFee: ValuedToken = ValuedToken.Empty,
     val providerFee: ValuedToken = ValuedToken.Empty,
+    // Outbound-fee portion of the fee breakdown, already formatted as fiat. Non-null only for
+    // THORChain / MayaChain swaps; rendered as its own row so the overview reconciles to the swap
+    // form's breakdown instead of folding the outbound fee into "Swap Fee" (#5061).
+    val outboundFee: String? = null,
     val totalFee: String = "",
     val networkFeeFormatted: String = "",
     val providerFeeFormatted: String = "",

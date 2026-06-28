@@ -166,13 +166,11 @@ constructor(
         }
     }
 
-    // Instant in-memory eligibility (MLDSA key + BTC address); the claim screen does the real
-    // check.
+    // Instant in-memory eligibility (MLDSA key); the claim screen does the real check, including
+    // BTC availability — so the entry point shows even when the Bitcoin chain isn't enabled.
     private fun checkQbtcClaimEligibility(chain: Chain) {
         val vault = currentVault
-        val btcAddress = vault?.coins?.firstOrNull { it.chain == Chain.Bitcoin }?.address
-        val isEligible =
-            vault != null && vault.pubKeyMLDSA.isNotEmpty() && !btcAddress.isNullOrEmpty()
+        val isEligible = vault != null && vault.pubKeyMLDSA.isNotEmpty()
         uiState.update {
             it.copy(
                 showQbtcClaimBanner = isEligible && chain == Chain.Bitcoin,

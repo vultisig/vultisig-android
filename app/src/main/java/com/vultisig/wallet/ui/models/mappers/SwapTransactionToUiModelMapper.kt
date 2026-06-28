@@ -64,6 +64,25 @@ constructor(
 
         val quotesFeesFiat = convertTokenValueToFiat(tokenValue, from.estimatedFees, currency)
 
+        // THORChain / MayaChain quotes carry a fee breakdown (affiliate + outbound + liquidity).
+        // When present, show the affiliate-only "Swap Fee" and a separate "Outbound Fee" row — the
+        // same decomposition the swap form does — instead of rendering the opaque total under the
+        // "Swap Fee" label (#5061). Aggregators report no breakdown, so both stay null and the
+        // single estimated-fees total is shown as before.
+        val swapFeeFiat = from.swapFee?.let { convertTokenValueToFiat(from.dstToken, it, currency) }
+        val outboundFeeFiat =
+            from.outboundFee?.let { convertTokenValueToFiat(from.dstToken, it, currency) }
+
+        // Headline total mirrors the swap form: gas + affiliate + outbound, dropping the liquidity
+        // (asset) component already reflected in the destination amount. Falls back to the opaque
+        // total when there is no breakdown.
+        val feesFiatForTotal =
+            if (swapFeeFiat != null) {
+                outboundFeeFiat?.let { swapFeeFiat + it } ?: swapFeeFiat
+            } else {
+                quotesFeesFiat
+            }
+
         // SwapTransaction carries no destination fiat, so it is recomputed here for the verify and
         // keysign screens. Apply the same value-preserving clamp the swap form uses (#4878) so an
         // illiquid token's inflated market mark can't reappear on the screens the user signs from.
@@ -110,9 +129,10 @@ constructor(
             providerFee =
                 ValuedToken(
                     token = tokenValue,
-                    value = from.estimatedFees.value.toString(),
-                    fiatValue = fiatValueToStringMapper(quotesFeesFiat, asFee = true),
+                    value = (from.swapFee ?: from.estimatedFees).value.toString(),
+                    fiatValue = fiatValueToStringMapper(swapFeeFiat ?: quotesFeesFiat, asFee = true),
                 ),
+            outboundFee = outboundFeeFiat?.let { fiatValueToStringMapper(it, asFee = true) },
             networkFee =
                 ValuedToken(
                     token = from.srcToken,
@@ -121,7 +141,8 @@ constructor(
                 ),
             networkFeeFormatted =
                 mapTokenValueToDecimalUiString(from.gasFees) + " ${from.gasFees.unit}",
-            totalFee = fiatValueToStringMapper(quotesFeesFiat + from.gasFeeFiatValue, asFee = true),
+            totalFee =
+                fiatValueToStringMapper(feesFiatForTotal + from.gasFeeFiatValue, asFee = true),
             provider = provider.getSwapProviderId(),
             providerLabel = providerLabel,
             swapId = swapId,

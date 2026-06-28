@@ -30,6 +30,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.boundsInParent
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -188,6 +190,7 @@ internal fun SwapScreen(
             val space = 8.dp
 
             var flipButtonBottomCenter by remember { mutableStateOf(Offset.Zero) }
+            var inputBlockTopLeft by remember { mutableStateOf(Offset.Zero) }
 
             val error = state.error ?: state.formError
 
@@ -211,7 +214,12 @@ internal fun SwapScreen(
                             modifier = Modifier.padding(vertical = 48.dp),
                         )
                     } else {
-                        Box {
+                        Box(
+                            modifier =
+                                Modifier.onGloballyPositioned {
+                                    inputBlockTopLeft = it.boundsInParent().topLeft
+                                }
+                        ) {
                             Column(verticalArrangement = Arrangement.spacedBy(space)) {
                                 Box {
                                     SrcTokenInput(
@@ -324,8 +332,12 @@ internal fun SwapScreen(
                             title = stringResource(R.string.dialog_default_error_title),
                             offset =
                                 IntOffset(
-                                    x = flipButtonBottomCenter.x.toInt() - errorWidthBoxPx.div(2),
-                                    y = flipButtonBottomCenter.y.toInt() + spacePx,
+                                    x =
+                                        (inputBlockTopLeft.x + flipButtonBottomCenter.x).toInt() -
+                                            errorWidthBoxPx.div(2),
+                                    y =
+                                        (inputBlockTopLeft.y + flipButtonBottomCenter.y).toInt() +
+                                            spacePx,
                                 ),
                             isVisible = true,
                         )
