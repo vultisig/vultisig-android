@@ -52,6 +52,7 @@ import com.vultisig.wallet.ui.models.keysign.JoinKeysignViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.VerifyUiModel
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
+import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimDoneContent
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.sign.VerifySignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
@@ -180,11 +181,16 @@ internal fun JoinKeysignView() {
 
             is QbtcClaim -> {
                 val claim = state as QbtcClaim
-                KeysignLoadingScreen(
-                    text =
-                        if (claim.txHash == null) stringResource(R.string.qbtc_claim_proving)
-                        else stringResource(R.string.qbtc_claim_success_title)
-                )
+                if (claim.txHash == null) {
+                    KeysignLoadingScreen(text = stringResource(R.string.qbtc_claim_proving))
+                } else {
+                    QbtcClaimDoneContent(
+                        txHash = claim.txHash,
+                        explorerUrl = claim.explorerUrl.orEmpty(),
+                        totalSats = claim.totalSats ?: 0L,
+                        onComplete = viewModel::complete,
+                    )
+                }
             }
 
             Keysign -> {

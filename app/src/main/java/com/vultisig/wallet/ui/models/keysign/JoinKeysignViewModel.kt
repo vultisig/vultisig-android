@@ -35,6 +35,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
@@ -215,8 +216,14 @@ sealed interface JoinKeysignState {
 
     /**
      * QBTC claim co-sign: [txHash] null while signing, set once the initiator pushes the result.
+     * [explorerUrl] is the QBTC explorer link for [txHash], populated alongside it so the peer's
+     * done screen can link out the same way the initiator's does.
      */
-    data class QbtcClaim(val txHash: String?, val totalSats: Long?) : JoinKeysignState
+    data class QbtcClaim(
+        val txHash: String?,
+        val totalSats: Long?,
+        val explorerUrl: String? = null,
+    ) : JoinKeysignState
 
     data class Error(val errorType: JoinKeysignError) : JoinKeysignState
 }
@@ -271,6 +278,7 @@ constructor(
     private val buildHeroContent: BuildHeroContentUseCase,
     private val qbtcClaimCosign: QbtcClaimCosignUseCase,
     private val resolveQbtcClaimCoins: ResolveQbtcClaimCoinsUseCase,
+    private val explorerLinkRepository: ExplorerLinkRepository,
     private val joinSwapUiModelBuilder: JoinSwapUiModelBuilder,
     private val joinDepositUiModelBuilder: JoinDepositUiModelBuilder,
     private val joinSendUiModelBuilder: JoinSendUiModelBuilder,
@@ -1000,7 +1008,14 @@ constructor(
                     encryptionKeyHex = _encryptionKeyHex,
                 )
             _currentState.value =
-                JoinKeysignState.QbtcClaim(txHash = result.txHash, totalSats = result.totalSats)
+                JoinKeysignState.QbtcClaim(
+                    txHash = result.txHash,
+                    totalSats = result.totalSats,
+                    explorerUrl =
+                        result.txHash?.let {
+                            explorerLinkRepository.getTransactionLink(Chain.Qbtc, it)
+                        },
+                )
         }
     }
 
