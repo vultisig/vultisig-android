@@ -41,29 +41,44 @@ internal class StakeStrategyTest {
 
     @Test
     fun `whales deposit uses Deposit comment, bounceable dest and scaled amount`() = runTest {
-        givenPool(implementation = "whales", minStake = 0)
+        // min_stake 1 TON + 1 TON commission => 2 TON minimum; deposit exactly 2 TON.
+        givenPool(implementation = "whales", minStake = 1_000_000_000)
         givenAccounts()
         givenSpecific()
         nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
-        tokenAmount.setTextAndPlaceCursorAtEnd("1")
+        tokenAmount.setTextAndPlaceCursorAtEnd("2")
 
         val tx = stake().build()
 
         assertEquals("Deposit", tx.memo)
         assertEquals(tonCoin(), tx.srcToken)
         assertEquals("EQ_0:pool", tx.dstAddress)
-        assertEquals(BigInteger.valueOf(1_000_000_000), tx.srcTokenValue.value)
+        assertEquals(BigInteger.valueOf(2_000_000_000), tx.srcTokenValue.value)
     }
 
     @Test
     fun `tf deposit uses d comment`() = runTest {
-        givenPool(implementation = "tf", minStake = 0)
+        givenPool(implementation = "tf", minStake = 1_000_000_000)
         givenAccounts()
         givenSpecific()
         nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
-        tokenAmount.setTextAndPlaceCursorAtEnd("1")
+        tokenAmount.setTextAndPlaceCursorAtEnd("2")
 
         assertEquals("d", stake().build().memo)
+    }
+
+    @Test
+    fun `deposit blocked when pool reports no usable minimum stake`() = runTest {
+        givenPool(implementation = "whales", minStake = 0)
+        givenAccounts()
+        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
+        tokenAmount.setTextAndPlaceCursorAtEnd("100")
+
+        val ex = assertFailsWith<InvalidTransactionDataException> { stake().build() }
+        assertEquals(
+            R.string.ton_stake_error_unsupported_pool,
+            (ex.text as UiText.StringResource).resId,
+        )
     }
 
     @Test
@@ -141,7 +156,7 @@ internal class StakeStrategyTest {
 
     @Test
     fun `stake throws when token amount is missing or zero`() = runTest {
-        givenPool(implementation = "whales", minStake = 0)
+        givenPool(implementation = "whales", minStake = 1_000_000_000)
         givenAccounts()
         nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
         tokenAmount.setTextAndPlaceCursorAtEnd("0")

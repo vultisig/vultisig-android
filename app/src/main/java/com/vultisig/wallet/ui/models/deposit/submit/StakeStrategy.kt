@@ -139,8 +139,16 @@ internal suspend fun buildTonStakingTransaction(
 
     val amountNano =
         when (action) {
-            TonStakingAction.DEPOSIT ->
-                resolveDepositAmount(tokenAmountFieldState, selectedToken, poolInfo.minStake)
+            TonStakingAction.DEPOSIT -> {
+                // A deposit needs a real minimum to enforce; a missing/zero min_stake means drifted
+                // pool metadata, so block rather than silently allow a near-zero deposit.
+                val minStakeNano =
+                    poolInfo.minStake?.takeIf { it > 0 }
+                        ?: throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.ton_stake_error_unsupported_pool)
+                        )
+                resolveDepositAmount(tokenAmountFieldState, selectedToken, minStakeNano)
+            }
             // The withdraw message carries only the fixed signal fee; the entered amount is
             // ignored.
             TonStakingAction.WITHDRAW -> TonNominatorPool.WITHDRAW_FEE
@@ -187,7 +195,7 @@ internal suspend fun buildTonStakingTransaction(
 private fun resolveDepositAmount(
     tokenAmountFieldState: TextFieldState,
     token: Coin,
-    minStakeNano: Long?,
+    minStakeNano: Long,
 ): BigInteger {
     val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
     if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
@@ -196,7 +204,7 @@ private fun resolveDepositAmount(
 
     val amountNano = tokenAmount.movePointRight(token.decimal).toBigInteger()
 
-    val minDeposit = TonNominatorPool.minimumDeposit(BigInteger.valueOf(minStakeNano ?: 0L))
+    val minDeposit = TonNominatorPool.minimumDeposit(BigInteger.valueOf(minStakeNano))
     if (amountNano < minDeposit) {
         val minDepositTon = BigDecimal(minDeposit).movePointLeft(token.decimal).stripTrailingZeros()
         throw InvalidTransactionDataException(
