@@ -184,7 +184,7 @@ constructor(
     private fun collectBannerVisibility(vaultId: VaultId) {
         bannerJob?.cancel()
         bannerJob =
-            viewModelScope.launch {
+            viewModelScope.safeLaunch {
                 // Re-collected per vault so an expired TTL is re-evaluated on vault switch / home
                 // re-entry. The upgrade banner is migration-only (GG20); the others depend solely
                 // on
