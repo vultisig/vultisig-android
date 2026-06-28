@@ -20,11 +20,12 @@ import com.vultisig.wallet.ui.screens.v2.home.pager.container.HomePagePagerConta
 internal fun HomepagePager(
     modifier: Modifier = Modifier,
     params: HomepagePagerParams,
-    onCloseClick: () -> Unit,
     onUpgradeClick: () -> Unit,
     onFollowXClick: () -> Unit,
     onBuyVultClick: () -> Unit,
     onBuyVultDismiss: () -> Unit,
+    onUpgradeDismiss: () -> Unit,
+    onFollowXDismiss: () -> Unit,
 ) {
     val state = rememberVsPagerState(key = params)
 
@@ -33,16 +34,16 @@ internal fun HomepagePager(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         VsPager(state = state) {
-            if (params.hasMigration && params.showSessionBanners)
+            if (params.showUpgrade)
                 item {
-                    HomePagePagerContainer(onCloseClick = onCloseClick) {
+                    HomePagePagerContainer(onCloseClick = onUpgradeDismiss) {
                         UpgradeBanner(onUpgradeClick = onUpgradeClick)
                     }
                 }
 
-            if (params.showSessionBanners)
+            if (params.showFollowX)
                 item {
-                    HomePagePagerContainer(onCloseClick = onCloseClick) {
+                    HomePagePagerContainer(onCloseClick = onFollowXDismiss) {
                         FollowXBanner(onFollowXClick = onFollowXClick)
                     }
                 }
@@ -72,18 +73,18 @@ internal fun HomepagePager(
 @Composable
 private fun HomepagePagerPreview() {
     HomepagePager(
-        params =
-            HomepagePagerParams(hasMigration = true, showSessionBanners = true, showBuyVult = true),
-        onCloseClick = {},
+        params = HomepagePagerParams(showUpgrade = true, showFollowX = true, showBuyVult = true),
         onUpgradeClick = {},
         onFollowXClick = {},
         onBuyVultClick = {},
         onBuyVultDismiss = {},
+        onUpgradeDismiss = {},
+        onFollowXDismiss = {},
     )
 }
 
 internal data class HomepagePagerParams(
-    val hasMigration: Boolean,
-    val showSessionBanners: Boolean,
+    val showUpgrade: Boolean,
+    val showFollowX: Boolean,
     val showBuyVult: Boolean,
 )

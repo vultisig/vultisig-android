@@ -28,6 +28,8 @@ import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
 import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
+import com.vultisig.wallet.data.repositories.PromoBanner
+import com.vultisig.wallet.data.repositories.PromoBannerDismissalRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TiersNFTRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -35,7 +37,6 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
-import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.HasCircleAccountUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
@@ -84,7 +85,6 @@ internal data class VaultAccountsUiModel(
     val showNotificationIntroSheet: Boolean = false,
     val showNotificationVaultSheet: Boolean = false,
     val notificationIntroVaults: List<VaultIntroItem> = emptyList(),
-    val showMigration: Boolean = false,
     val isRefreshing: Boolean = false,
     val totalFiatValue: String? = null,
     val totalDeFiValue: String? = null,
@@ -92,7 +92,11 @@ internal data class VaultAccountsUiModel(
     val accounts: List<AccountUiModel> = emptyList(),
     val defiAccounts: List<AccountUiModel> = emptyList(),
     val searchTextFieldState: TextFieldState = TextFieldState(),
-    val isBannerVisible: Boolean = true,
+    // Per-banner visibility, each gated on a global, TTL-based dismissal (#5064). The upgrade
+    // banner
+    // additionally requires the vault to be GG20 (migration-eligible).
+    val showUpgradeBanner: Boolean = false,
+    val showFollowXBanner: Boolean = false,
     val showBuyVultBanner: Boolean = false,
     val cryptoConnectionType: CryptoConnectionType = CryptoConnectionType.Wallet,
     val scanQrUiModel: ScanQrUiModel = ScanQrUiModel(),
@@ -142,7 +146,7 @@ constructor(
     private val setNeverShowGlobalBackupReminder: NeverShowGlobalBackupReminderUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
-    private val getDiscountBpsUseCase: GetDiscountBpsUseCase,
+    private val promoBannerDismissalRepository: PromoBannerDismissalRepository,
     private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository,
     private val defaultDeFiChainsRepository: DefaultDeFiChainsRepository,
     private val hasCircleAccount: HasCircleAccountUseCase,
@@ -161,18 +165,13 @@ constructor(
     private var loadVaultNameJob: Job? = null
     private var loadAccountsJob: Job? = null
     private var loadDeFiBalancesJob: Job? = null
-    private var buyVultBannerJob: Job? = null
+    private var bannerJob: Job? = null
 
     // Last merged snapshot per stream (wallet / DeFi), keyed in-memory so a chain that comes back
     // with a null balance mid-refetch can carry its previously-shown value forward (#4768). Reset
     // on vault switch so one vault's balances never leak into the next.
     private var lastWalletAddresses: List<Address> = emptyList()
     private var lastDeFiAddresses: List<Address> = emptyList()
-
-    // In-memory "dismissed for this visit" flag. When the vault holds less than the Silver-tier
-    // VULT amount, closing the Buy VULT banner only flips this (no persistence), so it returns the
-    // next time the home screen is entered or the vault is switched.
-    private val buyVultSessionDismissed = MutableStateFlow(false)
 
     private val _requestNotificationPermission = Channel<Unit>(Channel.BUFFERED)
     val requestNotificationPermission = _requestNotificationPermission.receiveAsFlow()
@@ -182,17 +181,37 @@ constructor(
         collectLastOpenedVault()
     }
 
-    private fun collectBuyVultBannerDismissed(vaultId: VaultId) {
-        buyVultBannerJob?.cancel()
-        buyVultBannerJob =
+    private fun collectBannerVisibility(vaultId: VaultId) {
+        bannerJob?.cancel()
+        bannerJob =
             viewModelScope.launch {
+                // Re-collected per vault so an expired TTL is re-evaluated on vault switch / home
+                // re-entry. The upgrade banner is migration-only (GG20); the others depend solely
+                // on
+                // their global dismissal window.
+                val isMigrationEligible =
+                    withContext(ioDispatcher) { vaultRepository.get(vaultId) }?.libType ==
+                        SigningLibType.GG20
                 combine(
-                        vaultDataStoreRepository.readBuyVultBannerDismissed(vaultId),
-                        buyVultSessionDismissed,
-                    ) { persisted, session ->
-                        !persisted && !session
+                        promoBannerDismissalRepository.isDismissed(PromoBanner.UpgradeVaultDkls),
+                        promoBannerDismissalRepository.isDismissed(PromoBanner.FollowXVultisig),
+                        promoBannerDismissalRepository.isDismissed(PromoBanner.BuyVultSwap),
+                    ) { upgradeDismissed, followXDismissed, buyVultDismissed ->
+                        Triple(
+                            isMigrationEligible && !upgradeDismissed,
+                            !followXDismissed,
+                            !buyVultDismissed,
+                        )
                     }
-                    .collect { show -> uiState.update { it.copy(showBuyVultBanner = show) } }
+                    .collect { (showUpgrade, showFollowX, showBuyVult) ->
+                        uiState.update {
+                            it.copy(
+                                showUpgradeBanner = showUpgrade,
+                                showFollowXBanner = showFollowX,
+                                showBuyVultBanner = showBuyVult,
+                            )
+                        }
+                    }
             }
     }
 
@@ -233,8 +252,6 @@ constructor(
 
         this.vaultId = vaultId
         if (vaultChanged) {
-            // Don't carry a per-visit Buy VULT dismissal across to the next vault.
-            buyVultSessionDismissed.value = false
             // Drop the previous vault's balances so the retain/partial-total logic can't surface
             // one vault's totals or rows under the next (#4768).
             lastWalletAddresses = emptyList()
@@ -248,7 +265,7 @@ constructor(
                 )
             }
         }
-        collectBuyVultBannerDismissed(vaultId)
+        collectBannerVisibility(vaultId)
         loadVaultNameAndShowBackup(vaultId)
         loadAccounts(vaultId)
         loadBalanceVisibility(vaultId)
@@ -364,16 +381,18 @@ constructor(
         }
     }
 
-    fun dismissBuyVultBanner() {
-        val vaultId = vaultId ?: return
-        // Always hide for the current visit; only persist once the vault reaches Silver tier,
-        // otherwise the banner returns on the next entry to the home screen / vault switch.
-        buyVultSessionDismissed.value = true
-        viewModelScope.safeLaunch {
-            if (getDiscountBpsUseCase.hasReachedSilverTier(vaultId)) {
-                vaultDataStoreRepository.setBuyVultBannerDismissed(vaultId, true)
-            }
-        }
+    fun dismissBuyVultBanner() = dismissPromoBanner(PromoBanner.BuyVultSwap)
+
+    fun dismissUpgradeBanner() = dismissPromoBanner(PromoBanner.UpgradeVaultDkls)
+
+    fun dismissFollowXBanner() = dismissPromoBanner(PromoBanner.FollowXVultisig)
+
+    // Global, TTL-based dismissal: the banner stays hidden across vaults until its TTL elapses,
+    // then
+    // becomes eligible again (#5064). Writing the timestamp re-emits the dismissal flow, so the
+    // banner hides reactively without a session flag.
+    private fun dismissPromoBanner(banner: PromoBanner) {
+        viewModelScope.safeLaunch { promoBannerDismissalRepository.dismiss(banner) }
     }
 
     fun receive() {
@@ -458,8 +477,6 @@ constructor(
                 }
                 val isVaultBackedUp = vaultDataStoreRepository.readBackupStatus(vaultId).first()
                 uiState.update { it.copy(showBackupWarning = !isVaultBackedUp) }
-                val showMigration = vault.libType == SigningLibType.GG20
-                uiState.update { it.copy(showMigration = showMigration) }
             }
     }
 
@@ -710,10 +727,6 @@ constructor(
                 navigator.route(Route.VaultList(openType = Route.VaultList.OpenType.Home(it)))
             }
         }
-    }
-
-    fun tempRemoveBanner() {
-        uiState.update { it.copy(isBannerVisible = false) }
     }
 
     fun setCryptoConnectionType(type: CryptoConnectionType) {
