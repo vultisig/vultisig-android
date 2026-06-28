@@ -93,7 +93,7 @@ internal class TonDappHeroResolverTest {
             )
 
         val swap = hero as HeroContent.Swap
-        assertEquals("TON", swap.from.ticker)
+        assertEquals("GRAM", swap.from.ticker)
         assertEquals("USDT", swap.to.ticker)
     }
 
