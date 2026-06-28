@@ -220,6 +220,10 @@ constructor(
             swapResponse.providers.firstOrNull()?.takeIf { it.isNotBlank() }
                 ?: swapResponse.meta.subProvider?.takeIf { it.isNotBlank() }
 
+        // Fractional price impact (e.g. 0.0133 == 1.33%) for the Price Impact row (iOS parity).
+        // SwapKit reports it on the chosen route as totalSlippageBps; map bps → fraction.
+        val priceImpact = best.totalSlippageBps?.let { BigDecimal.valueOf(it).movePointLeft(4) }
+
         // EVM + Solana ride the EVMSwapQuoteJson envelope (Solana signers pull the base64 blob
         // from `tx.data`, matching how JupiterQuoteSource stages a Solana swap). PSBT (Bitcoin),
         // TRON and TON can't fit that shape, so they surface as a fully-formed SwapQuote.SwapKit
@@ -237,6 +241,7 @@ constructor(
                         ),
                     subProvider = subProvider,
                     swapId = swapId,
+                    priceImpact = priceImpact,
                 )
             TxKind.PSBT,
             TxKind.TRON,
@@ -246,7 +251,13 @@ constructor(
             TxKind.TON,
             TxKind.XRP ->
                 SwapQuoteResult.Native(
-                    buildSwapKitNativeQuote(swapResponse, request, subProvider, best.fees)
+                    buildSwapKitNativeQuote(
+                        swapResponse,
+                        request,
+                        subProvider,
+                        best.fees,
+                        priceImpact,
+                    )
                 )
             TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(swapResponse.meta.txType)
         }
@@ -503,6 +514,7 @@ constructor(
         request: SwapQuoteRequest,
         subProvider: String?,
         routeFees: List<SwapKitFee>,
+        priceImpact: BigDecimal?,
     ): SwapQuote.SwapKit {
         val srcToken = request.srcToken
         val dstToken = request.dstToken
@@ -553,6 +565,7 @@ constructor(
             expiredAt = Clock.System.now() + expiredAfter,
             data = payload,
             subProvider = subProvider,
+            priceImpact = priceImpact,
         )
     }
 
