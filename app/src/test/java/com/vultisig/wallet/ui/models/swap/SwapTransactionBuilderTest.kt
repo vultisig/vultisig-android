@@ -3,6 +3,7 @@
 package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.Fees
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
@@ -66,6 +67,8 @@ internal class SwapTransactionBuilderTest {
         val dstToken = coin(Chain.Ethereum, "ETH", "0xdst", 18, isNative = true)
         val data =
             mockk<THORChainSwapQuote>(relaxed = true).apply {
+                every { fees } returns
+                    Fees(affiliate = "0", asset = "0", outbound = "0", total = "0")
                 every { router } returns null
                 every { inboundAddress } returns "thor-inbound"
                 every { memo } returns "=:ETH.ETH:0xdst"
@@ -119,6 +122,8 @@ internal class SwapTransactionBuilderTest {
         val dstToken = coin(Chain.Bitcoin, "BTC", "bc1qdst", 8, isNative = true)
         val data =
             mockk<THORChainSwapQuote>(relaxed = true).apply {
+                every { fees } returns
+                    Fees(affiliate = "0", asset = "0", outbound = "0", total = "0")
                 every { router } returns null
                 every { inboundAddress } returns "maya-inbound"
                 every { memo } returns "=:BTC.BTC:bc1qdst"
@@ -167,6 +172,8 @@ internal class SwapTransactionBuilderTest {
         val dstToken = coin(Chain.Bitcoin, "BTC", "bc1qdst", 8, isNative = true)
         val data =
             mockk<THORChainSwapQuote>(relaxed = true).apply {
+                every { fees } returns
+                    Fees(affiliate = "0", asset = "0", outbound = "0", total = "0")
                 every { router } returns "0xrouter"
                 every { inboundAddress } returns "thor-inbound"
                 every { memo } returns "=:BTC.BTC:bc1qdst"
@@ -219,6 +226,8 @@ internal class SwapTransactionBuilderTest {
         val dstToken = coin(Chain.Bitcoin, "BTC", "bc1qdst", 8, isNative = true)
         val data =
             mockk<THORChainSwapQuote>(relaxed = true).apply {
+                every { fees } returns
+                    Fees(affiliate = "0", asset = "0", outbound = "0", total = "0")
                 every { router } returns "0xrouter"
                 every { inboundAddress } returns "maya-inbound"
                 every { memo } returns "=:BTC.BTC:bc1qdst"
@@ -601,6 +610,8 @@ internal class SwapTransactionBuilderTest {
             val dstToken = coin(Chain.Ethereum, "ETH", "0xdst", 18, isNative = true)
             val data =
                 mockk<THORChainSwapQuote>(relaxed = true).apply {
+                    every { fees } returns
+                        Fees(affiliate = "0", asset = "0", outbound = "0", total = "0")
                     every { router } returns null
                     every { inboundAddress } returns "thor-inbound"
                     every { memo } returns "=:ETH.ETH:0xExternal"

@@ -292,6 +292,16 @@ private fun VerifySwapScreen(
                         subtitle = tx.providerFee.fiatValue,
                     )
 
+                    // Shown only for THORChain / MayaChain, which report an outbound fee distinct
+                    // from the affiliate swap fee. Mirrors the swap form's breakdown so the rows
+                    // reconcile to the total (#5061).
+                    tx.outboundFee?.let { outboundFee ->
+                        VerifyCardDetails(
+                            title = stringResource(R.string.swap_form_outbound_fee_title),
+                            subtitle = outboundFee,
+                        )
+                    }
+
                     VerifyCardDivider(size = 10.dp)
 
                     VerifyCardDetails(
