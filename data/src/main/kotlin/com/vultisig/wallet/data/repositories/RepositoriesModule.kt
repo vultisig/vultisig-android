@@ -72,6 +72,12 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindPromoBannerDismissalRepository(
+        impl: PromoBannerDismissalRepositoryImpl
+    ): PromoBannerDismissalRepository
+
+    @Binds
+    @Singleton
     fun bindTransactionRepository(impl: TransactionRepositoryImpl): TransactionRepository
 
     @Binds

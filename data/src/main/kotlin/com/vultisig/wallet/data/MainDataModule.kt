@@ -7,6 +7,7 @@ import androidx.datastore.core.DataMigration
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.data.sources.AppDataStoreImpl
@@ -45,7 +46,8 @@ internal interface MainDataModule {
         @Singleton
         fun provideDataStore(@ApplicationContext context: Context) =
             PreferenceDataStoreFactory.create(
-                migrations = listOf(removeLegacyBuyVultBannerKey()),
+                migrations =
+                    listOf(removeLegacyBuyVultBannerKey(), migrateLegacyPerVaultBuyVultDismissal()),
                 produceFile = { context.preferencesDataStoreFile("app_pref") },
             )
 
@@ -63,6 +65,39 @@ internal interface MainDataModule {
 
                 override suspend fun migrate(currentData: Preferences) =
                     currentData.toMutablePreferences().apply { remove(legacyKey) }.toPreferences()
+
+                override suspend fun cleanUp() = Unit
+            }
+        }
+
+        /**
+         * Migrates the per-vault Buy VULT dismissal (`buy_vult_banner_dismissed/<vaultId>`, a
+         * boolean with no expiry) onto the new global, TTL-based model (#5064). If the banner was
+         * dismissed in any vault, the global `banner_dismissed_at/buy_vult_swap` timestamp is
+         * seeded to "now" so the user's dismissal is honored across vaults for the banner's TTL
+         * instead of resetting. The old per-vault keys are then removed so they don't linger.
+         */
+        private fun migrateLegacyPerVaultBuyVultDismissal(): DataMigration<Preferences> {
+            val perVaultPrefix = "buy_vult_banner_dismissed/"
+            val globalDismissedAtKey = longPreferencesKey("banner_dismissed_at/buy_vult_swap")
+            return object : DataMigration<Preferences> {
+                override suspend fun shouldMigrate(currentData: Preferences) =
+                    currentData.asMap().keys.any { it.name.startsWith(perVaultPrefix) }
+
+                override suspend fun migrate(currentData: Preferences): Preferences {
+                    val perVaultKeys =
+                        currentData.asMap().keys.filter { it.name.startsWith(perVaultPrefix) }
+                    val wasDismissed = perVaultKeys.any { currentData[it] as? Boolean == true }
+                    return currentData
+                        .toMutablePreferences()
+                        .apply {
+                            if (wasDismissed && !currentData.contains(globalDismissedAtKey)) {
+                                this[globalDismissedAtKey] = System.currentTimeMillis()
+                            }
+                            perVaultKeys.forEach { remove(it) }
+                        }
+                        .toPreferences()
+                }
 
                 override suspend fun cleanUp() = Unit
             }
