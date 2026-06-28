@@ -20,9 +20,9 @@ import kotlinx.coroutines.flow.map
  * can be tuned per banner in one place.
  */
 enum class PromoBanner(val id: String, val ttl: Duration) {
-    UpgradeVaultDkls(id = "upgrade_vault_dkls", ttl = 14.days),
+    UpgradeVaultDkls(id = "upgrade_vault_dkls", ttl = 15.days),
     BuyVultSwap(id = "buy_vult_swap", ttl = 7.days),
-    FollowXVultisig(id = "follow_x_vultisig", ttl = 30.days),
+    FollowXVultisig(id = "follow_x_vultisig", ttl = 15.days),
 }
 
 interface PromoBannerDismissalRepository {
