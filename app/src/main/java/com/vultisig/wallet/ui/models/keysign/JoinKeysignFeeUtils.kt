@@ -39,10 +39,15 @@ internal fun computeJoinKeysignNetworkFee(
 
 /**
  * Swap-only fee helper. Only [BlockChainSpecific.Ethereum] and [BlockChainSpecific.THORChain] are
- * reachable in the swap branch — every other subtype goes through `feeServiceComposite`. The
- * Ethereum case uses [EthereumFeeService.DEFAULT_SWAP_LIMIT] so joiner output matches the
- * initiator's swap-fee display (see [EthereumFeeService.calculateDefaultFees] for Swap) instead of
- * being ~15× lower for native ETH/Arb transfers.
+ * reachable in the swap branch — every other subtype goes through `feeServiceComposite`.
+ *
+ * For EVM the joiner re-bases the displayed fee onto the gas limit the swap tx is signed with: an
+ * EVM aggregator route (1inch / Kyber / LI.FI / SwapKit) carries its own [aggregatorRouteGas],
+ * which the signer floors by the payload's [BlockChainSpecific.Ethereum.gasLimit], so the joiner
+ * mirrors `maxFeePerGas × maxOf(routeGas, gasLimit)` to match the initiator (issue #5056).
+ * Native-protocol deposits (THORChain / Maya EVM) carry no route gas, so they keep
+ * [EthereumFeeService.DEFAULT_SWAP_LIMIT] — matching the initiator's flat swap-fee display instead
+ * of being ~15× lower for native ETH/Arb.
  *
  * The [error] branch is the safety net for [JoinKeysignViewModel.loadTransaction]'s swap path: if a
  * new [BlockChainSpecific] subtype is ever added to that branch's type check, this helper crashes
@@ -51,13 +56,15 @@ internal fun computeJoinKeysignNetworkFee(
 internal fun computeJoinKeysignSwapNetworkFee(
     blockChainSpecific: BlockChainSpecific,
     nativeCoin: Coin,
+    aggregatorRouteGas: BigInteger? = null,
 ): TokenValue =
     when (blockChainSpecific) {
-        is BlockChainSpecific.Ethereum ->
-            TokenValue(
-                value = blockChainSpecific.maxFeePerGasWei * EthereumFeeService.DEFAULT_SWAP_LIMIT,
-                token = nativeCoin,
-            )
+        is BlockChainSpecific.Ethereum -> {
+            val limit =
+                aggregatorRouteGas?.let { maxOf(it, blockChainSpecific.gasLimit) }
+                    ?: EthereumFeeService.DEFAULT_SWAP_LIMIT
+            TokenValue(value = blockChainSpecific.maxFeePerGasWei * limit, token = nativeCoin)
+        }
         is BlockChainSpecific.THORChain ->
             TokenValue(value = blockChainSpecific.fee, token = nativeCoin)
         else ->

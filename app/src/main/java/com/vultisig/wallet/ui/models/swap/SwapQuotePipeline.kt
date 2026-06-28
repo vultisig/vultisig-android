@@ -446,6 +446,7 @@ internal class SwapQuotePipeline(
         var formError: UiText? = null
         var networkFee: NetworkFeeUpdate? = null
         var effectiveNetworkFeeTokenValue = networkFeeTokenValue
+        val quote = result.quote
 
         if (result.isUtxoSwap) {
             val currentGasFee = gasFee?.takeIf { gasFeeChain == srcToken.chain }
@@ -491,6 +492,31 @@ internal class SwapQuotePipeline(
                 // previous chain. isSwapDisabled stays true until the plan fee is verified.
                 networkFee = NetworkFeeUpdate.Clear
                 effectiveNetworkFeeTokenValue = null
+            }
+        } else if (quote is SwapQuote.OneInch && srcToken.chain.standard == TokenStandard.EVM) {
+            // EVM aggregator routes (1inch / Kyber / LI.FI / SwapKit) sign with the route's own gas
+            // limit, but the gas pass computed the displayed fee from the flat DEFAULT_SWAP_LIMIT
+            // before the quote landed. Re-base it onto the route gas so the estimate matches the
+            // signed/paid fee instead of a worst-case ~2x over-estimate (#5056). A route with no
+            // usable gas (e.g. Jupiter's Solana quotes) leaves the gas-pass value untouched.
+            val currentGasFee = gasFee?.takeIf { gasFeeChain == srcToken.chain }
+            val rebased =
+                currentGasFee?.let {
+                    swapGasCalculator.rebaseEvmSwapNetworkFee(
+                        srcToken = srcToken,
+                        baselineGasFee = it,
+                        routeGas = quote.data.tx.gas,
+                    )
+                }
+            if (rebased != null) {
+                networkFee =
+                    NetworkFeeUpdate.Set(
+                        tokenValue = rebased.estimated.tokenValue,
+                        fiatValue = rebased.estimated.fiatValue,
+                        formattedTokenValue = rebased.estimated.formattedTokenValue,
+                        formattedFiatValue = rebased.estimated.formattedFiatValue,
+                    )
+                effectiveNetworkFeeTokenValue = rebased.estimated.tokenValue
             }
         }
 

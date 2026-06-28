@@ -278,20 +278,27 @@ constructor(
                 // user override (#4858) must be reflected in the displayed/verify fee too — else a
                 // lowered limit could show a fee that can't match what executes (review #4969).
                 // Recompute the max-fee from the override (gasLimit × maxFeePerGas) and re-value it
-                // in fiat via the native-token price implied by the matched (gasFee,
-                // gasFeeFiatValue)
-                // pair (fiat ÷ token, gas-independent). Auto (no override) keeps the estimate.
+                // in fiat via the native-token price implied by the displayed fee pair (fiat ÷
+                // token, gas-independent). Use estimatedNetworkFeeTokenValue as the wei reference —
+                // it is the matched partner of gasFeeFiatValue and is re-based onto the route gas
+                // for aggregator swaps (#5056), whereas gasFee stays the flat-600k baseline and
+                // would skew the implied price. Auto (no override) keeps the estimate.
+                val priceReferenceFee = estimatedNetworkFeeTokenValue ?: gasFee
                 val (displayGasFees, displayGasFeeFiat) =
                     if (
                         specific is BlockChainSpecific.Ethereum &&
                             hasGasOverride &&
-                            gasFee.value.signum() > 0
+                            priceReferenceFee.value.signum() > 0
                     ) {
                         val overriddenFeeWei = gasLimit.toBigInteger() * specific.maxFeePerGasWei
                         val overriddenFiat =
                             gasFeeFiatValue.value
                                 .multiply(overriddenFeeWei.toBigDecimal())
-                                .divide(gasFee.value.toBigDecimal(), 10, RoundingMode.HALF_UP)
+                                .divide(
+                                    priceReferenceFee.value.toBigDecimal(),
+                                    10,
+                                    RoundingMode.HALF_UP,
+                                )
                         gasFee.copy(value = overriddenFeeWei) to
                             FiatValue(overriddenFiat, gasFeeFiatValue.currency)
                     } else {

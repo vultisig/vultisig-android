@@ -84,6 +84,17 @@ constructor(
 
         val chain = srcToken.chain
         val blockChainSpecific = payload.blockChainSpecific
+        // EVM aggregator routes carry their own signed gas limit; pass it so the joiner's network
+        // fee mirrors the initiator's route-gas estimate instead of the flat 600k (#5056). Native
+        // protocol deposits (THORChain / Maya) have no route gas, so this stays null.
+        val aggregatorRouteGas =
+            (swapPayload as? SwapPayload.EVM)
+                ?.data
+                ?.quote
+                ?.tx
+                ?.gas
+                ?.takeIf { it > 0L }
+                ?.toBigInteger()
         val gasFee =
             when {
                 chain.standard == TokenStandard.UTXO && chain != Chain.Cardano -> {
@@ -99,6 +110,7 @@ constructor(
                     computeJoinKeysignSwapNetworkFee(
                         blockChainSpecific = blockChainSpecific,
                         nativeCoin = nativeToken,
+                        aggregatorRouteGas = aggregatorRouteGas,
                     )
                 else -> {
                     val (nativeTokenAddress, _) =

@@ -595,6 +595,59 @@ internal class SwapTransactionBuilderTest {
     }
 
     @Test
+    fun `gas-limit override re-values fiat from the route-gas estimate, not the flat baseline`() =
+        runTest {
+            val srcToken =
+                coin(Chain.Ethereum, "USDC", "0xsrc", 6, isNative = false, contract = "0xtoken")
+            val dstToken = coin(Chain.Ethereum, "ETH", "0xdst", 18, isNative = true)
+            val nativeEth = coin(Chain.Ethereum, "ETH", "0xsrc", 18, isNative = true)
+            coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+                ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(10))
+            val tx0 =
+                OneInchSwapTxJson(
+                    from = "0xsrc",
+                    to = "0xrouter",
+                    allowanceTarget = "0xproxy",
+                    gas = 21_000,
+                    data = "0xdata",
+                    value = "0",
+                    gasPrice = "1",
+                )
+            val quote =
+                SwapQuote.OneInch(
+                    expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
+                    fees = TokenValue(BigInteger.valueOf(9), dstToken),
+                    expiredAt = Clock.System.now(),
+                    data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
+                    provider = "1inch",
+                )
+
+            val tx =
+                builder.build(
+                    vaultId = "vault-fee-pair",
+                    srcToken = srcToken,
+                    dstToken = dstToken,
+                    srcAddress = "0xsrc",
+                    srcTokenValue = TokenValue(BigInteger.valueOf(1_000), srcToken),
+                    quote = quote,
+                    // gasFee stays the flat-600k baseline; the route-gas estimate (#5056) is the
+                    // matched display pair the override fiat must re-value against.
+                    gasFee = TokenValue(BigInteger.valueOf(6_000_000), nativeEth),
+                    gasFeeFiatValue = FiatValue(BigDecimal("4.00"), "USD"),
+                    estimatedNetworkFeeTokenValue =
+                        TokenValue(BigInteger.valueOf(2_000_000), nativeEth),
+                    estimatedNetworkFeeFiatValue = FiatValue(BigDecimal("4.00"), "USD"),
+                    gasLimitOverride = 300_000L,
+                )
+
+            // Max-fee = 300_000 × 10 = 3_000_000 wei, re-valued via the matched route-gas pair
+            // (4.00 ÷ 2_000_000): 4.00 × 3_000_000 / 2_000_000 = 6.00. The unmatched 600k baseline
+            // would wrongly give 4.00 × 3_000_000 / 6_000_000 = 2.00.
+            assertEquals(BigInteger.valueOf(3_000_000), tx.gasFees.value)
+            assertEquals(0, tx.gasFeeFiatValue.value.compareTo(BigDecimal("6.00")))
+        }
+
+    @Test
     fun `stamps the external recipient on the built transaction for verify-screen surfacing`() =
         runTest {
             val srcToken = coin(Chain.Bitcoin, "BTC", "bc1qsrc", 8, isNative = true)

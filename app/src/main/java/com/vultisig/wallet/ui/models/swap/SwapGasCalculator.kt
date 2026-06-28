@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
@@ -293,6 +294,52 @@ constructor(
         return if (isEVMSwap)
             BigInteger.valueOf(if (token.chain == Chain.Ethereum) ETH_GAS_LIMIT else ARB_GAS_LIMIT)
         else null
+    }
+
+    /**
+     * Re-bases the displayed network fee for an EVM aggregator swap onto the gas limit the swap tx
+     * is actually signed with — the route's own `tx.gas`, floored by the same per-chain limit the
+     * signing path applies ([getGasLimit] for native ETH/Arbitrum, otherwise [DEFAULT_SWAP_LIMIT])
+     * — instead of the flat [DEFAULT_SWAP_LIMIT] worst case used by [calculateGasFee] before the
+     * quote lands (issue #5056).
+     *
+     * [baselineGasFee] is the `maxFeePerGas × DEFAULT_SWAP_LIMIT` fee from [calculateGasFee];
+     * rescaling it by the real limit keeps the per-gas price untouched, so this is exact for chains
+     * with no L1 component (Ethereum/Arbitrum). Returns null when there is no usable route gas, or
+     * when the limit lands back on [DEFAULT_SWAP_LIMIT] — then the baseline already matches (and
+     * any OP-stack L1 component it carries is preserved unscaled).
+     */
+    suspend fun rebaseEvmSwapNetworkFee(
+        srcToken: Coin,
+        baselineGasFee: TokenValue,
+        routeGas: Long,
+    ): GasCalculationResult? {
+        if (routeGas <= 0L || baselineGasFee.value <= BigInteger.ZERO) return null
+        val signedGasLimit =
+            maxOf(routeGas.toBigInteger(), getGasLimit(srcToken) ?: DEFAULT_SWAP_LIMIT)
+        if (signedGasLimit == DEFAULT_SWAP_LIMIT) return null
+
+        val nativeCoin =
+            withContext(Dispatchers.IO) { tokenRepository.getNativeToken(srcToken.chain.id) }
+        val rebasedFee =
+            TokenValue(
+                value = baselineGasFee.value * signedGasLimit / DEFAULT_SWAP_LIMIT,
+                token = nativeCoin,
+            )
+        val estimated =
+            gasFeeToEstimatedFee(
+                GasFeeParams(
+                    gasLimit = BigInteger.ONE,
+                    gasFee = rebasedFee,
+                    selectedToken = srcToken,
+                    perUnit = true,
+                )
+            )
+        return GasCalculationResult(
+            gasFee = rebasedFee,
+            estimated = estimated,
+            chain = srcToken.chain,
+        )
     }
 
     companion object {

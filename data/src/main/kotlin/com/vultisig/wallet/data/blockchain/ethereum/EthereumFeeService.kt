@@ -208,8 +208,7 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
 
         val maxPriorityFeePerGas =
             calculateMaxPriorityFeePerGas(rewardsFeeHistory, chain, isSwap, evmApi)
-        val baseNetworkPrice =
-            calculateBaseNetworkPrice(baseNetworkPriceDeferred.await(), isSwap, chain)
+        val baseNetworkPrice = calculateBaseNetworkPrice(baseNetworkPriceDeferred.await(), isSwap)
         val maxFeePerGas = calculateMaxFeePerGas(baseNetworkPrice, maxPriorityFeePerGas)
 
         Eip1559(
@@ -228,21 +227,16 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         return baseNetworkPrice.increaseByPercent(20).add(maxPriorityFeePerGas)
     }
 
-    private fun calculateBaseNetworkPrice(
-        baseNetworkPrice: BigInteger,
-        swap: Boolean,
-        chain: Chain,
-    ): BigInteger {
+    private fun calculateBaseNetworkPrice(baseNetworkPrice: BigInteger, swap: Boolean): BigInteger {
         if (swap) {
-            // Ethereum swap calldata embeds a short deadline (1inch ~1–5 min, Kyber 20 min).
-            // The stored Eip1559.networkPrice ends up at baseFee × 1.5 for Ethereum
-            // (× 1.1 for other chains), and calculateMaxFeePerGas then bumps it by a
-            // further 20%, so the broadcast ceiling is baseFee × 1.8 + priorityFee on
-            // Ethereum (× 1.32 elsewhere). This is sized to survive base-fee spikes
-            // during the MPC review + sign window so the tx still lands before the
-            // deadline.
-            val bumpPercent = if (chain == Chain.Ethereum) 50 else 10
-            return baseNetworkPrice.increaseByPercent(bumpPercent)
+            // Swap calldata embeds a short deadline (1inch ~1–5 min, Kyber 20 min), so the
+            // committed base is bumped 10% and calculateMaxFeePerGas adds a further 20%, giving a
+            // broadcast ceiling of baseFee × 1.32 + priorityFee — enough headroom to survive a
+            // base-fee climb during the MPC review + sign window without inflating the fee. This
+            // matches iOS (FeeService: baseFee × 1.1 × 1.2 + tip) so the same route prices the
+            // same across platforms; the previous Ethereum-only × 1.5 over-bumped the bond ~36%
+            // above iOS for no inclusion benefit it doesn't already accept (issue #5056).
+            return baseNetworkPrice.increaseByPercent(SWAP_BASE_FEE_BUMP_PERCENT)
         }
         // Non-swap transfers: bump the committed base so the broadcast ceiling
         // (calculateMaxFeePerGas adds a further 20%) lands at baseFee × 1.5 + priorityFee
@@ -358,6 +352,10 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         // ceiling (~3 consecutive max EIP-1559 base-fee increases of 12.5%) so a transfer
         // survives a base-fee climb during the MPC review + sign window without stalling.
         private const val NON_SWAP_BASE_FEE_BUMP_PERCENT = 25
+
+        // Committed-base bump for swaps; the further 20% in calculateMaxFeePerGas then yields a
+        // baseFee × 1.32 + priorityFee broadcast ceiling, matching iOS (issue #5056).
+        private const val SWAP_BASE_FEE_BUMP_PERCENT = 10
 
         private val DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2 = "20".toBigInteger()
         private val DEFAULT_MAX_PRIORITY_FEE_POLYGON = "30".toBigInteger()
