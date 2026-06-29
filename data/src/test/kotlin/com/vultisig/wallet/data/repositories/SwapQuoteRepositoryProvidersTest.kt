@@ -606,6 +606,29 @@ class SwapQuoteRepositoryProvidersTest {
         }
     }
 
+    @Test
+    fun `jupiter forwards a positive VULT-scaled affiliate bps to the api`() = runTest {
+        coEvery { jupiterApi.getSwapQuote(any(), any(), any(), any(), any(), any()) } returns
+            jupiterQuoteResponse(feeMint = SOL_MINT, feeAmount = "1234")
+
+        val sol = coin(Chain.Solana, "SOL", contractAddress = "")
+        val usdc = coin(Chain.Solana, "USDC", contractAddress = USDC_MINT)
+        jupiterSource.fetch(
+            SwapQuoteRequest(
+                srcToken = sol,
+                dstToken = usdc,
+                tokenValue = TokenValue(value = BigInteger("1000"), token = sol),
+                srcAddress = "WALLET",
+                affiliateBps = 30,
+            )
+        )
+
+        // The source forwards the request's affiliate bps so the API can request the platform fee.
+        coVerify(exactly = 1) {
+            jupiterApi.getSwapQuote(any(), any(), any(), any(), any(), affiliateBps = 30)
+        }
+    }
+
     companion object {
         const val SOL_MINT = "So11111111111111111111111111111111111111112"
         const val USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"

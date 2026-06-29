@@ -119,6 +119,26 @@ class JupiterApiTest {
         }
     }
 
+    @Test
+    fun `a resolved fee prepends the create-ATA onto the swap transaction`() {
+        // Happy path: /swap returns a transaction, so the impl reaches prependCreateFeeAta with the
+        // resolved fee account. The fake records its inputs and raises a marker to stop before the
+        // native compute-budget step, pinning that the prepend runs on the swap tx with the swap's
+        // fee payer.
+        val service = FakeFeeAtaService(feeAccount = FEE_ACCOUNT, prependThrows = true)
+        val api = swapOkApi(service)
+
+        assertThrows(PrependInvoked::class.java) {
+            runBlocking {
+                api.getSwapQuote(QUOTE_AMOUNT, INPUT_MINT, OUTPUT_MINT, WALLET, null, 50)
+            }
+        }
+
+        assertEquals(SWAP_TX, service.prependedTxData)
+        assertEquals(WALLET, service.prependedFeePayer)
+        assertEquals(FEE_ACCOUNT, service.prependedFee)
+    }
+
     /**
      * The quote GET returns 429 so [JupiterApi.getSwapQuote] short-circuits before the swap POST
      * and its WalletCore compute-budget step, keeping the slippage tests on the request they assert
@@ -170,6 +190,31 @@ class JupiterApiTest {
         return api to captured
     }
 
+    /**
+     * Both legs succeed: /quote returns a route with a non-zero platform fee and /swap returns a
+     * serialized transaction, so the impl resolves the fee account and reaches the fee-ATA prepend.
+     */
+    private fun swapOkApi(service: FakeFeeAtaService): JupiterApi =
+        jupiterApiImpl(
+            service = service,
+            engine =
+                MockEngine { request ->
+                    if (request.url.encodedPath.endsWith("/quote")) {
+                        respond(
+                            content = routeResponseJson("36341"),
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                        )
+                    } else {
+                        respond(
+                            content = """{"swapTransaction":"$SWAP_TX"}""",
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                        )
+                    }
+                },
+        )
+
     private fun jupiterApiImpl(service: JupiterFeeAtaService, engine: MockEngine): JupiterApi =
         JupiterApiImpl(
             HttpClient(engine) {
@@ -193,10 +238,26 @@ class JupiterApiTest {
         var swapBody: String? = null,
     )
 
-    /** Fake service: returns [feeAccount] from resolve, or throws when it is null. */
-    private class FakeFeeAtaService(private val feeAccount: JupiterFeeAccount?) :
-        JupiterFeeAtaService {
+    /**
+     * Fake service: [resolveFeeAccount] returns [feeAccount] or throws when it is null;
+     * [prependCreateFeeAta] records its arguments and, when [prependThrows], raises
+     * [PrependInvoked] so a happy-path test can assert the prepend was reached with the right
+     * inputs without crossing the native compute-budget step that runs right after it.
+     */
+    private class FakeFeeAtaService(
+        private val feeAccount: JupiterFeeAccount?,
+        private val prependThrows: Boolean = false,
+    ) : JupiterFeeAtaService {
         var resolveCalled = false
+            private set
+
+        var prependedTxData: String? = null
+            private set
+
+        var prependedFee: JupiterFeeAccount? = null
+            private set
+
+        var prependedFeePayer: String? = null
             private set
 
         override suspend fun resolveFeeAccount(outputMint: String): JupiterFeeAccount {
@@ -208,8 +269,16 @@ class JupiterApiTest {
             txData: String,
             fee: JupiterFeeAccount,
             feePayer: String,
-        ): String = txData
+        ): String {
+            prependedTxData = txData
+            prependedFee = fee
+            prependedFeePayer = feePayer
+            if (prependThrows) throw PrependInvoked
+            return txData
+        }
     }
+
+    private object PrependInvoked : RuntimeException("prepend invoked")
 
     private fun routeResponseJson(platformFeeAmount: String?): String {
         val platformFee =
@@ -239,6 +308,10 @@ class JupiterApiTest {
         const val INPUT_MINT = "So11111111111111111111111111111111111111112"
         const val OUTPUT_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
         const val WALLET = "Wallet"
+
+        // Opaque base64 stand-in for Jupiter's serialized swap tx; the fake short-circuits before
+        // any native decode, so its bytes only need to round-trip as a string.
+        const val SWAP_TX = "AQID"
 
         val FEE_ACCOUNT =
             JupiterFeeAccount(
