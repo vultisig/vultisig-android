@@ -253,7 +253,7 @@
     <string name="reshare_start_screen_body">Mit „Reshare“ können Sie die Anzahl der Geräte in einem Vault aktualisieren, erweitern oder reduzieren.</string>
     <string name="reshare_start_screen_warning">Für alle Reshare-Aktionen ist immer der Geräteschwellenwert erforderlich.</string>
     <string name="reshare_start_screen_start_reshare">Neu teilen starten</string>
-    <string name="threshold_error">Schwellenwert nicht erreicht.\n Es fehlen ausreichend Erstausrüstungen.</string>
+    <string name="threshold_error">Schwellenwert nicht erreicht.\n Es fehlen genügend Anfangsgeräte.</string>
     <string name="add_folder_folder_name_title">Ordnername</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">Biometrie für schnelles Signieren ist aktiviert</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">Biometrie für schnelles Signieren ist deaktiviert</string>
@@ -1018,7 +1018,7 @@
     <string name="migration_onboarding_upgrade_now">Jetzt upgraden</string>
     <string name="migration_onboarding_step_1_text_start">Verbessere diesen Tresor auf die</string>
     <string name="onboarding_desc_page_1_part_2">Tresorfreigaben</string>
-    <string name="verify_swap_youre_swapping_title">Sie tauschen gerade Daten aus.</string>
+    <string name="verify_swap_youre_swapping_title">Sie tauschen</string>
     <string name="keysign_app_version_text">Version %1$s (%2$s)</string>
     <string name="lp_position">Position</string>
     <string name="add">Hinzufügen</string>
@@ -1414,8 +1414,8 @@
     <string name="cosmos_staking_verify_sign">Transaktion signieren</string>
     <string name="cosmos_staking_source_validator">Quell-Validator</string>
     <string name="cosmos_staking_destination_validator">Ziel-Validator</string>
-    <string name="cosmos_staking_redelegate_cooldown_message">Source validator is under a %1$d-day redelegation cooldown - unlocks %2$s</string>
-    <string name="cosmos_staking_redelegate_cooldown_fallback">Source validator is under a redelegation cooldown</string>
-    <string name="cosmos_staking_insufficient_fee_balance">Not enough liquid %1$s to cover the network fee. Claim rewards first or top up.</string>
+    <string name="cosmos_staking_redelegate_cooldown_message">Quell-Validator befindet sich in einer %1$d-tägigen Redelegations-Abkühlphase – Freigabe am %2$s</string>
+    <string name="cosmos_staking_redelegate_cooldown_fallback">Quell-Validator befindet sich in einer Redelegations-Abkühlphase</string>
+    <string name="cosmos_staking_insufficient_fee_balance">Nicht genügend liquides %1$s zur Deckung der Netzwerkgebühr. Fordern Sie zuerst Belohnungen an oder laden Sie auf.</string>
     <string name="cosmos_staking_max_entries_reached">Du hast die maximale Anzahl von %1$d ausstehenden Anfragen für diesen Validator erreicht. Warte, bis eine abgeschlossen ist, bevor du fortfährst.</string>
 </resources>
