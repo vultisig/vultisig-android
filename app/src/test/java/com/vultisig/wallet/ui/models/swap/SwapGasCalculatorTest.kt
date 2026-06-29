@@ -654,6 +654,43 @@ internal class SwapGasCalculatorTest {
         assertEquals(BigInteger.valueOf(4_000_000), capturedParams.captured.gasFee.value)
     }
 
+    // ── evmSwapDisplayGasLimit: the shared floor used by both initiator and joiner (#5056) ──
+
+    @Test
+    fun `evmSwapDisplayGasLimit returns route gas for native ETH above the 40k floor`() {
+        assertEquals(
+            BigInteger.valueOf(286_146),
+            evmSwapDisplayGasLimit(nativeCoinFor(Chain.Ethereum), 286_146L),
+        )
+    }
+
+    @Test
+    fun `evmSwapDisplayGasLimit floors native Arbitrum at its 400k limit`() {
+        assertEquals(
+            BigInteger.valueOf(400_000),
+            evmSwapDisplayGasLimit(nativeCoinFor(Chain.Arbitrum), 100_000L),
+        )
+    }
+
+    @Test
+    fun `evmSwapDisplayGasLimit returns null for ERC-20 at or below the 600k default`() {
+        assertNull(evmSwapDisplayGasLimit(evmErc20Coin(Chain.Ethereum), 286_146L))
+    }
+
+    @Test
+    fun `evmSwapDisplayGasLimit returns route gas for ERC-20 above the 600k default`() {
+        assertEquals(
+            BigInteger.valueOf(900_000),
+            evmSwapDisplayGasLimit(evmErc20Coin(Chain.Ethereum), 900_000L),
+        )
+    }
+
+    @Test
+    fun `evmSwapDisplayGasLimit returns null for OP-stack L2s and for zero route gas`() {
+        assertNull(evmSwapDisplayGasLimit(nativeCoinFor(Chain.Base), 900_000L))
+        assertNull(evmSwapDisplayGasLimit(nativeCoinFor(Chain.Ethereum), 0L))
+    }
+
     private fun stubGetSpecific() {
         coEvery {
             blockChainSpecificRepository.getSpecific(

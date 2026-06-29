@@ -349,10 +349,14 @@ constructor(
         estimatedNetworkFeeTokenValue: TokenValue?,
         estimatedNetworkFeeFiatValue: FiatValue?,
     ): Pair<TokenValue, FiatValue> {
-        val referenceFee = estimatedNetworkFeeTokenValue ?: gasFee
+        // Use the route-gas estimate when it is a real positive value, else fall back to the
+        // gas-pass baseline — a non-null zero estimate must not suppress the override (it would
+        // also
+        // make repriceFee divide by zero).
+        val estimate = estimatedNetworkFeeTokenValue?.takeIf { it.value.signum() > 0 }
+        val referenceFee = estimate ?: gasFee
         val referenceFiat =
-            if (estimatedNetworkFeeTokenValue != null)
-                estimatedNetworkFeeFiatValue ?: gasFeeFiatValue
+            if (estimate != null) estimatedNetworkFeeFiatValue ?: gasFeeFiatValue
             else gasFeeFiatValue
         if (
             specific !is BlockChainSpecific.Ethereum ||

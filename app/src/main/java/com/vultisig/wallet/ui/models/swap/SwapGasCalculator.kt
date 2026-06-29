@@ -64,6 +64,25 @@ internal sealed interface UtxoPlanFeeResult {
     data object Unavailable : UtxoPlanFeeResult
 }
 
+/**
+ * Gas limit to display an EVM aggregator swap fee at: the route's [routeGas] floored by the
+ * per-chain default the signer uses (40k native ETH, 400k native Arbitrum, else 600k). Null means
+ * keep the flat 600k baseline — no usable route gas, an OP-stack L2 (its baseline folds in an
+ * un-scalable L1 data fee), or a limit that lands back on 600k. Shared by the initiator and the
+ * joiner so both display the same fee for one swap (#5056).
+ */
+internal fun evmSwapDisplayGasLimit(srcToken: Coin, routeGas: Long): BigInteger? {
+    if (routeGas <= 0L || srcToken.chain.isOpStackL2) return null
+    val floor =
+        when {
+            !srcToken.isNativeToken -> DEFAULT_SWAP_LIMIT
+            srcToken.chain == Chain.Ethereum -> SwapGasCalculator.ETH_GAS_LIMIT.toBigInteger()
+            srcToken.chain == Chain.Arbitrum -> SwapGasCalculator.ARB_GAS_LIMIT.toBigInteger()
+            else -> DEFAULT_SWAP_LIMIT
+        }
+    return maxOf(routeGas.toBigInteger(), floor).takeIf { it != DEFAULT_SWAP_LIMIT }
+}
+
 internal class SwapGasCalculator
 @Inject
 constructor(
@@ -299,29 +318,21 @@ constructor(
 
     /**
      * Re-bases the flat-[DEFAULT_SWAP_LIMIT] swap fee from [calculateGasFee] onto the gas an EVM
-     * aggregator tx is actually signed with — the route's [routeGas] floored by [getGasLimit] — so
-     * the estimate matches the bond, not a worst case (#5056). Null when there is no usable route
-     * gas or the limit lands back on [DEFAULT_SWAP_LIMIT] (the baseline already matches).
+     * aggregator tx is signed with — [evmSwapDisplayGasLimit] — so the estimate matches the bond,
+     * not a worst case (#5056). Null when no re-base applies (see [evmSwapDisplayGasLimit]).
      */
     suspend fun rebaseEvmSwapNetworkFee(
         srcToken: Coin,
         baselineGasFee: TokenValue,
         routeGas: Long,
     ): GasCalculationResult? {
-        if (routeGas <= 0L || baselineGasFee.value <= BigInteger.ZERO) return null
-        // Skip OP-stack L2s: their baseline folds in an L1 data fee the gas-limit ratio can't
-        // scale.
-        if (srcToken.chain.isOpStackL2) return null
-        val signedGasLimit =
-            maxOf(routeGas.toBigInteger(), getGasLimit(srcToken) ?: DEFAULT_SWAP_LIMIT)
-        if (signedGasLimit == DEFAULT_SWAP_LIMIT) return null
-
-        val nativeCoin = tokenRepository.getNativeToken(srcToken.chain.id)
+        if (baselineGasFee.value <= BigInteger.ZERO) return null
+        val displayLimit = evmSwapDisplayGasLimit(srcToken, routeGas) ?: return null
+        // baselineGasFee is maxFeePerGas × DEFAULT_SWAP_LIMIT on the chain's native coin, so
+        // scaling
+        // by displayLimit / DEFAULT_SWAP_LIMIT keeps the per-gas price and the coin.
         val rebasedFee =
-            TokenValue(
-                value = baselineGasFee.value * signedGasLimit / DEFAULT_SWAP_LIMIT,
-                token = nativeCoin,
-            )
+            baselineGasFee.copy(value = baselineGasFee.value * displayLimit / DEFAULT_SWAP_LIMIT)
         val estimated =
             gasFeeToEstimatedFee(
                 GasFeeParams(

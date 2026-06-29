@@ -498,21 +498,27 @@ internal class SwapQuotePipeline(
                 effectiveNetworkFeeTokenValue = null
             }
         } else if (quote is SwapQuote.OneInch && srcToken.chain.standard == TokenStandard.EVM) {
-            // Re-base the gas-pass's flat estimate onto the EVM aggregator route's real gas
-            // (#5056);
-            // a route with no usable gas (e.g. Jupiter's Solana quotes) keeps the gas-pass value.
             val currentGasFee = gasFee?.takeIf { gasFeeChain == srcToken.chain }
-            val rebased =
-                currentGasFee?.let {
+            if (currentGasFee == null) {
+                // gasFeeChain lags srcToken.chain right after a token switch; clear the previous
+                // chain's stale fee so it isn't shown or validated against (mirrors the UTXO
+                // branch).
+                networkFee = NetworkFeeUpdate.Clear
+                effectiveNetworkFeeTokenValue = null
+            } else {
+                // Re-base the gas-pass's flat estimate onto the EVM aggregator route's real gas
+                // (#5056); no usable route gas (e.g. Jupiter's Solana quotes) keeps the gas-pass
+                // fee.
+                val rebased =
                     swapGasCalculator.rebaseEvmSwapNetworkFee(
                         srcToken = srcToken,
-                        baselineGasFee = it,
+                        baselineGasFee = currentGasFee,
                         routeGas = quote.data.tx.gas,
                     )
+                if (rebased != null) {
+                    networkFee = rebased.estimated.toNetworkFeeSet()
+                    effectiveNetworkFeeTokenValue = rebased.estimated.tokenValue
                 }
-            if (rebased != null) {
-                networkFee = rebased.estimated.toNetworkFeeSet()
-                effectiveNetworkFeeTokenValue = rebased.estimated.tokenValue
             }
         }
 

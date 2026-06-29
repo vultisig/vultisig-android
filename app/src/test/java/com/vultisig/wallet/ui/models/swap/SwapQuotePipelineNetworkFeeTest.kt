@@ -91,6 +91,24 @@ internal class SwapQuotePipelineNetworkFeeTest {
         coVerify(exactly = 0) { swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), any()) }
     }
 
+    @Test
+    fun `clears the stale fee when the gas fee lags the source chain`() = runTest {
+        val ethCoin = coin(Chain.Ethereum)
+        val outcome =
+            pipeline.resolveNetworkFee(
+                result = success(oneInchQuote(ethCoin, routeGas = 286_146L)),
+                src = sendSrc(ethCoin),
+                vaultId = "vault",
+                gasFee = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
+                // gasFeeChain lags srcToken.chain right after a token switch.
+                gasFeeChain = Chain.Bitcoin,
+                networkFeeTokenValue = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
+            )
+
+        assertEquals(NetworkFeeUpdate.Clear, outcome.networkFee)
+        coVerify(exactly = 0) { swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), any()) }
+    }
+
     private fun oneInchQuote(dstToken: Coin, routeGas: Long) =
         SwapQuote.OneInch(
             expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),

@@ -243,19 +243,19 @@ internal class EthereumFeeServiceTest {
     }
 
     @Test
-    fun `Ethereum swap maxFeePerGas is baseFee times 1_32 plus priority fee, matching iOS`() =
-        runTest {
-            // iOS parity (issue #5056): committed base is bumped 10% (networkPrice = 110) and
-            // calculateMaxFeePerGas adds a further 20%, so the broadcast ceiling is
-            // baseFee × 1.32 + priorityFee — not the previous Ethereum-only × 1.8.
-            coEvery { evmApi.getBaseFee() } returns gwei(100)
-            stubFeeHistory(listOf(gwei(5)))
+    fun `Ethereum swap keeps the x1_8 broadcast ceiling for the MPC sign window`() = runTest {
+        // Ethereum swaps bump the base 50% (networkPrice = 150); calculateMaxFeePerGas adds 20% →
+        // baseFee × 1.8 + priorityFee. A lower bump left the ceiling under the base fee by
+        // broadcast
+        // time and caused stuck/expired ETH mainnet swaps, so this guards the headroom (#5056).
+        coEvery { evmApi.getBaseFee() } returns gwei(100)
+        stubFeeHistory(listOf(gwei(5)))
 
-            val fee = service.calculateDefaultFees(swap(Chain.Ethereum)) as Eip1559
+        val fee = service.calculateDefaultFees(swap(Chain.Ethereum)) as Eip1559
 
-            assertEquals(gwei(110), fee.networkPrice) // 100 * 1.1
-            assertEquals(gwei(137), fee.maxFeePerGas) // 100 * 1.1 * 1.2 + 5
-        }
+        assertEquals(gwei(150), fee.networkPrice) // 100 * 1.5
+        assertEquals(gwei(185), fee.maxFeePerGas) // 100 * 1.5 * 1.2 + 5
+    }
 
     // ---------- Legacy gas path (BSC) ----------
 
@@ -358,10 +358,10 @@ internal class EthereumFeeServiceTest {
         val fee = service.calculateFees(swap(Chain.Ethereum)) as Eip1559
 
         assertEquals(DEFAULT_SWAP_LIMIT, fee.limit)
-        // Swaps store networkPrice at baseFee × 1.1; the broadcast maxFeePerGas is
-        // baseFee × 1.1 × 1.2 + priorityFee = baseFee × 1.32 + priorityFee, matching iOS
-        // (issue #5056) — enough headroom for the MPC sign window without over-bumping.
-        assertEquals(gwei(110), fee.networkPrice)
+        // Ethereum swaps store networkPrice at baseFee × 1.5; the broadcast maxFeePerGas is
+        // baseFee × 1.5 × 1.2 + priorityFee = baseFee × 1.8 + priorityFee, sized to survive
+        // base-fee spikes during the MPC sign window and land before the DEX deadline.
+        assertEquals(gwei(150), fee.networkPrice)
     }
 
     @Test

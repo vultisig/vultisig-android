@@ -41,21 +41,19 @@ internal fun computeJoinKeysignNetworkFee(
  * Swap-only fee helper — only [BlockChainSpecific.Ethereum] and [BlockChainSpecific.THORChain]
  * reach the swap branch; everything else goes through `feeServiceComposite`.
  *
- * For an EVM aggregator route the joiner mirrors the initiator by valuing the fee at `maxFeePerGas
- * × maxOf([aggregatorRouteGas], gasLimit)` — the gas the tx is signed with (#5056); native-protocol
- * deposits carry no route gas and keep [EthereumFeeService.DEFAULT_SWAP_LIMIT]. The [error] branch
- * guards against a new subtype reaching this path with a silent zero fee.
+ * For an EVM aggregator route the caller passes [aggregatorDisplayGasLimit] (from
+ * `evmSwapDisplayGasLimit`) so the joiner values the fee at the same limit as the initiator
+ * (#5056); native-protocol deposits pass null and keep [EthereumFeeService.DEFAULT_SWAP_LIMIT]. The
+ * [error] branch guards against a new subtype reaching this path with a silent zero fee.
  */
 internal fun computeJoinKeysignSwapNetworkFee(
     blockChainSpecific: BlockChainSpecific,
     nativeCoin: Coin,
-    aggregatorRouteGas: BigInteger? = null,
+    aggregatorDisplayGasLimit: BigInteger? = null,
 ): TokenValue =
     when (blockChainSpecific) {
         is BlockChainSpecific.Ethereum -> {
-            val limit =
-                aggregatorRouteGas?.let { maxOf(it, blockChainSpecific.gasLimit) }
-                    ?: EthereumFeeService.DEFAULT_SWAP_LIMIT
+            val limit = aggregatorDisplayGasLimit ?: EthereumFeeService.DEFAULT_SWAP_LIMIT
             TokenValue(value = blockChainSpecific.maxFeePerGasWei * limit, token = nativeCoin)
         }
         is BlockChainSpecific.THORChain ->

@@ -180,62 +180,29 @@ internal class JoinKeysignSendGasFeeTest {
     }
 
     /**
-     * Swap helper: an EVM aggregator route carries its own signed gas limit, so the joiner re-bases
-     * the fee onto it (here above the payload floor) to match the initiator instead of the flat
-     * 600k (#5056).
+     * Swap helper: an EVM aggregator route supplies the display gas limit the initiator computed,
+     * and the joiner values the fee at it directly so both co-signers match (#5056).
      */
     @Test
-    fun `evm swap helper uses the aggregator route gas when it exceeds the payload limit`() {
-        val payloadGasLimit = BigInteger.valueOf(40_000) // native-ETH swap floor
-        val routeGas = BigInteger.valueOf(286_146)
+    fun `evm swap helper values the fee at the supplied aggregator display gas limit`() {
+        val displayGasLimit = BigInteger.valueOf(286_146)
         val maxFeePerGasWei = BigInteger.valueOf(30_000_000_000L)
         val specific =
             BlockChainSpecific.Ethereum(
                 maxFeePerGasWei = maxFeePerGasWei,
                 priorityFeeWei = BigInteger.valueOf(1_000_000_000L),
                 nonce = BigInteger.ZERO,
-                gasLimit = payloadGasLimit,
+                gasLimit = BigInteger.valueOf(40_000),
             )
 
         val result =
             computeJoinKeysignSwapNetworkFee(
                 blockChainSpecific = specific,
                 nativeCoin = ethCoin,
-                aggregatorRouteGas = routeGas,
+                aggregatorDisplayGasLimit = displayGasLimit,
             )
 
-        result shouldBe TokenValue(value = maxFeePerGasWei * routeGas, token = ethCoin)
-    }
-
-    /**
-     * Swap helper: the route gas is floored by the payload's signed gas limit, so an ERC-20 swap
-     * whose bond is 600k still bonds 600k even when the route reports less (#5056).
-     */
-    @Test
-    fun `evm swap helper floors the aggregator route gas by the payload gas limit`() {
-        val payloadGasLimit = EthereumFeeService.DEFAULT_SWAP_LIMIT // ERC-20 swap bond
-        val routeGas = BigInteger.valueOf(286_146)
-        val maxFeePerGasWei = BigInteger.valueOf(30_000_000_000L)
-        val specific =
-            BlockChainSpecific.Ethereum(
-                maxFeePerGasWei = maxFeePerGasWei,
-                priorityFeeWei = BigInteger.valueOf(1_000_000_000L),
-                nonce = BigInteger.ZERO,
-                gasLimit = payloadGasLimit,
-            )
-
-        val result =
-            computeJoinKeysignSwapNetworkFee(
-                blockChainSpecific = specific,
-                nativeCoin = ethCoin,
-                aggregatorRouteGas = routeGas,
-            )
-
-        result shouldBe
-            TokenValue(
-                value = maxFeePerGasWei * EthereumFeeService.DEFAULT_SWAP_LIMIT,
-                token = ethCoin,
-            )
+        result shouldBe TokenValue(value = maxFeePerGasWei * displayGasLimit, token = ethCoin)
     }
 
     /** Swap helper: THORChain returns blockChainSpecific.fee. */
