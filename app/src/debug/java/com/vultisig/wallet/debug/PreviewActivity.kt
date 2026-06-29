@@ -97,6 +97,7 @@ import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
+import com.vultisig.wallet.ui.models.qbtc.QbtcClaimMaturingUtxoUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
@@ -246,6 +247,7 @@ class PreviewActivity : ComponentActivity() {
                     "qbtc_claim_done" -> QbtcClaimDonePreview()
                     "qbtc_claim_error" -> QbtcClaimErrorPreview()
                     "qbtc_claim_blocked" -> QbtcClaimBlockedPreview()
+                    "qbtc_claim_maturing" -> QbtcClaimMaturingPreview()
                     "keysign_signing_lunc" -> KeysignSigningLuncPreview()
                     "circle_usdc_widget" -> CircleUsdcWidgetPreview()
                     "btc_detail_claim" -> BtcDetailClaimPreview()
@@ -2051,6 +2053,41 @@ private fun QbtcClaimErrorPreview() {
 private fun QbtcClaimBlockedPreview() {
     QbtcClaimScreen(
         state = QbtcClaimUiState.Blocked(reason = QbtcClaimBlockedReason.NoUtxos),
+        isFastVault = true,
+        onBackClick = {},
+        onToggle = {},
+        onConfirm = {},
+        onStartSecureVault = {},
+        onRetry = {},
+    )
+}
+
+// The "all maturing" empty state for issue #4798 — no UTXO is claimable yet.
+@Composable
+private fun QbtcClaimMaturingPreview() {
+    QbtcClaimScreen(
+        state =
+            QbtcClaimUiState.Maturing(
+                utxos =
+                    listOf(
+                        QbtcClaimMaturingUtxoUiModel(
+                            key = "a3f1:0",
+                            shortId = "a3f1…8d2c:0",
+                            confirmationsCount = "112/144",
+                            remainingBlocks = 32,
+                            qbtcAmount = "0.75 QBTC",
+                            btcAmount = "0.75 BTC",
+                        ),
+                        QbtcClaimMaturingUtxoUiModel(
+                            key = "b7c4:2",
+                            shortId = "b7c4…1e9f:2",
+                            confirmationsCount = "58/144",
+                            remainingBlocks = 86,
+                            qbtcAmount = "0.25 QBTC",
+                            btcAmount = "0.25 BTC",
+                        ),
+                    )
+            ),
         isFastVault = true,
         onBackClick = {},
         onToggle = {},

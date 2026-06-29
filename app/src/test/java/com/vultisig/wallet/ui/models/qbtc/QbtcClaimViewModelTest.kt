@@ -174,6 +174,39 @@ internal class QbtcClaimViewModelTest {
         }
 
     @Test
+    fun `load maps a maturing result to the maturing state with confirmation and block counts`() =
+        runTest(testDispatcher) {
+            coEvery { loadClaimableUtxos(BTC_ADDRESS) } returns
+                QbtcClaimLoadResult.Maturing(
+                    listOf(
+                        ClaimableUtxo(
+                            txid = "ab".repeat(32),
+                            vout = 0,
+                            amount = 75_000_000,
+                            confirmations = 112,
+                        ),
+                        // Unconfirmed (mempool) UTXO → shown as 0 confirmations.
+                        ClaimableUtxo(
+                            txid = "cd".repeat(32),
+                            vout = 2,
+                            amount = 25_000_000,
+                            confirmations = null,
+                        ),
+                    )
+                )
+
+            val vm = viewModel()
+            advanceUntilIdle()
+
+            val state = vm.uiState.value as QbtcClaimUiState.Maturing
+            assertEquals(2, state.utxos.size)
+            assertEquals("112/144", state.utxos[0].confirmationsCount)
+            assertEquals(32L, state.utxos[0].remainingBlocks)
+            assertEquals("0/144", state.utxos[1].confirmationsCount)
+            assertEquals(144L, state.utxos[1].remainingBlocks)
+        }
+
+    @Test
     fun `load blocks when the claim accounts cannot be resolved`() =
         runTest(testDispatcher) {
             // Neither chain is enabled and derivation can't produce the account → resolver throws.
