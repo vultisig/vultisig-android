@@ -4,6 +4,9 @@ package com.vultisig.wallet.ui.models.deposit.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
+import com.vultisig.wallet.data.api.chains.ton.TonStakingPoolInfoJson
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -14,9 +17,9 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
-import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
+import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigInteger
@@ -33,65 +36,146 @@ internal class StakeStrategyTest {
     private val tokenAmount = TextFieldState()
 
     private val accountsRepo: AccountsRepository = mockk()
-    private val chainRepo: ChainAccountAddressRepository = mockk()
     private val specificRepo: BlockChainSpecificRepository = mockk()
+    private val tonStakingApi: TonStakingApi = mockk()
 
     @Test
-    fun `Ton stake memo is d and uses native token scaled by decimals`() = runTest {
-        coEvery { chainRepo.isValid(Chain.Ton, "tonNode") } returns true
+    fun `whales deposit uses Deposit comment, bounceable dest and scaled amount`() = runTest {
+        // min_stake 1 TON + 1 TON commission => 2 TON minimum; deposit exactly 2 TON.
+        givenPool(implementation = "whales", minStake = 1_000_000_000)
         givenAccounts()
         givenSpecific()
-        nodeAddress.setTextAndPlaceCursorAtEnd("tonNode")
-        tokenAmount.setTextAndPlaceCursorAtEnd("1")
+        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
+        tokenAmount.setTextAndPlaceCursorAtEnd("2")
 
-        val tx = build().build()
+        val tx = stake().build()
 
-        assertEquals("d", tx.memo)
+        assertEquals("Deposit", tx.memo)
         assertEquals(tonCoin(), tx.srcToken)
-        assertEquals("tonNode", tx.dstAddress)
-        assertEquals(BigInteger.valueOf(1_000_000_000), tx.srcTokenValue.value)
+        assertEquals("EQ_0:pool", tx.dstAddress)
+        assertEquals(BigInteger.valueOf(2_000_000_000), tx.srcTokenValue.value)
+    }
+
+    @Test
+    fun `tf deposit uses d comment`() = runTest {
+        givenPool(implementation = "tf", minStake = 1_000_000_000)
+        givenAccounts()
+        givenSpecific()
+        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
+        tokenAmount.setTextAndPlaceCursorAtEnd("2")
+
+        assertEquals("d", stake().build().memo)
+    }
+
+    @Test
+    fun `deposit blocked when pool reports no usable minimum stake`() = runTest {
+        givenPool(implementation = "whales", minStake = 0)
+        givenAccounts()
+        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
+        tokenAmount.setTextAndPlaceCursorAtEnd("100")
+
+        val ex = assertFailsWith<InvalidTransactionDataException> { stake().build() }
+        assertEquals(
+            R.string.ton_stake_error_unsupported_pool,
+            (ex.text as UiText.StringResource).resId,
+        )
+    }
+
+    @Test
+    fun `whales withdraw uses Withdraw comment and fixed 0_2 TON fee`() = runTest {
+        givenPool(implementation = "whales", minStake = 50_000_000_000)
+        givenAccounts()
+        givenSpecific()
+        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
+        // Entered amount is ignored for withdraw.
+        tokenAmount.setTextAndPlaceCursorAtEnd("999")
+
+        val tx = unstake().build()
+
+        assertEquals("Withdraw", tx.memo)
+        assertEquals(BigInteger.valueOf(200_000_000), tx.srcTokenValue.value)
+    }
+
+    @Test
+    fun `deposit blocked for unsupported pool implementation`() = runTest {
+        givenPool(implementation = "liquidTF", minStake = 0)
+        givenAccounts()
+        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
+        tokenAmount.setTextAndPlaceCursorAtEnd("100")
+
+        val ex = assertFailsWith<InvalidTransactionDataException> { stake().build() }
+        assertEquals(
+            R.string.ton_stake_error_unsupported_pool,
+            (ex.text as UiText.StringResource).resId,
+        )
+    }
+
+    @Test
+    fun `deposit blocked when pool is unknown to tonapi`() = runTest {
+        coEvery { tonStakingApi.getStakingPool(any()) } returns null
+        givenAccounts()
+        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
+        tokenAmount.setTextAndPlaceCursorAtEnd("100")
+
+        val ex = assertFailsWith<InvalidTransactionDataException> { stake().build() }
+        assertEquals(
+            R.string.ton_stake_error_unsupported_pool,
+            (ex.text as UiText.StringResource).resId,
+        )
+    }
+
+    @Test
+    fun `deposit below pool minimum is rejected`() = runTest {
+        givenPool(implementation = "whales", minStake = 50_000_000_000)
+        givenAccounts()
+        givenSpecific()
+        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
+        // 50 TON < min_stake (50) + 1 TON commission.
+        tokenAmount.setTextAndPlaceCursorAtEnd("50")
+
+        val ex = assertFailsWith<InvalidTransactionDataException> { stake().build() }
+        assertEquals(R.string.ton_stake_error_min_amount, (ex.text as UiText.FormattedText).resId)
     }
 
     @Test
     fun `stake throws when deposit chain is not Ton`() = runTest {
-        coEvery { chainRepo.isValid(any(), any()) } returns true
-        nodeAddress.setTextAndPlaceCursorAtEnd("tonNode")
-        tokenAmount.setTextAndPlaceCursorAtEnd("1")
+        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
+        tokenAmount.setTextAndPlaceCursorAtEnd("100")
 
         assertFailsWith<InvalidTransactionDataException> {
-            build(depositChain = Chain.ThorChain).build()
+            stake(depositChain = Chain.ThorChain).build()
         }
     }
 
     @Test
     fun `stake throws when node address is blank`() = runTest {
-        coEvery { chainRepo.isValid(any(), any()) } returns false
-        tokenAmount.setTextAndPlaceCursorAtEnd("1")
+        tokenAmount.setTextAndPlaceCursorAtEnd("100")
 
-        assertFailsWith<InvalidTransactionDataException> { build().build() }
+        assertFailsWith<InvalidTransactionDataException> { stake().build() }
     }
 
     @Test
     fun `stake throws when token amount is missing or zero`() = runTest {
-        coEvery { chainRepo.isValid(Chain.Ton, "tonNode") } returns true
-        nodeAddress.setTextAndPlaceCursorAtEnd("tonNode")
+        givenPool(implementation = "whales", minStake = 1_000_000_000)
+        givenAccounts()
+        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
         tokenAmount.setTextAndPlaceCursorAtEnd("0")
 
-        assertFailsWith<InvalidTransactionDataException> { build().build() }
+        assertFailsWith<InvalidTransactionDataException> { stake().build() }
     }
 
     @Test
     fun `stake throws when no native token account exists`() = runTest {
-        coEvery { chainRepo.isValid(Chain.Ton, "tonNode") } returns true
+        givenPool(implementation = "whales", minStake = 0)
         coEvery { accountsRepo.loadAddress("vault-1", Chain.Ton) } returns
-            flowOf(Address(chain = Chain.Ton, address = "tonNode", accounts = emptyList()))
-        nodeAddress.setTextAndPlaceCursorAtEnd("tonNode")
+            flowOf(Address(chain = Chain.Ton, address = "0:pool", accounts = emptyList()))
+        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
         tokenAmount.setTextAndPlaceCursorAtEnd("1")
 
-        assertFailsWith<InvalidTransactionDataException> { build().build() }
+        assertFailsWith<InvalidTransactionDataException> { stake().build() }
     }
 
-    private fun build(depositChain: Chain = Chain.Ton) =
+    private fun stake(depositChain: Chain = Chain.Ton) =
         StakeStrategy(
             vaultIdProvider = { "vault-1" },
             chainProvider = { Chain.Ton },
@@ -99,11 +183,32 @@ internal class StakeStrategyTest {
             nodeAddressFieldState = nodeAddress,
             tokenAmountFieldState = tokenAmount,
             accountsRepository = accountsRepo,
-            chainAccountAddressRepository = chainRepo,
+            tonStakingApi = tonStakingApi,
+            toBounceableAddress = { "EQ_$it" },
             blockChainSpecificRepository = specificRepo,
             calculateGasFee = { _, token, _ -> TokenValue(BigInteger.ONE, token) },
             getFeesFiatValue = { _, _, _ -> estimatedFee() },
         )
+
+    private fun unstake(depositChain: Chain = Chain.Ton) =
+        UnstakeStrategy(
+            vaultIdProvider = { "vault-1" },
+            chainProvider = { Chain.Ton },
+            stateProvider = { DepositFormUiModel(depositChain = depositChain) },
+            nodeAddressFieldState = nodeAddress,
+            tokenAmountFieldState = tokenAmount,
+            accountsRepository = accountsRepo,
+            tonStakingApi = tonStakingApi,
+            toBounceableAddress = { "EQ_$it" },
+            blockChainSpecificRepository = specificRepo,
+            calculateGasFee = { _, token, _ -> TokenValue(BigInteger.ONE, token) },
+            getFeesFiatValue = { _, _, _ -> estimatedFee() },
+        )
+
+    private fun givenPool(implementation: String, minStake: Long) {
+        coEvery { tonStakingApi.getStakingPool(any()) } returns
+            TonStakingPoolInfoJson(implementation = implementation, minStake = minStake)
+    }
 
     private fun givenAccounts() {
         coEvery { accountsRepo.loadAddress("vault-1", Chain.Ton) } returns
@@ -134,13 +239,16 @@ internal class StakeStrategyTest {
                 isSwap = any(),
                 isMaxAmountEnabled = any(),
                 isDeposit = any(),
+                // Pin the bounceable EQ destination so the test fails if the strategy stops
+                // forwarding it into the spec.
+                dstAddress = "EQ_0:pool",
             )
         } returns
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Ton(
                     sequenceNumber = 0UL,
                     expireAt = 0UL,
-                    bounceable = false,
+                    bounceable = true,
                     sendMaxAmount = false,
                 )
             )

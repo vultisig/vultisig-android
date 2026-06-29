@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.deposit.submit
 
+import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -12,6 +13,7 @@ import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.ui.models.deposit.DepositFieldValidator
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import javax.inject.Inject
+import wallet.core.jni.TONAddressConverter
 
 /**
  * Builds the [DepositSubmitStrategies] map for a `DepositFormViewModel`.
@@ -32,6 +34,7 @@ constructor(
     private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase,
     private val isAssetCharsValid: DepositMemoAssetsValidatorUseCase,
     private val fieldValidator: DepositFieldValidator,
+    private val tonStakingApi: TonStakingApi,
 ) {
 
     /**
@@ -122,7 +125,8 @@ constructor(
                         nodeAddressFieldState = fields.nodeAddressFieldState,
                         tokenAmountFieldState = fields.tokenAmountFieldState,
                         accountsRepository = accountsRepository,
-                        chainAccountAddressRepository = chainAccountAddressRepository,
+                        tonStakingApi = tonStakingApi,
+                        toBounceableAddress = ::toTonBounceableAddress,
                         blockChainSpecificRepository = context.blockChainSpecificRepository,
                         calculateGasFee = context.calculateGasFee,
                         getFeesFiatValue = context.getFeesFiatValue,
@@ -135,7 +139,8 @@ constructor(
                         nodeAddressFieldState = fields.nodeAddressFieldState,
                         tokenAmountFieldState = fields.tokenAmountFieldState,
                         accountsRepository = accountsRepository,
-                        chainAccountAddressRepository = chainAccountAddressRepository,
+                        tonStakingApi = tonStakingApi,
+                        toBounceableAddress = ::toTonBounceableAddress,
                         blockChainSpecificRepository = context.blockChainSpecificRepository,
                         calculateGasFee = context.calculateGasFee,
                         getFeesFiatValue = context.getFeesFiatValue,
@@ -266,3 +271,11 @@ constructor(
         return strategies
     }
 }
+
+/**
+ * Converts a TON pool address (raw `0:…` or user-friendly) to the bounceable `EQ…` form required
+ * for nominator-pool deposits/withdrawals — a non-bounceable message a pool rejects is absorbed
+ * (lost).
+ */
+private fun toTonBounceableAddress(address: String): String =
+    TONAddressConverter.toUserFriendly(address, /* bounceable= */ true, /* testnet= */ false)

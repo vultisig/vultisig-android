@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -91,6 +92,7 @@ internal class DepositFormViewModelTest {
     private val requestResultRepository: RequestResultRepository = mockk(relaxed = true)
     private val chainAccountAddressRepository: ChainAccountAddressRepository = mockk(relaxed = true)
     private val transactionRepository: DepositTransactionRepository = mockk(relaxed = true)
+    private val tonStakingApi: TonStakingApi = mockk(relaxed = true)
     private val blockChainSpecificRepository: BlockChainSpecificRepository = mockk(relaxed = true)
     private val thorChainApi: ThorChainApi = mockk(relaxed = true)
     private val mayaChainApi: MayaChainApi = mockk(relaxed = true)
@@ -315,6 +317,7 @@ internal class DepositFormViewModelTest {
             validateMayaTransactionHeight = validateMayaTransactionHeight,
             isAssetCharsValid = isAssetCharsValid,
             fieldValidator = fieldValidator,
+            tonStakingApi = tonStakingApi,
         )
 
     @BeforeEach

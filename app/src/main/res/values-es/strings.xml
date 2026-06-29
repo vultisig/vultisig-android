@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="keysign">Signo de clave</string>
+    <string name="keysign">Keysign</string>
     <string name="signing_error_please_try_again_s">Error al Firmar. Por favor intenta de nuevo. %s</string>
     <string name="try_again">Intentar de Nuevo</string>
     <string name="vault_settings_title">Configuración de la Bóveda</string>
@@ -196,7 +196,7 @@
     <string name="vault_settings_delete_vault_eddsa_key">Clave EdDSA:</string>
     <string name="vault_settings_delete_vault_id">ID de dispositivo:</string>
     <string name="verify_transaction_memo_title">Memorándum</string>
-    <string name="vault_settings_delete_vault_value">Vault Valor:</string>
+    <string name="vault_settings_delete_vault_value">Valor de la Bóveda:</string>
     <string name="join_keysign_wrong_reshare">ReShare incorrecto</string>
     <string name="swap_screen_provider_title">Proveedor</string>
     <string name="swap_form_minimum_amount">El monto de intercambio es demasiado pequeño. El monto recomendado es %1$s %2$s</string>
@@ -878,6 +878,8 @@
     </plurals>
     <string name="send_form_ripple_reaping_warning">Asegúrate de tener fondos suficientes para cubrir las comisiones. Si el saldo de una cuenta cae por debajo de 1 XRP (Depósito Existente), la cuenta se desactivará (se liquidará) y los fondos restantes se perderán. Puedes reactivar la dirección con un nuevo depósito superior al depósito existente en cualquier momento. Sin embargo, esto no recuperará los fondos perdidos.</string>
     <string name="error_invalid_chain">La cadena no es válida.</string>
+    <string name="ton_stake_error_unsupported_pool">Este pool de staking no es compatible</string>
+    <string name="ton_stake_error_min_amount">El stake mínimo para este pool es de %1$s TON</string>
     <string name="vault_backup_verifying_pin">Verificando código, por favor espere</string>
     <string name="select_vault_type_next">Siguiente</string>
     <string name="select_vault_type_choose_setup">Selecciona Configuración</string>
@@ -1407,8 +1409,8 @@
     <string name="cosmos_staking_verify_sign">Firmar transacción</string>
     <string name="cosmos_staking_source_validator">Validador origen</string>
     <string name="cosmos_staking_destination_validator">Validador destino</string>
-    <string name="cosmos_staking_redelegate_cooldown_message">Source validator is under a %1$d-day redelegation cooldown - unlocks %2$s</string>
-    <string name="cosmos_staking_redelegate_cooldown_fallback">Source validator is under a redelegation cooldown</string>
-    <string name="cosmos_staking_insufficient_fee_balance">Not enough liquid %1$s to cover the network fee. Claim rewards first or top up.</string>
+    <string name="cosmos_staking_redelegate_cooldown_message">El validador de origen está en un período de espera de redelegación de %1$d días: se desbloquea el %2$s</string>
+    <string name="cosmos_staking_redelegate_cooldown_fallback">El validador de origen está en un período de espera de redelegación</string>
+    <string name="cosmos_staking_insufficient_fee_balance">No hay suficiente %1$s líquido para cubrir la comisión de red. Reclama las recompensas primero o recarga.</string>
     <string name="cosmos_staking_max_entries_reached">Has alcanzado el máximo de %1$d solicitudes pendientes para este validador. Espera a que se complete una antes de continuar.</string>
 </resources>

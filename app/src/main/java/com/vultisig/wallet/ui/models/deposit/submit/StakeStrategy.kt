@@ -2,16 +2,16 @@ package com.vultisig.wallet.ui.models.deposit.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
+import com.vultisig.wallet.data.blockchain.ton.TonNominatorPool
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.DepositMemo
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
-import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
@@ -20,7 +20,13 @@ import java.math.BigInteger
 import java.util.UUID
 import kotlinx.coroutines.flow.first
 
-/** Builds a Stake [DepositTransaction] for the TON chain. */
+/** Whether a TON nominator-pool transaction deposits into or withdraws from the pool. */
+internal enum class TonStakingAction {
+    DEPOSIT,
+    WITHDRAW,
+}
+
+/** Builds a Stake (deposit) [DepositTransaction] for a TON nominator pool. */
 internal class StakeStrategy(
     private val vaultIdProvider: () -> String?,
     private val chainProvider: () -> Chain?,
@@ -28,7 +34,8 @@ internal class StakeStrategy(
     private val nodeAddressFieldState: TextFieldState,
     private val tokenAmountFieldState: TextFieldState,
     private val accountsRepository: AccountsRepository,
-    private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val tonStakingApi: TonStakingApi,
+    private val toBounceableAddress: (String) -> String,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val calculateGasFee: suspend (Chain, Coin, String) -> TokenValue,
     private val getFeesFiatValue:
@@ -36,15 +43,16 @@ internal class StakeStrategy(
 ) : DepositSubmitStrategy {
 
     override suspend fun build(): DepositTransaction =
-        buildTonDepositTransaction(
-            memo = DepositMemo.Stake,
+        buildTonStakingTransaction(
+            action = TonStakingAction.DEPOSIT,
             vaultIdProvider = vaultIdProvider,
             chainProvider = chainProvider,
             stateProvider = stateProvider,
             nodeAddressFieldState = nodeAddressFieldState,
             tokenAmountFieldState = tokenAmountFieldState,
             accountsRepository = accountsRepository,
-            chainAccountAddressRepository = chainAccountAddressRepository,
+            tonStakingApi = tonStakingApi,
+            toBounceableAddress = toBounceableAddress,
             blockChainSpecificRepository = blockChainSpecificRepository,
             calculateGasFee = calculateGasFee,
             getFeesFiatValue = getFeesFiatValue,
@@ -52,21 +60,25 @@ internal class StakeStrategy(
 }
 
 /**
- * Builds a TON deposit [DepositTransaction] carrying [memo].
+ * Builds a TON nominator-pool [DepositTransaction] for [action] (deposit or withdraw).
  *
- * Shared by the Stake and Unstake strategies, which differ only by the memo they send.
- *
- * @param memo the deposit memo to attach (e.g. [DepositMemo.Stake] or [DepositMemo.Unstake]).
+ * Shared by the Stake and Unstake strategies. The destination pool's `implementation` (resolved
+ * from tonapi) drives the text comment — `whales` → `Deposit`/`Withdraw`, `tf` → `d`/`w` — and an
+ * unknown implementation blocks the action rather than guessing. The pool address is converted to
+ * the bounceable user-friendly `EQ…` form so a rejected message bounces back instead of being
+ * absorbed (lost). A deposit must clear `min_stake` + a ~1 TON commission; a withdraw carries only
+ * the fixed 0.2 TON signal fee (the pool returns the full staked balance).
  */
-internal suspend fun buildTonDepositTransaction(
-    memo: DepositMemo,
+internal suspend fun buildTonStakingTransaction(
+    action: TonStakingAction,
     vaultIdProvider: () -> String?,
     chainProvider: () -> Chain?,
     stateProvider: () -> DepositFormUiModel,
     nodeAddressFieldState: TextFieldState,
     tokenAmountFieldState: TextFieldState,
     accountsRepository: AccountsRepository,
-    chainAccountAddressRepository: ChainAccountAddressRepository,
+    tonStakingApi: TonStakingApi,
+    toBounceableAddress: (String) -> String,
     blockChainSpecificRepository: BlockChainSpecificRepository,
     calculateGasFee: suspend (Chain, Coin, String) -> TokenValue,
     getFeesFiatValue: suspend (BlockChainSpecificAndUtxo, TokenValue, Coin) -> EstimatedGasFee,
@@ -81,38 +93,73 @@ internal suspend fun buildTonDepositTransaction(
                 UiText.StringResource(R.string.send_error_no_address)
             )
 
-    val depositChain = stateProvider().depositChain
-
-    if (depositChain != Chain.Ton) {
+    if (stateProvider().depositChain != Chain.Ton) {
         throw InvalidTransactionDataException(UiText.StringResource(R.string.error_invalid_chain))
     }
 
-    val nodeAddress = nodeAddressFieldState.text.toString()
-
-    if (nodeAddress.isBlank() || !chainAccountAddressRepository.isValid(chain, nodeAddress)) {
+    val poolAddressInput = nodeAddressFieldState.text.toString().trim()
+    if (poolAddressInput.isBlank()) {
         throw InvalidTransactionDataException(UiText.StringResource(R.string.send_error_no_address))
     }
 
-    val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
+    // Resolve the pool: its implementation drives the comment word and gates the action; min_stake
+    // is needed to validate a deposit. A pool unknown to tonapi (or an unsupported implementation)
+    // is blocked rather than guessed.
+    val poolInfo =
+        tonStakingApi.getStakingPool(poolAddressInput)
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.ton_stake_error_unsupported_pool)
+            )
 
-    if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
-        throw InvalidTransactionDataException(UiText.StringResource(R.string.send_error_no_amount))
-    }
+    val comment =
+        when (action) {
+            TonStakingAction.DEPOSIT -> TonNominatorPool.depositComment(poolInfo.implementation)
+            TonStakingAction.WITHDRAW -> TonNominatorPool.withdrawComment(poolInfo.implementation)
+        }
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.ton_stake_error_unsupported_pool)
+            )
+
+    // Pool addresses arrive raw `0:…`; convert to the bounceable `EQ…` form so a rejected deposit
+    // bounces back. An address that can't be converted is invalid.
+    val dstAddress =
+        runCatching { toBounceableAddress(poolAddressInput) }
+            .getOrElse {
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
+            }
+
     val address = accountsRepository.loadAddress(vaultId, chain).first()
-
     val selectedToken =
         address.accounts.firstOrNull { it.token.isNativeToken }?.token
             ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_address)
             )
 
-    val tokenAmountInt =
-        tokenAmount.movePointRight(selectedToken.decimal)?.toBigInteger() ?: BigInteger.ONE
+    val amountNano =
+        when (action) {
+            TonStakingAction.DEPOSIT -> {
+                // A deposit needs a real minimum to enforce; a missing/zero min_stake means drifted
+                // pool metadata, so block rather than silently allow a near-zero deposit.
+                val minStakeNano =
+                    poolInfo.minStake?.takeIf { it > 0 }
+                        ?: throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.ton_stake_error_unsupported_pool)
+                        )
+                resolveDepositAmount(tokenAmountFieldState, selectedToken, minStakeNano)
+            }
+            // The withdraw message carries only the fixed signal fee; the entered amount is
+            // ignored.
+            TonStakingAction.WITHDRAW -> TonNominatorPool.WITHDRAW_FEE
+        }
 
     val srcAddress = selectedToken.address
 
     val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
 
+    // Pass the bounceable destination so the spec resolves bounceable = true; without a dstAddress
+    // the flag defaults to false and a rejected deposit would be absorbed instead of bounced back.
     val specific =
         blockChainSpecificRepository.getSpecific(
             chain,
@@ -122,6 +169,7 @@ internal suspend fun buildTonDepositTransaction(
             isSwap = false,
             isMaxAmountEnabled = false,
             isDeposit = true,
+            dstAddress = dstAddress,
         )
 
     val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
@@ -131,11 +179,41 @@ internal suspend fun buildTonDepositTransaction(
         vaultId = vaultId,
         srcToken = selectedToken,
         srcAddress = srcAddress,
-        dstAddress = nodeAddress,
-        memo = memo.toString(),
-        srcTokenValue = TokenValue(value = tokenAmountInt, token = selectedToken),
+        dstAddress = dstAddress,
+        memo = comment,
+        srcTokenValue = TokenValue(value = amountNano, token = selectedToken),
         estimatedFees = gasFee,
         estimateFeesFiat = gasFeeFiat.formattedFiatValue,
         blockChainSpecific = specific.blockChainSpecific,
     )
+}
+
+/**
+ * Parses and validates the deposit amount entered for [token], enforcing the pool minimum
+ * (`min_stake` + ~1 TON commission). [minStakeNano] is the pool's `min_stake` in nanotons.
+ */
+private fun resolveDepositAmount(
+    tokenAmountFieldState: TextFieldState,
+    token: Coin,
+    minStakeNano: Long,
+): BigInteger {
+    val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
+    if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+        throw InvalidTransactionDataException(UiText.StringResource(R.string.send_error_no_amount))
+    }
+
+    val amountNano = tokenAmount.movePointRight(token.decimal).toBigInteger()
+
+    val minDeposit = TonNominatorPool.minimumDeposit(BigInteger.valueOf(minStakeNano))
+    if (amountNano < minDeposit) {
+        val minDepositTon = BigDecimal(minDeposit).movePointLeft(token.decimal).stripTrailingZeros()
+        throw InvalidTransactionDataException(
+            UiText.FormattedText(
+                R.string.ton_stake_error_min_amount,
+                listOf(minDepositTon.toPlainString()),
+            )
+        )
+    }
+
+    return amountNano
 }

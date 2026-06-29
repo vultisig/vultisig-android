@@ -144,7 +144,7 @@
     <string name="transaction_type_button_swap">Zamijeni</string>
     <string name="chain_account_view_swap">ZAMIJENI</string>
     <string name="signing_error_please_try_again_s">Greška pri prijavi. Molimo pokušajte ponovno. %s</string>
-    <string name="faq_settings_q1">Moram li se registrirati?</string>
+    <string name="faq_settings_q1">Što je Vultisig?</string>
     <string name="swap_screen_invalid_vault">Transakcija će vjerojatno propasti, trezor se nije mogao učitati.</string>
     <string name="swap_form_vault">Trezor</string>
     <string name="swap_form_min_pay">min. isplata</string>
@@ -571,8 +571,8 @@
     <string name="faq_settings_q7">Je li Vultisig otvorenog koda i revidiran?</string>
     <string name="faq_settings_q8">Kako Vultisig rješava privatnost i zaštitu podataka?</string>
     <string name="faq_settings_q9">Kako se Vultisig uspoređuje s drugim multisign novčanicima?</string>
-    <string name="faq_settings_a7">, Vultisig je otvorenog koda i prošao je sigurnosne revizije. I izvješća revizije i izvorni kod su dostupni.</string>
-    <string name="faq_settings_a8">ltisig ne pohranjuje nikakve korisničke podatke iz svojih mobilnih aplikacija.</string>
+    <string name="faq_settings_a7">Da, Vultisig je otvorenog koda i prošao je sigurnosne revizije. I izvješća revizije i izvorni kod su dostupni.</string>
+    <string name="faq_settings_a8">Vultisig ne pohranjuje nikakve korisničke podatke iz svojih mobilnih aplikacija.</string>
     <string name="faq_settings_a9">Izgrađen je na MPC tehnologiji, što eliminira potrebu za početnim frazama i podržava više blockchaina, čineći Vultisig fleksibilnim i neovisnim o lancu.</string>
     <string name="vault_settings_advanced_title">Napredno</string>
     <string name="settings_advanced_swapkit_toggle">SwapKit agregator</string>
@@ -648,11 +648,11 @@
     <string name="address_book_delete_entry_cancel">Odustani</string>
     <string name="backup_password_request_title">Želite li šifrirati sigurnosnu kopiju lozinkom?</string>
     <string name="backup_password_request_caution_encrypt_desc">Ako odaberete dodati lozinku, ona će se koristiti za šifriranje sigurnosne kopije datoteke.</string>
-    <string name="backup_password_request_highlight_encrypt">ifriraj</string>
+    <string name="backup_password_request_highlight_encrypt">šifriranje</string>
     <string name="backup_password_request_caution_cannot_reset_desc">Zapamtite: Ako zaboravite lozinku trezora, ne možete je resetirati ili oporaviti.</string>
     <string name="backup_password_request_highlight_cannot">ne može</string>
     <string name="backup_password_request_caution_secure_without_desc">Prema zadanim postavkama, vaša je sigurnosna kopija sigurna bez dodatne lozinke jer dijeljene datoteke trezora pohranjujete na različitim lokacijama.</string>
-    <string name="backup_password_request_highlight_secure_without">sigurno bez</string>
+    <string name="backup_password_request_highlight_secure_without">sigurna bez</string>
     <string name="backup_select_vaults_title">Odaberite trezore za sigurnosno kopiranje</string>
     <string name="backup_select_vaults_subtitle">Odaberite želite li sigurnosno kopirati samo ovaj trezor ili sve trezore u aplikaciji.</string>
     <string name="backup_this_vault_only">Samo ovaj trezor</string>
@@ -742,7 +742,7 @@
     <string name="send_tx_overview_add_to_address_book">Dodaj u adresar</string>
     <string name="invite_to_x_banner_title">Vultisig gradi s vama.</string>
     <string name="invite_to_x_banner_desc">Pratite nas na X</string>
-    <string name="invite_to_x_banner_button">Pratite %s</string>
+    <string name="invite_to_x_banner_button">Pratite @%s</string>
     <string name="buy_vult_banner_desc">I uštedi na naknadama za zamjenu</string>
     <string name="vault_detail_vault_info">Informacije o trezoru</string>
     <string name="vault_details_keys">ključevi</string>
@@ -883,6 +883,8 @@
     </plurals>
     <string name="send_form_ripple_reaping_warning">Osigurajte dovoljno sredstava za pokrivanje naknada. Ako stanje na računu padne ispod 1 XRP (egzistencijalni depozit), račun će biti deaktiviran (potrošen) i sva preostala sredstva bit će izgubljena. Adresu možete ponovno aktivirati novim depozitom većim od egzistencijalnog depozita u bilo kojem trenutku. Međutim, to neće vratiti izgubljena sredstva.</string>
     <string name="error_invalid_chain">Lanac nije valjan</string>
+    <string name="ton_stake_error_unsupported_pool">Ovaj staking pool nije podržan</string>
+    <string name="ton_stake_error_min_amount">Minimalni ulog za ovaj pool je %1$s TON</string>
     <string name="vault_backup_verifying_pin">Provjera koda, molimo pričekajte</string>
     <string name="select_vault_type_next">Sljedeće</string>
     <string name="select_vault_type_choose_setup">Odaberite Postavljanje</string>
@@ -1417,8 +1419,8 @@
     <string name="cosmos_staking_verify_sign">Potpiši transakciju</string>
     <string name="cosmos_staking_source_validator">Izvorni validator</string>
     <string name="cosmos_staking_destination_validator">Odredišni validator</string>
-    <string name="cosmos_staking_redelegate_cooldown_message">Source validator is under a %1$d-day redelegation cooldown - unlocks %2$s</string>
-    <string name="cosmos_staking_redelegate_cooldown_fallback">Source validator is under a redelegation cooldown</string>
-    <string name="cosmos_staking_insufficient_fee_balance">Not enough liquid %1$s to cover the network fee. Claim rewards first or top up.</string>
+    <string name="cosmos_staking_redelegate_cooldown_message">Izvorni validator je u razdoblju mirovanja redelegacije od %1$d dana – otključava se %2$s</string>
+    <string name="cosmos_staking_redelegate_cooldown_fallback">Izvorni validator je u razdoblju mirovanja redelegacije</string>
+    <string name="cosmos_staking_insufficient_fee_balance">Nema dovoljno likvidnog %1$s za pokrivanje mrežne naknade. Najprije zatražite nagrade ili nadoplatite.</string>
     <string name="cosmos_staking_max_entries_reached">Dosegnuli ste najveći broj od %1$d zahtjeva na čekanju za ovaj validator. Pričekajte da se jedan dovrši prije nastavka.</string>
 </resources>
