@@ -180,8 +180,7 @@ fun VsButton(
  */
 @Composable
 private fun VsButtonLoadingIndicator(size: VsButtonSize) {
-    val composition by
-        rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.cta_loading_icon1))
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.button_loading))
 
     val progress by
         animateLottieCompositionAsState(
