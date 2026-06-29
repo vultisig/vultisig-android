@@ -70,8 +70,10 @@ import com.vultisig.wallet.ui.components.v2.fastselection.components.ChainSelect
 import com.vultisig.wallet.ui.components.v2.fastselection.components.SelectPopup
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.AccountUiModel
+import com.vultisig.wallet.ui.models.ChainSelectionUiModel
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
+import com.vultisig.wallet.ui.models.ChainUiModel
 import com.vultisig.wallet.ui.models.DeviceMeta
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
@@ -106,6 +108,7 @@ import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VultTierGateUiModel
 import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesUiState
+import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingPositionsContent
@@ -272,6 +275,7 @@ class PreviewActivity : ComponentActivity() {
                     "vault_detail_no_mldsa" -> VaultDetailPreview(withMldsa = false)
                     "vault_detail_mldsa" -> VaultDetailPreview(withMldsa = true)
                     "error_screen_after" -> ErrorScreenAfterPreview()
+                    "chain_selection" -> ChainSelectionClipPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -284,6 +288,30 @@ class PreviewActivity : ComponentActivity() {
 // "Show exact error" disclosure that opens the raw-trace sheet. Rendered as the "Transaction
 // failed"
 // critical case with a real stack trace so the disclosure row is visible.
+/**
+ * "Select chains" bottom sheet (#5084) rendered with the full chain list so the grid overflows and
+ * scrolls. Used to verify the last row's label (alphabetically Zcash) is no longer clipped behind
+ * the system navigation bar. Scroll to the bottom before capturing.
+ */
+@Composable
+private fun ChainSelectionClipPreview() {
+    val chains = remember {
+        Coins.coins.values
+            .mapNotNull { it.firstOrNull() }
+            .sortedBy { it.chain.raw }
+            .map { ChainUiModel(isEnabled = it.chain == Chain.Bitcoin, coin = it) }
+    }
+    ChainSelectionScreen(
+        title = "Select chains",
+        state = ChainSelectionUiModel(chains = chains),
+        searchTextFieldState = remember { TextFieldState() },
+        onEnableAccount = {},
+        onDisableAccount = {},
+        onCommitChanges = {},
+        onBackClick = {},
+    )
+}
+
 @Composable
 private fun ErrorScreenAfterPreview() {
     ErrorView(
