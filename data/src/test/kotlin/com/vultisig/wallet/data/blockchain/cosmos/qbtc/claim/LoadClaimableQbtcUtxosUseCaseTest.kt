@@ -80,21 +80,19 @@ class LoadClaimableQbtcUtxosUseCaseTest {
     }
 
     @Test
-    fun `utxo with 143 confirmations is excluded as immature`() = runTest {
-        val result =
-            useCase(FakeChainService(), FakeUtxosService(listOf(utxoWith(143)))).invoke(p2wpkh)
-        assertEquals(QbtcClaimBlockedReason.NoUtxos, (result as QbtcClaimLoadResult.Blocked).reason)
+    fun `utxo with 143 confirmations surfaces as maturing`() = runTest {
+        val immature = utxoWith(143)
+        val result = useCase(FakeChainService(), FakeUtxosService(listOf(immature))).invoke(p2wpkh)
+        assertEquals(listOf(immature), (result as QbtcClaimLoadResult.Maturing).utxos)
     }
 
     @Test
-    fun `utxo with exactly 144 confirmations is excluded since chain requires strictly more`() =
+    fun `utxo with exactly 144 confirmations surfaces as maturing since chain requires strictly more`() =
         runTest {
+            val immature = utxoWith(144)
             val result =
-                useCase(FakeChainService(), FakeUtxosService(listOf(utxoWith(144)))).invoke(p2wpkh)
-            assertEquals(
-                QbtcClaimBlockedReason.NoUtxos,
-                (result as QbtcClaimLoadResult.Blocked).reason,
-            )
+                useCase(FakeChainService(), FakeUtxosService(listOf(immature))).invoke(p2wpkh)
+            assertEquals(listOf(immature), (result as QbtcClaimLoadResult.Maturing).utxos)
         }
 
     @Test
@@ -105,10 +103,10 @@ class LoadClaimableQbtcUtxosUseCaseTest {
     }
 
     @Test
-    fun `utxo with null confirmations is excluded as immature`() = runTest {
-        val result =
-            useCase(FakeChainService(), FakeUtxosService(listOf(utxoWith(null)))).invoke(p2wpkh)
-        assertEquals(QbtcClaimBlockedReason.NoUtxos, (result as QbtcClaimLoadResult.Blocked).reason)
+    fun `utxo with null confirmations surfaces as maturing`() = runTest {
+        val immature = utxoWith(null)
+        val result = useCase(FakeChainService(), FakeUtxosService(listOf(immature))).invoke(p2wpkh)
+        assertEquals(listOf(immature), (result as QbtcClaimLoadResult.Maturing).utxos)
     }
 
     @Test
@@ -126,7 +124,7 @@ class LoadClaimableQbtcUtxosUseCaseTest {
     }
 
     @Test
-    fun `all immature utxos block as no utxos`() = runTest {
+    fun `all immature utxos surface as maturing`() = runTest {
         val immature =
             listOf(
                 ClaimableUtxo(txid = "11".repeat(32), vout = 0, amount = 1, confirmations = 0),
@@ -135,8 +133,28 @@ class LoadClaimableQbtcUtxosUseCaseTest {
                 ClaimableUtxo(txid = "44".repeat(32), vout = 0, amount = 1, confirmations = null),
             )
         val result = useCase(FakeChainService(), FakeUtxosService(immature)).invoke(p2wpkh)
-        assertEquals(QbtcClaimBlockedReason.NoUtxos, (result as QbtcClaimLoadResult.Blocked).reason)
+        assertEquals(immature, (result as QbtcClaimLoadResult.Maturing).utxos)
     }
+
+    @Test
+    fun `mature utxos take priority and maturing ones are hidden from the available set`() =
+        runTest {
+            val mature =
+                ClaimableUtxo(
+                    txid = "cc".repeat(32),
+                    vout = 0,
+                    amount = 50_000,
+                    confirmations = 200,
+                )
+            val immature =
+                ClaimableUtxo(txid = "dd".repeat(32), vout = 0, amount = 60_000, confirmations = 10)
+            val result =
+                useCase(FakeChainService(), FakeUtxosService(listOf(immature, mature)))
+                    .invoke(p2wpkh)
+            // As long as something is claimable now, the screen shows the selectable set, not
+            // maturing.
+            assertEquals(listOf(mature), (result as QbtcClaimLoadResult.Available).utxos)
+        }
 
     private fun useCase(chain: FakeChainService, utxos: FakeUtxosService) =
         LoadClaimableQbtcUtxosUseCaseImpl(chain, utxos)

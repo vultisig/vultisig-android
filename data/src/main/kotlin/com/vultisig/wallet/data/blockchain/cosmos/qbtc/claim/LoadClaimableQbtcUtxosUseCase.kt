@@ -18,6 +18,13 @@ sealed interface QbtcClaimBlockedReason {
 sealed interface QbtcClaimLoadResult {
     data class Available(val utxos: List<ClaimableUtxo>) : QbtcClaimLoadResult
 
+    /**
+     * No UTXO is claimable yet, but one or more are still maturing (claimable on-chain, just short
+     * of [QbtcClaimConfig.MIN_CLAIM_CONFIRMATIONS]). Surfaced so the UI can explain the wait
+     * instead of implying nothing is claimable.
+     */
+    data class Maturing(val utxos: List<ClaimableUtxo>) : QbtcClaimLoadResult
+
     data class Blocked(val reason: QbtcClaimBlockedReason) : QbtcClaimLoadResult
 }
 
@@ -64,10 +71,10 @@ constructor(
             return QbtcClaimLoadResult.Blocked(QbtcClaimBlockedReason.KillSwitchClosed)
         }
 
-        val filtered =
+        val claimable =
             try {
                 val candidates = utxosService.fetchClaimableCandidates(btcAddress)
-                chainService.filterClaimable(candidates).filter { it.isMature }
+                chainService.filterClaimable(candidates)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -77,10 +84,11 @@ constructor(
                 )
             }
 
-        return if (filtered.isEmpty()) {
-            QbtcClaimLoadResult.Blocked(QbtcClaimBlockedReason.NoUtxos)
-        } else {
-            QbtcClaimLoadResult.Available(filtered)
+        val (mature, maturing) = claimable.partition { it.isMature }
+        return when {
+            mature.isNotEmpty() -> QbtcClaimLoadResult.Available(mature)
+            maturing.isNotEmpty() -> QbtcClaimLoadResult.Maturing(maturing)
+            else -> QbtcClaimLoadResult.Blocked(QbtcClaimBlockedReason.NoUtxos)
         }
     }
 }
