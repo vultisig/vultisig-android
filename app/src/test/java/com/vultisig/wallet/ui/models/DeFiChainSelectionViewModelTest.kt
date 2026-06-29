@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.HasCircleAccountUseCase
 import com.vultisig.wallet.ui.models.mappers.ChainToDefiChainUiMapperImpl
@@ -42,6 +43,7 @@ internal class DeFiChainSelectionViewModelTest {
     private lateinit var defaultDeFiChainsRepository: DefaultDeFiChainsRepository
     private lateinit var hasCircleAccount: HasCircleAccountUseCase
     private lateinit var navigator: Navigator<Destination>
+    private lateinit var requestResultRepository: RequestResultRepository
 
     private val vaultId = "vault-1"
 
@@ -56,6 +58,7 @@ internal class DeFiChainSelectionViewModelTest {
         defaultDeFiChainsRepository = mockk(relaxed = true)
         hasCircleAccount = mockk()
         navigator = mockk(relaxed = true)
+        requestResultRepository = mockk(relaxed = true)
 
         // Vault holding Ethereum (Circle) and ThorChain, both DeFi-supported.
         coEvery { vaultRepository.get(vaultId) } returns
@@ -81,6 +84,7 @@ internal class DeFiChainSelectionViewModelTest {
             hasCircleAccount = hasCircleAccount,
             mapChainDefi = ChainToDefiChainUiMapperImpl(),
             navigator = navigator,
+            requestResultRepository = requestResultRepository,
         )
 
     @Test
