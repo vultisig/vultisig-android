@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -18,7 +19,6 @@ import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.io.IOException
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -154,7 +154,7 @@ constructor(
                     .getTokenValue(transaction.srcAddress, transaction.srcToken)
                     .first()
                     .value
-            } catch (e: IOException) {
+            } catch (e: NetworkException) {
                 Timber.e(e)
                 return
             }
