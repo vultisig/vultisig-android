@@ -20,8 +20,9 @@ import kotlinx.serialization.Serializable
 interface TonStakingApi {
 
     /**
-     * List of known staking pools, backing the pool picker. `include_unverified=false` is sent so
-     * only verified pools are returned; callers re-filter defensively to nominator implementations.
+     * List of verified staking pools, backing the pool picker. `include_unverified=false` is sent,
+     * but tonapi does not honor it, so results are filtered on the decoded `verified` flag
+     * client-side; callers may re-filter defensively to nominator implementations.
      */
     suspend fun getStakingPools(): List<TonStakingPoolEntryJson>
 
@@ -47,6 +48,9 @@ internal class TonStakingApiImpl @Inject constructor(private val http: HttpClien
             .get("$BASE_URL/v2/staking/pools") { parameter("include_unverified", false) }
             .bodyOrThrow<TonStakingPoolsResponseJson>()
             .pools
+            // `include_unverified=false` does not actually restrict tonapi's response, so filter on
+            // the decoded `verified` flag client-side (mirrors vultisig-ios).
+            .filter { it.verified }
 
     override suspend fun getStakingPool(poolAddress: String): TonStakingPoolInfoJson? =
         try {

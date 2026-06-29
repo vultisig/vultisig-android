@@ -42,7 +42,14 @@ internal class TonDeFiBalanceServiceTest {
         val balance = result.single().balances.single()
         assertEquals(Coins.Ton.TON, balance.coin)
         assertEquals(BigInteger.valueOf(50_800_000_000), balance.amount)
-        coVerify { repo.saveStakingDetails(vaultId, match { it.stakeAmount == balance.amount }) }
+        // tonapi `apy` is a percentage (5.0 = 5%); it must persist as a fraction (0.05) since the
+        // DeFi screen's formatPercentage multiplies by 100.
+        coVerify {
+            repo.saveStakingDetails(
+                vaultId,
+                match { it.stakeAmount == balance.amount && it.apr == 0.05 },
+            )
+        }
     }
 
     @Test

@@ -362,7 +362,8 @@ internal fun DepositFormScreen(
                                 depositChain == Chain.ThorChain) ||
                             (depositOption == DepositOption.Custom &&
                                 depositChain == Chain.MayaChain) ||
-                            depositOption == DepositOption.Unstake ||
+                            // TON unstake withdraws the full staked balance, so no amount is
+                            // entered.
                             depositOption == DepositOption.Stake ||
                             depositOption == DepositOption.AddCacaoPool
                     ) {

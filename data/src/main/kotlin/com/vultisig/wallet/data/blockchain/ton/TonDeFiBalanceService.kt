@@ -55,10 +55,14 @@ class TonDeFiBalanceService(
         }
     }
 
-    /** Best-effort pool APY; a decoration failure must not drop an otherwise-valid position. */
+    /**
+     * Best-effort pool APY; a decoration failure must not drop an otherwise-valid position. tonapi
+     * returns `apy` as a percentage (e.g. `13.27` = 13.27%), but `StakingDetails.apr` is stored as
+     * a fraction (the DeFi screen's `formatPercentage` multiplies by 100), so scale it down here.
+     */
     private suspend fun fetchPoolApr(poolAddress: String): Double? =
         try {
-            tonStakingApi.getStakingPool(poolAddress)?.apy
+            tonStakingApi.getStakingPool(poolAddress)?.apy?.let { it / 100 }
         } catch (e: NetworkException) {
             Timber.w(e, "TonDeFiBalanceService: Failed to decorate TON staking APY")
             null
