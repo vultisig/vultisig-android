@@ -78,6 +78,10 @@ internal class VerifyDepositViewModelTest {
         vaultPasswordRepository = mockk(relaxed = true)
         launchKeysign = mockk(relaxed = true)
         isVaultHasFastSignById = mockk(relaxed = true)
+        // A relaxed mock can't synthesize the non-null DepositTransactionUiModel for this
+        // suspend function-type mapper, so its invoke must be stubbed explicitly; otherwise the
+        // null return throws in init before checkFeeAffordability runs and the gate never trips.
+        coEvery { mapTransactionToUiModel(any()) } returns DepositTransactionUiModel()
         coEvery { isVaultHasFastSignById(any()) } returns false
     }
 
