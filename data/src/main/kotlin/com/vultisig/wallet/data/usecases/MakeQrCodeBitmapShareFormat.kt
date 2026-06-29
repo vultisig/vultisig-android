@@ -59,6 +59,24 @@ interface MakeQrCodeBitmapShareFormat : (Context, Bitmap, Int, Bitmap, QrShareIn
 
 private fun Float.dp(context: Context): Float = this * context.resources.displayMetrics.density
 
+// `Bitmap.scale` delegates to `createScaledBitmap`, which rejects a source whose color space is
+// null with "can't create bitmap without a color space" (some devices hand us such QR/logo
+// bitmaps). Redraw those into a fresh sRGB-backed bitmap before scaling so the share render can
+// never crash on this input.
+private fun Bitmap.scaleWithColorSpace(width: Int, height: Int, filter: Boolean = true): Bitmap {
+    val source =
+        if (colorSpace == null) {
+            createBitmap(this.width, this.height, config ?: Bitmap.Config.ARGB_8888).also {
+                Canvas(it).drawBitmap(this, 0f, 0f, null)
+            }
+        } else {
+            this
+        }
+    val scaled = source.scale(width, height, filter)
+    if (source !== this) source.recycle()
+    return scaled
+}
+
 private fun ellipsizeToWidth(text: String, paint: Paint, maxWidth: Float): String {
     if (maxWidth <= 0f) return ""
     if (paint.measureText(text) <= maxWidth) return text
@@ -103,8 +121,10 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
         val maxQrPx = (QR_CODE_MAX_SIZE_DP * density).roundToInt()
         val qrBitmap =
             when {
-                qrCodeBitmap.width < minQrPx -> qrCodeBitmap.scale(minQrPx, minQrPx, false)
-                qrCodeBitmap.width > maxQrPx -> qrCodeBitmap.scale(maxQrPx, maxQrPx, false)
+                qrCodeBitmap.width < minQrPx ->
+                    qrCodeBitmap.scaleWithColorSpace(minQrPx, minQrPx, false)
+                qrCodeBitmap.width > maxQrPx ->
+                    qrCodeBitmap.scaleWithColorSpace(maxQrPx, maxQrPx, false)
                 else -> qrCodeBitmap
             }
 
@@ -251,7 +271,7 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
             val valueTextWidth = valuePaint.measureText(ellipsizedValue)
             val icon = field.valueIcon
             if (icon != null) {
-                val scaledIcon = icon.scale(iconPx, iconPx)
+                val scaledIcon = icon.scaleWithColorSpace(iconPx, iconPx)
                 val iconLeft = metaContentRight - valueTextWidth - valueIconToTextGap - iconPx
                 val iconTop = rowsCursorY + (fieldLineHeight - iconPx) / 2f
                 canvas.drawBitmap(scaledIcon, iconLeft, iconTop, null)
@@ -274,7 +294,7 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
 
         val signatureTop = metaCardBottom + signatureTopGap
         val scaledLogoSize = signatureIconSize.roundToInt().coerceAtLeast(1)
-        val scaledLogo = logo.scale(scaledLogoSize, scaledLogoSize)
+        val scaledLogo = logo.scaleWithColorSpace(scaledLogoSize, scaledLogoSize)
         val logoLeft = (finalWidth - scaledLogoSize) / 2f
         canvas.drawBitmap(scaledLogo, logoLeft, signatureTop, null)
         if (scaledLogo !== logo) scaledLogo.recycle()
