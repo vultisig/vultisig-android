@@ -562,19 +562,24 @@ constructor(
         }
 
     /**
-     * Provider preference order for the banded selection. Lower index = preferred. THORChain is
-     * most preferred, then MayaChain, SwapKit, KyberSwap, 1inch, LI.FI; Jupiter (Solana-only,
-     * rarely competing in the same candidate set) ranks last.
+     * Provider preference order for the banded selection. Lower index = preferred. THORChain then
+     * MayaChain lead for cross-chain. Jupiter sits next, above SwapKit/Kyber/1inch/LI.FI: it is
+     * Solana-only and same-chain, so the only candidate set it ever appears in is an on-Solana
+     * SOL↔SPL / SPL↔SPL pair (against LI.FI and a SwapKit/NEAR cross-chain route), where the spec
+     * wants Jupiter — the native Solana DEX aggregator, no markup — preferred. Ranking it above
+     * those globally is safe because it never competes outside that set, and it never co-occurs
+     * with THORChain/Maya (those need a non-Solana or native-SOL leg Jupiter can't be eligible
+     * for).
      */
     private fun providerPriority(provider: SwapProvider): Int =
         when (provider) {
             SwapProvider.THORCHAIN -> 0
             SwapProvider.MAYA -> 1
-            SwapProvider.SWAPKIT -> 2
-            SwapProvider.KYBER -> 3
-            SwapProvider.ONEINCH -> 4
-            SwapProvider.LIFI -> 5
-            SwapProvider.JUPITER -> 6
+            SwapProvider.JUPITER -> 2
+            SwapProvider.SWAPKIT -> 3
+            SwapProvider.KYBER -> 4
+            SwapProvider.ONEINCH -> 5
+            SwapProvider.LIFI -> 6
         }
 
     /**
@@ -893,6 +898,14 @@ constructor(
                                     dstToken = dstToken,
                                     tokenValue = tokenValue,
                                     srcAddress = src.address.address,
+                                    // VULT-scaled affiliate fee (parity with Kyber/1inch/LiFi):
+                                    // 50 bps base, reduced by the holder's tier discount, never
+                                    // negative. Jupiter takes 0% itself, so this is the only fee.
+                                    affiliateBps =
+                                        maxOf(
+                                            0,
+                                            JUPITER_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0),
+                                        ),
                                     slippageBps = slippageBps,
                                 ),
                             )
@@ -1272,6 +1285,10 @@ constructor(
         private const val KYBER_AFFILIATE_FEE_BPS = 50
         /** Base bps before tier discount; clamped to SwapKit's documented 0..1000 range. */
         private const val SWAPKIT_AFFILIATE_FEE_BPS = 50
+        /**
+         * Base bps before tier discount for Jupiter's `platformFeeBps` (parity with the others).
+         */
+        private const val JUPITER_AFFILIATE_FEE_BPS = 50
         private const val NATIVE_TOKEN_SENTINEL = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         private const val QUOTE_FETCH_TIMEOUT_MS = 15_000L
         /**

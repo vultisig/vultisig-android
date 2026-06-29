@@ -591,6 +591,26 @@ internal class SwapQuoteManagerTest {
     }
 
     @Test
+    fun `selectBestQuote prefers Jupiter over LI-FI and SwapKit for an on-Solana pair`() {
+        // SOL↔SPL / SPL↔SPL is the only candidate set Jupiter ever appears in: against LI.FI and a
+        // SwapKit/NEAR cross-chain route. The spec wants Jupiter (the native Solana DEX aggregator,
+        // no markup) preferred there (#5053). With equal net output all three are in band and none
+        // expose source gas, so provider priority decides — Jupiter must outrank BOTH LI.FI and
+        // SwapKit (whose higher cross-chain priority must not steal an on-Solana swap).
+        val best =
+            createManager()
+                .selectBestQuote(
+                    listOf(
+                        rankable(SwapProvider.SWAPKIT, "0.03"),
+                        rankable(SwapProvider.LIFI, "0.03"),
+                        rankable(SwapProvider.JUPITER, "0.03"),
+                    )
+                )
+
+        assertEquals(SwapProvider.JUPITER, best.candidate.provider)
+    }
+
+    @Test
     fun `selectBestQuote prefers the lower-gas route among in-band EVM aggregators`() {
         // KyberSwap has the marginally higher net AND higher priority, but burns more source gas;
         // 1inch is in band (floor 0.02985) with cheaper gas. The lower-gas quote wins, beating both
