@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -131,9 +133,8 @@ fun VsButton(
             label = "VsButton.borderColor",
         )
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+    Box(
+        contentAlignment = Alignment.Center,
         modifier =
             modifier
                 .background(
@@ -156,10 +157,18 @@ fun VsButton(
                     }
                 ),
     ) {
+        // Keep the content composed and measured while loading so the button retains its
+        // natural size; hide it visually and overlay the loading indicator on top.
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            modifier = if (isLoading) Modifier.alpha(0f) else Modifier,
+        ) {
+            content()
+        }
+
         if (isLoading) {
             VsButtonLoadingIndicator(size = size)
-        } else {
-            content()
         }
     }
 }
