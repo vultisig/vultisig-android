@@ -400,7 +400,7 @@ internal fun SwapScreen(
                                     } else {
                                         VsButtonState.Enabled
                                     },
-                                isLoading = state.isLoading,
+                                isLoading = state.isLoadingNextScreen,
                                 onClick = {
                                     focusManager.clearFocus(true)
                                     onSwap()
