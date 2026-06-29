@@ -145,6 +145,8 @@ internal class SwapQuotePipelineNetworkFeeTest {
             feeText = "0",
             outboundFeeText = null,
             swapFeePercent = null,
+            priceImpactPercent = null,
+            priceImpactLevel = null,
             isUtxoSwap = false,
             utxoDstAddress = null,
             utxoMemo = null,
