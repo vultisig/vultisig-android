@@ -179,6 +179,10 @@
     <string name="swap_form_estimated_fees_title">Commissione di cambio</string>
     <string name="swap_form_estimated_fees_with_percent_title">Commissione di cambio (%1$s)</string>
     <string name="swap_form_outbound_fee_title">Commissione in uscita</string>
+    <string name="swap_form_price_impact_title">Impatto sul Prezzo</string>
+    <string name="swap_price_impact_good">Buono</string>
+    <string name="swap_price_impact_average">Medio</string>
+    <string name="swap_price_impact_high">Alto</string>
     <string name="join_keysign_discovering_session_id">Individuazione dell\'ID sessione</string>
     <string name="join_keysign_discovery_service">Scoprire il servizio</string>
     <string name="vault_settings_delete_subtitle">Elimina definitivamente il tuo vault.</string>

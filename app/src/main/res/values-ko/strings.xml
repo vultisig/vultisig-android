@@ -251,6 +251,10 @@
     <string name="swap_form_estimated_fees_title">스왑 수수료</string>
     <string name="swap_form_estimated_fees_with_percent_title">스왑 수수료 (%1$s)</string>
     <string name="swap_form_outbound_fee_title">출금 수수료</string>
+    <string name="swap_form_price_impact_title">가격 영향</string>
+    <string name="swap_price_impact_good">양호</string>
+    <string name="swap_price_impact_average">보통</string>
+    <string name="swap_price_impact_high">높음</string>
     <string name="swap_form_dst_token_title">받는 토큰</string>
     <string name="transaction_type_button_swap">스왑</string>
     <string name="swap_form_gas_title">네트워크 수수료</string>

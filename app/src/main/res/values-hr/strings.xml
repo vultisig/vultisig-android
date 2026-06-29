@@ -179,6 +179,10 @@
     <string name="swap_form_estimated_fees_title">Naknada za zamjenu</string>
     <string name="swap_form_estimated_fees_with_percent_title">Naknada za zamjenu (%1$s)</string>
     <string name="swap_form_outbound_fee_title">Izlazna naknada</string>
+    <string name="swap_form_price_impact_title">Utjecaj na cijenu</string>
+    <string name="swap_price_impact_good">Dobro</string>
+    <string name="swap_price_impact_average">Srednje</string>
+    <string name="swap_price_impact_high">Visoko</string>
     <string name="join_keysign_discovering_session_id">Otkrivanje ID-a sesije</string>
     <string name="join_keysign_discovery_service">Usluga otkrivanja</string>
     <string name="vault_settings_delete_subtitle">Trajno izbrišite svoj trezor.</string>

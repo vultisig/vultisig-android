@@ -58,7 +58,7 @@ class SwapKitQuoteDecodingTest {
                     { "type": "network", "amount": "21000", "asset": "ETH.ETH", "chain": "ETH" }
                   ],
                   "warnings": [],
-                  "meta": { "tags": ["FASTEST", "RECOMMENDED"], "assets": [] }
+                  "meta": { "tags": ["FASTEST", "RECOMMENDED"], "assets": [], "priceImpact": 0.0133 }
                 }
               ]
             }
@@ -80,6 +80,7 @@ class SwapKitQuoteDecodingTest {
         assertEquals("CHAINFLIP", route.legs.single().provider)
         assertEquals(54.0, route.estimatedTime?.total)
         assertEquals(listOf("FASTEST", "RECOMMENDED"), route.meta?.tags)
+        assertEquals(0.0133, route.meta?.priceImpact)
         assertNull(decoded.error)
     }
 
