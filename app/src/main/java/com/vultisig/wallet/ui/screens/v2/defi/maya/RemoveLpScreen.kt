@@ -187,6 +187,7 @@ internal fun RemoveLpScreenContent(
             label = stringResource(R.string.send_continue_button),
             modifier = Modifier.fillMaxWidth(),
             onClick = onContinue,
+            isLoading = state.isLoading,
             state =
                 if (state.removeLpPercent > 0f && state.removeLpCacaoDisplay.isNotEmpty())
                     VsButtonState.Enabled

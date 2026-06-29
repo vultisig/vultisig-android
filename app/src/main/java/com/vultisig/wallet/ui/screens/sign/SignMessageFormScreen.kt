@@ -43,6 +43,7 @@ internal fun SignMessageFormScreen(
         messageFieldState = model.messageFieldState,
         state =
             if (state.isLoading || !isFormValid) VsButtonState.Disabled else VsButtonState.Enabled,
+        isLoading = state.isLoading,
         onSign = {
             focusManager.clearFocus()
             model.sign()
@@ -55,6 +56,7 @@ private fun SignMessageFormScreen(
     methodFieldState: TextFieldState,
     messageFieldState: TextFieldState,
     state: VsButtonState,
+    isLoading: Boolean = false,
     onSign: () -> Unit = {},
 ) {
     Scaffold(
@@ -62,6 +64,7 @@ private fun SignMessageFormScreen(
             VsButton(
                 label = stringResource(id = R.string.sign_message_continue),
                 state = state,
+                isLoading = isLoading,
                 onClick = onSign,
                 modifier = Modifier.fillMaxWidth().padding(all = 16.dp),
             )

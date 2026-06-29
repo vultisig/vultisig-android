@@ -228,6 +228,7 @@ internal fun BondFormContent(
                 focusManager.clearFocus()
                 onDeposit()
             },
+            isLoading = state.isLoading,
             state =
                 if (state.isLoading || state.isCheckingWhitelist || state.nodeAddressError != null)
                     VsButtonState.Disabled
