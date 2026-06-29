@@ -41,6 +41,9 @@ data class THORChainSwapQuote(
     @SerialName("warning") val warning: String,
     @SerialName("router") val router: String?,
     @SerialName("error") val error: String?,
+    // Price impact of the swap in basis points (100 == 1%), as reported by the node. Drives the
+    // Price Impact row in the fee breakdown (iOS parity). Null when the node omits it.
+    @SerialName("slippage_bps") val slippageBps: Int? = null,
 )
 
 @Serializable

@@ -64,6 +64,9 @@ internal data class QuoteFetchResult(
     val sourceGasWei: BigInteger? = null,
     val outboundFeeText: String? = null,
     val swapFeePercent: String? = null,
+    // Fractional price impact of the winning quote (e.g. 0.0133 == 1.33%), or null when the
+    // provider doesn't expose it. Formatted into the Price Impact row downstream.
+    val priceImpact: BigDecimal? = null,
 )
 
 internal data class QuoteCandidate(
@@ -380,6 +383,7 @@ constructor(
             sourceGasWei = sourceGasWei(provider, quote),
             outboundFeeText = outboundFeeText,
             swapFeePercent = swapFeePercent,
+            priceImpact = quote.priceImpact,
         )
     }
 
@@ -1029,6 +1033,8 @@ constructor(
                     subProvider = evmResult.subProvider,
                     // Correlation key for `/track` settlement gating of this cross-chain swap.
                     swapId = evmResult.swapId,
+                    // Price impact from the SwapKit route, surfaced in the fee breakdown.
+                    priceImpact = evmResult.priceImpact,
                 )
             }
         // Read the sub-provider off the returned quote (not a hoisted var): a cache HIT skips the

@@ -82,7 +82,7 @@
     <string name="send_amount">Quantità</string>
     <string name="send_amount_currency_hint">Inserisci Quantità</string>
     <string name="send_continue_button">Continua</string>
-    <string name="circle_defi_description">Deposita i tuoi USDC in un account Circle e guadagna rendimenti. In modo sicuro all interno del tuo vault Vultisig.</string>
+    <string name="circle_defi_description">Deposita i tuoi USDC in un account Circle e guadagna rendimenti. In modo sicuro all\'interno del tuo vault Vultisig.</string>
     <string name="circle_defi_control_info">I fondi rimangono completamente sotto il controllo del tuo vault. Gli account Circle sono auto-custoditi e il rendimento è generato attraverso tesorerie sicure off-chain.</string>
     <string name="open_account_button">Apri account</string>
     <string name="ok">OK</string>
@@ -138,7 +138,7 @@
     <string name="swap_form_gas_title">Commissione di rete</string>
     <string name="swap_form_total_fees_title">Totale commissioni</string>
     <string name="verify_swap_sign_button">Firma Transazione</string>
-    <string name="swap_error_no_amount">a quantità deve essere un numero positivo.</string>
+    <string name="swap_error_no_amount">La quantità deve essere un numero positivo.</string>
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
     <string name="transaction_type_button_swap">Scambia</string>
@@ -162,7 +162,7 @@
     <string name="send_screen_max">Massimo</string>
     <string name="biometry_auth_login_button">Accedi con la biometria</string>
     <string name="feature_item_learn_more">Saperne di più</string>
-    <string name="keysign">Segno chiave</string>
+    <string name="keysign">Keysign</string>
     <string name="generating_key_screen_keygen_failed">Keygen non riuscito</string>
     <string name="naming_vault_screen_invalid_name">Nome non valido</string>
     <string name="rename_vault_invalid_name">Nome non valido</string>
@@ -179,6 +179,10 @@
     <string name="swap_form_estimated_fees_title">Commissione di cambio</string>
     <string name="swap_form_estimated_fees_with_percent_title">Commissione di cambio (%1$s)</string>
     <string name="swap_form_outbound_fee_title">Commissione in uscita</string>
+    <string name="swap_form_price_impact_title">Impatto sul Prezzo</string>
+    <string name="swap_price_impact_good">Buono</string>
+    <string name="swap_price_impact_average">Medio</string>
+    <string name="swap_price_impact_high">Alto</string>
     <string name="join_keysign_discovering_session_id">Individuazione dell\'ID sessione</string>
     <string name="join_keysign_discovery_service">Scoprire il servizio</string>
     <string name="vault_settings_delete_subtitle">Elimina definitivamente il tuo vault.</string>
@@ -188,7 +192,7 @@
     <string name="chain_token_screen_address_copied">%1$s copiato negli appunti</string>
     <string name="s_of_s_vault">%1$s del caveau %2$s</string>
     <string name="camera_permission_open_settings">Apri impostazioni</string>
-    <string name="verify_transaction_value">Valor</string>
+    <string name="verify_transaction_value">Valore</string>
     <string name="send_error_no_address">L\'indirizzo non è valido</string>
     <string name="vault_settings_error_backup_file">si è verificato un errore</string>
     <string name="vault_settings_delete_vault_name">Nome Cassaforte:</string>
@@ -263,13 +267,13 @@
     <string name="generating_key_screen_reshare_failed">Ricondivisione non riuscita</string>
     <string name="keygen_email_continue_button">Continuare</string>
     <string name="password_should_not_be_empty">La password non deve essere vuota</string>
-    <string name="signing_error_insufficient_funds">Non c&#8217;è abbastanza benzina per coprire la commissione di transazione.\n Si prega di finanziare il portafoglio.</string>
+    <string name="signing_error_insufficient_funds">Non c&#8217;è abbastanza gas per coprire la commissione di transazione.\n Si prega di finanziare il portafoglio.</string>
     <string name="signing_error_token_account_not_found_s">Impossibile caricare il tuo account token %s. Riprova.</string>
     <string name="signing_error_mixed_reshare">Firma di condivisione mista.\nUtilizzare condivisioni Vault dello stesso ciclo di condivisione.</string>
     <string name="signing_error_sequence_mismatch">La sequenza dell&#8217;account è cambiata — riprova.</string>
     <string name="signing_error_broadcast_rejected">Transazione rifiutata dalla rete.</string>
     <string name="signing_error_broadcast_rejected_s">Transazione rifiutata dalla rete: %s</string>
-    <string name="verify_transaction_fast_sign_btn_title">Segnale veloce</string>
+    <string name="verify_transaction_fast_sign_btn_title">Firma rapida</string>
     <string name="verify_transaction_paired_btn_title">Abbinato</string>
     <string name="keysign_sign_transaction">Firma transazione</string>
     <string name="sign_transaction">Firma transazione</string>
@@ -395,8 +399,8 @@
     <string name="apy">APY</string>
     <string name="unbond">Svincola</string>
     <string name="unbond_screen_title">Svincola</string>
-    <string name="stake_screen_title">Puntare</string>
-    <string name="unstake_screen_title">Rimuovi puntata</string>
+    <string name="stake_screen_title">Stake</string>
+    <string name="unstake_screen_title">Unstake</string>
     <string name="mint_screen_title">Coniare</string>
     <string name="redeem_screen_title">Riscattare</string>
     <string name="rewards_screen_title">Ricompense</string>
@@ -516,8 +520,8 @@
     <string name="remove_lp_title">Rimuovi LP %1$s</string>
     <string name="remove_pool_amount_label">Quantità</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
-    <string name="stake_cacao_title">Puntare CACAO</string>
-    <string name="unstake_cacao_title">Rimuovi puntata CACAO</string>
+    <string name="stake_cacao_title">Stake CACAO</string>
+    <string name="unstake_cacao_title">Unstake CACAO</string>
     <string name="unstake_cacao_available_format">Disponibile: %1$s</string>
     <string name="unstake_cacao_unlocks_in_days_hours_format">Si sblocca tra %1$dg %2$dh</string>
     <string name="unstake_cacao_unlocks_in_hours_format">Si sblocca tra %1$dh %2$dm</string>
@@ -791,7 +795,7 @@
     <string name="join_key_gen_waiting_for_other_devices_to_join">In attesa che altri dispositivi si uniscano</string>
     <string name="join_key_gen_your_vault_will_start_generating">Il vault inizierà a generare dati dal momento in cui finalizzi la configurazione del vault sul tuo dispositivo principale</string>
     <string name="join_key_sign_wrong_signing_library_type">Tipo di libreria di firma errato</string>
-    <string name="gas_settings_advanced_gas_fee">Tariffa carburante anticipata</string>
+    <string name="gas_settings_advanced_gas_fee">Tariffa gas avanzata</string>
     <string name="gas_settings_max_base_fee_gwei">Tariffa base massima (GWEI)</string>
     <string name="gas_settings_priority_fee_gwei">Tariffa prioritaria (GWEI)</string>
     <string name="import_file_import_your_vault_share">Importa la tua condivisione Vault</string>
@@ -878,6 +882,8 @@
     </plurals>
     <string name="send_form_ripple_reaping_warning">Assicurati di lasciare fondi sufficienti per coprire le commissioni. Se il saldo di un conto scende al di sotto di 1 XRP (Deposito Esistenziale), il conto verrà disattivato (rimosso) e tutti i fondi rimanenti andranno persi. Puoi riattivare l\'indirizzo con un nuovo deposito superiore al deposito esistenziale in qualsiasi momento. Tuttavia, questo non recupererà i fondi persi.</string>
     <string name="error_invalid_chain">La catena non è valida</string>
+    <string name="ton_stake_error_unsupported_pool">Questo pool di staking non è supportato</string>
+    <string name="ton_stake_error_min_amount">Lo stake minimo per questo pool è %1$s TON</string>
     <string name="vault_backup_verifying_pin">Verifica del PIN in corso, attendere</string>
     <string name="select_vault_type_next">Avanti</string>
     <string name="select_vault_type_choose_setup">Scegli configurazione</string>
@@ -1410,8 +1416,8 @@
     <string name="cosmos_staking_verify_sign">Firma transazione</string>
     <string name="cosmos_staking_source_validator">Validatore di origine</string>
     <string name="cosmos_staking_destination_validator">Validatore di destinazione</string>
-    <string name="cosmos_staking_redelegate_cooldown_message">Source validator is under a %1$d-day redelegation cooldown - unlocks %2$s</string>
-    <string name="cosmos_staking_redelegate_cooldown_fallback">Source validator is under a redelegation cooldown</string>
-    <string name="cosmos_staking_insufficient_fee_balance">Not enough liquid %1$s to cover the network fee. Claim rewards first or top up.</string>
+    <string name="cosmos_staking_redelegate_cooldown_message">Il validatore di origine è in un periodo di attesa di ridelegazione di %1$d giorni – si sblocca il %2$s</string>
+    <string name="cosmos_staking_redelegate_cooldown_fallback">Il validatore di origine è in un periodo di attesa di ridelegazione</string>
+    <string name="cosmos_staking_insufficient_fee_balance">%1$s liquido insufficiente per coprire la commissione di rete. Riscuoti prima le ricompense o ricarica.</string>
     <string name="cosmos_staking_max_entries_reached">Hai raggiunto il numero massimo di %1$d richieste in sospeso per questo validatore. Attendi che una si completi prima di continuare.</string>
 </resources>

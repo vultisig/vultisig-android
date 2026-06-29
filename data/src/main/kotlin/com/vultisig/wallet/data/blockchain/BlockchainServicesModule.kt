@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.blockchain
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
+import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingService
 import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
@@ -13,6 +14,7 @@ import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionServi
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
+import com.vultisig.wallet.data.blockchain.ton.TonDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.tron.TronDeFiBalanceService
 import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
 import com.vultisig.wallet.data.repositories.ScaCircleAccountRepository
@@ -117,6 +119,17 @@ internal interface BlockchainServicesModule {
         ): TronDeFiBalanceService =
             TronDeFiBalanceService(
                 tronApi = tronApi,
+                stakingDetailsRepository = stakingDetailsRepository,
+            )
+
+        @Provides
+        @Singleton
+        fun provideTonDeFiBalanceService(
+            tonStakingApi: TonStakingApi,
+            stakingDetailsRepository: StakingDetailsRepository,
+        ): TonDeFiBalanceService =
+            TonDeFiBalanceService(
+                tonStakingApi = tonStakingApi,
                 stakingDetailsRepository = stakingDetailsRepository,
             )
 

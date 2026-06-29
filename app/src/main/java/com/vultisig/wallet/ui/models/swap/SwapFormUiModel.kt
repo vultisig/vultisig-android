@@ -29,6 +29,10 @@ internal data class FeeBreakdown(
     val fee: String = "",
     val outboundFee: String? = null,
     val swapFeePercent: String? = null,
+    // Signed price-impact percentage (e.g. "-1.33%") and its tier, or null when the provider does
+    // not report price impact (1inch/Kyber/LiFi/Jupiter). Drives the Price Impact row (iOS parity).
+    val priceImpactPercent: String? = null,
+    val priceImpactLevel: PriceImpactLevel? = null,
 )
 
 /** VULT-tier and referral discount info rendered in the fee-details panel. */

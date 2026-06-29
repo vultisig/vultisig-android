@@ -252,6 +252,10 @@
     <string name="swap_form_estimated_fees_title">Swap Fee</string>
     <string name="swap_form_estimated_fees_with_percent_title">Swap Fee (%1$s)</string>
     <string name="swap_form_outbound_fee_title">Outbound Fee</string>
+    <string name="swap_form_price_impact_title">Price Impact</string>
+    <string name="swap_price_impact_good">Good</string>
+    <string name="swap_price_impact_average">Average</string>
+    <string name="swap_price_impact_high">High</string>
     <string name="swap_form_dst_token_title">To</string>
     <string name="transaction_type_button_swap">Swap</string>
     <string name="swap_form_gas_title">Network Fee</string>
@@ -477,6 +481,8 @@
     </plurals>
     <string name="send_form_ripple_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 XRP (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
     <string name="error_invalid_chain">Chain is invalid</string>
+    <string name="ton_stake_error_unsupported_pool">This staking pool isn\'t supported</string>
+    <string name="ton_stake_error_min_amount">Minimum stake for this pool is %1$s TON</string>
     <string name="send_error_invalid_plan_fee">Invalid Plan Fee</string>
     <string name="send_error_same_address">The to address must be different from the from address</string>
     <string name="select_vault_type_secure">Secure</string>

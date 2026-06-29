@@ -139,6 +139,7 @@ private fun DelegateContent(
             label = stringResource(R.string.cosmos_staking_continue),
             variant = VsButtonVariant.CTA,
             state = if (state.isSubmitting) VsButtonState.Disabled else VsButtonState.Enabled,
+            isLoading = state.isSubmitting,
             onClick = onSubmit,
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
         )

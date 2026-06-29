@@ -223,6 +223,7 @@ private fun SendFormScreen(
             VsButton(
                 label = stringResource(R.string.send_continue_button),
                 state = if (state.isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
+                isLoading = state.isLoading,
                 onClick = {
                     if (!state.isLoading) {
                         focusManager.clearFocus()

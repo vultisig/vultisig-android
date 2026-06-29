@@ -50,6 +50,12 @@ sealed class SwapQuoteResult {
         val data: EVMSwapQuoteJson,
         val subProvider: String? = null,
         val swapId: String? = null,
+        // Signed fractional price impact (e.g. 0.0133 == +1.33% cost) from SwapKit's route
+        // (`meta.priceImpact`, else `totalSlippageBps`), threaded out-of-band since
+        // EVMSwapQuoteJson
+        // has no slot for it. Null for direct aggregators (1inch/Kyber/LiFi/Jupiter), which don't
+        // report price impact.
+        val priceImpact: java.math.BigDecimal? = null,
     ) : SwapQuoteResult()
 
     // A future SwapKit non-EVM route (BTC / TON / ADA / TRON / SUI / ZEC) rides Native, since

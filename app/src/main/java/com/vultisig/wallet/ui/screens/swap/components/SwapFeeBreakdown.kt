@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormDetails2
 import com.vultisig.wallet.ui.models.swap.DiscountInfo
 import com.vultisig.wallet.ui.models.swap.FeeBreakdown
+import com.vultisig.wallet.ui.models.swap.PriceImpactLevel
 import com.vultisig.wallet.ui.models.swap.QuoteDisplay
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.theme.Theme
@@ -239,6 +240,42 @@ internal fun SwapFeeBreakdown(
                                 Text(
                                     text = "-${discountInfo.referralBpsDiscountFiatValue}",
                                     color = Theme.v2.colors.text.secondary,
+                                    style = Theme.brockmann.supplementary.caption,
+                                )
+                            }
+                        }
+
+                        if (
+                            feeBreakdown.priceImpactPercent != null &&
+                                feeBreakdown.priceImpactLevel != null
+                        ) {
+                            val levelLabel =
+                                when (feeBreakdown.priceImpactLevel) {
+                                    PriceImpactLevel.GOOD -> R.string.swap_price_impact_good
+                                    PriceImpactLevel.AVERAGE -> R.string.swap_price_impact_average
+                                    PriceImpactLevel.HIGH -> R.string.swap_price_impact_high
+                                }
+                            val levelColor =
+                                when (feeBreakdown.priceImpactLevel) {
+                                    PriceImpactLevel.GOOD -> Theme.v2.colors.alerts.success
+                                    PriceImpactLevel.AVERAGE -> Theme.v2.colors.alerts.warning
+                                    PriceImpactLevel.HIGH -> Theme.v2.colors.alerts.error
+                                }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.swap_form_price_impact_title),
+                                    color = Theme.v2.colors.text.tertiary,
+                                    style = Theme.brockmann.supplementary.caption,
+                                )
+
+                                Text(
+                                    text =
+                                        "${feeBreakdown.priceImpactPercent} " +
+                                            "(${stringResource(levelLabel)})",
+                                    color = levelColor,
                                     style = Theme.brockmann.supplementary.caption,
                                 )
                             }
