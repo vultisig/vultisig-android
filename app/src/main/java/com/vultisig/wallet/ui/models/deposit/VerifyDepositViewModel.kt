@@ -10,7 +10,6 @@ import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
-import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -139,9 +138,10 @@ constructor(
      * Verifies the source account holds enough native balance to cover the required network fee
      * (plus any amount being sent) before the keysign ceremony can be started. Scoped to QBTC,
      * whose unfunded accounts otherwise stage a vote that the chain rejects at broadcast (#5044
-     * / #5043). Only a transient network failure of the balance lookup is treated as affordable (so
-     * legitimate signing is never hard-blocked by lost connectivity); any other failure is left to
-     * propagate to the caller's error handling instead of being masked as affordable.
+     * / #5043). Fails closed: if the balance cannot be resolved (a network error, or an empty
+     * lookup result) the Sign button is left disabled rather than defaulting to affordable —
+     * mirroring iOS `canCoverVoteFee` — so an unverified balance can never start the doomed
+     * ceremony this guards against.
      */
     private suspend fun checkFeeAffordability(
         transaction: com.vultisig.wallet.data.models.DepositTransaction
@@ -154,8 +154,20 @@ constructor(
                     .getTokenValue(transaction.srcAddress, transaction.srcToken)
                     .first()
                     .value
-            } catch (e: NetworkException) {
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
                 Timber.e(e)
+                // Fail closed: an unresolved balance keeps Sign disabled so a QBTC voter can't
+                // start a doomed ceremony on a balance we never confirmed can cover the fee
+                // (#5044).
+                state.update {
+                    it.copy(
+                        hasEnoughBalance = false,
+                        insufficientBalanceError =
+                            UiText.StringResource(R.string.network_connection_lost),
+                    )
+                }
                 return
             }
         val requiredSpend = transaction.estimatedFees.value + transaction.srcTokenValue.value
