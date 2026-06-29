@@ -111,14 +111,14 @@ constructor(
                 }
 
                 val depositTransactionUiModel = mapTransactionToUiModel(transaction)
-                state.update {
-                    it.copy(
-                        depositTransactionUiModel = depositTransactionUiModel,
-                        isLoading = false,
-                    )
-                }
+                state.update { it.copy(depositTransactionUiModel = depositTransactionUiModel) }
 
+                // Keep isLoading true (Sign button disabled) until the balance lookup resolves, so
+                // a zero-balance voter cannot tap Sign mid round-trip while hasEnoughBalance is
+                // still at its default true and start the doomed ceremony this targets (#5044).
                 checkFeeAffordability(transaction)
+
+                state.update { it.copy(isLoading = false) }
             } catch (t: Throwable) {
                 if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
