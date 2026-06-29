@@ -71,10 +71,18 @@ constructor(
             return QbtcClaimLoadResult.Blocked(QbtcClaimBlockedReason.KillSwitchClosed)
         }
 
-        val claimable =
+        val (claimableMature, maturing) =
             try {
                 val candidates = utxosService.fetchClaimableCandidates(btcAddress)
-                chainService.filterClaimable(candidates)
+                // Partition on BTC confirmations BEFORE the chain cross-check, mirroring iOS
+                // which gates confirmations before querying the chain. The QBTC chain only
+                // indexes a UTXO once it crosses the confirmation threshold, so a still-maturing
+                // UTXO comes back as 404/NotIndexed; filterClaimable would drop it and it would
+                // never reach the Maturing branch — the screen would fall back to the generic
+                // "nothing to claim". Only the mature set is worth cross-checking for
+                // already-claimed / not-indexed; maturing ones surface straight from Blockchair.
+                val (matureCandidates, maturingCandidates) = candidates.partition { it.isMature }
+                chainService.filterClaimable(matureCandidates) to maturingCandidates
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -84,9 +92,8 @@ constructor(
                 )
             }
 
-        val (mature, maturing) = claimable.partition { it.isMature }
         return when {
-            mature.isNotEmpty() -> QbtcClaimLoadResult.Available(mature)
+            claimableMature.isNotEmpty() -> QbtcClaimLoadResult.Available(claimableMature)
             maturing.isNotEmpty() -> QbtcClaimLoadResult.Maturing(maturing)
             else -> QbtcClaimLoadResult.Blocked(QbtcClaimBlockedReason.NoUtxos)
         }
