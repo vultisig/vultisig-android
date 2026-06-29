@@ -18,6 +18,7 @@ import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.io.IOException
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -138,37 +139,38 @@ constructor(
      * Verifies the source account holds enough native balance to cover the required network fee
      * (plus any amount being sent) before the keysign ceremony can be started. Scoped to QBTC,
      * whose unfunded accounts otherwise stage a vote that the chain rejects at broadcast (#5044
-     * / #5043). A failed balance lookup is treated as affordable so legitimate signing is never
-     * hard-blocked by a transient network error.
+     * / #5043). Only a transient network failure of the balance lookup is treated as affordable (so
+     * legitimate signing is never hard-blocked by lost connectivity); any other failure is left to
+     * propagate to the caller's error handling instead of being masked as affordable.
      */
     private suspend fun checkFeeAffordability(
         transaction: com.vultisig.wallet.data.models.DepositTransaction
     ) {
         if (transaction.srcToken.chain != Chain.Qbtc) return
 
-        try {
-            val balance =
+        val balance =
+            try {
                 balanceRepository
                     .getTokenValue(transaction.srcAddress, transaction.srcToken)
                     .first()
                     .value
-            val requiredSpend = transaction.estimatedFees.value + transaction.srcTokenValue.value
-
-            if (balance < requiredSpend) {
-                state.update {
-                    it.copy(
-                        hasEnoughBalance = false,
-                        insufficientBalanceError =
-                            UiText.FormattedText(
-                                R.string.insufficient_native_token,
-                                listOf(transaction.srcToken.ticker),
-                            ),
-                    )
-                }
+            } catch (e: IOException) {
+                Timber.e(e)
+                return
             }
-        } catch (t: Throwable) {
-            if (t is kotlinx.coroutines.CancellationException) throw t
-            Timber.e(t)
+        val requiredSpend = transaction.estimatedFees.value + transaction.srcTokenValue.value
+
+        if (balance < requiredSpend) {
+            state.update {
+                it.copy(
+                    hasEnoughBalance = false,
+                    insufficientBalanceError =
+                        UiText.FormattedText(
+                            R.string.insufficient_native_token,
+                            listOf(transaction.srcToken.ticker),
+                        ),
+                )
+            }
         }
     }
 
