@@ -30,9 +30,21 @@ data class SwapRouteResponseJson(
     @SerialName("swapMode") val swapMode: String,
     @SerialName("slippageBps") val slippageBps: Int,
     @SerialName("priceImpactPct") val priceImpactPct: String,
+    // Present only when the quote was requested with `platformFeeBps`. Jupiter may floor `amount`
+    // to
+    // 0 even when a fee was requested (tiny amounts / fee-ineligible route), so the affiliate-fee
+    // flow keys off this amount rather than the requested bps. Round-tripped back into the `/swap`
+    // request's `quoteResponse` so Jupiter actually applies it.
+    @SerialName("platformFee") val platformFee: JupiterPlatformFeeJson? = null,
     @SerialName("routePlan") val routePlan: List<RoutePlanItemJson>,
     @SerialName("contextSlot") val contextSlot: Long,
     @SerialName("timeTaken") val timeTaken: Double,
+)
+
+@Serializable
+data class JupiterPlatformFeeJson(
+    @SerialName("amount") val amount: String? = null,
+    @SerialName("feeBps") val feeBps: Int? = null,
 )
 
 @Serializable

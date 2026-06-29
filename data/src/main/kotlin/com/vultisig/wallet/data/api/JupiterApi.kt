@@ -11,6 +11,7 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
+import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -25,25 +26,38 @@ interface JupiterApi {
         toToken: String,
         fromAddress: String,
         slippageBps: Int?,
+        affiliateBps: Int?,
     ): QuoteSwapTotalDataJson
 }
 
 internal class JupiterApiImpl
 @Inject
-constructor(private val httpClient: HttpClient, private val json: Json) : JupiterApi {
+constructor(
+    private val httpClient: HttpClient,
+    private val json: Json,
+    private val feeAtaService: JupiterFeeAtaService,
+) : JupiterApi {
     override suspend fun getSwapQuote(
         fromAmount: String,
         fromToken: String,
         toToken: String,
         fromAddress: String,
         slippageBps: Int?,
+        affiliateBps: Int?,
     ): QuoteSwapTotalDataJson {
+        // Ask Jupiter to take the VULT-scaled affiliate fee (in the output mint) when a positive
+        // bps
+        // was requested. Whether we actually provision a fee account is decided below from the
+        // quote's real fee amount, not just the request.
+        val requestsPlatformFee = (affiliateBps ?: 0) > 0
+
         val quoteResponse =
             httpClient.get("$JUPITER_URL/swap/v1/quote") {
                 parameter("inputMint", fromToken)
                 parameter("outputMint", toToken)
                 parameter("amount", fromAmount)
                 parameter("slippageBps", slippageBps ?: DEFAULT_SLIPPAGE_BPS)
+                if (requestsPlatformFee) parameter("platformFeeBps", affiliateBps)
             }
         if (quoteResponse.status == HttpStatusCode.TooManyRequests) {
             throw SwapException.RateLimitExceeded("[Jupiter] Too many requests")
@@ -52,10 +66,20 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Jupite
         val outAmount = body.outAmount
         val routePlan = body.routePlan
 
+        // Gate the fee-account flow on the actually-quoted fee, not just the requested bps: Jupiter
+        // can floor `platformFee.amount` to 0 (tiny amounts / fee-ineligible route) even when a fee
+        // was asked for. Deriving a fee account and paying ATA rent for a zero fee would be wrong.
+        val quotedFeeAmount = body.platformFee?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        val feeAccount =
+            if (requestsPlatformFee && quotedFeeAmount > BigInteger.ZERO)
+                feeAtaService.resolveFeeAccount(toToken)
+            else null
+
         val quoteSwapRequestBody = buildJsonObject {
             put("quoteResponse", json.encodeToJsonElement(body))
             put("userPublicKey", fromAddress)
             put("dynamicComputeUnitLimit", true)
+            if (feeAccount != null) put("feeAccount", feeAccount.feeAccount)
             put(
                 "prioritizationFeeLamports",
                 buildJsonObject {
@@ -76,17 +100,23 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Jupite
         }
         val quoteSwapData = swapResponse.bodyOrThrow<QuoteSwapTransactionJson>()
 
-        val feePrice =
-            (SolanaTransaction.getComputeUnitPrice(quoteSwapData.data) ?: "0").toBigInteger()
+        // Jupiter never initializes the `feeAccount` ATA, so prepend an idempotent create for it.
+        // The user pays the ~0.002 SOL rent the first time per fee mint; it is a no-op thereafter.
+        // The co-signer signs this exact transaction from the keysign payload, so byte-parity
+        // holds. Note: the displayed Solana network-fee estimate does not yet include this one-time
+        // rent (the SDK adds `ataRentLamports`); that is a deferred fee-display refinement.
+        val swapTxData =
+            if (feeAccount != null)
+                feeAtaService.prependCreateFeeAta(quoteSwapData.data, feeAccount, fromAddress)
+            else quoteSwapData.data
+
+        val feePrice = (SolanaTransaction.getComputeUnitPrice(swapTxData) ?: "0").toBigInteger()
 
         val updatedSwapTx =
             if (feePrice < MIN_FEE_PRICE_SWAP) {
-                SolanaTransaction.setComputeUnitPrice(
-                    quoteSwapData.data,
-                    MIN_FEE_PRICE_SWAP.toString(),
-                )
+                SolanaTransaction.setComputeUnitPrice(swapTxData, MIN_FEE_PRICE_SWAP.toString())
             } else {
-                quoteSwapData.data
+                swapTxData
             }
 
         return QuoteSwapTotalDataJson(

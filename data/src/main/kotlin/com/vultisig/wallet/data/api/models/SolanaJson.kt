@@ -71,3 +71,16 @@ data class SolanaRpcResponseJson<T>(
 )
 
 @Serializable data class SolanaSignatureStatus(val confirmationStatus: String? = null)
+
+@Serializable
+data class SolanaAccountInfoResponseJson(
+    @SerialName("result") val result: SolanaAccountInfoResultJson? = null,
+    @SerialName("error") val error: JsonObject? = null,
+)
+
+@Serializable
+data class SolanaAccountInfoResultJson(
+    @SerialName("value") val value: SolanaAccountInfoValueJson? = null
+)
+
+@Serializable data class SolanaAccountInfoValueJson(@SerialName("owner") val owner: String? = null)

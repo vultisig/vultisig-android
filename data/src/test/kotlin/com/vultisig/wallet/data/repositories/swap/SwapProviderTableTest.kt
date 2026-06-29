@@ -229,6 +229,58 @@ internal class SwapProviderTableTest {
         assertTrue(SwapProvider.ONEINCH in eligible, "ONEINCH missing same-chain: $eligible")
     }
 
+    @Test
+    fun `Jupiter is offered for on-Solana pairs and dropped for cross-chain Solana pairs`() {
+        // Jupiter is Solana-only and same-chain (#5053): it must be a candidate for SOL↔SPL and
+        // SPL↔SPL, but never for a cross-chain pair where it can't route. The cross-chain drop
+        // happens via the intersection — Jupiter is absent from every non-Solana chain's set.
+        val sol = coin(Chain.Solana, "SOL", isNative = true)
+        val splUsdc = coin(Chain.Solana, "USDC", isNative = false, contract = "EPjF")
+        val splBonk = coin(Chain.Solana, "BONK", isNative = false, contract = "DezX")
+        val btc = coin(Chain.Bitcoin, "BTC", isNative = true)
+        val eth = coin(Chain.Ethereum, "ETH", isNative = true)
+
+        assertTrue(
+            SwapProvider.JUPITER in table.eligibleProvidersFor(sol, splUsdc),
+            "Jupiter must be eligible for SOL↔SPL",
+        )
+        assertTrue(
+            SwapProvider.JUPITER in table.eligibleProvidersFor(splUsdc, splBonk),
+            "Jupiter must be eligible for SPL↔SPL",
+        )
+        assertFalse(
+            SwapProvider.JUPITER in table.eligibleProvidersFor(sol, btc),
+            "Jupiter must be dropped for native SOL → BTC",
+        )
+        assertFalse(
+            SwapProvider.JUPITER in table.eligibleProvidersFor(splUsdc, eth),
+            "Jupiter must be dropped for SPL → ETH",
+        )
+    }
+
+    @Test
+    fun `native SOL cross-chain keeps THORChain and drops Jupiter`() {
+        // Native SOL → BTC/ETH must route through THORChain (THORChain SOL support is wired), with
+        // Jupiter excluded as a cross-chain candidate (#5053).
+        val sol = coin(Chain.Solana, "SOL", isNative = true)
+
+        listOf(
+                coin(Chain.Bitcoin, "BTC", isNative = true),
+                coin(Chain.Ethereum, "ETH", isNative = true),
+            )
+            .forEach { dst ->
+                val eligible = table.eligibleProvidersFor(sol, dst)
+                assertTrue(
+                    SwapProvider.THORCHAIN in eligible,
+                    "THORChain must remain eligible for native SOL → ${dst.chain}: $eligible",
+                )
+                assertFalse(
+                    SwapProvider.JUPITER in eligible,
+                    "Jupiter must not be eligible for native SOL → ${dst.chain}: $eligible",
+                )
+            }
+    }
+
     /**
      * In-memory eligibility whose live `CHAIN.TICKER` sets stand in for fetched Available pools.
      */
