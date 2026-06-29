@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,6 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
@@ -55,6 +61,7 @@ fun VsButton(
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
     shape: Shape? = null,
+    isLoading: Boolean = false,
     onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -138,7 +145,7 @@ fun VsButton(
                     color = borderColor,
                     shape = shape ?: RoundedCornerShape(percent = 100),
                 )
-                .clickable(enabled = state != Disabled, onClick = onClick)
+                .clickable(enabled = state != Disabled && !isLoading, onClick = onClick)
                 .then(
                     when (size) {
                         Medium -> Modifier.padding(vertical = 14.dp, horizontal = 24.dp)
@@ -149,8 +156,42 @@ fun VsButton(
                     }
                 ),
     ) {
-        content()
+        if (isLoading) {
+            VsButtonLoadingIndicator(size = size)
+        } else {
+            content()
+        }
     }
+}
+
+/**
+ * Looping Lottie loading indicator rendered inside a [VsButton] while an async action is in flight.
+ *
+ * @param size the button size, used to scale the indicator so the button keeps its normal height.
+ */
+@Composable
+private fun VsButtonLoadingIndicator(size: VsButtonSize) {
+    val composition by
+        rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.cta_loading_icon1))
+
+    val progress by
+        animateLottieCompositionAsState(
+            composition = composition,
+            iterations = LottieConstants.IterateForever,
+        )
+
+    val indicatorSize =
+        when (size) {
+            Medium -> 24.dp
+            Small,
+            Mini -> 20.dp
+        }
+
+    LottieAnimation(
+        composition = composition,
+        progress = { progress },
+        modifier = Modifier.size(indicatorSize),
+    )
 }
 
 @Composable
@@ -163,6 +204,7 @@ fun VsButton(
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
     shape: Shape? = null,
+    isLoading: Boolean = false,
     onClick: () -> Unit,
 ) {
     VsButton(
@@ -171,6 +213,7 @@ fun VsButton(
         state = state,
         size = size,
         shape = shape,
+        isLoading = isLoading,
         onClick = onClick,
     ) {
         val contentColor by
@@ -299,5 +342,13 @@ private fun VsButtonPreview() {
         VsButton(label = "CTA Enabled", variant = CTA, state = Enabled, onClick = {})
 
         VsButton(label = "CTA Disabled", variant = CTA, state = Disabled, onClick = {})
+
+        VsButton(
+            label = "CTA Loading",
+            variant = CTA,
+            state = Enabled,
+            isLoading = true,
+            onClick = {},
+        )
     }
 }
