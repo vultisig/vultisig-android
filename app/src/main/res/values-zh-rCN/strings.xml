@@ -1166,9 +1166,9 @@
     <string name="select_vault_type_secure_title">终极安全保障</string>
     <string name="select_vault_type_secure_desc_1">多设备安全防护</string>
     <string name="select_vault_type_secure_desc_2">随时可通过设备备份访问</string>
-    <string name="onboarding_desc_page_4_part_1">即使密码丢失也能恢复您的保险库</string>
-    <string name="onboarding_desc_page_4_part_2">如果设备丢失或损坏</string>
-    <string name="onboarding_desc_page_5_part_1">务必备份每个保险库共享文件夹。</string>
+    <string name="onboarding_desc_page_4_part_1">恢复您的保险库，即使</string>
+    <string name="onboarding_desc_page_4_part_2">设备丢失或损坏</string>
+    <string name="onboarding_desc_page_5_part_1">务必备份每个保险库份额</string>
     <string name="keygen_benefit_4_template">支持 Android、iOS、macOS 和 Windows 系统</string>
     <string name="keygen_benefit_4_emphasized">可用</string>
     <string name="onboarding_intro_preview_part_2">助记词</string>
@@ -1229,7 +1229,7 @@
     <string name="select_vault_type_fast_desc_3">Vultiserver 立即联合签名</string>
     <string name="peer_discovery_topbar_title">扫描二维码</string>
     <string name="peer_discovery_expand_qr">放大二维码</string>
-    <string name="onboarding_desc_page_5_part_2">单独发送</string>
+    <string name="onboarding_desc_page_5_part_2">单独存放在</string>
     <string name="onboarding_desc_page_5_part_3">其他位置</string>
     <string name="scan_qr_code_modal_annotation">在另一台设备上打开应用并点击“扫描二维码”进行连接。</string>
     <string name="onboarding_desc_page_2_part_3">提高安全性并</string>
@@ -1327,7 +1327,7 @@
     <string name="peer_discovery_action_continue_m_of_n">继续 (%1$d/%2$d)</string>
     <string name="peer_discovery_waiting_for_devices_action">正在等待设备……</string>
     <string name="select_chain_title">选择链</string>
-    <string name="keygen_benefit_2_emphasized">自保</string>
+    <string name="keygen_benefit_2_emphasized">自托管</string>
     <string name="sign_message_sign_screen_title">签名消息</string>
     <string name="vault_settings_sign_message_description">签名自定义消息</string>
     <string name="dialog_default_error_body">出错了</string>
@@ -1732,8 +1732,8 @@
     <string name="cosmos_staking_verify_sign">签署交易</string>
     <string name="cosmos_staking_source_validator">来源验证人</string>
     <string name="cosmos_staking_destination_validator">目标验证人</string>
-    <string name="cosmos_staking_redelegate_cooldown_message">Source validator is under a %1$d-day redelegation cooldown - unlocks %2$s</string>
-    <string name="cosmos_staking_redelegate_cooldown_fallback">Source validator is under a redelegation cooldown</string>
-    <string name="cosmos_staking_insufficient_fee_balance">Not enough liquid %1$s to cover the network fee. Claim rewards first or top up.</string>
+    <string name="cosmos_staking_redelegate_cooldown_message">源验证人处于 %1$d 天的重新委托冷却期 — 将于 %2$s 解锁</string>
+    <string name="cosmos_staking_redelegate_cooldown_fallback">源验证人处于重新委托冷却期</string>
+    <string name="cosmos_staking_insufficient_fee_balance">可用 %1$s 不足以支付网络费用。请先领取奖励或充值。</string>
     <string name="cosmos_staking_max_entries_reached">您对该验证人的待处理请求已达到上限 %1$d 个。请等待其中一个完成后再继续。</string>
 </resources>

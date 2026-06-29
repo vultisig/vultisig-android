@@ -158,7 +158,7 @@
     <string name="vault_accounts_account_assets">%1$s активы</string>
     <string name="s_of_s_vault">%1$s из %2$s хранилища</string>
     <string name="rename_vault_screen_vault_name">Имя хранилища</string>
-    <string name="faq_settings_q1">Что такое Вультисиг?</string>
+    <string name="faq_settings_q1">Что такое Vultisig?</string>
     <string name="faq_settings_q2">Каковы преимущества использования Vultisig?</string>
     <string name="faq_settings_q3">Могу ли я восстановить свои активы в случае потери устройства?</string>
     <string name="faq_settings_q4">Как используется Vultisig?</string>
@@ -1063,7 +1063,7 @@
     <string name="circle_usdc_account">Учетная запись Circle USDC</string>
     <string name="withdraw">Вывести</string>
     <string name="swap_form_vult_discount_bps">VULT (%1$s - %2$d bps)</string>
-    <string name="swap_form_referral_discount_bps">Реферальная программа (-%1$d бит/с)</string>
+    <string name="swap_form_referral_discount_bps">Реферальная программа (-%1$d bps)</string>
     <string name="amino_sign">Амино-подпись</string>
     <string name="amino_direct">Прямая подпись</string>
     <string name="transaction_status_confirmed">Транзакция подтверждена</string>
@@ -1419,8 +1419,8 @@
     <string name="cosmos_staking_verify_sign">Подписать транзакцию</string>
     <string name="cosmos_staking_source_validator">Исходный валидатор</string>
     <string name="cosmos_staking_destination_validator">Целевой валидатор</string>
-    <string name="cosmos_staking_redelegate_cooldown_message">Source validator is under a %1$d-day redelegation cooldown - unlocks %2$s</string>
-    <string name="cosmos_staking_redelegate_cooldown_fallback">Source validator is under a redelegation cooldown</string>
-    <string name="cosmos_staking_insufficient_fee_balance">Not enough liquid %1$s to cover the network fee. Claim rewards first or top up.</string>
+    <string name="cosmos_staking_redelegate_cooldown_message">Исходный валидатор находится в периоде ожидания переделегирования %1$d дн. — разблокируется %2$s</string>
+    <string name="cosmos_staking_redelegate_cooldown_fallback">Исходный валидатор находится в периоде ожидания переделегирования</string>
+    <string name="cosmos_staking_insufficient_fee_balance">Недостаточно ликвидных %1$s для оплаты комиссии сети. Сначала получите награды или пополните баланс.</string>
     <string name="cosmos_staking_max_entries_reached">Достигнуто максимальное число ожидающих запросов (%1$d) для этого валидатора. Дождитесь завершения одного из них, прежде чем продолжить.</string>
 </resources>
