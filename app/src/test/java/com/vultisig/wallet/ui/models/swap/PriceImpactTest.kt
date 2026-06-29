@@ -59,7 +59,10 @@ internal class PriceImpactTest {
 
     @Test
     fun `favorable impact renders an explicit plus sign and Good tier`() {
-        // A negative slippage (favorable) negates to a positive display value.
+        // SwapKit reports a *signed* impact (both `meta.priceImpact` and `totalSlippageBps`), so a
+        // favorable trade emits a negative value here — observed on-device, a NEAR BTC->TRX route
+        // returned a negative slippage. It negates to a positive display, exercising the `+` prefix
+        // branch that mirrors iOS `SwapCryptoLogic`.
         val display = formatPriceImpact(BigDecimal("-0.002"))!!
         assertEquals("+0.20%", display.percent)
         assertEquals(PriceImpactLevel.GOOD, display.level)

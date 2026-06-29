@@ -14,9 +14,10 @@ sealed class SwapQuote {
 
     /**
      * Fractional price impact of the swap (e.g. `0.0133` == 1.33%), or null when the provider does
-     * not expose it. THORChain/Maya derive it from the quote's `slippage_bps`; SwapKit from its
-     * route's `totalSlippageBps`. EVM aggregators (1inch/Kyber/LiFi/Jupiter) do not report it, so
-     * the Price Impact row is hidden for them (iOS parity).
+     * not expose it. THORChain/Maya derive it from the quote's `slippage_bps`; SwapKit prefers its
+     * route's `meta.priceImpact` (iOS parity) and falls back to `totalSlippageBps` when the proxy
+     * omits it. EVM aggregators (1inch/Kyber/LiFi/Jupiter) do not report it, so the Price Impact
+     * row is hidden for them (iOS parity).
      */
     open val priceImpact: BigDecimal?
         get() = null
@@ -34,8 +35,8 @@ sealed class SwapQuote {
         // SwapKit `/v3/swap` swap id, carried onto the persisted swap so its tx-history Success can
         // be gated on the destination-leg `/track` settlement. Null for 1inch / Kyber / LiFi.
         val swapId: String? = null,
-        // Populated for SwapKit (from its route's totalSlippageBps); null for 1inch/Kyber/LiFi/
-        // Jupiter, which do not report price impact.
+        // Populated for SwapKit (route's meta.priceImpact, else totalSlippageBps); null for
+        // 1inch/Kyber/LiFi/Jupiter, which do not report price impact.
         override val priceImpact: BigDecimal? = null,
     ) : SwapQuote()
 
