@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
@@ -19,6 +21,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -48,6 +51,13 @@ internal data class VerifyDepositUiModel(
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
     val isLoading: Boolean = false,
+    /**
+     * Whether the source account balance can cover the required network fee (plus any sent amount).
+     * When false the Sign button is disabled and an inline fee-balance error is shown so the
+     * keysign ceremony cannot start for an account that can never pay the fee (issue #5044).
+     */
+    val hasEnoughBalance: Boolean = true,
+    val insufficientBalanceError: UiText? = null,
 )
 
 @HiltViewModel
@@ -57,6 +67,7 @@ constructor(
     savedStateHandle: SavedStateHandle,
     private val mapTransactionToUiModel: DepositTransactionToUiModelMapper,
     private val depositTransactionRepository: DepositTransactionRepository,
+    private val balanceRepository: BalanceRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val launchKeysign: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
@@ -105,6 +116,8 @@ constructor(
                         isLoading = false,
                     )
                 }
+
+                checkFeeAffordability(transaction)
             } catch (t: Throwable) {
                 if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
@@ -119,6 +132,44 @@ constructor(
 
         loadFastSign()
         loadPassword()
+    }
+
+    /**
+     * Verifies the source account holds enough native balance to cover the required network fee
+     * (plus any amount being sent) before the keysign ceremony can be started. Scoped to QBTC,
+     * whose unfunded accounts otherwise stage a vote that the chain rejects at broadcast (#5044
+     * / #5043). A failed balance lookup is treated as affordable so legitimate signing is never
+     * hard-blocked by a transient network error.
+     */
+    private suspend fun checkFeeAffordability(
+        transaction: com.vultisig.wallet.data.models.DepositTransaction
+    ) {
+        if (transaction.srcToken.chain != Chain.Qbtc) return
+
+        try {
+            val balance =
+                balanceRepository
+                    .getTokenValue(transaction.srcAddress, transaction.srcToken)
+                    .first()
+                    .value
+            val requiredSpend = transaction.estimatedFees.value + transaction.srcTokenValue.value
+
+            if (balance < requiredSpend) {
+                state.update {
+                    it.copy(
+                        hasEnoughBalance = false,
+                        insufficientBalanceError =
+                            UiText.FormattedText(
+                                R.string.insufficient_native_token,
+                                listOf(transaction.srcToken.ticker),
+                            ),
+                    )
+                }
+            }
+        } catch (t: Throwable) {
+            if (t is kotlinx.coroutines.CancellationException) throw t
+            Timber.e(t)
+        }
     }
 
     fun dismissError() {
@@ -143,6 +194,7 @@ constructor(
     }
 
     private fun keysign(keysignInitType: KeysignInitType) {
+        if (!state.value.hasEnoughBalance) return
         val txId = transactionId ?: return
         val vault = vaultId ?: return
         viewModelScope.launch {
