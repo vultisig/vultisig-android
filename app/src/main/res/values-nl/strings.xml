@@ -281,7 +281,7 @@
     <string name="start_screen_import_vault_share_file_types">Ondersteunde bestandstypen: .bak &amp; .vult</string>
     <string name="start_screen_recover_or_convert">Herstel uw kluis of converteer uw seedphrase naar een kluis</string>
     <string name="keysign_password_incorrect_password">Wachtwoord is onjuist</string>
-    <string name="vault_list_part_n_of_t">Delen %1$d-of-%2$d</string>
+    <string name="vault_list_part_n_of_t">Delen %1$d-van-%2$d</string>
     <string name="vault_part_n_of_t">Delen %1$d-van-%2$d</string>
     <string name="qr_title_join_keygen">Word lid van Keygen</string>
     <string name="qr_title_join_keysign">Word lid van Keysign</string>
@@ -329,7 +329,7 @@
     <string name="join_keysign_wrong_vault">Verkeerde kluis geselecteerd</string>
     <string name="verify_swap_screen_total_fees">Totale kosten</string>
     <string name="scan_qr_code_error_text">Niet-gerelateerde QR-code wordt gescand</string>
-    <string name="scan_qr_code_error_button">Rug</string>
+    <string name="scan_qr_code_error_button">Terug</string>
     <string name="form_token_selection_balance">Saldo: %s</string>
     <string name="form_token_selection_asset">Bezit</string>
     <string name="insufficient_native_token">Onvoldoende %1$s voor gaskosten</string>
@@ -1401,8 +1401,8 @@
     <string name="cosmos_staking_verify_sign">Transactie ondertekenen</string>
     <string name="cosmos_staking_source_validator">Bronvalidator</string>
     <string name="cosmos_staking_destination_validator">Bestemmingsvalidator</string>
-    <string name="cosmos_staking_redelegate_cooldown_message">Source validator is under a %1$d-day redelegation cooldown - unlocks %2$s</string>
-    <string name="cosmos_staking_redelegate_cooldown_fallback">Source validator is under a redelegation cooldown</string>
-    <string name="cosmos_staking_insufficient_fee_balance">Not enough liquid %1$s to cover the network fee. Claim rewards first or top up.</string>
+    <string name="cosmos_staking_redelegate_cooldown_message">Bronvalidator heeft een herdelegatie-afkoelperiode van %1$d dagen - ontgrendelt %2$s</string>
+    <string name="cosmos_staking_redelegate_cooldown_fallback">Bronvalidator heeft een herdelegatie-afkoelperiode</string>
+    <string name="cosmos_staking_insufficient_fee_balance">Niet genoeg liquide %1$s om de netwerkkosten te dekken. Claim eerst beloningen of vul aan.</string>
     <string name="cosmos_staking_max_entries_reached">Je hebt het maximum van %1$d openstaande verzoeken voor deze validator bereikt. Wacht tot er één is voltooid voordat je doorgaat.</string>
 </resources>
