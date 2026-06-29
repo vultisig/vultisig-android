@@ -1334,6 +1334,11 @@
     <string name="qbtc_claim_eligible_header">Berechtigte UTXOs</string>
     <string name="qbtc_claim_utxo_block_format">Bestätigt · vor %1$d Blöcken</string>
     <string name="qbtc_claim_utxo_pending">Ausstehend</string>
+    <string name="qbtc_claim_maturing_title">Ihr BTC reift noch</string>
+    <string name="qbtc_claim_maturing_detail">UTXOs benötigen 144 Bestätigungen, bevor sie als QBTC abgerufen werden können. Ihre Gelder sind sicher.</string>
+    <string name="qbtc_claim_maturing_section">Reifende UTXOs</string>
+    <string name="qbtc_claim_maturing_confirmations_label">Bestätigungen</string>
+    <string name="qbtc_claim_maturing_blocks">~%1$d Blöcke</string>
     <string name="qbtc_claim_cta_all">Alle abrufen</string>
     <string name="qbtc_claim_cta_partial">%1$d von %2$d abrufen</string>
     <string name="qbtc_claim_proving">Nachweis wird erstellt und gesendet…</string>

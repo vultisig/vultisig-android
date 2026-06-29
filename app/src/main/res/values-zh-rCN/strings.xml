@@ -1657,6 +1657,11 @@
     <string name="qbtc_claim_eligible_header">符合条件的 UTXO</string>
     <string name="qbtc_claim_utxo_block_format">已确认 · %1$d 个区块前</string>
     <string name="qbtc_claim_utxo_pending">待处理</string>
+    <string name="qbtc_claim_maturing_title">您的 BTC 仍在成熟中</string>
+    <string name="qbtc_claim_maturing_detail">UTXO 需要 144 个确认才能提取为 QBTC。您的资金是安全的。</string>
+    <string name="qbtc_claim_maturing_section">成熟中的 UTXO</string>
+    <string name="qbtc_claim_maturing_confirmations_label">确认</string>
+    <string name="qbtc_claim_maturing_blocks">约 %1$d 个区块</string>
     <string name="qbtc_claim_cta_all">全部提取</string>
     <string name="qbtc_claim_cta_partial">提取 %2$d 个中的 %1$d 个</string>
     <string name="qbtc_claim_proving">正在生成证明并广播…</string>

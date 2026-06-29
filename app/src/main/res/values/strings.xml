@@ -1386,6 +1386,11 @@
     <string name="qbtc_claim_eligible_header">Eligible UTXOs</string>
     <string name="qbtc_claim_utxo_block_format">Confirmed · %1$d blocks ago</string>
     <string name="qbtc_claim_utxo_pending">Pending</string>
+    <string name="qbtc_claim_maturing_title">Your BTC is still maturing</string>
+    <string name="qbtc_claim_maturing_detail">UTXOs need 144 confirmations before they can be claimed as QBTC. Your funds are safe.</string>
+    <string name="qbtc_claim_maturing_section">Maturing UTXOs</string>
+    <string name="qbtc_claim_maturing_confirmations_label">confirmations</string>
+    <string name="qbtc_claim_maturing_blocks">~%1$d blocks</string>
     <string name="qbtc_claim_cta_all">Claim All</string>
     <string name="qbtc_claim_cta_partial">Claim %1$d of %2$d</string>
     <string name="qbtc_claim_proving">Generating proof and broadcasting…</string>
