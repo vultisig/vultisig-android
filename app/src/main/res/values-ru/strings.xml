@@ -1350,6 +1350,11 @@
     <string name="qbtc_claim_eligible_header">Подходящие UTXO</string>
     <string name="qbtc_claim_utxo_block_format">Подтверждено · %1$d блоков назад</string>
     <string name="qbtc_claim_utxo_pending">Ожидание</string>
+    <string name="qbtc_claim_maturing_title">Ваш BTC ещё созревает</string>
+    <string name="qbtc_claim_maturing_detail">UTXO требуется 144 подтверждения, прежде чем их можно будет получить в виде QBTC. Ваши средства в безопасности.</string>
+    <string name="qbtc_claim_maturing_section">Созревающие UTXO</string>
+    <string name="qbtc_claim_maturing_confirmations_label">подтверждений</string>
+    <string name="qbtc_claim_maturing_blocks">~%1$d блоков</string>
     <string name="qbtc_claim_cta_all">Получить всё</string>
     <string name="qbtc_claim_cta_partial">Получить %1$d из %2$d</string>
     <string name="qbtc_claim_proving">Генерация доказательства и отправка…</string>

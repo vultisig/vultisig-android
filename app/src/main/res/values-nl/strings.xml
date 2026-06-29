@@ -1332,6 +1332,11 @@
     <string name="qbtc_claim_eligible_header">Geschikte UTXO\'s</string>
     <string name="qbtc_claim_utxo_block_format">Bevestigd · %1$d blokken geleden</string>
     <string name="qbtc_claim_utxo_pending">In behandeling</string>
+    <string name="qbtc_claim_maturing_title">Uw BTC is nog aan het rijpen</string>
+    <string name="qbtc_claim_maturing_detail">UTXO\'s hebben 144 bevestigingen nodig voordat ze als QBTC kunnen worden geclaimd. Uw geld is veilig.</string>
+    <string name="qbtc_claim_maturing_section">Rijpende UTXO\'s</string>
+    <string name="qbtc_claim_maturing_confirmations_label">bevestigingen</string>
+    <string name="qbtc_claim_maturing_blocks">~%1$d blokken</string>
     <string name="qbtc_claim_cta_all">Alles claimen</string>
     <string name="qbtc_claim_cta_partial">%1$d van %2$d claimen</string>
     <string name="qbtc_claim_proving">Bewijs genereren en uitzenden…</string>

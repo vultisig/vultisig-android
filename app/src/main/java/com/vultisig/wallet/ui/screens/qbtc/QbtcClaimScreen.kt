@@ -65,6 +65,7 @@ import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
+import com.vultisig.wallet.ui.models.qbtc.QbtcClaimMaturingUtxoUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimViewModel
@@ -123,19 +124,31 @@ internal fun QbtcClaimScreen(
                 onBackClick = onBackClick,
                 applyGradientBackground = false,
                 bottomBar = {
-                    if (state is QbtcClaimUiState.Selecting) {
-                        VsButton(
-                            label = ctaLabel(state),
-                            state =
-                                if (state.canConfirm) VsButtonState.Enabled
-                                else VsButtonState.Disabled,
-                            onClick = {
-                                if (isFastVault) passwordPrompt = true else onStartSecureVault()
-                            },
-                            modifier =
-                                Modifier.fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 24.dp),
-                        )
+                    when (state) {
+                        is QbtcClaimUiState.Selecting ->
+                            VsButton(
+                                label = ctaLabel(state),
+                                state =
+                                    if (state.canConfirm) VsButtonState.Enabled
+                                    else VsButtonState.Disabled,
+                                onClick = {
+                                    if (isFastVault) passwordPrompt = true else onStartSecureVault()
+                                },
+                                modifier =
+                                    Modifier.fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 24.dp),
+                            )
+                        // Maturing: nothing is claimable yet, so the CTA stays disabled.
+                        is QbtcClaimUiState.Maturing ->
+                            VsButton(
+                                label = stringResource(R.string.qbtc_claim_cta_all),
+                                state = VsButtonState.Disabled,
+                                onClick = {},
+                                modifier =
+                                    Modifier.fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 24.dp),
+                            )
+                        else -> Unit
                     }
                 },
             ) {
@@ -143,6 +156,7 @@ internal fun QbtcClaimScreen(
                     QbtcClaimUiState.Loading ->
                         CenteredProgress(stringResource(R.string.qbtc_claim_loading))
                     is QbtcClaimUiState.Selecting -> SelectingContent(state, onToggle)
+                    is QbtcClaimUiState.Maturing -> MaturingContent(state)
                     is QbtcClaimUiState.Signing ->
                         ClaimSigningProgress(
                             label = stringResource(R.string.qbtc_claim_proving),
@@ -343,6 +357,121 @@ private fun QbtcClaimUtxoRow(
                 color = Theme.v2.colors.text.tertiary,
             )
         }
+    }
+}
+
+@Composable
+private fun MaturingContent(state: QbtcClaimUiState.Maturing) {
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // No mature UTXO means a 0 claimable total, matching the Figma "0 QBTC" hero.
+                    QbtcClaimHeroCard(totalEligibleSats = 0L)
+                    ClaimTabHeader()
+                }
+                MaturingInfoCard()
+                Text(
+                    text = stringResource(R.string.qbtc_claim_maturing_section),
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+                // Pad the gap to the first card up to the 16dp the LazyColumn's 8dp can't reach.
+                UiSpacer(size = 8.dp)
+            }
+        }
+        items(state.utxos, key = { it.key }) { utxo -> MaturingUtxoRow(utxo) }
+    }
+}
+
+@Composable
+private fun MaturingInfoCard() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .background(Theme.v2.colors.backgrounds.surface1)
+                .padding(horizontal = 24.dp, vertical = 20.dp),
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_hourglass),
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+        )
+        Text(
+            text = stringResource(R.string.qbtc_claim_maturing_title),
+            style = Theme.brockmann.headings.title3,
+            color = Theme.v2.colors.text.primary,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = stringResource(R.string.qbtc_claim_maturing_detail),
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.v2.colors.text.tertiary,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun MaturingUtxoRow(utxo: QbtcClaimMaturingUtxoUiModel) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Theme.v2.colors.backgrounds.surface1)
+                .padding(16.dp),
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_clock_filled),
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
+            Text(
+                text = utxo.shortId,
+                style = Theme.brockmann.button.semibold.medium,
+                color = Theme.v2.colors.text.primary,
+            )
+            Text(
+                text = maturingConfirmations(utxo.confirmationsCount),
+                style = Theme.brockmann.supplementary.caption,
+            )
+            Text(
+                text = stringResource(R.string.qbtc_claim_maturing_blocks, utxo.remainingBlocks),
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.tertiary,
+            )
+        }
+        Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = utxo.qbtcAmount,
+                style = Theme.brockmann.button.semibold.medium,
+                color = Theme.v2.colors.text.primary,
+            )
+            Text(
+                text = utxo.btcAmount,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.tertiary,
+            )
+        }
+    }
+}
+
+/** "112/144" in warning amber, then the localized "confirmations" label in tertiary. */
+@Composable
+private fun maturingConfirmations(count: String) = buildAnnotatedString {
+    withStyle(SpanStyle(color = Theme.v2.colors.alerts.warning)) { append(count) }
+    append(" ")
+    withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) {
+        append(stringResource(R.string.qbtc_claim_maturing_confirmations_label))
     }
 }
 

@@ -1357,6 +1357,11 @@
     <string name="qbtc_claim_eligible_header">청구 가능한 UTXO</string>
     <string name="qbtc_claim_utxo_block_format">확인됨 · %1$d블록 전</string>
     <string name="qbtc_claim_utxo_pending">대기 중</string>
+    <string name="qbtc_claim_maturing_title">BTC가 아직 성숙 중입니다</string>
+    <string name="qbtc_claim_maturing_detail">UTXO는 QBTC로 청구되기 전에 144번의 확인이 필요합니다. 자금은 안전합니다.</string>
+    <string name="qbtc_claim_maturing_section">성숙 중인 UTXO</string>
+    <string name="qbtc_claim_maturing_confirmations_label">확인</string>
+    <string name="qbtc_claim_maturing_blocks">약 %1$d블록</string>
     <string name="qbtc_claim_cta_all">모두 청구</string>
     <string name="qbtc_claim_cta_partial">%2$d개 중 %1$d개 청구</string>
     <string name="qbtc_claim_proving">증명 생성 및 브로드캐스트 중…</string>

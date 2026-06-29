@@ -1336,6 +1336,11 @@
     <string name="qbtc_claim_eligible_header">UTXOs elegíveis</string>
     <string name="qbtc_claim_utxo_block_format">Confirmado · há %1$d blocos</string>
     <string name="qbtc_claim_utxo_pending">Pendente</string>
+    <string name="qbtc_claim_maturing_title">O seu BTC ainda está a amadurecer</string>
+    <string name="qbtc_claim_maturing_detail">Os UTXOs precisam de 144 confirmações antes de poderem ser resgatados como QBTC. Os seus fundos estão seguros.</string>
+    <string name="qbtc_claim_maturing_section">UTXOs em maturação</string>
+    <string name="qbtc_claim_maturing_confirmations_label">confirmações</string>
+    <string name="qbtc_claim_maturing_blocks">~%1$d blocos</string>
     <string name="qbtc_claim_cta_all">Resgatar tudo</string>
     <string name="qbtc_claim_cta_partial">Resgatar %1$d de %2$d</string>
     <string name="qbtc_claim_proving">A gerar prova e a transmitir…</string>

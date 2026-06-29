@@ -1341,6 +1341,11 @@
     <string name="qbtc_claim_eligible_header">UTXO idonei</string>
     <string name="qbtc_claim_utxo_block_format">Confermato · %1$d blocchi fa</string>
     <string name="qbtc_claim_utxo_pending">In sospeso</string>
+    <string name="qbtc_claim_maturing_title">Il tuo BTC sta ancora maturando</string>
+    <string name="qbtc_claim_maturing_detail">Gli UTXO necessitano di 144 conferme prima di poter essere prelevati come QBTC. I tuoi fondi sono al sicuro.</string>
+    <string name="qbtc_claim_maturing_section">UTXO in maturazione</string>
+    <string name="qbtc_claim_maturing_confirmations_label">conferme</string>
+    <string name="qbtc_claim_maturing_blocks">~%1$d blocchi</string>
     <string name="qbtc_claim_cta_all">Preleva tutto</string>
     <string name="qbtc_claim_cta_partial">Preleva %1$d di %2$d</string>
     <string name="qbtc_claim_proving">Generazione della prova e trasmissione…</string>

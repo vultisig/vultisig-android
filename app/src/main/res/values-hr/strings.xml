@@ -1348,6 +1348,11 @@
     <string name="qbtc_claim_eligible_header">Prihvatljivi UTXO-ovi</string>
     <string name="qbtc_claim_utxo_block_format">Potvrđeno · prije %1$d blokova</string>
     <string name="qbtc_claim_utxo_pending">Na čekanju</string>
+    <string name="qbtc_claim_maturing_title">Vaš BTC još uvijek sazrijeva</string>
+    <string name="qbtc_claim_maturing_detail">UTXO-ovi trebaju 144 potvrde prije nego što se mogu preuzeti kao QBTC. Vaša su sredstva sigurna.</string>
+    <string name="qbtc_claim_maturing_section">UTXO-ovi koji sazrijevaju</string>
+    <string name="qbtc_claim_maturing_confirmations_label">potvrde</string>
+    <string name="qbtc_claim_maturing_blocks">~%1$d blokova</string>
     <string name="qbtc_claim_cta_all">Preuzmi sve</string>
     <string name="qbtc_claim_cta_partial">Preuzmi %1$d od %2$d</string>
     <string name="qbtc_claim_proving">Generiranje dokaza i emitiranje…</string>
