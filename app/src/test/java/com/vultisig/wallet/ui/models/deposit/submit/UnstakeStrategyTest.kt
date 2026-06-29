@@ -4,6 +4,8 @@ package com.vultisig.wallet.ui.models.deposit.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
+import com.vultisig.wallet.data.api.chains.ton.TonStakingPoolInfoJson
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -14,7 +16,6 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
-import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import io.mockk.coEvery
@@ -33,30 +34,38 @@ internal class UnstakeStrategyTest {
     private val tokenAmount = TextFieldState()
 
     private val accountsRepo: AccountsRepository = mockk()
-    private val chainRepo: ChainAccountAddressRepository = mockk()
     private val specificRepo: BlockChainSpecificRepository = mockk()
+    private val tonStakingApi: TonStakingApi = mockk()
 
     @Test
-    fun `Ton unstake memo is w and uses native token scaled by decimals`() = runTest {
-        coEvery { chainRepo.isValid(Chain.Ton, "tonNode") } returns true
+    fun `tf withdraw uses w comment, bounceable dest and fixed 0_2 TON fee`() = runTest {
+        givenPool(implementation = "tf")
         givenAccounts()
         givenSpecific()
-        nodeAddress.setTextAndPlaceCursorAtEnd("tonNode")
+        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
+        // Entered amount is ignored for withdraw.
         tokenAmount.setTextAndPlaceCursorAtEnd("1")
 
         val tx = build().build()
 
         assertEquals("w", tx.memo)
         assertEquals(tonCoin(), tx.srcToken)
-        assertEquals("tonNode", tx.dstAddress)
-        assertEquals(BigInteger.valueOf(1_000_000_000), tx.srcTokenValue.value)
+        assertEquals("EQ_0:pool", tx.dstAddress)
+        assertEquals(BigInteger.valueOf(200_000_000), tx.srcTokenValue.value)
+    }
+
+    @Test
+    fun `withdraw blocked for unsupported pool implementation`() = runTest {
+        givenPool(implementation = "liquidTF")
+        givenAccounts()
+        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
+
+        assertFailsWith<InvalidTransactionDataException> { build().build() }
     }
 
     @Test
     fun `unstake throws when deposit chain is not Ton`() = runTest {
-        coEvery { chainRepo.isValid(any(), any()) } returns true
-        nodeAddress.setTextAndPlaceCursorAtEnd("tonNode")
-        tokenAmount.setTextAndPlaceCursorAtEnd("1")
+        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
 
         assertFailsWith<InvalidTransactionDataException> {
             build(depositChain = Chain.ThorChain).build()
@@ -65,28 +74,15 @@ internal class UnstakeStrategyTest {
 
     @Test
     fun `unstake throws when node address is blank`() = runTest {
-        coEvery { chainRepo.isValid(any(), any()) } returns false
-        tokenAmount.setTextAndPlaceCursorAtEnd("1")
-
-        assertFailsWith<InvalidTransactionDataException> { build().build() }
-    }
-
-    @Test
-    fun `unstake throws when token amount is missing or zero`() = runTest {
-        coEvery { chainRepo.isValid(Chain.Ton, "tonNode") } returns true
-        nodeAddress.setTextAndPlaceCursorAtEnd("tonNode")
-        tokenAmount.setTextAndPlaceCursorAtEnd("0")
-
         assertFailsWith<InvalidTransactionDataException> { build().build() }
     }
 
     @Test
     fun `unstake throws when no native token account exists`() = runTest {
-        coEvery { chainRepo.isValid(Chain.Ton, "tonNode") } returns true
+        givenPool(implementation = "whales")
         coEvery { accountsRepo.loadAddress("vault-1", Chain.Ton) } returns
-            flowOf(Address(chain = Chain.Ton, address = "tonNode", accounts = emptyList()))
-        nodeAddress.setTextAndPlaceCursorAtEnd("tonNode")
-        tokenAmount.setTextAndPlaceCursorAtEnd("1")
+            flowOf(Address(chain = Chain.Ton, address = "0:pool", accounts = emptyList()))
+        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
 
         assertFailsWith<InvalidTransactionDataException> { build().build() }
     }
@@ -99,11 +95,17 @@ internal class UnstakeStrategyTest {
             nodeAddressFieldState = nodeAddress,
             tokenAmountFieldState = tokenAmount,
             accountsRepository = accountsRepo,
-            chainAccountAddressRepository = chainRepo,
+            tonStakingApi = tonStakingApi,
+            toBounceableAddress = { "EQ_$it" },
             blockChainSpecificRepository = specificRepo,
             calculateGasFee = { _, token, _ -> TokenValue(BigInteger.ONE, token) },
             getFeesFiatValue = { _, _, _ -> estimatedFee() },
         )
+
+    private fun givenPool(implementation: String) {
+        coEvery { tonStakingApi.getStakingPool(any()) } returns
+            TonStakingPoolInfoJson(implementation = implementation)
+    }
 
     private fun givenAccounts() {
         coEvery { accountsRepo.loadAddress("vault-1", Chain.Ton) } returns
@@ -134,13 +136,16 @@ internal class UnstakeStrategyTest {
                 isSwap = any(),
                 isMaxAmountEnabled = any(),
                 isDeposit = any(),
+                // Pin the bounceable EQ destination so the test fails if the strategy stops
+                // forwarding it into the spec.
+                dstAddress = "EQ_0:pool",
             )
         } returns
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Ton(
                     sequenceNumber = 0UL,
                     expireAt = 0UL,
-                    bounceable = false,
+                    bounceable = true,
                     sendMaxAmount = false,
                 )
             )

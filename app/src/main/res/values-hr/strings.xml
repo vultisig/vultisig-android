@@ -883,6 +883,8 @@
     </plurals>
     <string name="send_form_ripple_reaping_warning">Osigurajte dovoljno sredstava za pokrivanje naknada. Ako stanje na računu padne ispod 1 XRP (egzistencijalni depozit), račun će biti deaktiviran (potrošen) i sva preostala sredstva bit će izgubljena. Adresu možete ponovno aktivirati novim depozitom većim od egzistencijalnog depozita u bilo kojem trenutku. Međutim, to neće vratiti izgubljena sredstva.</string>
     <string name="error_invalid_chain">Lanac nije valjan</string>
+    <string name="ton_stake_error_unsupported_pool">Ovaj staking pool nije podržan</string>
+    <string name="ton_stake_error_min_amount">Minimalni ulog za ovaj pool je %1$s TON</string>
     <string name="vault_backup_verifying_pin">Provjera koda, molimo pričekajte</string>
     <string name="select_vault_type_next">Sljedeće</string>
     <string name="select_vault_type_choose_setup">Odaberite Postavljanje</string>

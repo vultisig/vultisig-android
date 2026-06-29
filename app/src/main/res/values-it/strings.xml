@@ -878,6 +878,8 @@
     </plurals>
     <string name="send_form_ripple_reaping_warning">Assicurati di lasciare fondi sufficienti per coprire le commissioni. Se il saldo di un conto scende al di sotto di 1 XRP (Deposito Esistenziale), il conto verrà disattivato (rimosso) e tutti i fondi rimanenti andranno persi. Puoi riattivare l\'indirizzo con un nuovo deposito superiore al deposito esistenziale in qualsiasi momento. Tuttavia, questo non recupererà i fondi persi.</string>
     <string name="error_invalid_chain">La catena non è valida</string>
+    <string name="ton_stake_error_unsupported_pool">Questo pool di staking non è supportato</string>
+    <string name="ton_stake_error_min_amount">Lo stake minimo per questo pool è %1$s TON</string>
     <string name="vault_backup_verifying_pin">Verifica del PIN in corso, attendere</string>
     <string name="select_vault_type_next">Avanti</string>
     <string name="select_vault_type_choose_setup">Scegli configurazione</string>

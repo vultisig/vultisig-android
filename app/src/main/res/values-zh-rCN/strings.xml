@@ -1209,6 +1209,8 @@
     </plurals>
     <string name="send_form_ripple_reaping_warning">请确保账户中留有足够的资金以支付手续费。如果账户余额低于 1 XRP（存量保证金），账户将被停用（清算），剩余资金也将丢失。您可以随时通过存入高于存量保证金的金额来重新激活账户。但是，这无法找回已丢失的资金。</string>
     <string name="error_invalid_chain">链无效</string>
+    <string name="ton_stake_error_unsupported_pool">不支持此质押池</string>
+    <string name="ton_stake_error_min_amount">此质押池的最低质押金额为 %1$s TON</string>
     <string name="vault_backup_verifying_pin">正在验证代码，请稍候</string>
     <string name="select_vault_type_next">下一步</string>
     <string name="select_vault_type_choose_setup">选择“设置”</string>
