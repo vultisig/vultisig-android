@@ -94,7 +94,6 @@
     <string name="circle_defi_control_info">Средства остаются полностью под контролем вашего хранилища. Счета Circle являются самостоятельными, а доход генерируется через безопасные внесетевые казначейства.</string>
     <string name="open_account_button">Открыть счет</string>
     <string name="vault_settings_error_backup_file">произошла ошибка</string>
-    <string name="vault_settings_success_backup_file">файл сохранен в Загрузках/%1$s</string>
     <string name="vault_edit_this_name_already_exist">это имя уже существует</string>
     <string name="send_screen_max">МАКС</string>
     <string name="ok">ОК</string>
@@ -211,7 +210,6 @@
     <string name="import_file_screen_enter_password_sub">Этот пароль был установлен при экспорте общего доступа к хранилищу.</string>
     <string name="import_file_screen_hint_password">Пароль</string>
     <string name="backup_password_screen_permission_required">Для операций резервного копирования требуется разрешение на доступ к файлу.</string>
-    <string name="share_qr_screen_permission_required">Для операций обмена требуется разрешение на доступ к файлу.</string>
     <string name="token_selection_search_hint">Поиск…</string>
     <string name="verify_swap_agree_allowance">Я согласен с предоставлением неограниченного лимита ERC20</string>
     <string name="deposit_screen_amount_title">Количество</string>
@@ -220,8 +218,6 @@
     <string name="custom_token_token_not_found">Токен не найден</string>
     <string name="custom_token_add_token">Добавить %1$s токен</string>
     <string name="deposit_form_amount_title">Сумма (Баланс: %1$s)</string>
-    <string name="share_vault_qr_title">Поделиться хранилищем QR</string>
-    <string name="share_vault_qr_save" >Сохранить</string>
     <string name="share_vault_qr_share" >Поделиться</string>
     <string name="deposit_form_node_address_title">Адрес узла</string>
     <string name="bond_not_whitelisted_error">Вы не в белом списке этого узла</string>
@@ -643,7 +639,6 @@
     <string name="update_available">Обновление доступно</string>
     <string name="app_up_to_date">Приложение обновлено</string>
     <string name="update">Обновить</string>
-    <string name="share_vault_qr_info">Этот QR-код позволяет вам поделиться версией вашего хранилища, доступной только для просмотра</string>
     <string name="add_address_title_label">Метка</string>
     <string name="address_book_title_edit">Редактировать адресную книгу</string>
     <string name="address_book_delete_entry_title">Удалить адрес?</string>
@@ -675,7 +670,6 @@
     <string name="share_sheet_more">Ещё</string>
     <string name="referral_not_found">Рефералов пока нет</string>
     <string name="referral_cta">Преврати свой сейф в машину наград. Создай свою реферальную ссылку сейчас и начинай зарабатывать</string>
-    <string name="error_saving_qr_code">Не удалось сохранить QR-код. %1$s</string>
     <string name="transaction_type_button_buy">Купить</string>
     <string name="transaction_type_button_receive">Получить</string>
     <string name="vault_settings_view_vault">Просмотр имени, части и типа хранилища</string>

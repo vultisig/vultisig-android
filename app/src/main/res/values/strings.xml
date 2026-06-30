@@ -168,7 +168,6 @@
     <string name="send_percent" translatable="false">%d%%</string>
     <string name="chain_account_view_swap">Swap</string>
     <string name="vault_settings_error_backup_file">An error occurred</string>
-    <string name="vault_settings_success_backup_file">File saved in Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">This name already exists</string>
     <string name="send_screen_max">MAX</string>
     <string name="ok">OK</string>
@@ -294,7 +293,6 @@
     <string name="import_file_screen_enter_password_sub">This password was set when the vault share was exported.</string>
     <string name="import_file_screen_hint_password">Password</string>
     <string name="backup_password_screen_permission_required">File permission is required for backup operations.</string>
-    <string name="share_qr_screen_permission_required">File permission is required for share operations.</string>
     <string name="token_selection_search_hint">Search…</string>
     <string name="verify_swap_agree_allowance">I agree with providing ERC20 allowance</string>
     <string name="deposit_screen_amount_title">Amount</string>
@@ -306,8 +304,6 @@
     <string name="custom_token_add_token">Add %1$s Token</string>
     <string name="deposit_form_amount_title">Amount (Balance: %1$s)</string>
     <string name="deposit_form_shares_title">Shares (Balance: %1$s)</string>
-    <string name="share_vault_qr_title">Share Vault QR</string>
-    <string name="share_vault_qr_save">Save</string>
     <string name="share_vault_qr_share">Share</string>
     <string name="deposit_form_node_address_title">Node Address</string>
     <string name="bond_not_whitelisted_error">You are not whitelisted on this node</string>
@@ -396,8 +392,6 @@
     <string name="qr_share_type_fast_vault">Fast Vault</string>
     <string name="qr_share_type_secure_vault">Secure Vault</string>
     <string name="error_folder_must_have_at_least_one_vault">Folder needs at least one selected vault</string>
-    <string name="share_vault_qr_uid" translatable="false">UID: %1$s</string>
-    <string name="share_vault_qr_address" translatable="false">vultisig.com</string>
     <string name="import_file_password_hint_text">Hint: %s</string>
     <string name="scan_qr_upload_qr_code">Upload QR Code</string>
     <string name="scan_qr_hint_title">Having trouble scanning?</string>
@@ -888,7 +882,6 @@
     <string name="update_available">Update is available</string>
     <string name="app_up_to_date">Application is up to date</string>
     <string name="update">Update</string>
-    <string name="share_vault_qr_info">This QR Code lets you share a view-only version of your Vault</string>
     <string name="add_address_title_label">Label</string>
     <string name="address_book_title_edit">Edit Address Book</string>
     <string name="address_book_delete_entry_title">Delete address?</string>
@@ -917,7 +910,6 @@
     <string name="backup_server_desc">Request Server Vault Share again.</string>
     <string name="share_sheet_more">More</string>
     <string name="x_twitter" translatable="false">X (Twitter)</string>
-    <string name="error_saving_qr_code">Failed to save QR code. %1$s</string>
     <string name="transaction_type_button_buy">Buy</string>
     <string name="transaction_type_button_receive">Receive</string>
     <string name="vault_settings_view_vault">View vault name, part and type</string>

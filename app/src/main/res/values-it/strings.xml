@@ -175,7 +175,6 @@
     <string name="send_error_insufficient_native_balance_with_fees">Saldo %1$s insufficiente</string>
     <string name="send_error_insufficient_frozen_balance">L\'importo supera il saldo %1$s congelato</string>
     <string name="verify_swap_agree_receive_amount">Accetto l\'importo minimo che riceverò</string>
-    <string name="vault_settings_success_backup_file">file salvato in Download/%1$s</string>
     <string name="swap_form_estimated_fees_title">Commissione di cambio</string>
     <string name="swap_form_estimated_fees_with_percent_title">Commissione di cambio (%1$s)</string>
     <string name="swap_form_outbound_fee_title">Commissione in uscita</string>
@@ -211,7 +210,6 @@
     <string name="import_file_screen_enter_password_sub">Questa password è stata impostata al momento dell\'esportazione della condivisione del vault.</string>
     <string name="import_file_screen_hint_password">Password</string>
     <string name="backup_password_screen_permission_required">Per le operazioni di backup è richiesta l\'autorizzazione del file.</string>
-    <string name="share_qr_screen_permission_required">Per le operazioni di condivisione è richiesta l\'autorizzazione del file.</string>
     <string name="token_selection_search_hint">Ricerca…</string>
     <string name="verify_swap_agree_allowance">Sono d\'accordo con la fornitura di un\'indennità ERC20 illimitata</string>
     <string name="deposit_screen_amount_title">Quantità</string>
@@ -222,8 +220,6 @@
     <string name="custom_token_token_not_found">Token non trovato</string>
     <string name="custom_token_add_token">Aggiungi token %1$s</string>
     <string name="deposit_form_amount_title">Importo (Saldo: %1$s)</string>
-    <string name="share_vault_qr_title">Condividi Vault QR</string>
-    <string name="share_vault_qr_save" >Salva</string>
     <string name="share_vault_qr_share" >Condividi</string>
     <string name="deposit_form_node_address_title">Indirizzo del nodo</string>
     <string name="bond_not_whitelisted_error">Non sei nella whitelist di questo nodo</string>
@@ -642,7 +638,6 @@
     <string name="update_available">È disponibile un aggiornamento</string>
     <string name="app_up_to_date">L\'app è aggiornata</string>
     <string name="update">Aggiorna</string>
-    <string name="share_vault_qr_info">Questo codice QR consente di condividere una versione a sola lettura della tua cassaforte</string>
     <string name="add_address_title_label">Etichetta</string>
     <string name="address_book_title_edit">Modifica rubrica</string>
     <string name="address_book_delete_entry_title">Eliminare l\'indirizzo?</string>
@@ -672,7 +667,6 @@
     <string name="share_sheet_more">Di più</string>
     <string name="referral_not_found">Nessun referral ancora</string>
     <string name="referral_cta">Trasforma il tuo caveau in una macchina di ricompense. Crea subito il tuo referral e inizia a guadagnare</string>
-    <string name="error_saving_qr_code">Impossibile salvare il codice QR. %1$s</string>
     <string name="transaction_type_button_buy">Acquista</string>
     <string name="transaction_type_button_receive">Ricevi</string>
     <string name="vault_settings_view_vault">Visualizza nome, parte e tipo del vault</string>

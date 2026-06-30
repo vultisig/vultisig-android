@@ -167,7 +167,6 @@
     <string name="send_continue_button">계속</string>
     <string name="chain_account_view_swap">스왑</string>
     <string name="vault_settings_error_backup_file">오류가 발생했습니다</string>
-    <string name="vault_settings_success_backup_file">Downloads/%1$s에 파일 저장됨</string>
     <string name="vault_edit_this_name_already_exist">이 이름은 이미 존재합니다</string>
     <string name="send_screen_max">최대</string>
     <string name="ok">확인</string>
@@ -286,7 +285,6 @@
     <string name="import_file_screen_enter_password_sub">이 비밀번호는 볼트 공유를 내보낼 때 설정되었습니다.</string>
     <string name="import_file_screen_hint_password">비밀번호</string>
     <string name="backup_password_screen_permission_required">백업 작업을 위해 파일 권한이 필요합니다.</string>
-    <string name="share_qr_screen_permission_required">공유 작업을 위해 파일 권한이 필요합니다.</string>
     <string name="token_selection_search_hint">검색…</string>
     <string name="verify_swap_agree_allowance">ERC20 허용량 제공에 동의합니다</string>
     <string name="deposit_screen_amount_title">금액</string>
@@ -298,8 +296,6 @@
     <string name="custom_token_add_token">%1$s 토큰 추가</string>
     <string name="deposit_form_amount_title">금액 (잔액: %1$s)</string>
     <string name="deposit_form_shares_title">수량 (잔액: %1$s)</string>
-    <string name="share_vault_qr_title">볼트 QR 공유</string>
-    <string name="share_vault_qr_save">저장</string>
     <string name="share_vault_qr_share">공유</string>
     <string name="deposit_form_node_address_title">노드 주소</string>
     <string name="bond_not_whitelisted_error">이 노드의 화이트리스트에 등록되지 않았습니다</string>
@@ -871,7 +867,6 @@
     <string name="update_available">업데이트가 있습니다</string>
     <string name="app_up_to_date">앱이 최신 버전입니다</string>
     <string name="update">업데이트</string>
-    <string name="share_vault_qr_info">이 QR 코드로 볼트의 읽기 전용 버전을 공유할 수 있습니다</string>
     <string name="add_address_title_label">라벨</string>
     <string name="address_book_title_edit">주소록 수정</string>
     <string name="address_book_delete_entry_title">주소를 삭제하시겠습니까?</string>
@@ -898,7 +893,6 @@
     <string name="backup_server_title">서버 백업</string>
     <string name="backup_server_desc">서버 볼트 공유를 다시 요청합니다.</string>
     <string name="share_sheet_more">더 보기</string>
-    <string name="error_saving_qr_code">QR 코드 저장 실패. %1$s</string>
     <string name="transaction_type_button_buy">구매</string>
     <string name="transaction_type_button_receive">받기</string>
     <string name="vault_settings_view_vault">볼트 이름, 파트 및 유형 보기</string>

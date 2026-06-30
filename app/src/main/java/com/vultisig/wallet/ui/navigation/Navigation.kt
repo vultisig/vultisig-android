@@ -517,8 +517,6 @@ internal sealed class Route {
 
     @Serializable data class ConfirmDelete(val vaultId: String)
 
-    @Serializable data class ShareVaultQr(val vaultId: String)
-
     @Serializable data class ReshareStartScreen(val vaultId: String)
 
     @Serializable data object OnChainSecurity

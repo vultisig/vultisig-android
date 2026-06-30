@@ -181,7 +181,6 @@
 
     <!-- Vault Settings Errors -->
     <string name="vault_settings_error_backup_file">发生错误</string>
-    <string name="vault_settings_success_backup_file">文件已保存在 Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">此名称已存在</string>
 
     <!-- Send Screen -->
@@ -375,7 +374,6 @@
     <string name="import_file_screen_enter_password_sub">此密码是在导出共享保险库时设置的。</string>
     <string name="import_file_screen_hint_password">密码</string>
     <string name="backup_password_screen_permission_required">备份操作需要文件权限。</string>
-    <string name="share_qr_screen_permission_required">分享操作需要文件权限。</string>
 
     <!-- Token Selection -->
     <string name="token_selection_search_hint">搜索…</string>
@@ -401,8 +399,6 @@
     <string name="deposit_form_shares_title">份额（余额：%1$s）</string>
 
     <!-- Share Vault QR -->
-    <string name="share_vault_qr_title">分享保险库二维码</string>
-    <string name="share_vault_qr_save">保存</string>
     <string name="share_vault_qr_share">分享</string>
 
     <!-- Deposit Form -->
@@ -996,7 +992,6 @@
     <string name="update">更新</string>
 
     <!-- Share Vault QR -->
-    <string name="share_vault_qr_info">此二维码允许您分享保险库的只读版本</string>
 
     <!-- Add Address -->
     <string name="add_address_title_label">标签</string>
@@ -1039,7 +1034,6 @@
     <string name="share_sheet_more">更多</string>
 
     <!-- Error Saving QR Code -->
-    <string name="error_saving_qr_code">保存二维码失败。%1$s</string>
 
     <!-- Transaction Type -->
     <string name="transaction_type_button_buy">购买</string>
