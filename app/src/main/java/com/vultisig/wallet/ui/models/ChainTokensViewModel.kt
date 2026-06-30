@@ -297,7 +297,10 @@ constructor(
                                     chainLogo = chain.logo,
                                     monotoneChainLogo = chain.monoToneLogo,
                                     mergeBalance = mergeBalances.findMergeBalance(token).toString(),
-                                    price = account.price?.let { fiatValueToStringMapper(it) },
+                                    price =
+                                        account.price?.let {
+                                            fiatValueToStringMapper(it, asPrice = true)
+                                        },
                                     network = token.chain.raw,
                                 )
                             }

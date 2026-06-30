@@ -228,7 +228,9 @@ constructor(
 
         return TokenBalanceAndPrice(
             tokenBalance = TokenBalance(tokenValue = tokenValue, fiatValue = fiatValue),
-            price = FiatValue(priceValue.scaledFor(currency), currency.ticker),
+            // Keep the full-precision unit price; display formatting (incl. sub-cent prices like
+            // LUNC) is handled by FiatValueToStringMapper. Scaling here would collapse it to $0.00.
+            price = FiatValue(priceValue, currency.ticker),
         )
     }
 
@@ -280,7 +282,7 @@ constructor(
                 tokenBalance = TokenBalance(tokenValue = tokenValue, fiatValue = fiatValue),
                 price =
                     if (price != null) {
-                        FiatValue(price.scaledFor(currency), currency.ticker)
+                        FiatValue(price, currency.ticker)
                     } else {
                         null
                     },
@@ -341,7 +343,7 @@ constructor(
                                     currency = currency.ticker,
                                 ),
                         ),
-                    price = FiatValue(value = price.scaledFor(currency), currency = currency.ticker),
+                    price = FiatValue(value = price, currency = currency.ticker),
                 )
             }
         }
@@ -379,7 +381,7 @@ constructor(
         emit(
             TokenBalanceAndPrice(
                 tokenBalance = TokenBalance(tokenValue = tokenValue, fiatValue = fiatValue),
-                price = FiatValue(value = price.scaledFor(currency), currency = currency.ticker),
+                price = FiatValue(value = price, currency = currency.ticker),
             )
         )
     }
@@ -628,7 +630,7 @@ constructor(
                                     currency = currency.ticker,
                                 ),
                         ),
-                    price = FiatValue(value = price.scaledFor(currency), currency = currency.ticker),
+                    price = FiatValue(value = price, currency = currency.ticker),
                 )
         }
     }

@@ -92,4 +92,40 @@ internal class FiatValueToStringMapperImplTest {
         // Sub-cent value with standard formatting truncates to USD's 2 digits.
         mapper(FiatValue(BigDecimal("0.0015"), "USD")) shouldBe "$0.00"
     }
+
+    @Test
+    fun `asPrice reveals a sub-cent token price instead of collapsing to zero`() = runTest {
+        // LUNC-like price: standard formatting shows $0.00, asPrice reveals the leading figures.
+        mapper(FiatValue(BigDecimal("0.00006"), "USD"), asPrice = true) shouldBe "$0.00006"
+    }
+
+    @Test
+    fun `asPrice shows two significant figures of a long sub-cent price`() = runTest {
+        mapper(FiatValue(BigDecimal("0.00006123"), "USD"), asPrice = true) shouldBe "$0.000061"
+    }
+
+    @Test
+    fun `asPrice caps precision at eight fraction digits for micro prices`() = runTest {
+        // Two significant figures would need 9 digits; capped to 8 → rounds to $0.00000012.
+        mapper(FiatValue(BigDecimal("0.000000123"), "USD"), asPrice = true) shouldBe "$0.00000012"
+    }
+
+    @Test
+    fun `asPrice falls back to standard formatting at or above one cent`() = runTest {
+        val value = FiatValue(BigDecimal("1.50"), "USD")
+        mapper(value, asPrice = true) shouldBe mapper(value)
+        mapper(value, asPrice = true) shouldBe "$1.50"
+    }
+
+    @Test
+    fun `asPrice falls back to standard formatting for zero`() = runTest {
+        val value = FiatValue(BigDecimal.ZERO, "USD")
+        mapper(value, asPrice = true) shouldBe mapper(value)
+    }
+
+    @Test
+    fun `asFee takes precedence over asPrice`() = runTest {
+        val value = FiatValue(BigDecimal("0.0001256"), "USD")
+        mapper(value, asFee = true, asPrice = true) shouldBe mapper(value, asFee = true)
+    }
 }

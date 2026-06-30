@@ -59,7 +59,7 @@ constructor(
             if (searchedToken == null) {
                 showError()
             } else {
-                val price = fiatValueToStringMapper(searchedToken.fiatValue)
+                val price = fiatValueToStringMapper(searchedToken.fiatValue, asPrice = true)
                 Timber.d("token url: ${searchedToken.coin.logo}")
                 uiModel.update {
                     it.copy(
