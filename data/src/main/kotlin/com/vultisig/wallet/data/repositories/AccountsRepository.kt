@@ -324,7 +324,7 @@ constructor(
                             tokenPriceRepository.refresh(updatedCoins)
                         } catch (e: Exception) {
                             if (e is kotlinx.coroutines.CancellationException) throw e
-                            Timber.e(e, "Price refresh failed for ${chain.id}")
+                            Timber.e(e, "Price refresh failed for %s", chain.id)
                         }
                     }
 
@@ -558,8 +558,12 @@ constructor(
         // cache, so once prices land we recompute fiat from the cache without a second network
         // call.
         val loadPrices = async {
-            runCatching { tokenPriceRepository.refresh(coins) }
-                .onFailure { Timber.e(it, "Failed to refresh token prices for chain: $chain") }
+            try {
+                tokenPriceRepository.refresh(coins)
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Timber.e(e, "Failed to refresh token prices for chain: %s", chain)
+            }
         }
 
         val accountToUpdate =

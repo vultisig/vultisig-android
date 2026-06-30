@@ -62,7 +62,12 @@ internal class AccountsRepositoryImplTest {
         // about the recomputed terminal values override it per coin.
         coEvery { balanceRepository.getCachedTokenBalanceAndPrice(any(), any()) } coAnswers
             {
-                balanceWithFiat(amount = 0L, fiat = 0L, coin = secondArg<Coin>())
+                balanceWithFiat(
+                    amount = 0L,
+                    fiat = 0L,
+                    coin = secondArg<Coin>(),
+                    price = BigDecimal.ZERO,
+                )
             }
     }
 
@@ -313,6 +318,10 @@ internal class AccountsRepositoryImplTest {
                 terminal.addresses.solFiat(),
                 "fiat should populate once prices land, without a second balance fetch",
             )
+            verify(exactly = 1) { balanceRepository.getTokenBalanceAndPrice(SOL_ADDRESS, sol) }
+            coVerify(exactly = 1) {
+                balanceRepository.getCachedTokenBalanceAndPrice(SOL_ADDRESS, sol)
+            }
             job.cancel()
         }
 
@@ -384,14 +393,19 @@ internal class AccountsRepositoryImplTest {
             price = FiatValue(BigDecimal.ONE, USD),
         )
 
-    private fun balanceWithFiat(amount: Long, fiat: Long, coin: Coin) =
+    private fun balanceWithFiat(
+        amount: Long,
+        fiat: Long,
+        coin: Coin,
+        price: BigDecimal = BigDecimal.ONE,
+    ) =
         TokenBalanceAndPrice(
             tokenBalance =
                 TokenBalance(
                     tokenValue = TokenValue(BigInteger.valueOf(amount), coin.ticker, coin.decimal),
                     fiatValue = FiatValue(BigDecimal.valueOf(fiat), USD),
                 ),
-            price = FiatValue(BigDecimal.ONE, USD),
+            price = FiatValue(price, USD),
         )
 
     private fun gatedBalance(
