@@ -199,6 +199,11 @@ internal interface MainDataModule {
                 return create()
             }
 
+            fun fallbackToInMemory(cause: KeyStoreException): SharedPreferences {
+                Timber.w(cause, "Transient keystore failure; falling back to in-memory prefs")
+                return InMemorySharedPreferences()
+            }
+
             // Issue #4401: only KeyPermanentlyInvalidatedException is destructive; transient
             // GeneralSecurityException / IOException must propagate so user data is not wiped.
             // Issue #5106: a non-KeyPermanentlyInvalidatedException KeyStoreException (lock-timeout
@@ -207,13 +212,20 @@ internal interface MainDataModule {
             // component (e.g. VultisigFirebaseMessagingService.onCreate). The
             // KeyPermanentlyInvalidatedException catch stays first: it extends InvalidKeyException,
             // not KeyStoreException, so neither subsumes the other and destructive recovery holds.
+            // recoverAndRetry's own create() call can re-throw a transient KeyStoreException; since
+            // sibling catch clauses do not catch exceptions thrown from another catch block, wrap
+            // it
+            // so the post-recovery retry degrades to in-memory prefs too instead of escaping Hilt.
             return try {
                 create()
             } catch (e: KeyPermanentlyInvalidatedException) {
-                recoverAndRetry(e)
+                try {
+                    recoverAndRetry(e)
+                } catch (retryFailure: KeyStoreException) {
+                    fallbackToInMemory(retryFailure)
+                }
             } catch (e: KeyStoreException) {
-                Timber.w(e, "Transient keystore failure; falling back to in-memory prefs")
-                InMemorySharedPreferences()
+                fallbackToInMemory(e)
             }
         }
     }
