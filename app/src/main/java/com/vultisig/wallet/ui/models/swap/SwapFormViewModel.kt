@@ -480,7 +480,7 @@ constructor(
         val amount =
             TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
                 .multiply(percentage.toBigDecimal())
-                .formatFlippedAmount(srcTokenValue.decimals)
+                .formatFullAmount(srcTokenValue.decimals)
 
         // A percentage / Max tap is an explicit, deliberate amount — fetch the quote immediately
         // instead of waiting out the typing debounce (#4712). Mark before mutating the text so the

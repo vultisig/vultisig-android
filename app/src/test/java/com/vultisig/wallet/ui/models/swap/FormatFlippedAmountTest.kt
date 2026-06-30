@@ -1,10 +1,47 @@
 package com.vultisig.wallet.ui.models.swap
 
+import com.vultisig.wallet.data.models.TokenValue
 import java.math.BigDecimal
+import java.math.BigInteger
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class FormatFlippedAmountTest {
+
+    @Test
+    fun `formatFullAmount keeps full precision for tokens with more than 8 decimals`() {
+        // POPCAT has 9 decimals; balance of 404408822 base units (0.404408822).
+        val decimals = 9
+        val balanceBaseUnits = BigInteger("404408822")
+
+        val maxAmount =
+            TokenValue.createDecimal(balanceBaseUnits, decimals)
+                .multiply(BigDecimal.ONE)
+                .formatFullAmount(decimals)
+
+        val swappedBaseUnits =
+            BigDecimal(maxAmount).multiply(BigDecimal.TEN.pow(decimals)).toBigInteger()
+
+        assertEquals("0.404408822", maxAmount)
+        assertEquals(BigInteger.ZERO, balanceBaseUnits - swappedBaseUnits)
+    }
+
+    @Test
+    fun `formatFlippedAmount would leave dust for tokens with more than 8 decimals`() {
+        // The old display-capped path truncates the 9th decimal, leaving 2 base units behind.
+        val decimals = 9
+        val balanceBaseUnits = BigInteger("404408822")
+
+        val cappedAmount =
+            TokenValue.createDecimal(balanceBaseUnits, decimals)
+                .multiply(BigDecimal.ONE)
+                .formatFlippedAmount(decimals)
+
+        val swappedBaseUnits =
+            BigDecimal(cappedAmount).multiply(BigDecimal.TEN.pow(decimals)).toBigInteger()
+
+        assertEquals(BigInteger("2"), balanceBaseUnits - swappedBaseUnits)
+    }
 
     @Test
     fun `truncates to token decimals when less than max`() {

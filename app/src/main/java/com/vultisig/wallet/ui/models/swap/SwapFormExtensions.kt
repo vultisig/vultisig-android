@@ -27,6 +27,17 @@ internal fun BigDecimal.formatFlippedAmount(tokenDecimals: Int? = null): String 
         .toPlainString()
 
 /**
+ * Formats an amount using the token's full decimal precision (no 8-decimal display cap), trimming
+ * any excess scale down and stripping trailing zeros. Used for the MAX/percentage swap amount so
+ * the entire balance is consumed and no dust is left behind for tokens with more than
+ * [MAX_DISPLAY_DECIMALS] decimals.
+ *
+ * @param tokenDecimals the token's decimal precision.
+ */
+internal fun BigDecimal.formatFullAmount(tokenDecimals: Int): String =
+    setScale(tokenDecimals, RoundingMode.DOWN).stripTrailingZeros().toPlainString()
+
+/**
  * Updates the source-selection flow for the given token/chain: clears it when no addresses are
  * available, picks the first matching source when unset, or re-resolves the current source
  * otherwise.
