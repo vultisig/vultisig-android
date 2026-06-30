@@ -12,6 +12,7 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.data.sources.AppDataStoreImpl
 import com.vultisig.wallet.data.utils.EncryptingSharedPreferences
+import com.vultisig.wallet.data.utils.InMemorySharedPreferences
 import com.vultisig.wallet.data.utils.SECURE_PREFS_KEY_ALIAS
 import com.vultisig.wallet.data.utils.SharedPrefsMasterKeyInitializer
 import com.vultisig.wallet.data.utils.buildSecurePrefsKey
@@ -23,6 +24,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import java.io.File
 import java.security.KeyStore
+import java.security.KeyStoreException
 import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
@@ -199,10 +201,19 @@ internal interface MainDataModule {
 
             // Issue #4401: only KeyPermanentlyInvalidatedException is destructive; transient
             // GeneralSecurityException / IOException must propagate so user data is not wiped.
+            // Issue #5106: a non-KeyPermanentlyInvalidatedException KeyStoreException (lock-timeout
+            // or unexpected-entry) from buildSecurePrefsKey is transient/contended, not corruption,
+            // so it degrades to in-memory prefs rather than escaping Hilt and crashing the injected
+            // component (e.g. VultisigFirebaseMessagingService.onCreate). The
+            // KeyPermanentlyInvalidatedException catch stays first: it extends InvalidKeyException,
+            // not KeyStoreException, so neither subsumes the other and destructive recovery holds.
             return try {
                 create()
             } catch (e: KeyPermanentlyInvalidatedException) {
                 recoverAndRetry(e)
+            } catch (e: KeyStoreException) {
+                Timber.w(e, "Transient keystore failure; falling back to in-memory prefs")
+                InMemorySharedPreferences()
             }
         }
     }
