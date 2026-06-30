@@ -32,6 +32,7 @@ import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -243,8 +244,18 @@ constructor(
                 // waiting for GC.
                 val rendered =
                     withContext(Dispatchers.IO) {
-                        val bmp = makeQrCodeBitmapShareFormat(context, bitmap, color, logo, info)
-                        if (!isActive) {
+                        val bmp =
+                            try {
+                                makeQrCodeBitmapShareFormat(context, bitmap, color, logo, info)
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                // A failed share render must not crash the keysign flow; the share
+                                // bitmap simply stays unset and the user can retry.
+                                Timber.e(e, "Failed to render share QR bitmap")
+                                null
+                            }
+                        if (bmp != null && !isActive) {
                             bmp.recycle()
                             null
                         } else {

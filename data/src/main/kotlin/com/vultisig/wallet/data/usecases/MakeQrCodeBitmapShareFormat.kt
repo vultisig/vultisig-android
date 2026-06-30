@@ -12,7 +12,6 @@ import android.text.TextPaint
 import android.text.TextUtils
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.createBitmap
-import androidx.core.graphics.scale
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
@@ -103,8 +102,10 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
         val maxQrPx = (QR_CODE_MAX_SIZE_DP * density).roundToInt()
         val qrBitmap =
             when {
-                qrCodeBitmap.width < minQrPx -> qrCodeBitmap.scale(minQrPx, minQrPx, false)
-                qrCodeBitmap.width > maxQrPx -> qrCodeBitmap.scale(maxQrPx, maxQrPx, false)
+                qrCodeBitmap.width < minQrPx ->
+                    qrCodeBitmap.scaleWithColorSpace(minQrPx, minQrPx, false)
+                qrCodeBitmap.width > maxQrPx ->
+                    qrCodeBitmap.scaleWithColorSpace(maxQrPx, maxQrPx, false)
                 else -> qrCodeBitmap
             }
 
@@ -251,7 +252,7 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
             val valueTextWidth = valuePaint.measureText(ellipsizedValue)
             val icon = field.valueIcon
             if (icon != null) {
-                val scaledIcon = icon.scale(iconPx, iconPx)
+                val scaledIcon = icon.scaleWithColorSpace(iconPx, iconPx)
                 val iconLeft = metaContentRight - valueTextWidth - valueIconToTextGap - iconPx
                 val iconTop = rowsCursorY + (fieldLineHeight - iconPx) / 2f
                 canvas.drawBitmap(scaledIcon, iconLeft, iconTop, null)
@@ -274,7 +275,7 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
 
         val signatureTop = metaCardBottom + signatureTopGap
         val scaledLogoSize = signatureIconSize.roundToInt().coerceAtLeast(1)
-        val scaledLogo = logo.scale(scaledLogoSize, scaledLogoSize)
+        val scaledLogo = logo.scaleWithColorSpace(scaledLogoSize, scaledLogoSize)
         val logoLeft = (finalWidth - scaledLogoSize) / 2f
         canvas.drawBitmap(scaledLogo, logoLeft, signatureTop, null)
         if (scaledLogo !== logo) scaledLogo.recycle()

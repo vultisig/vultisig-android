@@ -69,7 +69,10 @@ internal class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
         val scaledLogoHeightTemp = scaledHeight / QR_CODE_VS_LOGO_SCALE_FACTOR
         val scaledLogoWidth = if (scaledLogoWidthTemp == 0) 1 else scaledLogoWidthTemp
         val scaledLogoHeight = if (scaledLogoHeightTemp == 0) 1 else scaledLogoHeightTemp
-        val scaledLogo = logo.scale(scaledLogoWidth, scaledLogoHeight)
+        // `logo` comes from `decodeResource` on the call sites; some devices hand back a bitmap
+        // with a null color space, which raw `scale` rejects. Use the color-space-safe scale so a
+        // shared/exported QR can never crash on this input.
+        val scaledLogo = logo.scaleWithColorSpace(scaledLogoWidth, scaledLogoHeight)
         val scaledBitmap = bitmap.scale(scaledWidth, scaledHeight, false)
 
         val canvas = android.graphics.Canvas(scaledBitmap)

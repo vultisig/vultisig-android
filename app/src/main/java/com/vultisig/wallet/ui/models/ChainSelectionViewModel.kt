@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.hasPreGeneratedKey
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -53,6 +54,7 @@ constructor(
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val discoverTokenUseCase: DiscoverTokenUseCase,
+    private val defaultDeFiChainsRepository: DefaultDeFiChainsRepository,
     private val navigator: Navigator<Destination>,
     private val requestResultRepository: RequestResultRepository,
     private val snackbarFlow: SnackbarFlow,
@@ -129,6 +131,13 @@ constructor(
                     }
             }
             toDisableAccounts.forEach { disableAccount(it.coin) }
+
+            // Keep the persisted DeFi chain selection in sync: a chain removed from the vault
+            // must not silently resurrect in the DeFi Portfolio when it is later re-enabled.
+            defaultDeFiChainsRepository.removeChains(
+                vaultId,
+                toDisableAccounts.map { it.coin.chain }.toSet(),
+            )
 
             if (failedChains.isNotEmpty()) {
                 val shown = failedChains.take(MAX_FAILED_CHAINS_SHOWN).joinToString(", ")

@@ -8,7 +8,6 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
-import io.ktor.util.encodeBase64
 import java.math.BigInteger
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.Base64
@@ -39,6 +38,16 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
 
     companion object {
         val DefaultFeeInLamports: BigInteger = 1000000.toBigInteger()
+
+        /**
+         * The Solana transaction id is the first signature in the signed transaction. WalletCore
+         * populates [Solana.SigningOutput.getSignaturesList] (base58) on the
+         * `compileWithSignatures` path, so read it directly instead of re-deriving it from the
+         * encoded transaction.
+         */
+        internal fun Solana.SigningOutput.transactionHash(): String =
+            signaturesList.firstOrNull()?.signature
+                ?: error("Signed Solana transaction has no signature")
     }
 
     private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
@@ -186,7 +195,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         val output = Solana.SigningOutput.parseFrom(compiledWithSignature).checkError()
         return SignedTransactionResult(
             rawTransaction = output.encoded,
-            transactionHash = output.encoded.take(64).encodeBase64(),
+            transactionHash = output.transactionHash(),
         )
     }
 
@@ -232,7 +241,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         val output = Solana.SigningOutput.parseFrom(compileWithSignature).checkError()
         return SignedTransactionResult(
             rawTransaction = output.encoded,
-            transactionHash = output.encoded.take(64).encodeBase64(),
+            transactionHash = output.transactionHash(),
         )
     }
 
@@ -348,7 +357,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
 
         return SignedTransactionResult(
             rawTransaction = output.encoded,
-            transactionHash = output.encoded.take(64).encodeBase64(),
+            transactionHash = output.transactionHash(),
         )
     }
 }
