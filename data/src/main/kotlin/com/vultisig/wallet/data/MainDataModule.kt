@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.utils.EncryptingSharedPreferences
 import com.vultisig.wallet.data.utils.InMemorySharedPreferences
 import com.vultisig.wallet.data.utils.SECURE_PREFS_KEY_ALIAS
 import com.vultisig.wallet.data.utils.SharedPrefsMasterKeyInitializer
+import com.vultisig.wallet.data.utils.UnexpectedKeyEntryException
 import com.vultisig.wallet.data.utils.buildSecurePrefsKey
 import dagger.Binds
 import dagger.Module
@@ -23,8 +24,11 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import java.io.File
+import java.security.GeneralSecurityException
 import java.security.KeyStore
 import java.security.KeyStoreException
+import java.security.NoSuchAlgorithmException
+import java.security.UnrecoverableEntryException
 import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
@@ -152,10 +156,10 @@ internal interface MainDataModule {
                 return prefs
             }
 
-            fun recoverAndRetry(cause: KeyPermanentlyInvalidatedException): SharedPreferences {
+            fun recoverAndRetry(cause: GeneralSecurityException): SharedPreferences {
                 Timber.w(
                     cause,
-                    "KeyPermanentlyInvalidatedException detected; performing destructive recovery",
+                    "Persistent keystore corruption detected; performing destructive recovery",
                 )
                 // File first so a partial recovery (alias delete fails below) leaves no
                 // ciphertext readable by the next launch; that next launch will re-enter recovery
@@ -199,32 +203,49 @@ internal interface MainDataModule {
                 return create()
             }
 
-            fun fallbackToInMemory(cause: KeyStoreException): SharedPreferences {
+            fun fallbackToInMemory(cause: GeneralSecurityException): SharedPreferences {
                 Timber.w(cause, "Transient keystore failure; falling back to in-memory prefs")
                 return InMemorySharedPreferences()
             }
 
-            // Issue #4401: only KeyPermanentlyInvalidatedException is destructive; transient
+            // recoverAndRetry's own create() call can re-throw a keystore failure; since sibling
+            // catch clauses do not catch exceptions thrown from another catch block, wrap it so the
+            // post-recovery retry degrades to in-memory prefs instead of escaping Hilt.
+            fun recoverOrFallback(cause: GeneralSecurityException): SharedPreferences =
+                try {
+                    recoverAndRetry(cause)
+                } catch (retryFailure: GeneralSecurityException) {
+                    fallbackToInMemory(retryFailure)
+                }
+
+            // Issue #4401: only persistent corruption is destructive; transient
             // GeneralSecurityException / IOException must propagate so user data is not wiped.
-            // Issue #5106: a non-KeyPermanentlyInvalidatedException KeyStoreException (lock-timeout
-            // or unexpected-entry) from buildSecurePrefsKey is transient/contended, not corruption,
-            // so it degrades to in-memory prefs rather than escaping Hilt and crashing the injected
-            // component (e.g. VultisigFirebaseMessagingService.onCreate). The
-            // KeyPermanentlyInvalidatedException catch stays first: it extends InvalidKeyException,
-            // not KeyStoreException, so neither subsumes the other and destructive recovery holds.
-            // recoverAndRetry's own create() call can re-throw a transient KeyStoreException; since
-            // sibling catch clauses do not catch exceptions thrown from another catch block, wrap
-            // it
-            // so the post-recovery retry degrades to in-memory prefs too instead of escaping Hilt.
+            // Issue #5106: keystore failures from buildSecurePrefsKey must not escape Hilt and
+            // crash
+            // the injected component (e.g. VultisigFirebaseMessagingService.onCreate). They are
+            // routed by whether they self-heal:
+            //   - KeyPermanentlyInvalidatedException and UnexpectedKeyEntryException are persistent
+            //     corruption that re-throws on every launch, so they rotate the alias via
+            //     recoverAndRetry (falling back to in-memory only if the post-recovery retry also
+            //     fails); an in-memory fallback alone would never self-heal across restarts.
+            //   - A lock-timeout/interrupt KeyStoreException, plus UnrecoverableEntryException and
+            //     NoSuchAlgorithmException from getEntry, are transient/environmental and
+            //     non-destructive, so they degrade to in-memory prefs and the next process launch
+            //     retries the real keystore.
+            // Catch order matters: KeyPermanentlyInvalidatedException extends InvalidKeyException
+            // (not KeyStoreException) and UnexpectedKeyEntryException extends KeyStoreException, so
+            // each persistent case is caught before the generic transient KeyStoreException clause.
             return try {
                 create()
             } catch (e: KeyPermanentlyInvalidatedException) {
-                try {
-                    recoverAndRetry(e)
-                } catch (retryFailure: KeyStoreException) {
-                    fallbackToInMemory(retryFailure)
-                }
+                recoverOrFallback(e)
+            } catch (e: UnexpectedKeyEntryException) {
+                recoverOrFallback(e)
             } catch (e: KeyStoreException) {
+                fallbackToInMemory(e)
+            } catch (e: UnrecoverableEntryException) {
+                fallbackToInMemory(e)
+            } catch (e: NoSuchAlgorithmException) {
                 fallbackToInMemory(e)
             }
         }

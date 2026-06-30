@@ -32,13 +32,22 @@ private const val SECURE_PREFS_LOCK_TIMEOUT_MS = 3_000L
 private val secureKeyLock = ReentrantLock()
 
 /**
+ * Thrown when [SECURE_PREFS_KEY_ALIAS] resolves to a non-[KeyStore.SecretKeyEntry]. Unlike a
+ * lock-timeout/interrupt [KeyStoreException], this is a persistent alias-corruption state that
+ * re-throws on every launch, so callers rotate the alias via destructive recovery rather than
+ * degrading to an in-memory fallback that would never self-heal across restarts (issue #5106).
+ */
+internal class UnexpectedKeyEntryException(message: String) : KeyStoreException(message)
+
+/**
  * Builds or retrieves the AES-256-GCM AndroidKeyStore key used to encrypt preference values.
  * StrongBox is not requested to avoid keystore-daemon stalls on certain Pixel/Samsung devices.
  * Acquires [secureKeyLock] with a 3-second timeout so contended callers can fail fast instead of
  * blocking indefinitely if the keystore daemon stalls.
  *
- * Lock-timeout, lock-interrupt, and unexpected-entry-type surface as [KeyStoreException] (a
- * [java.security.GeneralSecurityException]) so the existing catches in
+ * Lock-timeout and lock-interrupt surface as [KeyStoreException]; the persistent unexpected-entry
+ * case surfaces as [UnexpectedKeyEntryException] (a [KeyStoreException] subtype). Both are
+ * [java.security.GeneralSecurityException]s so the existing catches in
  * [com.vultisig.wallet.data.MainDataModule.provideEncryptedSharedPrefs] and
  * [SharedPrefsMasterKeyInitializer.prewarm] can route to recovery instead of letting an
  * `IllegalStateException` escape and crash Hilt at boot. (Issue #4403.)
@@ -103,7 +112,7 @@ internal fun buildSecurePrefsKey(
                     SECURE_PREFS_KEY_ALIAS,
                     entry::class.simpleName,
                 )
-                throw KeyStoreException(
+                throw UnexpectedKeyEntryException(
                     "Alias $SECURE_PREFS_KEY_ALIAS holds unexpected entry type: ${entry::class.simpleName}"
                 )
             }

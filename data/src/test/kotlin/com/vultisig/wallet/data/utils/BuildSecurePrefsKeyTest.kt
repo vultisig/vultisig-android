@@ -214,6 +214,11 @@ internal class BuildSecurePrefsKeyTest {
             "must NOT be IllegalStateException — old error() contract",
         )
         assertIs<GeneralSecurityException>(ex, "must be catchable as GeneralSecurityException")
+        assertIs<UnexpectedKeyEntryException>(
+            ex,
+            "persistent wrong-entry state must surface as UnexpectedKeyEntryException so the " +
+                "provider routes it to destructive recovery, not an in-memory fallback",
+        )
         assertTrue(
             ex.message?.contains("unexpected entry type") == true,
             "message must contain 'unexpected entry type', was: ${ex.message}",
