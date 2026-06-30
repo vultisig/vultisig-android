@@ -80,6 +80,10 @@ internal interface ApiModule {
 
     @Binds @Singleton fun bindJupiterApi(impl: JupiterApiImpl): JupiterApi
 
+    @Binds
+    @Singleton
+    fun bindJupiterFeeAtaService(impl: JupiterFeeAtaServiceImpl): JupiterFeeAtaService
+
     @Binds @Singleton fun bindTronApi(impl: TronApiImpl): TronApi
 
     @Binds @Singleton fun bindCardanoApi(impl: CardanoApiImpl): CardanoApi

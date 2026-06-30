@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.models.JupiterTokenResponseJson
 import com.vultisig.wallet.data.api.models.RecentBlockHashResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.SPLTokenRequestJson
+import com.vultisig.wallet.data.api.models.SolanaAccountInfoResponseJson
 import com.vultisig.wallet.data.api.models.SolanaBalanceJson
 import com.vultisig.wallet.data.api.models.SolanaFeeForMessageResponse
 import com.vultisig.wallet.data.api.models.SolanaFeeObjectRespJson
@@ -78,6 +79,13 @@ interface SolanaApi {
     ): Pair<String?, Boolean>
 
     suspend fun getFeeForMessage(message: String): BigInteger
+
+    /**
+     * The base58 program id that owns [account] on-chain (e.g. the SPL Token vs Token-2022 program
+     * that owns a mint), or null if the account is missing or the lookup fails. Used to derive the
+     * correct associated-token-account program for a fee mint.
+     */
+    suspend fun getAccountOwner(account: String): String?
 
     suspend fun checkStatus(txHash: String): SolanaRpcResponseJson<SolanaSignatureStatusesResult>?
 }
@@ -393,6 +401,34 @@ constructor(
             return Pair(null, false)
         }
     }
+
+    override suspend fun getAccountOwner(account: String): String? =
+        try {
+            val response =
+                httpClient.postRpc<SolanaAccountInfoResponseJson>(
+                    url = rpcEndpoint,
+                    method = "getAccountInfo",
+                    params =
+                        buildJsonArray {
+                            add(account)
+                            addJsonObject { put("encoding", "base64") }
+                        },
+                )
+            // postRpc returns a 200 carrying a JSON-RPC `error` body without throwing, so a
+            // transient
+            // RPC failure would otherwise resolve to a null owner indistinguishable from a
+            // genuinely
+            // missing account — and silently drop the now-preferred Jupiter route. Log it so the
+            // failure is observable rather than masquerading as "mint not found".
+            response.error?.let {
+                Timber.tag("SolanaApiImp").w("getAccountOwner RPC error for %s: %s", account, it)
+            }
+            response.result?.value?.owner
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.tag("SolanaApiImp").e(e, "getAccountOwner failed for %s", account)
+            null
+        }
 
     override suspend fun getFeeForMessage(message: String): BigInteger {
         val payload =
