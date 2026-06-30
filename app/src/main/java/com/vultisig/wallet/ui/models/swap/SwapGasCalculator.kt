@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
@@ -13,6 +14,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.getPubKeyByChain
+import com.vultisig.wallet.data.models.isOpStackL2
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
@@ -60,6 +62,25 @@ internal sealed interface UtxoPlanFeeResult {
      * swap disabled.
      */
     data object Unavailable : UtxoPlanFeeResult
+}
+
+/**
+ * Gas limit to display an EVM aggregator swap fee at: the route's [routeGas] floored by the
+ * per-chain default the signer uses (40k native ETH, 400k native Arbitrum, else 600k). Null means
+ * keep the flat 600k baseline — no usable route gas, an OP-stack L2 (its baseline folds in an
+ * un-scalable L1 data fee), or a limit that lands back on 600k. Shared by the initiator and the
+ * joiner so both display the same fee for one swap (#5056).
+ */
+internal fun evmSwapDisplayGasLimit(srcToken: Coin, routeGas: Long): BigInteger? {
+    if (routeGas <= 0L || srcToken.chain.isOpStackL2) return null
+    val floor =
+        when {
+            !srcToken.isNativeToken -> DEFAULT_SWAP_LIMIT
+            srcToken.chain == Chain.Ethereum -> SwapGasCalculator.ETH_GAS_LIMIT.toBigInteger()
+            srcToken.chain == Chain.Arbitrum -> SwapGasCalculator.ARB_GAS_LIMIT.toBigInteger()
+            else -> DEFAULT_SWAP_LIMIT
+        }
+    return maxOf(routeGas.toBigInteger(), floor).takeIf { it != DEFAULT_SWAP_LIMIT }
 }
 
 internal class SwapGasCalculator
@@ -293,6 +314,39 @@ constructor(
         return if (isEVMSwap)
             BigInteger.valueOf(if (token.chain == Chain.Ethereum) ETH_GAS_LIMIT else ARB_GAS_LIMIT)
         else null
+    }
+
+    /**
+     * Re-bases the flat-[DEFAULT_SWAP_LIMIT] swap fee from [calculateGasFee] onto the gas an EVM
+     * aggregator tx is signed with — [evmSwapDisplayGasLimit] — so the estimate matches the bond,
+     * not a worst case (#5056). Null when no re-base applies (see [evmSwapDisplayGasLimit]).
+     */
+    suspend fun rebaseEvmSwapNetworkFee(
+        srcToken: Coin,
+        baselineGasFee: TokenValue,
+        routeGas: Long,
+    ): GasCalculationResult? {
+        if (baselineGasFee.value <= BigInteger.ZERO) return null
+        val displayLimit = evmSwapDisplayGasLimit(srcToken, routeGas) ?: return null
+        // baselineGasFee is maxFeePerGas × DEFAULT_SWAP_LIMIT on the chain's native coin, so
+        // scaling
+        // by displayLimit / DEFAULT_SWAP_LIMIT keeps the per-gas price and the coin.
+        val rebasedFee =
+            baselineGasFee.copy(value = baselineGasFee.value * displayLimit / DEFAULT_SWAP_LIMIT)
+        val estimated =
+            gasFeeToEstimatedFee(
+                GasFeeParams(
+                    gasLimit = BigInteger.ONE,
+                    gasFee = rebasedFee,
+                    selectedToken = srcToken,
+                    perUnit = true,
+                )
+            )
+        return GasCalculationResult(
+            gasFee = rebasedFee,
+            estimated = estimated,
+            chain = srcToken.chain,
+        )
     }
 
     companion object {

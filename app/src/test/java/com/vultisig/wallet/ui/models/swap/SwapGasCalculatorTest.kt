@@ -529,6 +529,168 @@ internal class SwapGasCalculatorTest {
             verify(exactly = 0) { UtxoHelper.getHelper(any(), any()) }
         }
 
+    // ── rebaseEvmSwapNetworkFee tests (issue #5056) ─────────────────────────
+
+    /**
+     * Regression for #5056: a native-ETH aggregator swap is signed with the route's own gas limit,
+     * so the displayed fee must be re-based from the flat 600k baseline onto that limit — the bug
+     * was a ~2x over-estimate. baselineGasFee = maxFeePerGas(10) × 600_000; route gas 286_146 → fee
+     * 10 × 286_146.
+     */
+    @Test
+    fun `rebaseEvmSwapNetworkFee re-bases a native ETH swap fee onto the route gas`() = runTest {
+        val ethCoin = nativeCoinFor(Chain.Ethereum)
+        coEvery { tokenRepository.getNativeToken(Chain.Ethereum.id) } returns ethCoin
+        val capturedParams = slot<GasFeeParams>()
+        val estimated = estimatedFee(ethCoin, BigInteger.valueOf(2_861_460))
+        coEvery { gasFeeToEstimatedFee(capture(capturedParams)) } returns estimated
+
+        val result =
+            calculator.rebaseEvmSwapNetworkFee(
+                srcToken = ethCoin,
+                baselineGasFee = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
+                routeGas = 286_146L,
+            )
+
+        requireNotNull(result)
+        assertEquals(BigInteger.valueOf(2_861_460), result.gasFee.value)
+        assertEquals(BigInteger.valueOf(2_861_460), capturedParams.captured.gasFee.value)
+        assertEquals(estimated, result.estimated)
+    }
+
+    /**
+     * A route with no usable gas (e.g. Jupiter's Solana quotes) leaves the baseline fee untouched.
+     */
+    @Test
+    fun `rebaseEvmSwapNetworkFee returns null when route gas is zero`() = runTest {
+        val ethCoin = nativeCoinFor(Chain.Ethereum)
+        val result =
+            calculator.rebaseEvmSwapNetworkFee(
+                srcToken = ethCoin,
+                baselineGasFee = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
+                routeGas = 0L,
+            )
+        assertNull(result)
+    }
+
+    /**
+     * ERC-20 swaps are signed with at least the 600k bond, so a sub-600k route gas lands back on
+     * the baseline — return null to keep the gas-pass value (and any OP-stack L1 component)
+     * unscaled.
+     */
+    @Test
+    fun `rebaseEvmSwapNetworkFee returns null when the limit lands on the swap default`() =
+        runTest {
+            val erc20 = evmErc20Coin(Chain.Ethereum)
+            val result =
+                calculator.rebaseEvmSwapNetworkFee(
+                    srcToken = erc20,
+                    baselineGasFee =
+                        TokenValue(BigInteger.valueOf(6_000_000), nativeCoinFor(Chain.Ethereum)),
+                    routeGas = 286_146L,
+                )
+            assertNull(result)
+        }
+
+    /**
+     * A route gas above the 600k bond re-bases up for ERC-20 swaps: 6_000_000 × 900_000 / 600_000.
+     */
+    @Test
+    fun `rebaseEvmSwapNetworkFee re-bases up when the route gas exceeds the swap default`() =
+        runTest {
+            val erc20 = evmErc20Coin(Chain.Ethereum)
+            val ethCoin = nativeCoinFor(Chain.Ethereum)
+            coEvery { tokenRepository.getNativeToken(Chain.Ethereum.id) } returns ethCoin
+            val capturedParams = slot<GasFeeParams>()
+            coEvery { gasFeeToEstimatedFee(capture(capturedParams)) } returns
+                estimatedFee(ethCoin, BigInteger.valueOf(9_000_000))
+
+            val result =
+                calculator.rebaseEvmSwapNetworkFee(
+                    srcToken = erc20,
+                    baselineGasFee = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
+                    routeGas = 900_000L,
+                )
+
+            requireNotNull(result)
+            assertEquals(BigInteger.valueOf(9_000_000), capturedParams.captured.gasFee.value)
+        }
+
+    /**
+     * OP-stack L2s (Base/Optimism/Blast) fold an L1 data fee into the baseline, which the gas-limit
+     * ratio must not scale — so the rebase is skipped there even when route gas exceeds 600k
+     * (#5056, CodeRabbit). Base native floors at 600k via getGasLimit==null, and routeGas 900k
+     * would otherwise rebase up.
+     */
+    @Test
+    fun `rebaseEvmSwapNetworkFee skips OP-stack L2 chains to avoid scaling the L1 fee`() = runTest {
+        val baseCoin = nativeCoinFor(Chain.Base)
+        val result =
+            calculator.rebaseEvmSwapNetworkFee(
+                srcToken = baseCoin,
+                baselineGasFee = TokenValue(BigInteger.valueOf(6_000_000), baseCoin),
+                routeGas = 900_000L,
+            )
+        assertNull(result)
+    }
+
+    /** Native Arbitrum floors the route gas at its 400k limit: 6_000_000 × 400_000 / 600_000. */
+    @Test
+    fun `rebaseEvmSwapNetworkFee floors a native arbitrum swap at the arbitrum limit`() = runTest {
+        val arbCoin = nativeCoinFor(Chain.Arbitrum)
+        coEvery { tokenRepository.getNativeToken(Chain.Arbitrum.id) } returns arbCoin
+        val capturedParams = slot<GasFeeParams>()
+        coEvery { gasFeeToEstimatedFee(capture(capturedParams)) } returns
+            estimatedFee(arbCoin, BigInteger.valueOf(4_000_000))
+
+        val result =
+            calculator.rebaseEvmSwapNetworkFee(
+                srcToken = arbCoin,
+                baselineGasFee = TokenValue(BigInteger.valueOf(6_000_000), arbCoin),
+                routeGas = 100_000L,
+            )
+
+        requireNotNull(result)
+        assertEquals(BigInteger.valueOf(4_000_000), capturedParams.captured.gasFee.value)
+    }
+
+    // ── evmSwapDisplayGasLimit: the shared floor used by both initiator and joiner (#5056) ──
+
+    @Test
+    fun `evmSwapDisplayGasLimit returns route gas for native ETH above the 40k floor`() {
+        assertEquals(
+            BigInteger.valueOf(286_146),
+            evmSwapDisplayGasLimit(nativeCoinFor(Chain.Ethereum), 286_146L),
+        )
+    }
+
+    @Test
+    fun `evmSwapDisplayGasLimit floors native Arbitrum at its 400k limit`() {
+        assertEquals(
+            BigInteger.valueOf(400_000),
+            evmSwapDisplayGasLimit(nativeCoinFor(Chain.Arbitrum), 100_000L),
+        )
+    }
+
+    @Test
+    fun `evmSwapDisplayGasLimit returns null for ERC-20 at or below the 600k default`() {
+        assertNull(evmSwapDisplayGasLimit(evmErc20Coin(Chain.Ethereum), 286_146L))
+    }
+
+    @Test
+    fun `evmSwapDisplayGasLimit returns route gas for ERC-20 above the 600k default`() {
+        assertEquals(
+            BigInteger.valueOf(900_000),
+            evmSwapDisplayGasLimit(evmErc20Coin(Chain.Ethereum), 900_000L),
+        )
+    }
+
+    @Test
+    fun `evmSwapDisplayGasLimit returns null for OP-stack L2s and for zero route gas`() {
+        assertNull(evmSwapDisplayGasLimit(nativeCoinFor(Chain.Base), 900_000L))
+        assertNull(evmSwapDisplayGasLimit(nativeCoinFor(Chain.Ethereum), 0L))
+    }
+
     private fun stubGetSpecific() {
         coEvery {
             blockChainSpecificRepository.getSpecific(
@@ -599,6 +761,19 @@ internal class SwapGasCalculatorTest {
                 isNativeToken = true,
             )
         }
+
+        private fun evmErc20Coin(chain: Chain): Coin =
+            Coin(
+                chain = chain,
+                ticker = "USDC",
+                logo = "usdc",
+                address = "0xerc20",
+                decimal = 6,
+                hexPublicKey = "hex",
+                priceProviderID = "usd-coin",
+                contractAddress = "0xtoken",
+                isNativeToken = false,
+            )
 
         private fun utxoSendSrc(chain: Chain): SendSrc = buildSendSrc(nativeCoinFor(chain))
 
