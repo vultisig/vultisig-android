@@ -94,7 +94,6 @@
     <string name="circle_defi_control_info">Средства остаются полностью под контролем вашего хранилища. Счета Circle являются самостоятельными, а доход генерируется через безопасные внесетевые казначейства.</string>
     <string name="open_account_button">Открыть счет</string>
     <string name="vault_settings_error_backup_file">произошла ошибка</string>
-    <string name="vault_settings_success_backup_file">файл сохранен в Загрузках/%1$s</string>
     <string name="vault_edit_this_name_already_exist">это имя уже существует</string>
     <string name="send_screen_max">МАКС</string>
     <string name="ok">ОК</string>
@@ -671,7 +670,6 @@
     <string name="share_sheet_more">Ещё</string>
     <string name="referral_not_found">Рефералов пока нет</string>
     <string name="referral_cta">Преврати свой сейф в машину наград. Создай свою реферальную ссылку сейчас и начинай зарабатывать</string>
-    <string name="error_saving_qr_code">Не удалось сохранить QR-код. %1$s</string>
     <string name="transaction_type_button_buy">Купить</string>
     <string name="transaction_type_button_receive">Получить</string>
     <string name="vault_settings_view_vault">Просмотр имени, части и типа хранилища</string>

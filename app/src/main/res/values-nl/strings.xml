@@ -94,7 +94,6 @@
     <string name="circle_defi_control_info">Fondsen blijven volledig onder controle van je kluis. Circle-accounts zijn zelfbeheerd en rendement wordt gegenereerd via veilige off-chain schatkisten.</string>
     <string name="open_account_button">Account openen</string>
     <string name="vault_settings_error_backup_file">er is een fout opgetreden</string>
-    <string name="vault_settings_success_backup_file">bestand opgeslagen in Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">deze naam bestaat al</string>
     <string name="send_screen_max">MAX</string>
     <string name="ok">OK</string>
@@ -665,7 +664,6 @@
     <string name="share_sheet_more">Meer</string>
     <string name="referral_not_found">Nog geen verwijzing</string>
     <string name="referral_cta">Maak van je kluis een beloningsmachine. Maak nu je verwijzing aan en begin te verdienen</string>
-    <string name="error_saving_qr_code">QR-code opslaan mislukt. %1$s</string>
     <string name="transaction_type_button_buy">Kopen</string>
     <string name="transaction_type_button_receive">Ontvangen</string>
     <string name="vault_settings_view_vault">Bekijk kluisnaam, onderdeel en type</string>

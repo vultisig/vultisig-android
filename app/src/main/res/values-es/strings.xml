@@ -97,7 +97,6 @@
     <string name="circle_defi_description">Deposita tu USDC en una cuenta de Circle y obtén rendimientos. De forma segura dentro de tu bóveda Vultisig.</string>
     <string name="circle_defi_control_info">Los fondos permanecen completamente bajo el control de tu bóveda. Las cuentas de Circle son de autocustodia y el rendimiento se genera a través de tesorerías seguras fuera de la cadena.</string>
     <string name="open_account_button">Abrir cuenta</string>
-    <string name="vault_settings_success_backup_file">archivo guardado en Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">Este nombre ya existe</string>
     <string name="send_screen_max">MÁXIMA</string>
     <string name="ok">OK</string>
@@ -670,7 +669,6 @@
     <string name="share_sheet_more">Más</string>
     <string name="referral_not_found">Aún no hay referencia</string>
     <string name="referral_cta">Convierte tu vault en una máquina de recompensas. Crea tu referencia ahora y empieza a ganar</string>
-    <string name="error_saving_qr_code">No se pudo guardar el código QR. %1$s</string>
     <string name="transaction_type_button_buy">Comprar</string>
     <string name="transaction_type_button_receive">Recibir</string>
     <string name="vault_settings_view_vault">Ver el nombre, la parte y el tipo de tu bóveda</string>

@@ -175,7 +175,6 @@
     <string name="send_error_insufficient_native_balance_with_fees">Saldo %1$s insufficiente</string>
     <string name="send_error_insufficient_frozen_balance">L\'importo supera il saldo %1$s congelato</string>
     <string name="verify_swap_agree_receive_amount">Accetto l\'importo minimo che riceverò</string>
-    <string name="vault_settings_success_backup_file">file salvato in Download/%1$s</string>
     <string name="swap_form_estimated_fees_title">Commissione di cambio</string>
     <string name="swap_form_estimated_fees_with_percent_title">Commissione di cambio (%1$s)</string>
     <string name="swap_form_outbound_fee_title">Commissione in uscita</string>
@@ -668,7 +667,6 @@
     <string name="share_sheet_more">Di più</string>
     <string name="referral_not_found">Nessun referral ancora</string>
     <string name="referral_cta">Trasforma il tuo caveau in una macchina di ricompense. Crea subito il tuo referral e inizia a guadagnare</string>
-    <string name="error_saving_qr_code">Impossibile salvare il codice QR. %1$s</string>
     <string name="transaction_type_button_buy">Acquista</string>
     <string name="transaction_type_button_receive">Ricevi</string>
     <string name="vault_settings_view_vault">Visualizza nome, parte e tipo del vault</string>

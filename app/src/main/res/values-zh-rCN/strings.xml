@@ -181,7 +181,6 @@
 
     <!-- Vault Settings Errors -->
     <string name="vault_settings_error_backup_file">发生错误</string>
-    <string name="vault_settings_success_backup_file">文件已保存在 Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">此名称已存在</string>
 
     <!-- Send Screen -->
@@ -1035,7 +1034,6 @@
     <string name="share_sheet_more">更多</string>
 
     <!-- Error Saving QR Code -->
-    <string name="error_saving_qr_code">保存二维码失败。%1$s</string>
 
     <!-- Transaction Type -->
     <string name="transaction_type_button_buy">购买</string>
