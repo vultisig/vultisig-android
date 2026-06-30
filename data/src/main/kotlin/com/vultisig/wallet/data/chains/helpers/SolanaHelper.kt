@@ -10,7 +10,6 @@ import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
 import java.math.BigInteger
 import wallet.core.jni.AnyAddress
-import wallet.core.jni.Base58
 import wallet.core.jni.Base64
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
@@ -41,32 +40,14 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         val DefaultFeeInLamports: BigInteger = 1000000.toBigInteger()
 
         /**
-         * The Solana transaction id is the base58 of the first 64-byte signature in the wire
-         * transaction — NOT a substring of the base58-encoded transaction. WalletCore emits
-         * `output.encoded` as base58 (the signing input never sets `txEncoding`, so the proto
-         * default applies), so decode it, skip the shortvec signature count, and base58-encode
-         * the first signature. Mirrors vultisig-ios `getHashFromRawTransaction`.
+         * The Solana transaction id is the first signature in the signed transaction. WalletCore
+         * populates [Solana.SigningOutput.getSignaturesList] (base58) on the
+         * `compileWithSignatures` path, so read it directly instead of re-deriving it from the
+         * encoded transaction.
          */
-        internal fun solanaTransactionHash(encoded: String): String {
-            val txData =
-                Base58.decodeNoCheck(encoded)
-                    ?: error("Failed to decode signed Solana transaction")
-            // compact-u16 (shortvec) decode: 7 bits per byte, high bit = continuation.
-            var offset = 0
-            var numSigs = 0
-            var shift = 0
-            while (offset < txData.size) {
-                val byte = txData[offset].toInt() and 0xFF
-                numSigs = numSigs or ((byte and 0x7F) shl shift)
-                offset++
-                if (byte and 0x80 == 0) break
-                shift += 7
-                require(shift <= 14) { "Invalid shortvec for signature count" }
-            }
-            require(numSigs >= 1) { "Transaction declares no signatures" }
-            require(offset + 64 <= txData.size) { "Transaction too short to extract signature" }
-            return Base58.encodeNoCheck(txData.copyOfRange(offset, offset + 64))
-        }
+        internal fun Solana.SigningOutput.transactionHash(): String =
+            signaturesList.firstOrNull()?.signature
+                ?: error("Signed Solana transaction has no signature")
     }
 
     private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
@@ -214,7 +195,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         val output = Solana.SigningOutput.parseFrom(compiledWithSignature).checkError()
         return SignedTransactionResult(
             rawTransaction = output.encoded,
-            transactionHash = solanaTransactionHash(output.encoded),
+            transactionHash = output.transactionHash(),
         )
     }
 
@@ -260,7 +241,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         val output = Solana.SigningOutput.parseFrom(compileWithSignature).checkError()
         return SignedTransactionResult(
             rawTransaction = output.encoded,
-            transactionHash = solanaTransactionHash(output.encoded),
+            transactionHash = output.transactionHash(),
         )
     }
 
@@ -376,7 +357,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
 
         return SignedTransactionResult(
             rawTransaction = output.encoded,
-            transactionHash = solanaTransactionHash(output.encoded),
+            transactionHash = output.transactionHash(),
         )
     }
 }
