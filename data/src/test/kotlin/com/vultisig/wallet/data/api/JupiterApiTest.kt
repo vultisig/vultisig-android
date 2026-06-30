@@ -139,6 +139,34 @@ class JupiterApiTest {
         assertEquals(FEE_ACCOUNT, service.prependedFee)
     }
 
+    @Test
+    fun `an already-existing fee ATA skips the create-ATA prepend`() {
+        // needsCreate = false (the ATA is already on-chain) must short-circuit the prepend so the
+        // swap tx doesn't gain the fee owner/ATA as extra static keys on the steady-state path.
+        // prependThrows would raise PrependInvoked if reached; instead execution falls through to
+        // the
+        // native compute-budget step (absent in unit tests), so we only assert the prepend was
+        // skipped — the fake records its input before throwing, so a null input proves it ran
+        // never.
+        val service =
+            FakeFeeAtaService(
+                feeAccount = FEE_ACCOUNT.copy(needsCreate = false),
+                prependThrows = true,
+            )
+        val api = swapOkApi(service)
+
+        runCatching {
+            runBlocking {
+                api.getSwapQuote(QUOTE_AMOUNT, INPUT_MINT, OUTPUT_MINT, WALLET, null, 50)
+            }
+        }
+
+        assertNull(
+            service.prependedTxData,
+            "prepend must be skipped when the fee ATA already exists",
+        )
+    }
+
     /**
      * The quote GET returns 429 so [JupiterApi.getSwapQuote] short-circuits before the swap POST
      * and its WalletCore compute-budget step, keeping the slippage tests on the request they assert
@@ -319,6 +347,7 @@ class JupiterApiTest {
                 mint = OUTPUT_MINT,
                 owner = "8iqhrtBzMcYLR6c6FkzeoMHibedYDkHvLKnX2ArNie5z",
                 tokenProgramId = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                needsCreate = true,
             )
     }
 }

@@ -453,10 +453,19 @@ constructor(
         // the source balance here — that would mix decimals and could wrongly drive the usable
         // amount negative for a low-decimal source into a high-decimal destination.
         val reservedNetworkFee =
-            if (percentage >= 1f) {
-                quotePipeline.estimatedNetworkFeeTokenValue.value?.value?.takeIf {
-                    srcToken.isNativeToken && quotePipeline.gasFeeChain.value == srcToken.chain
-                } ?: BigInteger.ZERO
+            if (
+                percentage >= 1f &&
+                    srcToken.isNativeToken &&
+                    quotePipeline.gasFeeChain.value == srcToken.chain
+            ) {
+                val baseFee =
+                    quotePipeline.estimatedNetworkFeeTokenValue.value?.value ?: BigInteger.ZERO
+                // A Jupiter affiliate swap may create the destination-mint fee ATA on first use,
+                // whose ~0.002 SOL rent the payer (this wallet) funds but the network-fee estimate
+                // doesn't include. Reserve it on native-SOL MAX so the first such swap can't
+                // underfund and fail on submit; it leaves harmless dust when no ATA is created.
+                if (srcToken.chain == Chain.Solana) baseFee + SOLANA_FEE_ATA_RENT_RESERVE
+                else baseFee
             } else {
                 BigInteger.ZERO
             }
@@ -644,6 +653,11 @@ constructor(
 
         // Upper bound for slippage tolerance: 10_000 bps = 100%.
         private const val MAX_SLIPPAGE_BPS = 10_000
+
+        // Rent-exempt minimum for an SPL token account (~0.00203928 SOL, in lamports). Held back on
+        // native-SOL MAX swaps to cover a first-use Jupiter fee-ATA creation the fee estimate
+        // omits.
+        private val SOLANA_FEE_ATA_RENT_RESERVE = BigInteger.valueOf(2_039_280)
 
         // Grouped, up-to-8-decimal $VULT amount (e.g. "3,000", "6.65648001"); truncates rather than
         // rounds up so a displayed balance never overstates what the vault holds.

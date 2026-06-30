@@ -18,6 +18,14 @@ data class JupiterFeeAccount(
     val mint: String,
     val owner: String,
     val tokenProgramId: String,
+    /**
+     * False when the fee ATA already exists on-chain, letting the swap skip the create-ATA prepend.
+     * Skipping keeps the fee owner/ATA off the transaction's static keys on the steady-state path,
+     * so dense v0 routes (which insertInstruction can't fold into their address-lookup tables)
+     * don't grow toward the 1232-byte limit or risk AccountLoadedTwice on every swap — only on
+     * first use.
+     */
+    val needsCreate: Boolean,
 )
 
 /**
@@ -66,11 +74,16 @@ internal class JupiterFeeAtaServiceImpl @Inject constructor(private val solanaAp
         require(!feeAccount.isNullOrEmpty()) {
             "Failed to derive the Jupiter fee ATA for $outputMint"
         }
+        // Probe whether the fee ATA already exists so the caller can skip the create-ATA prepend on
+        // the common path. A transient probe failure resolves to null here, which conservatively
+        // keeps the (idempotent) create — never wrong, just the larger transaction.
+        val needsCreate = solanaApi.getAccountOwner(feeAccount) == null
         return JupiterFeeAccount(
             feeAccount = feeAccount,
             mint = outputMint,
             owner = JUPITER_FEE_OWNER_ADDRESS,
             tokenProgramId = tokenProgramId,
+            needsCreate = needsCreate,
         )
     }
 

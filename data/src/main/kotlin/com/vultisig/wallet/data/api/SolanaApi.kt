@@ -400,8 +400,8 @@ constructor(
 
     override suspend fun getAccountOwner(account: String): String? =
         try {
-            httpClient
-                .postRpc<SolanaAccountInfoResponseJson>(
+            val response =
+                httpClient.postRpc<SolanaAccountInfoResponseJson>(
                     url = rpcEndpoint,
                     method = "getAccountInfo",
                     params =
@@ -410,9 +410,16 @@ constructor(
                             addJsonObject { put("encoding", "base64") }
                         },
                 )
-                .result
-                ?.value
-                ?.owner
+            // postRpc returns a 200 carrying a JSON-RPC `error` body without throwing, so a
+            // transient
+            // RPC failure would otherwise resolve to a null owner indistinguishable from a
+            // genuinely
+            // missing account — and silently drop the now-preferred Jupiter route. Log it so the
+            // failure is observable rather than masquerading as "mint not found".
+            response.error?.let {
+                Timber.tag("SolanaApiImp").w("getAccountOwner RPC error for %s: %s", account, it)
+            }
+            response.result?.value?.owner
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Timber.tag("SolanaApiImp").e(e, "getAccountOwner failed for %s", account)

@@ -75,8 +75,15 @@ constructor(
                 feeAtaService.resolveFeeAccount(toToken)
             else null
 
+        // When Jupiter floored the fee to 0 we resolve no `feeAccount`. Round-tripping the quote's
+        // `platformFee` back into `/swap` without a matching `feeAccount` makes Jupiter reject the
+        // fee-bearing swap, which would drop the now-preferred Jupiter route to a worse provider,
+        // so
+        // strip it. With no fee requested `platformFee` is already null, so this is a no-op there.
+        val quoteResponseForSwap = if (feeAccount == null) body.copy(platformFee = null) else body
+
         val quoteSwapRequestBody = buildJsonObject {
-            put("quoteResponse", json.encodeToJsonElement(body))
+            put("quoteResponse", json.encodeToJsonElement(quoteResponseForSwap))
             put("userPublicKey", fromAddress)
             put("dynamicComputeUnitLimit", true)
             if (feeAccount != null) put("feeAccount", feeAccount.feeAccount)
@@ -100,14 +107,24 @@ constructor(
         }
         val quoteSwapData = swapResponse.bodyOrThrow<QuoteSwapTransactionJson>()
 
-        // Jupiter never initializes the `feeAccount` ATA, so prepend an idempotent create for it.
-        // The user pays the ~0.002 SOL rent the first time per fee mint; it is a no-op thereafter.
-        // The co-signer signs this exact transaction from the keysign payload, so byte-parity
-        // holds. Note: the displayed Solana network-fee estimate does not yet include this one-time
-        // rent (the SDK adds `ataRentLamports`); that is a deferred fee-display refinement.
+        // Jupiter never initializes the `feeAccount` ATA, so prepend an idempotent create for it
+        // the
+        // first time per fee mint (the payer funds the ~0.002 SOL rent; it is skipped once the ATA
+        // exists, see `needsCreate`). The co-signer signs this exact transaction from the keysign
+        // payload, so byte-parity holds.
         val swapTxData =
-            if (feeAccount != null)
-                feeAtaService.prependCreateFeeAta(quoteSwapData.data, feeAccount, fromAddress)
+            if (feeAccount != null && feeAccount.needsCreate)
+                feeAtaService
+                    .prependCreateFeeAta(quoteSwapData.data, feeAccount, fromAddress)
+                    // Jupiter sized `SetComputeUnitLimit` from its `dynamicComputeUnitLimit`
+                    // simulation, which ran before this create-ATA existed, so the baked limit does
+                    // not budget for the ~30k CU a first-time ATA creation costs. Raise the limit
+                    // by
+                    // that headroom so the first swap per fee mint can't revert on an exceeded
+                    // compute budget.
+                    .let { withFeeAta ->
+                        bumpComputeUnitLimit(withFeeAta, CREATE_ATA_COMPUTE_UNITS)
+                    }
             else quoteSwapData.data
 
         val feePrice = (SolanaTransaction.getComputeUnitPrice(swapTxData) ?: "0").toBigInteger()
@@ -126,8 +143,23 @@ constructor(
         )
     }
 
+    /**
+     * Raise the transaction's `SetComputeUnitLimit` by [extraUnits]. Returns [txData] unchanged
+     * when it carries no limit instruction (nothing to rebase) or wallet-core cannot re-encode it.
+     */
+    private fun bumpComputeUnitLimit(txData: String, extraUnits: BigInteger): String {
+        val currentLimit =
+            SolanaTransaction.getComputeUnitLimit(txData)?.toBigIntegerOrNull() ?: return txData
+        return SolanaTransaction.setComputeUnitLimit(txData, (currentLimit + extraUnits).toString())
+            ?: txData
+    }
+
     internal companion object {
         val MIN_FEE_PRICE_SWAP = "150000".toBigInteger()
+
+        // CU headroom for one first-time SPL create-idempotent-ATA instruction (~25k observed),
+        // added on top of Jupiter's pre-prepend compute-limit estimate so the create can't overrun.
+        val CREATE_ATA_COMPUTE_UNITS = "30000".toBigInteger()
         val MAX_PRIORITY_FEE_LAMPORTS = 6000000
         val PRIORITY_LEVEL = "high"
 
