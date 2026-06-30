@@ -91,6 +91,30 @@ internal class TokenPriceRepositoryImplTest {
     }
 
     @Test
+    fun `getPrice falls back to the persisted price before any refresh`() = runTest {
+        // Cold start: the in-memory map is empty, but Room holds a last-known price. getPrice must
+        // serve it instead of $0 so decoupled balance fetches don't flash cached fiat to zero.
+        coEvery { tokenPriceDao.getTokenPrice(ezEth.id, "usd") } returns "3500.0"
+
+        val price = repository.getPrice(ezEth, AppCurrency.USD).first()
+
+        assertEquals(BigDecimal("3500.0"), price)
+    }
+
+    @Test
+    fun `getPrice prefers the refreshed in-memory price over the persisted price`() = runTest {
+        // Room holds a stale price, but a refresh populated the in-memory map with a newer one.
+        coEvery { tokenPriceDao.getTokenPrice(ezEth.id, "usd") } returns "3000.0"
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns
+            mapOf("ezETH" to mapOf("usd" to BigDecimal("3400.0")))
+
+        repository.refresh(listOf(ezEth))
+        val price = repository.getPrice(ezEth, AppCurrency.USD).first()
+
+        assertEquals(BigDecimal("3400.0"), price)
+    }
+
+    @Test
     fun `does not call contract-address lookup when priceProviderID returns a price`() = runTest {
         coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns
             mapOf("ezETH" to mapOf("usd" to BigDecimal("3400.0")))

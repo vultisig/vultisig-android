@@ -109,8 +109,12 @@ constructor(
                             async {
                                 try {
                                     val address = account.address
-                                    loadPrices.await()
 
+                                    // Don't gate balances on the price refresh: prices come from an
+                                    // in-memory StateFlow that resolves instantly (cached/zero), so
+                                    // awaiting the refresh here only delayed balances for chains
+                                    // that need no pricing. Fiat is recomputed below once prices
+                                    // land. (Desktop decouples these the same way.)
                                     val newAccounts =
                                         if (account.chain.standard == TokenStandard.EVM) {
                                             // One Multicall3 round-trip per (chain, address) for
@@ -174,6 +178,25 @@ constructor(
                         }
                         .awaitAll()
 
+                    // Balances are already streamed; now wait for the price refresh and recompute
+                    // fiat from the freshly persisted prices. On a warm start the StateFlow already
+                    // held prices, so the per-chain emissions were already correct and this is a
+                    // no-op confirmation; only a cold start (empty StateFlow) updates fiat here.
+                    // Guard both the price await and the cache recompute: a failure in either must
+                    // not skip the terminal emission below, or the UI's refresh spinner would hang
+                    // (it only stops on isComplete). On failure we keep the already-streamed
+                    // balances with their last-known fiat.
+                    try {
+                        loadPrices.await()
+                        addresses.recomputeFiatFromFreshPrices()
+                    } catch (e: Exception) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
+                        Timber.e(
+                            e,
+                            "Price refresh/fiat recompute failed; emitting last-known balances",
+                        )
+                    }
+
                     // Terminal emission: every chain has resolved (or failed). Carries the final
                     // snapshot and flags completion so the UI can stop the refresh spinner.
                     send(AddressBalancesUpdate(addresses.toList(), isComplete = true))
@@ -229,6 +252,29 @@ constructor(
         }
     }
 
+    /**
+     * Recomputes each account's fiat value and unit price from the now-refreshed prices, reusing
+     * the Room-backed [BalanceRepository.getCachedTokenBalanceAndPrice] read (the freshly fetched
+     * balance was already persisted there, and so is the fresh price) so no extra network calls are
+     * made. Accounts with no cached balance (e.g. a brand-new coin whose network fetch failed) are
+     * left untouched so a streamed value is never overwritten with null.
+     */
+    private suspend fun MutableList<Address>.recomputeFiatFromFreshPrices() {
+        forEachIndexed { index, account ->
+            val newAccounts =
+                account.accounts.map { acc ->
+                    val balance =
+                        balanceRepository.getCachedTokenBalanceAndPrice(account.address, acc.token)
+                    if (balance.tokenBalance.tokenValue != null) {
+                        acc.applyBalance(balance.tokenBalance, balance.price)
+                    } else {
+                        acc
+                    }
+                }
+            this[index] = account.copy(accounts = newAccounts)
+        }
+    }
+
     private suspend fun getSPLCoins(solanaCoins: List<Coin>, vault: Vault): List<Coin> {
         if (solanaCoins.any { !it.isNativeToken }) return emptyList()
         val solanaAddress = solanaCoins.firstOrNull()?.address
@@ -267,13 +313,30 @@ constructor(
 
                 emitCachedAddress(account)
 
-                val loadPrices = supervisorScope {
-                    async { tokenPriceRepository.refresh(updatedCoins) }
+                coroutineScope {
+                    // Fetch the network balance in parallel with the price refresh instead of
+                    // gating it behind the refresh; emitRefreshAddress already shows the balance
+                    // using whatever price the StateFlow currently holds. The refresh is caught
+                    // inside the async: an uncaught failure here would cancel this coroutineScope
+                    // and propagate out (catching await() alone is not enough), failing the flow.
+                    val loadPrices = async {
+                        try {
+                            tokenPriceRepository.refresh(updatedCoins)
+                        } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) throw e
+                            Timber.e(e, "Price refresh failed for %s", chain.id)
+                        }
+                    }
+
+                    emitRefreshAddress(account)
+
+                    loadPrices.await()
+
+                    // Re-emit from the cache so fiat reflects the freshly persisted balance and
+                    // price (no extra network call). On a warm start this just confirms the values
+                    // emitRefreshAddress already produced.
+                    emitCachedAddress(account)
                 }
-
-                loadPrices.await()
-
-                emitRefreshAddress(account)
             }
             .map { it.distinctByChainAndContractAddress() }
 
@@ -490,8 +553,18 @@ constructor(
             chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
                 ?: error("Failed to map address for chain: $chain with coins: $coins")
 
-        runCatching { tokenPriceRepository.refresh(coins) }
-            .onFailure { Timber.e(it, "Failed to refresh token prices for chain: $chain") }
+        // Refresh prices and fetch the balance concurrently (wall-clock max of the two, not the
+        // sum) instead of awaiting prices first. The balance fetch persists the value to the Room
+        // cache, so once prices land we recompute fiat from the cache without a second network
+        // call.
+        val loadPrices = async {
+            try {
+                tokenPriceRepository.refresh(coins)
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Timber.e(e, "Failed to refresh token prices for chain: %s", chain)
+            }
+        }
 
         val accountToUpdate =
             finalAccount.accounts.firstOrNull { it.token.id == updatedToken.id }
@@ -500,7 +573,15 @@ constructor(
         val balance =
             balanceRepository.getTokenBalanceAndPrice(finalAccount.address, updatedToken).first()
 
-        accountToUpdate.applyBalance(balance.tokenBalance, balance.price)
+        loadPrices.await()
+
+        val refreshed =
+            balanceRepository.getCachedTokenBalanceAndPrice(finalAccount.address, updatedToken)
+        if (refreshed.tokenBalance.tokenValue != null) {
+            accountToUpdate.applyBalance(refreshed.tokenBalance, refreshed.price)
+        } else {
+            accountToUpdate.applyBalance(balance.tokenBalance, balance.price)
+        }
     }
 
     private fun Account.applyBalance(balance: TokenBalance): Account =
