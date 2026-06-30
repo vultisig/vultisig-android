@@ -12,7 +12,6 @@ import android.text.TextPaint
 import android.text.TextUtils
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.createBitmap
-import androidx.core.graphics.scale
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
@@ -58,24 +57,6 @@ data class QrShareInfo(val title: String, val fields: List<QrShareField>) {
 interface MakeQrCodeBitmapShareFormat : (Context, Bitmap, Int, Bitmap, QrShareInfo) -> Bitmap
 
 private fun Float.dp(context: Context): Float = this * context.resources.displayMetrics.density
-
-// `Bitmap.scale` delegates to `createScaledBitmap`, which rejects a source whose color space is
-// null with "can't create bitmap without a color space" (some devices hand us such QR/logo
-// bitmaps). Redraw those into a fresh sRGB-backed bitmap before scaling so the share render can
-// never crash on this input.
-private fun Bitmap.scaleWithColorSpace(width: Int, height: Int, filter: Boolean = true): Bitmap {
-    val source =
-        if (colorSpace == null) {
-            createBitmap(this.width, this.height, config ?: Bitmap.Config.ARGB_8888).also {
-                Canvas(it).drawBitmap(this, 0f, 0f, null)
-            }
-        } else {
-            this
-        }
-    val scaled = source.scale(width, height, filter)
-    if (source !== this) source.recycle()
-    return scaled
-}
 
 private fun ellipsizeToWidth(text: String, paint: Paint, maxWidth: Float): String {
     if (maxWidth <= 0f) return ""
