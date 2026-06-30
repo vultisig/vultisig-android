@@ -62,4 +62,20 @@ internal class SolanaBroadcastActionTest {
             solanaBroadcastAction("BLOCK HEIGHT EXCEEDED", attempt = 1, maxAttempts = maxAttempts),
         )
     }
+
+    // The real sendTransaction error body carries the failure as the camelCase TransactionError
+    // enum nested in data.err, not as the spaced human-readable phrase.
+    @Test
+    fun `camelCase BlockhashNotFound from the raw error object resends`() {
+        val rawError =
+            """{"code":-32002,"message":"Transaction simulation failed","data":{"err":"BlockhashNotFound","logs":[]}}"""
+        assertEquals(
+            SolanaBroadcastAction.RESEND,
+            solanaBroadcastAction(rawError, attempt = 1, maxAttempts = maxAttempts),
+        )
+        assertEquals(
+            SolanaBroadcastAction.EXPIRED,
+            solanaBroadcastAction(rawError, attempt = 3, maxAttempts = maxAttempts),
+        )
+    }
 }

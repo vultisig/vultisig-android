@@ -207,7 +207,11 @@ constructor(
                 Timber.tag("SolanaApiImp")
                     .d("Error broadcasting transaction: %s", responseRawString)
 
-                when (solanaBroadcastAction(message, attempt, BROADCAST_MAX_ATTEMPTS)) {
+                // Solana reports the specific failure (e.g. "BlockhashNotFound") in error.data.err,
+                // while error.message only carries the generic "Transaction simulation failed".
+                // Classify against the whole error object so a transient blockhash-not-found is
+                // retried (RESEND) instead of being misread as a fatal error.
+                when (solanaBroadcastAction(error.toString(), attempt, BROADCAST_MAX_ATTEMPTS)) {
                     // Propagation lag: the RPC node hasn't observed our confirmed blockhash yet.
                     // Resending the same signed tx after a short backoff typically clears it.
                     SolanaBroadcastAction.RESEND -> {
@@ -479,11 +483,13 @@ internal fun solanaBroadcastAction(
     attempt: Int,
     maxAttempts: Int,
 ): SolanaBroadcastAction {
-    val lowered = errorMessage.lowercase()
+    // Normalize away spaces/underscores so we match both the human-readable RPC message
+    // ("Blockhash not found") and Solana's camelCase TransactionError enum ("BlockhashNotFound").
+    val normalized = errorMessage.lowercase().replace(" ", "").replace("_", "")
     return when {
-        lowered.contains("blockhash not found") && attempt < maxAttempts ->
+        normalized.contains("blockhashnotfound") && attempt < maxAttempts ->
             SolanaBroadcastAction.RESEND
-        lowered.contains("blockhash not found") || lowered.contains("block height exceeded") ->
+        normalized.contains("blockhashnotfound") || normalized.contains("blockheightexceeded") ->
             SolanaBroadcastAction.EXPIRED
         else -> SolanaBroadcastAction.FATAL
     }
