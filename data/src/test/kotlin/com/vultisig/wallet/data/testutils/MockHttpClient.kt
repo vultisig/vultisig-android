@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.utils.NetworkException
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.engine.mock.toByteArray
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpCallValidator
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -73,6 +74,31 @@ object MockHttpClient {
     fun respondingWith(status: HttpStatusCode, body: String, jsonFormat: Json = json): HttpClient =
         HttpClient(
             MockEngine { respond(content = body, status = status, headers = JSON_HEADERS) }
+        ) {
+            installDefaults(jsonFormat)
+        }
+
+    /** Mutable holder for the last outgoing request body captured by [capturingRequest]. */
+    class RequestCapture {
+        var lastBody: String = ""
+    }
+
+    /**
+     * Like [respondingWith], but records each outgoing request body into [capture] so a test can
+     * assert what was sent (e.g. RPC params). The MockEngine block runs sequentially within a single
+     * coroutine, so a plain field is sufficient.
+     */
+    fun capturingRequest(
+        status: HttpStatusCode,
+        body: String,
+        capture: RequestCapture,
+        jsonFormat: Json = json,
+    ): HttpClient =
+        HttpClient(
+            MockEngine { request ->
+                capture.lastBody = request.body.toByteArray().decodeToString()
+                respond(content = body, status = status, headers = JSON_HEADERS)
+            }
         ) {
             installDefaults(jsonFormat)
         }

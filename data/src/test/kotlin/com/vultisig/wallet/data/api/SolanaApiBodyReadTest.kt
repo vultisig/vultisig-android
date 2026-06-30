@@ -94,6 +94,28 @@ class SolanaApiBodyReadTest {
     }
 
     @Test
+    fun `broadcastTransaction sends skipPreflight so a lagging node forwards instead of re-simulating`() =
+        runTest {
+            val capture = MockHttpClient.RequestCapture()
+            val api =
+                SolanaApiImp(
+                    json = json,
+                    httpClient =
+                        MockHttpClient.capturingRequest(
+                            HttpStatusCode.OK,
+                            """{ "result": "sig", "error": null }""",
+                            capture,
+                            json,
+                        ),
+                    splTokenSerializer = SplTokenResponseJsonSerializerImpl(json),
+                )
+
+            api.broadcastTransaction("sometx")
+
+            assertEquals(true, capture.lastBody.contains("\"skipPreflight\":true"))
+        }
+
+    @Test
     fun `broadcastTransaction surfaces an expired blockhash as SolanaBlockhashExpiredException`() =
         runTest {
             val body =

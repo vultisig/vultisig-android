@@ -200,7 +200,17 @@ constructor(
                 RpcPayload(
                     jsonrpc = "2.0",
                     method = "sendTransaction",
-                    params = buildJsonArray { add(tx) },
+                    // skipPreflight: don't let the receiving RPC node simulate the tx against its
+                    // own (load-balanced, possibly lagging) blockhash cache — that re-simulation is
+                    // what rejects an otherwise-valid recent blockhash with "BlockhashNotFound",
+                    // especially for Jupiter swaps whose blockhash is minted on a different cluster.
+                    // The node forwards straight to the current leader (at the tip, has the
+                    // blockhash) instead. On-chain success is still verified by status polling.
+                    params =
+                        buildJsonArray {
+                            add(tx)
+                            addJsonObject { put("skipPreflight", true) }
+                        },
                     id = 1,
                 )
             repeat(BROADCAST_MAX_ATTEMPTS) { index ->
