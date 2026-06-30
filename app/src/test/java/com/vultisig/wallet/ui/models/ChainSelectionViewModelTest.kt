@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -48,6 +49,7 @@ internal class ChainSelectionViewModelTest {
     private lateinit var tokenRepository: TokenRepository
     private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
     private lateinit var discoverTokenUseCase: DiscoverTokenUseCase
+    private lateinit var defaultDeFiChainsRepository: DefaultDeFiChainsRepository
     private lateinit var navigator: Navigator<Destination>
     private lateinit var requestResultRepository: RequestResultRepository
     private lateinit var snackbarFlow: SnackbarFlow
@@ -63,6 +65,7 @@ internal class ChainSelectionViewModelTest {
         chainAccountAddressRepository = mockk(relaxed = true)
         discoverTokenUseCase = mockk()
         every { discoverTokenUseCase(any(), any()) } just Runs
+        defaultDeFiChainsRepository = mockk(relaxed = true)
         navigator = mockk(relaxed = true)
         requestResultRepository = mockk(relaxed = true)
         snackbarFlow = mockk(relaxed = true)
@@ -192,6 +195,43 @@ internal class ChainSelectionViewModelTest {
             verify { discoverTokenUseCase(VAULT_ID, Chain.Bitcoin.raw) }
         }
 
+    @Test
+    fun `prunes disabled chains from the persisted DeFi chain selection`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.uiState.update {
+                it.copy(
+                    chains =
+                        listOf(
+                            ChainUiModel(isEnabled = false, coin = nativeCoin(Chain.ThorChain)),
+                            ChainUiModel(isEnabled = true, coin = nativeCoin(Chain.Ethereum)),
+                        )
+                )
+            }
+
+            vm.onCommitChanges()
+            advanceUntilIdle()
+
+            coVerify { defaultDeFiChainsRepository.removeChains(VAULT_ID, setOf(Chain.ThorChain)) }
+        }
+
+    @Test
+    fun `does not prune any DeFi chains when nothing is disabled`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.uiState.update {
+                it.copy(
+                    chains =
+                        listOf(ChainUiModel(isEnabled = true, coin = nativeCoin(Chain.Ethereum)))
+                )
+            }
+
+            vm.onCommitChanges()
+            advanceUntilIdle()
+
+            coVerify { defaultDeFiChainsRepository.removeChains(VAULT_ID, emptySet()) }
+        }
+
     private fun createViewModel() =
         ChainSelectionViewModel(
             savedStateHandle = mockk(relaxed = true),
@@ -199,6 +239,7 @@ internal class ChainSelectionViewModelTest {
             tokenRepository = tokenRepository,
             chainAccountAddressRepository = chainAccountAddressRepository,
             discoverTokenUseCase = discoverTokenUseCase,
+            defaultDeFiChainsRepository = defaultDeFiChainsRepository,
             navigator = navigator,
             requestResultRepository = requestResultRepository,
             snackbarFlow = snackbarFlow,

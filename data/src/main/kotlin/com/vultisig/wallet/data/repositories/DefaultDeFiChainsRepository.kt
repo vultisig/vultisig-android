@@ -7,9 +7,12 @@ import com.vultisig.wallet.data.sources.AppDataStore
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 
 interface DefaultDeFiChainsRepository {
     suspend fun setDefaultChains(vaultId: String, chains: Set<Chain>)
+
+    suspend fun removeChains(vaultId: String, chains: Set<Chain>)
 
     fun getDefaultChains(vaultId: String): Flow<Set<Chain>>
 }
@@ -26,6 +29,14 @@ constructor(private val dataStore: AppDataStore) : DefaultDeFiChainsRepository {
             preferences[chainsKey] = chains.map { it.raw }.toSet()
             preferences[hasBeenSetKey] = true
         }
+    }
+
+    override suspend fun removeChains(vaultId: String, chains: Set<Chain>) {
+        if (chains.isEmpty()) return
+        val current = getDefaultChains(vaultId).first()
+        val updated = current - chains
+        if (updated == current) return
+        setDefaultChains(vaultId, updated)
     }
 
     override fun getDefaultChains(vaultId: String): Flow<Set<Chain>> {
