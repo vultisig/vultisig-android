@@ -72,7 +72,16 @@ constructor(
 
     @ExperimentalCoroutinesApi
     override fun getPrice(token: Coin, appCurrency: AppCurrency): Flow<BigDecimal> =
-        tokenIdToPrice.map { it[token.id]?.get(appCurrency.ticker.lowercase()) ?: BigDecimal.ZERO }
+        tokenIdToPrice.map { prices ->
+            // Fall back to the last-known persisted price when the in-memory map has no entry yet.
+            // The map is empty on every cold start, so without this fallback a balance fetch that
+            // decoupled from the price refresh would price fresh balances at $0 until the refresh
+            // lands, flashing the cached fiat to zero. The cached price holds the last-known fiat
+            // until the refresh updates the StateFlow.
+            prices[token.id]?.get(appCurrency.ticker.lowercase())
+                ?: getCachedPrice(token.id, appCurrency)
+                ?: BigDecimal.ZERO
+        }
 
     override suspend fun refresh(tokens: List<Coin>) {
         val currency = appCurrencyRepository.currency.first().ticker.lowercase()
