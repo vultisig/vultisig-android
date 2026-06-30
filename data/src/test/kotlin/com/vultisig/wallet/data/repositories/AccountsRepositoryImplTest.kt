@@ -56,6 +56,14 @@ internal class AccountsRepositoryImplTest {
                 chainAndTokensToAddressMapper = ChainAndTokensToAddressMapperImpl(),
                 splTokenRepository = splTokenRepository,
             )
+
+        // After every chain resolves, loadAddressBalances recomputes fiat from the Room cache once
+        // the price refresh lands. Default this read to a zero-priced snapshot; tests that care
+        // about the recomputed terminal values override it per coin.
+        coEvery { balanceRepository.getCachedTokenBalanceAndPrice(any(), any()) } coAnswers
+            {
+                balanceWithFiat(amount = 0L, fiat = 0L, coin = secondArg<Coin>())
+            }
     }
 
     @Test
@@ -156,6 +164,13 @@ internal class AccountsRepositoryImplTest {
         every { balanceRepository.getTokenBalanceAndPrice(SOL_ADDRESS, sol) } returns
             gatedBalance(solanaGate, amount = SOL_NETWORK, coin = sol)
 
+        // The terminal emission recomputes fiat from the cache; mirror the network balances there
+        // so the persisted values carry through completion.
+        coEvery { balanceRepository.getCachedTokenBalanceAndPrice(ETH_ADDRESS, eth) } returns
+            balance(amount = ETH_NETWORK, coin = eth)
+        coEvery { balanceRepository.getCachedTokenBalanceAndPrice(SOL_ADDRESS, sol) } returns
+            balance(amount = SOL_NETWORK, coin = sol)
+
         val emissions = mutableListOf<AddressBalancesUpdate>()
         val job = launch { repository.loadAddressBalances(VAULT_ID).collect(emissions::add) }
 
@@ -248,6 +263,59 @@ internal class AccountsRepositoryImplTest {
         job.cancel()
     }
 
+    @Test
+    fun `balances stream before the price refresh completes and fiat updates once prices land`() =
+        runTest {
+            val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
+            stubVault(sol)
+
+            // The price refresh is slow/gated — it must not hold up the crypto amount.
+            val priceGate = CompletableDeferred<Unit>()
+            coEvery { tokenPriceRepository.refresh(any()) } coAnswers { priceGate.await() }
+
+            coEvery { balanceRepository.getCachedTokenBalances(any(), any()) } returns
+                listOf(wrapped(amount = CACHED, coin = sol))
+            // Network balance resolves immediately; on a cold start its fiat is $0 because the
+            // price
+            // StateFlow is still empty.
+            every { balanceRepository.getTokenBalanceAndPrice(SOL_ADDRESS, sol) } returns
+                flowOf(balanceWithFiat(amount = NETWORK, fiat = 0L, coin = sol))
+            // Once prices land, the Room cache yields the same balance, now priced.
+            coEvery { balanceRepository.getCachedTokenBalanceAndPrice(SOL_ADDRESS, sol) } returns
+                balanceWithFiat(amount = NETWORK, fiat = NETWORK, coin = sol)
+
+            val emissions = mutableListOf<AddressBalancesUpdate>()
+            val job = launch { repository.loadAddressBalances(VAULT_ID).collect(emissions::add) }
+
+            advanceUntilIdle()
+
+            // The crypto amount is already streamed even though the price refresh is still blocked
+            // —
+            // this is the decoupling the issue asks for. Before the fix the balance waited on
+            // loadPrices.await().
+            val streamed = emissions.last()
+            assertEquals(NETWORK, streamed.addresses.solValue())
+            assertEquals(0L, streamed.addresses.solFiat(), "fiat is not priced yet on cold start")
+            assertTrue(
+                emissions.none { it.isComplete },
+                "load must not complete while the price refresh is pending",
+            )
+
+            priceGate.complete(Unit)
+            advanceUntilIdle()
+
+            // Once prices resolve, the terminal emission recomputes fiat from the cache.
+            val terminal = emissions.last()
+            assertTrue(terminal.isComplete)
+            assertEquals(NETWORK, terminal.addresses.solValue())
+            assertEquals(
+                NETWORK,
+                terminal.addresses.solFiat(),
+                "fiat should populate once prices land, without a second balance fetch",
+            )
+            job.cancel()
+        }
+
     private fun stubVault(vararg coins: Coin) {
         val vault = Vault(id = VAULT_ID, name = "Test Vault", coins = coins.toList())
         every { vaultRepository.getAsFlow(VAULT_ID) } returns flowOf(vault)
@@ -263,6 +331,16 @@ internal class AccountsRepositoryImplTest {
     private fun balance(amount: Long, coin: Coin) =
         TokenBalanceAndPrice(
             tokenBalance = tokenBalance(amount, coin),
+            price = FiatValue(BigDecimal.ONE, USD),
+        )
+
+    private fun balanceWithFiat(amount: Long, fiat: Long, coin: Coin) =
+        TokenBalanceAndPrice(
+            tokenBalance =
+                TokenBalance(
+                    tokenValue = TokenValue(BigInteger.valueOf(amount), coin.ticker, coin.decimal),
+                    fiatValue = FiatValue(BigDecimal.valueOf(fiat), USD),
+                ),
             price = FiatValue(BigDecimal.ONE, USD),
         )
 
@@ -285,6 +363,14 @@ internal class AccountsRepositoryImplTest {
         firstOrNull { it.chain == chain }?.accounts?.firstOrNull()?.tokenValue?.value?.toLong()
 
     private fun List<Address>.solValue(): Long? = value(Chain.Solana)
+
+    private fun List<Address>.solFiat(): Long? =
+        firstOrNull { it.chain == Chain.Solana }
+            ?.accounts
+            ?.firstOrNull()
+            ?.fiatValue
+            ?.value
+            ?.toLong()
 
     private companion object {
         const val VAULT_ID = "vault-1"
