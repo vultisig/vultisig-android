@@ -111,7 +111,15 @@ internal class FiatValueToStringMapperImplTest {
     }
 
     @Test
-    fun `asPrice falls back to standard formatting at or above one cent`() = runTest {
+    fun `asPrice falls back to standard formatting at exactly one cent`() = runTest {
+        // The subUnit guard is exclusive, so 0.01 is the first value that must use standard format.
+        val value = FiatValue(BigDecimal("0.01"), "USD")
+        mapper(value, asPrice = true) shouldBe mapper(value)
+        mapper(value, asPrice = true) shouldBe "$0.01"
+    }
+
+    @Test
+    fun `asPrice falls back to standard formatting above one cent`() = runTest {
         val value = FiatValue(BigDecimal("1.50"), "USD")
         mapper(value, asPrice = true) shouldBe mapper(value)
         mapper(value, asPrice = true) shouldBe "$1.50"
