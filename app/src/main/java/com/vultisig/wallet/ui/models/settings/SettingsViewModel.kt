@@ -473,10 +473,6 @@ constructor(
         }
     }
 
-    fun onShareVaultQrClick() {
-        viewModelScope.launch { navigator.route(Route.ShareVaultQr(vaultId)) }
-    }
-
     fun onDismissShareLinkBottomSheet() {
         state.update { it.copy(showShareBottomSheet = false) }
     }

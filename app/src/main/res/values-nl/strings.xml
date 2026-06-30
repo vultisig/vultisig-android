@@ -210,7 +210,6 @@
     <string name="import_file_screen_enter_password_sub">Dit wachtwoord is ingesteld toen de kluis werd geëxporteerd.</string>
     <string name="import_file_screen_hint_password">Wachtwoord</string>
     <string name="backup_password_screen_permission_required">Voor back-upbewerkingen zijn bestandsrechten vereist.</string>
-    <string name="share_qr_screen_permission_required">Voor het delen van bewerkingen is bestandsmachtiging vereist.</string>
     <string name="token_selection_search_hint">Zoekopdracht…</string>
     <string name="verify_swap_agree_allowance">Ik ga akkoord met het verstrekken van een onbeperkte ERC20-toelage</string>
     <string name="deposit_screen_amount_title">Bedrag</string>
@@ -221,8 +220,6 @@
     <string name="custom_token_token_not_found">Token niet gevonden</string>
     <string name="custom_token_add_token">%1$s-token toevoegen</string>
     <string name="deposit_form_amount_title">Bedrag (Saldo: %1$s)</string>
-    <string name="share_vault_qr_title">Deel Vault QR</string>
-    <string name="share_vault_qr_save" >Opslaan</string>
     <string name="share_vault_qr_share" >Delen</string>
     <string name="deposit_form_node_address_title">Knooppuntadres</string>
     <string name="bond_not_whitelisted_error">U staat niet op de whitelist van dit knooppunt</string>
@@ -639,7 +636,6 @@
     <string name="update_available">Er is een update beschikbaar</string>
     <string name="app_up_to_date">De app is up-to-date</string>
     <string name="update">Bijwerken</string>
-    <string name="share_vault_qr_info">Met deze QR-code kunt u een alleen-lezenversie van uw kluis delen</string>
     <string name="add_address_title_label">Label</string>
     <string name="address_book_title_edit">Adresboek bewerken</string>
     <string name="address_book_delete_entry_title">Adres verwijderen?</string>

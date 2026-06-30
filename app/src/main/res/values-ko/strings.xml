@@ -286,7 +286,6 @@
     <string name="import_file_screen_enter_password_sub">이 비밀번호는 볼트 공유를 내보낼 때 설정되었습니다.</string>
     <string name="import_file_screen_hint_password">비밀번호</string>
     <string name="backup_password_screen_permission_required">백업 작업을 위해 파일 권한이 필요합니다.</string>
-    <string name="share_qr_screen_permission_required">공유 작업을 위해 파일 권한이 필요합니다.</string>
     <string name="token_selection_search_hint">검색…</string>
     <string name="verify_swap_agree_allowance">ERC20 허용량 제공에 동의합니다</string>
     <string name="deposit_screen_amount_title">금액</string>
@@ -298,8 +297,6 @@
     <string name="custom_token_add_token">%1$s 토큰 추가</string>
     <string name="deposit_form_amount_title">금액 (잔액: %1$s)</string>
     <string name="deposit_form_shares_title">수량 (잔액: %1$s)</string>
-    <string name="share_vault_qr_title">볼트 QR 공유</string>
-    <string name="share_vault_qr_save">저장</string>
     <string name="share_vault_qr_share">공유</string>
     <string name="deposit_form_node_address_title">노드 주소</string>
     <string name="bond_not_whitelisted_error">이 노드의 화이트리스트에 등록되지 않았습니다</string>
@@ -871,7 +868,6 @@
     <string name="update_available">업데이트가 있습니다</string>
     <string name="app_up_to_date">앱이 최신 버전입니다</string>
     <string name="update">업데이트</string>
-    <string name="share_vault_qr_info">이 QR 코드로 볼트의 읽기 전용 버전을 공유할 수 있습니다</string>
     <string name="add_address_title_label">라벨</string>
     <string name="address_book_title_edit">주소록 수정</string>
     <string name="address_book_delete_entry_title">주소를 삭제하시겠습니까?</string>

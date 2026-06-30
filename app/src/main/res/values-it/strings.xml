@@ -211,7 +211,6 @@
     <string name="import_file_screen_enter_password_sub">Questa password è stata impostata al momento dell\'esportazione della condivisione del vault.</string>
     <string name="import_file_screen_hint_password">Password</string>
     <string name="backup_password_screen_permission_required">Per le operazioni di backup è richiesta l\'autorizzazione del file.</string>
-    <string name="share_qr_screen_permission_required">Per le operazioni di condivisione è richiesta l\'autorizzazione del file.</string>
     <string name="token_selection_search_hint">Ricerca…</string>
     <string name="verify_swap_agree_allowance">Sono d\'accordo con la fornitura di un\'indennità ERC20 illimitata</string>
     <string name="deposit_screen_amount_title">Quantità</string>
@@ -222,8 +221,6 @@
     <string name="custom_token_token_not_found">Token non trovato</string>
     <string name="custom_token_add_token">Aggiungi token %1$s</string>
     <string name="deposit_form_amount_title">Importo (Saldo: %1$s)</string>
-    <string name="share_vault_qr_title">Condividi Vault QR</string>
-    <string name="share_vault_qr_save" >Salva</string>
     <string name="share_vault_qr_share" >Condividi</string>
     <string name="deposit_form_node_address_title">Indirizzo del nodo</string>
     <string name="bond_not_whitelisted_error">Non sei nella whitelist di questo nodo</string>
@@ -642,7 +639,6 @@
     <string name="update_available">È disponibile un aggiornamento</string>
     <string name="app_up_to_date">L\'app è aggiornata</string>
     <string name="update">Aggiorna</string>
-    <string name="share_vault_qr_info">Questo codice QR consente di condividere una versione a sola lettura della tua cassaforte</string>
     <string name="add_address_title_label">Etichetta</string>
     <string name="address_book_title_edit">Modifica rubrica</string>
     <string name="address_book_delete_entry_title">Eliminare l\'indirizzo?</string>

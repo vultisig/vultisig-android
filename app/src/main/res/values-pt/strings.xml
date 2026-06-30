@@ -212,7 +212,6 @@
     <string name="import_file_screen_enter_password_sub">Esta palavra-passe foi definida quando a partilha do cofre foi exportada.</string>
     <string name="import_file_screen_hint_password">Palavra-passe</string>
     <string name="backup_password_screen_permission_required">A permissão de ficheiro é necessária para operações de cópia de segurança.</string>
-    <string name="share_qr_screen_permission_required">A permissão de ficheiro é necessária para operações de partilha.</string>
     <string name="token_selection_search_hint">Pesquisa…</string>
     <string name="verify_swap_agree_allowance">Concordo em fornecer subsídio ERC20 ilimitado</string>
     <string name="deposit_screen_amount_title">Montante</string>
@@ -223,8 +222,6 @@
     <string name="custom_token_token_not_found">Token não encontrado</string>
     <string name="custom_token_add_token">Adicionar token %1$s</string>
     <string name="deposit_form_amount_title">Valor (Saldo: %1$s)</string>
-    <string name="share_vault_qr_title">Partilhar QR do cofre</string>
-    <string name="share_vault_qr_save">Guardar</string>
     <string name="share_vault_qr_share">Compartilhar</string>
     <string name="deposit_form_node_address_title">Endereço do nó</string>
     <string name="bond_not_whitelisted_error">Você não está na lista de permissões deste nó</string>
@@ -640,7 +637,6 @@
     <string name="update_available">Atualização disponível</string>
     <string name="app_up_to_date">Aplicação atualizada</string>
     <string name="update">Atualizar</string>
-    <string name="share_vault_qr_info">Este código QR permite-lhe partilhar uma versão apenas de leitura do seu cofre</string>
     <string name="add_address_title_label">Etiqueta</string>
     <string name="address_book_title_edit">Editar Catálogo de Endereços</string>
     <string name="address_book_delete_entry_title">Deletar endereço?</string>

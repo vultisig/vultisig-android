@@ -211,7 +211,6 @@
     <string name="import_file_screen_enter_password_sub">Dieses Passwort wurde beim Export der Tresorfreigabe festgelegt.</string>
     <string name="import_file_screen_hint_password">Passwort</string>
     <string name="backup_password_screen_permission_required">Für Sicherungsvorgänge sind Dateiberechtigungen erforderlich.</string>
-    <string name="share_qr_screen_permission_required">Für Freigabevorgänge sind Dateiberechtigungen erforderlich.</string>
     <string name="token_selection_search_hint">Suchen…</string>
     <string name="verify_swap_agree_allowance">Ich bin mit der Bereitstellung eines unbegrenzten ERC20-Kontingents einverstanden</string>
     <string name="deposit_screen_amount_title">Betrag</string>
@@ -222,8 +221,6 @@
     <string name="custom_token_token_not_found">Token nicht gefunden</string>
     <string name="custom_token_add_token">%1$s Token hinzufügen</string>
     <string name="deposit_form_amount_title">Betrag (Guthaben: %1$s)</string>
-    <string name="share_vault_qr_title">Vault-QR teilen</string>
-    <string name="share_vault_qr_save" >Speichern</string>
     <string name="share_vault_qr_share" >Teilen</string>
     <string name="deposit_form_node_address_title">Knotenadresse</string>
     <string name="bond_not_whitelisted_error">Sie sind nicht auf der Whitelist dieses Knotens</string>
@@ -642,7 +639,6 @@
     <string name="update_available">Update verfügbar</string>
     <string name="app_up_to_date">App ist aktuell</string>
     <string name="update">Aktualisieren</string>
-    <string name="share_vault_qr_info">Mit diesem QR-Code können Sie eine schreibgeschützte Version Ihres Tresors teilen</string>
     <string name="add_address_title_label">Beschriftung</string>
     <string name="address_book_title_edit">Adressbuch bearbeiten</string>
     <string name="address_book_delete_entry_title">Adresse löschen?</string>

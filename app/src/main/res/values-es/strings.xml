@@ -212,7 +212,6 @@
     <string name="import_file_screen_enter_password_sub">Esta contraseña se estableció al exportar el recurso compartido de la bóveda.</string>
     <string name="import_file_screen_hint_password">Contraseña</string>
     <string name="backup_password_screen_permission_required">Se requiere permiso de archivo para las operaciones de copia de seguridad.</string>
-    <string name="share_qr_screen_permission_required">Se requiere permiso de archivo para realizar operaciones de compartir.</string>
     <string name="token_selection_search_hint">Buscar…</string>
     <string name="verify_swap_agree_allowance">Estoy de acuerdo con proporcionar una asignación ilimitada de ERC20</string>
     <string name="deposit_screen_amount_title">Cantidad</string>
@@ -222,8 +221,6 @@
     <string name="custom_token_token_not_found">Token no encontrado</string>
     <string name="custom_token_add_token">Agregar %1$s token</string>
     <string name="deposit_form_amount_title">Importe (Saldo: %1$s)</string>
-    <string name="share_vault_qr_title">Compartir Bóveda QR</string>
-    <string name="share_vault_qr_save" >Guardar</string>
     <string name="share_vault_qr_share" >Compartir</string>
     <string name="deposit_form_node_address_title">Dirección del nodo</string>
     <string name="bond_not_whitelisted_error">No está en la lista blanca de este nodo</string>
@@ -644,7 +641,6 @@
     <string name="update_available">Actualización disponible</string>
     <string name="app_up_to_date">Aplicación actualizada</string>
     <string name="update">Actualizar</string>
-    <string name="share_vault_qr_info">Este código QR le permite compartir una versión de solo lectura de su bóveda</string>
     <string name="add_address_title_label">Etiqueta</string>
     <string name="address_book_title_edit">Editar libreta de direcciones</string>
     <string name="address_book_delete_entry_title">¿Eliminar dirección?</string>
