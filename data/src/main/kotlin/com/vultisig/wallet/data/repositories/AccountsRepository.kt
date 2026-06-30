@@ -182,16 +182,20 @@ constructor(
                     // fiat from the freshly persisted prices. On a warm start the StateFlow already
                     // held prices, so the per-chain emissions were already correct and this is a
                     // no-op confirmation; only a cold start (empty StateFlow) updates fiat here.
+                    // Guard both the price await and the cache recompute: a failure in either must
+                    // not skip the terminal emission below, or the UI's refresh spinner would hang
+                    // (it only stops on isComplete). On failure we keep the already-streamed
+                    // balances with their last-known fiat.
                     try {
                         loadPrices.await()
+                        addresses.recomputeFiatFromFreshPrices()
                     } catch (e: Exception) {
                         if (e is kotlinx.coroutines.CancellationException) throw e
                         Timber.e(
                             e,
-                            "Price refresh failed; emitting balances with last-known prices",
+                            "Price refresh/fiat recompute failed; emitting last-known balances",
                         )
                     }
-                    addresses.recomputeFiatFromFreshPrices()
 
                     // Terminal emission: every chain has resolved (or failed). Carries the final
                     // snapshot and flags completion so the UI can stop the refresh spinner.
@@ -312,17 +316,21 @@ constructor(
                 coroutineScope {
                     // Fetch the network balance in parallel with the price refresh instead of
                     // gating it behind the refresh; emitRefreshAddress already shows the balance
-                    // using whatever price the StateFlow currently holds.
-                    val loadPrices = async { tokenPriceRepository.refresh(updatedCoins) }
+                    // using whatever price the StateFlow currently holds. The refresh is caught
+                    // inside the async: an uncaught failure here would cancel this coroutineScope
+                    // and propagate out (catching await() alone is not enough), failing the flow.
+                    val loadPrices = async {
+                        try {
+                            tokenPriceRepository.refresh(updatedCoins)
+                        } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) throw e
+                            Timber.e(e, "Price refresh failed for ${chain.id}")
+                        }
+                    }
 
                     emitRefreshAddress(account)
 
-                    try {
-                        loadPrices.await()
-                    } catch (e: Exception) {
-                        if (e is kotlinx.coroutines.CancellationException) throw e
-                        Timber.e(e, "Price refresh failed for ${chain.id}")
-                    }
+                    loadPrices.await()
 
                     // Re-emit from the cache so fiat reflects the freshly persisted balance and
                     // price (no extra network call). On a warm start this just confirms the values

@@ -316,6 +316,56 @@ internal class AccountsRepositoryImplTest {
             job.cancel()
         }
 
+    @Test
+    fun `loadAddressBalances still completes when the fiat recompute fails`() = runTest {
+        val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
+        stubVault(sol)
+        coJustRun { tokenPriceRepository.refresh(any()) }
+        coEvery { balanceRepository.getCachedTokenBalances(any(), any()) } returns
+            listOf(wrapped(amount = CACHED, coin = sol))
+        every { balanceRepository.getTokenBalanceAndPrice(SOL_ADDRESS, sol) } returns
+            flowOf(balance(amount = NETWORK, coin = sol))
+        // The terminal recompute reads the cache; simulate a DB/cache read failure there.
+        coEvery { balanceRepository.getCachedTokenBalanceAndPrice(SOL_ADDRESS, sol) } throws
+            IllegalStateException("cache read failed")
+
+        val emissions = mutableListOf<AddressBalancesUpdate>()
+        val job = launch { repository.loadAddressBalances(VAULT_ID).collect(emissions::add) }
+        advanceUntilIdle()
+
+        // Completion must still fire — otherwise the pull-to-refresh spinner hangs — and it carries
+        // the already-streamed balance with its last-known fiat.
+        val terminal = emissions.last()
+        assertTrue(terminal.isComplete, "load must complete even when the fiat recompute fails")
+        assertEquals(NETWORK, terminal.addresses.solValue())
+        job.cancel()
+    }
+
+    @Test
+    fun `loadAddress surfaces balances even when the price refresh throws`() = runTest {
+        val eth = Coins.Ethereum.ETH.copy(address = ETH_ADDRESS)
+        val vault = Vault(id = VAULT_ID, name = "Test Vault", coins = listOf(eth))
+        coEvery { vaultRepository.get(VAULT_ID) } returns vault
+        // A failing refresh must not tear down the flow (catching await() alone would not, since
+        // the async failure cancels the enclosing coroutineScope).
+        coEvery { tokenPriceRepository.refresh(any()) } throws RuntimeException("coingecko 429")
+        every { balanceRepository.getTokenBalanceAndPrice(ETH_ADDRESS, eth) } returns
+            flowOf(balance(amount = ETH_NETWORK, coin = eth))
+        coEvery { balanceRepository.getCachedTokenBalanceAndPrice(ETH_ADDRESS, eth) } returns
+            balance(amount = ETH_NETWORK, coin = eth)
+
+        val emissions = mutableListOf<Address>()
+        // Collecting would throw without the fix; the assertion is that it completes normally.
+        repository.loadAddress(VAULT_ID, Chain.Ethereum).collect(emissions::add)
+
+        val finalEth = emissions.lastOrNull()?.accounts?.firstOrNull { it.token.id == eth.id }
+        assertEquals(
+            ETH_NETWORK,
+            finalEth?.tokenValue?.value?.toLong(),
+            "balance should surface even though the price refresh failed",
+        )
+    }
+
     private fun stubVault(vararg coins: Coin) {
         val vault = Vault(id = VAULT_ID, name = "Test Vault", coins = coins.toList())
         every { vaultRepository.getAsFlow(VAULT_ID) } returns flowOf(vault)
