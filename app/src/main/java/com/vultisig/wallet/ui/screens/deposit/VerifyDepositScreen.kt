@@ -313,18 +313,29 @@ internal fun VerifyDepositScreen(
                     Modifier.fillMaxWidth()
                         .padding(horizontal = if (hasToolbar) 24.dp else 8.dp, vertical = 12.dp),
             ) {
+                state.insufficientBalanceError?.let { error ->
+                    Text(
+                        text = error.asString(),
+                        style = Theme.brockmann.supplementary.footnote,
+                        color = Theme.v2.colors.alerts.error,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+
+                val buttonState =
+                    if (state.isLoading || !state.hasEnoughBalance) VsButtonState.Disabled
+                    else VsButtonState.Enabled
+
                 if (state.hasFastSign) {
                     FastSignPairedButtons(
                         onFastSignClick = onFastSignClick,
                         onPairedSignClick = onConfirm,
-                        state =
-                            if (state.isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
+                        state = buttonState,
                     )
                 } else {
                     VsButton(
-                        state =
-                            state.isLoading.takeIf { it }?.let { VsButtonState.Disabled }
-                                ?: VsButtonState.Enabled,
+                        state = buttonState,
                         label = confirmTitle,
                         onClick = onConfirm,
                         modifier = Modifier.fillMaxWidth(),

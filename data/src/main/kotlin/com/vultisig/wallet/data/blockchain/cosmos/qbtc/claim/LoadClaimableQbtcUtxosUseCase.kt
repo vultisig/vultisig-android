@@ -18,6 +18,13 @@ sealed interface QbtcClaimBlockedReason {
 sealed interface QbtcClaimLoadResult {
     data class Available(val utxos: List<ClaimableUtxo>) : QbtcClaimLoadResult
 
+    /**
+     * No UTXO is claimable yet, but one or more are still maturing (claimable on-chain, just short
+     * of [QbtcClaimConfig.MIN_CLAIM_CONFIRMATIONS]). Surfaced so the UI can explain the wait
+     * instead of implying nothing is claimable.
+     */
+    data class Maturing(val utxos: List<ClaimableUtxo>) : QbtcClaimLoadResult
+
     data class Blocked(val reason: QbtcClaimBlockedReason) : QbtcClaimLoadResult
 }
 
@@ -64,10 +71,18 @@ constructor(
             return QbtcClaimLoadResult.Blocked(QbtcClaimBlockedReason.KillSwitchClosed)
         }
 
-        val filtered =
+        val (claimableMature, maturing) =
             try {
                 val candidates = utxosService.fetchClaimableCandidates(btcAddress)
-                chainService.filterClaimable(candidates).filter { it.isMature }
+                // Partition on BTC confirmations BEFORE the chain cross-check, mirroring iOS
+                // which gates confirmations before querying the chain. The QBTC chain only
+                // indexes a UTXO once it crosses the confirmation threshold, so a still-maturing
+                // UTXO comes back as 404/NotIndexed; filterClaimable would drop it and it would
+                // never reach the Maturing branch — the screen would fall back to the generic
+                // "nothing to claim". Only the mature set is worth cross-checking for
+                // already-claimed / not-indexed; maturing ones surface straight from Blockchair.
+                val (matureCandidates, maturingCandidates) = candidates.partition { it.isMature }
+                chainService.filterClaimable(matureCandidates) to maturingCandidates
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -77,10 +92,10 @@ constructor(
                 )
             }
 
-        return if (filtered.isEmpty()) {
-            QbtcClaimLoadResult.Blocked(QbtcClaimBlockedReason.NoUtxos)
-        } else {
-            QbtcClaimLoadResult.Available(filtered)
+        return when {
+            claimableMature.isNotEmpty() -> QbtcClaimLoadResult.Available(claimableMature)
+            maturing.isNotEmpty() -> QbtcClaimLoadResult.Maturing(maturing)
+            else -> QbtcClaimLoadResult.Blocked(QbtcClaimBlockedReason.NoUtxos)
         }
     }
 }

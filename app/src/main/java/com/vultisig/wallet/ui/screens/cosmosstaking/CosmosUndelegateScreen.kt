@@ -119,6 +119,7 @@ internal fun CosmosUndelegateScreen(viewModel: CosmosUndelegateViewModel = hiltV
                     if (state.isSubmitting || state.maxUnbondingEntriesReached)
                         VsButtonState.Disabled
                     else VsButtonState.Enabled,
+                isLoading = state.isSubmitting,
                 onClick = viewModel::submit,
                 modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
             )

@@ -206,6 +206,7 @@ private fun UnstakeCacaoContent(
             variant = VsButtonVariant.CTA,
             modifier = Modifier.fillMaxWidth(),
             onClick = onDeposit,
+            isLoading = state.isLoading,
             state =
                 if (
                     (tokenAmountFieldState.text.toString().toIntOrNull() ?: 0) > 0 &&

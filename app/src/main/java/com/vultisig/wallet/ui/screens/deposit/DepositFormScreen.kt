@@ -573,6 +573,7 @@ internal fun DepositFormScreen(
                 focusManager.clearFocus()
                 onDeposit()
             },
+            isLoading = state.isLoading,
             state =
                 if (
                     state.isLoading ||

@@ -38,26 +38,24 @@ internal fun computeJoinKeysignNetworkFee(
     }
 
 /**
- * Swap-only fee helper. Only [BlockChainSpecific.Ethereum] and [BlockChainSpecific.THORChain] are
- * reachable in the swap branch — every other subtype goes through `feeServiceComposite`. The
- * Ethereum case uses [EthereumFeeService.DEFAULT_SWAP_LIMIT] so joiner output matches the
- * initiator's swap-fee display (see [EthereumFeeService.calculateDefaultFees] for Swap) instead of
- * being ~15× lower for native ETH/Arb transfers.
+ * Swap-only fee helper — only [BlockChainSpecific.Ethereum] and [BlockChainSpecific.THORChain]
+ * reach the swap branch; everything else goes through `feeServiceComposite`.
  *
- * The [error] branch is the safety net for [JoinKeysignViewModel.loadTransaction]'s swap path: if a
- * new [BlockChainSpecific] subtype is ever added to that branch's type check, this helper crashes
- * loudly instead of silently shipping a zero fee.
+ * For an EVM aggregator route the caller passes [aggregatorDisplayGasLimit] (from
+ * `evmSwapDisplayGasLimit`) so the joiner values the fee at the same limit as the initiator
+ * (#5056); native-protocol deposits pass null and keep [EthereumFeeService.DEFAULT_SWAP_LIMIT]. The
+ * [error] branch guards against a new subtype reaching this path with a silent zero fee.
  */
 internal fun computeJoinKeysignSwapNetworkFee(
     blockChainSpecific: BlockChainSpecific,
     nativeCoin: Coin,
+    aggregatorDisplayGasLimit: BigInteger? = null,
 ): TokenValue =
     when (blockChainSpecific) {
-        is BlockChainSpecific.Ethereum ->
-            TokenValue(
-                value = blockChainSpecific.maxFeePerGasWei * EthereumFeeService.DEFAULT_SWAP_LIMIT,
-                token = nativeCoin,
-            )
+        is BlockChainSpecific.Ethereum -> {
+            val limit = aggregatorDisplayGasLimit ?: EthereumFeeService.DEFAULT_SWAP_LIMIT
+            TokenValue(value = blockChainSpecific.maxFeePerGasWei * limit, token = nativeCoin)
+        }
         is BlockChainSpecific.THORChain ->
             TokenValue(value = blockChainSpecific.fee, token = nativeCoin)
         else ->

@@ -83,6 +83,17 @@ internal data class QbtcClaimUtxoUiModel(
 )
 
 @Immutable
+internal data class QbtcClaimMaturingUtxoUiModel(
+    val key: String,
+    val shortId: String,
+    /** e.g. "112/144" — the count is rendered in warning amber, the threshold after the slash. */
+    val confirmationsCount: String,
+    val remainingBlocks: Long,
+    val qbtcAmount: String,
+    val btcAmount: String,
+)
+
+@Immutable
 internal sealed interface QbtcClaimUiState {
     data object Loading : QbtcClaimUiState
 
@@ -96,6 +107,9 @@ internal sealed interface QbtcClaimUiState {
         val canConfirm: Boolean,
         val isAllSelected: Boolean,
     ) : QbtcClaimUiState
+
+    /** Nothing is claimable yet because every claimable UTXO is still maturing. */
+    data class Maturing(val utxos: List<QbtcClaimMaturingUtxoUiModel>) : QbtcClaimUiState
 
     /** Secure Vault: showing the pairing QR and waiting for the co-signing device(s) to join. */
     data class Pairing(
@@ -200,6 +214,10 @@ constructor(
                         claimable.take(QbtcClaimConfig.MAX_CLAIM_UTXOS).map { it.key() }
                     )
                     emitSelecting()
+                }
+                is QbtcClaimLoadResult.Maturing -> {
+                    uiState.value =
+                        QbtcClaimUiState.Maturing(result.utxos.map { it.toMaturingUiModel() })
                 }
             }
         }
@@ -441,6 +459,23 @@ constructor(
             qbtcAmount = QbtcClaimAmountFormatter.formatQbtc(amount),
             btcAmount = QbtcClaimAmountFormatter.formatBtc(amount),
         )
+
+    private fun ClaimableUtxo.toMaturingUiModel(): QbtcClaimMaturingUtxoUiModel {
+        // A maturing UTXO is `!isMature`: either short of the threshold or still unconfirmed
+        // (null → mempool / unknown tip), which we surface as 0 confirmations.
+        val confirmed = (confirmations ?: 0L).coerceAtLeast(0L)
+        // Maturity needs strictly more than the threshold, so the floor of 1 keeps the boundary
+        // case (exactly at the threshold) honest rather than implying "0 blocks left".
+        val remaining = (QbtcClaimConfig.MIN_CLAIM_CONFIRMATIONS - confirmed).coerceAtLeast(1L)
+        return QbtcClaimMaturingUtxoUiModel(
+            key = key(),
+            shortId = shortTxid(),
+            confirmationsCount = "$confirmed/${QbtcClaimConfig.MIN_CLAIM_CONFIRMATIONS}",
+            remainingBlocks = remaining,
+            qbtcAmount = QbtcClaimAmountFormatter.formatQbtc(amount),
+            btcAmount = QbtcClaimAmountFormatter.formatBtc(amount),
+        )
+    }
 
     private fun ClaimableUtxo.shortTxid(): String =
         if (txid.length <= 14) "$txid:$vout" else "${txid.take(4)}…${txid.takeLast(4)}:$vout"

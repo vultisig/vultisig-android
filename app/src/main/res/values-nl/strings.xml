@@ -94,7 +94,6 @@
     <string name="circle_defi_control_info">Fondsen blijven volledig onder controle van je kluis. Circle-accounts zijn zelfbeheerd en rendement wordt gegenereerd via veilige off-chain schatkisten.</string>
     <string name="open_account_button">Account openen</string>
     <string name="vault_settings_error_backup_file">er is een fout opgetreden</string>
-    <string name="vault_settings_success_backup_file">bestand opgeslagen in Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">deze naam bestaat al</string>
     <string name="send_screen_max">MAX</string>
     <string name="ok">OK</string>
@@ -210,7 +209,6 @@
     <string name="import_file_screen_enter_password_sub">Dit wachtwoord is ingesteld toen de kluis werd geëxporteerd.</string>
     <string name="import_file_screen_hint_password">Wachtwoord</string>
     <string name="backup_password_screen_permission_required">Voor back-upbewerkingen zijn bestandsrechten vereist.</string>
-    <string name="share_qr_screen_permission_required">Voor het delen van bewerkingen is bestandsmachtiging vereist.</string>
     <string name="token_selection_search_hint">Zoekopdracht…</string>
     <string name="verify_swap_agree_allowance">Ik ga akkoord met het verstrekken van een onbeperkte ERC20-toelage</string>
     <string name="deposit_screen_amount_title">Bedrag</string>
@@ -221,8 +219,6 @@
     <string name="custom_token_token_not_found">Token niet gevonden</string>
     <string name="custom_token_add_token">%1$s-token toevoegen</string>
     <string name="deposit_form_amount_title">Bedrag (Saldo: %1$s)</string>
-    <string name="share_vault_qr_title">Deel Vault QR</string>
-    <string name="share_vault_qr_save" >Opslaan</string>
     <string name="share_vault_qr_share" >Delen</string>
     <string name="deposit_form_node_address_title">Knooppuntadres</string>
     <string name="bond_not_whitelisted_error">U staat niet op de whitelist van dit knooppunt</string>
@@ -639,7 +635,6 @@
     <string name="update_available">Er is een update beschikbaar</string>
     <string name="app_up_to_date">De app is up-to-date</string>
     <string name="update">Bijwerken</string>
-    <string name="share_vault_qr_info">Met deze QR-code kunt u een alleen-lezenversie van uw kluis delen</string>
     <string name="add_address_title_label">Label</string>
     <string name="address_book_title_edit">Adresboek bewerken</string>
     <string name="address_book_delete_entry_title">Adres verwijderen?</string>
@@ -669,7 +664,6 @@
     <string name="share_sheet_more">Meer</string>
     <string name="referral_not_found">Nog geen verwijzing</string>
     <string name="referral_cta">Maak van je kluis een beloningsmachine. Maak nu je verwijzing aan en begin te verdienen</string>
-    <string name="error_saving_qr_code">QR-code opslaan mislukt. %1$s</string>
     <string name="transaction_type_button_buy">Kopen</string>
     <string name="transaction_type_button_receive">Ontvangen</string>
     <string name="vault_settings_view_vault">Bekijk kluisnaam, onderdeel en type</string>
@@ -1332,6 +1326,11 @@
     <string name="qbtc_claim_eligible_header">Geschikte UTXO\'s</string>
     <string name="qbtc_claim_utxo_block_format">Bevestigd · %1$d blokken geleden</string>
     <string name="qbtc_claim_utxo_pending">In behandeling</string>
+    <string name="qbtc_claim_maturing_title">Uw BTC is nog aan het rijpen</string>
+    <string name="qbtc_claim_maturing_detail">UTXO\'s hebben 144 bevestigingen nodig voordat ze als QBTC kunnen worden geclaimd. Uw geld is veilig.</string>
+    <string name="qbtc_claim_maturing_section">Rijpende UTXO\'s</string>
+    <string name="qbtc_claim_maturing_confirmations_label">bevestigingen</string>
+    <string name="qbtc_claim_maturing_blocks">~%1$d blokken</string>
     <string name="qbtc_claim_cta_all">Alles claimen</string>
     <string name="qbtc_claim_cta_partial">%1$d van %2$d claimen</string>
     <string name="qbtc_claim_proving">Bewijs genereren en uitzenden…</string>

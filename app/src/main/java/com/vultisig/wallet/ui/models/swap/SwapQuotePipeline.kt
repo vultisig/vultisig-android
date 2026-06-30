@@ -4,6 +4,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
@@ -48,6 +49,15 @@ internal sealed interface NetworkFeeUpdate {
         val formattedFiatValue: String,
     ) : NetworkFeeUpdate
 }
+
+/** Maps a resolved [EstimatedGasFee] onto the network-fee update written into the form state. */
+private fun EstimatedGasFee.toNetworkFeeSet() =
+    NetworkFeeUpdate.Set(
+        tokenValue = tokenValue,
+        fiatValue = fiatValue,
+        formattedTokenValue = formattedTokenValue,
+        formattedFiatValue = formattedFiatValue,
+    )
 
 /**
  * Outcome of [SwapQuotePipeline.resolveNetworkFee]: the network-fee mutation to apply (or `null` to
@@ -453,6 +463,7 @@ internal class SwapQuotePipeline(
         var formError: UiText? = null
         var networkFee: NetworkFeeUpdate? = null
         var effectiveNetworkFeeTokenValue = networkFeeTokenValue
+        val quote = result.quote
 
         if (result.isUtxoSwap) {
             val currentGasFee = gasFee?.takeIf { gasFeeChain == srcToken.chain }
@@ -470,13 +481,7 @@ internal class SwapQuotePipeline(
                         )
                 ) {
                     is UtxoPlanFeeResult.Success -> {
-                        networkFee =
-                            NetworkFeeUpdate.Set(
-                                tokenValue = planFee.estimated.tokenValue,
-                                fiatValue = planFee.estimated.fiatValue,
-                                formattedTokenValue = planFee.estimated.formattedTokenValue,
-                                formattedFiatValue = planFee.estimated.formattedFiatValue,
-                            )
+                        networkFee = planFee.estimated.toNetworkFeeSet()
                         effectiveNetworkFeeTokenValue = planFee.estimated.tokenValue
                         isSwapDisabled = false
                     }
@@ -498,6 +503,29 @@ internal class SwapQuotePipeline(
                 // previous chain. isSwapDisabled stays true until the plan fee is verified.
                 networkFee = NetworkFeeUpdate.Clear
                 effectiveNetworkFeeTokenValue = null
+            }
+        } else if (quote is SwapQuote.OneInch && srcToken.chain.standard == TokenStandard.EVM) {
+            val currentGasFee = gasFee?.takeIf { gasFeeChain == srcToken.chain }
+            if (currentGasFee == null) {
+                // gasFeeChain lags srcToken.chain right after a token switch; clear the previous
+                // chain's stale fee so it isn't shown or validated against (mirrors the UTXO
+                // branch).
+                networkFee = NetworkFeeUpdate.Clear
+                effectiveNetworkFeeTokenValue = null
+            } else {
+                // Re-base the gas-pass's flat estimate onto the EVM aggregator route's real gas
+                // (#5056); no usable route gas (e.g. Jupiter's Solana quotes) keeps the gas-pass
+                // fee.
+                val rebased =
+                    swapGasCalculator.rebaseEvmSwapNetworkFee(
+                        srcToken = srcToken,
+                        baselineGasFee = currentGasFee,
+                        routeGas = quote.data.tx.gas,
+                    )
+                if (rebased != null) {
+                    networkFee = rebased.estimated.toNetworkFeeSet()
+                    effectiveNetworkFeeTokenValue = rebased.estimated.tokenValue
+                }
             }
         }
 

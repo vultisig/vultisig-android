@@ -234,13 +234,9 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         chain: Chain,
     ): BigInteger {
         if (swap) {
-            // Ethereum swap calldata embeds a short deadline (1inch ~1–5 min, Kyber 20 min).
-            // The stored Eip1559.networkPrice ends up at baseFee × 1.5 for Ethereum
-            // (× 1.1 for other chains), and calculateMaxFeePerGas then bumps it by a
-            // further 20%, so the broadcast ceiling is baseFee × 1.8 + priorityFee on
-            // Ethereum (× 1.32 elsewhere). This is sized to survive base-fee spikes
-            // during the MPC review + sign window so the tx still lands before the
-            // deadline.
+            // Ethereum swaps bump the committed base 50% (×1.8 ceiling after calculateMaxFeePerGas)
+            // to survive base-fee spikes across the MPC sign window before the embedded DEX
+            // deadline — a lower bump caused stuck/expired ETH mainnet swaps. Other chains use 10%.
             val bumpPercent = if (chain == Chain.Ethereum) 50 else 10
             return baseNetworkPrice.increaseByPercent(bumpPercent)
         }

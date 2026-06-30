@@ -4,7 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -143,11 +146,13 @@ internal fun <T> TokenSelectionList(
                 notFoundContent()
             } else
                 Box(modifier = Modifier.weight(1f)) {
+                    val navigationBarPadding =
+                        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
                     LazyVerticalGrid(
                         columns = GridCells.Adaptive(minSize = 74.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(bottom = 60.dp),
+                        contentPadding = PaddingValues(bottom = 60.dp + navigationBarPadding),
                     ) {
                         groups.forEachIndexed { groupIndex, (title, items, mapper, plusUiModel) ->
                             title?.let {

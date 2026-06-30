@@ -68,7 +68,6 @@ fun SettingsScreen() {
         onBackClick = viewModel::back,
         onContinueReferral = viewModel::onContinueReferralBottomSheet,
         onDismissReferral = viewModel::onDismissReferralBottomSheet,
-        onShareVaultQrClick = viewModel::onShareVaultQrClick,
         onDismissShareLink = viewModel::onDismissShareLinkBottomSheet,
         onVersionClick = viewModel::onVersionClick,
     )
@@ -78,19 +77,13 @@ fun SettingsScreen() {
 private fun SettingsScreen(
     state: SettingsUiModel,
     onSettingsItemClick: (SettingsItem) -> Unit,
-    onShareVaultQrClick: () -> Unit,
     onBackClick: () -> Unit,
     onContinueReferral: () -> Unit,
     onDismissReferral: () -> Unit,
     onDismissShareLink: () -> Unit,
     onVersionClick: () -> Unit,
 ) {
-    V2Scaffold(
-        title = stringResource(R.string.settings_screen_title),
-        onBackClick = onBackClick,
-        rightIcon = R.drawable.navigation_qr_code,
-        onRightIconClick = onShareVaultQrClick,
-    ) {
+    V2Scaffold(title = stringResource(R.string.settings_screen_title), onBackClick = onBackClick) {
         Column(
             modifier = Modifier.verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -300,7 +293,6 @@ internal fun SettingsScreenPreview() {
         onBackClick = {},
         onContinueReferral = {},
         onDismissReferral = {},
-        onShareVaultQrClick = {},
         onDismissShareLink = {},
         onVersionClick = {},
     )

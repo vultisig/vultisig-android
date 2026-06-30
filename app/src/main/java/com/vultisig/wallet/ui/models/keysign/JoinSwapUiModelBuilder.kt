@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
+import com.vultisig.wallet.ui.models.swap.evmSwapDisplayGasLimit
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import com.vultisig.wallet.ui.models.swap.resolveExternalSwapRecipient
 import java.math.BigInteger
@@ -86,6 +87,12 @@ constructor(
 
         val chain = srcToken.chain
         val blockChainSpecific = payload.blockChainSpecific
+        // EVM aggregator display gas limit, computed with the same rule as the initiator so both
+        // co-signers show the same fee; null for native deposits and OP-stack L2s (#5056).
+        val aggregatorDisplayGasLimit =
+            (swapPayload as? SwapPayload.EVM)?.let {
+                evmSwapDisplayGasLimit(srcToken, it.data.quote.tx.gas)
+            }
         val gasFee =
             when {
                 chain.standard == TokenStandard.UTXO && chain != Chain.Cardano -> {
@@ -101,6 +108,7 @@ constructor(
                     computeJoinKeysignSwapNetworkFee(
                         blockChainSpecific = blockChainSpecific,
                         nativeCoin = nativeToken,
+                        aggregatorDisplayGasLimit = aggregatorDisplayGasLimit,
                     )
                 else -> {
                     val (nativeTokenAddress, _) =

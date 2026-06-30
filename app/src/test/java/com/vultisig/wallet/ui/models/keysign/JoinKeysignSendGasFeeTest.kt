@@ -179,6 +179,32 @@ internal class JoinKeysignSendGasFeeTest {
             )
     }
 
+    /**
+     * Swap helper: an EVM aggregator route supplies the display gas limit the initiator computed,
+     * and the joiner values the fee at it directly so both co-signers match (#5056).
+     */
+    @Test
+    fun `evm swap helper values the fee at the supplied aggregator display gas limit`() {
+        val displayGasLimit = BigInteger.valueOf(286_146)
+        val maxFeePerGasWei = BigInteger.valueOf(30_000_000_000L)
+        val specific =
+            BlockChainSpecific.Ethereum(
+                maxFeePerGasWei = maxFeePerGasWei,
+                priorityFeeWei = BigInteger.valueOf(1_000_000_000L),
+                nonce = BigInteger.ZERO,
+                gasLimit = BigInteger.valueOf(40_000),
+            )
+
+        val result =
+            computeJoinKeysignSwapNetworkFee(
+                blockChainSpecific = specific,
+                nativeCoin = ethCoin,
+                aggregatorDisplayGasLimit = displayGasLimit,
+            )
+
+        result shouldBe TokenValue(value = maxFeePerGasWei * displayGasLimit, token = ethCoin)
+    }
+
     /** Swap helper: THORChain returns blockChainSpecific.fee. */
     @Test
     fun `thorchain swap helper uses blockChainSpecific fee`() {

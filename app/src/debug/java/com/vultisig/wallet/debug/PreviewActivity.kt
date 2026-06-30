@@ -70,8 +70,10 @@ import com.vultisig.wallet.ui.components.v2.fastselection.components.ChainSelect
 import com.vultisig.wallet.ui.components.v2.fastselection.components.SelectPopup
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.AccountUiModel
+import com.vultisig.wallet.ui.models.ChainSelectionUiModel
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
+import com.vultisig.wallet.ui.models.ChainUiModel
 import com.vultisig.wallet.ui.models.DeviceMeta
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
@@ -97,6 +99,7 @@ import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
+import com.vultisig.wallet.ui.models.qbtc.QbtcClaimMaturingUtxoUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
@@ -106,6 +109,7 @@ import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VultTierGateUiModel
 import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesUiState
+import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingPositionsContent
@@ -246,6 +250,7 @@ class PreviewActivity : ComponentActivity() {
                     "qbtc_claim_done" -> QbtcClaimDonePreview()
                     "qbtc_claim_error" -> QbtcClaimErrorPreview()
                     "qbtc_claim_blocked" -> QbtcClaimBlockedPreview()
+                    "qbtc_claim_maturing" -> QbtcClaimMaturingPreview()
                     "keysign_signing_lunc" -> KeysignSigningLuncPreview()
                     "circle_usdc_widget" -> CircleUsdcWidgetPreview()
                     "btc_detail_claim" -> BtcDetailClaimPreview()
@@ -272,6 +277,7 @@ class PreviewActivity : ComponentActivity() {
                     "vault_detail_no_mldsa" -> VaultDetailPreview(withMldsa = false)
                     "vault_detail_mldsa" -> VaultDetailPreview(withMldsa = true)
                     "error_screen_after" -> ErrorScreenAfterPreview()
+                    "chain_selection" -> ChainSelectionClipPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -284,6 +290,30 @@ class PreviewActivity : ComponentActivity() {
 // "Show exact error" disclosure that opens the raw-trace sheet. Rendered as the "Transaction
 // failed"
 // critical case with a real stack trace so the disclosure row is visible.
+/**
+ * "Select chains" bottom sheet (#5084) rendered with the full chain list so the grid overflows and
+ * scrolls. Used to verify the last row's label (alphabetically Zcash) is no longer clipped behind
+ * the system navigation bar. Scroll to the bottom before capturing.
+ */
+@Composable
+private fun ChainSelectionClipPreview() {
+    val chains = remember {
+        Coins.coins.values
+            .mapNotNull { it.firstOrNull() }
+            .sortedBy { it.chain.raw }
+            .map { ChainUiModel(isEnabled = it.chain == Chain.Bitcoin, coin = it) }
+    }
+    ChainSelectionScreen(
+        title = "Select chains",
+        state = ChainSelectionUiModel(chains = chains),
+        searchTextFieldState = remember { TextFieldState() },
+        onEnableAccount = {},
+        onDisableAccount = {},
+        onCommitChanges = {},
+        onBackClick = {},
+    )
+}
+
 @Composable
 private fun ErrorScreenAfterPreview() {
     ErrorView(
@@ -2051,6 +2081,41 @@ private fun QbtcClaimErrorPreview() {
 private fun QbtcClaimBlockedPreview() {
     QbtcClaimScreen(
         state = QbtcClaimUiState.Blocked(reason = QbtcClaimBlockedReason.NoUtxos),
+        isFastVault = true,
+        onBackClick = {},
+        onToggle = {},
+        onConfirm = {},
+        onStartSecureVault = {},
+        onRetry = {},
+    )
+}
+
+// The "all maturing" empty state for issue #4798 — no UTXO is claimable yet.
+@Composable
+private fun QbtcClaimMaturingPreview() {
+    QbtcClaimScreen(
+        state =
+            QbtcClaimUiState.Maturing(
+                utxos =
+                    listOf(
+                        QbtcClaimMaturingUtxoUiModel(
+                            key = "a3f1:0",
+                            shortId = "a3f1…8d2c:0",
+                            confirmationsCount = "112/144",
+                            remainingBlocks = 32,
+                            qbtcAmount = "0.75 QBTC",
+                            btcAmount = "0.75 BTC",
+                        ),
+                        QbtcClaimMaturingUtxoUiModel(
+                            key = "b7c4:2",
+                            shortId = "b7c4…1e9f:2",
+                            confirmationsCount = "58/144",
+                            remainingBlocks = 86,
+                            qbtcAmount = "0.25 QBTC",
+                            btcAmount = "0.25 BTC",
+                        ),
+                    )
+            ),
         isFastVault = true,
         onBackClick = {},
         onToggle = {},

@@ -10,9 +10,11 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.DefiChainUiModel
 import com.vultisig.wallet.data.models.isDeFiSupported
 import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.HasCircleAccountUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.VaultAccountsViewModel.Companion.REFRESH_CHAIN_DATA
 import com.vultisig.wallet.ui.models.mappers.ChainToDefiChainUiMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -48,6 +50,7 @@ constructor(
     private val hasCircleAccount: HasCircleAccountUseCase,
     private val mapChainDefi: ChainToDefiChainUiMapper,
     private val navigator: Navigator<Destination>,
+    private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.AddDeFiChainAccount>()
@@ -128,6 +131,7 @@ constructor(
                     .map { it.defiChain.chain }
                     .toSet()
             defaultDeFiChainsRepository.setDefaultChains(vaultId, chains)
+            requestResultRepository.respond(REFRESH_CHAIN_DATA, Unit)
             navigator.back()
         }
     }

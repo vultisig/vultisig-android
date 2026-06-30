@@ -281,6 +281,7 @@ private fun androidx.compose.foundation.layout.BoxScope.FooterSummary(
             variant = VsButtonVariant.CTA,
             state =
                 if (isSubmitting || !isValidForm) VsButtonState.Disabled else VsButtonState.Enabled,
+            isLoading = isSubmitting,
             onClick = onSubmit,
             modifier = Modifier.fillMaxWidth(),
         )

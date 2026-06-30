@@ -54,7 +54,6 @@ import com.vultisig.wallet.ui.screens.DeFiChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ImportFileScreen
 import com.vultisig.wallet.ui.screens.OnRampScreen
 import com.vultisig.wallet.ui.screens.SecretScreen
-import com.vultisig.wallet.ui.screens.ShareVaultQrScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
@@ -247,8 +246,6 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         }
 
         composable<Route.ConfirmDelete> { ConfirmDeleteScreen(navController) }
-
-        composable<Route.ShareVaultQr> { ShareVaultQrScreen(navController = navController) }
 
         dialog<Route.CustomToken> { CustomTokenScreen() }
 

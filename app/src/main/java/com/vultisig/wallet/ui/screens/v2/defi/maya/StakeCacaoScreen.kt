@@ -219,6 +219,7 @@ private fun StakeCacaoContent(
             label = stringResource(R.string.send_continue_button),
             variant = VsButtonVariant.CTA,
             state = if (isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
+            isLoading = isLoading,
             onClick = onDeposit,
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
         )
