@@ -136,7 +136,10 @@ constructor(
                                         tokenLogo = getCoinLogo(token.logo),
                                         chainLogo = chain.logo,
                                         mergeBalance = mergedBalance,
-                                        price = account.price?.let { fiatValueToStringMapper(it) },
+                                        price =
+                                            account.price?.let {
+                                                fiatValueToStringMapper(it, asPrice = true)
+                                            },
                                         network = token.chain.raw,
                                     )
 
