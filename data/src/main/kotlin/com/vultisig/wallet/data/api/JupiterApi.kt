@@ -145,13 +145,16 @@ constructor(
 
     /**
      * Raise the transaction's `SetComputeUnitLimit` by [extraUnits]. Returns [txData] unchanged
-     * when it carries no limit instruction (nothing to rebase) or wallet-core cannot re-encode it.
+     * when it carries no limit instruction (nothing to rebase). Fails closed if the limit exists
+     * but can't be re-encoded: returning the original would broadcast a tx whose budget doesn't
+     * cover the just-prepended ATA create, guaranteeing an on-chain revert — better to drop Jupiter
+     * and fall back to another provider.
      */
     private fun bumpComputeUnitLimit(txData: String, extraUnits: BigInteger): String {
         val currentLimit =
             SolanaTransaction.getComputeUnitLimit(txData)?.toBigIntegerOrNull() ?: return txData
         return SolanaTransaction.setComputeUnitLimit(txData, (currentLimit + extraUnits).toString())
-            ?: txData
+            ?: error("[Jupiter] Failed to re-encode SetComputeUnitLimit after prepending fee ATA")
     }
 
     internal companion object {

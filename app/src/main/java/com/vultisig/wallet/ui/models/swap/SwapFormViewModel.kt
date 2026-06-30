@@ -464,7 +464,11 @@ constructor(
                 // whose ~0.002 SOL rent the payer (this wallet) funds but the network-fee estimate
                 // doesn't include. Reserve it on native-SOL MAX so the first such swap can't
                 // underfund and fail on submit; it leaves harmless dust when no ATA is created.
-                if (srcToken.chain == Chain.Solana) baseFee + SOLANA_FEE_ATA_RENT_RESERVE
+                // Jupiter only handles same-chain Solana, so a SOL→non-Solana MAX (routed via
+                // THORChain/LI.FI) never creates a fee ATA — don't reserve dust for it.
+                val dstChain = selectedDst.value?.account?.token?.chain
+                if (srcToken.chain == Chain.Solana && dstChain == Chain.Solana)
+                    baseFee + SOLANA_FEE_ATA_RENT_RESERVE
                 else baseFee
             } else {
                 BigInteger.ZERO
