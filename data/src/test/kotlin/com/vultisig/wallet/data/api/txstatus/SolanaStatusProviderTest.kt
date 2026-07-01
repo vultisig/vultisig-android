@@ -40,7 +40,10 @@ class SolanaStatusProviderTest {
         coEvery { solanaApi.checkStatus(any()) } returns
             response(SolanaSignatureStatus(confirmationStatus = "finalized", err = err))
 
-        assertEquals(TransactionResult.Failed(err.toString()), provider.checkStatus("h", Chain.Solana))
+        assertEquals(
+            TransactionResult.Failed(err.toString()),
+            provider.checkStatus("h", Chain.Solana),
+        )
     }
 
     @Test
@@ -49,7 +52,10 @@ class SolanaStatusProviderTest {
         coEvery { solanaApi.checkStatus(any()) } returns
             response(SolanaSignatureStatus(confirmationStatus = "processed", err = err))
 
-        assertEquals(TransactionResult.Failed(err.toString()), provider.checkStatus("h", Chain.Solana))
+        assertEquals(
+            TransactionResult.Failed(err.toString()),
+            provider.checkStatus("h", Chain.Solana),
+        )
     }
 
     @Test

@@ -16,8 +16,8 @@ internal class SolanaStatusProvider @Inject constructor(private val solanaApi: S
             val status = solanaApi.checkStatus(txHash)?.result?.value?.firstOrNull()
             when {
                 // A landed tx with `err` set executed but reverted (swap slippage, insufficient
-                // funds, etc.). Since broadcast uses skipPreflight, these reach the chain, so report
-                // failure instead of treating a finalized-but-failed tx as confirmed (matches iOS).
+                // funds, etc.). Report failure instead of treating a finalized-but-failed tx as
+                // confirmed (matches iOS).
                 status?.err != null -> TransactionResult.Failed(status.err.toString())
                 else ->
                     when (status?.confirmationStatus) {

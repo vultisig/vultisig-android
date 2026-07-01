@@ -85,8 +85,8 @@ object MockHttpClient {
 
     /**
      * Like [respondingWith], but records each outgoing request body into [capture] so a test can
-     * assert what was sent (e.g. RPC params). The MockEngine block runs sequentially within a single
-     * coroutine, so a plain field is sufficient.
+     * assert what was sent (e.g. RPC params). The MockEngine block runs sequentially within a
+     * single coroutine, so a plain field is sufficient.
      */
     fun capturingRequest(
         status: HttpStatusCode,
