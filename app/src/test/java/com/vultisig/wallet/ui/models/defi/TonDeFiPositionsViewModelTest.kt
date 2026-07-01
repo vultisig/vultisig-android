@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.models.defi
 import com.vultisig.wallet.data.api.chains.ton.TonAccountStakingInfoJson
 import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
 import com.vultisig.wallet.data.api.chains.ton.TonStakingPoolInfoJson
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
@@ -140,18 +139,56 @@ internal class TonDeFiPositionsViewModelTest {
     }
 
     @Test
-    fun `stake routes into the deposit flow with the TON stake action`() = runTest {
+    fun `a first-time stake opens the stake screen with no preselected pool`() = runTest {
         coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } returns emptyList()
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
         vm.onStake()
 
         coVerify(exactly = 1) {
-            navigator.route(
-                Route.Deposit(vaultId = VAULT_ID, chainId = Chain.Ton.id, depositType = "stake_ton")
-            )
+            navigator.route(Route.TonStake(vaultId = VAULT_ID, poolAddress = null))
         }
+        coVerify(exactly = 0) { navigator.route(match { it is Route.Deposit }) }
     }
+
+    @Test
+    fun `adding to an existing position opens the stake screen with its pool prefilled`() =
+        runTest {
+            coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } returns
+                listOf(TonAccountStakingInfoJson(pool = POOL, amount = 50_000_000_000L))
+            coEvery { tonStakingApi.getStakingPool(POOL) } returns
+                TonStakingPoolInfoJson(name = "Whales", apy = 5.0)
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+            vm.onStake()
+
+            coVerify(exactly = 1) {
+                navigator.route(Route.TonStake(vaultId = VAULT_ID, poolAddress = POOL))
+            }
+            coVerify(exactly = 0) { navigator.route(match { it is Route.Deposit }) }
+        }
+
+    @Test
+    fun `unstake opens the unstake confirmation carrying the existing pool and staked amount`() =
+        runTest {
+            coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } returns
+                listOf(TonAccountStakingInfoJson(pool = POOL, amount = 50_000_000_000L))
+            coEvery { tonStakingApi.getStakingPool(POOL) } returns
+                TonStakingPoolInfoJson(name = "Whales", apy = 5.0)
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+            vm.onUnstake()
+
+            coVerify(exactly = 1) {
+                navigator.route(
+                    Route.TonUnstake(
+                        vaultId = VAULT_ID,
+                        poolAddress = POOL,
+                        stakedDisplay = "50 GRAM",
+                    )
+                )
+            }
+        }
 
     private fun createViewModel(): TonDeFiPositionsViewModel =
         TonDeFiPositionsViewModel(

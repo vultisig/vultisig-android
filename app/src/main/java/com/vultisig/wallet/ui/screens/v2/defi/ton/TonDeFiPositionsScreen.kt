@@ -213,7 +213,10 @@ private fun TonDeFiPositionsScreenContent(
                             val isTonSelected = state.selectedPositions.contains("TON")
                             if (!isTonSelected) {
                                 item { NoPositionsContainer() }
-                            } else if (tonData.hasPosition) {
+                            } else {
+                                // Always render the position card (zeroed when there's no
+                                // position),
+                                // with Unstake disabled until there is one — mirrors iOS/macOS.
                                 item {
                                     TonStakingPositionCard(
                                         data = tonData,
@@ -222,8 +225,6 @@ private fun TonDeFiPositionsScreenContent(
                                         onClickUnstake = onClickUnstake,
                                     )
                                 }
-                            } else {
-                                item { TonNoPositionCard(onClickStake = onClickStake) }
                             }
                         }
                     }
@@ -308,7 +309,10 @@ private fun TonStakingPositionCard(
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = data.poolName,
+                text =
+                    data.poolName.ifBlank {
+                        stringResource(R.string.ton_defi_staked_amount, data.ticker)
+                    },
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.tertiary,
             )
@@ -369,8 +373,10 @@ private fun TonStakingPositionCard(
                 VsButton(
                     label = stringResource(R.string.defi_action_unstake),
                     variant = VsButtonVariant.Secondary,
+                    // Unstake needs an existing position; disabled at 0 staked (and while locked).
                     state =
-                        if (data.isActionLocked) VsButtonState.Disabled else VsButtonState.Enabled,
+                        if (data.hasPosition && !data.isActionLocked) VsButtonState.Enabled
+                        else VsButtonState.Disabled,
                     onClick = onClickUnstake,
                     modifier = Modifier.weight(1f),
                 )
@@ -427,31 +433,6 @@ private fun TonUnlockNotice(data: TonStakingUiModel) {
             text = unlockText,
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
-        )
-    }
-}
-
-/** Empty-state card with a Stake call-to-action when the account holds no TON position. */
-@Composable
-private fun TonNoPositionCard(onClickStake: () -> Unit) {
-    Column(
-        modifier =
-            Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Theme.v2.colors.backgrounds.secondary)
-                .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(16.dp))
-                .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.ton_defi_no_position),
-            style = Theme.brockmann.body.m.medium,
-            color = Theme.v2.colors.text.secondary,
-        )
-        VsButton(
-            label = stringResource(R.string.defi_action_stake),
-            onClick = onClickStake,
-            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

@@ -21,7 +21,6 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.formatPercentage
-import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
@@ -44,6 +43,7 @@ private const val TON_KEY = "TON"
 @Immutable
 internal data class TonStakingUiModel(
     val totalAmountPrice: String = "",
+    val ticker: String = "",
     val poolName: String = "",
     val stakedDisplay: String = "",
     val stakedFiatDisplay: String = "",
@@ -106,6 +106,10 @@ constructor(
 
     private var vaultId: VaultId = ""
     private var cachedTonCoin: Coin? = null
+    /** Address of the pool backing the current position; drives add-more/unstake routing. */
+    private var cachedPoolAddress: String? = null
+    /** Staked amount shown on the unstake confirmation screen. */
+    private var cachedStakedDisplay: String = ""
     private var loadJob: Job? = null
 
     fun setData(vaultId: VaultId) {
@@ -158,9 +162,25 @@ constructor(
                         it.stakedTotal()
                     }
 
+                cachedPoolAddress = primary?.takeIf { it.stakedTotal() > BigInteger.ZERO }?.pool
+                cachedStakedDisplay =
+                    primary
+                        ?.takeIf { it.stakedTotal() > BigInteger.ZERO }
+                        ?.let {
+                            "${it.stakedTotal().toBigDecimal().movePointLeft(tonCoin.decimal).stripTrailingZeros().toPlainString()} ${tonCoin.ticker}"
+                        }
+                        .orEmpty()
+
                 val tonData =
                     if (primary == null || primary.stakedTotal() == BigInteger.ZERO) {
-                        TonStakingUiModel(hasPosition = false)
+                        // Show a zeroed position card (with a disabled Unstake) rather than an
+                        // empty state, mirroring iOS/macOS which always render the card.
+                        TonStakingUiModel(
+                            ticker = tonCoin.ticker,
+                            stakedDisplay = "0 ${tonCoin.ticker}",
+                            stakedFiatDisplay = currencyFormat.format(BigDecimal.ZERO),
+                            hasPosition = false,
+                        )
                     } else {
                         buildPositionUiModel(
                             staked = primary.stakedTotal(),
@@ -198,6 +218,7 @@ constructor(
 
         return TonStakingUiModel(
             totalAmountPrice = stakedFiat,
+            ticker = coin.ticker,
             poolName = poolInfo?.name?.takeIf { it.isNotBlank() } ?: shortPool(poolAddress),
             stakedDisplay = "${stakedTon.stripTrailingZeros().toPlainString()} ${coin.ticker}",
             stakedFiatDisplay = stakedFiat,
@@ -267,24 +288,36 @@ constructor(
         }
     }
 
-    fun onStake() = navigateToDeposit(DeFiNavActions.STAKE_TON)
+    /**
+     * Opens the dedicated Stake screen. An existing position prefills its pool (add-more); a
+     * first-time stake leaves the pool unset so the user picks one there — mirroring macOS "Stake
+     * TON".
+     */
+    fun onStake() {
+        viewModelScope.safeLaunch(onError = { e -> Timber.e(e, "Failed to open TON stake") }) {
+            if (cachedTonCoin == null) {
+                refresh()
+                return@safeLaunch
+            }
+            navigator.route(Route.TonStake(vaultId = vaultId, poolAddress = cachedPoolAddress))
+        }
+    }
 
     fun onUnstake() {
         val locked = (_state.value as? TonDeFiUiState.Success)?.tonData?.isActionLocked ?: false
         if (locked) return
-        navigateToDeposit(DeFiNavActions.UNSTAKE_TON)
-    }
-
-    private fun navigateToDeposit(action: DeFiNavActions) {
-        viewModelScope.safeLaunch(
-            onError = { e -> Timber.e(e, "Failed to navigate for action %s", action) }
-        ) {
+        val poolAddress = cachedPoolAddress ?: return
+        viewModelScope.safeLaunch(onError = { e -> Timber.e(e, "Failed to open TON unstake") }) {
             if (cachedTonCoin == null) {
                 refresh()
                 return@safeLaunch
             }
             navigator.route(
-                Route.Deposit(vaultId = vaultId, chainId = Chain.Ton.id, depositType = action.type)
+                Route.TonUnstake(
+                    vaultId = vaultId,
+                    poolAddress = poolAddress,
+                    stakedDisplay = cachedStakedDisplay,
+                )
             )
         }
     }
