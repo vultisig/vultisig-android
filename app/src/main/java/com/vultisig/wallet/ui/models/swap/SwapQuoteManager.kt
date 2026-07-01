@@ -924,8 +924,15 @@ constructor(
                 // provider's fetch, so the picker falls back to another route or surfaces "route
                 // not available" instead of signing a doomed tx (#5131).
                 if (srcToken.chain == Chain.Solana) {
-                    val accountLocks = SolanaSwap.countAccountLocks(apiQuote.tx.data)
-                    if (accountLocks > SolanaSwap.MAX_TX_ACCOUNT_LOCKS) {
+                    // Only drop a route we can positively confirm is over the cap. A real over-cap
+                    // tx decodes cleanly (count > 64); if decoding fails for any reason, fall back
+                    // to the pre-guard behavior and let the route proceed rather than abort the
+                    // whole fetch on an undecodable tx.
+                    val accountLocks =
+                        runCatching { SolanaSwap.countAccountLocks(apiQuote.tx.data) }
+                            .onFailure { Timber.w(it, "Failed to count Solana swap account locks") }
+                            .getOrNull()
+                    if (accountLocks != null && accountLocks > SolanaSwap.MAX_TX_ACCOUNT_LOCKS) {
                         throw SwapException.SwapRouteNotAvailable(
                             "[$provider] Solana swap tx locks $accountLocks accounts, " +
                                 "exceeding the ${SolanaSwap.MAX_TX_ACCOUNT_LOCKS}-account limit"
