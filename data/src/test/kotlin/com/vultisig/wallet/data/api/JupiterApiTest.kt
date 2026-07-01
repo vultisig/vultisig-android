@@ -167,6 +167,40 @@ class JupiterApiTest {
         )
     }
 
+    @Test
+    fun `a swap simulationError drops the Jupiter route`() {
+        // Jupiter's /swap response carries a non-null simulationError (the built tx would fail
+        // on-chain). getSwapQuote must throw so the doomed route is never offered/signed — and it
+        // must throw before the native compute-budget step, so no JNI is reached.
+        val api =
+            jupiterApiImpl(
+                service = FakeFeeAtaService(feeAccount = FEE_ACCOUNT),
+                engine =
+                    MockEngine { request ->
+                        if (request.url.encodedPath.endsWith("/quote")) {
+                            respond(
+                                content = routeResponseJson(null),
+                                status = HttpStatusCode.OK,
+                                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                            )
+                        } else {
+                            respond(
+                                content =
+                                    """{"swapTransaction":"$SWAP_TX","simulationError":{"errorCode":"TRANSACTION_ERROR","error":"Error processing Instruction 2: custom program error: 0x1789"}}""",
+                                status = HttpStatusCode.OK,
+                                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                            )
+                        }
+                    },
+            )
+
+        assertThrows(SwapException.SwapRouteNotAvailable::class.java) {
+            runBlocking {
+                api.getSwapQuote(QUOTE_AMOUNT, INPUT_MINT, OUTPUT_MINT, WALLET, null, null)
+            }
+        }
+    }
+
     /**
      * The quote GET returns 429 so [JupiterApi.getSwapQuote] short-circuits before the swap POST
      * and its WalletCore compute-budget step, keeping the slippage tests on the request they assert
