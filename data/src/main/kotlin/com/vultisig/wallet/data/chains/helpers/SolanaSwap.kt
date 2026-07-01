@@ -115,8 +115,8 @@ class SolanaSwap(private val vaultHexPublicKey: String) {
 
         /**
          * Counts the accounts a decoded [rawMessage] locks. A v0 message locks its static account
-         * keys plus every writable/readonly index across its address-table lookups; a legacy message
-         * has no lookups, so it locks only its static account keys.
+         * keys plus every writable/readonly index across its address-table lookups; a legacy
+         * message has no lookups, so it locks only its static account keys.
          */
         fun countAccountLocks(rawMessage: Solana.RawMessage): Int =
             when {
