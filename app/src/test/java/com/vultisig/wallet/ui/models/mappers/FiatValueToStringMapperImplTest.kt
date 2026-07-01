@@ -96,18 +96,48 @@ internal class FiatValueToStringMapperImplTest {
     @Test
     fun `asPrice reveals a sub-cent token price instead of collapsing to zero`() = runTest {
         // LUNC-like price: standard formatting shows $0.00, asPrice reveals the leading figures.
-        mapper(FiatValue(BigDecimal("0.00006"), "USD"), asPrice = true) shouldBe "$0.00006"
+        // Four leading zeros collapse into subscript notation.
+        mapper(FiatValue(BigDecimal("0.00006"), "USD"), asPrice = true) shouldBe "$0.0₄6"
     }
 
     @Test
-    fun `asPrice shows two significant figures of a long sub-cent price`() = runTest {
-        mapper(FiatValue(BigDecimal("0.00006123"), "USD"), asPrice = true) shouldBe "$0.000061"
+    fun `asPrice keeps up to four significant figures of a sub-cent price`() = runTest {
+        mapper(FiatValue(BigDecimal("0.00006123"), "USD"), asPrice = true) shouldBe "$0.0₄6123"
     }
 
     @Test
-    fun `asPrice caps precision at eight fraction digits for micro prices`() = runTest {
-        // Two significant figures would need 9 digits; capped to 8 → rounds to $0.00000012.
-        mapper(FiatValue(BigDecimal("0.000000123"), "USD"), asPrice = true) shouldBe "$0.00000012"
+    fun `asPrice rounds HALF_UP to four significant figures`() = runTest {
+        mapper(FiatValue(BigDecimal("0.000061237"), "USD"), asPrice = true) shouldBe "$0.0₄6124"
+    }
+
+    @Test
+    fun `asPrice renders a micro price with the leading-zero count as a subscript`() = runTest {
+        // 0.000000123 -> six leading zeros -> $0.0₆123.
+        mapper(FiatValue(BigDecimal("0.000000123"), "USD"), asPrice = true) shouldBe "$0.0₆123"
+    }
+
+    @Test
+    fun `asPrice uses subscript notation for extremely tiny prices`() = runTest {
+        // Parity with desktop: 0.00000003 -> seven leading zeros -> $0.0₇3.
+        mapper(FiatValue(BigDecimal("0.00000003"), "USD"), asPrice = true) shouldBe "$0.0₇3"
+    }
+
+    @Test
+    fun `asPrice collapses four leading zeros while keeping the significant digits`() = runTest {
+        mapper(FiatValue(BigDecimal("0.00001234"), "USD"), asPrice = true) shouldBe "$0.0₄1234"
+    }
+
+    @Test
+    fun `asPrice keeps plain decimals below the subscript threshold`() = runTest {
+        // Three leading zeros stay as plain decimals (no subscript).
+        mapper(FiatValue(BigDecimal("0.0001234"), "USD"), asPrice = true) shouldBe "$0.0001234"
+        mapper(FiatValue(BigDecimal("0.00456"), "USD"), asPrice = true) shouldBe "$0.00456"
+    }
+
+    @Test
+    fun `asPrice shifts the leading-zero count when rounding carries`() = runTest {
+        // 0.0000999999 rounds up to 0.0001, dropping from four to three leading zeros -> plain.
+        mapper(FiatValue(BigDecimal("0.0000999999"), "USD"), asPrice = true) shouldBe "$0.0001"
     }
 
     @Test
