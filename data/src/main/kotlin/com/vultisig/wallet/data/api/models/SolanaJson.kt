@@ -4,6 +4,7 @@ import java.math.BigInteger
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
 @Serializable
@@ -70,7 +71,13 @@ data class SolanaRpcResponseJson<T>(
     @SerialName("error") val error: RpcError?,
 )
 
-@Serializable data class SolanaSignatureStatus(val confirmationStatus: String? = null)
+@Serializable
+data class SolanaSignatureStatus(
+    val confirmationStatus: String? = null,
+    // Non-null when the tx executed but reverted (e.g. swap slippage, insufficient funds). A Solana
+    // TransactionError is either a string or an object, so keep it as a raw JsonElement.
+    @SerialName("err") val err: JsonElement? = null,
+)
 
 @Serializable
 data class SolanaAccountInfoResponseJson(

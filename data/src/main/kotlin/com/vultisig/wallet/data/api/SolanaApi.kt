@@ -200,7 +200,11 @@ constructor(
                 RpcPayload(
                     jsonrpc = "2.0",
                     method = "sendTransaction",
-                    params = buildJsonArray { add(tx) },
+                    params =
+                        buildJsonArray {
+                            add(tx)
+                            addJsonObject { put("preflightCommitment", "confirmed") }
+                        },
                     id = 1,
                 )
             repeat(BROADCAST_MAX_ATTEMPTS) { index ->
