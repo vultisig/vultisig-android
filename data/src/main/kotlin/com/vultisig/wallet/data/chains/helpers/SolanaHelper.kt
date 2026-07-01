@@ -145,14 +145,12 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         keysignPayload.signSolana?.let { signSolana ->
-            val allHashes = mutableListOf<String>()
-            for (base64Tx in signSolana.rawTransactions) {
+            return signSolana.rawTransactions.flatMap { base64Tx ->
                 val txData =
                     android.util.Base64.decode(base64Tx, android.util.Base64.DEFAULT)
                         ?: error("Invalid base64 transaction")
-                allHashes.addAll(getPreSignedImageHashForRaw(txData))
+                getPreSignedImageHashForRaw(txData)
             }
-            return allHashes
         }
 
         val result = getPreSignedInputData(keysignPayload)
