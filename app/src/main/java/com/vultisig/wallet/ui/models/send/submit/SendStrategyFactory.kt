@@ -75,7 +75,10 @@ internal data class SendStrategies(
             DeFiNavActions.ADD_LP,
             DeFiNavActions.REMOVE_LP,
             DeFiNavActions.FREEZE_TRX,
-            DeFiNavActions.UNFREEZE_TRX -> default.submit()
+            DeFiNavActions.UNFREEZE_TRX,
+            // TON staking submits through the Deposit flow, not the Send flow.
+            DeFiNavActions.STAKE_TON,
+            DeFiNavActions.UNSTAKE_TON -> default.submit()
         }
     }
 }

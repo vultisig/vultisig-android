@@ -158,6 +158,8 @@ internal class TokenPreselectionService(
             DeFiNavActions.REMOVE_LP -> Coins.MayaChain.CACAO
             DeFiNavActions.FREEZE_TRX,
             DeFiNavActions.UNFREEZE_TRX -> Coins.Tron.TRX
+            DeFiNavActions.STAKE_TON,
+            DeFiNavActions.UNSTAKE_TON -> Coins.Ton.TON
             null -> findPreselectedToken(accounts, preSelectedChainIds, preSelectedTokenId)
         }
 }
