@@ -27,12 +27,14 @@ import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
+import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.utils.increaseByPercent
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigInteger
 import kotlin.test.assertEquals
@@ -132,6 +134,39 @@ internal class BlockChainSpecificRepositoryImplTest {
             assertEquals(
                 SOLANA_PRIORITY_FEE_LIMIT.toBigInteger(),
                 specific.priorityLimit,
+            )
+        }
+
+    @Test
+    fun `Solana swap skips the priority-fee RPC (aggregator tx carries its own compute budget)`() =
+        runTest {
+            val coin = solanaCoin()
+            val solanaApi =
+                mockk<SolanaApi> {
+                    coEvery { getRecentBlockHash() } returns "SolanaBlockHash1111"
+                    coEvery { getTokenAssociatedAccountByOwner(any(), any()) } returns (null to false)
+                }
+
+            val result =
+                repository(solanaApi = solanaApi)
+                    .getSpecific(
+                        chain = Chain.Solana,
+                        address = SOURCE_ADDRESS,
+                        token = coin,
+                        gasFee = TokenValue(BigInteger("105000"), coin),
+                        isSwap = true,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                        dstAddress = "SolRecipient1111",
+                    )
+
+            val specific = result.blockChainSpecific
+            assertTrue(specific is BlockChainSpecific.Solana)
+            // No median fetched — swap signers ignore priorityFee; it falls back to the floor price.
+            coVerify(exactly = 0) { solanaApi.getMedianPriorityFee(any()) }
+            assertEquals(
+                SOLANA_PRIORITY_FEE_PRICE.toBigInteger(),
+                (specific as BlockChainSpecific.Solana).priorityFee,
             )
         }
 
