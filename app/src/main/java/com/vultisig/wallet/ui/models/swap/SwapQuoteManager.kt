@@ -916,29 +916,7 @@ constructor(
                                 ),
                             )
                             .expectEvm(SwapProvider.JUPITER)
-                // Drop an unbroadcastable Solana route before it can be selected and signed. Any
-                // aggregator (Jupiter, LiFi/Titan) can build a tx that locks more than Solana's
-                // 64-account cap; such a tx fails sanitization at the leader with
-                // `TooManyAccountLocks` (a pre-simulation error that never surfaces in any
-                // `simulationError` field), so it can never land. Throwing here fails only this
-                // provider's fetch, so the picker falls back to another route or surfaces "route
-                // not available" instead of signing a doomed tx (#5131).
-                if (srcToken.chain == Chain.Solana) {
-                    // Only drop a route we can positively confirm is over the cap. A real over-cap
-                    // tx decodes cleanly (count > 64); if decoding fails for any reason, fall back
-                    // to the pre-guard behavior and let the route proceed rather than abort the
-                    // whole fetch on an undecodable tx.
-                    val accountLocks =
-                        runCatching { SolanaSwap.countAccountLocks(apiQuote.tx.data) }
-                            .onFailure { Timber.w(it, "Failed to count Solana swap account locks") }
-                            .getOrNull()
-                    if (accountLocks != null && accountLocks > SolanaSwap.MAX_TX_ACCOUNT_LOCKS) {
-                        throw SwapException.SwapRouteNotAvailable(
-                            "[$provider] Solana swap tx locks $accountLocks accounts, " +
-                                "exceeding the ${SolanaSwap.MAX_TX_ACCOUNT_LOCKS}-account limit"
-                        )
-                    }
-                }
+                guardSolanaAccountLocks(provider, srcToken.chain, apiQuote.tx.data)
                 val expectedDstValue =
                     TokenValue(value = apiQuote.dstAmount.toBigInteger(), token = dstToken)
                 val (feeAmount, feeCoin) =
@@ -974,6 +952,42 @@ constructor(
                 R.string.swap_for_provider_jupiter.asUiText()
             }
         return swapQuote to providerText
+    }
+
+    /**
+     * Drops an unbroadcastable Solana swap route before it can be selected and signed. Any
+     * aggregator that builds the tx — Jupiter, LiFi/Titan, or a SwapKit sub-provider such as
+     * Chainflip/NEAR Intents — can produce a tx that locks more than Solana's 64-account cap; such
+     * a tx fails sanitization at the leader with `TooManyAccountLocks` (a pre-simulation error that
+     * never surfaces in any `simulationError` field), so it can never land. Throwing here fails
+     * only this provider's fetch, so the picker falls back to another route or surfaces "route not
+     * available" instead of signing a doomed tx (#5131).
+     *
+     * Only drops a route we can positively confirm is over the cap: a real over-cap tx decodes
+     * cleanly (count > 64); if decoding fails for any reason it falls back to the pre-guard
+     * behavior and lets the route proceed rather than aborting the whole fetch on an undecodable
+     * tx.
+     *
+     * @param provider the aggregator whose route is being checked, used only for the error label.
+     * @param srcChain the source chain; the guard is a no-op unless it is [Chain.Solana].
+     * @param transactionData the base64 Solana tx blob staged on the quote's `tx.data`.
+     */
+    private fun guardSolanaAccountLocks(
+        provider: SwapProvider,
+        srcChain: Chain,
+        transactionData: String,
+    ) {
+        if (srcChain != Chain.Solana) return
+        val accountLocks =
+            runCatching { SolanaSwap.countAccountLocks(transactionData) }
+                .onFailure { Timber.w(it, "Failed to count Solana swap account locks") }
+                .getOrNull()
+        if (accountLocks != null && accountLocks > SolanaSwap.MAX_TX_ACCOUNT_LOCKS) {
+            throw SwapException.SwapRouteNotAvailable(
+                "[$provider] Solana swap tx locks $accountLocks accounts, " +
+                    "exceeding the ${SolanaSwap.MAX_TX_ACCOUNT_LOCKS}-account limit"
+            )
+        }
     }
 
     private suspend fun fetchSwapKitQuote(
@@ -1031,6 +1045,10 @@ constructor(
                         is SwapQuoteResult.Evm -> result
                     }
                 val apiQuote = evmResult.data
+                // SwapKit stages a Solana-source route (e.g. Chainflip/NEAR Intents) on the same
+                // EVM envelope with the base64 tx on `tx.data`, so the same over-lock route can
+                // reach signing here — guard it just like the Jupiter/LiFi path (#5131).
+                guardSolanaAccountLocks(SwapProvider.SWAPKIT, srcToken.chain, apiQuote.tx.data)
                 val expectedDstValue =
                     TokenValue(
                         value =
