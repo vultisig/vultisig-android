@@ -209,7 +209,9 @@ val Chain.isDepositSupported: Boolean
         when (this) {
             Chain.ThorChain,
             Chain.MayaChain,
-            Chain.Ton,
+            // TON staking (stake / unstake) lives on the DeFi tab, not the generic
+            // Functions/Deposit
+            // flow — mirroring iOS, which removed TON from the Functions flow.
             Chain.Kujira,
             Chain.GaiaChain,
             Chain.Osmosis,
@@ -294,6 +296,8 @@ val Chain.isDeFiSupported: Boolean
             Chain.MayaChain,
             Chain.Ethereum,
             Chain.Tron,
+            // TON surfaces a nominator-pool staking positions view (stake / unstake).
+            Chain.Ton,
             // Terra family + QBTC surface a DeFi (staking) positions view — delegate / undelegate /
             // redelegate / claim. Matches Windows `supportedDefiChains` + iOS DeFi-tab `.stake`.
             Chain.Terra,
