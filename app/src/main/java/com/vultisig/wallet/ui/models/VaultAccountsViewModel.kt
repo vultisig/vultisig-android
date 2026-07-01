@@ -440,6 +440,12 @@ constructor(
                                     route = ChainDashboardRoute.PositionTron(vaultId = vaultId)
                                 )
                             )
+                        account.chainName.equals(Chain.Ton.raw, true) ->
+                            navigator.route(
+                                Route.ChainDashboard(
+                                    route = ChainDashboardRoute.PositionTon(vaultId = vaultId)
+                                )
+                            )
                         account.chainName.equals(Chain.Terra.raw, true) ||
                             account.chainName.equals(Chain.TerraClassic.raw, true) ||
                             account.chainName.equals(Chain.Qbtc.raw, true) ->

@@ -199,6 +199,12 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
             )
         }
 
+        composable<Route.TonStake> { com.vultisig.wallet.ui.screens.v2.defi.ton.TonStakeScreen() }
+
+        composable<Route.TonUnstake> {
+            com.vultisig.wallet.ui.screens.v2.defi.ton.TonUnstakeScreen()
+        }
+
         composable<Route.CosmosStakingDelegate> {
             com.vultisig.wallet.ui.screens.cosmosstaking.CosmosDelegateScreen()
         }
