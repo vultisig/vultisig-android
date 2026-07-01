@@ -117,9 +117,12 @@ internal fun resolveSigningError(rawMessage: String): SigningError {
  */
 @Composable
 private fun onChainRejectionDescription(rawMessage: String): String {
+    // Match the marker the same way the branch does (case + spaces/underscores insensitive) so the
+    // on-chain reason after it isn't lost for wordings like "SimulationFailed: AccountLoadedTwice".
     val detail =
-        rawMessage
-            .substringAfter("simulation failed", "")
+        SIMULATION_FAILED_MARKER.find(rawMessage)
+            ?.let { rawMessage.substring(it.range.last + 1) }
+            .orEmpty()
             .trimStart(':', ' ')
             .let { raw ->
                 if (raw.length > BROADCAST_DETAIL_MAX_LENGTH) {
@@ -159,6 +162,9 @@ internal fun KeysignErrorScreen(
  * truncated with an ellipsis before being interpolated into the user-facing label.
  */
 private const val BROADCAST_DETAIL_MAX_LENGTH = 120
+
+/** Matches the RPC "simulation failed" marker regardless of case and space/underscore wording. */
+private val SIMULATION_FAILED_MARKER = Regex("(?i)simulation[ _]?failed")
 
 @Preview(showBackground = true, name = "KeysignErrorScreen Preview")
 @Composable

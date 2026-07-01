@@ -42,13 +42,13 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import timber.log.Timber
@@ -222,7 +222,7 @@ constructor(
                 // failed". Append the reason so the failure surfaced to the user names the real cause
                 // instead of a bare, generic message.
                 val reason =
-                    error["data"]?.jsonObject?.get("err")?.let { err ->
+                    (error["data"] as? JsonObject)?.get("err")?.let { err ->
                         (err as? JsonPrimitive)?.contentOrNull ?: err.toString()
                     }
                 val detailedMessage =

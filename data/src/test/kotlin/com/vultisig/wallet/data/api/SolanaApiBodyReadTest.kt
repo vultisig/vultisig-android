@@ -172,6 +172,26 @@ class SolanaApiBodyReadTest {
         assertEquals(true, error?.message?.contains("AccountLoadedTwice"))
     }
 
+    @Test
+    fun `broadcastTransaction does not crash when error data is a primitive`() = runTest {
+        // A non-object `data` must not throw while building the error (jsonObject would); the
+        // original RPC message should still surface.
+        val body =
+            """
+            {
+              "error": { "code": -32002, "message": "Transaction simulation failed", "data": "oops" },
+              "result": null
+            }
+            """
+                .trimIndent()
+        val api = newApi(body)
+
+        val error = runCatching { api.broadcastTransaction("tx") }.exceptionOrNull()
+
+        assertInstanceOf(IllegalStateException::class.java, error)
+        assertEquals(true, error?.message?.contains("Transaction simulation failed"))
+    }
+
     // ── getSPLTokensInfo2 ───────────────────────────────────────────────────────
     // Uses .body<List<SplTokenInfo>>() for each token in parallel; respondingWith returns the same
     // body for every request.
