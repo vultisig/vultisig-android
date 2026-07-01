@@ -147,8 +147,10 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         keysignPayload.signSolana?.let { signSolana ->
             val allHashes = mutableListOf<String>()
             for (base64Tx in signSolana.rawTransactions) {
-                val hashes = getPreSignedImageHashForRaw(base64Tx)
-                allHashes.addAll(hashes)
+                val txData =
+                    android.util.Base64.decode(base64Tx, android.util.Base64.DEFAULT)
+                        ?: error("Invalid base64 transaction")
+                allHashes.addAll(getPreSignedImageHashForRaw(txData))
             }
             return allHashes
         }
@@ -172,9 +174,15 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                 "Expected exactly one Solana raw transaction"
             }
 
+            val txData =
+                android.util.Base64.decode(
+                    signSolana.rawTransactions.first(),
+                    android.util.Base64.DEFAULT,
+                ) ?: error("Invalid base64 transaction")
+
             return signRawTransaction(
                 coinHexPubKey = keysignPayload.coin.hexPublicKey,
-                base64Transaction = signSolana.rawTransactions.first(),
+                txData = txData,
                 signatures = signatures,
             )
         }
@@ -275,19 +283,15 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
     }
 
     /**
-     * Computes the pre-image hash(es) to sign for a raw (already-serialized) Solana transaction.
+     * Computes the pre-image hash(es) to sign for a raw (already-decoded) Solana transaction.
      *
      * The message bytes are extracted verbatim from the wire transaction so the hash matches what
      * is broadcast, rather than re-serializing through WalletCore.
      *
-     * @param base64Transaction the base64-encoded wire transaction
+     * @param txData the decoded wire transaction bytes
      * @return the message bytes to sign, hex-encoded without a `0x` prefix
      */
-    private fun getPreSignedImageHashForRaw(base64Transaction: String): List<String> {
-        val txData =
-            android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
-                ?: error("Invalid base64 transaction")
-
+    internal fun getPreSignedImageHashForRaw(txData: ByteArray): List<String> {
         val messageBytes = extractRawMessage(txData).messageBytes
 
         return listOf(Numeric.toHexStringNoPrefix(messageBytes))
@@ -301,22 +305,18 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
      * WalletCore re-serialization causes for v0 transactions with address-table lookups.
      *
      * @param coinHexPubKey the signer's ed25519 public key, hex-encoded
-     * @param base64Transaction the base64-encoded wire transaction
+     * @param txData the decoded wire transaction bytes
      * @param signatures TSS signatures keyed by the hex-encoded message hash
      * @return the Base58-encoded signed transaction and its transaction hash (the signer-0
      *   signature)
      */
-    private fun signRawTransaction(
+    internal fun signRawTransaction(
         coinHexPubKey: String,
-        base64Transaction: String,
+        txData: ByteArray,
         signatures: Map<String, tss.KeysignResponse>,
     ): SignedTransactionResult {
         val pubkeyData = coinHexPubKey.toHexByteArray()
         val publicKey = PublicKey(pubkeyData, PublicKeyType.ED25519)
-
-        val txData =
-            android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
-                ?: error("Invalid base64 transaction")
 
         val rawMessage = extractRawMessage(txData)
         val messageBytes = rawMessage.messageBytes
@@ -365,8 +365,9 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
      * @return the signer-0 signature offset and the raw message bytes
      */
     internal fun extractRawMessage(txData: ByteArray): RawSolanaMessage {
-        val (signatureCount, prefixLength) = decodeShortVec(txData, 0)
-        val messageStart = prefixLength + signatureCount * SOLANA_SIGNATURE_LENGTH
+        val shortVec = txData.readShortVec(0)
+        val signatureCount = shortVec.value
+        val messageStart = shortVec.byteLength + signatureCount * SOLANA_SIGNATURE_LENGTH
         // Strict `<` (matching iOS `Solana.swift`) rejects a zero-length message: a real Solana
         // message is never empty, so `messageStart == txData.size` means the buffer was truncated
         // and must not be hashed as an empty pre-image.
@@ -374,34 +375,37 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
             "Malformed Solana transaction: signature section out of bounds"
         }
         return RawSolanaMessage(
-            signatureOffset = prefixLength,
+            signatureOffset = shortVec.byteLength,
             messageBytes = txData.copyOfRange(messageStart, txData.size),
         )
     }
+}
 
-    /**
-     * Decodes a Solana shortvec (compact-u16) value starting at [offset].
-     *
-     * @param data the buffer to read from
-     * @param offset the index to start decoding at
-     * @return the decoded value and the number of bytes it consumed
-     */
-    internal fun decodeShortVec(data: ByteArray, offset: Int): Pair<Int, Int> {
-        var value = 0
-        var shift = 0
-        var i = offset
-        while (true) {
-            require(i < data.size) { "Malformed Solana transaction: truncated shortvec" }
-            // Solana's compact-u16 encodes a 0..65535 value in at most 3 bytes. Bounding the
-            // continuation run stops a crafted prefix from inflating the count until
-            // `signatureCount * SOLANA_SIGNATURE_LENGTH` overflows Int back to a tiny messageStart.
-            require(i - offset < 3) { "Malformed Solana transaction: shortvec too long" }
-            val byte = data[i].toInt() and 0xFF
-            value = value or ((byte and 0x7F) shl shift)
-            i++
-            if (byte and 0x80 == 0) break
-            shift += 7
-        }
-        return value to (i - offset)
+/**
+ * A decoded Solana shortvec (compact-u16).
+ *
+ * @property value the decoded integer value
+ * @property byteLength the number of bytes the encoding consumed
+ */
+internal data class ShortVec(val value: Int, val byteLength: Int)
+
+/**
+ * Decodes a Solana compact-u16 (shortvec) starting at [offset]: 7 payload bits per byte, high bit =
+ * continuation, capped at 3 bytes (values 0..65535) per the wire format. The 3-byte cap stops a
+ * crafted continuation run from inflating the value until `value * SOLANA_SIGNATURE_LENGTH`
+ * overflows Int back to a tiny message offset.
+ *
+ * @param offset the index to start decoding at
+ * @return the decoded value and the number of bytes it consumed
+ */
+internal fun ByteArray.readShortVec(offset: Int): ShortVec {
+    var value = 0
+    for (length in 1..3) {
+        val index = offset + length - 1
+        require(index < size) { "Malformed Solana transaction: truncated shortvec" }
+        val byte = this[index].toInt() and 0xFF
+        value = value or ((byte and 0x7F) shl ((length - 1) * 7))
+        if (byte and 0x80 == 0) return ShortVec(value, length)
     }
+    error("Malformed Solana transaction: shortvec too long")
 }

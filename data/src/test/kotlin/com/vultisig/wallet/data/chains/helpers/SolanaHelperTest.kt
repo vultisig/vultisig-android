@@ -78,17 +78,15 @@ class SolanaHelperTest {
 
     /** shortvec (compact-u16) must decode multi-byte values with continuation bits correctly. */
     @Test
-    fun `decodeShortVec decodes single and multi byte values`() {
-        val helper = SolanaHelper("")
-
-        val (single, singleLen) = helper.decodeShortVec(byteArrayOf(0x01), 0)
-        assertEquals(1, single)
-        assertEquals(1, singleLen)
+    fun `readShortVec decodes single and multi byte values`() {
+        val single = byteArrayOf(0x01).readShortVec(0)
+        assertEquals(1, single.value)
+        assertEquals(1, single.byteLength)
 
         // 0x80, 0x01 => (0 & 0x7F) | (1 << 7) = 128, consuming two bytes.
-        val (multi, multiLen) = helper.decodeShortVec(byteArrayOf(0x80.toByte(), 0x01), 0)
-        assertEquals(128, multi)
-        assertEquals(2, multiLen)
+        val multi = byteArrayOf(0x80.toByte(), 0x01).readShortVec(0)
+        assertEquals(128, multi.value)
+        assertEquals(2, multi.byteLength)
     }
 
     /**
@@ -97,11 +95,10 @@ class SolanaHelperTest {
      * offset onto attacker-chosen bytes.
      */
     @Test
-    fun `decodeShortVec rejects an over-long continuation run`() {
-        val helper = SolanaHelper("")
+    fun `readShortVec rejects an over-long continuation run`() {
         val crafted = byteArrayOf(0x80.toByte(), 0x80.toByte(), 0x80.toByte(), 0x01)
 
-        assertThrows<IllegalArgumentException> { helper.decodeShortVec(crafted, 0) }
+        assertThrows<IllegalStateException> { crafted.readShortVec(0) }
     }
 
     /**
