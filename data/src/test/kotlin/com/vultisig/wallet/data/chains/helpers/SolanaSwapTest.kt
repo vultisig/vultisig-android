@@ -10,27 +10,30 @@ class SolanaSwapTest {
 
     /**
      * Builds a v0 [Solana.RawMessage] with [staticKeys] static account keys and one address-table
-     * lookup referencing [writableRefs] writable and [readonlyRefs] readonly indexes. Uses the
-     * builder-returning proto API so the test never names the nested lookup type directly.
+     * lookup referencing [writableRefs] writable and [readonlyRefs] readonly indexes.
      */
     private fun v0Message(
         staticKeys: Int,
         writableRefs: Int,
         readonlyRefs: Int,
     ): Solana.RawMessage {
-        val v0Builder =
+        val lookup =
+            Solana.RawMessage.MessageAddressTableLookup.newBuilder()
+                .setAccountKey("lookupTable")
+                .addAllWritableIndexes((0 until writableRefs).toList())
+                .addAllReadonlyIndexes((0 until readonlyRefs).toList())
+                .build()
+        val v0 =
             Solana.RawMessage.MessageV0.newBuilder()
                 .addAllAccountKeys((0 until staticKeys).map { "key$it" })
-        val lookup = v0Builder.addAddressTableLookupsBuilder()
-        lookup.setAccountKey("lookupTable")
-        lookup.addAllWritableIndexes((0 until writableRefs).toList())
-        lookup.addAllReadonlyIndexes((0 until readonlyRefs).toList())
-        return Solana.RawMessage.newBuilder().setV0(v0Builder.build()).build()
+                .addAddressTableLookups(lookup)
+                .build()
+        return Solana.RawMessage.newBuilder().setV0(v0).build()
     }
 
     private fun legacyMessage(staticKeys: Int): Solana.RawMessage {
         val legacy =
-            Solana.RawMessage.Legacy.newBuilder()
+            Solana.RawMessage.MessageLegacy.newBuilder()
                 .addAllAccountKeys((0 until staticKeys).map { "key$it" })
                 .build()
         return Solana.RawMessage.newBuilder().setLegacy(legacy).build()
