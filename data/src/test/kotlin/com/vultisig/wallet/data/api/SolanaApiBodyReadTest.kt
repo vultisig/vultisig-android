@@ -94,7 +94,7 @@ class SolanaApiBodyReadTest {
     }
 
     @Test
-    fun `broadcastTransaction sends skipPreflight so a lagging node forwards instead of re-simulating`() =
+    fun `broadcastTransaction sends preflightCommitment confirmed to match the blockhash commitment`() =
         runTest {
             val capture = MockHttpClient.RequestCapture()
             val api =
@@ -112,7 +112,7 @@ class SolanaApiBodyReadTest {
 
             api.broadcastTransaction("sometx")
 
-            assertEquals(true, capture.lastBody.contains("\"skipPreflight\":true"))
+            assertEquals(true, capture.lastBody.contains("\"preflightCommitment\":\"confirmed\""))
         }
 
     @Test
