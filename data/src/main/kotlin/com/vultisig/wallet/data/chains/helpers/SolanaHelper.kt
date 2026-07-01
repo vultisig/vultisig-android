@@ -274,6 +274,15 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         return Base64.encode(dataMessage)
     }
 
+    /**
+     * Computes the pre-image hash(es) to sign for a raw (already-serialized) Solana transaction.
+     *
+     * The message bytes are extracted verbatim from the wire transaction so the hash matches what
+     * is broadcast, rather than re-serializing through WalletCore.
+     *
+     * @param base64Transaction the base64-encoded wire transaction
+     * @return the message bytes to sign, hex-encoded without a `0x` prefix
+     */
     private fun getPreSignedImageHashForRaw(base64Transaction: String): List<String> {
         val txData =
             android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
@@ -284,6 +293,19 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         return listOf(Numeric.toHexStringNoPrefix(messageBytes))
     }
 
+    /**
+     * Assembles a broadcastable Solana transaction for a raw (already-serialized) wire transaction.
+     *
+     * The verified 64-byte signature is spliced into the signer-0 slot of the original bytes so the
+     * transaction is broadcast byte-for-byte, avoiding the `AccountLoadedTwice` error that
+     * WalletCore re-serialization causes for v0 transactions with address-table lookups.
+     *
+     * @param coinHexPubKey the signer's ed25519 public key, hex-encoded
+     * @param base64Transaction the base64-encoded wire transaction
+     * @param signatures TSS signatures keyed by the hex-encoded message hash
+     * @return the Base58-encoded signed transaction and its transaction hash (the signer-0
+     *   signature)
+     */
     private fun signRawTransaction(
         coinHexPubKey: String,
         base64Transaction: String,
