@@ -217,9 +217,12 @@ constructor(
                     result.error ?: return result.result ?: error("broadcastTransaction error")
 
                 val message = error["message"]?.jsonPrimitive?.contentOrNull ?: error.toString()
-                // Solana puts the actual on-chain reason in error.data.err (e.g. "AccountLoadedTwice",
-                // "BlockhashNotFound"); error.message only carries the generic "Transaction simulation
-                // failed". Append the reason so the failure surfaced to the user names the real cause
+                // Solana puts the actual on-chain reason in error.data.err (e.g.
+                // "AccountLoadedTwice",
+                // "BlockhashNotFound"); error.message only carries the generic "Transaction
+                // simulation
+                // failed". Append the reason so the failure surfaced to the user names the real
+                // cause
                 // instead of a bare, generic message.
                 val reason =
                     when (val err = (error["data"] as? JsonObject)?.get("err")) {
@@ -231,8 +234,7 @@ constructor(
                         is JsonObject -> err.keys.firstOrNull()
                         else -> null
                     }
-                val detailedMessage =
-                    if (!reason.isNullOrBlank()) "$message: $reason" else message
+                val detailedMessage = if (!reason.isNullOrBlank()) "$message: $reason" else message
                 Timber.tag("SolanaApiImp")
                     .d("Error broadcasting transaction: %s", responseRawString)
 

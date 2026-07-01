@@ -401,7 +401,8 @@ constructor(
                     Timber.d("solana blockhash: $recentBlockHashResult")
                     // priorityFee is a per-compute-unit price (microlamports/CU); priorityLimit is
                     // the CU limit. SolanaHelper charges price * limit / 1e6 as the priority fee.
-                    // Swaps sign the aggregator's prebuilt tx, which carries its own compute budget,
+                    // Swaps sign the aggregator's prebuilt tx, which carries its own compute
+                    // budget,
                     // so these fields are ignored for swaps — skip the RPC and use the fallback.
                     val priorityFeePrice =
                         if (isSwap) {
