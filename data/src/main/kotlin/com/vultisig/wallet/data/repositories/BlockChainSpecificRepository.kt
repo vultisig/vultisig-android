@@ -29,6 +29,7 @@ import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.CardanoHelper
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
+import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -398,10 +399,25 @@ constructor(
                     val fromAddressPubKeyResult = fromAddressPubKey.await()
                     val toAddressPubKeyResult = toAddressPubKey.await()
                     Timber.d("solana blockhash: $recentBlockHashResult")
+                    // priorityFee is a per-compute-unit price (microlamports/CU); priorityLimit is
+                    // the CU limit. SolanaHelper charges price * limit / 1e6 as the priority fee.
+                    // Swaps sign the aggregator's prebuilt tx, which carries its own compute budget,
+                    // so these fields are ignored for swaps — skip the RPC and use the fallback.
+                    val priorityFeePrice =
+                        if (isSwap) {
+                            SOLANA_PRIORITY_FEE_PRICE.toBigInteger()
+                        } else {
+                            val priorityAccounts = buildList {
+                                add(token.address)
+                                fromAddressPubKeyResult?.first?.let { add(it) }
+                                toAddressPubKeyResult?.first?.let { add(it) }
+                            }
+                            solanaApi.getMedianPriorityFee(priorityAccounts)
+                        }
                     BlockChainSpecificAndUtxo(
                         BlockChainSpecific.Solana(
                             recentBlockHash = recentBlockHashResult,
-                            priorityFee = gasFee.value,
+                            priorityFee = priorityFeePrice,
                             fromAddressPubKey = fromAddressPubKeyResult?.first,
                             toAddressPubKey = toAddressPubKeyResult?.first,
                             programId = fromAddressPubKeyResult?.second == true,
