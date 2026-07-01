@@ -334,12 +334,12 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         // Splice the signature into the original transaction bytes verbatim (mirroring iOS
         // `replaceSubrange`), so a v0 tx with address-table lookups is broadcast byte-for-byte
         // instead of being re-serialized through WalletCore's compiler (which duplicates accounts
-        // and yields `AccountLoadedTwice`).
-        val signedTx = txData.copyOf()
-        System.arraycopy(signature, 0, signedTx, rawMessage.signatureOffset, signature.size)
+        // and yields `AccountLoadedTwice`). `extractRawMessage` already copied out the message
+        // region, so overwriting signer-0's slot in `txData` in place is safe.
+        signature.copyInto(txData, destinationOffset = rawMessage.signatureOffset)
 
         return SignedTransactionResult(
-            rawTransaction = Base58.encodeNoCheck(signedTx),
+            rawTransaction = Base58.encodeNoCheck(txData),
             transactionHash = Base58.encodeNoCheck(signature),
         )
     }
