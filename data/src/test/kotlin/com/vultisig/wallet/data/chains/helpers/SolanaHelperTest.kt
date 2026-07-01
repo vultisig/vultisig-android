@@ -76,17 +76,17 @@ class SolanaHelperTest {
         assertArrayEquals(message, raw.messageBytes)
     }
 
-    /** shortvec (compact-u16) must decode multi-byte values with continuation bits correctly. */
+    /** compact-u16 must decode multi-byte values with continuation bits correctly. */
     @Test
-    fun `readShortVec decodes single and multi byte values`() {
-        val single = byteArrayOf(0x01).readShortVec(0)
+    fun `SolanaCompactU16 decode decodes single and multi byte values`() {
+        val single = SolanaCompactU16.decode(byteArrayOf(0x01))
         assertEquals(1, single.value)
-        assertEquals(1, single.byteLength)
+        assertEquals(1, single.bytesRead)
 
         // 0x80, 0x01 => (0 & 0x7F) | (1 << 7) = 128, consuming two bytes.
-        val multi = byteArrayOf(0x80.toByte(), 0x01).readShortVec(0)
+        val multi = SolanaCompactU16.decode(byteArrayOf(0x80.toByte(), 0x01))
         assertEquals(128, multi.value)
-        assertEquals(2, multi.byteLength)
+        assertEquals(2, multi.bytesRead)
     }
 
     /**
@@ -95,10 +95,34 @@ class SolanaHelperTest {
      * offset onto attacker-chosen bytes.
      */
     @Test
-    fun `readShortVec rejects an over-long continuation run`() {
+    fun `SolanaCompactU16 decode rejects an over-long continuation run`() {
         val crafted = byteArrayOf(0x80.toByte(), 0x80.toByte(), 0x80.toByte(), 0x01)
 
-        assertThrows<IllegalStateException> { crafted.readShortVec(0) }
+        assertThrows<IllegalArgumentException> { SolanaCompactU16.decode(crafted) }
+    }
+
+    /**
+     * A 3-byte encoding whose accumulated value exceeds 0xFFFF cannot represent a valid u16 and
+     * must be rejected rather than silently truncated.
+     */
+    @Test
+    fun `SolanaCompactU16 decode rejects a value exceeding u16 range`() {
+        val overflowing = byteArrayOf(0xFF.toByte(), 0xFF.toByte(), 0x7F)
+
+        assertThrows<IllegalArgumentException> { SolanaCompactU16.decode(overflowing) }
+    }
+
+    /**
+     * Solana's own deserializer rejects a padded compact-u16 that re-encodes a value using more
+     * bytes than its canonical form (`short_vec.rs`'s `VisitError::Alias`) — e.g. `1` has the
+     * canonical single-byte encoding `0x01`, so the 2-byte alias `0x81, 0x00` must be refused, or
+     * this parser would accept transactions the real network rejects.
+     */
+    @Test
+    fun `SolanaCompactU16 decode rejects a non-canonical encoding`() {
+        val nonCanonical = byteArrayOf(0x81.toByte(), 0x00)
+
+        assertThrows<IllegalArgumentException> { SolanaCompactU16.decode(nonCanonical) }
     }
 
     /**

@@ -363,9 +363,9 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
      * @return the signer-0 signature offset and the raw message bytes
      */
     internal fun extractRawMessage(txData: ByteArray): RawSolanaMessage {
-        val shortVec = txData.readShortVec(0)
-        val signatureCount = shortVec.value
-        val messageStart = shortVec.byteLength + signatureCount * SOLANA_SIGNATURE_LENGTH
+        val compactU16 = SolanaCompactU16.decode(txData)
+        val signatureCount = compactU16.value
+        val messageStart = compactU16.bytesRead + signatureCount * SOLANA_SIGNATURE_LENGTH
         // Strict `<` (matching iOS `Solana.swift`) rejects a zero-length message: a real Solana
         // message is never empty, so `messageStart == txData.size` means the buffer was truncated
         // and must not be hashed as an empty pre-image.
@@ -373,37 +373,73 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
             "Malformed Solana transaction: signature section out of bounds"
         }
         return RawSolanaMessage(
-            signatureOffset = shortVec.byteLength,
+            signatureOffset = compactU16.bytesRead,
             messageBytes = txData.copyOfRange(messageStart, txData.size),
         )
     }
 }
 
 /**
- * A decoded Solana shortvec (compact-u16).
+ * A decoded Solana compact-u16 (shortvec).
  *
  * @property value the decoded integer value
- * @property byteLength the number of bytes the encoding consumed
+ * @property bytesRead the number of bytes the encoding consumed
  */
-internal data class ShortVec(val value: Int, val byteLength: Int)
+internal data class CompactU16(val value: Int, val bytesRead: Int)
+
+private const val SOLANA_COMPACT_U16_MAX_BYTES = 3
+private const val SOLANA_COMPACT_U16_CONTINUATION_BIT = 0x80
+private const val SOLANA_COMPACT_U16_VALUE_BITS = 0x7F
+private const val SOLANA_COMPACT_U16_MAX_VALUE = 0xFFFF
 
 /**
- * Decodes a Solana compact-u16 (shortvec) starting at [offset]: 7 payload bits per byte, high bit =
- * continuation, capped at 3 bytes (values 0..65535) per the wire format. The 3-byte cap stops a
- * crafted continuation run from inflating the value until `value * SOLANA_SIGNATURE_LENGTH`
- * overflows Int back to a tiny message offset.
- *
- * @param offset the index to start decoding at
- * @return the decoded value and the number of bytes it consumed
+ * Decodes a Solana compact-u16: 7 payload bits per byte, high bit = continuation, at most 3 bytes
+ * (values 0..65535). Rejects non-canonical encodings — e.g. `[0x81, 0x00]` as a padded alias for
+ * `1`, whose canonical encoding is the single byte `0x01` — matching Solana's own deserializer
+ * (`short_vec.rs`'s `VisitError::Alias`), which the real network also rejects.
  */
-internal fun ByteArray.readShortVec(offset: Int): ShortVec {
-    var value = 0
-    for (length in 1..3) {
-        val index = offset + length - 1
-        require(index < size) { "Malformed Solana transaction: truncated shortvec" }
-        val byte = this[index].toInt() and 0xFF
-        value = value or ((byte and 0x7F) shl ((length - 1) * 7))
-        if (byte and 0x80 == 0) return ShortVec(value, length)
+internal object SolanaCompactU16 {
+
+    fun decode(bytes: ByteArray, offset: Int = 0): CompactU16 {
+        require(offset >= 0 && offset <= bytes.size) {
+            "Malformed Solana transaction: compact-u16 offset out of bounds"
+        }
+
+        var value = 0
+
+        repeat(SOLANA_COMPACT_U16_MAX_BYTES) { byteIndex ->
+            val index = offset + byteIndex
+            require(index < bytes.size) { "Malformed Solana transaction: truncated compact-u16" }
+
+            val byte = bytes[index].toInt() and 0xFF
+            val payload = byte and SOLANA_COMPACT_U16_VALUE_BITS
+            val hasNext = byte and SOLANA_COMPACT_U16_CONTINUATION_BIT != 0
+            value = value or (payload shl (byteIndex * 7))
+
+            if (!hasNext) {
+                require(value <= SOLANA_COMPACT_U16_MAX_VALUE) {
+                    "Malformed Solana transaction: compact-u16 overflow"
+                }
+                val bytesRead = byteIndex + 1
+                require(bytesRead == encodedLength(value)) {
+                    "Malformed Solana transaction: non-canonical compact-u16"
+                }
+                return CompactU16(value = value, bytesRead = bytesRead)
+            }
+
+            require(byteIndex < SOLANA_COMPACT_U16_MAX_BYTES - 1) {
+                "Malformed Solana transaction: compact-u16 too long"
+            }
+        }
+
+        error("Unreachable compact-u16 decoder state")
     }
-    error("Malformed Solana transaction: shortvec too long")
+
+    private fun encodedLength(value: Int): Int =
+        when {
+            value <= 0x7F -> 1
+            value <= 0x3FFF -> 2
+            value <= SOLANA_COMPACT_U16_MAX_VALUE -> 3
+            else -> error("compact-u16 overflow")
+        }
 }
