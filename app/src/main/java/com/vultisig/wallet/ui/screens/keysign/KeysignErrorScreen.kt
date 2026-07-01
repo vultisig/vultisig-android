@@ -25,15 +25,20 @@ internal data class SigningError(
  * use the red critical variant.
  */
 @Composable
-internal fun resolveSigningError(rawMessage: String): SigningError =
-    when {
-        rawMessage.contains("Blockhash not found") ->
+internal fun resolveSigningError(rawMessage: String): SigningError {
+    // Normalize away spaces/underscores/case so a single check matches both the RPC's human wording
+    // ("Blockhash not found", "insufficient lamports") and Solana's camelCase enum forms
+    // ("BlockhashNotFound", "BlockHeightExceeded") that error.data.err carries.
+    val normalized = rawMessage.lowercase().replace(" ", "").replace("_", "")
+    return when {
+        // Blockhash expiry — both RPC wordings map to the same "sign again" copy.
+        normalized.contains("blockhashnotfound") || normalized.contains("blockheightexceeded") ->
             SigningError(
                 title = stringResource(R.string.signing_error_transaction_failed_title),
                 description = stringResource(R.string.signing_error_transaction_timeout),
                 errorState = ErrorState.CRITICAL,
             )
-        rawMessage.contains("insufficient funds") ->
+        normalized.contains("insufficientfunds") || normalized.contains("insufficientlamports") ->
             SigningError(
                 title = stringResource(R.string.error_insufficient_funds_title),
                 description = stringResource(R.string.signing_error_insufficient_funds),
@@ -87,6 +92,15 @@ internal fun resolveSigningError(rawMessage: String): SigningError =
                 )
             }
         }
+        // On-chain rejection at broadcast: the app runs no client-side simulation, so a
+        // "simulation failed" can only come from the node's preflight. This is a network rejection,
+        // NOT a device/connection timeout — surface it as such, with the on-chain reason.
+        normalized.contains("simulationfailed") ->
+            SigningError(
+                title = stringResource(R.string.signing_error_transaction_failed_title),
+                description = onChainRejectionDescription(rawMessage),
+                errorState = ErrorState.CRITICAL,
+            )
         else ->
             SigningError(
                 title = stringResource(R.string.signing_error_transaction_failed_title),
@@ -94,6 +108,30 @@ internal fun resolveSigningError(rawMessage: String): SigningError =
                 errorState = ErrorState.CRITICAL,
             )
     }
+}
+
+/**
+ * Builds the description for an on-chain broadcast rejection, appending the node-supplied reason
+ * (the text after "simulation failed", e.g. `AccountLoadedTwice`) when present. Reuses the same
+ * "rejected by the network" copy as the Cosmos broadcast path.
+ */
+@Composable
+private fun onChainRejectionDescription(rawMessage: String): String {
+    val detail =
+        rawMessage
+            .substringAfter("simulation failed", "")
+            .trimStart(':', ' ')
+            .let { raw ->
+                if (raw.length > BROADCAST_DETAIL_MAX_LENGTH) {
+                    raw.take(BROADCAST_DETAIL_MAX_LENGTH).trimEnd() + "…"
+                } else raw
+            }
+    return if (detail.isBlank()) {
+        stringResource(R.string.signing_error_broadcast_rejected)
+    } else {
+        stringResource(R.string.signing_error_broadcast_rejected_s, detail)
+    }
+}
 
 @Composable
 internal fun KeysignErrorScreen(

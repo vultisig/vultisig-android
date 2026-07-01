@@ -150,6 +150,28 @@ class SolanaApiBodyReadTest {
         assertInstanceOf(IllegalStateException::class.java, error)
     }
 
+    @Test
+    fun `broadcastTransaction appends the on-chain reason from error data err`() = runTest {
+        val body =
+            """
+            {
+              "error": {
+                "code": -32002,
+                "message": "Transaction simulation failed",
+                "data": { "err": "AccountLoadedTwice", "logs": [] }
+              },
+              "result": null
+            }
+            """
+                .trimIndent()
+        val api = newApi(body)
+
+        val error = runCatching { api.broadcastTransaction("tx") }.exceptionOrNull()
+
+        assertInstanceOf(IllegalStateException::class.java, error)
+        assertEquals(true, error?.message?.contains("AccountLoadedTwice"))
+    }
+
     // ── getSPLTokensInfo2 ───────────────────────────────────────────────────────
     // Uses .body<List<SplTokenInfo>>() for each token in parallel; respondingWith returns the same
     // body for every request.

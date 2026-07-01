@@ -48,6 +48,7 @@ import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import timber.log.Timber
@@ -216,6 +217,16 @@ constructor(
                     result.error ?: return result.result ?: error("broadcastTransaction error")
 
                 val message = error["message"]?.jsonPrimitive?.contentOrNull ?: error.toString()
+                // Solana puts the actual on-chain reason in error.data.err (e.g. "AccountLoadedTwice",
+                // "BlockhashNotFound"); error.message only carries the generic "Transaction simulation
+                // failed". Append the reason so the failure surfaced to the user names the real cause
+                // instead of a bare, generic message.
+                val reason =
+                    error["data"]?.jsonObject?.get("err")?.let { err ->
+                        (err as? JsonPrimitive)?.contentOrNull ?: err.toString()
+                    }
+                val detailedMessage =
+                    if (!reason.isNullOrBlank()) "$message: $reason" else message
                 Timber.tag("SolanaApiImp")
                     .d("Error broadcasting transaction: %s", responseRawString)
 
@@ -238,8 +249,9 @@ constructor(
                     // True expiry (or exhausted resends): the same tx can no longer land, so
                     // surface it as expired. Re-signing with a fresh blockhash is a deferred
                     // follow-up (needs a cross-device KeysignMessage proto change).
-                    SolanaBroadcastAction.EXPIRED -> throw SolanaBlockhashExpiredException(message)
-                    SolanaBroadcastAction.FATAL -> error(message)
+                    SolanaBroadcastAction.EXPIRED ->
+                        throw SolanaBlockhashExpiredException(detailedMessage)
+                    SolanaBroadcastAction.FATAL -> error(detailedMessage)
                 }
             }
             error("broadcastTransaction failed after $BROADCAST_MAX_ATTEMPTS attempts")
