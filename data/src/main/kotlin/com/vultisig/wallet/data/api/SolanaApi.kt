@@ -42,6 +42,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
@@ -216,6 +217,22 @@ constructor(
                     result.error ?: return result.result ?: error("broadcastTransaction error")
 
                 val message = error["message"]?.jsonPrimitive?.contentOrNull ?: error.toString()
+                // Solana puts the actual on-chain reason in error.data.err (e.g. "AccountLoadedTwice",
+                // "BlockhashNotFound"); error.message only carries the generic "Transaction simulation
+                // failed". Append the reason so the failure surfaced to the user names the real cause
+                // instead of a bare, generic message.
+                val reason =
+                    when (val err = (error["data"] as? JsonObject)?.get("err")) {
+                        // Bare string enum, e.g. "AccountLoadedTwice", "BlockhashNotFound".
+                        is JsonPrimitive -> err.contentOrNull
+                        // Structured error, e.g. {"InstructionError":[1,{"Custom":6001}]}. Use the
+                        // variant name (the single top-level key) rather than embedding raw JSON in
+                        // the user-facing rejection text.
+                        is JsonObject -> err.keys.firstOrNull()
+                        else -> null
+                    }
+                val detailedMessage =
+                    if (!reason.isNullOrBlank()) "$message: $reason" else message
                 Timber.tag("SolanaApiImp")
                     .d("Error broadcasting transaction: %s", responseRawString)
 
@@ -238,8 +255,9 @@ constructor(
                     // True expiry (or exhausted resends): the same tx can no longer land, so
                     // surface it as expired. Re-signing with a fresh blockhash is a deferred
                     // follow-up (needs a cross-device KeysignMessage proto change).
-                    SolanaBroadcastAction.EXPIRED -> throw SolanaBlockhashExpiredException(message)
-                    SolanaBroadcastAction.FATAL -> error(message)
+                    SolanaBroadcastAction.EXPIRED ->
+                        throw SolanaBlockhashExpiredException(detailedMessage)
+                    SolanaBroadcastAction.FATAL -> error(detailedMessage)
                 }
             }
             error("broadcastTransaction failed after $BROADCAST_MAX_ATTEMPTS attempts")
