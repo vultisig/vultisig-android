@@ -6,6 +6,8 @@ import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
+import com.vultisig.wallet.data.chains.helpers.SolanaSwap
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapProvider
@@ -914,6 +916,22 @@ constructor(
                                 ),
                             )
                             .expectEvm(SwapProvider.JUPITER)
+                // Drop an unbroadcastable Solana route before it can be selected and signed. Any
+                // aggregator (Jupiter, LiFi/Titan) can build a tx that locks more than Solana's
+                // 64-account cap; such a tx fails sanitization at the leader with
+                // `TooManyAccountLocks` (a pre-simulation error that never surfaces in any
+                // `simulationError` field), so it can never land. Throwing here fails only this
+                // provider's fetch, so the picker falls back to another route or surfaces "route
+                // not available" instead of signing a doomed tx (#5131).
+                if (srcToken.chain == Chain.Solana) {
+                    val accountLocks = SolanaSwap.countAccountLocks(apiQuote.tx.data)
+                    if (accountLocks > SolanaSwap.MAX_TX_ACCOUNT_LOCKS) {
+                        throw SwapException.SwapRouteNotAvailable(
+                            "[$provider] Solana swap tx locks $accountLocks accounts, " +
+                                "exceeding the ${SolanaSwap.MAX_TX_ACCOUNT_LOCKS}-account limit"
+                        )
+                    }
+                }
                 val expectedDstValue =
                     TokenValue(value = apiQuote.dstAmount.toBigInteger(), token = dstToken)
                 val (feeAmount, feeCoin) =
