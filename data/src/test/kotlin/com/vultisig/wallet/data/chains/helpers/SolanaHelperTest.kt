@@ -90,4 +90,29 @@ class SolanaHelperTest {
         assertEquals(128, multi)
         assertEquals(2, multiLen)
     }
+
+    /**
+     * A compact-u16 is at most 3 bytes; a crafted continuation-byte run must be rejected rather
+     * than inflating the count until `signatureCount * 64` overflows Int and collapses the message
+     * offset onto attacker-chosen bytes.
+     */
+    @Test
+    fun `decodeShortVec rejects an over-long continuation run`() {
+        val helper = SolanaHelper("")
+        val crafted = byteArrayOf(0x80.toByte(), 0x80.toByte(), 0x80.toByte(), 0x01)
+
+        assertThrows<IllegalArgumentException> { helper.decodeShortVec(crafted, 0) }
+    }
+
+    /**
+     * A truncated buffer whose signature section consumes every byte leaves a zero-length message.
+     * `extractRawMessage` must refuse it instead of handing an empty pre-image to signing.
+     */
+    @Test
+    fun `extractRawMessage rejects a zero-length message`() {
+        val tx = ByteArray(1 + 64)
+        tx[0] = 0x01 // shortvec: one signature, no message bytes follow
+
+        assertThrows<IllegalArgumentException> { SolanaHelper("").extractRawMessage(tx) }
+    }
 }

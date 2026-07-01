@@ -367,7 +367,10 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
     internal fun extractRawMessage(txData: ByteArray): RawSolanaMessage {
         val (signatureCount, prefixLength) = decodeShortVec(txData, 0)
         val messageStart = prefixLength + signatureCount * SOLANA_SIGNATURE_LENGTH
-        require(signatureCount > 0 && messageStart <= txData.size) {
+        // Strict `<` (matching iOS `Solana.swift`) rejects a zero-length message: a real Solana
+        // message is never empty, so `messageStart == txData.size` means the buffer was truncated
+        // and must not be hashed as an empty pre-image.
+        require(signatureCount > 0 && messageStart < txData.size) {
             "Malformed Solana transaction: signature section out of bounds"
         }
         return RawSolanaMessage(
@@ -389,6 +392,10 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         var i = offset
         while (true) {
             require(i < data.size) { "Malformed Solana transaction: truncated shortvec" }
+            // Solana's compact-u16 encodes a 0..65535 value in at most 3 bytes. Bounding the
+            // continuation run stops a crafted prefix from inflating the count until
+            // `signatureCount * SOLANA_SIGNATURE_LENGTH` overflows Int back to a tiny messageStart.
+            require(i - offset < 3) { "Malformed Solana transaction: shortvec too long" }
             val byte = data[i].toInt() and 0xFF
             value = value or ((byte and 0x7F) shl shift)
             i++
