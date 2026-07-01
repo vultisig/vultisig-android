@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import java.math.BigInteger
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -55,5 +56,38 @@ class SolanaHelperTest {
         val error =
             assertThrows<IllegalStateException> { SolanaHelper("").getPreSignedImageHash(payload) }
         assertEquals(SOLANA_MISSING_TOKEN_ACCOUNT_PREFIX + usdc.ticker, error.message)
+    }
+
+    /**
+     * A single-signature transaction has a one-byte shortvec prefix, so the signer-0 slot begins at
+     * offset 1 and the message follows the 64-byte signature slot. Getting either offset wrong
+     * would corrupt every raw (Jupiter swap / dApp) broadcast.
+     */
+    @Test
+    fun `extractRawMessage locates the signer-0 slot and message for a single-signature tx`() {
+        val message = byteArrayOf(0x09, 0x08, 0x07, 0x06, 0x05)
+        val tx = ByteArray(1 + 64 + message.size)
+        tx[0] = 0x01 // shortvec: one signature
+        message.copyInto(tx, 1 + 64)
+
+        val raw = SolanaHelper("").extractRawMessage(tx)
+
+        assertEquals(1, raw.signatureOffset)
+        assertArrayEquals(message, raw.messageBytes)
+    }
+
+    /** shortvec (compact-u16) must decode multi-byte values with continuation bits correctly. */
+    @Test
+    fun `decodeShortVec decodes single and multi byte values`() {
+        val helper = SolanaHelper("")
+
+        val (single, singleLen) = helper.decodeShortVec(byteArrayOf(0x01), 0)
+        assertEquals(1, single)
+        assertEquals(1, singleLen)
+
+        // 0x80, 0x01 => (0 & 0x7F) | (1 << 7) = 128, consuming two bytes.
+        val (multi, multiLen) = helper.decodeShortVec(byteArrayOf(0x80.toByte(), 0x01), 0)
+        assertEquals(128, multi)
+        assertEquals(2, multiLen)
     }
 }

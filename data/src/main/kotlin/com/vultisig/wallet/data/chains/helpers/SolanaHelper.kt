@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
 import java.math.BigInteger
 import wallet.core.jni.AnyAddress
+import wallet.core.jni.Base58
 import wallet.core.jni.Base64
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
@@ -21,6 +22,9 @@ import wallet.core.jni.proto.Solana
 
 internal const val SOLANA_PRIORITY_FEE_PRICE = 1000000L
 internal const val SOLANA_PRIORITY_FEE_LIMIT = 100000
+
+/** Length in bytes of an ed25519 signature slot inside a serialized Solana transaction. */
+private const val SOLANA_SIGNATURE_LENGTH = 64
 
 const val SOLANA_DEFAULT_CONTRACT_ADDRESS = "So11111111111111111111111111111111111111112"
 
@@ -271,30 +275,13 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
     }
 
     private fun getPreSignedImageHashForRaw(base64Transaction: String): List<String> {
-        val txData = android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
+        val txData =
+            android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
+                ?: error("Invalid base64 transaction")
 
-        val decodedData = wallet.core.jni.TransactionDecoder.decode(coinType, txData)
-        val decodingOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData)
+        val messageBytes = extractRawMessage(txData).messageBytes
 
-        if (decodingOutput.errorMessage.isNotEmpty()) {
-            error(decodingOutput.errorMessage)
-        }
-
-        if (!decodingOutput.hasTransaction()) {
-            error("Invalid transaction format")
-        }
-
-        val input =
-            Solana.SigningInput.newBuilder().setRawMessage(decodingOutput.transaction).build()
-
-        val inputData = input.toByteArray()
-
-        val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
-        val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-                .checkError()
-
-        return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
+        return listOf(Numeric.toHexStringNoPrefix(messageBytes))
     }
 
     private fun signRawTransaction(
@@ -309,55 +296,83 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
             android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
                 ?: error("Invalid base64 transaction")
 
-        val decodedData = wallet.core.jni.TransactionDecoder.decode(coinType, txData)
-        val decodingOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData)
+        val rawMessage = extractRawMessage(txData)
+        val messageBytes = rawMessage.messageBytes
 
-        if (decodingOutput.errorMessage.isNotEmpty()) {
-            error(decodingOutput.errorMessage)
-        }
-
-        if (!decodingOutput.hasTransaction()) {
-            error("Invalid transaction format")
-        }
-
-        val input =
-            Solana.SigningInput.newBuilder().setRawMessage(decodingOutput.transaction).build()
-
-        val inputData = input.toByteArray()
-
-        val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
-        val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-
-        if (preSigningOutput.errorMessage.isNotEmpty()) {
-            error(preSigningOutput.errorMessage)
-        }
-
-        val key = Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())
+        val key = Numeric.toHexStringNoPrefix(messageBytes)
         val signature = signatures[key]?.getSignature() ?: error("Signature not found")
 
-        if (!publicKey.verify(signature, preSigningOutput.data.toByteArray())) {
+        if (!publicKey.verify(signature, messageBytes)) {
             error("Signature verification failed")
         }
+        require(signature.size == SOLANA_SIGNATURE_LENGTH) {
+            "Unexpected Solana signature length: ${signature.size}"
+        }
 
-        val allSignatures = DataVector()
-        val publicKeys = DataVector()
-        allSignatures.add(signature)
-        publicKeys.add(pubkeyData)
-
-        val compiled =
-            TransactionCompiler.compileWithSignatures(
-                coinType,
-                inputData,
-                allSignatures,
-                publicKeys,
-            )
-
-        val output = Solana.SigningOutput.parseFrom(compiled).checkError()
+        // Splice the signature into the original transaction bytes verbatim (mirroring iOS
+        // `replaceSubrange`), so a v0 tx with address-table lookups is broadcast byte-for-byte
+        // instead of being re-serialized through WalletCore's compiler (which duplicates accounts
+        // and yields `AccountLoadedTwice`).
+        val signedTx = txData.copyOf()
+        System.arraycopy(signature, 0, signedTx, rawMessage.signatureOffset, signature.size)
 
         return SignedTransactionResult(
-            rawTransaction = output.encoded,
-            transactionHash = output.transactionHash(),
+            rawTransaction = Base58.encodeNoCheck(signedTx),
+            transactionHash = Base58.encodeNoCheck(signature),
         )
+    }
+
+    /**
+     * The location of the fee payer's signature slot and the message bytes within a serialized
+     * Solana transaction.
+     *
+     * @property signatureOffset byte offset of signer index 0's 64-byte signature slot
+     * @property messageBytes the serialized message that ed25519 signs and that is broadcast
+     *   verbatim
+     */
+    internal class RawSolanaMessage(val signatureOffset: Int, val messageBytes: ByteArray)
+
+    /**
+     * Parses a serialized Solana transaction to locate the signer-0 signature slot and the message.
+     *
+     * A wire transaction is laid out as `[shortvec signature count][signatures...][message]`. The
+     * fee payer is signer index 0, so its signature slot begins right after the shortvec prefix and
+     * the message follows all signature slots.
+     *
+     * @param txData the decoded transaction bytes
+     * @return the signer-0 signature offset and the raw message bytes
+     */
+    internal fun extractRawMessage(txData: ByteArray): RawSolanaMessage {
+        val (signatureCount, prefixLength) = decodeShortVec(txData, 0)
+        val messageStart = prefixLength + signatureCount * SOLANA_SIGNATURE_LENGTH
+        require(signatureCount > 0 && messageStart <= txData.size) {
+            "Malformed Solana transaction: signature section out of bounds"
+        }
+        return RawSolanaMessage(
+            signatureOffset = prefixLength,
+            messageBytes = txData.copyOfRange(messageStart, txData.size),
+        )
+    }
+
+    /**
+     * Decodes a Solana shortvec (compact-u16) value starting at [offset].
+     *
+     * @param data the buffer to read from
+     * @param offset the index to start decoding at
+     * @return the decoded value and the number of bytes it consumed
+     */
+    internal fun decodeShortVec(data: ByteArray, offset: Int): Pair<Int, Int> {
+        var value = 0
+        var shift = 0
+        var i = offset
+        while (true) {
+            require(i < data.size) { "Malformed Solana transaction: truncated shortvec" }
+            val byte = data[i].toInt() and 0xFF
+            value = value or ((byte and 0x7F) shl shift)
+            i++
+            if (byte and 0x80 == 0) break
+            shift += 7
+        }
+        return value to (i - offset)
     }
 }
