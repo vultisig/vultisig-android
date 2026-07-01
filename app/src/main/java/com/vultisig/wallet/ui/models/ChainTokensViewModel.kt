@@ -162,7 +162,7 @@ constructor(
     fun onClaimQbtc() {
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
-            navigator.route(Route.QbtcClaim(vaultId = vaultId))
+            navigator.route(Route.QuantumSecurityIntro(vaultId = vaultId))
         }
     }
 
