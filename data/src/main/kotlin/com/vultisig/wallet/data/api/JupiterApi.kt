@@ -110,8 +110,8 @@ constructor(
         // Jupiter pre-simulates the swap tx and reports a non-null `simulationError` when it will
         // fail on-chain (slippage / min-out / liquidity at execution). Don't build or offer a tx
         // Jupiter already knows is doomed — drop the Jupiter route so the picker re-quotes or falls
-        // back to another provider. This matters especially with client-side `skipPreflight`, where
-        // a sim-failing tx would still land on-chain and burn the fee.
+        // back to another provider, instead of taking the user through the full keysign only for
+        // the broadcast to be rejected at preflight.
         quoteSwapData.simulationError?.let { simError ->
             throw SwapException.SwapRouteNotAvailable(
                 "[Jupiter] swap simulation failed: ${simError.error ?: simError.errorCode ?: "unknown"}"
