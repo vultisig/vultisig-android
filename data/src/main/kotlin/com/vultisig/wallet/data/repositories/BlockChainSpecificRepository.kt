@@ -398,10 +398,22 @@ constructor(
                     val fromAddressPubKeyResult = fromAddressPubKey.await()
                     val toAddressPubKeyResult = toAddressPubKey.await()
                     Timber.d("solana blockhash: $recentBlockHashResult")
+                    // priorityFee is a per-compute-unit PRICE (microlamports/CU), not the total fee
+                    // amount. gasFee.value holds the total (base + priority + rent); assigning it
+                    // here made SolanaHelper multiply the whole fee by the 100k CU limit, mispricing
+                    // the tx. Read the dynamic median price the same way the fee display does
+                    // (getRecentPrioritizationFees) so the signed tx is prioritized correctly and the
+                    // charged fee matches the estimate. iOS/Windows keep these two fields separate.
+                    val priorityAccounts = buildList {
+                        add(token.address)
+                        fromAddressPubKeyResult?.first?.let { add(it) }
+                        toAddressPubKeyResult?.first?.let { add(it) }
+                    }
+                    val priorityFeePrice = solanaApi.getMedianPriorityFee(priorityAccounts)
                     BlockChainSpecificAndUtxo(
                         BlockChainSpecific.Solana(
                             recentBlockHash = recentBlockHashResult,
-                            priorityFee = gasFee.value,
+                            priorityFee = priorityFeePrice,
                             fromAddressPubKey = fromAddressPubKeyResult?.first,
                             toAddressPubKey = toAddressPubKeyResult?.first,
                             programId = fromAddressPubKeyResult?.second == true,

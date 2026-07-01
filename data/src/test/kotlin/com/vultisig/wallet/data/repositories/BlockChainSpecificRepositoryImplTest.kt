@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
+import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
@@ -98,6 +99,41 @@ internal class BlockChainSpecificRepositoryImplTest {
         assertTrue(specific is BlockChainSpecific.UTXO)
         assertEquals("30f33754", (specific as BlockChainSpecific.UTXO).zcashBranchId)
     }
+
+    @Test
+    fun `Solana specific carries the per-CU median price as priorityFee, not the total gas fee`() =
+        runTest {
+            val coin = solanaCoin()
+            val solanaApi =
+                mockk<SolanaApi> {
+                    coEvery { getRecentBlockHash() } returns "SolanaBlockHash1111"
+                    coEvery { getTokenAssociatedAccountByOwner(any(), any()) } returns (null to false)
+                    coEvery { getMedianPriorityFee(any()) } returns BigInteger("50000")
+                }
+
+            val result =
+                repository(solanaApi = solanaApi)
+                    .getSpecific(
+                        chain = Chain.Solana,
+                        address = SOURCE_ADDRESS,
+                        token = coin,
+                        // Total fee (base + priority + rent) in lamports — must NOT leak into
+                        // priorityFee, which is a per-compute-unit price.
+                        gasFee = TokenValue(BigInteger("105000"), coin),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                        dstAddress = "SolRecipient1111",
+                    )
+
+            val specific = result.blockChainSpecific
+            assertTrue(specific is BlockChainSpecific.Solana)
+            assertEquals(BigInteger("50000"), (specific as BlockChainSpecific.Solana).priorityFee)
+            assertEquals(
+                SOLANA_PRIORITY_FEE_LIMIT.toBigInteger(),
+                specific.priorityLimit,
+            )
+        }
 
     @Test
     fun `ERC20 estimation uses destination address in returned dto`() = runTest {
@@ -449,6 +485,19 @@ internal class BlockChainSpecificRepositoryImplTest {
             isNativeToken = true,
         )
 
+    private fun solanaCoin() =
+        Coin(
+            chain = Chain.Solana,
+            ticker = "SOL",
+            logo = "",
+            address = SOURCE_ADDRESS,
+            decimal = 9,
+            hexPublicKey = "pub",
+            priceProviderID = "solana",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
     private fun repository(
         evmApi: EvmApi = mockk<EvmApi>(relaxed = true),
         evmFeeService: FeeService = NoOpFeeService,
@@ -456,6 +505,7 @@ internal class BlockChainSpecificRepositoryImplTest {
         suiFeeService: FeeService = NoOpFeeService,
         blockChairApi: BlockChairApi = mockk<BlockChairApi>(relaxed = true),
         zcashApi: ZcashApi = mockk<ZcashApi>(relaxed = true),
+        solanaApi: SolanaApi = mockk<SolanaApi>(relaxed = true),
     ): BlockChainSpecificRepositoryImpl {
         val evmApiFactory =
             object : EvmApiFactory {
@@ -466,7 +516,7 @@ internal class BlockChainSpecificRepositoryImplTest {
             thorChainApi = mockk<ThorChainApi>(relaxed = true),
             mayaChainApi = mockk<MayaChainApi>(relaxed = true),
             evmApiFactory = evmApiFactory,
-            solanaApi = mockk<SolanaApi>(relaxed = true),
+            solanaApi = solanaApi,
             cosmosApiFactory = mockk<CosmosApiFactory>(relaxed = true),
             blockChairApi = blockChairApi,
             dashApi = mockk<DashApi>(relaxed = true),
