@@ -38,7 +38,19 @@ internal fun resolveSigningError(rawMessage: String): SigningError {
                 description = stringResource(R.string.signing_error_transaction_timeout),
                 errorState = ErrorState.CRITICAL,
             )
-        normalized.contains("insufficientfunds") || normalized.contains("insufficientlamports") ->
+        // On-chain rejection at broadcast: the app runs no client-side simulation, so a
+        // "simulation failed" can only come from the node's preflight. Checked BEFORE the
+        // insufficient-funds branch so an on-chain reason that merely contains "insufficient funds"
+        // (e.g. "InsufficientFundsForRent") is reported as a network rejection with its reason,
+        // rather than the fund-the-wallet warning.
+        normalized.contains("simulationfailed") ->
+            SigningError(
+                title = stringResource(R.string.signing_error_transaction_failed_title),
+                description = onChainRejectionDescription(rawMessage),
+                errorState = ErrorState.CRITICAL,
+            )
+        // Pre-broadcast insufficient funds (e.g. EVM gas) — actionable "fund the wallet" copy.
+        normalized.contains("insufficientfunds") ->
             SigningError(
                 title = stringResource(R.string.error_insufficient_funds_title),
                 description = stringResource(R.string.signing_error_insufficient_funds),
@@ -92,15 +104,6 @@ internal fun resolveSigningError(rawMessage: String): SigningError {
                 )
             }
         }
-        // On-chain rejection at broadcast: the app runs no client-side simulation, so a
-        // "simulation failed" can only come from the node's preflight. This is a network rejection,
-        // NOT a device/connection timeout — surface it as such, with the on-chain reason.
-        normalized.contains("simulationfailed") ->
-            SigningError(
-                title = stringResource(R.string.signing_error_transaction_failed_title),
-                description = onChainRejectionDescription(rawMessage),
-                errorState = ErrorState.CRITICAL,
-            )
         else ->
             SigningError(
                 title = stringResource(R.string.signing_error_transaction_failed_title),

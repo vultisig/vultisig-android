@@ -222,8 +222,14 @@ constructor(
                 // failed". Append the reason so the failure surfaced to the user names the real cause
                 // instead of a bare, generic message.
                 val reason =
-                    (error["data"] as? JsonObject)?.get("err")?.let { err ->
-                        (err as? JsonPrimitive)?.contentOrNull ?: err.toString()
+                    when (val err = (error["data"] as? JsonObject)?.get("err")) {
+                        // Bare string enum, e.g. "AccountLoadedTwice", "BlockhashNotFound".
+                        is JsonPrimitive -> err.contentOrNull
+                        // Structured error, e.g. {"InstructionError":[1,{"Custom":6001}]}. Use the
+                        // variant name (the single top-level key) rather than embedding raw JSON in
+                        // the user-facing rejection text.
+                        is JsonObject -> err.keys.firstOrNull()
+                        else -> null
                     }
                 val detailedMessage =
                     if (!reason.isNullOrBlank()) "$message: $reason" else message

@@ -173,6 +173,30 @@ class SolanaApiBodyReadTest {
     }
 
     @Test
+    fun `broadcastTransaction uses the variant name for a structured err, not raw JSON`() = runTest {
+        val body =
+            """
+            {
+              "error": {
+                "code": -32002,
+                "message": "Transaction simulation failed",
+                "data": { "err": { "InstructionError": [1, { "Custom": 6001 }] }, "logs": [] }
+              },
+              "result": null
+            }
+            """
+                .trimIndent()
+        val api = newApi(body)
+
+        val error = runCatching { api.broadcastTransaction("tx") }.exceptionOrNull()
+
+        assertInstanceOf(IllegalStateException::class.java, error)
+        assertEquals(true, error?.message?.contains("InstructionError"))
+        // The raw JSON payload must not leak into the surfaced message.
+        assertEquals(false, error?.message?.contains("Custom"))
+    }
+
+    @Test
     fun `broadcastTransaction does not crash when error data is a primitive`() = runTest {
         // A non-object `data` must not throw while building the error (jsonObject would); the
         // original RPC message should still surface.
