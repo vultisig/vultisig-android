@@ -3,7 +3,7 @@ package com.vultisig.wallet.ui.components.banners
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -92,10 +92,13 @@ internal fun ForegroundNotificationBanner(
     val shape = RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp)
     val imagePainter = painterResource(R.drawable.foreground_layer)
 
-    // Horizontal swipe-to-dismiss: lets the user flick away a stale or unwanted signing
-    // request (e.g. an old notification) without acting on it. Dragging past ~35% of the
-    // banner width settles it off-screen and reports the dismissal; a shorter drag springs back.
+    // Swipe-to-dismiss on two axes: lets the user flick away a stale or unwanted signing request
+    // (e.g. an old notification) without acting on it. A horizontal flick past ~35% of the banner
+    // width, or an upward drag past ~25% of its height, settles it off-screen and reports the
+    // dismissal; a shorter drag springs back. Downward drag is clamped to 0 (the banner sits at the
+    // top edge, so pushing it further into the content is meaningless).
     val offsetX = remember { Animatable(0f) }
+    val offsetY = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
 
     // Re-center only when a live request (re)enters. A new or re-broadcast push produces a fresh
@@ -103,40 +106,64 @@ internal fun ForegroundNotificationBanner(
     // do NOT reset on dismissal: after a successful swipe the banner must stay off-screen while the
     // parent's vertical exit transition plays out, otherwise the snap-back rides that exit and the
     // banner visibly re-centers then slides up (#5001).
-    LaunchedEffect(qrCodeData, isActive) { if (isActive) offsetX.snapTo(0f) }
+    LaunchedEffect(qrCodeData, isActive) {
+        if (isActive) {
+            offsetX.snapTo(0f)
+            offsetY.snapTo(0f)
+        }
+    }
 
     Box(
         modifier =
             modifier
                 .fillMaxWidth()
-                .offset { IntOffset(offsetX.value.roundToInt(), 0) }
+                .offset { IntOffset(offsetX.value.roundToInt(), offsetY.value.roundToInt()) }
                 .pointerInput(Unit) {
-                    val dismissThreshold = size.width * 0.35f
-                    detectHorizontalDragGestures(
-                        onHorizontalDrag = { change, dragAmount ->
+                    val horizontalThreshold = size.width * 0.35f
+                    val verticalThreshold = size.height * 0.25f
+                    detectDragGestures(
+                        onDrag = { change, dragAmount ->
                             change.consume()
-                            scope.launch { offsetX.snapTo(offsetX.value + dragAmount) }
+                            scope.launch {
+                                offsetX.snapTo(offsetX.value + dragAmount.x)
+                                // Only allow upward travel; a downward drag can't push the banner
+                                // deeper into the content below it.
+                                offsetY.snapTo((offsetY.value + dragAmount.y).coerceAtMost(0f))
+                            }
                         },
                         onDragEnd = {
                             scope.launch {
-                                if (abs(offsetX.value) >= dismissThreshold) {
-                                    val target =
-                                        if (offsetX.value > 0) size.width.toFloat()
-                                        else -size.width.toFloat()
-                                    offsetX.animateTo(target)
-                                    // Leave the banner off-screen and clear the request; the
-                                    // retained offset keeps it hidden through the parent's vertical
-                                    // exit transition. The LaunchedEffect above re-centers it only
-                                    // when a fresh request next (re)enters.
-                                    onDismiss()
-                                } else {
-                                    offsetX.animateTo(0f)
+                                when {
+                                    -offsetY.value >= verticalThreshold -> {
+                                        offsetY.animateTo(-size.height.toFloat())
+                                        // Leave the banner off-screen and clear the request; the
+                                        // retained offset keeps it hidden through the parent's
+                                        // vertical exit transition. The LaunchedEffect above
+                                        // re-centers it only when a fresh request next (re)enters.
+                                        onDismiss()
+                                    }
+                                    abs(offsetX.value) >= horizontalThreshold -> {
+                                        val target =
+                                            if (offsetX.value > 0) size.width.toFloat()
+                                            else -size.width.toFloat()
+                                        offsetX.animateTo(target)
+                                        onDismiss()
+                                    }
+                                    else -> {
+                                        offsetX.animateTo(0f)
+                                        offsetY.animateTo(0f)
+                                    }
                                 }
                             }
                         },
                         // A drag interrupted by a second pointer or an arena steal runs neither
                         // onDragEnd branch; without this the banner freezes at its partial offset.
-                        onDragCancel = { scope.launch { offsetX.animateTo(0f) } },
+                        onDragCancel = {
+                            scope.launch {
+                                offsetX.animateTo(0f)
+                                offsetY.animateTo(0f)
+                            }
+                        },
                     )
                 }
                 .clip(shape)
