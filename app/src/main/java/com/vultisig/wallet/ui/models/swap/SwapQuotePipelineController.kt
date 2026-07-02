@@ -133,6 +133,12 @@ constructor(
 
     private var refreshQuoteJob: Job? = null
 
+    // Suppresses the quote-refresh timer while the form isn't the foreground screen. The form's
+    // scope (= viewModelScope) stays alive on the back stack once the flow proceeds to
+    // verify/keysign, so without this the expiry timer would keep re-firing quote fetches — even on
+    // the "Transaction failed" screen (#5128).
+    private var isPaused = false
+
     // Whether the currently selected source/destination pair has any eligible swap provider.
     // Resolved up front on every pair change (#4710) so an unroutable pair surfaces guidance the
     // moment it is selected and never reaches the quote pipeline (which would throw
@@ -499,8 +505,35 @@ constructor(
         }
     }
 
+    /**
+     * Stops quote polling when the form leaves the foreground (navigating into verify/keysign or
+     * the app backgrounding). Cancels the pending refresh timer and blocks it from being re-armed
+     * by the per-quote scheduling in [applyQuoteResult] while paused (#5128).
+     */
+    fun pause() {
+        isPaused = true
+        refreshQuoteJob?.cancel()
+        refreshQuoteJob = null
+    }
+
+    /**
+     * Resumes quote polling when the form returns to the foreground, re-arming the refresh timer
+     * from the current quote's expiry so a quote that expired while paused refetches promptly
+     * (#5128).
+     */
+    fun resume() {
+        isPaused = false
+        quoteState.quote?.expiredAt?.let { launchRefreshQuoteTimer(it) }
+    }
+
     private fun launchRefreshQuoteTimer(expiredAt: Instant) {
         refreshQuoteJob?.cancel()
+        // Paused: the form is off-screen, so don't re-arm the timer that would keep re-fetching
+        // quotes in the background (#5128).
+        if (isPaused) {
+            refreshQuoteJob = null
+            return
+        }
         refreshQuoteJob =
             scope.launch(ioDispatcher) {
                 delay(expiredAt - Clock.System.now())

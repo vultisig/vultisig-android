@@ -208,6 +208,20 @@ constructor(
         }
     }
 
+    /**
+     * Stops swap quote polling when the form leaves the foreground (navigating into verify/keysign
+     * or the app backgrounding), so quotes are not re-fetched in the background — including while
+     * the "Transaction failed" screen is shown (#5128).
+     */
+    fun onScreenPaused() {
+        quotePipeline.pause()
+    }
+
+    /** Resumes swap quote polling when the form returns to the foreground (#5128). */
+    fun onScreenResumed() {
+        quotePipeline.resume()
+    }
+
     fun back() {
         viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
