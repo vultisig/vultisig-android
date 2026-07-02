@@ -95,6 +95,13 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "sui" -> R.drawable.sui
         "ton" -> R.drawable.ton
         "gram" -> R.drawable.gram
+        "not" -> R.drawable.not
+        "dogs" -> R.drawable.dogs
+        "cati" -> R.drawable.cati
+        "hmstr" -> R.drawable.hmstr
+        "ston" -> R.drawable.ston
+        "stton" -> R.drawable.stton
+        "tston" -> R.drawable.tston
         "osmo" -> R.drawable.osmo
         "wif",
         "dogwifhat-wif-logo" -> R.drawable.wif

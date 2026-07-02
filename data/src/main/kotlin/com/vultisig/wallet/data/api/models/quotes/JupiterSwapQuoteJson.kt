@@ -22,7 +22,8 @@ data class QuoteSwapTotalDataJson(
 data class QuoteSwapTransactionJson(
     @SerialName("swapTransaction") val data: String,
     // Non-null when Jupiter's own pre-simulation of the swap tx failed (e.g. slippage / min-out /
-    // liquidity at execution). Present in the `/swap` response; the swap must not be signed when set.
+    // liquidity at execution). Present in the `/swap` response; the swap must not be signed when
+    // set.
     @SerialName("simulationError") val simulationError: JupiterSimulationErrorJson? = null,
 )
 

@@ -2985,7 +2985,98 @@ object Coins {
                 isNativeToken = false,
             )
 
-        val all = listOf(TON, USDT)
+        val NOT =
+            Coin(
+                chain = Chain.Ton,
+                ticker = "NOT",
+                logo = "not",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "notcoin",
+                contractAddress = "EQAvlWFDxGF2lXm67y4yzC17wYKD9A0guwPkMs1gOsM__NOT",
+                isNativeToken = false,
+            )
+
+        val DOGS =
+            Coin(
+                chain = Chain.Ton,
+                ticker = "DOGS",
+                logo = "dogs",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "dogs-2",
+                contractAddress = "EQCvxJy4eG8hyHBFsZ7eePxrRsUQSFE_jpptRAYBmcG_DOGS",
+                isNativeToken = false,
+            )
+
+        val CATI =
+            Coin(
+                chain = Chain.Ton,
+                ticker = "CATI",
+                logo = "cati",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "catizen",
+                contractAddress = "EQD-cvR0Nz6XAyRBvbhz-abTrRC6sI5tvHvvpeQraV9UAAD7",
+                isNativeToken = false,
+            )
+
+        val HMSTR =
+            Coin(
+                chain = Chain.Ton,
+                ticker = "HMSTR",
+                logo = "hmstr",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "hamster-kombat",
+                contractAddress = "EQAJ8uWd7EBqsmpSWaRdf_I-8R8-XHwh3gsNKhy-UrdrPcUo",
+                isNativeToken = false,
+            )
+
+        val STON =
+            Coin(
+                chain = Chain.Ton,
+                ticker = "STON",
+                logo = "ston",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "ston-2",
+                contractAddress = "EQA2kCVNwVsil2EM2mB0SkXytxCqQjS4mttjDpnXmwG9T6bO",
+                isNativeToken = false,
+            )
+
+        val STTON =
+            Coin(
+                chain = Chain.Ton,
+                ticker = "stTON",
+                logo = "stton",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "bemo-staked-ton",
+                contractAddress = "EQDNhy-nxYFgUqzfUzImBEP67JqsyMIcyk2S5_RwNNEYku0k",
+                isNativeToken = false,
+            )
+
+        val TSTON =
+            Coin(
+                chain = Chain.Ton,
+                ticker = "tsTON",
+                logo = "tston",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "tonstakers",
+                contractAddress = "EQC98_qAmNEptUtPc7W6xdHh_ZHrBUFpw5Ft_IzNU20QAJav",
+                isNativeToken = false,
+            )
+
+        val all = listOf(TON, USDT, NOT, DOGS, CATI, HMSTR, STON, STTON, TSTON)
     }
 
     object Tron {
