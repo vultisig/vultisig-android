@@ -173,9 +173,10 @@ class SolanaApiBodyReadTest {
     }
 
     @Test
-    fun `broadcastTransaction uses the variant name for a structured err, not raw JSON`() = runTest {
-        val body =
-            """
+    fun `broadcastTransaction uses the variant name for a structured err, not raw JSON`() =
+        runTest {
+            val body =
+                """
             {
               "error": {
                 "code": -32002,
@@ -185,16 +186,16 @@ class SolanaApiBodyReadTest {
               "result": null
             }
             """
-                .trimIndent()
-        val api = newApi(body)
+                    .trimIndent()
+            val api = newApi(body)
 
-        val error = runCatching { api.broadcastTransaction("tx") }.exceptionOrNull()
+            val error = runCatching { api.broadcastTransaction("tx") }.exceptionOrNull()
 
-        assertInstanceOf(IllegalStateException::class.java, error)
-        assertEquals(true, error?.message?.contains("InstructionError"))
-        // The raw JSON payload must not leak into the surfaced message.
-        assertEquals(false, error?.message?.contains("Custom"))
-    }
+            assertInstanceOf(IllegalStateException::class.java, error)
+            assertEquals(true, error?.message?.contains("InstructionError"))
+            // The raw JSON payload must not leak into the surfaced message.
+            assertEquals(false, error?.message?.contains("Custom"))
+        }
 
     @Test
     fun `broadcastTransaction does not crash when error data is a primitive`() = runTest {

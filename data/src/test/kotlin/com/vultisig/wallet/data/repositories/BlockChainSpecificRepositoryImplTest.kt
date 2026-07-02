@@ -109,7 +109,8 @@ internal class BlockChainSpecificRepositoryImplTest {
             val solanaApi =
                 mockk<SolanaApi> {
                     coEvery { getRecentBlockHash() } returns "SolanaBlockHash1111"
-                    coEvery { getTokenAssociatedAccountByOwner(any(), any()) } returns (null to false)
+                    coEvery { getTokenAssociatedAccountByOwner(any(), any()) } returns
+                        (null to false)
                     coEvery { getMedianPriorityFee(any()) } returns BigInteger("50000")
                 }
 
@@ -131,10 +132,7 @@ internal class BlockChainSpecificRepositoryImplTest {
             val specific = result.blockChainSpecific
             assertTrue(specific is BlockChainSpecific.Solana)
             assertEquals(BigInteger("50000"), (specific as BlockChainSpecific.Solana).priorityFee)
-            assertEquals(
-                SOLANA_PRIORITY_FEE_LIMIT.toBigInteger(),
-                specific.priorityLimit,
-            )
+            assertEquals(SOLANA_PRIORITY_FEE_LIMIT.toBigInteger(), specific.priorityLimit)
         }
 
     @Test
@@ -144,7 +142,8 @@ internal class BlockChainSpecificRepositoryImplTest {
             val solanaApi =
                 mockk<SolanaApi> {
                     coEvery { getRecentBlockHash() } returns "SolanaBlockHash1111"
-                    coEvery { getTokenAssociatedAccountByOwner(any(), any()) } returns (null to false)
+                    coEvery { getTokenAssociatedAccountByOwner(any(), any()) } returns
+                        (null to false)
                 }
 
             val result =
@@ -162,7 +161,8 @@ internal class BlockChainSpecificRepositoryImplTest {
 
             val specific = result.blockChainSpecific
             assertTrue(specific is BlockChainSpecific.Solana)
-            // No median fetched — swap signers ignore priorityFee; it falls back to the floor price.
+            // No median fetched — swap signers ignore priorityFee; it falls back to the floor
+            // price.
             coVerify(exactly = 0) { solanaApi.getMedianPriorityFee(any()) }
             assertEquals(
                 SOLANA_PRIORITY_FEE_PRICE.toBigInteger(),
