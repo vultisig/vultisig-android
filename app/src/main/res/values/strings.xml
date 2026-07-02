@@ -155,8 +155,6 @@
     <string name="vault_tier_ultimate_description_part2">a complete Vultisig fee waiver</string>
     <string name="vault_tier_ultimate_description_part3"> on all swaps.</string>
     <string name="join_keysign_missing_required_vault">You do not have the required vault for Keysign</string>
-    <string name="join_keysign_discovery_service">Discovering Service</string>
-    <string name="join_keysign_waiting_keysign_start">Waiting for Keysign to start.</string>
     <string name="send_screen_title">Send</string>
     <string name="send_from_address">From</string>
     <string name="send_to_address">Send to</string>
@@ -200,7 +198,6 @@
     <string name="verify_transaction_consent_amount">The amount is correct</string>
     <string name="verify_transaction_error_not_enough_consent">Please check all consents</string>
     <string name="camera_permission_open_settings">Open Settings</string>
-    <string name="join_keysign_discovering_session_id">Discovering Session ID</string>
     <string name="transaction_done_title">Done</string>
     <string name="transaction_done_overview">Overview</string>
     <string name="transaction_done_complete">Complete</string>

@@ -153,8 +153,6 @@
     <string name="vault_tier_ultimate_description_part3">在所有交换中。</string>
     <!-- Keysign & Join -->
     <string name="join_keysign_missing_required_vault">您没有密钥签名所需的保险库</string>
-    <string name="join_keysign_discovery_service">发现服务中</string>
-    <string name="join_keysign_waiting_keysign_start">等待密钥签名开始。</string>
 
     <!-- Send Screen -->
     <string name="send_screen_title">发送</string>
@@ -227,7 +225,6 @@
 
     <!-- Camera & QR -->
     <string name="camera_permission_open_settings">打开设置</string>
-    <string name="join_keysign_discovering_session_id">发现会话 ID</string>
 
     <!-- Transaction Done -->
     <string name="transaction_done_title">完成</string>
