@@ -45,18 +45,70 @@ data class JettonWalletsJson(
     @SerialName("jetton_wallets") val jettonWallets: List<JettonWalletJson> = emptyList(),
     @SerialName("address_book") val addressBook: Map<String, AddressEntryJson> = emptyMap(),
 ) {
-    fun getJettonsAddress(): String? {
-        val jettonAddress = jettonWallets.firstOrNull()?.address ?: return null
+    /**
+     * Find the jetton wallet whose master matches [master]. The indexer's `jetton_master_address`
+     * filter is not honored, so the response may contain wallets for other masters; matching
+     * compares both the raw `jetton` field and its user-friendly form from the address book.
+     * Returns `null` when no wallet matches.
+     *
+     * TON addresses have multiple equal-but-non-identical encodings (bounceable `EQ…` vs
+     * non-bounceable `UQ…`, URL-safe base64, raw `0:hex`), so both sides are routed through
+     * [toUserFriendly] before comparing — consistent with the codebase's canonicalize-then-compare
+     * pattern. The default identity keeps the raw semantics for tests.
+     *
+     * @param master requested jetton master, in raw (`0:…`) or user-friendly (`EQ…`) form.
+     * @param toUserFriendly canonicalizes an address to its user-friendly form for comparison;
+     *   returns `null` for a non-address value.
+     */
+    fun matchingWallet(
+        master: String,
+        toUserFriendly: (String) -> String? = { it },
+    ): JettonWalletJson? {
+        val canonicalMaster = toUserFriendly(master) ?: master
+        return jettonWallets.firstOrNull { wallet ->
+            (toUserFriendly(wallet.jetton) ?: wallet.jetton) == canonicalMaster ||
+                addressBook[wallet.jetton]?.userFriendly?.let { toUserFriendly(it) ?: it } ==
+                    canonicalMaster
+        }
+    }
+
+    /**
+     * Resolve the user-friendly jetton wallet address for the wallet holding [master]. Returns
+     * `null` when no returned wallet matches the requested master (never an arbitrary fallback).
+     *
+     * @param master requested jetton master, in raw (`0:…`) or user-friendly (`EQ…`) form.
+     * @param toUserFriendly canonicalizes an address to its user-friendly form for comparison.
+     */
+    fun getJettonsAddress(master: String, toUserFriendly: (String) -> String? = { it }): String? {
+        val jettonAddress = matchingWallet(master, toUserFriendly)?.address ?: return null
         return addressBook[jettonAddress]?.userFriendly
     }
 
     /**
      * Resolve the jetton master address (in user-friendly form when the address book provides it)
-     * for the first returned wallet. Used to map a jetton wallet back to the token it holds when
-     * decoding a dApp transfer.
+     * for the wallet whose `address` matches [walletAddress]. Used to map a jetton wallet back to
+     * the token it holds when decoding a dApp transfer. Returns `null` when no wallet matches.
+     *
+     * Both sides are canonicalized through [toUserFriendly] so encodings that differ only by
+     * bounceable flag / URL-safe base64 / raw form still match.
+     *
+     * @param walletAddress the jetton wallet address, in raw (`0:…`) or user-friendly (`EQ…`) form.
+     * @param toUserFriendly canonicalizes an address to its user-friendly form for comparison.
      */
-    fun getMasterAddress(): String? {
-        val master = jettonWallets.firstOrNull()?.jetton ?: return null
+    fun getMasterAddress(
+        walletAddress: String,
+        toUserFriendly: (String) -> String? = { it },
+    ): String? {
+        val canonicalWallet = toUserFriendly(walletAddress) ?: walletAddress
+        val master =
+            jettonWallets
+                .firstOrNull { wallet ->
+                    (toUserFriendly(wallet.address) ?: wallet.address) == canonicalWallet ||
+                        addressBook[wallet.address]?.userFriendly?.let {
+                            toUserFriendly(it) ?: it
+                        } == canonicalWallet
+                }
+                ?.jetton ?: return null
         return addressBook[master]?.userFriendly ?: master
     }
 }
