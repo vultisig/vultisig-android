@@ -1379,6 +1379,16 @@
     <string name="qbtc_claim_cosign_btc_account">Bitcoin 계정</string>
     <string name="qbtc_claim_cosign_qbtc_account">QBTC 계정</string>
     <string name="qbtc_claim_cosign_approve">승인 및 공동 서명</string>
+    <!-- New quantum security intro screen -->
+    <string name="qbtc_intro_title">새로운 양자 보안</string>
+    <string name="qbtc_intro_subtitle">고전적 키는 양자 컴퓨터로 해독될 수 있습니다. QBTC를 사용하려면 새 키 쌍을 생성해야 합니다.</string>
+    <string name="qbtc_intro_generate_title">양자 키 쌍 생성</string>
+    <string name="qbtc_intro_generate_desc">Vultisig는 볼트 기기 전반에서 로컬 MPC 절차를 실행하여 새 키 쌍을 생성합니다.</string>
+    <string name="qbtc_intro_link_title">기존 볼트에 연결</string>
+    <string name="qbtc_intro_link_desc">양자 키는 현재 볼트 지분 구조에 연결됩니다. 재공유가 필요하지 않습니다.</string>
+    <string name="qbtc_intro_claim_title">QBTC로 청구하고 거래</string>
+    <string name="qbtc_intro_claim_desc">생성되면 대상 BTC UTXO가 1:1 비율로 청구 가능한 QBTC로 표시됩니다.</string>
+    <string name="qbtc_intro_get_started">시작하기</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">청구</string>
     <string name="cosmos_staking_action_delegate">스테이킹</string>

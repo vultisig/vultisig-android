@@ -1685,6 +1685,16 @@
     <string name="qbtc_claim_cosign_btc_account">Bitcoin 账户</string>
     <string name="qbtc_claim_cosign_qbtc_account">QBTC 账户</string>
     <string name="qbtc_claim_cosign_approve">批准并共同签署</string>
+    <!-- New quantum security intro screen -->
+    <string name="qbtc_intro_title">全新量子安全</string>
+    <string name="qbtc_intro_subtitle">经典密钥可能被量子计算机破解。启用 QBTC 需要生成新的密钥对。</string>
+    <string name="qbtc_intro_generate_title">生成您的量子密钥对</string>
+    <string name="qbtc_intro_generate_desc">Vultisig 在您的保险库设备之间运行本地 MPC 仪式，以生成新的密钥对。</string>
+    <string name="qbtc_intro_link_title">将其关联到您现有的保险库</string>
+    <string name="qbtc_intro_link_desc">量子密钥绑定到您当前的保险库份额结构，无需重新分享。</string>
+    <string name="qbtc_intro_claim_title">提取并使用 QBTC 进行交易</string>
+    <string name="qbtc_intro_claim_desc">生成后，您符合条件的 BTC UTXO 将按 1:1 的比例显示为可提取的 QBTC。</string>
+    <string name="qbtc_intro_get_started">开始</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">领取</string>
     <string name="cosmos_staking_action_delegate">质押</string>

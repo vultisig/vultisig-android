@@ -1363,6 +1363,16 @@
     <string name="qbtc_claim_cosign_btc_account">Account Bitcoin</string>
     <string name="qbtc_claim_cosign_qbtc_account">Account QBTC</string>
     <string name="qbtc_claim_cosign_approve">Approva e cofirma</string>
+    <!-- New quantum security intro screen -->
+    <string name="qbtc_intro_title">Nuova sicurezza quantistica</string>
+    <string name="qbtc_intro_subtitle">Le chiavi classiche possono essere violate dai computer quantistici. Abilitare QBTC richiede la generazione di una nuova coppia di chiavi.</string>
+    <string name="qbtc_intro_generate_title">Genera la tua coppia di chiavi quantistica</string>
+    <string name="qbtc_intro_generate_desc">Vultisig esegue una cerimonia MPC locale tra i dispositivi del tuo vault per produrre una nuova coppia di chiavi.</string>
+    <string name="qbtc_intro_link_title">Collegalo al tuo vault esistente</string>
+    <string name="qbtc_intro_link_desc">La chiave quantistica è legata all\'attuale struttura delle quote del tuo vault. Nessuna ricondivisione necessaria.</string>
+    <string name="qbtc_intro_claim_title">Preleva e opera in QBTC</string>
+    <string name="qbtc_intro_claim_desc">Una volta generati, i tuoi UTXO BTC idonei appaiono come QBTC prelevabile con un rapporto di 1:1.</string>
+    <string name="qbtc_intro_get_started">Inizia</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Riscatta</string>
     <string name="cosmos_staking_action_delegate">Stake</string>

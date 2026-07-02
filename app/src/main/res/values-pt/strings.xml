@@ -1358,6 +1358,16 @@
     <string name="qbtc_claim_cosign_btc_account">Conta Bitcoin</string>
     <string name="qbtc_claim_cosign_qbtc_account">Conta QBTC</string>
     <string name="qbtc_claim_cosign_approve">Aprovar e coassinar</string>
+    <!-- New quantum security intro screen -->
+    <string name="qbtc_intro_title">Nova segurança quântica</string>
+    <string name="qbtc_intro_subtitle">As chaves clássicas podem ser quebradas por computadores quânticos. Ativar o QBTC requer gerar um novo par de chaves.</string>
+    <string name="qbtc_intro_generate_title">Gere o seu par de chaves quântico</string>
+    <string name="qbtc_intro_generate_desc">A Vultisig executa uma cerimónia MPC local nos dispositivos do seu cofre para produzir um novo par de chaves.</string>
+    <string name="qbtc_intro_link_title">Vincule-o ao seu cofre existente</string>
+    <string name="qbtc_intro_link_desc">A chave quântica está associada à estrutura de participação atual do seu cofre. Não é necessário recompartilhar.</string>
+    <string name="qbtc_intro_claim_title">Resgate e transacione em QBTC</string>
+    <string name="qbtc_intro_claim_desc">Depois de gerados, os seus UTXOs de BTC elegíveis aparecem como QBTC resgatável numa proporção de 1:1.</string>
+    <string name="qbtc_intro_get_started">Começar</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Reivindicar</string>
     <string name="cosmos_staking_action_delegate">Stake</string>
