@@ -621,7 +621,7 @@ constructor(
                             val jettonsAddressDeferred = async {
                                 tonApi
                                     .getJettonWallet(address, token.contractAddress)
-                                    .getJettonsAddress()
+                                    .getJettonsAddress(token.contractAddress)
                             }
 
                             destinationIsActiveDeferred.await() to jettonsAddressDeferred.await()

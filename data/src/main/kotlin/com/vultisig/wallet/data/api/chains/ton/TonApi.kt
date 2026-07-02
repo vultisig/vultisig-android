@@ -61,7 +61,7 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
         getAddressInformation(address).balance
 
     override suspend fun getJettonBalance(address: String, contract: String): BigInteger {
-        val wallet = getJettonWallet(address, contract).jettonWallets.firstOrNull()
+        val wallet = getJettonWallet(address, contract).matchingWallet(contract)
         return wallet?.balance?.toBigIntegerOrNull() ?: BigInteger.ZERO
     }
 
@@ -123,7 +123,7 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
                 parameter("limit", 1)
             }
             .bodyOrThrow<JettonWalletsJson>()
-            .getMasterAddress()
+            .getMasterAddress(jettonWalletAddress)
 
     override suspend fun getJettonMetadata(masterAddress: String): TonJettonMetadata? {
         val content =
