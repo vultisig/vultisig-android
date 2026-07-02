@@ -5,8 +5,8 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import java.util.Base64
 import tss.KeysignResponse
-import wallet.core.jni.Base64
 import wallet.core.jni.CoinType.SOLANA
 import wallet.core.jni.TransactionDecoder
 import wallet.core.jni.proto.Solana
@@ -29,7 +29,7 @@ class SolanaSwap(private val vaultHexPublicKey: String) {
         keysignPayload: KeysignPayload,
     ): List<String> {
         require(keysignPayload.coin.chain == Chain.Solana) { "Chain is not Solana" }
-        val txData = Base64.decode(swapPayload.quote.tx.data)
+        val txData = Base64.getDecoder().decode(swapPayload.quote.tx.data)
         return SolanaHelper(vaultHexPublicKey).getPreSignedImageHashForRaw(txData)
     }
 
@@ -48,7 +48,7 @@ class SolanaSwap(private val vaultHexPublicKey: String) {
         signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
         require(keysignPayload.coin.chain == Chain.Solana) { "Chain is not Solana" }
-        val txData = Base64.decode(swapPayload.quote.tx.data)
+        val txData = Base64.getDecoder().decode(swapPayload.quote.tx.data)
         return SolanaHelper(vaultHexPublicKey)
             .signRawTransaction(
                 coinHexPubKey = keysignPayload.coin.hexPublicKey,
@@ -77,7 +77,8 @@ class SolanaSwap(private val vaultHexPublicKey: String) {
          * @return the total account-lock count; compare against [MAX_TX_ACCOUNT_LOCKS].
          */
         fun countAccountLocks(transactionData: String): Int {
-            val decodedData = TransactionDecoder.decode(SOLANA, Base64.decode(transactionData))
+            val decodedData =
+                TransactionDecoder.decode(SOLANA, wallet.core.jni.Base64.decode(transactionData))
             val decodedOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData).checkError()
             return countAccountLocks(decodedOutput.transaction)
         }
