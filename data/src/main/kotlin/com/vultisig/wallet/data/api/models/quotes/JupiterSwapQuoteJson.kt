@@ -18,7 +18,19 @@ data class QuoteSwapTotalDataJson(
     @SerialName("routePlan") val routePlan: List<RoutePlanItemJson>,
 )
 
-@Serializable data class QuoteSwapTransactionJson(@SerialName("swapTransaction") val data: String)
+@Serializable
+data class QuoteSwapTransactionJson(
+    @SerialName("swapTransaction") val data: String,
+    // Non-null when Jupiter's own pre-simulation of the swap tx failed (e.g. slippage / min-out /
+    // liquidity at execution). Present in the `/swap` response; the swap must not be signed when set.
+    @SerialName("simulationError") val simulationError: JupiterSimulationErrorJson? = null,
+)
+
+@Serializable
+data class JupiterSimulationErrorJson(
+    @SerialName("errorCode") val errorCode: String? = null,
+    @SerialName("error") val error: String? = null,
+)
 
 @Serializable
 data class SwapRouteResponseJson(
