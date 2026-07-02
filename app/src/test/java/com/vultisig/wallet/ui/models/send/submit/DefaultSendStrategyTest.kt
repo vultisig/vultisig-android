@@ -324,6 +324,7 @@ internal class DefaultSendStrategyTest {
             accountValidator = accountValidator,
             chainAccountAddressRepository = chainAccountAddressRepository,
             blockChainSpecificRepository = blockChainSpecificRepository,
+            feeServiceComposite = mockk(relaxed = true),
             transactionRepository = transactionRepository,
             bitcoinPlanService = mockk(relaxed = true),
             getAvailableTokenBalance = getAvailableTokenBalance,

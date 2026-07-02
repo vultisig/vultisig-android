@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.send.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
+import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -127,6 +128,7 @@ internal class SendStrategyFactory
 constructor(
     private val transactionRepository: TransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
+    private val feeServiceComposite: FeeServiceComposite,
     private val getAvailableTokenBalance: GetAvailableTokenBalanceUseCase,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val depositTransactionRepository: DepositTransactionRepository,
@@ -153,6 +155,7 @@ constructor(
                     accountValidator = context.accountValidator,
                     chainAccountAddressRepository = chainAccountAddressRepository,
                     blockChainSpecificRepository = blockChainSpecificRepository,
+                    feeServiceComposite = feeServiceComposite,
                     transactionRepository = transactionRepository,
                     bitcoinPlanService = context.bitcoinPlanService,
                     getAvailableTokenBalance = getAvailableTokenBalance,

@@ -2,7 +2,11 @@ package com.vultisig.wallet.ui.models.send.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.cosmos.TerraClassicTax
+import com.vultisig.wallet.data.blockchain.model.GasFees
+import com.vultisig.wallet.data.blockchain.model.Transfer
+import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
@@ -57,6 +61,7 @@ internal class DefaultSendStrategy(
     private val accountValidator: AccountValidator,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
+    private val feeServiceComposite: FeeServiceComposite,
     private val transactionRepository: TransactionRepository,
     private val bitcoinPlanService: BitcoinPlanService,
     private val getAvailableTokenBalance: GetAvailableTokenBalanceUseCase,
@@ -162,6 +167,32 @@ internal class DefaultSendStrategy(
                             !selectedToken.isNativeToken &&
                             selectedToken.chain.standard == TokenStandard.EVM
 
+                    // Solana's priority-fee median can move between fetches, so compute the fee
+                    // once here and reuse the same per-CU price for both the signed tx and the
+                    // Verify label, keeping them in sync (issue #5127).
+                    val solanaGasFees =
+                        if (chain.standard == TokenStandard.SOL) {
+                            runCatching {
+                                    withContext(Dispatchers.IO) {
+                                        feeServiceComposite.calculateFees(
+                                            Transfer(
+                                                coin = selectedToken,
+                                                vault =
+                                                    VaultData(
+                                                        vaultHexPublicKey =
+                                                            selectedToken.hexPublicKey,
+                                                        vaultHexChainCode = "",
+                                                    ),
+                                                amount = tokenAmountInt,
+                                                to = dstAddress,
+                                                memo = memo,
+                                            )
+                                        )
+                                    }
+                                }
+                                .getOrNull() as? GasFees
+                        } else null
+
                     val specific =
                         withContext(Dispatchers.IO) {
                                 blockChainSpecificRepository.getSpecific(
@@ -178,6 +209,17 @@ internal class DefaultSendStrategy(
                                     dstAddress = dstAddress,
                                     isThorchainRouterDeposit = isThorchainRouterDeposit,
                                 )
+                            }
+                            .let { spec ->
+                                // Sign the same per-CU priority price that backs the displayed
+                                // fee (keeps a fresh blockhash from getSpecific) (issue #5127).
+                                val bcs = spec.blockChainSpecific
+                                if (solanaGasFees != null && bcs is BlockChainSpecific.Solana) {
+                                    spec.copy(
+                                        blockChainSpecific =
+                                            bcs.copy(priorityFee = solanaGasFees.price)
+                                    )
+                                } else spec
                             }
                             .let { applyGasSettings(it) }
                             .let {
@@ -294,6 +336,10 @@ internal class DefaultSendStrategy(
                     }
 
                     val evmGasSettings = gasSettings.value as? GasSettings.Eth
+                    // For Solana, surface the amount tied to the price the signed tx pays so the
+                    // Verify label matches the broadcast fee (issue #5127).
+                    val displayGasFee =
+                        solanaGasFees?.let { gasFee.copy(value = it.amount) } ?: gasFee
                     val totalGasAndFee =
                         gasFeeToEstimatedFee(
                             GasFeeParams(
@@ -303,7 +349,7 @@ internal class DefaultSendStrategy(
                                 gasFee =
                                     selectGasFeeForFeeEstimation(
                                         chain = chain,
-                                        gasFee = gasFee,
+                                        gasFee = displayGasFee,
                                         planFee = planFee.value,
                                         evmGasSettings = evmGasSettings,
                                     ),
