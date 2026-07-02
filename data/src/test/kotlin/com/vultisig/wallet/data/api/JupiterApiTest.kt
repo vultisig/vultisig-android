@@ -63,10 +63,34 @@ class JupiterApiTest {
 
         assertEquals("45", captured.platformFeeBps)
         assertTrue(service.resolveCalled, "fee account must be resolved when a fee is quoted")
+        assertEquals(
+            OUTPUT_MINT,
+            service.resolvedMint,
+            "fee is taken in the output mint for token outputs",
+        )
         assertTrue(
-            captured.swapBody!!.contains("\"feeAccount\":\"${FEE_ACCOUNT.feeAccount}\""),
+            captured.swapBody!!.contains("\"feeAccount\":\"$FEE_ACCOUNT\""),
             "swap body must carry the resolved fee account: ${captured.swapBody}",
         )
+    }
+
+    @Test
+    fun `a native-SOL output takes the fee in the input mint`() {
+        // The fee owner holds no wSOL ATA (collecting in wSOL would need unwrapping), so SOL-output
+        // swaps charge the affiliate fee on the input mint instead. Mirrors iOS.
+        val service = FakeFeeAtaService(feeAccount = FEE_ACCOUNT)
+        val (api, captured) = feeApi(service, quotedFeeAmount = "36341")
+
+        assertThrows(SwapException.RateLimitExceeded::class.java) {
+            runBlocking { api.getSwapQuote(QUOTE_AMOUNT, OUTPUT_MINT, WSOL_MINT, WALLET, null, 45) }
+        }
+
+        assertEquals(
+            OUTPUT_MINT,
+            service.resolvedMint,
+            "fee must be taken in the input mint when the output is wrapped SOL",
+        )
+        assertTrue(captured.swapBody!!.contains("\"feeAccount\":\"$FEE_ACCOUNT\""))
     }
 
     @Test
@@ -88,8 +112,7 @@ class JupiterApiTest {
     @Test
     fun `a fee floored to zero by Jupiter sends platformFeeBps but no feeAccount`() {
         // The quote asks for a fee (bps > 0) but Jupiter floors platformFee.amount to 0; we must
-        // not
-        // derive a fee account or prepend a create-ATA for a zero fee.
+        // not derive a fee account for a zero fee.
         val service = FakeFeeAtaService(feeAccount = FEE_ACCOUNT)
         val (api, captured) = feeApi(service, quotedFeeAmount = "0")
 
@@ -105,10 +128,10 @@ class JupiterApiTest {
     }
 
     @Test
-    fun `an unresolvable fee mint fails the quote`() {
-        // resolveFeeAccount throwing (missing/unsupported mint or RPC failure) must propagate so
-        // the
-        // Jupiter quote fails and the picker falls back to another provider.
+    fun `an unresolvable or unprovisioned fee account fails the quote`() {
+        // resolveFeeAccount throwing (missing/unsupported mint, RPC failure, or an unprovisioned
+        // fee ATA) must propagate so the Jupiter quote fails and the picker falls back to another
+        // provider — we never sign a swap whose fee cannot be collected.
         val service = FakeFeeAtaService(feeAccount = null)
         val (api, _) = feeApi(service, quotedFeeAmount = "36341")
 
@@ -117,54 +140,6 @@ class JupiterApiTest {
                 api.getSwapQuote(QUOTE_AMOUNT, INPUT_MINT, OUTPUT_MINT, WALLET, null, 50)
             }
         }
-    }
-
-    @Test
-    fun `a resolved fee prepends the create-ATA onto the swap transaction`() {
-        // Happy path: /swap returns a transaction, so the impl reaches prependCreateFeeAta with the
-        // resolved fee account. The fake records its inputs and raises a marker to stop before the
-        // native compute-budget step, pinning that the prepend runs on the swap tx with the swap's
-        // fee payer.
-        val service = FakeFeeAtaService(feeAccount = FEE_ACCOUNT, prependThrows = true)
-        val api = swapOkApi(service)
-
-        assertThrows(PrependInvoked::class.java) {
-            runBlocking {
-                api.getSwapQuote(QUOTE_AMOUNT, INPUT_MINT, OUTPUT_MINT, WALLET, null, 50)
-            }
-        }
-
-        assertEquals(SWAP_TX, service.prependedTxData)
-        assertEquals(WALLET, service.prependedFeePayer)
-        assertEquals(FEE_ACCOUNT, service.prependedFee)
-    }
-
-    @Test
-    fun `an already-existing fee ATA skips the create-ATA prepend`() {
-        // needsCreate = false (the ATA is already on-chain) must short-circuit the prepend so the
-        // swap tx doesn't gain the fee owner/ATA as extra static keys on the steady-state path.
-        // prependThrows would raise PrependInvoked if reached; instead execution falls through to
-        // the
-        // native compute-budget step (absent in unit tests), so we only assert the prepend was
-        // skipped — the fake records its input before throwing, so a null input proves it ran
-        // never.
-        val service =
-            FakeFeeAtaService(
-                feeAccount = FEE_ACCOUNT.copy(needsCreate = false),
-                prependThrows = true,
-            )
-        val api = swapOkApi(service)
-
-        runCatching {
-            runBlocking {
-                api.getSwapQuote(QUOTE_AMOUNT, INPUT_MINT, OUTPUT_MINT, WALLET, null, 50)
-            }
-        }
-
-        assertNull(
-            service.prependedTxData,
-            "prepend must be skipped when the fee ATA already exists",
-        )
     }
 
     @Test
@@ -252,31 +227,6 @@ class JupiterApiTest {
         return api to captured
     }
 
-    /**
-     * Both legs succeed: /quote returns a route with a non-zero platform fee and /swap returns a
-     * serialized transaction, so the impl resolves the fee account and reaches the fee-ATA prepend.
-     */
-    private fun swapOkApi(service: FakeFeeAtaService): JupiterApi =
-        jupiterApiImpl(
-            service = service,
-            engine =
-                MockEngine { request ->
-                    if (request.url.encodedPath.endsWith("/quote")) {
-                        respond(
-                            content = routeResponseJson("36341"),
-                            status = HttpStatusCode.OK,
-                            headers = headersOf(HttpHeaders.ContentType, "application/json"),
-                        )
-                    } else {
-                        respond(
-                            content = """{"swapTransaction":"$SWAP_TX"}""",
-                            status = HttpStatusCode.OK,
-                            headers = headersOf(HttpHeaders.ContentType, "application/json"),
-                        )
-                    }
-                },
-        )
-
     private fun jupiterApiImpl(service: JupiterFeeAtaService, engine: MockEngine): JupiterApi =
         JupiterApiImpl(
             HttpClient(engine) {
@@ -301,46 +251,22 @@ class JupiterApiTest {
     )
 
     /**
-     * Fake service: [resolveFeeAccount] returns [feeAccount] or throws when it is null;
-     * [prependCreateFeeAta] records its arguments and, when [prependThrows], raises
-     * [PrependInvoked] so a happy-path test can assert the prepend was reached with the right
-     * inputs without crossing the native compute-budget step that runs right after it.
+     * Fake service: [resolveFeeAccount] records the requested fee mint and returns [feeAccount], or
+     * throws when it is null (unresolvable mint / unprovisioned fee ATA).
      */
-    private class FakeFeeAtaService(
-        private val feeAccount: JupiterFeeAccount?,
-        private val prependThrows: Boolean = false,
-    ) : JupiterFeeAtaService {
+    private class FakeFeeAtaService(private val feeAccount: String?) : JupiterFeeAtaService {
         var resolveCalled = false
             private set
 
-        var prependedTxData: String? = null
+        var resolvedMint: String? = null
             private set
 
-        var prependedFee: JupiterFeeAccount? = null
-            private set
-
-        var prependedFeePayer: String? = null
-            private set
-
-        override suspend fun resolveFeeAccount(outputMint: String): JupiterFeeAccount {
+        override suspend fun resolveFeeAccount(feeMint: String): String {
             resolveCalled = true
-            return feeAccount ?: error("cannot resolve fee account for $outputMint")
-        }
-
-        override fun prependCreateFeeAta(
-            txData: String,
-            fee: JupiterFeeAccount,
-            feePayer: String,
-        ): String {
-            prependedTxData = txData
-            prependedFee = fee
-            prependedFeePayer = feePayer
-            if (prependThrows) throw PrependInvoked
-            return txData
+            resolvedMint = feeMint
+            return feeAccount ?: error("cannot resolve fee account for $feeMint")
         }
     }
-
-    private object PrependInvoked : RuntimeException("prepend invoked")
 
     private fun routeResponseJson(platformFeeAmount: String?): String {
         val platformFee =
@@ -367,21 +293,15 @@ class JupiterApiTest {
 
     private companion object {
         const val QUOTE_AMOUNT = "1000"
-        const val INPUT_MINT = "So11111111111111111111111111111111111111112"
+        const val WSOL_MINT = "So11111111111111111111111111111111111111112"
+        const val INPUT_MINT = WSOL_MINT
         const val OUTPUT_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
         const val WALLET = "Wallet"
 
-        // Opaque base64 stand-in for Jupiter's serialized swap tx; the fake short-circuits before
-        // any native decode, so its bytes only need to round-trip as a string.
-        const val SWAP_TX = "AQID"
+        const val FEE_ACCOUNT = "tigMQDjwCNAzNndtiX93ZK1p71XaKTTRrQ8mfyp39LS"
 
-        val FEE_ACCOUNT =
-            JupiterFeeAccount(
-                feeAccount = "tigMQDjwCNAzNndtiX93ZK1p71XaKTTRrQ8mfyp39LS",
-                mint = OUTPUT_MINT,
-                owner = "8iqhrtBzMcYLR6c6FkzeoMHibedYDkHvLKnX2ArNie5z",
-                tokenProgramId = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-                needsCreate = true,
-            )
+        // Opaque base64 stand-in for Jupiter's serialized swap tx; the simulationError test throws
+        // before any native decode, so its bytes only need to round-trip as a string.
+        const val SWAP_TX = "AQID"
     }
 }
