@@ -18,6 +18,7 @@ internal fun fakeSendStrategyFactory(
     SendStrategyFactory(
         transactionRepository = transactionRepository,
         blockChainSpecificRepository = mockk(relaxed = true),
+        feeServiceComposite = mockk(relaxed = true),
         getAvailableTokenBalance = mockk(relaxed = true),
         gasFeeToEstimatedFee = mockk(relaxed = true),
         depositTransactionRepository = mockk(relaxed = true),

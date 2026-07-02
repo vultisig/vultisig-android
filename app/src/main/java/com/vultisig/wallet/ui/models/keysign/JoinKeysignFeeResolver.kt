@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -10,7 +11,9 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
+import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -78,20 +81,56 @@ constructor(
             )
 
     /**
-     * Returns ZERO for EVM/THORChain (fee is read from [BlockChainSpecific]) or fetches via the fee
-     * service otherwise.
+     * Returns ZERO for EVM/THORChain (fee is read from [BlockChainSpecific]), the payload-anchored
+     * amount for Solana (see [resolveSolanaFallbackFeeAmount]), or fetches via the fee service
+     * otherwise.
      */
     private suspend fun resolveFallbackFeeAmount(
         blockChainSpecific: BlockChainSpecific,
         blockchainTransaction: Transfer,
     ): BigInteger =
-        if (
-            blockChainSpecific is BlockChainSpecific.Ethereum ||
-                blockChainSpecific is BlockChainSpecific.THORChain
-        ) {
-            BigInteger.ZERO
-        } else {
-            withContext(Dispatchers.IO) { feeServiceComposite.calculateFees(blockchainTransaction) }
-                .amount
+        when (blockChainSpecific) {
+            is BlockChainSpecific.Ethereum,
+            is BlockChainSpecific.THORChain -> BigInteger.ZERO
+            is BlockChainSpecific.Solana ->
+                resolveSolanaFallbackFeeAmount(blockChainSpecific, blockchainTransaction)
+            else ->
+                withContext(Dispatchers.IO) {
+                        feeServiceComposite.calculateFees(blockchainTransaction)
+                    }
+                    .amount
         }
+
+    /**
+     * Solana network fee for the join device: the tx-derived base (network + rent-exemption) plus
+     * the priority component read from the transmitted [payload][BlockChainSpecific.Solana], so the
+     * verify label matches the exact fee the broadcast tx pays instead of re-fetching a fresh
+     * priority median (issue #5127).
+     *
+     * The base is recovered from [FeeServiceComposite.calculateFees] by subtracting its own freshly
+     * fetched priority component; the payload's `priorityFee` / `priorityLimit` are then applied.
+     */
+    private suspend fun resolveSolanaFallbackFeeAmount(
+        solana: BlockChainSpecific.Solana,
+        blockchainTransaction: Transfer,
+    ): BigInteger {
+        val fees =
+            withContext(Dispatchers.IO) { feeServiceComposite.calculateFees(blockchainTransaction) }
+        val baseAndRent =
+            when (fees) {
+                is GasFees -> fees.amount - solanaPriorityAmount(fees.price, fees.limit)
+                else -> fees.amount
+            }
+        return baseAndRent + solanaPriorityAmount(solana.priorityFee, solana.priorityLimit)
+    }
+
+    /**
+     * The lamport priority component charged for a Solana tx: `price * limit / 1e6` rounded down,
+     * mirroring `SolanaFeeService`'s calculation.
+     */
+    private fun solanaPriorityAmount(price: BigInteger, limit: BigInteger): BigInteger =
+        (price * limit)
+            .toBigDecimal()
+            .divide(BigDecimal.TEN.pow(6), RoundingMode.DOWN)
+            .toBigInteger()
 }
