@@ -10,6 +10,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import app.rive.Fit
 import app.rive.ViewModelSource
 import app.rive.rememberViewModelInstance
@@ -41,7 +44,14 @@ internal fun KeysignLoadingScreen(modifier: Modifier = Modifier) {
         showRive = true
     }
 
-    Box(modifier = modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
+    val statusDescription = stringResource(R.string.keygen_connecting_with_server)
+
+    Box(
+        modifier =
+            modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary).semantics {
+                contentDescription = statusDescription
+            }
+    ) {
         if (showRive && riveFile != null) {
             val vmi =
                 rememberViewModelInstance(

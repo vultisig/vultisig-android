@@ -29,6 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -137,10 +139,16 @@ private fun KeygenScreen(state: KeygenUiModel, onTryAgainClick: () -> Unit) {
                             vmi.setNumber("progessPercentage", animatedValue)
                         }
 
+                        val statusDescription =
+                            stringResource(R.string.keygen_connecting_with_server)
+
                         RiveAnimation(
                             file = riveFile,
                             viewModelInstance = vmi,
-                            modifier = Modifier.fillMaxSize(),
+                            modifier =
+                                Modifier.fillMaxSize().semantics {
+                                    contentDescription = statusDescription
+                                },
                             fit = Fit.Cover(),
                         )
                     } else {
