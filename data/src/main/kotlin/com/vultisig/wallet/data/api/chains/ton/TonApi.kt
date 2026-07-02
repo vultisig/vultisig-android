@@ -10,9 +10,19 @@ import io.ktor.client.request.setBody
 import java.math.BigInteger
 import java.util.Base64
 import javax.inject.Inject
+import wallet.core.jni.TONAddressConverter
 
 /** Display metadata for a jetton, resolved from its master contract. */
 data class TonJettonMetadata(val ticker: String, val decimals: Int, val logo: String?)
+
+/**
+ * Canonicalize a TON address to its user-friendly bounceable form for equality comparison. Raw
+ * `0:hex`, URL-safe base64, and non-bounceable `UQ…` variants all normalize to the same `EQ…`
+ * string. Returns `null` when [address] is not a valid TON address, so callers can fall back to the
+ * raw value.
+ */
+internal fun tonUserFriendlyAddress(address: String): String? =
+    runCatching { TONAddressConverter.toUserFriendly(address, true, false) }.getOrNull()
 
 interface TonApi {
 
@@ -61,7 +71,8 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
         getAddressInformation(address).balance
 
     override suspend fun getJettonBalance(address: String, contract: String): BigInteger {
-        val wallet = getJettonWallet(address, contract).matchingWallet(contract)
+        val wallet =
+            getJettonWallet(address, contract).matchingWallet(contract, ::tonUserFriendlyAddress)
         return wallet?.balance?.toBigIntegerOrNull() ?: BigInteger.ZERO
     }
 
@@ -123,7 +134,7 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
                 parameter("limit", 1)
             }
             .bodyOrThrow<JettonWalletsJson>()
-            .getMasterAddress(jettonWalletAddress)
+            .getMasterAddress(jettonWalletAddress, ::tonUserFriendlyAddress)
 
     override suspend fun getJettonMetadata(masterAddress: String): TonJettonMetadata? {
         val content =

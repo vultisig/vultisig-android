@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.api.TronApiImpl.Companion.TRANSFER_FUNCTION_SELE
 import com.vultisig.wallet.data.api.ZcashApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
+import com.vultisig.wallet.data.api.chains.ton.tonUserFriendlyAddress
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUM_TRANSFER
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
@@ -621,7 +622,10 @@ constructor(
                             val jettonsAddressDeferred = async {
                                 tonApi
                                     .getJettonWallet(address, token.contractAddress)
-                                    .getJettonsAddress(token.contractAddress)
+                                    .getJettonsAddress(
+                                        token.contractAddress,
+                                        ::tonUserFriendlyAddress,
+                                    )
                             }
 
                             destinationIsActiveDeferred.await() to jettonsAddressDeferred.await()

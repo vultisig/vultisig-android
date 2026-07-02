@@ -113,6 +113,42 @@ internal class JettonWalletsJsonTest {
     }
 
     @Test
+    fun `matchingWallet matches when the requested master differs only by encoding`() {
+        // Non-bounceable UQ… variant of the same address the indexer returns as bounceable EQ….
+        val canonicalize = { addr: String -> addr.replaceFirst("UQ", "EQ") }
+        val response =
+            JettonWalletsJson(
+                jettonWallets =
+                    listOf(
+                        JettonWalletJson(
+                            address = "EQusdtWallet",
+                            jetton = "EQusdt",
+                            balance = "40886112",
+                        )
+                    )
+            )
+
+        // Raw string equality would miss this; canonicalizing both sides matches.
+        assertNull(response.matchingWallet("UQusdt"))
+        assertEquals("40886112", response.matchingWallet("UQusdt", canonicalize)?.balance)
+    }
+
+    @Test
+    fun `getMasterAddress matches when the wallet address differs only by encoding`() {
+        val canonicalize = { addr: String -> addr.replaceFirst("UQ", "EQ") }
+        val response =
+            JettonWalletsJson(
+                jettonWallets =
+                    listOf(
+                        JettonWalletJson(address = "EQwallet", jetton = "EQmaster", balance = "5")
+                    )
+            )
+
+        assertNull(response.getMasterAddress("UQwallet"))
+        assertEquals("EQmaster", response.getMasterAddress("UQwallet", canonicalize))
+    }
+
+    @Test
     fun `getJettonsAddress returns null when no wallet matches the master`() {
         val response =
             JettonWalletsJson(
