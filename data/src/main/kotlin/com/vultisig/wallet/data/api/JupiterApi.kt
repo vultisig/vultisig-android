@@ -107,6 +107,17 @@ constructor(
         }
         val quoteSwapData = swapResponse.bodyOrThrow<QuoteSwapTransactionJson>()
 
+        // Jupiter pre-simulates the swap tx and reports a non-null `simulationError` when it will
+        // fail on-chain (slippage / min-out / liquidity at execution). Don't build or offer a tx
+        // Jupiter already knows is doomed — drop the Jupiter route so the picker re-quotes or falls
+        // back to another provider, instead of taking the user through the full keysign only for
+        // the broadcast to be rejected at preflight.
+        quoteSwapData.simulationError?.let { simError ->
+            throw SwapException.SwapRouteNotAvailable(
+                "[Jupiter] swap simulation failed: ${simError.error ?: simError.errorCode ?: "unknown"}"
+            )
+        }
+
         // Jupiter never initializes the `feeAccount` ATA, so prepend an idempotent create for it
         // the
         // first time per fee mint (the payer funds the ~0.002 SOL rent; it is skipped once the ATA
