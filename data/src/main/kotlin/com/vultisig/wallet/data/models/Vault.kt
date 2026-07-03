@@ -76,6 +76,13 @@ fun Vault.isFastVault(): Boolean {
 fun Vault.isSecureVault() = !isFastVault()
 
 /**
+ * True when the vault holds a usable MLDSA (quantum) key: the public key is set and the matching
+ * keyshare is present, so the vault can actually take part in an MLDSA signing ceremony.
+ */
+fun Vault.hasValidMldsaKey(): Boolean =
+    pubKeyMLDSA.isNotBlank() && keyshares.any { it.pubKey == pubKeyMLDSA }
+
+/**
  * Returns (publicKey, chainCode) for ECDSA signing on the given [chain].
  *
  * For KeyImport vaults, resolves the per-chain key from [ChainPublicKey]:

@@ -122,6 +122,7 @@ import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
 import com.vultisig.wallet.ui.screens.keysign.KeysignView
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimScreen
+import com.vultisig.wallet.ui.screens.qbtc.QuantumSecurityIntroScreenContent
 import com.vultisig.wallet.ui.screens.referral.ContentRow
 import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
@@ -251,6 +252,7 @@ class PreviewActivity : ComponentActivity() {
                     "qbtc_claim_error" -> QbtcClaimErrorPreview()
                     "qbtc_claim_blocked" -> QbtcClaimBlockedPreview()
                     "qbtc_claim_maturing" -> QbtcClaimMaturingPreview()
+                    "quantum_security_intro" -> QuantumSecurityIntroScreenContent()
                     "keysign_signing_lunc" -> KeysignSigningLuncPreview()
                     "circle_usdc_widget" -> CircleUsdcWidgetPreview()
                     "btc_detail_claim" -> BtcDetailClaimPreview()

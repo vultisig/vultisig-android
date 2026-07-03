@@ -1409,6 +1409,16 @@
     <string name="qbtc_claim_cosign_btc_account">Bitcoin account</string>
     <string name="qbtc_claim_cosign_qbtc_account">QBTC account</string>
     <string name="qbtc_claim_cosign_approve">Approve &amp; co-sign</string>
+    <!-- New quantum security intro screen -->
+    <string name="qbtc_intro_title">New quantum security</string>
+    <string name="qbtc_intro_subtitle">Classical keys can be broken by quantum computers. Enabling QBTC requires generating a new key pair.</string>
+    <string name="qbtc_intro_generate_title">Generate your quantum key pair</string>
+    <string name="qbtc_intro_generate_desc">Vultisig runs a local MPC ceremony across your vault devices to produce a new key pair.</string>
+    <string name="qbtc_intro_link_title">Link it to your existing vault</string>
+    <string name="qbtc_intro_link_desc">The quantum key is bound to your current vault share structure. No reshare needed.</string>
+    <string name="qbtc_intro_claim_title">Claim and transact in QBTC</string>
+    <string name="qbtc_intro_claim_desc">Once generated, your eligible BTC UTXOs appear as claimable QBTC at a 1:1 ratio.</string>
+    <string name="qbtc_intro_get_started">Get started</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Claim</string>
     <string name="cosmos_staking_action_delegate">Stake</string>

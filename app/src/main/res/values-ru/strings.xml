@@ -1369,6 +1369,16 @@
     <string name="qbtc_claim_cosign_btc_account">Счёт Bitcoin</string>
     <string name="qbtc_claim_cosign_qbtc_account">Счёт QBTC</string>
     <string name="qbtc_claim_cosign_approve">Одобрить и подписать</string>
+    <!-- New quantum security intro screen -->
+    <string name="qbtc_intro_title">Новая квантовая безопасность</string>
+    <string name="qbtc_intro_subtitle">Классические ключи могут быть взломаны квантовыми компьютерами. Для включения QBTC необходимо сгенерировать новую пару ключей.</string>
+    <string name="qbtc_intro_generate_title">Сгенерируйте свою квантовую пару ключей</string>
+    <string name="qbtc_intro_generate_desc">Vultisig проводит локальную MPC-церемонию на устройствах вашего хранилища, чтобы создать новую пару ключей.</string>
+    <string name="qbtc_intro_link_title">Свяжите её с вашим существующим хранилищем</string>
+    <string name="qbtc_intro_link_desc">Квантовый ключ привязан к текущей структуре долей вашего хранилища. Повторное совместное использование не требуется.</string>
+    <string name="qbtc_intro_claim_title">Получайте и совершайте транзакции в QBTC</string>
+    <string name="qbtc_intro_claim_desc">После генерации ваши подходящие BTC UTXO появятся как доступные для получения QBTC по курсу 1:1.</string>
+    <string name="qbtc_intro_get_started">Начать</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Получить</string>
     <string name="cosmos_staking_action_delegate">Стейк</string>

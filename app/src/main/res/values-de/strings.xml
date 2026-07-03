@@ -1359,6 +1359,16 @@
     <string name="qbtc_claim_cosign_btc_account">Bitcoin-Konto</string>
     <string name="qbtc_claim_cosign_qbtc_account">QBTC-Konto</string>
     <string name="qbtc_claim_cosign_approve">Genehmigen &amp; mitsignieren</string>
+    <!-- New quantum security intro screen -->
+    <string name="qbtc_intro_title">Neue Quantensicherheit</string>
+    <string name="qbtc_intro_subtitle">Klassische Schlüssel können von Quantencomputern gebrochen werden. Zum Aktivieren von QBTC muss ein neues Schlüsselpaar generiert werden.</string>
+    <string name="qbtc_intro_generate_title">Generieren Sie Ihr Quanten-Schlüsselpaar</string>
+    <string name="qbtc_intro_generate_desc">Vultisig führt eine lokale MPC-Zeremonie über Ihre Tresor-Geräte aus, um ein neues Schlüsselpaar zu erzeugen.</string>
+    <string name="qbtc_intro_link_title">Verknüpfen Sie es mit Ihrem vorhandenen Tresor</string>
+    <string name="qbtc_intro_link_desc">Der Quantenschlüssel ist an Ihre aktuelle Tresor-Anteilsstruktur gebunden. Kein erneutes Teilen erforderlich.</string>
+    <string name="qbtc_intro_claim_title">QBTC abrufen und nutzen</string>
+    <string name="qbtc_intro_claim_desc">Nach der Generierung erscheinen Ihre berechtigten BTC-UTXOs im Verhältnis 1:1 als abrufbares QBTC.</string>
+    <string name="qbtc_intro_get_started">Loslegen</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Einfordern</string>
     <string name="cosmos_staking_action_delegate">Staken</string>
