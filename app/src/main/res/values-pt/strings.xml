@@ -147,7 +147,6 @@
     <string name="verify_swap_sign_button">Assinar transação</string>
     <string name="swap_screen_invalid_vault">A transação provavelmente falhará, o cofre não pôde ser carregado.</string>
     <string name="swap_error_no_amount">A quantidade deve ser um número positivo.</string>
-    <string name="join_keysign_waiting_keysign_start">Aguardando o início do Keysign.</string>
     <string name="tx_done_address_copied">%1$s copiado para a área de transferência</string>
     <string name="token_logo">Logotipo do token</string>
     <string name="vault_edit_this_name_already_exist">esse nome já existe</string>
@@ -182,8 +181,6 @@
     <string name="swap_price_impact_good">Bom</string>
     <string name="swap_price_impact_average">Médio</string>
     <string name="swap_price_impact_high">Alto</string>
-    <string name="join_keysign_discovering_session_id">Descobrindo o ID da sessão</string>
-    <string name="join_keysign_discovery_service">Descobrindo o Serviço</string>
     <string name="vault_settings_delete_subtitle">Exclua seu cofre permanentemente.</string>
     <string name="currency_unit_setting_screen_title">Moeda</string>
     <string name="share_qr_utils_choose_an_app">Escolha um aplicativo</string>

@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
@@ -81,6 +82,15 @@ internal fun NavGraphBuilder.swapScreen(navController: NavHostController) {
         onDragEnd ->
         val model: SwapFormViewModel = hiltViewModel()
         val state by model.uiState.collectAsState()
+
+        // Stop quote polling whenever the form isn't the foreground screen: it stays alive on the
+        // back stack once the flow proceeds to verify/keysign, and its expiry timer would otherwise
+        // keep re-fetching quotes in the background — even on the "Transaction failed" screen
+        // (#5128).
+        LifecycleResumeEffect(Unit) {
+            model.onScreenResumed()
+            onPauseOrDispose { model.onScreenPaused() }
+        }
 
         SwapScreen(
             state = state,

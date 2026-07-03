@@ -2,27 +2,33 @@ package com.vultisig.wallet.app.activity.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.semantics
@@ -136,6 +142,13 @@ private fun MainActivityContent(
     val density = LocalDensity.current
     val statusBarHeightPx = WindowInsets.statusBars.getTop(density)
 
+    // On-screen height the banner overlay occupies below the status bar, captured from its measured
+    // layout. Used to reserve matching space in the content column so the banner pushes content
+    // down
+    // instead of floating over it (#5134).
+    var bannerHeightPx by remember { mutableIntStateOf(0) }
+    val bannerHeightDp = with(density) { bannerHeightPx.toDp() }
+
     Box(
         modifier =
             Modifier.semantics {
@@ -150,6 +163,16 @@ private fun MainActivityContent(
         // reveal the screen's gradient instead of the solid outer Box background.
         Column(modifier = Modifier.fillMaxSize()) {
             OfflineBanner(isOffline)
+            // Reserve the banner's height so content sits below it while it is shown. This
+            // AnimatedVisibility mirrors the overlay's enter/exit so the reserved space grows and
+            // collapses in step with the banner sliding in and out.
+            AnimatedVisibility(
+                visible = foregroundNotification != null,
+                enter = expandVertically(),
+                exit = shrinkVertically(),
+            ) {
+                Spacer(modifier = Modifier.height(bannerHeightDp))
+            }
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) { navContent() }
         }
 
@@ -160,12 +183,14 @@ private fun MainActivityContent(
                 enter = slideInVertically { -it },
                 exit = slideOutVertically { -it },
                 modifier =
-                    Modifier.fillMaxWidth().layout { measurable, constraints ->
-                        val placeable = measurable.measure(constraints)
-                        layout(placeable.width, placeable.height - statusBarHeightPx) {
-                            placeable.placeRelative(0, -statusBarHeightPx)
-                        }
-                    },
+                    Modifier.fillMaxWidth()
+                        .onSizeChanged { bannerHeightPx = it.height }
+                        .layout { measurable, constraints ->
+                            val placeable = measurable.measure(constraints)
+                            layout(placeable.width, placeable.height - statusBarHeightPx) {
+                                placeable.placeRelative(0, -statusBarHeightPx)
+                            }
+                        },
             ) {
                 lastNotification?.let { notification ->
                     ForegroundNotificationBanner(

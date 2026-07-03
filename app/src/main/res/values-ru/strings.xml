@@ -78,8 +78,6 @@
     <string name="vault_tier_ultimate_description_part2">полное освобождение от комиссий Vultisig</string>
     <string name="vault_tier_ultimate_description_part3"> при всех обменах.</string>
     <string name="join_keysign_missing_required_vault">У вас нет необходимого хранилища для Keysign</string>
-    <string name="join_keysign_discovery_service">Обнаружение службы</string>
-    <string name="join_keysign_waiting_keysign_start">Ожидание начала ключевой подписи.</string>
     <string name="send_screen_title">Отправить</string>
     <string name="bond_screen_title">Привязать</string>
     <string name="transaction_type_button_send">Отправить</string>
@@ -124,7 +122,6 @@
     <string name="verify_transaction_consent_amount">Сумма верна</string>
     <string name="verify_transaction_error_not_enough_consent">Пожалуйста, проверьте все согласия</string>
     <string name="camera_permission_open_settings">Открыть настройки</string>
-    <string name="join_keysign_discovering_session_id">Обнаружение ID сессии</string>
     <string name="transaction_done_title">Готово</string>
     <string name="transaction_done_overview">Обзор</string>
     <string name="transaction_done_complete">Завершено</string>

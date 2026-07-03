@@ -149,7 +149,6 @@
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
     <string name="vault_list_vaults_list">Tresore</string>
-    <string name="join_keysign_waiting_keysign_start">Warte auf den Start von Keysign.</string>
     <string name="tx_done_address_copied">%1$s in die Zwischenablage kopiert</string>
     <string name="token_logo">Token-Logo</string>
     <string name="vault_edit_this_name_already_exist">dieser Name existiert bereits</string>
@@ -182,8 +181,6 @@
     <string name="swap_price_impact_good">Gut</string>
     <string name="swap_price_impact_average">Mittel</string>
     <string name="swap_price_impact_high">Hoch</string>
-    <string name="join_keysign_discovering_session_id">Sitzungs-ID ermitteln</string>
-    <string name="join_keysign_discovery_service">Service entdecken</string>
     <string name="vault_settings_delete_subtitle">Löschen Sie Ihren Tresor dauerhaft.</string>
     <string name="currency_unit_setting_screen_title">Währung</string>
     <string name="share_qr_utils_choose_an_app">Wählen Sie eine App</string>

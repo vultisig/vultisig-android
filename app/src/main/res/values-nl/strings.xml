@@ -78,8 +78,6 @@
     <string name="vault_settings_security_screen_title_bottomsheet">On-chain beveiliging uitgeschakeld</string>
     <string name="vault_settings_security_screen_content_bottomsheet">Het uitschakelen van on-chain beveiliging betekent dat Blockaid transacties niet kan verifiëren. Je bent dan minder beschermd.</string>
     <string name="vault_settings_security_screen_title">Beveiliging</string>
-    <string name="join_keysign_discovery_service">Service ontdekken</string>
-    <string name="join_keysign_waiting_keysign_start">Wachten op het starten van Keysign.</string>
     <string name="send_screen_title">Sturen</string>
     <string name="bond_screen_title">Bonden</string>
     <string name="transaction_type_button_send">Sturen</string>
@@ -124,7 +122,6 @@
     <string name="verify_transaction_consent_amount">Het bedrag is correct</string>
     <string name="verify_transaction_error_not_enough_consent">Controleer alle toestemmingen</string>
     <string name="camera_permission_open_settings">Instellingen openen</string>
-    <string name="join_keysign_discovering_session_id">Sessienummer ontdekken</string>
     <string name="transaction_done_title">Gedaan</string>
     <string name="transaction_done_overview">Overzicht</string>
     <string name="transaction_done_complete">Voltooid</string>
