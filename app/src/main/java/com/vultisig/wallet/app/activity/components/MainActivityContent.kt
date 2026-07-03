@@ -143,7 +143,8 @@ private fun MainActivityContent(
     val statusBarHeightPx = WindowInsets.statusBars.getTop(density)
 
     // On-screen height the banner overlay occupies below the status bar, captured from its measured
-    // layout. Used to reserve matching space in the content column so the banner pushes content down
+    // layout. Used to reserve matching space in the content column so the banner pushes content
+    // down
     // instead of floating over it (#5134).
     var bannerHeightPx by remember { mutableIntStateOf(0) }
     val bannerHeightDp = with(density) { bannerHeightPx.toDp() }
