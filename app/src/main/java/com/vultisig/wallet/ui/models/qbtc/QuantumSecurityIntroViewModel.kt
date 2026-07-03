@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.models.hasValidMldsaKey
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -35,10 +36,7 @@ constructor(
     fun getStarted() {
         viewModelScope.safeLaunch {
             val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId exists")
-            val hasValidMldsaKey =
-                vault.pubKeyMLDSA.isNotBlank() &&
-                    vault.keyshares.any { it.pubKey == vault.pubKeyMLDSA }
-            if (hasValidMldsaKey) {
+            if (vault.hasValidMldsaKey()) {
                 navigator.route(Route.QbtcClaim(vaultId = vaultId))
                 return@safeLaunch
             }

@@ -15,15 +15,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.rive.runtime.kotlin.core.Fit
@@ -32,6 +27,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
+import com.vultisig.wallet.ui.components.util.dashedBorder
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.qbtc.QuantumSecurityIntroViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -87,11 +83,13 @@ internal fun QuantumSecurityIntroScreenContent(
                     modifier =
                         Modifier.fillMaxWidth()
                             .height(HeroHeight)
+                            // Figma frame 75584:99921 is square-cornered, hence radius 0
                             .dashedBorder(
+                                width = 1.dp,
                                 color = Theme.v2.colors.border.light,
-                                strokeWidth = 1.dp,
+                                cornerRadius = 0.dp,
                                 dashLength = 6.dp,
-                                gapLength = 4.dp,
+                                intervalLength = 4.dp,
                             ),
                 )
 
@@ -149,21 +147,6 @@ private fun FeatureRow(@DrawableRes icon: Int, title: String, description: Strin
             )
         }
     }
-}
-
-private fun Modifier.dashedBorder(
-    color: Color,
-    strokeWidth: Dp,
-    dashLength: Dp,
-    gapLength: Dp,
-): Modifier = drawBehind {
-    val stroke =
-        Stroke(
-            width = strokeWidth.toPx(),
-            pathEffect =
-                PathEffect.dashPathEffect(floatArrayOf(dashLength.toPx(), gapLength.toPx()), 0f),
-        )
-    drawRect(color = color, style = stroke)
 }
 
 @Composable

@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.canSelectTokens
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.hasValidMldsaKey
 import com.vultisig.wallet.data.models.isBuySupported
 import com.vultisig.wallet.data.models.isDepositSupported
 import com.vultisig.wallet.data.models.isSwapSupported
@@ -166,7 +167,7 @@ constructor(
     fun onClaimQbtc() {
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
-            val hasMldsaKey = currentVault?.pubKeyMLDSA?.isNotEmpty() == true
+            val hasMldsaKey = currentVault?.hasValidMldsaKey() == true
             if (hasMldsaKey) {
                 navigator.route(Route.QbtcClaim(vaultId = vaultId))
             } else {
@@ -183,7 +184,7 @@ constructor(
     // those, no key means no claim path.
     private fun checkQbtcClaimEligibility(chain: Chain) {
         val vault = currentVault
-        val hasMldsaKey = vault != null && vault.pubKeyMLDSA.isNotEmpty()
+        val hasMldsaKey = vault != null && vault.hasValidMldsaKey()
         val canGenerateMldsaKey = vault != null && vault.libType == SigningLibType.DKLS
         uiState.update {
             it.copy(
