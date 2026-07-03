@@ -27,6 +27,15 @@ class CosmosBroadcastException(
     message: String,
 ) : Exception(message) {
 
+    /**
+     * True when the node rejected the broadcast with `codespace=sdk`/`code=32` (invalid account
+     * sequence). On a joined keysign device this is the duplicate-broadcast race: the peer's
+     * byte-identical transaction already advanced the account sequence, so the locally computed
+     * hash is the canonical on-chain hash. Any other rejection is a genuine failure.
+     */
+    val isSequenceMismatch: Boolean
+        get() = codespace == SDK_CODESPACE && code == SDK_INVALID_SEQUENCE
+
     companion object {
         const val BROADCAST_FAILURE_MARKER = "broadcast_failure"
         const val SEQUENCE_MISMATCH_MARKER = "broadcast_failure:sequence_mismatch"
