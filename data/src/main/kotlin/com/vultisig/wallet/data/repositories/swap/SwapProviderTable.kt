@@ -39,6 +39,7 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
             "YFI",
         )
     private val thorBscTokens = setOf("BNB", "USDT", "USDC")
+    private val thorGaiaTokens = setOf("ATOM")
     private val thorAvaxTokens = setOf("AVAX", "USDC", "USDT", "SOL")
     private val thorBaseTokens = setOf("ETH", "CBBTC", "USDC", "VVV")
     private val mayaEthTokens = setOf("ETH", "USDC", "LLD")
@@ -118,7 +119,14 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
             Chain.ThorChain -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA)
             Chain.Bitcoin -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA, SwapProvider.SWAPKIT)
 
-            Chain.GaiaChain -> setOf(SwapProvider.THORCHAIN)
+            // THORChain's only Cosmos Hub pool is native ATOM. IBC/factory tokens (e.g. rKUJI)
+            // would be sent as `GAIA.<TICKER>-ibc/...`, which Thornode rejects with "bad to asset"
+            // (#5113) — offer them no providers instead of a guaranteed-to-fail quote. A live
+            // Available pool can still add a route for a listed token.
+            Chain.GaiaChain ->
+                if (isThorEligible(Chain.GaiaChain, ticker, thorGaiaTokens))
+                    setOf(SwapProvider.THORCHAIN)
+                else emptySet()
 
             // SwapKit DOGE/BCH/LTC routes: DOGE/BCH are legacy P2PKH (SwapKitLegacyP2PKHSigner,
             // with

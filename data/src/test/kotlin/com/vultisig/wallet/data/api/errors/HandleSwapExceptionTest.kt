@@ -105,6 +105,27 @@ class HandleSwapExceptionTest {
     }
 
     @Test
+    fun `thorchain bad to asset full message maps to SwapRouteNotAvailable`() {
+        // Thornode 400 for a destination asset it can't parse, e.g. GAIA.rKUJI-ibc/... (#5113).
+        val result =
+            SwapException.handleSwapException("bad to asset: invalid symbol: invalid request")
+        assertInstanceOf(SwapException.SwapRouteNotAvailable::class.java, result)
+    }
+
+    @Test
+    fun `thorchain bad from asset maps to SwapRouteNotAvailable`() {
+        val result =
+            SwapException.handleSwapException("bad from asset: invalid symbol: invalid request")
+        assertInstanceOf(SwapException.SwapRouteNotAvailable::class.java, result)
+    }
+
+    @Test
+    fun `invalid symbol maps to SwapRouteNotAvailable`() {
+        val result = SwapException.handleSwapException("Invalid Symbol")
+        assertInstanceOf(SwapException.SwapRouteNotAvailable::class.java, result)
+    }
+
+    @Test
     fun `amount less than min swap maps to SmallSwapAmount`() {
         val result = SwapException.handleSwapException("amount less than min swap amount: 10000")
         assertInstanceOf(SwapException.SmallSwapAmount::class.java, result)
