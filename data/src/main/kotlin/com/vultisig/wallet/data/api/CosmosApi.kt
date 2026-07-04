@@ -31,6 +31,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -210,17 +211,26 @@ internal class CosmosApiImp(
         }
     }
 
+    /**
+     * Issues a CosmWasm smart query — a base64-encoded JSON [queryJson] against
+     * `.../contract/{contractAddress}/smart/{payload}`. Shared by the CW20 balance and token_info
+     * lookups so the query-path construction stays in one place.
+     */
+    private suspend fun smartQuery(contractAddress: String, queryJson: String): HttpResponse {
+        val payload = queryJson.encodeBase64()
+        return httpClient.get(
+            "$rpcEndpoint/cosmwasm/wasm/v1/contract/$contractAddress/smart/$payload"
+        )
+    }
+
     override suspend fun getWasmTokenBalance(
         address: String,
         contractAddress: String,
     ): CosmosBalance {
-        val payload = "{\"balance\":{\"address\":\"$address\"}}".encodeBase64()
-
         return CosmosBalance(
             denom = contractAddress,
             amount =
-                httpClient
-                    .get("$rpcEndpoint/cosmwasm/wasm/v1/contract/$contractAddress/smart/$payload")
+                smartQuery(contractAddress, "{\"balance\":{\"address\":\"$address\"}}")
                     .bodyOrThrow<JsonObject>()["data"]
                     ?.jsonObject
                     ?.get("balance")
@@ -230,10 +240,8 @@ internal class CosmosApiImp(
     }
 
     override suspend fun getCw20TokenInfo(contractAddress: String): Cw20TokenInfoJson? {
-        val payload = "{\"token_info\":{}}".encodeBase64()
         return try {
-            httpClient
-                .get("$rpcEndpoint/cosmwasm/wasm/v1/contract/$contractAddress/smart/$payload")
+            smartQuery(contractAddress, "{\"token_info\":{}}")
                 .bodyOrThrow<Cw20TokenInfoResponseJson>()
                 .data
         } catch (e: CancellationException) {
