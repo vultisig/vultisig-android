@@ -321,6 +321,36 @@ internal class VaultSettingsViewModelTest {
             customRpc.enabled.shouldBeFalse()
         }
 
+    /** The post-quantum keygen row shows for a DKLS vault without an MLDSA key yet. */
+    @Test
+    fun `dilithium keygen row is enabled for a DKLS vault`() =
+        runTest(testDispatcher) {
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                Vault(id = VAULT_ID, name = "Test", libType = SigningLibType.DKLS)
+            val vm = createViewModel()
+            val dilithium =
+                vm.uiModel.value.settingGroups
+                    .flatMap { it.items }
+                    .filterIsInstance<VaultSettingsItem.DilithiumKeygen>()
+                    .single()
+            dilithium.enabled.shouldBeTrue()
+        }
+
+    /** GG20 vaults must migrate to DKLS first, so the post-quantum keygen row is hidden. */
+    @Test
+    fun `dilithium keygen row is hidden for a GG20 vault`() =
+        runTest(testDispatcher) {
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                Vault(id = VAULT_ID, name = "Test", libType = SigningLibType.GG20)
+            val vm = createViewModel()
+            val dilithium =
+                vm.uiModel.value.settingGroups
+                    .flatMap { it.items }
+                    .filterIsInstance<VaultSettingsItem.DilithiumKeygen>()
+                    .single()
+            dilithium.enabled.shouldBeFalse()
+        }
+
     private companion object {
         const val VAULT_ID = "vault-1"
     }

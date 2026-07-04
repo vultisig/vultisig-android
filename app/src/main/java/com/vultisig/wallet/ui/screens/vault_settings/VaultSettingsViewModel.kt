@@ -297,7 +297,10 @@ constructor(
             hasFastSign = isVaultHasFastSignById(vaultId) && vault?.signers?.count() == 2
             val hasPassword = vaultPasswordRepository.getPassword(vaultId) != null
             val hasMldsaKey = vault != null && vault.hasValidMldsaKey()
-            val supportsDilithiumKeygen = vault != null && vault.libType != SigningLibType.KeyImport
+            // Only DKLS vaults can run the post-quantum (Dilithium/MLDSA) keygen: KeyImport vaults
+            // receive the key at import, and GG20 vaults must migrate to DKLS first — so the option
+            // stays hidden for them (an isEnabled=false item is filtered out of the list).
+            val supportsDilithiumKeygen = vault != null && vault.libType == SigningLibType.DKLS
 
             val newItems =
                 uiModel.value.settingGroups.map { group ->
