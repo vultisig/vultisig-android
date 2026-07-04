@@ -62,6 +62,11 @@ sealed class SwapException(message: String) : Exception(message) {
                     contains("amount less than dust threshold") -> AmountBelowDustThreshold(error)
                     contains("amount less than min swap amount") -> SmallSwapAmount(error)
                     contains("pool does not exist") -> SwapRouteNotAvailable(error)
+                    // Thornode rejects an asset id it can't parse ("bad to asset: invalid
+                    // symbol: invalid request") — deterministic, so never "adjust the amount".
+                    contains("bad to asset") ||
+                        contains("bad from asset") ||
+                        contains("invalid symbol") -> SwapRouteNotAvailable(error)
                     contains("trading is halted") || contains("trading halted") ->
                         TradingHalted(error)
                     contains("timeout") -> TimeOut(error)
