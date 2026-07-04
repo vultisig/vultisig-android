@@ -550,6 +550,7 @@ class ChainHelpersTest {
                     sendMaxAmount = cardano.sendMaxAmount,
                     ttl = cardano.ttl.toLong(),
                     utxos = internalPayload.utxos,
+                    memo = internalPayload.memo,
                 )
 
             assertTrue(
