@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.crypto.CardanoCIP20
 import com.vultisig.wallet.data.crypto.CardanoUtils
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
@@ -40,6 +41,7 @@ object CardanoHelper {
         ttl: Long,
         utxos: List<UtxoInfo>,
         forceFee: Long,
+        memo: String?,
     ): Cardano.SigningInput.Builder {
         val input =
             Cardano.SigningInput.newBuilder()
@@ -51,8 +53,13 @@ object CardanoHelper {
                         .setChangeAddress(changeAddress)
                         .setForceFee(forceFee)
                 )
-                // TODO: Implement memo support when WalletCore adds Cardano metadata support
                 .setTtl(ttl)
+
+        // CIP-20 memo (label 674). When present, WalletCore commits
+        // blake2b-256(auxDataCbor) into the body at map key 7 and emits the aux
+        // CBOR as element [3] of the signed tx. The encoder is byte-parity pinned
+        // to the SDK golden vector so co-signers agree on the sighash.
+        cip20AuxData(memo)?.let { input.setAuxiliaryData(ByteString.copyFrom(it)) }
 
         // Add UTXOs to the input
         for (inputUtxo in utxos) {
@@ -95,7 +102,19 @@ object CardanoHelper {
             ttl = ttl.toLong(),
             utxos = keysignPayload.utxos,
             forceFee = byteFee,
+            memo = keysignPayload.memo,
         )
+    }
+
+    /**
+     * Canonical CIP-20 auxiliary-data CBOR (label 674) for the payload [memo], or `null` when there
+     * is no memo. Both the pre-sign input (`Cardano.SigningInput.auxiliary_data`) and the
+     * WalletCore-compiled signed envelope derive from these bytes, so the body's key-7 hash and the
+     * embedded aux stay consistent — and byte-identical to the iOS/Extension co-signers.
+     */
+    private fun cip20AuxData(memo: String?): ByteArray? {
+        if (memo.isNullOrEmpty()) return null
+        return CardanoCIP20.buildAuxData(memo).auxDataCbor
     }
 
     /**
@@ -133,6 +152,7 @@ object CardanoHelper {
         sendMaxAmount: Boolean,
         ttl: Long,
         utxos: List<UtxoInfo>,
+        memo: String?,
     ): Long {
         val signingInput =
             buildSigningInput(
@@ -143,6 +163,7 @@ object CardanoHelper {
                     ttl = ttl,
                     utxos = utxos,
                     forceFee = 0,
+                    memo = memo,
                 )
                 .build()
         return plan(signingInput).fee
