@@ -154,6 +154,10 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindSearchTerraTokenUseCase(impl: SearchTerraTokenUseCaseImpl): SearchTerraTokenUseCase
+
+    @Binds
+    @Singleton
     fun bindCreateVaultBackupFileNameUseCase(
         impl: CreateVaultBackupFileNameUseCaseImpl
     ): CreateVaultBackupFileNameUseCase
