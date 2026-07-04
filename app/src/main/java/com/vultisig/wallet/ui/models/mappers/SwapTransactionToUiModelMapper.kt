@@ -57,7 +57,10 @@ constructor(
 
                 SwapProvider.ONEINCH,
                 SwapProvider.KYBER,
-                SwapProvider.SWAPKIT -> tokenRepository.getNativeToken(from.srcToken.chain.id)
+                SwapProvider.SWAPKIT,
+                // CowSwap orders are fee-less; the affiliate fee rides in appData, so the fee coin
+                // mirrors the source-native aggregator model.
+                SwapProvider.COWSWAP -> tokenRepository.getNativeToken(from.srcToken.chain.id)
 
                 SwapProvider.JUPITER -> from.srcToken
             }

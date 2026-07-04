@@ -296,6 +296,11 @@ constructor(
                         slippageBps,
                         externalRecipient,
                     )
+
+                // The CowSwap off-chain order quote source is wired in a later task; until then the
+                // provider is eligible but yields no quote (this throws, and the per-candidate
+                // runCatching drops it so the other providers still resolve).
+                SwapProvider.COWSWAP -> error("CowSwap quote source not yet implemented")
             }
 
         val feeCoin =
@@ -568,24 +573,26 @@ constructor(
         }
 
     /**
-     * Provider preference order for the banded selection. Lower index = preferred. THORChain then
-     * MayaChain lead for cross-chain. Jupiter sits next, above SwapKit/Kyber/1inch/LI.FI: it is
-     * Solana-only and same-chain, so the only candidate set it ever appears in is an on-Solana
-     * SOL↔SPL / SPL↔SPL pair (against LI.FI and a SwapKit/NEAR cross-chain route), where the spec
-     * wants Jupiter — the native Solana DEX aggregator, no markup — preferred. Ranking it above
-     * those globally is safe because it never competes outside that set, and it never co-occurs
-     * with THORChain/Maya (those need a non-Solana or native-SOL leg Jupiter can't be eligible
-     * for).
+     * Provider preference order for the banded selection. Lower index = preferred. CowSwap leads so
+     * it wins output ties on its same-chain ERC-20 pairs (MEV-protection tiebreak, matching the SDK
+     * comparator). THORChain then MayaChain lead for cross-chain. Jupiter sits next, above
+     * SwapKit/Kyber/1inch/LI.FI: it is Solana-only and same-chain, so the only candidate set it
+     * ever appears in is an on-Solana SOL↔SPL / SPL↔SPL pair (against LI.FI and a SwapKit/NEAR
+     * cross-chain route), where the spec wants Jupiter — the native Solana DEX aggregator, no
+     * markup — preferred. Ranking it above those globally is safe because it never competes outside
+     * that set, and it never co-occurs with THORChain/Maya (those need a non-Solana or native-SOL
+     * leg Jupiter can't be eligible for).
      */
     private fun providerPriority(provider: SwapProvider): Int =
         when (provider) {
-            SwapProvider.THORCHAIN -> 0
-            SwapProvider.MAYA -> 1
-            SwapProvider.JUPITER -> 2
-            SwapProvider.SWAPKIT -> 3
-            SwapProvider.KYBER -> 4
-            SwapProvider.ONEINCH -> 5
-            SwapProvider.LIFI -> 6
+            SwapProvider.COWSWAP -> 0
+            SwapProvider.THORCHAIN -> 1
+            SwapProvider.MAYA -> 2
+            SwapProvider.JUPITER -> 3
+            SwapProvider.SWAPKIT -> 4
+            SwapProvider.KYBER -> 5
+            SwapProvider.ONEINCH -> 6
+            SwapProvider.LIFI -> 7
         }
 
     /**
@@ -605,10 +612,13 @@ constructor(
                         ?.takeIf { it > BigInteger.ZERO && tx.gas > 0L }
                         ?.let { gasPrice -> gasPrice * tx.gas.toBigInteger() }
                 }
+            // CowSwap settles off-chain via a GPv2 order (no source-gas leg to compare), so it
+            // exposes no source gas here.
             SwapProvider.THORCHAIN,
             SwapProvider.MAYA,
             SwapProvider.SWAPKIT,
-            SwapProvider.JUPITER -> null
+            SwapProvider.JUPITER,
+            SwapProvider.COWSWAP -> null
         }
 
     /**

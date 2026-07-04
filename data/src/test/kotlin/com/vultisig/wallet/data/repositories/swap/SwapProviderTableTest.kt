@@ -120,6 +120,8 @@ internal class SwapProviderTableTest {
 
     @Test
     fun `Arbitrum offers 1inch and KyberSwap, keeping Maya for Maya-routable tokens`() {
+        // Arbitrum is a CowSwap chain, so every non-native (ERC-20) token also gains COWSWAP on top
+        // of the existing aggregator/Maya set.
         assertEquals(
             setOf(
                 SwapProvider.MAYA,
@@ -127,6 +129,7 @@ internal class SwapProviderTableTest {
                 SwapProvider.LIFI,
                 SwapProvider.KYBER,
                 SwapProvider.SWAPKIT,
+                SwapProvider.COWSWAP,
             ),
             table.providersFor(coin(Chain.Arbitrum, "ARB", isNative = false)),
             "Maya-routable Arbitrum token should keep MAYA and gain the EVM aggregators",
@@ -137,9 +140,57 @@ internal class SwapProviderTableTest {
                 SwapProvider.LIFI,
                 SwapProvider.KYBER,
                 SwapProvider.SWAPKIT,
+                SwapProvider.COWSWAP,
             ),
             table.providersFor(coin(Chain.Arbitrum, "ZZZ", isNative = false)),
             "Generic Arbitrum token should get the full evmAggregators set",
+        )
+    }
+
+    @Test
+    fun `CowSwap is offered for same-chain ERC-20 pairs on its four chains but never native or cross-chain`() {
+        // Same-chain ERC-20 → ERC-20 on each supported chain must surface COWSWAP.
+        listOf(Chain.Ethereum, Chain.Arbitrum, Chain.Base, Chain.Avalanche).forEach { chain ->
+            val eligible =
+                table.eligibleProvidersFor(
+                    srcToken = coin(chain, "AAA", isNative = false),
+                    dstToken = coin(chain, "BBB", isNative = false),
+                )
+            assertTrue(
+                SwapProvider.COWSWAP in eligible,
+                "COWSWAP missing for same-chain ERC-20 pair on $chain: $eligible",
+            )
+        }
+
+        // Selling the native token is out of scope (GPv2 eth-flow) — no COWSWAP.
+        assertFalse(
+            SwapProvider.COWSWAP in
+                table.eligibleProvidersFor(
+                    srcToken = coin(Chain.Ethereum, "ETH", isNative = true),
+                    dstToken = coin(Chain.Ethereum, "USDC", isNative = false),
+                ),
+            "COWSWAP must not be offered when selling native ETH",
+        )
+
+        // Cross-chain ERC-20 → ERC-20 must drop COWSWAP even though both legs are on CowSwap
+        // chains.
+        assertFalse(
+            SwapProvider.COWSWAP in
+                table.eligibleProvidersFor(
+                    srcToken = coin(Chain.Ethereum, "USDC", isNative = false),
+                    dstToken = coin(Chain.Arbitrum, "USDC", isNative = false),
+                ),
+            "COWSWAP (sameChainOnly) must be dropped on a cross-chain pair",
+        )
+
+        // A chain CowSwap does not route (Optimism) never surfaces it.
+        assertFalse(
+            SwapProvider.COWSWAP in
+                table.eligibleProvidersFor(
+                    srcToken = coin(Chain.Optimism, "AAA", isNative = false),
+                    dstToken = coin(Chain.Optimism, "BBB", isNative = false),
+                ),
+            "COWSWAP must not be offered on an unsupported chain",
         )
     }
 

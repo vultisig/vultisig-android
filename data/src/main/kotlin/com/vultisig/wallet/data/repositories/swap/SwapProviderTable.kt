@@ -80,9 +80,29 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
         )
 
     /** Providers that only quote same-chain swaps; filtered out for cross-chain pairs. */
-    private val sameChainOnly = setOf(SwapProvider.ONEINCH, SwapProvider.KYBER)
+    private val sameChainOnly =
+        setOf(SwapProvider.ONEINCH, SwapProvider.KYBER, SwapProvider.COWSWAP)
+
+    /**
+     * Chains on which CowSwap RFQ routes same-chain ERC-20 → ERC-20 swaps. Native tokens are
+     * excluded (GPv2 eth-flow is out of scope); the [isCowSwapEligible] guard enforces that.
+     */
+    private val cowSwapChains = setOf(Chain.Ethereum, Chain.Arbitrum, Chain.Base, Chain.Avalanche)
 
     override fun providersFor(coin: Coin): Set<SwapProvider> {
+        val base = baseProvidersFor(coin)
+        return if (isCowSwapEligible(coin)) base + SwapProvider.COWSWAP else base
+    }
+
+    /**
+     * True if [coin] is an ERC-20 (non-native) token on a chain where CowSwap RFQ routes. CowSwap
+     * only participates when both legs of a pair pass this check (via the [providersFor]
+     * intersection), so native tokens and unsupported chains never surface it.
+     */
+    private fun isCowSwapEligible(coin: Coin): Boolean =
+        !coin.isNativeToken && coin.chain in cowSwapChains
+
+    private fun baseProvidersFor(coin: Coin): Set<SwapProvider> {
         val ticker = coin.ticker.uppercase()
         return when (coin.chain) {
             Chain.MayaChain,
