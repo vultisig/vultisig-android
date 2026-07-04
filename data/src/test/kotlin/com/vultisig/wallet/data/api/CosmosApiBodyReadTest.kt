@@ -75,6 +75,49 @@ class CosmosApiBodyReadTest {
         assertEquals("42000000", result.amount)
     }
 
+    // ── getCw20TokenInfo ────────────────────────────────────────────────────────
+    // Uses bodyOrThrow<Cw20TokenInfoResponseJson>().data; null on any failure.
+
+    @Test
+    fun `getCw20TokenInfo extracts token_info metadata and ignores extra fields`() = runTest {
+        val body =
+            """
+            {
+              "data": {
+                "name": "Astroport",
+                "symbol": "ASTRO",
+                "decimals": 6,
+                "total_supply": "1000000000000"
+              }
+            }
+            """
+                .trimIndent()
+        val api = newApi(body)
+
+        val result = api.getCw20TokenInfo("terra1contractXYZ")
+
+        assertEquals("Astroport", result?.name)
+        assertEquals("ASTRO", result?.symbol)
+        assertEquals(6, result?.decimals)
+    }
+
+    @Test
+    fun `getCw20TokenInfo returns null when the LCD rejects the smart query`() = runTest {
+        val api =
+            CosmosApiImp(
+                httpClient =
+                    MockHttpClient.respondingWith(
+                        HttpStatusCode.BadRequest,
+                        """{"code":3,"message":"Error parsing into type ..."}""",
+                    ),
+                rpcEndpoint = "https://example.test",
+                json = json,
+                cosmosThorChainResponseSerializer = CosmosThorChainResponseSerializerImpl(json),
+            )
+
+        assertEquals(null, api.getCw20TokenInfo("terra1walletaddress"))
+    }
+
     // ── getIbcDenomTraces ───────────────────────────────────────────────────────
     // Uses .body<CosmosIbcDenomTraceJson>().denomTrace!!
 

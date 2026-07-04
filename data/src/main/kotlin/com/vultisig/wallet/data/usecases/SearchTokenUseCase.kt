@@ -24,6 +24,7 @@ constructor(
     private val searchEvmToken: SearchEvmTokenUseCase,
     private val searchSolToken: SearchSolTokenUseCase,
     private val searchKujiToken: SearchKujiraTokenUseCase,
+    private val searchTerraToken: SearchTerraTokenUseCase,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : SearchTokenUseCase {
 
@@ -42,6 +43,7 @@ constructor(
             chain.standard == EVM -> searchEvmToken(chainId, address)
             chain.standard == SOL -> searchSolToken(address)
             chain == Chain.Kujira -> searchKujiToken(address)
+            chain == Chain.Terra || chain == Chain.TerraClassic -> searchTerraToken(chain, address)
             else -> null
         }
 
@@ -51,17 +53,38 @@ constructor(
     }
 
     private fun String.isValidAddressOn(chain: Chain): Boolean =
-        isNotEmpty() && chainAccountAddressRepository.isValid(chain, canonicalizedFor(chain))
+        when (chain) {
+            Chain.Terra,
+            Chain.TerraClassic -> isCw20ContractAddressShape()
+            else ->
+                isNotEmpty() &&
+                    chainAccountAddressRepository.isValid(chain, canonicalizedFor(chain))
+        }
 
     private fun String.canonicalizedFor(chain: Chain): String =
         if (chain == Chain.Kujira && startsWith(KUJIRA_FACTORY_PREFIX)) {
             substringAfter('/').substringBefore('/')
         } else this
 
+    /**
+     * Bech32 *shape* check for a Terra CW20 contract address, mirroring the SDK's
+     * `isCosmosWasmTokenId` — WalletCore address validation isn't specified for 32-byte contract
+     * payloads, so it can't be used here. Contract addresses can be 20-byte (Terra Classic
+     * pre-migration contracts, indistinguishable from wallet addresses) or 32-byte; only the LCD
+     * query itself can tell a contract from a wallet address. `ibc/…` and `factory/…` bank denoms
+     * are rejected.
+     */
+    private fun String.isCw20ContractAddressShape(): Boolean {
+        if (!startsWith(TERRA_CONTRACT_PREFIX)) return false
+        val payload = removePrefix(TERRA_CONTRACT_PREFIX)
+        return payload.length in 20..80 && payload.all { it in 'a'..'z' || it in '0'..'9' }
+    }
+
     private fun Coin.hasSaneMetadata(): Boolean = ticker.isNotBlank() && decimal in 0..MAX_DECIMALS
 
     private companion object {
         const val KUJIRA_FACTORY_PREFIX = "factory/"
+        const val TERRA_CONTRACT_PREFIX = "terra1"
         const val MAX_DECIMALS = 30
     }
 }
