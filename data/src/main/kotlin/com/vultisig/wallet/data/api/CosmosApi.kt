@@ -17,6 +17,8 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosSimulateResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTxStatusJson
+import com.vultisig.wallet.data.api.models.cosmos.Cw20TokenInfoJson
+import com.vultisig.wallet.data.api.models.cosmos.Cw20TokenInfoResponseJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CustomRpcSupportedChains
@@ -61,6 +63,13 @@ interface CosmosApi {
     suspend fun simulate(txBytes: String): Long?
 
     suspend fun getWasmTokenBalance(address: String, contractAddress: String): CosmosBalance
+
+    /**
+     * CW20 `{"token_info":{}}` smart-query metadata for [contractAddress], or `null` when the
+     * address is not a CW20 contract (wallet address, non-CW20 contract, unknown address) or the
+     * request fails. Used by the custom-token flow on Terra / Terra Classic.
+     */
+    suspend fun getCw20TokenInfo(contractAddress: String): Cw20TokenInfoJson?
 
     suspend fun getIbcDenomTraces(contractAddress: String): CosmosIbcDenomTraceDenomTraceJson
 
@@ -218,6 +227,21 @@ internal class CosmosApiImp(
                     ?.jsonPrimitive
                     ?.content ?: "0",
         )
+    }
+
+    override suspend fun getCw20TokenInfo(contractAddress: String): Cw20TokenInfoJson? {
+        val payload = "{\"token_info\":{}}".encodeBase64()
+        return try {
+            httpClient
+                .get("$rpcEndpoint/cosmwasm/wasm/v1/contract/$contractAddress/smart/$payload")
+                .bodyOrThrow<Cw20TokenInfoResponseJson>()
+                .data
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.d(e, "CW20 token_info lookup failed for %s", contractAddress)
+            null
+        }
     }
 
     override suspend fun getIbcDenomTraces(
