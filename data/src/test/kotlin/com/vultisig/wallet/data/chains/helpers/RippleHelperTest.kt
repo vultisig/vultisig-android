@@ -10,7 +10,8 @@ class RippleHelperTest {
      * Canonical XRPL transaction ID derivation, checked against a real validated transaction
      * (ledger tx `005899AE…C974`). The blob is the binary form returned by the node's `tx` command,
      * and the expected hash is the id the node and explorers index it under. This locks in that we
-     * hash SHA-512Half over the `TXN `-prefixed blob and uppercase the result.
+     * hash SHA-512Half over the `0x54584E00` (`TXN` + zero byte) prefixed blob and uppercase the
+     * result.
      */
     @Test
     fun `calculateTransactionHash matches the canonical XRPL transaction id`() {
