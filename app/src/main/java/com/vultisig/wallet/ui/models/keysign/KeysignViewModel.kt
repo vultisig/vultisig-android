@@ -782,15 +782,18 @@ constructor(
     private suspend fun broadcastTransaction() {
         val payload = keysignPayload ?: return
 
-        when (
-            val result =
-                broadcastKeysign(
-                    vault = vault,
-                    payload = payload,
-                    signatures = signatures,
-                    isInitiatingDevice = isInitiatingDevice,
-                )
-        ) {
+        applyBroadcastResult(
+            broadcastKeysign(
+                vault = vault,
+                payload = payload,
+                signatures = signatures,
+                isInitiatingDevice = isInitiatingDevice,
+            )
+        )
+    }
+
+    internal suspend fun applyBroadcastResult(result: KeysignBroadcastResult) {
+        when (result) {
             is KeysignBroadcastResult.ApprovalNotConfirmed -> {
                 _state.update {
                     it.copy(
@@ -840,6 +843,17 @@ constructor(
                                     KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
                             )
                         }
+                    }
+                } else {
+                    // The broadcast succeeded but produced no hash. Land on the terminal
+                    // "broadcasted" state instead of leaving signingState at the last signing
+                    // state forever (infinite spinner → the user may force-retry and double-send).
+                    // Without a hash we cannot save history or poll status.
+                    _state.update {
+                        it.copy(
+                            signingState =
+                                KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+                        )
                     }
                 }
             }

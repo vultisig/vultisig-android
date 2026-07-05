@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.keysign
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
@@ -79,6 +80,11 @@ internal fun KeysignView(
     dappMetadata: DAppMetadata? = null,
     @DrawableRes coinLogoRes: Int? = null,
 ) {
+    // Block system back while signing/broadcasting is in progress. Popping the nav entry here
+    // cancels the ViewModel's coroutine scope mid-broadcast, before a terminal state lands, and a
+    // force-retry could double-send. Back is re-enabled once the flow reaches a finished/error
+    // state.
+    BackHandler(enabled = state.isInProgress) {}
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         if (state.isInProgress) {
             KeepScreenOn()
