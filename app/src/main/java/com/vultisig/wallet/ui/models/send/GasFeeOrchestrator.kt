@@ -326,6 +326,10 @@ internal class GasFeeOrchestrator(
             val tokenAmountFlow =
                 tokenAmountFieldState.textAsFlow().debounce(300).distinctUntilChanged()
 
+            // The memo is optional. textAsFlow() (snapshotFlow) emits the current text — an empty
+            // string when no memo is entered — immediately on collection, so this flow always has a
+            // value and never blocks the combine below; a missing memo simply yields cardanoMemo =
+            // null.
             val memoFlow = memoFieldState.textAsFlow().debounce(300).distinctUntilChanged()
 
             combine(
