@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.models.qbtc
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.ClaimProofResponse
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.ClaimableUtxo
@@ -31,6 +32,7 @@ import com.vultisig.wallet.ui.models.keysign.ResolveQbtcClaimCoinsUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -305,6 +307,25 @@ internal class QbtcClaimViewModelTest {
 
             coVerify(exactly = 0) { roundRunner.run(any()) }
             assertTrue(vm.uiState.value is QbtcClaimUiState.Selecting)
+        }
+
+    @Test
+    fun `confirm sets a validation error and never calls the orchestrator when the password is empty`() =
+        runTest(testDispatcher) {
+            coEvery { loadClaimableUtxos(BTC_ADDRESS) } returns
+                QbtcClaimLoadResult.Available(utxos(2))
+            val vm = viewModel()
+            advanceUntilIdle()
+
+            vm.confirm(fastVaultPassword = "")
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { roundRunner.run(any()) }
+            val state = vm.uiState.value as QbtcClaimUiState.Selecting
+            assertEquals(
+                UiText.StringResource(R.string.password_should_not_be_empty),
+                state.passwordError,
+            )
         }
 
     @Test

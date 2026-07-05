@@ -58,6 +58,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
@@ -72,6 +73,8 @@ import com.vultisig.wallet.ui.models.qbtc.QbtcClaimViewModel
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun QbtcClaimScreen(viewModel: QbtcClaimViewModel = hiltViewModel()) {
@@ -106,6 +109,7 @@ internal fun QbtcClaimScreen(
                 passwordPrompt = false
                 onConfirm(it)
             },
+            passwordError = (state as? QbtcClaimUiState.Selecting)?.passwordError,
         )
     }
 
@@ -613,12 +617,17 @@ private fun ClaimPairingScreen(state: QbtcClaimUiState.Pairing, onBackClick: () 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FastVaultPasswordSheet(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+private fun FastVaultPasswordSheet(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit,
+    passwordError: UiText?,
+) {
     val passwordFieldState = remember { TextFieldState() }
     var isPasswordVisible by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
 
-    val submit = { onConfirm(passwordFieldState.text.toString()) }
+    val canSubmit = passwordFieldState.text.isNotEmpty()
+    val submit = { if (canSubmit) onConfirm(passwordFieldState.text.toString()) }
 
     V2BottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
@@ -657,6 +666,10 @@ private fun FastVaultPasswordSheet(onDismiss: () -> Unit, onConfirm: (String) ->
                 focusRequester = focusRequester,
                 imeAction = ImeAction.Go,
                 onKeyboardAction = { submit() },
+                innerState =
+                    if (passwordError != null) VsTextInputFieldInnerState.Error
+                    else VsTextInputFieldInnerState.Default,
+                footNote = passwordError?.asString(),
                 invisibleIcon = R.drawable.eye_closed,
             )
 
@@ -664,6 +677,7 @@ private fun FastVaultPasswordSheet(onDismiss: () -> Unit, onConfirm: (String) ->
 
             VsButton(
                 label = stringResource(R.string.qbtc_claim_title),
+                state = if (canSubmit) VsButtonState.Enabled else VsButtonState.Disabled,
                 onClick = submit,
                 modifier = Modifier.fillMaxWidth(),
             )
