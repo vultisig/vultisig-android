@@ -352,7 +352,7 @@
     <string name="join_keysign_start_timeout">Drugi uređaj nije započeo potpisivanje na vrijeme</string>
     <string name="join_keysign_qbtc_claim_missing_account">Ovom trezoru nedostaje Bitcoin ili QBTC račun potreban za supotpisivanje zahtjeva</string>
     <string name="network_connection_lost">Mrežna veza izgubljena. Provjerite svoju internetsku vezu</string>
-    <string name="send_form_polka_reaping_warning">Ostavite dovoljno sredstava za pokrivanje naknada. Ako stanje na računu padne ispod 1 DOT (egzistencijalni depozit), račun će biti deaktiviran (požnjet) i sva preostala sredstva bit će izgubljena. Adresu možete ponovno aktivirati s novim pologom većim od egzistencijalnog pologa u bilo kojem trenutku. Međutim, to neće vratiti izgubljena sredstva.</string>
+    <string name="send_form_polka_reaping_warning">Ostavite dovoljno sredstava za pokrivanje naknada. Ako stanje na računu padne ispod 0,01 DOT (egzistencijalni depozit), račun će biti deaktiviran (požnjet) i sva preostala sredstva bit će izgubljena. Adresu možete ponovno aktivirati s novim pologom većim od egzistencijalnog pologa u bilo kojem trenutku. Međutim, to neće vratiti izgubljena sredstva.</string>
     <string name="edit_address_title">Uredi adresu</string>
     <!-- Push Notifications -->
     <string name="notifications">Obavijesti</string>

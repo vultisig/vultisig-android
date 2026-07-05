@@ -652,7 +652,7 @@
     <string name="network_connection_lost">网络连接丢失。请检查您的互联网连接</string>
 
     <!-- Send Form Polka -->
-    <string name="send_form_polka_reaping_warning">确保留下足够的资金来支付费用。如果账户余额低于 1 DOT（存在性存款），账户将被停用（收割），任何剩余资金将丢失。您可以随时用大于存在性存款的新存款重新激活地址。但是，这不会恢复丢失的资金。</string>
+    <string name="send_form_polka_reaping_warning">确保留下足够的资金来支付费用。如果账户余额低于 0.01 DOT（存在性存款），账户将被停用（收割），任何剩余资金将丢失。您可以随时用大于存在性存款的新存款重新激活地址。但是，这不会恢复丢失的资金。</string>
 
     <!-- Sign Message -->
     <string name="hint_signing_method">签名方法</string>

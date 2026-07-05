@@ -24,14 +24,18 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 
 /** Stub [RippleApi] that only answers `fetchAccountsInfo`, the sole call the tests need. */
-private class FakeRippleApi(private val accountInfo: RippleAccountInfoResponseJson? = null) :
-    RippleApi {
+private class FakeRippleApi(
+    private val accountInfo: RippleAccountInfoResponseJson? = null,
+    private val fetchAccountsInfoError: Exception? = null,
+) : RippleApi {
     override suspend fun broadcastTransaction(tx: String): String? = null
 
     override suspend fun getBalance(coin: Coin): BigInteger = BigInteger.ZERO
 
-    override suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountInfoResponseJson? =
-        accountInfo
+    override suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountInfoResponseJson? {
+        fetchAccountsInfoError?.let { throw it }
+        return accountInfo
+    }
 
     override suspend fun fetchServerState(): RippleServerStateResponseJson =
         error("not used by these tests")
@@ -128,9 +132,9 @@ internal class ChainValidationServiceTest {
 
     @Test
     fun `checkIsReapable - polkadot balance below existential deposit returns warning`() {
-        // 1.1 DOT balance, sending 1.0 DOT, 0.005 DOT fee → 0.005 DOT remaining < 0.01 DOT
+        // 1.01 DOT balance, sending 1.0 DOT, 0.005 DOT fee → 0.005 DOT remaining < 0.01 DOT
         // (Asset Hub) threshold
-        val balance = BigInteger.valueOf(1_100_000_000L) // 1.1 DOT
+        val balance = BigInteger.valueOf(10_100_000_000L) // 1.01 DOT
         val account = Account(dotCoin, TokenValue(balance, "DOT", 10), null, null)
         val gasFee = TokenValue(BigInteger.valueOf(50_000_000L), "DOT", 10) // 0.005 DOT
         val result = service.checkIsReapable(account, dotCoin, "1.0", gasFee)
@@ -358,6 +362,28 @@ internal class ChainValidationServiceTest {
         )
         // no exception means success
     }
+
+    @Test
+    fun `validateRippleDestinationReserve - lookup failure fails closed with a connection error`() =
+        runTest {
+            val brokenService =
+                ChainValidationService(
+                    FakeRippleApi(fetchAccountsInfoError = IllegalStateException("RPC unreachable"))
+                )
+            try {
+                brokenService.validateRippleDestinationReserve(
+                    selectedToken = xrpCoin,
+                    dstAddress = "rNewAddress",
+                    tokenAmountInt = BigInteger.ONE,
+                )
+                fail("Expected InvalidTransactionDataException to be thrown")
+            } catch (e: InvalidTransactionDataException) {
+                assertEquals(
+                    R.string.network_connection_lost,
+                    (e.text as UiText.StringResource).resId,
+                )
+            }
+        }
 
     // validateBtcLikeAmount tests
 

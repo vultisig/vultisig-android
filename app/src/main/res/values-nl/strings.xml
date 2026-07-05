@@ -351,7 +351,7 @@
     <string name="join_keysign_start_timeout">Het andere apparaat is niet op tijd begonnen met ondertekenen</string>
     <string name="join_keysign_qbtc_claim_missing_account">Deze kluis mist het Bitcoin- of QBTC-account dat nodig is om de claim mede te ondertekenen</string>
     <string name="network_connection_lost">Netwerkverbinding verbroken. Controleer uw internetverbinding.</string>
-    <string name="send_form_polka_reaping_warning">Zorg ervoor dat u voldoende geld achterlaat om de kosten te dekken. Als een rekeningsaldo onder 1 DOT (Existential Deposit) zakt, wordt de rekening gedeactiveerd (gereapeerd) en gaan alle resterende fondsen verloren. U kunt het adres op elk gewenst moment reactiveren met een nieuwe storting die groter is dan de existentiële storting. Dit zal echter niet de verloren fondsen terugkrijgen.</string>
+    <string name="send_form_polka_reaping_warning">Zorg ervoor dat u voldoende geld achterlaat om de kosten te dekken. Als een rekeningsaldo onder 0,01 DOT (Existential Deposit) zakt, wordt de rekening gedeactiveerd (gereapeerd) en gaan alle resterende fondsen verloren. U kunt het adres op elk gewenst moment reactiveren met een nieuwe storting die groter is dan de existentiële storting. Dit zal echter niet de verloren fondsen terugkrijgen.</string>
     <string name="edit_address_title">Adres bewerken</string>
     <!-- Push Notifications -->
     <string name="notifications">Meldingen</string>

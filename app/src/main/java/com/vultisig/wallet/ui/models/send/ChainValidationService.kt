@@ -25,6 +25,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
@@ -213,9 +214,20 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
     ) {
         if (selectedToken.chain != Chain.Ripple || !selectedToken.isNativeToken) return
 
-        val isDestinationFunded =
-            rippleApi.fetchAccountsInfo(dstAddress)?.result?.accountData != null
-        if (isDestinationFunded) return
+        // Fail closed on a lookup failure rather than assuming the destination is funded —
+        // skipping the check here would silently reopen the exact on-chain rejection this
+        // validator exists to prevent.
+        val accountInfo =
+            try {
+                rippleApi.fetchAccountsInfo(dstAddress)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.network_connection_lost)
+                )
+            }
+        if (accountInfo?.result?.accountData != null) return
 
         val baseReserve = RippleHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
         if (tokenAmountInt < baseReserve) {
