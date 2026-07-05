@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
+import java.security.MessageDigest
 import timber.log.Timber
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
@@ -150,9 +151,26 @@ object RippleHelper {
             error(errorMessage)
         }
 
+        val signedTransaction = output.encoded.toByteArray()
         return SignedTransactionResult(
-            rawTransaction = output.encoded.toByteArray().toHexString(),
-            transactionHash = "",
+            rawTransaction = signedTransaction.toHexString(),
+            transactionHash = calculateTransactionHash(signedTransaction),
         )
     }
+
+    /**
+     * Derives the canonical XRPL transaction ID: the first 32 bytes (SHA-512Half) of the SHA-512
+     * digest of the signed transaction blob prefixed with the transaction hash prefix 0x54584E00.
+     * WalletCore's [Ripple.SigningOutput] does not expose the hash, so it must be computed here to
+     * match the value the node returns and the explorer indexes - an empty hash breaks status
+     * polling, explorer deep-links, and duplicate-broadcast recovery.
+     */
+    fun calculateTransactionHash(signedTransaction: ByteArray): String {
+        val digest =
+            MessageDigest.getInstance("SHA-512").digest(TRANSACTION_HASH_PREFIX + signedTransaction)
+        return digest.copyOfRange(0, 32).toHexString(HexFormat.UpperCase)
+    }
+
+    // 0x54584E00 is the ASCII "TXN" mnemonic plus a zero byte: XRPL's transaction-ID hash prefix.
+    private val TRANSACTION_HASH_PREFIX = byteArrayOf(0x54, 0x58, 0x4E, 0x00)
 }
