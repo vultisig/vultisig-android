@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -119,7 +120,6 @@ internal fun TonStakeScreen(viewModel: TonStakeViewModel = hiltViewModel()) {
             TonPoolPickerSheet(
                 state = state,
                 searchTextFieldState = viewModel.searchTextFieldState,
-                onSearchQueryChange = viewModel::onSearchQueryChange,
                 onPoolSelected = viewModel::onPoolSelected,
                 onDismiss = viewModel::closePoolPicker,
             )
@@ -183,7 +183,6 @@ private fun TonPoolPickerField(selected: TonPoolUiModel?, onClick: () -> Unit) {
 private fun TonPoolPickerSheet(
     state: TonStakeUiState,
     searchTextFieldState: androidx.compose.foundation.text.input.TextFieldState,
-    onSearchQueryChange: (String) -> Unit,
     onPoolSelected: (TonPoolUiModel) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -223,11 +222,10 @@ private fun TonPoolPickerSheet(
                     tint = Theme.v2.colors.text.tertiary,
                 )
                 BasicTextField(
-                    value = searchTextFieldState.text.toString(),
-                    onValueChange = onSearchQueryChange,
-                    singleLine = true,
+                    state = searchTextFieldState,
+                    lineLimits = TextFieldLineLimits.SingleLine,
                     textStyle = TextStyle(color = Theme.v2.colors.text.primary, fontSize = 16.sp),
-                    decorationBox = { inner ->
+                    decorator = { inner ->
                         if (searchTextFieldState.text.isEmpty()) {
                             Text(
                                 text = stringResource(R.string.token_selection_search_hint),

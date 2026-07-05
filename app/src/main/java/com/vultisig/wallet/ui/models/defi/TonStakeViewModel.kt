@@ -26,10 +26,10 @@ import com.vultisig.wallet.ui.models.deposit.submit.buildTonStakingTransaction
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -106,7 +106,6 @@ constructor(
     private val transactionRepository:
         com.vultisig.wallet.data.repositories.DepositTransactionRepository,
     private val navigator: Navigator<com.vultisig.wallet.ui.navigation.Destination>,
-    private val sendNavigator: Navigator<SendDst>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -124,6 +123,7 @@ constructor(
     init {
         loadCoin()
         loadPools()
+        observeSearch()
     }
 
     fun openPoolPicker() {
@@ -135,15 +135,23 @@ constructor(
         _state.update { it.copy(isShowingPicker = false) }
     }
 
-    fun onSearchQueryChange(query: String) {
-        val needle = query.trim().lowercase()
-        val visible =
-            if (needle.isEmpty()) allPools
-            else
-                allPools.filter {
-                    it.name.lowercase().contains(needle) || it.address.lowercase().contains(needle)
-                }
-        _state.update { it.copy(pools = visible) }
+    /**
+     * Filter the pool list off the search field state so the typed query survives recomposition.
+     */
+    private fun observeSearch() {
+        viewModelScope.safeLaunch {
+            searchTextFieldState.textAsFlow().collect { query ->
+                val needle = query.trim().toString().lowercase()
+                val visible =
+                    if (needle.isEmpty()) allPools
+                    else
+                        allPools.filter {
+                            it.name.lowercase().contains(needle) ||
+                                it.address.lowercase().contains(needle)
+                        }
+                _state.update { it.copy(pools = visible) }
+            }
+        }
     }
 
     fun onPoolSelected(pool: TonPoolUiModel) {
@@ -228,11 +236,8 @@ constructor(
                     )
 
                 transactionRepository.addTransaction(transaction)
-                sendNavigator.navigate(
-                    SendDst.VerifyTransaction(
-                        transactionId = transaction.id,
-                        vaultId = route.vaultId,
-                    )
+                navigator.route(
+                    Route.VerifyDeposit(vaultId = route.vaultId, transactionId = transaction.id)
                 )
                 _state.update { it.copy(isSubmitting = false) }
             } catch (e: InvalidTransactionDataException) {
@@ -272,7 +277,12 @@ constructor(
 
     private fun loadPools() {
         viewModelScope.safeLaunch(
-            onError = { e -> Timber.e(e, "Failed to load TON staking pools") }
+            onError = { e ->
+                Timber.e(e, "Failed to load TON staking pools")
+                // Clear the spinner so the picker falls back to its empty state instead of
+                // spinning forever when the pools request fails.
+                _state.update { it.copy(isLoadingPools = false) }
+            }
         ) {
             _state.update { it.copy(isLoadingPools = true) }
             val decimals = coin?.decimal ?: com.vultisig.wallet.data.models.Coins.Ton.TON.decimal

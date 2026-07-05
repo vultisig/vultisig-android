@@ -29,6 +29,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.text.NumberFormat
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -210,7 +211,17 @@ constructor(
         price: BigDecimal,
         currencyFormat: NumberFormat,
     ): TonStakingUiModel {
-        val poolInfo = runCatching { tonStakingApi.getStakingPool(poolAddress) }.getOrNull()
+        // Pool metadata (name/apy/cycle) is display-only, so a genuine lookup miss degrades to a
+        // short fallback label. Cancellation must still propagate — otherwise a cancelled reload
+        // could swallow the exception and let this coroutine publish a stale Success state.
+        val poolInfo =
+            try {
+                tonStakingApi.getStakingPool(poolAddress)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
 
         val stakedTon = staked.toBigDecimal().movePointLeft(coin.decimal)
         val stakedFiat = currencyFormat.format(stakedTon.multiply(price))

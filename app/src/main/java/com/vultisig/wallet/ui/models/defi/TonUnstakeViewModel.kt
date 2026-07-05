@@ -25,7 +25,6 @@ import com.vultisig.wallet.ui.models.deposit.submit.buildTonStakingTransaction
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
@@ -71,7 +70,6 @@ constructor(
     private val depositGasFeeHelper: DepositGasFeeHelper,
     private val transactionRepository: DepositTransactionRepository,
     private val navigator: Navigator<com.vultisig.wallet.ui.navigation.Destination>,
-    private val sendNavigator: Navigator<SendDst>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -131,11 +129,8 @@ constructor(
                     )
 
                 transactionRepository.addTransaction(transaction)
-                sendNavigator.navigate(
-                    SendDst.VerifyTransaction(
-                        transactionId = transaction.id,
-                        vaultId = route.vaultId,
-                    )
+                navigator.route(
+                    Route.VerifyDeposit(vaultId = route.vaultId, transactionId = transaction.id)
                 )
                 _state.update { it.copy(isSubmitting = false) }
             } catch (e: InvalidTransactionDataException) {
@@ -146,32 +141,41 @@ constructor(
 
     private fun loadCoin() {
         viewModelScope.safeLaunch(
-            onError = { e -> Timber.e(e, "Failed to load TON coin for unstake flow") }
+            // Fail closed: any failure resolving the vault, coin, or gas fee leaves the action
+            // disabled with an explicit error rather than a silently-enabled Continue that can't
+            // broadcast.
+            onError = { e ->
+                Timber.e(e, "Failed to load TON coin for unstake flow")
+                setError(R.string.ton_defi_error_ton_not_in_vault.asUiText())
+                _state.update { it.copy(hasSufficientBalance = false) }
+            }
         ) {
             val vault = withContext(ioDispatcher) { vaultRepository.get(route.vaultId) }
             val nativeCoin =
                 vault?.coins?.firstOrNull { it.chain == Chain.Ton && it.isNativeToken }
-                    ?: return@safeLaunch
+                    ?: return@safeLaunch _state.update {
+                        it.copy(
+                            hasSufficientBalance = false,
+                            errorMessage = R.string.ton_defi_error_ton_not_in_vault.asUiText(),
+                        )
+                    }
             coin = nativeCoin
 
             // The withdraw message carries the 0.2 TON signal fee plus the network gas; block the
             // action if the liquid balance can't cover both (the broadcast would otherwise fail).
+            // A gas-fee lookup failure propagates to onError above rather than defaulting to zero,
+            // which would understate the requirement and enable a doomed withdrawal.
             val gasFee =
-                runCatching {
-                        withContext(ioDispatcher) {
-                            depositGasFeeHelper.calculateGasFee(
-                                route.vaultId,
-                                Chain.Ton,
-                                nativeCoin,
-                                nativeCoin.address,
-                            )
-                        }
-                    }
-                    .getOrNull()
-            val required =
-                BigDecimal(
-                        TonNominatorPool.WITHDRAW_FEE + (gasFee?.value ?: java.math.BigInteger.ZERO)
+                withContext(ioDispatcher) {
+                    depositGasFeeHelper.calculateGasFee(
+                        route.vaultId,
+                        Chain.Ton,
+                        nativeCoin,
+                        nativeCoin.address,
                     )
+                }
+            val required =
+                BigDecimal(TonNominatorPool.WITHDRAW_FEE + gasFee.value)
                     .movePointLeft(nativeCoin.decimal)
             val balance =
                 withContext(ioDispatcher) { balanceRepository.cachedSpendableBalance(nativeCoin) }

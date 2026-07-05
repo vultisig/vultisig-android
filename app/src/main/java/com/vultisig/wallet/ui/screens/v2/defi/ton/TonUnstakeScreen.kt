@@ -74,7 +74,7 @@ internal fun TonUnstakeScreen(viewModel: TonUnstakeViewModel = hiltViewModel()) 
                     color = Theme.v2.colors.text.secondary,
                 )
 
-                if (!state.hasSufficientBalance) {
+                if (!state.hasSufficientBalance && state.errorMessage == null) {
                     Text(
                         text = stringResource(R.string.insufficient_native_token, ticker),
                         style = Theme.brockmann.supplementary.caption,
