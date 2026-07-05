@@ -223,6 +223,7 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                Timber.e(e, "Failed to fetch Ripple account info for %s", dstAddress)
                 throw InvalidTransactionDataException(
                     UiText.StringResource(R.string.network_connection_lost)
                 )
