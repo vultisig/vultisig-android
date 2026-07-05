@@ -64,6 +64,12 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         }
         val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
 
+        val effectivePriorityLimit =
+            solanaSpecific.priorityLimit
+                .takeIf { it > BigInteger.ZERO }
+                ?.min(BigInteger.valueOf(Int.MAX_VALUE.toLong()))
+                ?.toInt() ?: SOLANA_PRIORITY_FEE_LIMIT
+
         val input =
             Solana.SigningInput.newBuilder()
                 .setV0Msg(true)
@@ -82,13 +88,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                         .build()
                 )
                 .setPriorityFeeLimit(
-                    Solana.PriorityFeeLimit.newBuilder()
-                        .setLimit(
-                            solanaSpecific.priorityLimit
-                                .min(BigInteger.valueOf(Int.MAX_VALUE.toLong()))
-                                .toInt()
-                        )
-                        .build()
+                    Solana.PriorityFeeLimit.newBuilder().setLimit(effectivePriorityLimit).build()
                 )
 
         if (keysignPayload.coin.isNativeToken) {

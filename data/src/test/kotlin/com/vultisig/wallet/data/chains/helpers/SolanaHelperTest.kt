@@ -7,8 +7,10 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import java.math.BigInteger
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import wallet.core.jni.proto.Solana
 
 class SolanaHelperTest {
 
@@ -55,5 +57,78 @@ class SolanaHelperTest {
         val error =
             assertThrows<IllegalStateException> { SolanaHelper("").getPreSignedImageHash(payload) }
         assertEquals(SOLANA_MISSING_TOKEN_ACCOUNT_PREFIX + usdc.ticker, error.message)
+    }
+
+    /**
+     * A zero compute-limit override (e.g. a joining device reconstructing a payload with a missing
+     * value) must fall back to the app's default limit rather than encoding a zero compute budget.
+     * Uses [SolanaHelper.getSwapPreSignedInputData] since it is the only public entry point that
+     * returns the raw signing-input bytes without invoking a WalletCore signing/hashing call.
+     */
+    @Test
+    fun `zero priorityLimit falls back to the default compute-unit limit`() {
+        try {
+            val inputData =
+                SolanaHelper("").getSwapPreSignedInputData(solanaSwapPayload(BigInteger.ZERO))
+            val signingInput = Solana.SigningInput.parseFrom(inputData)
+            assertEquals(SOLANA_PRIORITY_FEE_LIMIT, signingInput.priorityFeeLimit.limit)
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `positive priorityLimit is passed through unchanged`() {
+        try {
+            val inputData =
+                SolanaHelper("")
+                    .getSwapPreSignedInputData(solanaSwapPayload(BigInteger.valueOf(42_000L)))
+            val signingInput = Solana.SigningInput.parseFrom(inputData)
+            assertEquals(42_000, signingInput.priorityFeeLimit.limit)
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    private fun solanaSwapPayload(priorityLimit: BigInteger): KeysignPayload =
+        KeysignPayload(
+            coin =
+                Coin(
+                    chain = Chain.Solana,
+                    ticker = "SOL",
+                    logo = "",
+                    address = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+                    decimal = 9,
+                    hexPublicKey = "",
+                    priceProviderID = "",
+                    contractAddress = "",
+                    isNativeToken = true,
+                ),
+            toAddress = "3xM8c79mk7fvcz5ENZgMbChPJGWZAjFqwdDzZp4R2gHR",
+            toAmount = BigInteger.valueOf(1_000_000L),
+            blockChainSpecific =
+                BlockChainSpecific.Solana(
+                    recentBlockHash = "",
+                    priorityFee = BigInteger.ZERO,
+                    priorityLimit = priorityLimit,
+                    fromAddressPubKey = null,
+                    toAddressPubKey = null,
+                    programId = false,
+                ),
+            memo = "SWAP:THOR.RUNE:thor1abc:0",
+            vaultPublicKeyECDSA = "",
+            vaultLocalPartyID = "",
+            libType = SigningLibType.GG20,
+            wasmExecuteContractPayload = null,
+        )
+
+    private fun skipIfJniUnavailable(e: Throwable) {
+        if (
+            e is UnsatisfiedLinkError ||
+                e is ExceptionInInitializerError ||
+                e is NoClassDefFoundError
+        ) {
+            assumeTrue(false, "WalletCore JNI not available: ${e.message}")
+        } else throw e
     }
 }
