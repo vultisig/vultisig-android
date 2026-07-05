@@ -249,6 +249,14 @@ internal class DefaultSendStrategy(
                                 planBtc.value,
                             )
                         }
+
+                        withContext(Dispatchers.IO) {
+                            chainValidationService.validateRippleDestinationReserve(
+                                selectedToken = selectedToken,
+                                dstAddress = dstAddress,
+                                tokenAmountInt = tokenAmountInt,
+                            )
+                        }
                     } else if (
                         chain == Chain.TerraClassic &&
                             TerraClassicTax.isBankDenom(

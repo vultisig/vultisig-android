@@ -4,6 +4,8 @@ package com.vultisig.wallet.ui.models.send.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -50,6 +52,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import wallet.core.jni.proto.Bitcoin
@@ -70,6 +73,7 @@ internal class DefaultSendStrategyTest {
     private val transactionRepository: TransactionRepository = mockk(relaxed = true)
     private val getAvailableTokenBalance: GetAvailableTokenBalanceUseCase = mockk(relaxed = true)
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase = mockk(relaxed = true)
+    private val rippleApi: RippleApi = mockk(relaxed = true)
     private val amountManager: AmountManager = mockk(relaxed = true)
     private val addressManager: AddressManager = mockk(relaxed = true)
     private val dstAddressLabelFlow = MutableStateFlow<String?>(null)
@@ -288,6 +292,176 @@ internal class DefaultSendStrategyTest {
             }
         }
 
+    @Test
+    fun `submit blocks native token send exceeding the available balance`() = runTest {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            val ethCoin = ethCoin()
+            val account =
+                Account(
+                    token = ethCoin,
+                    tokenValue =
+                        TokenValue(BigInteger.valueOf(1_000_000_000_000_000_000L), ethCoin),
+                    fiatValue = null,
+                    price = null,
+                )
+            vaultId = "vault-1"
+            selectedAccount = account
+            addressFieldState.setTextAndPlaceCursorAtEnd("0xdest")
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+            coEvery { accountValidator.validate() } returns
+                ValidatedAccount(
+                    vaultId = "vault-1",
+                    selectedAccount = account,
+                    chain = Chain.Ethereum,
+                    gasFee = TokenValue(BigInteger.valueOf(21_000), ethCoin),
+                    dstAddress = "0xdest",
+                )
+            coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = any(),
+                    address = any(),
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = any(),
+                    isMaxAmountEnabled = any(),
+                    isDeposit = any(),
+                    dstAddress = any(),
+                    tokenAmountValue = any(),
+                    memo = any(),
+                    isThorchainRouterDeposit = any(),
+                )
+            } returns
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.Ethereum(
+                        maxFeePerGasWei = BigInteger.ONE,
+                        priorityFeeWei = BigInteger.ONE,
+                        nonce = BigInteger.ZERO,
+                        gasLimit = BigInteger.valueOf(21000),
+                    )
+                )
+            every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+            // Only 0.4 ETH available, but the form has 0.5 ETH entered.
+            coEvery { getAvailableTokenBalance(any(), any()) } returns
+                TokenValue(BigInteger.valueOf(400_000_000_000_000_000L), ethCoin)
+
+            build(this).submit()
+            advanceUntilIdle()
+
+            assertEquals(
+                R.string.send_error_insufficient_native_balance_with_fees,
+                (lastError as UiText.FormattedText).resId,
+            )
+            // The insufficient-balance check throws before the strategy ever builds or persists
+            // a Transaction, so a non-null lastError already proves addTransaction was skipped.
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    /**
+     * `validateRippleDestinationReserve` formats the reserve amount via WalletCore's `CoinType`,
+     * which is unavailable in a plain JVM unit test — the assertion below only runs when the native
+     * lib loads, mirroring the same skip used for [ChainValidationServiceTest]'s BTC-like dust
+     * tests.
+     */
+    @Test
+    fun `submit blocks XRP send to an unfunded destination below the reserve`() {
+        try {
+            runTest {
+                mockkStatic(Dispatchers::class)
+                every { Dispatchers.IO } returns mainDispatcher
+                try {
+                    val xrpCoin = xrpCoin()
+                    val account =
+                        Account(
+                            token = xrpCoin,
+                            tokenValue =
+                                TokenValue(BigInteger.valueOf(20_000_000L), xrpCoin), // 20 XRP
+                            fiatValue = null,
+                            price = null,
+                        )
+                    vaultId = "vault-1"
+                    selectedAccount = account
+                    addressFieldState.setTextAndPlaceCursorAtEnd("rNewDestination")
+                    tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5") // below 1 XRP reserve
+                    coEvery { accountValidator.validate() } returns
+                        ValidatedAccount(
+                            vaultId = "vault-1",
+                            selectedAccount = account,
+                            chain = Chain.Ripple,
+                            gasFee = TokenValue(BigInteger.valueOf(400L), xrpCoin),
+                            dstAddress = "rNewDestination",
+                        )
+                    coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+                    coEvery {
+                        blockChainSpecificRepository.getSpecific(
+                            chain = any(),
+                            address = any(),
+                            token = any(),
+                            gasFee = any(),
+                            isSwap = any(),
+                            isMaxAmountEnabled = any(),
+                            isDeposit = any(),
+                            dstAddress = any(),
+                            tokenAmountValue = any(),
+                            memo = any(),
+                            isThorchainRouterDeposit = any(),
+                        )
+                    } returns
+                        BlockChainSpecificAndUtxo(
+                            BlockChainSpecific.Ripple(
+                                sequence = 1UL,
+                                lastLedgerSequence = 100UL,
+                                gas = 400UL,
+                            )
+                        )
+                    every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+                    coEvery { getAvailableTokenBalance(any(), any()) } returns
+                        TokenValue(BigInteger.valueOf(19_999_600L), xrpCoin)
+                    // The destination has never been funded.
+                    coEvery { rippleApi.fetchAccountsInfo("rNewDestination") } returns null
+
+                    build(this).submit()
+                    advanceUntilIdle()
+
+                    assertEquals(
+                        R.string.send_error_xrp_destination_not_activated,
+                        (lastError as UiText.FormattedText).resId,
+                    )
+                    // The reserve check throws before the strategy ever builds or persists a
+                    // Transaction, so a non-null lastError already proves addTransaction was
+                    // skipped.
+                } finally {
+                    unmockkStatic(Dispatchers::class)
+                }
+            }
+        } catch (e: Throwable) {
+            if (
+                e is UnsatisfiedLinkError ||
+                    e is ExceptionInInitializerError ||
+                    e is NoClassDefFoundError
+            ) {
+                assumeTrue(false, "WalletCore JNI not available: ${e.message}")
+            } else throw e
+        }
+    }
+
+    private fun xrpCoin(): Coin =
+        Coin(
+            chain = Chain.Ripple,
+            ticker = "XRP",
+            logo = "",
+            address = "rSelf",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "ripple",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
     private fun usdtCoin(): Coin =
         Coin(
             chain = Chain.Ethereum,
@@ -328,7 +502,7 @@ internal class DefaultSendStrategyTest {
             bitcoinPlanService = mockk(relaxed = true),
             getAvailableTokenBalance = getAvailableTokenBalance,
             gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-            chainValidationService = ChainValidationService(),
+            chainValidationService = ChainValidationService(rippleApi = rippleApi),
             addressManager = addressManager,
             amountManager = amountManager,
             gasSettings = MutableStateFlow<GasSettings?>(null),

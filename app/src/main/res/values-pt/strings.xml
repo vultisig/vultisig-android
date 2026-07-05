@@ -353,7 +353,7 @@
     <string name="join_keysign_start_timeout">O outro dispositivo não começou a assinar a tempo</string>
     <string name="join_keysign_qbtc_claim_missing_account">Falta a este cofre a conta Bitcoin ou QBTC necessária para coassinar a reivindicação</string>
     <string name="network_connection_lost">Ligação de rede perdida. Verifique a sua ligação com a Internet</string>
-    <string name="send_form_polka_reaping_warning">Certifique-se de que deixa fundos suficientes para cobrir as taxas. Se o saldo de uma conta cair abaixo de 1 DOT (Depósito Existencial), a conta será desativada (recolhida) e quaisquer fundos remanescentes serão perdidos. Pode reativar o endereço com um novo depósito maior do que o depósito existencial a qualquer momento. No entanto, isto não recuperará os fundos perdidos.</string>
+    <string name="send_form_polka_reaping_warning">Certifique-se de que deixa fundos suficientes para cobrir as taxas. Se o saldo de uma conta cair abaixo de 0,01 DOT (Depósito Existencial), a conta será desativada (recolhida) e quaisquer fundos remanescentes serão perdidos. Pode reativar o endereço com um novo depósito maior do que o depósito existencial a qualquer momento. No entanto, isto não recuperará os fundos perdidos.</string>
     <!-- Push Notifications -->
     <string name="notifications">Notificações</string>
     <string name="push_notifications">Notificações push</string>
@@ -871,6 +871,7 @@
         <item quantity="other">A etiqueta deve ter entre 1 e %d caracteres</item>
     </plurals>
     <string name="send_form_ripple_reaping_warning">Certifique-se de que deixa fundos suficientes para cobrir as taxas. Se o saldo de uma conta descer abaixo de 1 XRP (Depósito Existente), a conta será desativada (esgotada) e quaisquer fundos remanescentes serão perdidos. Pode reativar o endereço com um novo depósito maior do que o depósito existencial a qualquer momento. No entanto, isto não recuperará os fundos perdidos.</string>
+    <string name="send_error_xrp_destination_not_activated">O valor mínimo para ativar este endereço é %1$s %2$s.</string>
     <string name="error_invalid_chain">A cadeia é inválida.</string>
     <string name="ton_stake_error_unsupported_pool">Este pool de staking não é suportado</string>
     <string name="ton_stake_error_min_amount">O stake mínimo para este pool é de %1$s TON</string>
