@@ -180,6 +180,9 @@ internal suspend fun buildTonStakingTransaction(
         srcToken = selectedToken,
         srcAddress = srcAddress,
         dstAddress = dstAddress,
+        // The verify screen surfaces the pool as the Node Address (iOS/macOS parity); without it
+        // the row is hidden. It equals the bounceable destination for a nominator-pool message.
+        nodeAddress = dstAddress,
         memo = comment,
         srcTokenValue = TokenValue(value = amountNano, token = selectedToken),
         estimatedFees = gasFee,
