@@ -326,12 +326,15 @@ internal class GasFeeOrchestrator(
             val tokenAmountFlow =
                 tokenAmountFieldState.textAsFlow().debounce(300).distinctUntilChanged()
 
+            val memoFlow = memoFieldState.textAsFlow().debounce(300).distinctUntilChanged()
+
             combine(
                     selectedToken.filterNotNull(),
                     gasFee.filterNotNull(),
                     dstAddressFlow,
                     tokenAmountFlow,
-                ) { token, gasFeeValue, dstAddress, tokenAmount ->
+                    memoFlow,
+                ) { token, gasFeeValue, dstAddress, tokenAmount, memo ->
                     val chain = token.chain
                     // Cardano forces the initiator's size-derived fee, so getSpecific needs the
                     // amount to plan it. For every other chain the amount is irrelevant here, so
@@ -346,10 +349,16 @@ internal class GasFeeOrchestrator(
                                 ?.toBigInteger()
                         } else null
 
-                    SpecificInput(token, gasFeeValue, dstAddress, cardanoAmount)
+                    // Only Cardano prices the memo into its byteFee here, so we drop the memo for
+                    // every other chain to keep them from refetching specifics on memo keystrokes.
+                    val cardanoMemo =
+                        if (chain == Chain.Cardano) memo.toString().takeIf { it.isNotEmpty() }
+                        else null
+
+                    SpecificInput(token, gasFeeValue, dstAddress, cardanoAmount, cardanoMemo)
                 }
                 .distinctUntilChanged()
-                .collect { (token, gasFeeValue, dstAddress, cardanoAmount) ->
+                .collect { (token, gasFeeValue, dstAddress, cardanoAmount, cardanoMemo) ->
                     val chain = token.chain
                     val srcAddress = token.address
                     advanceGasUiRepository.updateTokenStandard(token.chain.standard)
@@ -372,6 +381,7 @@ internal class GasFeeOrchestrator(
                                     isDeposit = false,
                                     dstAddress = validDstAddress,
                                     tokenAmountValue = cardanoAmount,
+                                    memo = cardanoMemo,
                                 )
                             }
                         specific.value = spec
@@ -420,6 +430,7 @@ private data class SpecificInput(
     val gasFee: TokenValue,
     val dstAddress: String,
     val cardanoAmount: BigInteger?,
+    val cardanoMemo: String?,
 )
 
 private data class PlanFeeInput(

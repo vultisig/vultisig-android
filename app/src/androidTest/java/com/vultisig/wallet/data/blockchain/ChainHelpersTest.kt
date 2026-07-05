@@ -560,6 +560,33 @@ class ChainHelpersTest {
         }
     }
 
+    @Test
+    fun cardanoMemoChangesSighash() {
+        val transactions: List<TransactionData> = loadTransactionData(CARDANO_JSON_FILE)
+        transactions.forEach { transaction ->
+            val internalPayload = transaction.keysignPayload.toInternalKeySignPayload()
+            val cardano = internalPayload.blockChainSpecific as BlockChainSpecific.Cardano
+
+            // WalletCore ignores forceFee for max-amount sends (output = total - fee), so the
+            // memo-driven aux hash can't be isolated from the fee there; assert only on ordinary
+            // sends, matching cardanoSignerForcesTransmittedByteFee.
+            if (cardano.sendMaxAmount) return@forEach
+
+            // Attaching a CIP-20 memo must flow through setAuxiliaryData into the pre-image hash:
+            // WalletCore commits blake2b-256(auxData) into body key 7, so the sighash MUST differ
+            // from the memo-less payload. Mirrors iOS's CardanoCip20SigningTests.
+            val noMemoHash = CardanoHelper.getPreSignedImageHash(internalPayload.copy(memo = null))
+            val memoHash =
+                CardanoHelper.getPreSignedImageHash(internalPayload.copy(memo = "hello world"))
+
+            assertTrue(
+                "Expected 64-char hex hash but got: ${memoHash[0]}",
+                memoHash[0].matches(Regex("[0-9a-f]{64}")),
+            )
+            assertNotEquals(noMemoHash, memoHash)
+        }
+    }
+
     private fun loadTransactionData(jsonFile: String): List<TransactionData> {
         val appContext: Context = InstrumentationRegistry.getInstrumentation().context
         val data =

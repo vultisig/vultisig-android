@@ -13,8 +13,8 @@ import kotlin.experimental.and
  * Each `msg` text chunk is at most 64 UTF-8 bytes, split on Unicode codepoint boundaries (never
  * mid-codepoint). WalletCore 4.7.0 consumes these CBOR bytes via
  * `Cardano.SigningInput.auxiliary_data`: it commits `blake2b-256(auxDataCbor)` into the tx body at
- * map key 7 (auxiliary_data_hash) and embeds the bytes as element [3] of the signed transaction
- * array.
+ * map key 7 (auxiliary_data_hash) and embeds the bytes as the signed transaction's auxiliary_data
+ * element.
  *
  * Cardano signing is MPC/TSS: every co-signing device (iOS / Android / Extension) builds the input
  * independently and the Blake2b sighash must match byte-for-byte, so this encoding MUST be

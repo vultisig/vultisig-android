@@ -56,9 +56,10 @@ object CardanoHelper {
                 .setTtl(ttl)
 
         // CIP-20 memo (label 674). When present, WalletCore commits
-        // blake2b-256(auxDataCbor) into the body at map key 7 and emits the aux
-        // CBOR as element [3] of the signed tx. The encoder is byte-parity pinned
-        // to the SDK golden vector so co-signers agree on the sighash.
+        // blake2b-256(auxDataCbor) into the body at map key 7 and embeds the aux
+        // CBOR as the transaction's auxiliary_data element. The encoder is
+        // byte-parity pinned to the SDK golden vector so co-signers agree on the
+        // sighash.
         cip20AuxData(memo)?.let { input.setAuxiliaryData(ByteString.copyFrom(it)) }
 
         // Add UTXOs to the input
