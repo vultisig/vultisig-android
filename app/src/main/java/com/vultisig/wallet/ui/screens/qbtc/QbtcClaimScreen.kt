@@ -626,7 +626,7 @@ private fun FastVaultPasswordSheet(
     var isPasswordVisible by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
 
-    val canSubmit = passwordFieldState.text.isNotEmpty()
+    val canSubmit = passwordFieldState.text.isNotBlank()
     val submit = { if (canSubmit) onConfirm(passwordFieldState.text.toString()) }
 
     V2BottomSheet(onDismissRequest = onDismiss) {

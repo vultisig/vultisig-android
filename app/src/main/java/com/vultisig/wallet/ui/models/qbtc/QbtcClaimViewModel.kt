@@ -241,7 +241,7 @@ constructor(
         val claim = readyClaim() ?: return
         // The password sheet already disables Confirm while the field is blank, so this is a
         // defense-in-depth guard against ever reaching the co-sign call with an empty password.
-        if (fastVaultPassword.isEmpty()) {
+        if (fastVaultPassword.isBlank()) {
             passwordError = UiText.StringResource(R.string.password_should_not_be_empty)
             emitSelecting()
             return

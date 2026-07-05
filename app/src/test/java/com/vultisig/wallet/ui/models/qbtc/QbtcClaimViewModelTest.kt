@@ -329,6 +329,25 @@ internal class QbtcClaimViewModelTest {
         }
 
     @Test
+    fun `confirm sets a validation error and never calls the orchestrator when the password is whitespace only`() =
+        runTest(testDispatcher) {
+            coEvery { loadClaimableUtxos(BTC_ADDRESS) } returns
+                QbtcClaimLoadResult.Available(utxos(2))
+            val vm = viewModel()
+            advanceUntilIdle()
+
+            vm.confirm(fastVaultPassword = "   ")
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { roundRunner.run(any()) }
+            val state = vm.uiState.value as QbtcClaimUiState.Selecting
+            assertEquals(
+                UiText.StringResource(R.string.password_should_not_be_empty),
+                state.passwordError,
+            )
+        }
+
+    @Test
     fun `retry reloads after a block`() =
         runTest(testDispatcher) {
             coEvery { loadClaimableUtxos(BTC_ADDRESS) } returns
