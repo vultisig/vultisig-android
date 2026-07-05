@@ -11,6 +11,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.ClaimableUtxo
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.LoadClaimableQbtcUtxosUseCase
@@ -53,6 +54,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.encodeBase64
 import java.math.BigInteger
@@ -106,6 +108,7 @@ internal sealed interface QbtcClaimUiState {
         val totalEligibleSats: Long,
         val canConfirm: Boolean,
         val isAllSelected: Boolean,
+        val passwordError: UiText? = null,
     ) : QbtcClaimUiState
 
     /** Nothing is claimable yet because every claimable UTXO is still maturing. */
@@ -160,6 +163,7 @@ constructor(
     private var claimable: List<ClaimableUtxo> = emptyList()
     private val selectedKeys = linkedSetOf<String>()
     private var claimJob: Job? = null
+    private var passwordError: UiText? = null
 
     init {
         load()
@@ -167,6 +171,7 @@ constructor(
 
     fun load() {
         uiState.value = QbtcClaimUiState.Loading
+        passwordError = null
         viewModelScope.safeLaunch {
             val loadedVault = vaultRepository.get(vaultId)
             // The claim needs a Bitcoin and a QBTC coin, but neither chain has to be enabled in the
@@ -234,6 +239,14 @@ constructor(
     /** Fast Vault: sign with the server co-signer using the entered vault password. */
     fun confirm(fastVaultPassword: String) {
         val claim = readyClaim() ?: return
+        // The password sheet already disables Confirm while the field is blank, so this is a
+        // defense-in-depth guard against ever reaching the co-sign call with an empty password.
+        if (fastVaultPassword.isBlank()) {
+            passwordError = UiText.StringResource(R.string.password_should_not_be_empty)
+            emitSelecting()
+            return
+        }
+        passwordError = null
         claimJob =
             viewModelScope.safeLaunch {
                 runOrchestrator(
@@ -446,6 +459,7 @@ constructor(
                 totalEligibleSats = totalEligible,
                 canConfirm = canConfirm(),
                 isAllSelected = selectedKeys.size == cap,
+                passwordError = passwordError,
             )
     }
 
