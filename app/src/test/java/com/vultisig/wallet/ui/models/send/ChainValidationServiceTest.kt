@@ -1,6 +1,12 @@
 package com.vultisig.wallet.ui.models.send
 
+import RippleBroadcastSuccessResponseJson
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.RippleAccountInfoResponseAccountDataJson
+import com.vultisig.wallet.data.api.RippleAccountInfoResponseJson
+import com.vultisig.wallet.data.api.RippleAccountInfoResponseResultJson
+import com.vultisig.wallet.data.api.RippleApi
+import com.vultisig.wallet.data.api.RippleServerStateResponseJson
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -9,6 +15,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigInteger
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -16,9 +23,25 @@ import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 
+/** Stub [RippleApi] that only answers `fetchAccountsInfo`, the sole call the tests need. */
+private class FakeRippleApi(private val accountInfo: RippleAccountInfoResponseJson? = null) :
+    RippleApi {
+    override suspend fun broadcastTransaction(tx: String): String? = null
+
+    override suspend fun getBalance(coin: Coin): BigInteger = BigInteger.ZERO
+
+    override suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountInfoResponseJson? =
+        accountInfo
+
+    override suspend fun fetchServerState(): RippleServerStateResponseJson =
+        error("not used by these tests")
+
+    override suspend fun getTsStatus(txHash: String): RippleBroadcastSuccessResponseJson? = null
+}
+
 internal class ChainValidationServiceTest {
 
-    private val service = ChainValidationService()
+    private val service = ChainValidationService(rippleApi = FakeRippleApi())
 
     @Test
     fun `validateSlippage - null returns required error`() {
@@ -96,7 +119,7 @@ internal class ChainValidationServiceTest {
 
     @Test
     fun `checkIsReapable - polkadot sufficient balance returns null`() {
-        // 20 DOT balance, sending 5 DOT, 0.1 DOT fee → 14.9 DOT remaining > 1 DOT threshold
+        // 20 DOT balance, sending 5 DOT, 0.1 DOT fee → 14.9 DOT remaining > 0.01 DOT threshold
         val balance = BigInteger.valueOf(200_000_000_000L) // 20 DOT (10 decimals)
         val account = Account(dotCoin, TokenValue(balance, "DOT", 10), null, null)
         val gasFee = TokenValue(BigInteger.valueOf(1_000_000_000L), "DOT", 10) // 0.1 DOT
@@ -105,11 +128,12 @@ internal class ChainValidationServiceTest {
 
     @Test
     fun `checkIsReapable - polkadot balance below existential deposit returns warning`() {
-        // 11 DOT balance, sending 10 DOT, 0.5 DOT fee → 0.5 DOT remaining < 1 DOT threshold
-        val balance = BigInteger.valueOf(110_000_000_000L) // 11 DOT
+        // 1.1 DOT balance, sending 1.0 DOT, 0.005 DOT fee → 0.005 DOT remaining < 0.01 DOT
+        // (Asset Hub) threshold
+        val balance = BigInteger.valueOf(1_100_000_000L) // 1.1 DOT
         val account = Account(dotCoin, TokenValue(balance, "DOT", 10), null, null)
-        val gasFee = TokenValue(BigInteger.valueOf(5_000_000_000L), "DOT", 10) // 0.5 DOT
-        val result = service.checkIsReapable(account, dotCoin, "10.0", gasFee)
+        val gasFee = TokenValue(BigInteger.valueOf(50_000_000L), "DOT", 10) // 0.005 DOT
+        val result = service.checkIsReapable(account, dotCoin, "1.0", gasFee)
         assertEquals(
             R.string.send_form_polka_reaping_warning,
             (result as UiText.StringResource).resId,
@@ -242,6 +266,97 @@ internal class ChainValidationServiceTest {
             R.string.send_form_ripple_reaping_warning,
             (result as UiText.StringResource).resId,
         )
+    }
+
+    // validateRippleDestinationReserve tests
+
+    private fun rippleApiWithAccount(exists: Boolean): FakeRippleApi =
+        FakeRippleApi(
+            accountInfo =
+                if (exists) {
+                    RippleAccountInfoResponseJson(
+                        result =
+                            RippleAccountInfoResponseResultJson(
+                                accountData = RippleAccountInfoResponseAccountDataJson()
+                            )
+                    )
+                } else {
+                    null
+                }
+        )
+
+    @Test
+    fun `validateRippleDestinationReserve - funded destination does not throw regardless of amount`() =
+        runTest {
+            val fundedService = ChainValidationService(rippleApiWithAccount(exists = true))
+            fundedService.validateRippleDestinationReserve(
+                selectedToken = xrpCoin,
+                dstAddress = "rDestination",
+                tokenAmountInt = BigInteger.ONE, // far below the reserve, but destination exists
+            )
+            // no exception means success
+        }
+
+    @Test
+    fun `validateRippleDestinationReserve - unfunded destination below reserve throws`() = runTest {
+        val unfundedService = ChainValidationService(rippleApiWithAccount(exists = false))
+        try {
+            unfundedService.validateRippleDestinationReserve(
+                selectedToken = xrpCoin,
+                dstAddress = "rNewAddress",
+                tokenAmountInt = BigInteger.valueOf(999_999L), // 1 drop short of 1 XRP
+            )
+            fail("Expected InvalidTransactionDataException to be thrown")
+        } catch (e: InvalidTransactionDataException) {
+            assertEquals(
+                R.string.send_error_xrp_destination_not_activated,
+                (e.text as UiText.FormattedText).resId,
+            )
+        } catch (e: Throwable) {
+            if (
+                e is UnsatisfiedLinkError ||
+                    e is ExceptionInInitializerError ||
+                    e is NoClassDefFoundError
+            ) {
+                assumeTrue(false, "WalletCore JNI not available: ${e.message}")
+            } else throw e
+        }
+    }
+
+    @Test
+    fun `validateRippleDestinationReserve - unfunded destination at reserve does not throw`() =
+        runTest {
+            val unfundedService = ChainValidationService(rippleApiWithAccount(exists = false))
+            unfundedService.validateRippleDestinationReserve(
+                selectedToken = xrpCoin,
+                dstAddress = "rNewAddress",
+                tokenAmountInt = BigInteger.valueOf(1_000_000L), // exactly 1 XRP reserve
+            )
+            // no exception means success
+        }
+
+    @Test
+    fun `validateRippleDestinationReserve - non-native token does not throw`() = runTest {
+        val unfundedService = ChainValidationService(rippleApiWithAccount(exists = false))
+        val nonNativeXrpToken = xrpCoin.copy(ticker = "USD", isNativeToken = false)
+        unfundedService.validateRippleDestinationReserve(
+            selectedToken = nonNativeXrpToken,
+            dstAddress = "rNewAddress",
+            tokenAmountInt = BigInteger.ONE,
+        )
+        // no exception means success — only native XRP payments fund account activation
+    }
+
+    @Test
+    fun `validateRippleDestinationReserve - non-Ripple chain does not throw`() = runTest {
+        val unfundedService = ChainValidationService(rippleApiWithAccount(exists = false))
+        val ethCoin = dotCoin.copy(chain = Chain.Ethereum, ticker = "ETH", decimal = 18)
+        unfundedService.validateRippleDestinationReserve(
+            selectedToken = ethCoin,
+            dstAddress = "0xdest",
+            tokenAmountInt = BigInteger.ONE,
+        )
+        // no exception means success
     }
 
     // validateBtcLikeAmount tests

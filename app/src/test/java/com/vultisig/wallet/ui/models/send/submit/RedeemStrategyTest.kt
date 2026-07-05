@@ -265,7 +265,7 @@ internal class RedeemStrategyTest {
             blockChainSpecificRepository = blockChainSpecificRepository,
             getAvailableTokenBalance = getAvailableTokenBalance,
             gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-            chainValidationService = ChainValidationService(),
+            chainValidationService = ChainValidationService(rippleApi = mockk(relaxed = true)),
             depositTransactionRepository = depositTransactionRepository,
             navigator = navigator,
             defiTypeProvider = { defiType },

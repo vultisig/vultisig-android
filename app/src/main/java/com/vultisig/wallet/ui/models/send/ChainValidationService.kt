@@ -3,6 +3,7 @@
 package com.vultisig.wallet.ui.models.send
 
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.models.Account
@@ -29,7 +30,7 @@ import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
 
 /** Validates chain-specific transaction constraints for the send form. */
-internal class ChainValidationService @Inject constructor() {
+internal class ChainValidationService @Inject constructor(private val rippleApi: RippleApi) {
 
     // 1 ADA = 1,000,000 lovelace; kept as a local constant to avoid a WalletCore JNI call
     // (CoinTypeConfiguration.getDecimals) which is unavailable in unit tests.
@@ -192,6 +193,41 @@ internal class ChainValidationService @Inject constructor() {
             Chain.Polkadot -> UiText.StringResource(R.string.send_form_polka_reaping_warning)
             Chain.Ripple -> UiText.StringResource(R.string.send_form_ripple_reaping_warning)
             else -> null
+        }
+    }
+
+    /**
+     * Ensures an XRP payment to a not-yet-activated destination meets the ledger's account reserve,
+     * otherwise the destination stays unfunded and the payment is rejected on-chain with
+     * `tecNO_DST_INSUF_XRP`.
+     *
+     * No-ops for non-Ripple sends, non-native tokens, and destinations that already exist.
+     *
+     * Throws [InvalidTransactionDataException] if the destination is unfunded and [tokenAmountInt]
+     * is below the account reserve.
+     */
+    suspend fun validateRippleDestinationReserve(
+        selectedToken: Coin,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+    ) {
+        if (selectedToken.chain != Chain.Ripple || !selectedToken.isNativeToken) return
+
+        val isDestinationFunded =
+            rippleApi.fetchAccountsInfo(dstAddress)?.result?.accountData != null
+        if (isDestinationFunded) return
+
+        val baseReserve = RippleHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
+        if (tokenAmountInt < baseReserve) {
+            throw InvalidTransactionDataException(
+                UiText.FormattedText(
+                    R.string.send_error_xrp_destination_not_activated,
+                    listOf(
+                        selectedToken.chain.toValue(baseReserve).toString(),
+                        selectedToken.ticker,
+                    ),
+                )
+            )
         }
     }
 

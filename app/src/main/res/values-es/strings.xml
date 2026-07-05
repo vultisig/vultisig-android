@@ -872,6 +872,7 @@
         <item quantity="other">La etiqueta debe tener entre 1 y %d caracteres</item>
     </plurals>
     <string name="send_form_ripple_reaping_warning">Asegúrate de tener fondos suficientes para cubrir las comisiones. Si el saldo de una cuenta cae por debajo de 1 XRP (Depósito Existente), la cuenta se desactivará (se liquidará) y los fondos restantes se perderán. Puedes reactivar la dirección con un nuevo depósito superior al depósito existente en cualquier momento. Sin embargo, esto no recuperará los fondos perdidos.</string>
+    <string name="send_error_xrp_destination_not_activated">La cantidad mínima para activar esta dirección es %1$s %2$s.</string>
     <string name="error_invalid_chain">La cadena no es válida.</string>
     <string name="ton_stake_error_unsupported_pool">Este pool de staking no es compatible</string>
     <string name="ton_stake_error_min_amount">El stake mínimo para este pool es de %1$s TON</string>

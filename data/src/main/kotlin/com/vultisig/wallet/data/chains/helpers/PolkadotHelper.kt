@@ -144,6 +144,8 @@ class PolkadotHelper(private val vaultHexPublicKey: String) {
 
     companion object {
         const val DEFAULT_FEE_PLANCKS = 250_000_000L
-        const val DEFAULT_EXISTENTIAL_DEPOSIT = 10_000_000_000L // 1 DOT
+        // Native DOT transfers move through Asset Hub (see getPreSignedInputData), whose
+        // existential deposit for the native asset is 0.01 DOT, not the Relay Chain's legacy 1 DOT.
+        const val DEFAULT_EXISTENTIAL_DEPOSIT = 100_000_000L // 0.01 DOT (Asset Hub)
     }
 }

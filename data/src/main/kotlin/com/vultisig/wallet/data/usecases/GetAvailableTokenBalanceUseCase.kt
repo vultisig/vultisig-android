@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.blockchain.cosmos.TerraClassicTax
+import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenValue
@@ -23,10 +24,22 @@ internal class GetAvailableTokenBalanceUseCaseImpl @Inject constructor() :
             token.isNativeToken ||
                 (token.chain == Chain.TerraClassic &&
                     TerraClassicTax.isBankDenom(token.contractAddress, token.isNativeToken))
-        return if (feePaidInThisToken) {
-            tokenValue?.copy(value = tokenValue.value.minus(gasCost).coerceAtLeast(BigInteger.ZERO))
-        } else {
-            tokenValue
-        }
+        if (!feePaidInThisToken) return tokenValue
+
+        // Polkadot reaps (deactivates) an account whose free balance drops below the existential
+        // deposit, so that reserve must be excluded from the selectable balance the same way gas
+        // is. Ripple needs no equivalent term here: RippleApi.getBalance() already nets the live
+        // account reserve out of tokenValue before it reaches this use case, so subtracting it
+        // again would double-reserve and under-fill MAX/percentage sends.
+        val reserve =
+            if (token.chain == Chain.Polkadot && token.isNativeToken) {
+                PolkadotHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
+            } else {
+                BigInteger.ZERO
+            }
+
+        return tokenValue?.copy(
+            value = tokenValue.value.minus(gasCost).minus(reserve).coerceAtLeast(BigInteger.ZERO)
+        )
     }
 }
