@@ -5,6 +5,7 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 /**
  * Characterization tests for [RippleApiImp] methods that contain a raw `body<…>()` call:
@@ -52,28 +53,32 @@ class RippleApiBodyReadTest {
         assertEquals("RIPPLEHASH01", result)
     }
 
+    // A genuine rejection must throw, not return the engine result message as a fake txid — the
+    // keysign would otherwise persist the rejection text as a transaction hash and show success.
     @Test
-    fun `broadcastTransaction returns engine_result_message when engineResult is not tesSUCCESS and tx hash is blank`() =
-        runBlocking {
-            val body =
-                """
-                {
-                  "result": {
-                    "engine_result": "temBAD_FEE",
-                    "engine_result_message": "Fee must be positive.",
-                    "tx_json": {
-                      "hash": ""
-                    }
-                  }
+    fun `broadcastTransaction throws engine_result_message when engineResult is a genuine rejection`() {
+        val body =
+            """
+            {
+              "result": {
+                "engine_result": "temBAD_FEE",
+                "engine_result_message": "Fee must be positive.",
+                "tx_json": {
+                  "hash": ""
                 }
-                """
-                    .trimIndent()
-            val api = newApi(HttpStatusCode.OK, body)
+              }
+            }
+            """
+                .trimIndent()
+        val api = newApi(HttpStatusCode.OK, body)
 
-            val result = api.broadcastTransaction("signedtx")
+        val error =
+            assertThrows<IllegalStateException> {
+                runBlocking { api.broadcastTransaction("signedtx") }
+            }
 
-            assertEquals("Fee must be positive.", result)
-        }
+        assertEquals("Fee must be positive.", error.message)
+    }
 
     @Test
     fun `broadcastTransaction recovers hash from tx_json when result message matches already-applied wording`() =
