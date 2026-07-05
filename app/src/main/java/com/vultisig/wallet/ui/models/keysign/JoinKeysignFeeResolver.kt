@@ -87,8 +87,11 @@ constructor(
     ): BigInteger =
         if (
             blockChainSpecific is BlockChainSpecific.Ethereum ||
-                blockChainSpecific is BlockChainSpecific.THORChain
+                blockChainSpecific is BlockChainSpecific.THORChain ||
+                blockChainSpecific is BlockChainSpecific.Cardano
         ) {
+            // These subtypes read their fee straight from BlockChainSpecific in
+            // computeJoinKeysignNetworkFee, so the fee-service fallback is never used — skip it.
             BigInteger.ZERO
         } else {
             withContext(Dispatchers.IO) { feeServiceComposite.calculateFees(blockchainTransaction) }
