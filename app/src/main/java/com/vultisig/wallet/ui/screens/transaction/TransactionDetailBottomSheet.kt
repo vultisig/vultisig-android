@@ -399,7 +399,7 @@ private fun DetailInfoRows(
  * inspect the on-chain refund.
  */
 @Composable
-private fun RefundReasonBanner(reason: String) {
+internal fun RefundReasonBanner(reason: String) {
     Text(
         text = reason,
         style = Theme.brockmann.supplementary.footnote,

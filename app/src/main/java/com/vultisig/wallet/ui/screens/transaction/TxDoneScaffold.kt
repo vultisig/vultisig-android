@@ -51,6 +51,7 @@ import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -132,58 +133,76 @@ private fun SuccessTransaction(
                 .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         AnimatedVisibility(isTransactionDetailVisible.not()) {
-            val isTransactionPending = transactionStatus == TransactionStatus.Pending
-            val isTransactionFailed = transactionStatus is TransactionStatus.Failed
-            val isTransactionRefunded = transactionStatus is TransactionStatus.Refunded
-            val isTransactionSigned = transactionStatus == TransactionStatus.Signed
-            Box(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 300.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (isTransactionPending) {
-                    TransactionPending()
-                } else if (isTransactionFailed || isTransactionRefunded) {
-                    RiveAnimation(
-                        animation = R.raw.riv_transaction_error,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                } else {
-                    Image(
-                        painter = painterResource(R.drawable.img_tx_overview_bg),
-                        contentDescription = null,
-                        alignment = Alignment.Center,
-                        modifier = Modifier.padding(horizontal = 48.dp).fillMaxWidth(),
+            Column {
+                val isTransactionPending = transactionStatus == TransactionStatus.Pending
+                val isTransactionFailed = transactionStatus is TransactionStatus.Failed
+                val isTransactionRefunded = transactionStatus is TransactionStatus.Refunded
+                val isTransactionSigned = transactionStatus == TransactionStatus.Signed
+                Box(
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 300.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (isTransactionPending) {
+                        TransactionPending()
+                    } else if (isTransactionFailed || isTransactionRefunded) {
+                        RiveAnimation(
+                            animation = R.raw.riv_transaction_error,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(R.drawable.img_tx_overview_bg),
+                            contentDescription = null,
+                            alignment = Alignment.Center,
+                            modifier = Modifier.padding(horizontal = 48.dp).fillMaxWidth(),
+                        )
+                    }
+                    Text(
+                        text =
+                            when {
+                                isTransactionPending ->
+                                    stringResource(R.string.transaction_status_pending)
+                                isTransactionRefunded ->
+                                    stringResource(R.string.transaction_status_refunded)
+                                isTransactionFailed -> stringResource(R.string.transaction_failed)
+                                // PSBT co-signing flow: wallet signed, dApp broadcasts. Avoid
+                                // "Transaction successful" copy that would imply the tx is
+                                // already on-chain.
+                                isTransactionSigned ->
+                                    stringResource(R.string.transaction_status_signed_label)
+                                else ->
+                                    successTitle
+                                        ?: stringResource(
+                                            R.string.tx_transaction_successful_screen_title
+                                        )
+                            },
+                        textAlign = TextAlign.Center,
+                        style =
+                            Theme.brockmann.body.l.medium.copy(
+                                brush = Theme.v2.colors.gradients.primary
+                            ),
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 48.dp),
                     )
                 }
-                Text(
-                    text =
-                        when {
-                            isTransactionPending ->
-                                stringResource(R.string.transaction_status_pending)
-                            isTransactionRefunded ->
-                                stringResource(R.string.transaction_status_refunded)
-                            isTransactionFailed -> stringResource(R.string.transaction_failed)
-                            // PSBT co-signing flow: wallet signed, dApp broadcasts. Avoid
-                            // "Transaction successful" copy that would imply the tx is
-                            // already on-chain.
-                            isTransactionSigned ->
-                                stringResource(R.string.transaction_status_signed_label)
-                            else ->
-                                successTitle
-                                    ?: stringResource(
-                                        R.string.tx_transaction_successful_screen_title
-                                    )
-                        },
-                    textAlign = TextAlign.Center,
-                    style =
-                        Theme.brockmann.body.l.medium.copy(
-                            brush = Theme.v2.colors.gradients.primary
-                        ),
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 48.dp),
-                )
+
+                // Surface the protocol's refund/failure reason (paused pool, slip exceeded, etc.)
+                // right on the done screen, not only later in transaction-history detail.
+                val statusReason =
+                    when (val status = transactionStatus) {
+                        is TransactionStatus.Refunded -> status.reason
+                        is TransactionStatus.Failed -> status.cause
+                        else -> null
+                    }
+                statusReason
+                    ?.asString()
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { reason ->
+                        RefundReasonBanner(reason = reason)
+                        UiSpacer(8.dp)
+                    }
             }
         }
 
