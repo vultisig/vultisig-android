@@ -302,7 +302,7 @@ constructor(
                 when (backupType) {
                     BackupType.AllVaults -> {
                         awaitVaults().forEach { vault ->
-                            launch { vaultDataStoreRepository.setBackupStatus(vault.id, true) }
+                            vaultDataStoreRepository.setBackupStatus(vault.id, true)
                         }
                     }
 

@@ -21,6 +21,8 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.SnackbarFlow
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -28,8 +30,6 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -135,11 +135,15 @@ internal class BackupPasswordRequestViewModelTest {
 
             vaultsLoaded.complete(Unit)
 
+            // backupAllVaults hops onto the real Dispatchers.Default, so the write below
+            // completes asynchronously — poll instead of asserting immediately.
             val contentSlot = slot<List<AppZipEntry>>()
-            coVerify { saveBackupToUri(uri, capture(contentSlot)) }
-            assertEquals(vaults.size, contentSlot.captured.size)
+            coVerify(timeout = 5_000) { saveBackupToUri(uri, capture(contentSlot)) }
+            contentSlot.captured.size shouldBe vaults.size
             vaults.forEach { vault ->
-                coVerify { vaultDataStoreRepository.setBackupStatus(vault.id, true) }
+                coVerify(timeout = 5_000) {
+                    vaultDataStoreRepository.setBackupStatus(vault.id, true)
+                }
             }
         }
 
@@ -163,10 +167,10 @@ internal class BackupPasswordRequestViewModelTest {
             }
 
             vm.backupWithoutPassword()
-            assertNull(requestedFileName, "must not request a document before vaults are loaded")
+            requestedFileName.shouldBeNull()
 
             vaultsLoaded.complete(Unit)
-            assertEquals("vaults_backup.zip", requestedFileName)
+            requestedFileName shouldBe "vaults_backup.zip"
             collectJob.cancel()
         }
 }
