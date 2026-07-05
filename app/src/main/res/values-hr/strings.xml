@@ -149,7 +149,6 @@
     <string name="swap_form_vault">Trezor</string>
     <string name="swap_form_min_pay">min. isplata</string>
     <string name="vault_list_vaults_list">Sefovi</string>
-    <string name="join_keysign_waiting_keysign_start">Čeka se da se Keysign pokrene.</string>
     <string name="tx_done_address_copied">%1$s kopirano u međuspremnik</string>
     <string name="token_logo">Logo tokena</string>
     <string name="vault_edit_this_name_already_exist">ovo ime već postoji</string>
@@ -182,8 +181,6 @@
     <string name="swap_price_impact_good">Dobro</string>
     <string name="swap_price_impact_average">Srednje</string>
     <string name="swap_price_impact_high">Visoko</string>
-    <string name="join_keysign_discovering_session_id">Otkrivanje ID-a sesije</string>
-    <string name="join_keysign_discovery_service">Usluga otkrivanja</string>
     <string name="vault_settings_delete_subtitle">Trajno izbrišite svoj trezor.</string>
     <string name="currency_unit_setting_screen_title">Valuta</string>
     <string name="share_qr_utils_choose_an_app">Odaberite aplikaciju</string>
@@ -1386,6 +1383,16 @@
     <string name="qbtc_claim_cosign_btc_account">Bitcoin račun</string>
     <string name="qbtc_claim_cosign_qbtc_account">QBTC račun</string>
     <string name="qbtc_claim_cosign_approve">Odobri i supotpiši</string>
+    <!-- New quantum security intro screen -->
+    <string name="qbtc_intro_title">Nova kvantna sigurnost</string>
+    <string name="qbtc_intro_subtitle">Klasične ključeve mogu razbiti kvantna računala. Omogućavanje QBTC-a zahtijeva generiranje novog para ključeva.</string>
+    <string name="qbtc_intro_generate_title">Generirajte svoj kvantni par ključeva</string>
+    <string name="qbtc_intro_generate_desc">Vultisig pokreće lokalnu MPC ceremoniju na uređajima vašeg trezora kako bi proizveo novi par ključeva.</string>
+    <string name="qbtc_intro_link_title">Povežite ga sa svojim postojećim trezorom</string>
+    <string name="qbtc_intro_link_desc">Kvantni ključ vezan je uz trenutnu strukturu udjela vašeg trezora. Ponovno dijeljenje nije potrebno.</string>
+    <string name="qbtc_intro_claim_title">Preuzmite i trgujte u QBTC-u</string>
+    <string name="qbtc_intro_claim_desc">Nakon generiranja, vaši prihvatljivi BTC UTXO-ovi pojavljuju se kao QBTC dostupan za preuzimanje u omjeru 1:1.</string>
+    <string name="qbtc_intro_get_started">Započni</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Preuzmi</string>
     <string name="cosmos_staking_action_delegate">Ulog</string>

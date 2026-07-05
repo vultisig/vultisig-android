@@ -198,6 +198,37 @@ internal class SwapProviderTableTest {
     }
 
     @Test
+    fun `GaiaChain offers THORChain for native ATOM but nothing for IBC tokens`() {
+        // THORChain's only Cosmos Hub pool is GAIA.ATOM. An IBC token like rKUJI would be quoted
+        // as `GAIA.rKUJI-ibc/...`, which Thornode rejects with "bad to asset" — it must get an
+        // empty provider set so the pair reads "Swap route not available" up front (#5113).
+        assertEquals(
+            setOf(SwapProvider.THORCHAIN),
+            table.providersFor(coin(Chain.GaiaChain, "ATOM", isNative = true)),
+            "Native ATOM must keep its THORChain route",
+        )
+        assertEquals(
+            emptySet<SwapProvider>(),
+            table.providersFor(
+                coin(Chain.GaiaChain, "rKUJI", isNative = false, contract = "ibc/50A69DC508AC")
+            ),
+            "A Cosmos IBC token has no THORChain pool and must get no providers",
+        )
+    }
+
+    @Test
+    fun `live THORChain pool adds a GaiaChain token route the static fallback omits`() {
+        val liveTable = SwapProviderTableImpl(FakeEligibility(thor = setOf("GAIA.RKUJI")))
+        assertEquals(
+            setOf(SwapProvider.THORCHAIN),
+            liveTable.providersFor(
+                coin(Chain.GaiaChain, "rKUJI", isNative = false, contract = "ibc/50A69DC508AC")
+            ),
+            "An Available GAIA pool must re-enable the THORChain route",
+        )
+    }
+
+    @Test
     fun `live Maya pool adds MAYA for ETH USDT that the static fallback omits`() {
         // USDT is not in the static mayaEthTokens fallback, so with no live pools the Ethereum
         // branch never offers MAYA for it.

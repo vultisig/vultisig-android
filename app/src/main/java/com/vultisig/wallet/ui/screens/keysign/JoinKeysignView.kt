@@ -74,6 +74,11 @@ internal fun JoinKeysignView() {
     val isKeysignFinished = keysignState is KeysignState.KeysignFinished
     val isKeysignInProgress = state == Keysign && keysignState.isInProgress
     val isSignMessageDone = isKeysignFinished && verifyUiModel is VerifyUiModel.SignMessage
+    val isConnecting =
+        state == DiscoveringSessionID ||
+            state == WaitingForKeysignStart ||
+            state == DiscoverService ||
+            state is QbtcClaim
 
     if (state == JoinKeysign) {
         // Each Verify*Screen owns its scaffold + toolbar, so the join path renders
@@ -161,27 +166,19 @@ internal fun JoinKeysignView() {
         title = title,
         onBack = viewModel::navigateToHome,
         isError = state is Error,
-        fullScreen = isKeysignInProgress,
+        fullScreen = isKeysignInProgress || isConnecting,
         applyDefaultPaddings = !isKeysignFinished,
     ) {
         when (state) {
             DiscoveringSessionID,
             WaitingForKeysignStart -> {
-                val text =
-                    when (state) {
-                        DiscoveringSessionID ->
-                            stringResource(R.string.join_keysign_discovering_session_id)
-                        WaitingForKeysignStart ->
-                            stringResource(R.string.join_keysign_waiting_keysign_start)
-                        else -> ""
-                    }
-                KeysignLoadingScreen(text = text)
+                KeysignLoadingScreen()
             }
 
             DiscoverService -> {
                 val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
                 viewModel.discoveryMediator(nsdManager)
-                KeysignLoadingScreen(text = stringResource(R.string.join_keysign_discovery_service))
+                KeysignLoadingScreen()
             }
 
             JoinKeysign -> Unit // handled above, before the JoinKeysignScreen wrapper
@@ -198,7 +195,7 @@ internal fun JoinKeysignView() {
             is QbtcClaim -> {
                 // The done state (txHash != null) is rendered before the JoinKeysignScreen wrapper;
                 // here the claim is still proving/broadcasting.
-                KeysignLoadingScreen(text = stringResource(R.string.qbtc_claim_proving))
+                KeysignLoadingScreen()
             }
 
             Keysign -> {

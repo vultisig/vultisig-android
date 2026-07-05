@@ -76,8 +76,6 @@
     <string name="vault_settings_security_screen_title_content">Puedes desactivar la seguridad en cadena en tiempo real proporcionada por Blockaid.</string>
     <string name="vault_settings_security_screen_title">Seguridad</string>
     <string name="join_keysign_missing_required_vault">No tienes la bóveda necesaria para Keysign</string>
-    <string name="join_keysign_discovery_service">Descubriendo el servicio</string>
-    <string name="join_keysign_waiting_keysign_start">Esperando que se inicie Keysign.</string>
     <string name="naming_vault_screen_invalid_name">Nombre inválido</string>
     <string name="rename_vault_invalid_name">Nombre inválido</string>
     <string name="vault_name_too_long_error">El nombre de la bóveda es demasiado largo</string>
@@ -124,7 +122,6 @@
     <string name="verify_transaction_consent_address">Estoy enviando a la dirección correcta</string>
     <string name="verify_transaction_consent_amount">La cantidad es correcta</string>
     <string name="verify_transaction_error_not_enough_consent">Por favor, revise todos los consentimientos</string>
-    <string name="join_keysign_discovering_session_id">Descubriendo el ID de sesión</string>
     <string name="transaction_done_title">Hecho</string>
     <string name="transaction_done_overview">Resumen</string>
     <string name="transaction_done_complete">Completo</string>
@@ -1376,6 +1373,16 @@
     <string name="qbtc_claim_cosign_btc_account">Cuenta de Bitcoin</string>
     <string name="qbtc_claim_cosign_qbtc_account">Cuenta de QBTC</string>
     <string name="qbtc_claim_cosign_approve">Aprobar y cofirmar</string>
+    <!-- New quantum security intro screen -->
+    <string name="qbtc_intro_title">Nueva seguridad cuántica</string>
+    <string name="qbtc_intro_subtitle">Las claves clásicas pueden ser vulneradas por computadoras cuánticas. Habilitar QBTC requiere generar un nuevo par de claves.</string>
+    <string name="qbtc_intro_generate_title">Genera tu par de claves cuánticas</string>
+    <string name="qbtc_intro_generate_desc">Vultisig ejecuta una ceremonia MPC local entre los dispositivos de tu bóveda para producir un nuevo par de claves.</string>
+    <string name="qbtc_intro_link_title">Vincúlalo a tu bóveda existente</string>
+    <string name="qbtc_intro_link_desc">La clave cuántica está vinculada a la estructura de participación actual de tu bóveda. No es necesario recompartir.</string>
+    <string name="qbtc_intro_claim_title">Reclama y opera en QBTC</string>
+    <string name="qbtc_intro_claim_desc">Una vez generados, tus UTXOs de BTC elegibles aparecen como QBTC reclamable en una proporción de 1:1.</string>
+    <string name="qbtc_intro_get_started">Comenzar</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Reclamar</string>
     <string name="cosmos_staking_action_delegate">Apostar</string>

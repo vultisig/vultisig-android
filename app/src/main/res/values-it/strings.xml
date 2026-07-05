@@ -149,7 +149,6 @@
     <string name="faq_settings_q1">Che cos\'è Vultisig?</string>
     <string name="vault_list_vaults_list">Cassaforti</string>
     <string name="swap_screen_invalid_vault">La transazione probabilmente fallirà, la cassaforte non è stata caricata.</string>
-    <string name="join_keysign_waiting_keysign_start">In attesa dell\'avvio di Keysign.</string>
     <string name="tx_done_address_copied">%1$s copiato negli appunti</string>
     <string name="token_logo">Logo del gettone</string>
     <string name="vault_edit_this_name_already_exist">questo nome esiste già</string>
@@ -182,8 +181,6 @@
     <string name="swap_price_impact_good">Buono</string>
     <string name="swap_price_impact_average">Medio</string>
     <string name="swap_price_impact_high">Alto</string>
-    <string name="join_keysign_discovering_session_id">Individuazione dell\'ID sessione</string>
-    <string name="join_keysign_discovery_service">Scoprire il servizio</string>
     <string name="vault_settings_delete_subtitle">Elimina definitivamente il tuo vault.</string>
     <string name="currency_unit_setting_screen_title">Valuta</string>
     <string name="share_qr_utils_choose_an_app">Scegli un\'app</string>
@@ -1379,6 +1376,16 @@
     <string name="qbtc_claim_cosign_btc_account">Account Bitcoin</string>
     <string name="qbtc_claim_cosign_qbtc_account">Account QBTC</string>
     <string name="qbtc_claim_cosign_approve">Approva e cofirma</string>
+    <!-- New quantum security intro screen -->
+    <string name="qbtc_intro_title">Nuova sicurezza quantistica</string>
+    <string name="qbtc_intro_subtitle">Le chiavi classiche possono essere violate dai computer quantistici. Abilitare QBTC richiede la generazione di una nuova coppia di chiavi.</string>
+    <string name="qbtc_intro_generate_title">Genera la tua coppia di chiavi quantistica</string>
+    <string name="qbtc_intro_generate_desc">Vultisig esegue una cerimonia MPC locale tra i dispositivi del tuo vault per produrre una nuova coppia di chiavi.</string>
+    <string name="qbtc_intro_link_title">Collegalo al tuo vault esistente</string>
+    <string name="qbtc_intro_link_desc">La chiave quantistica è legata all\'attuale struttura delle quote del tuo vault. Nessuna ricondivisione necessaria.</string>
+    <string name="qbtc_intro_claim_title">Preleva e opera in QBTC</string>
+    <string name="qbtc_intro_claim_desc">Una volta generati, i tuoi UTXO BTC idonei appaiono come QBTC prelevabile con un rapporto di 1:1.</string>
+    <string name="qbtc_intro_get_started">Inizia</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Riscatta</string>
     <string name="cosmos_staking_action_delegate">Stake</string>

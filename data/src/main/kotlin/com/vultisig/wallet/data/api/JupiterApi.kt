@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTotalDataJson
 import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTransactionJson
 import com.vultisig.wallet.data.api.models.quotes.SwapRouteResponseJson
+import com.vultisig.wallet.data.chains.helpers.SOLANA_DEFAULT_CONTRACT_ADDRESS
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -45,11 +46,16 @@ constructor(
         slippageBps: Int?,
         affiliateBps: Int?,
     ): QuoteSwapTotalDataJson {
-        // Ask Jupiter to take the VULT-scaled affiliate fee (in the output mint) when a positive
-        // bps
-        // was requested. Whether we actually provision a fee account is decided below from the
-        // quote's real fee amount, not just the request.
+        // Ask Jupiter to take the VULT-scaled affiliate fee when a positive bps was requested.
+        // Whether we actually pass a fee account is decided below from the quote's real fee
+        // amount, not just the request.
         val requestsPlatformFee = (affiliateBps ?: 0) > 0
+
+        // The mint the affiliate fee is collected in. For ExactIn, Jupiter accepts a fee account
+        // in the input OR output mint. We use the output mint, except for native-SOL outputs
+        // (wrapped SOL) where the fee owner holds no wSOL ATA and collecting in wSOL would need
+        // unwrapping — there we charge the fee on the input mint instead. Mirrors iOS.
+        val feeMint = if (toToken == SOLANA_DEFAULT_CONTRACT_ADDRESS) fromToken else toToken
 
         val quoteResponse =
             httpClient.get("$JUPITER_URL/swap/v1/quote") {
@@ -68,11 +74,12 @@ constructor(
 
         // Gate the fee-account flow on the actually-quoted fee, not just the requested bps: Jupiter
         // can floor `platformFee.amount` to 0 (tiny amounts / fee-ineligible route) even when a fee
-        // was asked for. Deriving a fee account and paying ATA rent for a zero fee would be wrong.
+        // was asked for. Deriving a fee account for a zero fee would be wrong. An unprovisioned
+        // fee ATA throws here, failing the Jupiter quote so another provider serves the pair.
         val quotedFeeAmount = body.platformFee?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
         val feeAccount =
             if (requestsPlatformFee && quotedFeeAmount > BigInteger.ZERO)
-                feeAtaService.resolveFeeAccount(toToken)
+                feeAtaService.resolveFeeAccount(feeMint)
             else null
 
         // When Jupiter floored the fee to 0 we resolve no `feeAccount`. Round-tripping the quote's
@@ -86,7 +93,7 @@ constructor(
             put("quoteResponse", json.encodeToJsonElement(quoteResponseForSwap))
             put("userPublicKey", fromAddress)
             put("dynamicComputeUnitLimit", true)
-            if (feeAccount != null) put("feeAccount", feeAccount.feeAccount)
+            if (feeAccount != null) put("feeAccount", feeAccount)
             put(
                 "prioritizationFeeLamports",
                 buildJsonObject {
@@ -107,25 +114,18 @@ constructor(
         }
         val quoteSwapData = swapResponse.bodyOrThrow<QuoteSwapTransactionJson>()
 
-        // Jupiter never initializes the `feeAccount` ATA, so prepend an idempotent create for it
-        // the
-        // first time per fee mint (the payer funds the ~0.002 SOL rent; it is skipped once the ATA
-        // exists, see `needsCreate`). The co-signer signs this exact transaction from the keysign
-        // payload, so byte-parity holds.
-        val swapTxData =
-            if (feeAccount != null && feeAccount.needsCreate)
-                feeAtaService
-                    .prependCreateFeeAta(quoteSwapData.data, feeAccount, fromAddress)
-                    // Jupiter sized `SetComputeUnitLimit` from its `dynamicComputeUnitLimit`
-                    // simulation, which ran before this create-ATA existed, so the baked limit does
-                    // not budget for the ~30k CU a first-time ATA creation costs. Raise the limit
-                    // by
-                    // that headroom so the first swap per fee mint can't revert on an exceeded
-                    // compute budget.
-                    .let { withFeeAta ->
-                        bumpComputeUnitLimit(withFeeAta, CREATE_ATA_COMPUTE_UNITS)
-                    }
-            else quoteSwapData.data
+        // Jupiter pre-simulates the swap tx and reports a non-null `simulationError` when it will
+        // fail on-chain (slippage / min-out / liquidity at execution). Don't build or offer a tx
+        // Jupiter already knows is doomed — drop the Jupiter route so the picker re-quotes or falls
+        // back to another provider, instead of taking the user through the full keysign only for
+        // the broadcast to be rejected at preflight.
+        quoteSwapData.simulationError?.let { simError ->
+            throw SwapException.SwapRouteNotAvailable(
+                "[Jupiter] swap simulation failed: ${simError.error ?: simError.errorCode ?: "unknown"}"
+            )
+        }
+
+        val swapTxData = quoteSwapData.data
 
         val feePrice = (SolanaTransaction.getComputeUnitPrice(swapTxData) ?: "0").toBigInteger()
 
@@ -143,26 +143,9 @@ constructor(
         )
     }
 
-    /**
-     * Raise the transaction's `SetComputeUnitLimit` by [extraUnits]. Returns [txData] unchanged
-     * when it carries no limit instruction (nothing to rebase). Fails closed if the limit exists
-     * but can't be re-encoded: returning the original would broadcast a tx whose budget doesn't
-     * cover the just-prepended ATA create, guaranteeing an on-chain revert — better to drop Jupiter
-     * and fall back to another provider.
-     */
-    private fun bumpComputeUnitLimit(txData: String, extraUnits: BigInteger): String {
-        val currentLimit =
-            SolanaTransaction.getComputeUnitLimit(txData)?.toBigIntegerOrNull() ?: return txData
-        return SolanaTransaction.setComputeUnitLimit(txData, (currentLimit + extraUnits).toString())
-            ?: error("[Jupiter] Failed to re-encode SetComputeUnitLimit after prepending fee ATA")
-    }
-
     internal companion object {
         val MIN_FEE_PRICE_SWAP = "150000".toBigInteger()
 
-        // CU headroom for one first-time SPL create-idempotent-ATA instruction (~25k observed),
-        // added on top of Jupiter's pre-prepend compute-limit estimate so the create can't overrun.
-        val CREATE_ATA_COMPUTE_UNITS = "30000".toBigInteger()
         val MAX_PRIORITY_FEE_LAMPORTS = 6000000
         val PRIORITY_LEVEL = "high"
 

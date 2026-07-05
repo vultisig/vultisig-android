@@ -147,7 +147,6 @@
     <string name="verify_swap_sign_button">Assinar transação</string>
     <string name="swap_screen_invalid_vault">A transação provavelmente falhará, o cofre não pôde ser carregado.</string>
     <string name="swap_error_no_amount">A quantidade deve ser um número positivo.</string>
-    <string name="join_keysign_waiting_keysign_start">Aguardando o início do Keysign.</string>
     <string name="tx_done_address_copied">%1$s copiado para a área de transferência</string>
     <string name="token_logo">Logotipo do token</string>
     <string name="vault_edit_this_name_already_exist">esse nome já existe</string>
@@ -182,8 +181,6 @@
     <string name="swap_price_impact_good">Bom</string>
     <string name="swap_price_impact_average">Médio</string>
     <string name="swap_price_impact_high">Alto</string>
-    <string name="join_keysign_discovering_session_id">Descobrindo o ID da sessão</string>
-    <string name="join_keysign_discovery_service">Descobrindo o Serviço</string>
     <string name="vault_settings_delete_subtitle">Exclua seu cofre permanentemente.</string>
     <string name="currency_unit_setting_screen_title">Moeda</string>
     <string name="share_qr_utils_choose_an_app">Escolha um aplicativo</string>
@@ -1374,6 +1371,16 @@
     <string name="qbtc_claim_cosign_btc_account">Conta Bitcoin</string>
     <string name="qbtc_claim_cosign_qbtc_account">Conta QBTC</string>
     <string name="qbtc_claim_cosign_approve">Aprovar e coassinar</string>
+    <!-- New quantum security intro screen -->
+    <string name="qbtc_intro_title">Nova segurança quântica</string>
+    <string name="qbtc_intro_subtitle">As chaves clássicas podem ser quebradas por computadores quânticos. Ativar o QBTC requer gerar um novo par de chaves.</string>
+    <string name="qbtc_intro_generate_title">Gere o seu par de chaves quântico</string>
+    <string name="qbtc_intro_generate_desc">A Vultisig executa uma cerimónia MPC local nos dispositivos do seu cofre para produzir um novo par de chaves.</string>
+    <string name="qbtc_intro_link_title">Vincule-o ao seu cofre existente</string>
+    <string name="qbtc_intro_link_desc">A chave quântica está associada à estrutura de participação atual do seu cofre. Não é necessário recompartilhar.</string>
+    <string name="qbtc_intro_claim_title">Resgate e transacione em QBTC</string>
+    <string name="qbtc_intro_claim_desc">Depois de gerados, os seus UTXOs de BTC elegíveis aparecem como QBTC resgatável numa proporção de 1:1.</string>
+    <string name="qbtc_intro_get_started">Começar</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Reivindicar</string>
     <string name="cosmos_staking_action_delegate">Stake</string>

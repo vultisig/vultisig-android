@@ -95,6 +95,7 @@ import com.vultisig.wallet.ui.screens.onboarding.VaultBackupOnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupSummaryScreen
 import com.vultisig.wallet.ui.screens.peer.KeygenPeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimScreen
+import com.vultisig.wallet.ui.screens.qbtc.QuantumSecurityIntroScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralCreateScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralEditExternalScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralEditVaultScreen
@@ -370,6 +371,8 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
             val args = entry.toRoute<Keysign.Keysign>()
             KeysignScreen(txType = args.txType)
         }
+
+        composable<Route.QuantumSecurityIntro> { QuantumSecurityIntroScreen() }
 
         composable<Route.QbtcClaim> { QbtcClaimScreen() }
 

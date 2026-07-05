@@ -149,7 +149,6 @@
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
     <string name="vault_list_vaults_list">Tresore</string>
-    <string name="join_keysign_waiting_keysign_start">Warte auf den Start von Keysign.</string>
     <string name="tx_done_address_copied">%1$s in die Zwischenablage kopiert</string>
     <string name="token_logo">Token-Logo</string>
     <string name="vault_edit_this_name_already_exist">dieser Name existiert bereits</string>
@@ -182,8 +181,6 @@
     <string name="swap_price_impact_good">Gut</string>
     <string name="swap_price_impact_average">Mittel</string>
     <string name="swap_price_impact_high">Hoch</string>
-    <string name="join_keysign_discovering_session_id">Sitzungs-ID ermitteln</string>
-    <string name="join_keysign_discovery_service">Service entdecken</string>
     <string name="vault_settings_delete_subtitle">Löschen Sie Ihren Tresor dauerhaft.</string>
     <string name="currency_unit_setting_screen_title">Währung</string>
     <string name="share_qr_utils_choose_an_app">Wählen Sie eine App</string>
@@ -1378,6 +1375,16 @@
     <string name="qbtc_claim_cosign_btc_account">Bitcoin-Konto</string>
     <string name="qbtc_claim_cosign_qbtc_account">QBTC-Konto</string>
     <string name="qbtc_claim_cosign_approve">Genehmigen &amp; mitsignieren</string>
+    <!-- New quantum security intro screen -->
+    <string name="qbtc_intro_title">Neue Quantensicherheit</string>
+    <string name="qbtc_intro_subtitle">Klassische Schlüssel können von Quantencomputern gebrochen werden. Zum Aktivieren von QBTC muss ein neues Schlüsselpaar generiert werden.</string>
+    <string name="qbtc_intro_generate_title">Generieren Sie Ihr Quanten-Schlüsselpaar</string>
+    <string name="qbtc_intro_generate_desc">Vultisig führt eine lokale MPC-Zeremonie über Ihre Tresor-Geräte aus, um ein neues Schlüsselpaar zu erzeugen.</string>
+    <string name="qbtc_intro_link_title">Verknüpfen Sie es mit Ihrem vorhandenen Tresor</string>
+    <string name="qbtc_intro_link_desc">Der Quantenschlüssel ist an Ihre aktuelle Tresor-Anteilsstruktur gebunden. Kein erneutes Teilen erforderlich.</string>
+    <string name="qbtc_intro_claim_title">QBTC abrufen und nutzen</string>
+    <string name="qbtc_intro_claim_desc">Nach der Generierung erscheinen Ihre berechtigten BTC-UTXOs im Verhältnis 1:1 als abrufbares QBTC.</string>
+    <string name="qbtc_intro_get_started">Loslegen</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Einfordern</string>
     <string name="cosmos_staking_action_delegate">Staken</string>

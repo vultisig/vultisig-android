@@ -11,10 +11,12 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.canSelectTokens
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.hasValidMldsaKey
 import com.vultisig.wallet.data.models.isBuySupported
 import com.vultisig.wallet.data.models.isDepositSupported
 import com.vultisig.wallet.data.models.isSwapSupported
@@ -159,22 +161,36 @@ constructor(
         }
     }
 
+    // iOS parity (ChainDetailScreen.onClaimBannerTapped): with the quantum key in
+    // place the intro would describe a keygen ceremony that never runs, so go
+    // straight to claim; without it, the intro leads into MLDSA single keygen.
     fun onClaimQbtc() {
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
-            navigator.route(Route.QbtcClaim(vaultId = vaultId))
+            val hasMldsaKey = currentVault?.hasValidMldsaKey() == true
+            if (hasMldsaKey) {
+                navigator.route(Route.QbtcClaim(vaultId = vaultId))
+            } else {
+                navigator.route(Route.QuantumSecurityIntro(vaultId = vaultId))
+            }
         }
     }
 
-    // Instant in-memory eligibility (MLDSA key); the claim screen does the real check, including
+    // Instant in-memory eligibility; the claim screen does the real check, including
     // BTC availability — so the entry point shows even when the Bitcoin chain isn't enabled.
+    // The BTC banner also shows pre-keygen for DKLS vaults, which can still generate the
+    // MLDSA key via the quantum-security intro. GG20 keyshares can't take part in the DKLS
+    // claim ceremony, and KeyImport vaults receive the MLDSA key at import time — so for
+    // those, no key means no claim path.
     private fun checkQbtcClaimEligibility(chain: Chain) {
         val vault = currentVault
-        val isEligible = vault != null && vault.pubKeyMLDSA.isNotEmpty()
+        val hasMldsaKey = vault != null && vault.hasValidMldsaKey()
+        val canGenerateMldsaKey = vault != null && vault.libType == SigningLibType.DKLS
         uiState.update {
             it.copy(
-                showQbtcClaimBanner = isEligible && chain == Chain.Bitcoin,
-                showClaimQbtcButton = isEligible && chain == Chain.Qbtc,
+                showQbtcClaimBanner =
+                    chain == Chain.Bitcoin && (hasMldsaKey || canGenerateMldsaKey),
+                showClaimQbtcButton = chain == Chain.Qbtc && hasMldsaKey,
             )
         }
     }

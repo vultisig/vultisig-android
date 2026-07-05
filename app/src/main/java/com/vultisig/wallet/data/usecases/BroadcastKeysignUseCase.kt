@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.models.Chain
@@ -186,15 +187,24 @@ constructor(
 
     /**
      * Broadcasts [signedTx] for [chain], falling back to the deterministic locally computed hash
-     * when a non-initiator's duplicate broadcast is rejected.
+     * only when a non-initiator's broadcast is rejected by an identified duplicate-broadcast race.
      *
-     * In a multi-device vault both peers compute the same signed extrinsic and call this path;
+     * In a multi-device vault both peers compute the same signed transaction and call this path;
      * whichever device's broadcast reaches the network first wins. The losing device's broadcast is
-     * then rejected — Substrate in particular surfaces this as `Transaction has a bad signature`
-     * (code 1010) when the initiator's extrinsic has already advanced the nonce. The signed bytes
-     * are byte-identical on both devices, so the locally computed
-     * [SignedTransactionResult.transactionHash] is the canonical on-chain hash, and we use it
-     * instead of failing the joined-device screen.
+     * then rejected. Most chains already resolve that race in a lower layer: EVM in
+     * `EvmApi.sendTransaction` (returns the keccak hash on `nonce too low` / `already known`),
+     * BTC-family, Solana, Polkadot, Ton, Ripple, Tron and Cardano in [BroadcastTxUseCase] via an
+     * on-chain verify, and the Cosmos mempool-cache code (19) in the Cosmos broadcast parser. The
+     * signed bytes are byte-identical on both devices, so the locally computed
+     * [SignedTransactionResult.transactionHash] is the canonical on-chain hash in those cases.
+     *
+     * The one duplicate-race signal that reaches this catch unresolved is a Cosmos account
+     * **sequence mismatch** (`codespace=sdk`/`code=32`): the initiator's identical transaction
+     * already advanced the account sequence, so we recover with the locally computed hash. Any
+     * other exception — a genuine rejection (`insufficient funds`, `intrinsic gas too low`) or a
+     * verify that proved the tx is *not* on chain — is re-thrown so the joined device surfaces the
+     * failure exactly like the initiator does, instead of showing a success screen for a
+     * transaction that never landed.
      *
      * iOS does the same recovery in `KeysignViewModel.handleBroadcastError` / `isAlreadyOnChain`.
      * We keep it scoped to non-initiator devices so a real broadcast failure on the initiator is
@@ -218,8 +228,13 @@ constructor(
         }
 
     /**
-     * Returns the locally computed transaction hash if this is a joined-device broadcast failure we
-     * should swallow; `null` if the caller must re-throw the original error.
+     * Returns the locally computed transaction hash if this is an identified joined-device
+     * duplicate-broadcast race we should swallow; `null` if the caller must re-throw the original
+     * error.
+     *
+     * Recovers only when all hold: the device is a joined (non-initiating) device, the error is a
+     * recognized duplicate-broadcast signal ([isDuplicateBroadcast]), and the precomputed hash is
+     * non-blank. Otherwise returns `null` so the failure propagates.
      */
     private fun recoverJoinedDeviceBroadcast(
         chain: Chain,
@@ -228,15 +243,24 @@ constructor(
         error: Throwable,
     ): String? {
         if (isInitiatingDevice) return null
+        if (!error.isDuplicateBroadcast()) return null
         return signedTx.transactionHash
             .takeUnless { it.isBlank() }
             ?.also { hash ->
                 Timber.w(
                     error,
-                    "Joined-device broadcast for %s failed; using locally computed hash %s",
+                    "Joined-device duplicate broadcast for %s; using locally computed hash %s",
                     chain.raw,
                     hash,
                 )
             }
     }
+
+    /**
+     * True when [this] error is a recognized duplicate-broadcast race that reaches
+     * [broadcastOrRecover] unresolved by a lower layer — currently a Cosmos account sequence
+     * mismatch (the peer's identical transaction already advanced the account sequence).
+     */
+    private fun Throwable.isDuplicateBroadcast(): Boolean =
+        this is CosmosBroadcastException && isSequenceMismatch
 }

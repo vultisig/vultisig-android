@@ -23,6 +23,7 @@ internal class SearchTokenUseCaseImplTest {
     private val searchEvmToken: SearchEvmTokenUseCase = mockk()
     private val searchSolToken: SearchSolTokenUseCase = mockk()
     private val searchKujiToken: SearchKujiraTokenUseCase = mockk()
+    private val searchTerraToken: SearchTerraTokenUseCase = mockk()
     private val appCurrencyRepository: AppCurrencyRepository = mockk {
         every { currency } returns flowOf(AppCurrency.USD)
     }
@@ -33,6 +34,7 @@ internal class SearchTokenUseCaseImplTest {
             searchEvmToken = searchEvmToken,
             searchSolToken = searchSolToken,
             searchKujiToken = searchKujiToken,
+            searchTerraToken = searchTerraToken,
             chainAccountAddressRepository = addressRepository,
         )
 
@@ -160,6 +162,70 @@ internal class SearchTokenUseCaseImplTest {
     }
 
     @Test
+    fun `valid Terra contract address delegated to Terra searcher without WalletCore`() = runTest {
+        coEvery { searchTerraToken(Chain.Terra, TERRA_CONTRACT) } returns
+            CoinAndPrice(terraCoin(contract = TERRA_CONTRACT), BigDecimal.ZERO)
+
+        val result = useCase(Chain.Terra.id, "  $TERRA_CONTRACT  ")
+
+        assertEquals(BigDecimal.ZERO, result?.fiatValue?.value)
+        coVerify(exactly = 1) { searchTerraToken(Chain.Terra, TERRA_CONTRACT) }
+        verify(exactly = 0) { addressRepository.isValid(any(), any()) }
+    }
+
+    @Test
+    fun `Terra Classic wallet-shaped contract address delegated to Terra searcher`() = runTest {
+        val address = "terra1xj49zyqrwpv5k928jwfpfy2ha668nwdgkwlrg3"
+        coEvery { searchTerraToken(Chain.TerraClassic, address) } returns
+            CoinAndPrice(terraCoin(chain = Chain.TerraClassic, contract = address), BigDecimal.ZERO)
+
+        val result = useCase(Chain.TerraClassic.id, address)
+
+        assertEquals(BigDecimal.ZERO, result?.fiatValue?.value)
+        coVerify(exactly = 1) { searchTerraToken(Chain.TerraClassic, address) }
+    }
+
+    @Test
+    fun `Terra ibc denom rejected without hitting the searcher`() = runTest {
+        assertNull(
+            useCase(
+                Chain.Terra.id,
+                "ibc/8D8A7F7253615E5F76CB6252A1E1BD921D5EDB7BBAAF8913FB1C77FF125D9995",
+            )
+        )
+
+        coVerify(exactly = 0) { searchTerraToken(any(), any()) }
+    }
+
+    @Test
+    fun `Terra factory denom rejected without hitting the searcher`() = runTest {
+        assertNull(useCase(Chain.Terra.id, "factory/terra1creator/utoken"))
+
+        coVerify(exactly = 0) { searchTerraToken(any(), any()) }
+    }
+
+    @Test
+    fun `Terra address with uppercase characters rejected`() = runTest {
+        assertNull(useCase(Chain.Terra.id, "terra1NSUQSK6KH58ULCZATWEV87TTQ2Z6R3PUSULG9R24M"))
+
+        coVerify(exactly = 0) { searchTerraToken(any(), any()) }
+    }
+
+    @Test
+    fun `Terra prefix with too-short payload rejected`() = runTest {
+        assertNull(useCase(Chain.Terra.id, "terra1short"))
+
+        coVerify(exactly = 0) { searchTerraToken(any(), any()) }
+    }
+
+    @Test
+    fun `EVM-shaped address rejected on Terra`() = runTest {
+        assertNull(useCase(Chain.Terra.id, EVM_ADDRESS))
+
+        coVerify(exactly = 0) { searchTerraToken(any(), any()) }
+    }
+
+    @Test
     fun `blank ticker in response returns null`() = runTest {
         givenEvmResponse(evmCoin(ticker = "   "))
 
@@ -225,6 +291,7 @@ internal class SearchTokenUseCaseImplTest {
         coVerify(exactly = 0) { searchEvmToken(any(), any()) }
         coVerify(exactly = 0) { searchSolToken(any()) }
         coVerify(exactly = 0) { searchKujiToken(any()) }
+        coVerify(exactly = 0) { searchTerraToken(any(), any()) }
     }
 
     private fun stubValid(chain: Chain, address: String, valid: Boolean) {
@@ -279,7 +346,22 @@ internal class SearchTokenUseCaseImplTest {
             isNativeToken = false,
         )
 
+    private fun terraCoin(chain: Chain = Chain.Terra, contract: String): Coin =
+        Coin(
+            chain = chain,
+            ticker = "STK",
+            logo = "",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = contract,
+            isNativeToken = false,
+        )
+
     private companion object {
         const val EVM_ADDRESS = "0x1234567890123456789012345678901234567890"
+        const val TERRA_CONTRACT =
+            "terra1nsuqsk6kh58ulczatwev87ttq2z6r3pusulg9r24mfj2fvtzd4uq3exn26"
     }
 }

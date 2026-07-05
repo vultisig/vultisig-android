@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.Fees
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
+import com.vultisig.wallet.data.chains.helpers.SolanaSwap
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
@@ -32,7 +33,9 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.slot
+import io.mockk.unmockkObject
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertFailsWith
@@ -1137,6 +1140,91 @@ internal class SwapQuoteManagerTest {
 
         coVerify(exactly = 2) { swapQuoteRepository.getQuote(SwapProvider.SWAPKIT, any()) }
     }
+
+    @Test
+    fun `fetchQuote drops a Jupiter Solana route that exceeds the account-lock cap`() = runTest {
+        // A built tx locking more than Solana's 64-account cap is unbroadcastable
+        // (TooManyAccountLocks), so the guard must fail this provider's fetch instead of signing a
+        // doomed tx (#5131).
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, "USD")
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.JUPITER, any()) } returns
+            SwapQuoteResult.Evm(jupiterEvmQuote())
+        mockkObject(SolanaSwap.Companion)
+        try {
+            every { SolanaSwap.countAccountLocks(any<String>()) } returns
+                SolanaSwap.MAX_TX_ACCOUNT_LOCKS + 2
+
+            assertFailsWith<SwapException.SwapRouteNotAvailable> {
+                fetchJupiterQuote(createManager(), slippageBps = 100)
+            }
+        } finally {
+            unmockkObject(SolanaSwap.Companion)
+        }
+    }
+
+    @Test
+    fun `fetchQuote keeps a Jupiter Solana route when the lock count cannot be decoded`() =
+        runTest {
+            // Fail-open: an undecodable tx must not abort the fetch — the route proceeds rather
+            // than
+            // being dropped on a tx the guard can't positively confirm is over the cap (#5131).
+            coEvery { tokenRepository.getNativeToken(any()) } returns
+                coin(Chain.Solana, "SOL", "SoLsrc", 9)
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+                FiatValue(BigDecimal.ZERO, "USD")
+            every { mapTokenValueToDecimalUiString(any()) } returns "0"
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.JUPITER, any()) } returns
+                SwapQuoteResult.Evm(jupiterEvmQuote())
+            mockkObject(SolanaSwap.Companion)
+            try {
+                every { SolanaSwap.countAccountLocks(any<String>()) } throws
+                    IllegalStateException("Can't decode swap transaction")
+
+                assertNotNull(fetchJupiterQuote(createManager(), slippageBps = 100))
+            } finally {
+                unmockkObject(SolanaSwap.Companion)
+            }
+        }
+
+    @Test
+    fun `fetchQuote drops a SwapKit Solana-source route that exceeds the account-lock cap`() =
+        runTest {
+            // SwapKit stages a Solana-source route (Chainflip/NEAR Intents) on the same EVM
+            // envelope, so the over-lock guard must run for it too — otherwise a >64-lock tx can
+            // still stage and sign (#5131).
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+                FiatValue(BigDecimal.ZERO, "USD")
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.SWAPKIT, any()) } returns
+                SwapQuoteResult.Evm(jupiterEvmQuote())
+            mockkObject(SolanaSwap.Companion)
+            try {
+                every { SolanaSwap.countAccountLocks(any<String>()) } returns
+                    SolanaSwap.MAX_TX_ACCOUNT_LOCKS + 2
+
+                assertFailsWith<SwapException.SwapRouteNotAvailable> {
+                    fetchSolanaSwapKitQuote(createManager())
+                }
+            } finally {
+                unmockkObject(SolanaSwap.Companion)
+            }
+        }
+
+    private suspend fun fetchSolanaSwapKitQuote(manager: SwapQuoteManager) =
+        manager.fetchQuote(
+            provider = SwapProvider.SWAPKIT,
+            src = mockk(relaxed = true),
+            dst = mockk(relaxed = true),
+            srcToken = coin(Chain.Solana, "SOL", "SoLsrc", 9),
+            dstToken = coin(Chain.Ethereum, "USDC", "0xdst", 6),
+            srcTokenValue = BigInteger.ONE,
+            tokenValue = TokenValue(BigInteger.ONE, coin(Chain.Solana, "SOL", "SoLsrc", 9)),
+            currency = AppCurrency.USD,
+            vultBPSDiscount = null,
+            referral = null,
+            amount = BigDecimal.ONE,
+            slippageBps = 100,
+        )
 
     private suspend fun fetchSwapKitQuote(manager: SwapQuoteManager, slippageBps: Int?) =
         manager.fetchQuote(

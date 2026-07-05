@@ -71,22 +71,21 @@ class SolanaFeeService @Inject constructor(private val solanaApi: SolanaApi) : F
 
         val serializedTx = SolanaHelper(vaultHexPubKey).getVersionedMessage(keySignPayload)
 
-        val baseFee = solanaApi.getFeeForMessage(serializedTx)
+        // serializedTx carries the ComputeBudget instructions, so getFeeForMessage already returns
+        // base signature fee + prioritization fee (price × limit / 1e6) — verified against mainnet
+        // RPC (a no-ComputeBudget message returns 5000, the same message with them returns 105000).
+        // Adding a separate priority term here would double-count it, so only rent-exemption is
+        // added on top.
+        val messageFee = solanaApi.getFeeForMessage(serializedTx)
         val rentExemptionFee = calculateRentExemptionForTokens(toAddress, coin)
 
         val solanaPriorityFee =
             (keySignPayload.blockChainSpecific as BlockChainSpecific.Solana).priorityFee
-        val priorityFee = solanaPriorityFee * SOLANA_PRIORITY_FEE_LIMIT.toBigInteger()
-        val priorityAmount =
-            priorityFee
-                .toBigDecimal()
-                .divide(BigDecimal.TEN.pow(6), RoundingMode.DOWN)
-                .toBigInteger()
 
         return GasFees(
             price = solanaPriorityFee,
             limit = SOLANA_PRIORITY_FEE_LIMIT.toBigInteger(),
-            amount = baseFee + priorityAmount + rentExemptionFee,
+            amount = messageFee + rentExemptionFee,
         )
     }
 

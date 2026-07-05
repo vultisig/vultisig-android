@@ -78,8 +78,6 @@
     <string name="vault_tier_ultimate_description_part2">полное освобождение от комиссий Vultisig</string>
     <string name="vault_tier_ultimate_description_part3"> при всех обменах.</string>
     <string name="join_keysign_missing_required_vault">У вас нет необходимого хранилища для Keysign</string>
-    <string name="join_keysign_discovery_service">Обнаружение службы</string>
-    <string name="join_keysign_waiting_keysign_start">Ожидание начала ключевой подписи.</string>
     <string name="send_screen_title">Отправить</string>
     <string name="bond_screen_title">Привязать</string>
     <string name="transaction_type_button_send">Отправить</string>
@@ -124,7 +122,6 @@
     <string name="verify_transaction_consent_amount">Сумма верна</string>
     <string name="verify_transaction_error_not_enough_consent">Пожалуйста, проверьте все согласия</string>
     <string name="camera_permission_open_settings">Открыть настройки</string>
-    <string name="join_keysign_discovering_session_id">Обнаружение ID сессии</string>
     <string name="transaction_done_title">Готово</string>
     <string name="transaction_done_overview">Обзор</string>
     <string name="transaction_done_complete">Завершено</string>
@@ -1388,6 +1385,16 @@
     <string name="qbtc_claim_cosign_btc_account">Счёт Bitcoin</string>
     <string name="qbtc_claim_cosign_qbtc_account">Счёт QBTC</string>
     <string name="qbtc_claim_cosign_approve">Одобрить и подписать</string>
+    <!-- New quantum security intro screen -->
+    <string name="qbtc_intro_title">Новая квантовая безопасность</string>
+    <string name="qbtc_intro_subtitle">Классические ключи могут быть взломаны квантовыми компьютерами. Для включения QBTC необходимо сгенерировать новую пару ключей.</string>
+    <string name="qbtc_intro_generate_title">Сгенерируйте свою квантовую пару ключей</string>
+    <string name="qbtc_intro_generate_desc">Vultisig проводит локальную MPC-церемонию на устройствах вашего хранилища, чтобы создать новую пару ключей.</string>
+    <string name="qbtc_intro_link_title">Свяжите её с вашим существующим хранилищем</string>
+    <string name="qbtc_intro_link_desc">Квантовый ключ привязан к текущей структуре долей вашего хранилища. Повторное совместное использование не требуется.</string>
+    <string name="qbtc_intro_claim_title">Получайте и совершайте транзакции в QBTC</string>
+    <string name="qbtc_intro_claim_desc">После генерации ваши подходящие BTC UTXO появятся как доступные для получения QBTC по курсу 1:1.</string>
+    <string name="qbtc_intro_get_started">Начать</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Получить</string>
     <string name="cosmos_staking_action_delegate">Стейк</string>

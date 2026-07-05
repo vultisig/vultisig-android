@@ -78,8 +78,6 @@
     <string name="vault_settings_security_screen_title_bottomsheet">On-chain beveiliging uitgeschakeld</string>
     <string name="vault_settings_security_screen_content_bottomsheet">Het uitschakelen van on-chain beveiliging betekent dat Blockaid transacties niet kan verifiëren. Je bent dan minder beschermd.</string>
     <string name="vault_settings_security_screen_title">Beveiliging</string>
-    <string name="join_keysign_discovery_service">Service ontdekken</string>
-    <string name="join_keysign_waiting_keysign_start">Wachten op het starten van Keysign.</string>
     <string name="send_screen_title">Sturen</string>
     <string name="bond_screen_title">Bonden</string>
     <string name="transaction_type_button_send">Sturen</string>
@@ -124,7 +122,6 @@
     <string name="verify_transaction_consent_amount">Het bedrag is correct</string>
     <string name="verify_transaction_error_not_enough_consent">Controleer alle toestemmingen</string>
     <string name="camera_permission_open_settings">Instellingen openen</string>
-    <string name="join_keysign_discovering_session_id">Sessienummer ontdekken</string>
     <string name="transaction_done_title">Gedaan</string>
     <string name="transaction_done_overview">Overzicht</string>
     <string name="transaction_done_complete">Voltooid</string>
@@ -1370,6 +1367,16 @@
     <string name="qbtc_claim_cosign_btc_account">Bitcoin-account</string>
     <string name="qbtc_claim_cosign_qbtc_account">QBTC-account</string>
     <string name="qbtc_claim_cosign_approve">Goedkeuren en mede-ondertekenen</string>
+    <!-- New quantum security intro screen -->
+    <string name="qbtc_intro_title">Nieuwe kwantumbeveiliging</string>
+    <string name="qbtc_intro_subtitle">Klassieke sleutels kunnen worden gekraakt door kwantumcomputers. Voor het inschakelen van QBTC moet een nieuw sleutelpaar worden gegenereerd.</string>
+    <string name="qbtc_intro_generate_title">Genereer uw kwantumsleutelpaar</string>
+    <string name="qbtc_intro_generate_desc">Vultisig voert een lokale MPC-ceremonie uit op de apparaten van uw kluis om een nieuw sleutelpaar te maken.</string>
+    <string name="qbtc_intro_link_title">Koppel het aan uw bestaande kluis</string>
+    <string name="qbtc_intro_link_desc">De kwantumsleutel is gebonden aan de huidige aandeelstructuur van uw kluis. Opnieuw delen is niet nodig.</string>
+    <string name="qbtc_intro_claim_title">Claim en gebruik QBTC</string>
+    <string name="qbtc_intro_claim_desc">Zodra ze zijn gegenereerd, verschijnen uw in aanmerking komende BTC-UTXO\'s als claimbare QBTC in een verhouding van 1:1.</string>
+    <string name="qbtc_intro_get_started">Aan de slag</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Claimen</string>
     <string name="cosmos_staking_action_delegate">Staken</string>

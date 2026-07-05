@@ -155,8 +155,6 @@
     <string name="vault_tier_ultimate_description_part2">Vultisig 수수료 완전 면제</string>
     <string name="vault_tier_ultimate_description_part3">를 받을 수 있습니다.</string>
     <string name="join_keysign_missing_required_vault">서명에 필요한 볼트가 없습니다</string>
-    <string name="join_keysign_discovery_service">서비스 검색 중</string>
-    <string name="join_keysign_waiting_keysign_start">서명 시작 대기 중.</string>
     <string name="send_screen_title">보내기</string>
     <string name="send_from_address">보내는 주소</string>
     <string name="send_to_address">받는 주소</string>
@@ -199,7 +197,6 @@
     <string name="verify_transaction_consent_amount">금액이 정확합니다</string>
     <string name="verify_transaction_error_not_enough_consent">모든 동의 항목을 확인해 주세요</string>
     <string name="camera_permission_open_settings">설정 열기</string>
-    <string name="join_keysign_discovering_session_id">세션 ID 검색 중</string>
     <string name="transaction_done_title">완료</string>
     <string name="transaction_done_overview">개요</string>
     <string name="transaction_done_complete">완료됨</string>
@@ -1395,6 +1392,16 @@
     <string name="qbtc_claim_cosign_btc_account">Bitcoin 계정</string>
     <string name="qbtc_claim_cosign_qbtc_account">QBTC 계정</string>
     <string name="qbtc_claim_cosign_approve">승인 및 공동 서명</string>
+    <!-- New quantum security intro screen -->
+    <string name="qbtc_intro_title">새로운 양자 보안</string>
+    <string name="qbtc_intro_subtitle">고전적 키는 양자 컴퓨터로 해독될 수 있습니다. QBTC를 사용하려면 새 키 쌍을 생성해야 합니다.</string>
+    <string name="qbtc_intro_generate_title">양자 키 쌍 생성</string>
+    <string name="qbtc_intro_generate_desc">Vultisig는 볼트 기기 전반에서 로컬 MPC 절차를 실행하여 새 키 쌍을 생성합니다.</string>
+    <string name="qbtc_intro_link_title">기존 볼트에 연결</string>
+    <string name="qbtc_intro_link_desc">양자 키는 현재 볼트 지분 구조에 연결됩니다. 재공유가 필요하지 않습니다.</string>
+    <string name="qbtc_intro_claim_title">QBTC로 청구하고 거래</string>
+    <string name="qbtc_intro_claim_desc">생성되면 대상 BTC UTXO가 1:1 비율로 청구 가능한 QBTC로 표시됩니다.</string>
+    <string name="qbtc_intro_get_started">시작하기</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">청구</string>
     <string name="cosmos_staking_action_delegate">스테이킹</string>

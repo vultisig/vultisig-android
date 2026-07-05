@@ -163,6 +163,8 @@ internal sealed class Route {
     @Serializable data class VerifyDeposit(val vaultId: VaultId, val transactionId: TransactionId)
 
     // qbtc claim
+    @Serializable data class QuantumSecurityIntro(val vaultId: VaultId)
+
     @Serializable data class QbtcClaim(val vaultId: VaultId)
 
     // keysign

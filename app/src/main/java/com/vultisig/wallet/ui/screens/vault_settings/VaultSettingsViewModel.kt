@@ -11,6 +11,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.models.hasValidMldsaKey
 import com.vultisig.wallet.data.repositories.CustomRpcConfig
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
@@ -295,11 +296,11 @@ constructor(
             val hasMigration = vault?.libType == SigningLibType.GG20
             hasFastSign = isVaultHasFastSignById(vaultId) && vault?.signers?.count() == 2
             val hasPassword = vaultPasswordRepository.getPassword(vaultId) != null
-            val hasMldsaKey =
-                vault != null &&
-                    vault.pubKeyMLDSA.isNotBlank() &&
-                    vault.keyshares.any { it.pubKey == vault.pubKeyMLDSA }
-            val supportsDilithiumKeygen = vault != null && vault.libType != SigningLibType.KeyImport
+            val hasMldsaKey = vault != null && vault.hasValidMldsaKey()
+            // Only DKLS vaults can run the post-quantum (Dilithium/MLDSA) keygen: KeyImport vaults
+            // receive the key at import, and GG20 vaults must migrate to DKLS first — so the option
+            // stays hidden for them (an isEnabled=false item is filtered out of the list).
+            val supportsDilithiumKeygen = vault != null && vault.libType == SigningLibType.DKLS
 
             val newItems =
                 uiModel.value.settingGroups.map { group ->
@@ -509,10 +510,7 @@ constructor(
     fun navigateToDilithiumKeygen() {
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId exists")
-            val hasValidMldsaKey =
-                vault.pubKeyMLDSA.isNotBlank() &&
-                    vault.keyshares.any { it.pubKey == vault.pubKeyMLDSA }
-            if (hasValidMldsaKey || vault.libType == SigningLibType.KeyImport) {
+            if (vault.hasValidMldsaKey() || vault.libType == SigningLibType.KeyImport) {
                 return@launch
             }
             if (hasFastSign) {

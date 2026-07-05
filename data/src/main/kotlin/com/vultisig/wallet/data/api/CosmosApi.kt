@@ -17,6 +17,8 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosSimulateResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTxStatusJson
+import com.vultisig.wallet.data.api.models.cosmos.Cw20TokenInfoJson
+import com.vultisig.wallet.data.api.models.cosmos.Cw20TokenInfoResponseJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CustomRpcSupportedChains
@@ -29,6 +31,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -61,6 +64,13 @@ interface CosmosApi {
     suspend fun simulate(txBytes: String): Long?
 
     suspend fun getWasmTokenBalance(address: String, contractAddress: String): CosmosBalance
+
+    /**
+     * CW20 `{"token_info":{}}` smart-query metadata for [contractAddress], or `null` when the
+     * address is not a CW20 contract (wallet address, non-CW20 contract, unknown address) or the
+     * request fails. Used by the custom-token flow on Terra / Terra Classic.
+     */
+    suspend fun getCw20TokenInfo(contractAddress: String): Cw20TokenInfoJson?
 
     suspend fun getIbcDenomTraces(contractAddress: String): CosmosIbcDenomTraceDenomTraceJson
 
@@ -201,23 +211,45 @@ internal class CosmosApiImp(
         }
     }
 
+    /**
+     * Issues a CosmWasm smart query — a base64-encoded JSON [queryJson] against
+     * `.../contract/{contractAddress}/smart/{payload}`. Shared by the CW20 balance and token_info
+     * lookups so the query-path construction stays in one place.
+     */
+    private suspend fun smartQuery(contractAddress: String, queryJson: String): HttpResponse {
+        val payload = queryJson.encodeBase64()
+        return httpClient.get(
+            "$rpcEndpoint/cosmwasm/wasm/v1/contract/$contractAddress/smart/$payload"
+        )
+    }
+
     override suspend fun getWasmTokenBalance(
         address: String,
         contractAddress: String,
     ): CosmosBalance {
-        val payload = "{\"balance\":{\"address\":\"$address\"}}".encodeBase64()
-
         return CosmosBalance(
             denom = contractAddress,
             amount =
-                httpClient
-                    .get("$rpcEndpoint/cosmwasm/wasm/v1/contract/$contractAddress/smart/$payload")
+                smartQuery(contractAddress, "{\"balance\":{\"address\":\"$address\"}}")
                     .bodyOrThrow<JsonObject>()["data"]
                     ?.jsonObject
                     ?.get("balance")
                     ?.jsonPrimitive
                     ?.content ?: "0",
         )
+    }
+
+    override suspend fun getCw20TokenInfo(contractAddress: String): Cw20TokenInfoJson? {
+        return try {
+            smartQuery(contractAddress, "{\"token_info\":{}}")
+                .bodyOrThrow<Cw20TokenInfoResponseJson>()
+                .data
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.d(e, "CW20 token_info lookup failed for %s", contractAddress)
+            null
+        }
     }
 
     override suspend fun getIbcDenomTraces(
