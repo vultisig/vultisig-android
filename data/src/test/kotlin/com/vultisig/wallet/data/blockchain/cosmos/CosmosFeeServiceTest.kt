@@ -85,6 +85,21 @@ class CosmosFeeServiceTest {
     }
 
     @Test
+    fun `Terra fee amount is 7500 at the static 300k limit`() = runTest {
+        val fee = feeService.calculateDefaultFees(transfer(Chain.Terra)) as GasFees
+        assertEquals(BigInteger("7500"), fee.amount)
+    }
+
+    @Test
+    fun `Terra fee amount scales with a relayed gas limit not equal to 300k`() {
+        // native LUNA: 0.025 uluna/gas × 450_000 = 11_250; × 300_000 = the static 7500 uluna.
+        assertEquals(BigInteger("7500"), CosmosFeeService.terraFeeAmount(300_000L))
+        assertEquals(BigInteger("11250"), CosmosFeeService.terraFeeAmount(450_000L))
+        // rounds up: 0.025 × 111_111 = 2_777.775 → ceil → 2_778.
+        assertEquals(BigInteger("2778"), CosmosFeeService.terraFeeAmount(111_111L))
+    }
+
+    @Test
     fun `Osmosis gas limit is 300000`() = runTest {
         val fee = feeService.calculateDefaultFees(transfer(Chain.Osmosis)) as GasFees
         assertEquals(BigInteger("300000"), fee.limit)

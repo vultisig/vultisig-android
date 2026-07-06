@@ -71,17 +71,45 @@ class TerraClassicTaxTest {
 
     @Test
     fun `baseGas picks uusd for bank denom and uluna otherwise`() {
+        // At the static 300k per-chain limit baseGas returns the documented anchor constants.
         assertEquals(
-            TerraClassicTax.UUSD_BASE_GAS,
-            TerraClassicTax.baseGas("uusd", isNativeToken = false),
+            TerraClassicTax.UUSD_BASE_GAS.toBigInteger(),
+            TerraClassicTax.baseGas("uusd", isNativeToken = false, gasLimit = 300_000L),
         )
         assertEquals(
-            TerraClassicTax.ULUNA_BASE_GAS,
-            TerraClassicTax.baseGas("", isNativeToken = true),
+            TerraClassicTax.ULUNA_BASE_GAS.toBigInteger(),
+            TerraClassicTax.baseGas("", isNativeToken = true, gasLimit = 300_000L),
         )
         assertEquals(
-            TerraClassicTax.ULUNA_BASE_GAS,
-            TerraClassicTax.baseGas("terra1abc", isNativeToken = false),
+            TerraClassicTax.ULUNA_BASE_GAS.toBigInteger(),
+            TerraClassicTax.baseGas("terra1abc", isNativeToken = false, gasLimit = 300_000L),
+        )
+    }
+
+    @Test
+    fun `baseGas scales with a relayed gas limit not equal to 300k`() {
+        // uluna: 28.325 uluna/gas × 450_000 = 12_746_250 (native LUNC, CW20 and IBC).
+        assertEquals(
+            BigInteger("12746250"),
+            TerraClassicTax.baseGas("", isNativeToken = true, gasLimit = 450_000L),
+        )
+        assertEquals(
+            BigInteger("12746250"),
+            TerraClassicTax.baseGas("terra1abc", isNativeToken = false, gasLimit = 450_000L),
+        )
+        // uusd bank denom: 0.75 uusd/gas × 450_000 = 337_500.
+        assertEquals(
+            BigInteger("337500"),
+            TerraClassicTax.baseGas("uusd", isNativeToken = false, gasLimit = 450_000L),
+        )
+    }
+
+    @Test
+    fun `baseGas rounds up so the signed fee never undershoots`() {
+        // 28.325 × 111_111 = 3_147_219.075 → ceil → 3_147_220.
+        assertEquals(
+            BigInteger("3147220"),
+            TerraClassicTax.baseGas("", isNativeToken = true, gasLimit = 111_111L),
         )
     }
 
