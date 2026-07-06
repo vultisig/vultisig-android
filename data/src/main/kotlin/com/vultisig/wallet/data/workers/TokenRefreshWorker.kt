@@ -38,6 +38,10 @@ constructor(
                 listOf(vaultRepository.get(inputVaultId) ?: return Result.failure())
             }
 
+        // Any transient failure below reschedules the whole run (with backoff) instead of
+        // dropping the affected chain permanently.
+        var hasRefreshFailure = false
+
         for (vault in vaults) {
             val allVaultChains = vault.coins.map { it.chain }.toSet()
             val chains =
@@ -54,7 +58,7 @@ constructor(
                 } catch (e: Exception) {
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e)
-                    return Result.failure()
+                    return Result.retry()
                 }
 
             for (chain in chains) {
@@ -75,13 +79,14 @@ constructor(
                 } catch (e: Exception) {
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e)
+                    hasRefreshFailure = true
                 }
 
                 if (chains.size > 1 && vaults.size > 1)
                     delay(1000) // should be removed when we use api without rate limit
             }
         }
-        return Result.success()
+        return if (hasRefreshFailure) Result.retry() else Result.success()
     }
 
     private suspend fun cleanupDeFiOnlyTokens(vault: Vault, chain: Chain) {
