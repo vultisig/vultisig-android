@@ -15,6 +15,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import java.io.IOException
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -87,6 +88,19 @@ internal class TokenRefreshWorkerTest {
         val result = buildWorker().doWork()
 
         assertEquals(ListenableWorker.Result.success(), result)
+    }
+
+    @Test
+    fun `doWork retries when reading enabled tokens fails`() = runTest {
+        val vault = vault(id = "vault-4", coins = listOf(coin(Chain.Ethereum)))
+        coEvery { vaultRepository.getAll() } returns listOf(vault)
+        coEvery { vaultRepository.getDisabledCoinIds(vault.id) } returns emptyList()
+        every { vaultRepository.getEnabledTokens(vault.id) } returns
+            flow { throw IOException("offline") }
+
+        val result = buildWorker().doWork()
+
+        assertEquals(ListenableWorker.Result.retry(), result)
     }
 
     @Test
