@@ -73,6 +73,7 @@ class SwapKitTrackingServiceTest {
                 toContractAddress = toContract,
                 toIsNative = toIsNative,
                 fromAddress = userAddress,
+                toAmountDecimal = "1000.0",
             )
         coEvery { transactionHistoryRepository.getTransaction("Ton", "0xton") } returns
             entityWith(payload)
