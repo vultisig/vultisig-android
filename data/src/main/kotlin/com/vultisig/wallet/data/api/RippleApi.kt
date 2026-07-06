@@ -44,34 +44,39 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
 
             val rpcResp = response.bodyOrThrow<RippleBroadcastResponseResponseJson>()
 
+            val engineResult = rpcResp.result.engineResult
             val resultMessage = rpcResp.result.engineResultMessage
+            val hash = rpcResp.result.txJson?.hash
 
-            if (rpcResp.result.engineResult != "tesSUCCESS") {
-                if (
-                    resultMessage?.contains("The transaction was applied", ignoreCase = true) ==
-                        true ||
-                        resultMessage.equals(
-                            "This sequence number has already passed.",
-                            ignoreCase = true,
-                        ) ||
-                        resultMessage.equals("The transaction is redundant.", ignoreCase = true)
-                ) {
-                    if (!rpcResp.result.txJson?.hash.isNullOrBlank()) {
-                        return rpcResp.result.txJson.hash
-                    }
+            // A benign duplicate-broadcast race: the peer's identical transaction was already
+            // applied/queued, so the transaction is (or will be) on-chain and we can recover its
+            // hash rather than treat it as a failure.
+            val alreadyApplied =
+                resultMessage?.contains("The transaction was applied", ignoreCase = true) == true ||
+                    resultMessage.equals(
+                        "This sequence number has already passed.",
+                        ignoreCase = true,
+                    ) ||
+                    resultMessage.equals("The transaction is redundant.", ignoreCase = true)
+
+            if (engineResult == "tesSUCCESS" || alreadyApplied) {
+                if (!hash.isNullOrBlank()) {
+                    return hash
                 }
-                return resultMessage ?: ""
-            } else {
-                val hash = rpcResp.result.txJson?.hash
-                return if (!hash.isNullOrBlank()) {
-                    hash
-                } else {
-                    resultMessage ?: ""
-                }
+                // Submitted but the node returned no hash. Don't invent one from the message; let
+                // the caller's on-chain recovery confirm using the locally computed hash instead.
+                error("XRP broadcast returned no transaction hash (engine_result=$engineResult)")
             }
+
+            // Any other engine result is a genuine rejection (e.g. temBAD_FEE, tecUNFUNDED). Throw
+            // the node's message instead of returning it as a fake txid, so the keysign surfaces
+            // the
+            // failure (matching iOS RippleService) rather than persisting the rejection text as a
+            // hash.
+            error(resultMessage ?: "XRP broadcast failed (engine_result=$engineResult)")
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.e(e.message, "Error in Broadcast XRP Transaction")
+            Timber.e(e, "Error in Broadcast XRP Transaction")
             error(e.message ?: "Error in Broadcast XRP Transaction")
         }
     }

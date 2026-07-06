@@ -289,6 +289,7 @@ constructor(
                                     sendMaxAmount = isMaxAmountEnabled,
                                     ttl = ttl.toLong(),
                                     utxos = utxos,
+                                    memo = memo,
                                 )
                             } catch (e: CancellationException) {
                                 throw e

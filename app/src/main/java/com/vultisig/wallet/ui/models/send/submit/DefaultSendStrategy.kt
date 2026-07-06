@@ -169,8 +169,12 @@ internal class DefaultSendStrategy(
                                     address = srcAddress,
                                     token = selectedToken,
                                     gasFee = gasFee,
-                                    memo =
-                                        memoFieldState.text.toString().takeIf { it.isNotEmpty() },
+                                    // Reuse the memo captured above rather than re-reading the
+                                    // field
+                                    // on Dispatchers.IO: a keystroke landing between the two reads
+                                    // could size the byteFee for a different memo than the one
+                                    // embedded in Transaction.memo and signed.
+                                    memo = memo,
                                     tokenAmountValue = tokenAmountInt,
                                     isSwap = false,
                                     isMaxAmountEnabled = isMaxAmount,
@@ -243,6 +247,14 @@ internal class DefaultSendStrategy(
                                 tokenAmountInt,
                                 chain,
                                 planBtc.value,
+                            )
+                        }
+
+                        withContext(Dispatchers.IO) {
+                            chainValidationService.validateRippleDestinationReserve(
+                                selectedToken = selectedToken,
+                                dstAddress = dstAddress,
+                                tokenAmountInt = tokenAmountInt,
                             )
                         }
                     } else if (

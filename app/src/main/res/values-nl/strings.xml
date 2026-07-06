@@ -351,7 +351,7 @@
     <string name="join_keysign_start_timeout">Het andere apparaat is niet op tijd begonnen met ondertekenen</string>
     <string name="join_keysign_qbtc_claim_missing_account">Deze kluis mist het Bitcoin- of QBTC-account dat nodig is om de claim mede te ondertekenen</string>
     <string name="network_connection_lost">Netwerkverbinding verbroken. Controleer uw internetverbinding.</string>
-    <string name="send_form_polka_reaping_warning">Zorg ervoor dat u voldoende geld achterlaat om de kosten te dekken. Als een rekeningsaldo onder 1 DOT (Existential Deposit) zakt, wordt de rekening gedeactiveerd (gereapeerd) en gaan alle resterende fondsen verloren. U kunt het adres op elk gewenst moment reactiveren met een nieuwe storting die groter is dan de existentiële storting. Dit zal echter niet de verloren fondsen terugkrijgen.</string>
+    <string name="send_form_polka_reaping_warning">Zorg ervoor dat u voldoende geld achterlaat om de kosten te dekken. Als een rekeningsaldo onder 0,01 DOT (Existential Deposit) zakt, wordt de rekening gedeactiveerd (gereapeerd) en gaan alle resterende fondsen verloren. U kunt het adres op elk gewenst moment reactiveren met een nieuwe storting die groter is dan de existentiële storting. Dit zal echter niet de verloren fondsen terugkrijgen.</string>
     <string name="edit_address_title">Adres bewerken</string>
     <!-- Push Notifications -->
     <string name="notifications">Meldingen</string>
@@ -869,6 +869,7 @@
         <item quantity="other">Label moet tussen 1 en %d tekens zijn</item>
     </plurals>
     <string name="send_form_ripple_reaping_warning">Zorg ervoor dat je voldoende saldo achterlaat om de kosten te dekken. Als het saldo onder de 1 XRP (Existentiële Storting) komt, wordt het account gedeactiveerd (opgenomen) en gaat het resterende saldo verloren. Je kunt het adres op elk moment reactiveren met een nieuwe storting die groter is dan de existentiële storting. Hiermee krijg je het verloren geld echter niet terug.</string>
+    <string name="send_error_xrp_destination_not_activated">Het minimumbedrag om dit adres te activeren is %1$s %2$s.</string>
     <string name="error_invalid_chain">Ketting is ongeldig</string>
     <string name="ton_stake_error_unsupported_pool">Deze staking-pool wordt niet ondersteund</string>
     <string name="ton_stake_error_min_amount">De minimale stake voor deze pool is %1$s %2$s</string>

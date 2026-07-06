@@ -352,7 +352,7 @@
     <string name="join_keysign_start_timeout">L\'altro dispositivo non ha avviato la firma in tempo</string>
     <string name="join_keysign_qbtc_claim_missing_account">A questo caveau manca l\'account Bitcoin o QBTC necessario per cofirmare il claim</string>
     <string name="network_connection_lost">Connessione di rete persa. Controlla la tua connessione Internet</string>
-    <string name="send_form_polka_reaping_warning">Assicurati di lasciare fondi sufficienti per coprire le commissioni. Se il saldo di un account scende sotto 1 DOT (deposito esistenziale), l\'account verrà disattivato (raccolto) e tutti i fondi rimanenti andranno persi. Puoi riattivare l\'indirizzo con un nuovo deposito superiore al deposito esistenziale in qualsiasi momento. Tuttavia, questo non recupererà i fondi persi.</string>
+    <string name="send_form_polka_reaping_warning">Assicurati di lasciare fondi sufficienti per coprire le commissioni. Se il saldo di un account scende sotto 0,01 DOT (deposito esistenziale), l\'account verrà disattivato (raccolto) e tutti i fondi rimanenti andranno persi. Puoi riattivare l\'indirizzo con un nuovo deposito superiore al deposito esistenziale in qualsiasi momento. Tuttavia, questo non recupererà i fondi persi.</string>
     <string name="edit_address_title">Modifica indirizzo</string>
     <!-- Push Notifications -->
     <string name="notifications">Notifiche</string>
@@ -872,6 +872,7 @@
         <item quantity="other">L\'etichetta deve essere tra 1 e %d caratteri</item>
     </plurals>
     <string name="send_form_ripple_reaping_warning">Assicurati di lasciare fondi sufficienti per coprire le commissioni. Se il saldo di un conto scende al di sotto di 1 XRP (Deposito Esistenziale), il conto verrà disattivato (rimosso) e tutti i fondi rimanenti andranno persi. Puoi riattivare l\'indirizzo con un nuovo deposito superiore al deposito esistenziale in qualsiasi momento. Tuttavia, questo non recupererà i fondi persi.</string>
+    <string name="send_error_xrp_destination_not_activated">L\'importo minimo per attivare questo indirizzo è %1$s %2$s.</string>
     <string name="error_invalid_chain">La catena non è valida</string>
     <string name="ton_stake_error_unsupported_pool">Questo pool di staking non è supportato</string>
     <string name="ton_stake_error_min_amount">Lo stake minimo per questo pool è %1$s %2$s</string>

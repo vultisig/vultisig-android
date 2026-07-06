@@ -37,6 +37,8 @@ import kotlin.reflect.typeOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -90,7 +92,7 @@ constructor(
     private val backupType = args?.backupType
 
     private val vault = MutableStateFlow<Vault?>(null)
-    private var vaults = listOf<Vault>()
+    private val vaults = MutableStateFlow<List<Vault>?>(null)
     private val isVaultLoaded = MutableStateFlow(false)
 
     val state =
@@ -119,7 +121,7 @@ constructor(
             }
         } else {
             viewModelScope.launch {
-                vaults = vaultRepository.getAll()
+                vaults.value = vaultRepository.getAll()
                 val loadedVault = vaultRepository.get(vaultId)
                 if (loadedVault == null) {
                     showError()
@@ -185,9 +187,11 @@ constructor(
     }
 
     private suspend fun requestToCreateVaultsZipFile() {
-        val fileName = createZipVaultsBackupFileName(vaults)
+        val fileName = createZipVaultsBackupFileName(awaitVaults())
         createDocumentRequestFlow.emit(fileName)
     }
+
+    private suspend fun awaitVaults(): List<Vault> = vaults.filterNotNull().first()
 
     fun showMoreInfo() {
         isMoreInfoVisible = true
@@ -277,9 +281,10 @@ constructor(
     }
 
     private suspend fun backupAllVaults(password: String, uri: Uri): Boolean {
+        val vaultsToBackup = awaitVaults()
         val content =
             withContext(Dispatchers.Default) {
-                vaults.map { vault ->
+                vaultsToBackup.map { vault ->
                     val vaultBackupData =
                         createVaultBackup(mapVaultToProto(vault), password)
                             ?: return@withContext null
@@ -296,8 +301,8 @@ constructor(
             if (backupSuccess) {
                 when (backupType) {
                     BackupType.AllVaults -> {
-                        vaults.forEach { vault ->
-                            launch { vaultDataStoreRepository.setBackupStatus(vault.id, true) }
+                        awaitVaults().forEach { vault ->
+                            vaultDataStoreRepository.setBackupStatus(vault.id, true)
                         }
                     }
 
