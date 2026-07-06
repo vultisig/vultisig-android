@@ -34,9 +34,13 @@ internal class TokenRefreshWorkerTest {
         context = mockk(relaxed = true)
     }
 
-    private fun buildWorker(inputData: Data = Data.EMPTY): TokenRefreshWorker =
+    private fun buildWorker(
+        inputData: Data = Data.EMPTY,
+        runAttemptCount: Int = 0,
+    ): TokenRefreshWorker =
         TestListenableWorkerBuilder<TokenRefreshWorker>(context)
             .setInputData(inputData)
+            .setRunAttemptCount(runAttemptCount)
             .setWorkerFactory(
                 object : WorkerFactory() {
                     override fun createWorker(
@@ -92,6 +96,19 @@ internal class TokenRefreshWorkerTest {
         coEvery { vaultRepository.get("missing-vault") } returns null
 
         val result = buildWorker(inputData).doWork()
+
+        assertEquals(ListenableWorker.Result.failure(), result)
+    }
+
+    @Test
+    fun `doWork fails once a chain refresh call keeps throwing past the max attempts`() = runTest {
+        val vault = vault(id = "vault-3", coins = listOf(coin(Chain.Ethereum)))
+        coEvery { vaultRepository.getAll() } returns listOf(vault)
+        coEvery { vaultRepository.getDisabledCoinIds(vault.id) } returns emptyList()
+        every { vaultRepository.getEnabledTokens(vault.id) } returns flowOf(emptyList())
+        coEvery { tokenRepository.getRefreshTokens(any(), any()) } throws IOException("offline")
+
+        val result = buildWorker(runAttemptCount = TokenRefreshWorker.MAX_REFRESH_ATTEMPTS).doWork()
 
         assertEquals(ListenableWorker.Result.failure(), result)
     }
