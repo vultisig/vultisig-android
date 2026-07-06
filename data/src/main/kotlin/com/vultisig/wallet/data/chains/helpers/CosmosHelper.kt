@@ -337,7 +337,7 @@ class CosmosHelper(
         // static per-chain limit. Both co-signers hash this gas value into the SignDoc, so they
         // must
         // resolve to the identical limit or the MPC signature fails.
-        val effectiveGasLimit = atomData.gasLimit?.takeIf { it.signum() > 0 }?.toLong() ?: gasLimit
+        val effectiveGasLimit = atomData.gasLimit?.takeIf { it.signum() > 0 }?.longValueExact() ?: gasLimit
         val fee = Cosmos.Fee.newBuilder().setGas(effectiveGasLimit)
         // A zero fee amount yields an empty fee: the `/simulate` tx must not declare a fee, or the
         // AnteHandler's DeductFee charges it and fails MAX / near-balance sends.
