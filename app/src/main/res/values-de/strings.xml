@@ -191,6 +191,7 @@
     <string name="verify_transaction_value">Wert</string>
     <string name="send_error_no_address">Adresse ist ungültig</string>
     <string name="vault_settings_error_backup_file">ein Fehler ist aufgetreten</string>
+    <string name="vault_settings_error_backup_failed">Backup fehlgeschlagen. Es wurde keine Datei gespeichert. Bitte versuchen Sie es erneut.</string>
     <string name="vault_settings_delete_vault_name">Tresorname:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA Schlüssel:</string>
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA Schlüssel:</string>
@@ -204,6 +205,7 @@
     <string name="import_file_screen_password_error">Falsches Passwort, bitte versuchen Sie es erneut.</string>
     <string name="add_vault_save">Speichern</string>
     <string name="backup_password_screen_enter_password">Passwort eingeben</string>
+    <string name="backup_password_screen_error_too_short">Das Passwort muss mindestens %1$d Zeichen lang sein</string>
     <string name="import_file_screen_enter_password_sub">Dieses Passwort wurde beim Export der Tresorfreigabe festgelegt.</string>
     <string name="import_file_screen_hint_password">Passwort</string>
     <string name="backup_password_screen_permission_required">Für Sicherungsvorgänge sind Dateiberechtigungen erforderlich.</string>

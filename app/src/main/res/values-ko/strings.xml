@@ -165,6 +165,7 @@
     <string name="send_continue_button">계속</string>
     <string name="chain_account_view_swap">스왑</string>
     <string name="vault_settings_error_backup_file">오류가 발생했습니다</string>
+    <string name="vault_settings_error_backup_failed">백업에 실패했습니다. 파일이 저장되지 않았습니다. 다시 시도해 주세요.</string>
     <string name="vault_edit_this_name_already_exist">이 이름은 이미 존재합니다</string>
     <string name="send_screen_max">최대</string>
     <string name="ok">확인</string>
@@ -279,6 +280,7 @@
     <string name="import_file_screen_password_error">비밀번호가 틀렸습니다. 다시 시도해 주세요</string>
     <string name="add_vault_save">저장</string>
     <string name="backup_password_screen_enter_password">비밀번호 입력</string>
+    <string name="backup_password_screen_error_too_short">비밀번호는 최소 %1$d자 이상이어야 합니다</string>
     <string name="import_file_screen_enter_password_sub">이 비밀번호는 볼트 공유를 내보낼 때 설정되었습니다.</string>
     <string name="import_file_screen_hint_password">비밀번호</string>
     <string name="backup_password_screen_permission_required">백업 작업을 위해 파일 권한이 필요합니다.</string>

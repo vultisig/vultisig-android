@@ -92,6 +92,7 @@
     <string name="circle_defi_control_info">Средства остаются полностью под контролем вашего хранилища. Счета Circle являются самостоятельными, а доход генерируется через безопасные внесетевые казначейства.</string>
     <string name="open_account_button">Открыть счет</string>
     <string name="vault_settings_error_backup_file">произошла ошибка</string>
+    <string name="vault_settings_error_backup_failed">Не удалось создать резервную копию. Файл не был сохранён. Пожалуйста, попробуйте ещё раз.</string>
     <string name="vault_edit_this_name_already_exist">это имя уже существует</string>
     <string name="send_screen_max">МАКС</string>
     <string name="ok">ОК</string>
@@ -204,6 +205,7 @@
     <string name="import_file_screen_password_error">Неверный пароль, попробуйте еще раз.</string>
     <string name="add_vault_save">Сохранить</string>
     <string name="backup_password_screen_enter_password">Введите пароль</string>
+    <string name="backup_password_screen_error_too_short">Пароль должен содержать не менее %1$d символов</string>
     <string name="import_file_screen_enter_password_sub">Этот пароль был установлен при экспорте общего доступа к хранилищу.</string>
     <string name="import_file_screen_hint_password">Пароль</string>
     <string name="backup_password_screen_permission_required">Для операций резервного копирования требуется разрешение на доступ к файлу.</string>

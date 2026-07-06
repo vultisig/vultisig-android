@@ -179,6 +179,7 @@
 
     <!-- Vault Settings Errors -->
     <string name="vault_settings_error_backup_file">发生错误</string>
+    <string name="vault_settings_error_backup_failed">备份失败。未保存任何文件。请重试。</string>
     <string name="vault_edit_this_name_already_exist">此名称已存在</string>
 
     <!-- Send Screen -->
@@ -368,6 +369,7 @@
     <string name="import_file_screen_password_error">密码错误，请重试</string>
     <string name="add_vault_save">保存</string>
     <string name="backup_password_screen_enter_password">输入密码</string>
+    <string name="backup_password_screen_error_too_short">密码至少需要 %1$d 个字符</string>
     <string name="import_file_screen_enter_password_sub">此密码是在导出共享保险库时设置的。</string>
     <string name="import_file_screen_hint_password">密码</string>
     <string name="backup_password_screen_permission_required">备份操作需要文件权限。</string>
