@@ -53,6 +53,11 @@ sealed class BlockChainSpecific {
         val gas: BigInteger,
         val ibcDenomTraces: CosmosIbcDenomTrace?,
         val transactionType: TransactionType,
+        // Relayed per-tx gas limit (proto `CosmosSpecific.gas_limit`) from a
+        // `/cosmos/tx/v1beta1/simulate` estimate. null means "use the static per-chain gas
+        // limit". It is part of the SignDoc, so every co-signing device must apply it
+        // identically or the MPC signature fails.
+        val gasLimit: BigInteger? = null,
     ) : BlockChainSpecific()
 
     data class Solana(
