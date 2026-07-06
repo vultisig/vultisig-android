@@ -2,12 +2,17 @@
 
 package com.vultisig.wallet.ui.models.mappers
 
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransaction.RegularSwapTransaction
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -96,6 +101,88 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
         uiModel.totalFee shouldBe "1.42"
     }
 
+    /**
+     * Proof for #5121: on a SwapKit EVM route the near-zero `fees[].inbound` placeholder surfaces
+     * only in the "Estimated Fees" (providerFee) row — NOT the Network Fee — and the total is the
+     * oracle gas bond, not an under-reported value. This pins WHERE the `0.0000…13 ETH` the
+     * reporter saw actually renders: the swap-fee row, mis-read as the Network Fee. The Network Fee
+     * row is fed by `gasFees`/`gasFeeFiatValue` (the oracle bond), and Total = swap-fee($0.00) +
+     * gas.
+     */
+    @Test
+    fun `swapkit evm places the inbound placeholder in the swap-fee row, not the network fee (#5121)`() =
+        runTest {
+            every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+            every { mapTokenValueToDecimalUiString(any()) } returns "0"
+            coEvery { fiatValueToStringMapper(any(), any()) } answers
+                {
+                    firstArg<FiatValue>().value.toPlainString()
+                }
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+            // SwapKit maps the fee onto the source-chain native coin.
+            coEvery { tokenRepository.getNativeToken(eth.chain.id) } returns eth
+            // The inbound placeholder (130 wei ETH) converts to ~$0.00 — the near-zero value.
+            coEvery { convertTokenValueToFiat(eth, inboundPlaceholder, AppCurrency.USD) } returns
+                usd("0.00")
+
+            val uiModel = mapper().invoke(swapKitEvmTransaction())
+
+            // The near-zero placeholder shows in the "Estimated Fees" / Swap Fee row…
+            uiModel.providerFee.fiatValue shouldBe "0.00"
+            // …while the Network Fee row is the oracle gas bond ($3.50 here), never the
+            // placeholder…
+            uiModel.networkFee.fiatValue shouldBe "3.50"
+            // …and the Total is that gas bond, i.e. NOT under-reported (0.00 swap fee + 3.50 gas).
+            uiModel.totalFee shouldBe "3.50"
+        }
+
+    private fun swapKitEvmTransaction(): RegularSwapTransaction =
+        RegularSwapTransaction(
+            id = "tx-swapkit",
+            vaultId = "vault-1",
+            srcToken = eth,
+            srcTokenValue = srcValue,
+            dstToken = usdt,
+            dstAddress = "0xRouter",
+            expectedDstTokenValue = dstValue,
+            blockChainSpecific = mockk<BlockChainSpecificAndUtxo>(relaxed = true),
+            // The SwapKit inbound native-gas placeholder rides estimatedFees; swapFee stays null.
+            estimatedFees = inboundPlaceholder,
+            swapFee = null,
+            outboundFee = null,
+            // Network Fee = the oracle bond the tx is signed with.
+            gasFees = TokenValue(BigInteger.valueOf(2_000_000_000_000_000L), eth),
+            memo = null,
+            payload =
+                SwapPayload.EVM(
+                    EVMSwapPayloadJson(
+                        fromCoin = eth,
+                        toCoin = usdt,
+                        fromAmount = srcValue.value,
+                        toAmountDecimal = BigDecimal.ONE,
+                        quote =
+                            EVMSwapQuoteJson(
+                                dstAmount = "400",
+                                tx =
+                                    OneInchSwapTxJson(
+                                        from = "0xsrc",
+                                        to = "0xRouter",
+                                        gas = 100_000L,
+                                        data = "0xdata",
+                                        value = "0",
+                                        gasPrice = "76833041",
+                                        swapFee = "130",
+                                        swapFeeTokenContract = "",
+                                    ),
+                            ),
+                        provider = SwapProvider.SWAPKIT.getSwapProviderId(),
+                        subProvider = "FLASHNET",
+                    )
+                ),
+            isApprovalRequired = false,
+            gasFeeFiatValue = usd("3.50"),
+        )
+
     private fun transaction(
         swapFee: TokenValue? = affiliateFee,
         outboundFee: TokenValue? = SwapTransactionToUiModelMapperFeeBreakdownTest.outboundFee,
@@ -167,5 +254,8 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
         val totalFees = TokenValue(value = BigInteger.valueOf(30), token = usdt)
         val affiliateFee = TokenValue(value = BigInteger.valueOf(40), token = usdt)
         val outboundFee = TokenValue(value = BigInteger.valueOf(50), token = usdt)
+
+        // SwapKit's FLASHNET-style near-zero inbound placeholder: 130 wei of native ETH (#5121).
+        val inboundPlaceholder = TokenValue(value = BigInteger.valueOf(130), token = eth)
     }
 }

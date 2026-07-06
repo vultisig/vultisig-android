@@ -134,12 +134,18 @@ constructor(
         }
 
         viewModelScope.launch {
-            passwordDelegate.validatePasswords().collect { passwordState ->
+            passwordDelegate.validatePasswords(MIN_BACKUP_PASSWORD_LENGTH).collect { passwordState
+                ->
                 val errorMessage =
-                    if (passwordState is PasswordState.Mismatch) {
-                        UiText.StringResource(R.string.fast_vault_password_screen_error)
-                    } else {
-                        null
+                    when (passwordState) {
+                        is PasswordState.Mismatch ->
+                            UiText.StringResource(R.string.fast_vault_password_screen_error)
+                        is PasswordState.TooShort ->
+                            UiText.FormattedText(
+                                R.string.backup_password_screen_error_too_short,
+                                listOf(passwordState.minLength),
+                            )
+                        else -> null
                     }
 
                 state.update { state ->
@@ -245,6 +251,9 @@ constructor(
 
                         null -> false
                     }
+                if (!isSuccess) {
+                    deleteBackupDocument(uri)
+                }
                 completeBackupVault(isSuccess)
             } else {
                 deleteBackupDocument(uri)
@@ -356,12 +365,20 @@ constructor(
                     navigator.route(Route.Home(vaultId), NavigationOptions(clearBackStack = true))
                 }
             } else {
-                showError()
+                state.update {
+                    it.copy(
+                        error = UiText.StringResource(R.string.vault_settings_error_backup_failed)
+                    )
+                }
             }
         }
     }
 
     private suspend fun showError() {
         snackbarFlow.showMessage(UiText.StringResource(R.string.vault_settings_error_backup_file))
+    }
+
+    companion object {
+        private const val MIN_BACKUP_PASSWORD_LENGTH = 4
     }
 }

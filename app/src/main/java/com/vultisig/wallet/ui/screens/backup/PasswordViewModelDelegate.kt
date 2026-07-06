@@ -11,6 +11,8 @@ sealed interface PasswordState {
     data object Mismatch : PasswordState
 
     data object Empty : PasswordState
+
+    data class TooShort(val minLength: Int) : PasswordState
 }
 
 class PasswordViewModelDelegate {
@@ -18,14 +20,15 @@ class PasswordViewModelDelegate {
     val passwordTextFieldState = TextFieldState()
     val confirmPasswordTextFieldState = TextFieldState()
 
-    fun validatePasswords(): Flow<PasswordState> =
+    fun validatePasswords(minLength: Int = 1): Flow<PasswordState> =
         combine(passwordTextFieldState.textAsFlow(), confirmPasswordTextFieldState.textAsFlow()) {
             password,
             confirmPassword ->
             when {
                 password.isEmpty() || confirmPassword.isEmpty() -> PasswordState.Empty
-                password.toString() == confirmPassword.toString() -> PasswordState.Valid
-                else -> PasswordState.Mismatch
+                password.toString() != confirmPassword.toString() -> PasswordState.Mismatch
+                password.length < minLength -> PasswordState.TooShort(minLength)
+                else -> PasswordState.Valid
             }
         }
 }

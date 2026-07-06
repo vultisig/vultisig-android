@@ -24,7 +24,6 @@ import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
@@ -120,7 +119,7 @@ constructor(
             if (rpcResp.error != null) {
                 Timber.tag("solanaApiImp")
                     .d("get balance ,address: $address error: ${rpcResp.error}")
-                BigInteger.ZERO
+                return BigInteger.ZERO
             }
             rpcResp.result?.value ?: error("getBalance error")
         } catch (e: Exception) {
@@ -313,7 +312,9 @@ constructor(
     }
 
     override suspend fun getJupiterTokens(): List<JupiterTokenResponseJson> =
-        httpClient.get(jupiterTokensUrl) { parameter("query", "verified") }.body()
+        httpClient
+            .get(jupiterTokensUrl) { parameter("query", "verified") }
+            .bodyOrThrow<List<JupiterTokenResponseJson>>()
 
     override suspend fun getSPLTokens(walletAddress: String): List<SplResponseAccountJson>? =
         coroutineScope {
