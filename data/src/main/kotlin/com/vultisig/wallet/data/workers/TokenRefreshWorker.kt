@@ -38,6 +38,10 @@ constructor(
                 listOf(vaultRepository.get(inputVaultId) ?: return Result.failure())
             }
 
+        // Any transient failure below reschedules the whole run (with backoff) instead of
+        // dropping the affected chain permanently.
+        var hasRefreshFailure = false
+
         for (vault in vaults) {
             val allVaultChains = vault.coins.map { it.chain }.toSet()
             val chains =
@@ -54,7 +58,7 @@ constructor(
                 } catch (e: Exception) {
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e)
-                    return Result.failure()
+                    return retryOrFail()
                 }
 
             for (chain in chains) {
@@ -75,14 +79,20 @@ constructor(
                 } catch (e: Exception) {
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e)
+                    hasRefreshFailure = true
                 }
 
                 if (chains.size > 1 && vaults.size > 1)
                     delay(1000) // should be removed when we use api without rate limit
             }
         }
-        return Result.success()
+        return if (hasRefreshFailure) retryOrFail() else Result.success()
     }
+
+    // WorkManager has no built-in attempt cap, so bound it here to stop rescheduling permanent
+    // failures.
+    private fun retryOrFail(): Result =
+        if (runAttemptCount < MAX_REFRESH_ATTEMPTS) Result.retry() else Result.failure()
 
     private suspend fun cleanupDeFiOnlyTokens(vault: Vault, chain: Chain) {
         if (chain != Chain.ThorChain) return
@@ -115,5 +125,6 @@ constructor(
     companion object {
         const val ARG_VAULT_ID = "vault_id"
         const val ARG_CHAIN = "chain_id"
+        const val MAX_REFRESH_ATTEMPTS = 3
     }
 }
