@@ -73,6 +73,12 @@ internal sealed interface TonDeFiUiState {
     @Immutable
     data class Success(
         val tonData: TonStakingUiModel,
+        /**
+         * A reload is in flight. Mirrors [isActionLocked]'s `loadJob` guard so the card's
+         * Stake/Unstake buttons disable in lockstep — otherwise a resume-triggered refresh would
+         * leave them Enabled over a stale snapshot while a tap silently no-ops.
+         */
+        val isReloading: Boolean = false,
         val isBalanceVisible: Boolean = true,
         val selectedTab: DeFiTab = DeFiTab.STAKED,
         val showPositionSelectionDialog: Boolean = false,
@@ -126,15 +132,26 @@ constructor(
 
     private fun loadData(vaultId: VaultId) {
         loadJob?.cancel()
+        // Flag the in-flight reload on an already-rendered screen so the buttons disable while the
+        // isActionLocked() guard is closed by the active loadJob.
+        _state.update { current ->
+            if (current is TonDeFiUiState.Success) current.copy(isReloading = true) else current
+        }
         loadJob =
             viewModelScope.safeLaunch(
                 onError = { e ->
                     Timber.e(e, "Failed to load TON DeFi data")
                     // Keep a screen that already shows data on a background-refresh failure; only
-                    // surface the error state when there's nothing rendered yet.
+                    // surface the error state when there's nothing rendered yet. Clear the reload
+                    // flag so the buttons re-enable once the failed refresh settles.
                     if (_state.value !is TonDeFiUiState.Success) {
                         _state.value =
                             TonDeFiUiState.Error(R.string.error_view_default_description.asUiText())
+                    } else {
+                        _state.update { current ->
+                            if (current is TonDeFiUiState.Success) current.copy(isReloading = false)
+                            else current
+                        }
                     }
                 }
             ) {

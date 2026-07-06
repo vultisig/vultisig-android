@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.blockchain.ton
 
 import com.vultisig.wallet.data.api.chains.ton.TonAccountStakingInfoJson
 import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
+import com.vultisig.wallet.data.api.chains.ton.TonStakingPoolInfoJson
 import com.vultisig.wallet.data.blockchain.DeFiService
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
@@ -34,8 +35,20 @@ class TonDeFiBalanceService(
                 tonStakingApi.getNominatorPools(address).maxByOrNull { it.stakedTotal() }
                     ?: return persistAndEmpty(vaultId)
 
-            val staked = primary.stakedTotal()
-            val apr = fetchPoolApr(primary.pool)
+            val poolInfo = fetchPoolInfo(primary.pool)
+
+            // Mirror TonDeFiPositionsViewModel: a liquid-staking Tonstakers (`liquidTF`) position
+            // is
+            // not a native nominator stake, so it must not count toward the DeFi total — otherwise
+            // the same stake reads zero on the DeFi screen but nonzero in the Portfolio total. A
+            // metadata miss (null implementation) is treated permissively so a transient tonapi
+            // failure can't erase a genuine nominator position.
+            val isNominatorStake =
+                poolInfo?.implementation == null ||
+                    TonNominatorPool.isNominatorImplementation(poolInfo.implementation)
+
+            val staked = if (isNominatorStake) primary.stakedTotal() else BigInteger.ZERO
+            val apr = poolInfo?.apy?.let { it / 100 }
 
             persistStakedBalance(vaultId, staked, apr)
 
@@ -56,18 +69,19 @@ class TonDeFiBalanceService(
     }
 
     /**
-     * Best-effort pool APY; a decoration failure must not drop an otherwise-valid position. tonapi
-     * returns `apy` as a percentage (e.g. `13.27` = 13.27%), but `StakingDetails.apr` is stored as
-     * a fraction (the DeFi screen's `formatPercentage` multiplies by 100), so scale it down here.
+     * Best-effort pool metadata (implementation + APY). A lookup failure must neither drop an
+     * otherwise-valid position nor misclassify it, so a miss returns `null` and callers treat that
+     * permissively. tonapi returns `apy` as a percentage (e.g. `13.27` = 13.27%); the caller scales
+     * it to the fraction `StakingDetails.apr` stores (the DeFi screen's `formatPercentage` ×100).
      */
-    private suspend fun fetchPoolApr(poolAddress: String): Double? =
+    private suspend fun fetchPoolInfo(poolAddress: String): TonStakingPoolInfoJson? =
         try {
-            tonStakingApi.getStakingPool(poolAddress)?.apy?.let { it / 100 }
+            tonStakingApi.getStakingPool(poolAddress)
         } catch (e: NetworkException) {
-            Timber.w(e, "TonDeFiBalanceService: Failed to decorate TON staking APY")
+            Timber.w(e, "TonDeFiBalanceService: Failed to fetch TON staking pool info")
             null
         } catch (e: IOException) {
-            Timber.w(e, "TonDeFiBalanceService: Failed to decorate TON staking APY")
+            Timber.w(e, "TonDeFiBalanceService: Failed to fetch TON staking pool info")
             null
         }
 

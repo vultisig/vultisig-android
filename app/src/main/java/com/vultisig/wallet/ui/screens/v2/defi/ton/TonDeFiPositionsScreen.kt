@@ -222,6 +222,11 @@ private fun TonDeFiPositionsScreenContent(
                                     TonStakingPositionCard(
                                         data = tonData,
                                         isBalanceVisible = state.isBalanceVisible,
+                                        // A reload closes the ViewModel's action guard, so disable
+                                        // the buttons to match rather than let a tap silently
+                                        // no-op.
+                                        areActionsLocked =
+                                            tonData.isActionLocked || state.isReloading,
                                         onClickStake = onClickStake,
                                         onClickUnstake = onClickUnstake,
                                     )
@@ -296,6 +301,10 @@ private fun TonStakingPositionCard(
     data: TonStakingUiModel,
     isBalanceVisible: Boolean,
     isLoading: Boolean = false,
+    // Whether Stake/Unstake are blocked: the withdrawal lock OR an in-flight reload. Kept separate
+    // from [TonStakingUiModel.isActionLocked] so the unlock notice still tracks only the
+    // withdrawal.
+    areActionsLocked: Boolean = data.isActionLocked,
     onClickStake: () -> Unit,
     onClickUnstake: () -> Unit,
 ) {
@@ -366,8 +375,7 @@ private fun TonStakingPositionCard(
                 VsButton(
                     label = stringResource(R.string.defi_action_stake),
                     variant = VsButtonVariant.Secondary,
-                    state =
-                        if (data.isActionLocked) VsButtonState.Disabled else VsButtonState.Enabled,
+                    state = if (areActionsLocked) VsButtonState.Disabled else VsButtonState.Enabled,
                     onClick = onClickStake,
                     modifier = Modifier.weight(1f),
                 )
@@ -376,7 +384,7 @@ private fun TonStakingPositionCard(
                     variant = VsButtonVariant.Secondary,
                     // Unstake needs an existing position; disabled at 0 staked (and while locked).
                     state =
-                        if (data.hasPosition && !data.isActionLocked) VsButtonState.Enabled
+                        if (data.hasPosition && !areActionsLocked) VsButtonState.Enabled
                         else VsButtonState.Disabled,
                     onClick = onClickUnstake,
                     modifier = Modifier.weight(1f),

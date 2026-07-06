@@ -75,6 +75,23 @@ internal class TonDeFiBalanceServiceTest {
     }
 
     @Test
+    fun `liquid-staking position is excluded and persisted as zero`() = runTest {
+        coEvery { api.getNominatorPools(address) } returns
+            listOf(position(pool = "0:tonstakers", amount = 50_000_000_000, pendingDeposit = 0))
+        coEvery { api.getStakingPool("0:tonstakers") } returns
+            TonStakingPoolInfoJson(
+                apy = 5.0,
+                implementation = TonNominatorPool.IMPLEMENTATION_LIQUID_TF,
+            )
+        coEvery { repo.getStakingDetailsByCoindId(vaultId, Coins.Ton.TON.id) } returns null
+
+        val result = service.getRemoteDeFiBalance(address, vaultId)
+
+        assertEquals(emptyList(), result)
+        coVerify { repo.saveStakingDetails(vaultId, match { it.stakeAmount == BigInteger.ZERO }) }
+    }
+
+    @Test
     fun `no positions yields an empty balance`() = runTest {
         coEvery { api.getNominatorPools(address) } returns emptyList()
 
