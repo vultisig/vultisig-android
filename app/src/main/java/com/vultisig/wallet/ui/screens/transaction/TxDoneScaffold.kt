@@ -187,24 +187,21 @@ private fun SuccessTransaction(
                                 .padding(bottom = 48.dp),
                     )
                 }
-
-                // Surface the protocol's refund/failure reason (paused pool, slip exceeded, etc.)
-                // right on the done screen, not only later in transaction-history detail.
-                val statusReason =
-                    when (val status = transactionStatus) {
-                        is TransactionStatus.Refunded -> status.reason
-                        is TransactionStatus.Failed -> status.cause
-                        else -> null
-                    }
-                statusReason
-                    ?.asString()
-                    ?.takeIf { it.isNotBlank() }
-                    ?.let { reason ->
-                        RefundReasonBanner(reason = reason)
-                        UiSpacer(8.dp)
-                    }
             }
         }
+
+        // Surface the protocol's refund reason (paused pool, slip exceeded, etc.) on the done
+        // screen. Kept outside the collapsed block above so it stays visible when the user expands
+        // Transaction Details. Only Refunded carries a clean Midgard reason; Failed.cause is a raw
+        // provider error string (JSON blob, untranslated timeout literal) and is not shown here.
+        (transactionStatus as? TransactionStatus.Refunded)
+            ?.reason
+            ?.asString()
+            ?.takeIf { it.isNotBlank() }
+            ?.let { reason ->
+                RefundReasonBanner(reason = reason)
+                UiSpacer(8.dp)
+            }
 
         dappMetadata
             ?.takeUnless { it.isEmpty }

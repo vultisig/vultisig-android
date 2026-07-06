@@ -54,6 +54,7 @@ import com.vultisig.wallet.ui.utils.asString
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -401,7 +402,7 @@ private fun DetailInfoRows(
 @Composable
 internal fun RefundReasonBanner(reason: String) {
     Text(
-        text = reason,
+        text = reason.replaceFirstChar { ch -> ch.titlecase(Locale.ROOT) },
         style = Theme.brockmann.supplementary.footnote,
         color = Theme.v2.colors.alerts.warning,
         modifier =
