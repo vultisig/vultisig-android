@@ -51,6 +51,10 @@ suspend fun Context.saveContentToUri(uri: Uri, content: String) = doFileOperatio
 
 suspend fun Context.saveContentToUri(uri: Uri, contentList: List<AppZipEntry>): Boolean =
     doFileOperation {
+        if (contentList.isEmpty()) {
+            Timber.w("Refusing to write a ZIP backup with no entries")
+            return@doFileOperation false
+        }
         try {
             contentResolver.openOutputStream(uri).use { outputStream ->
                 ZipOutputStream(outputStream).use { zipOutputStream ->

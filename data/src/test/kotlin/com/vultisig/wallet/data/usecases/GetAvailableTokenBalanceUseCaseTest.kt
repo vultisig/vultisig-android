@@ -98,4 +98,43 @@ class GetAvailableTokenBalanceUseCaseTest {
         val result = useCase(acc, BigInteger("250"))
         assertEquals(BigInteger.ZERO, result?.value)
     }
+
+    @Test
+    fun `polkadot native token reserves the existential deposit in addition to gas`() = runTest {
+        // 1 DOT balance, 0.005 DOT gas → available should exclude the 0.01 DOT (Asset Hub) ED too
+        val acc =
+            account(
+                coin(Chain.Polkadot, "DOT", "", isNativeToken = true),
+                BigInteger.valueOf(10_000_000_000L),
+            )
+        val result = useCase(acc, BigInteger.valueOf(50_000_000L))
+        // 10_000_000_000 - 50_000_000 (gas) - 100_000_000 (ED) = 9_850_000_000
+        assertEquals(BigInteger.valueOf(9_850_000_000L), result?.value)
+    }
+
+    @Test
+    fun `polkadot available balance is floored at zero when gas plus existential deposit exceed balance`() =
+        runTest {
+            val acc =
+                account(
+                    coin(Chain.Polkadot, "DOT", "", isNativeToken = true),
+                    BigInteger.valueOf(100_000_000L),
+                )
+            val result = useCase(acc, BigInteger.valueOf(50_000_000L))
+            assertEquals(BigInteger.ZERO, result?.value)
+        }
+
+    @Test
+    fun `ripple native token reserves only gas, not an additional existential deposit`() = runTest {
+        // RippleApi#getBalance already nets the live account reserve out of tokenValue before it
+        // reaches this use case, so subtracting the ED constant again here would double-reserve
+        // and under-fill MAX/percentage XRP sends.
+        val acc =
+            account(
+                coin(Chain.Ripple, "XRP", "", isNativeToken = true),
+                BigInteger.valueOf(5_000_000L),
+            )
+        val result = useCase(acc, BigInteger.valueOf(15L))
+        assertEquals(BigInteger.valueOf(4_999_985L), result?.value)
+    }
 }

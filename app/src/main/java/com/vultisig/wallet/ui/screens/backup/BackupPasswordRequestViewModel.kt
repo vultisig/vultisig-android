@@ -79,7 +79,7 @@ constructor(
     private val backupType = args.backupType
 
     private val vault = MutableStateFlow<Vault?>(null)
-    private var vaults = listOf<Vault>()
+    private val vaults = MutableStateFlow<List<Vault>?>(null)
 
     val state =
         MutableStateFlow(
@@ -97,9 +97,11 @@ constructor(
     init {
         viewModelScope.launch {
             vault.value = vaultRepository.get(vaultId) ?: error("Vault with id $vaultId not found")
-            vaults = vaultRepository.getAll()
+            vaults.value = vaultRepository.getAll()
         }
     }
+
+    private suspend fun awaitVaults(): List<Vault> = vaults.filterNotNull().first()
 
     fun dismissError() {
         state.update { it.copy(error = null) }
@@ -164,9 +166,10 @@ constructor(
     }
 
     private suspend fun backupAllVaults(uri: Uri): Boolean {
+        val vaultsToBackup = awaitVaults()
         val content =
             withContext(Dispatchers.Default) {
-                vaults.map { vault ->
+                vaultsToBackup.map { vault ->
                     val vaultBackupData =
                         createVaultBackup(mapVaultToProto(vault), null) ?: return@withContext null
                     val fileName = createVaultBackupFileName(vault)
@@ -223,7 +226,9 @@ constructor(
     private suspend fun updateBackupStatus() {
         when (backupType) {
             BackupType.AllVaults -> {
-                vaults.forEach { vault -> vaultDataStoreRepository.setBackupStatus(vault.id, true) }
+                awaitVaults().forEach { vault ->
+                    vaultDataStoreRepository.setBackupStatus(vault.id, true)
+                }
             }
 
             is BackupType.CurrentVault -> {
@@ -236,7 +241,7 @@ constructor(
         viewModelScope.launch {
             when (backupType) {
                 BackupType.AllVaults -> {
-                    createDocumentRequestFlow.emit(createZipVaultsBackupFileName(vaults))
+                    createDocumentRequestFlow.emit(createZipVaultsBackupFileName(awaitVaults()))
                 }
 
                 is BackupType.CurrentVault -> {

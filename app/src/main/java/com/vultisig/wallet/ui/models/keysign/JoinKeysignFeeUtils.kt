@@ -34,6 +34,11 @@ internal fun computeJoinKeysignNetworkFee(
             )
         is BlockChainSpecific.THORChain ->
             TokenValue(value = blockChainSpecific.fee, token = nativeCoin)
+        // Cardano forces the initiator's transmitted byteFee into the signed body (memo-inclusive),
+        // so the joiner must surface that exact value — not UtxoFeeService's flat default, which
+        // would understate a memo send on the co-signing device's approval screen.
+        is BlockChainSpecific.Cardano ->
+            TokenValue(value = blockChainSpecific.byteFee.toBigInteger(), token = nativeCoin)
         else -> TokenValue(value = fallbackFeeAmount, token = nativeCoin)
     }
 
