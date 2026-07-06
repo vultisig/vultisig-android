@@ -211,6 +211,10 @@ constructor(
     private var lpDialogJob: Job? = null
     private var loadLpJob: Job? = null
 
+    // Latest bonded nodes, kept so onClickUnBond can resolve the selected node's raw bonded amount
+    // (the UI model only carries the formatted string). Read/written on the main dispatcher.
+    private var activeBondedNodes: List<BondedNodePosition> = emptyList()
+
     fun setData(vaultId: VaultId) {
         this.vaultId = vaultId
         loadBalanceVisibility()
@@ -431,6 +435,7 @@ constructor(
                         state.update { it.copy(bonded = it.bonded.copy(isLoading = false)) }
                     }
                     .collect { activeNodes ->
+                        activeBondedNodes = activeNodes
                         // Format UI data and show
                         val nodeUiModels = activeNodes.map { it.toUiModel() }
                         val totalBonded = calculateTotalBonded(activeNodes)
@@ -1137,6 +1142,8 @@ constructor(
             val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
             if (runeCoin != null) {
+                val bondedAmount =
+                    activeBondedNodes.firstOrNull { it.node.address == nodeAddress }?.amount
                 navigator.route(
                     Route.Send(
                         vaultId = vaultId,
@@ -1144,6 +1151,7 @@ constructor(
                         chainId = Chain.ThorChain.id,
                         tokenId = runeCoin.id,
                         address = nodeAddress,
+                        bondedAmount = bondedAmount?.toString(),
                     )
                 )
             } else {

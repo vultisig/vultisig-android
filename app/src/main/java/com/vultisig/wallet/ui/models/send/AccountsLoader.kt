@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.genera
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -25,6 +26,7 @@ internal class AccountsLoader(
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val defiTypeProvider: () -> DeFiNavActions?,
     private val mscaAddressProvider: () -> String?,
+    private val bondedAmountProvider: () -> BigInteger?,
 ) {
     private var loadAccountsJob: Job? = null
 
@@ -50,6 +52,11 @@ internal class AccountsLoader(
                 DeFiNavActions.WITHDRAW_USDC_CIRCLE ->
                     scope.safeLaunch(onError = ::onLoadError) {
                         loadCircleUSDCAccount(vaultId, generation)
+                    }
+
+                DeFiNavActions.UNBOND ->
+                    scope.safeLaunch(onError = ::onLoadError) {
+                        loadUnbondAccount(vaultId, generation)
                     }
 
                 null,
@@ -250,5 +257,53 @@ internal class AccountsLoader(
         } else {
             publishLoaded(emptyList(), generation)
         }
+    }
+
+    // Unbond draws from the RUNE already bonded to the selected node, not the wallet's spendable
+    // RUNE. loadDeFiAddresses returns the wallet balance, so override the RUNE account's balance
+    // with the node's bonded amount (threaded via bondedAmountProvider). This makes the
+    // MAX/percentage base and the submit-time balance check operate on the bonded amount — matching
+    // iOS/Windows.
+    private suspend fun loadUnbondAccount(vaultId: VaultId, generation: Long) {
+        val bondedAmount = bondedAmountProvider()
+        accountsRepository
+            .loadDeFiAddresses(vaultId, false)
+            .map { addrs -> addrs.flatMap { it.accounts } }
+            .collect { accounts -> publishUnbond(accounts, bondedAmount, generation) }
+    }
+
+    private fun publishUnbond(
+        accounts: List<Account>,
+        bondedAmount: BigInteger?,
+        generation: Long,
+    ) {
+        if (generation != currentGeneration) return
+        // Without a bonded amount (e.g. a stale deep link) fall back to the wallet balance rather
+        // than showing a zero balance that would block the form entirely.
+        if (bondedAmount == null) {
+            publishLoaded(accounts, generation)
+            return
+        }
+        val overridden =
+            accounts.map { account ->
+                if (account.token.id.equals(Coins.ThorChain.RUNE.id, true)) {
+                    val bondedTokenValue =
+                        account.tokenValue?.copy(value = bondedAmount)
+                            ?: TokenValue(value = bondedAmount, token = account.token)
+                    account.copy(
+                        tokenValue = bondedTokenValue,
+                        fiatValue =
+                            account.price?.let { price ->
+                                FiatValue(
+                                    value = price.value.multiply(bondedTokenValue.decimal),
+                                    currency = price.currency,
+                                )
+                            },
+                    )
+                } else {
+                    account
+                }
+            }
+        publishLoaded(overridden, generation)
     }
 }
