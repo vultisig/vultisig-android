@@ -23,6 +23,7 @@ import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -74,6 +75,53 @@ internal class SwapQuotePipelineNetworkFeeTest {
         assertEquals(BigInteger.valueOf(2_861_460), set.tokenValue.value)
     }
 
+    /**
+     * Proof for #5121: a SwapKit EVM route (wrapped as [SwapQuote.OneInch] by
+     * `SwapQuoteManager.fetchSwapKitQuote`) takes the SAME oracle-rebase branch as 1inch/Kyber/LiFi
+     * — the branch keys on `quote is SwapQuote.OneInch && chain.standard == EVM`, independent of
+     * the provider. The Network Fee is the re-based oracle bond, NOT the near-zero `fees[].inbound`
+     * placeholder the quote carries (here 130 wei). `resolveNetworkFee` never reads `quote.fees`,
+     * so the placeholder cannot reach the displayed Network Fee nor the balance/gas-sufficiency
+     * check (which validates against `effectiveNetworkFeeTokenValue`).
+     */
+    @Test
+    fun `swapkit evm route uses the oracle bond for network fee, not the inbound placeholder (#5121)`() =
+        runTest {
+            val ethCoin = coin(Chain.Ethereum)
+            val src = sendSrc(ethCoin)
+            val inboundPlaceholder = TokenValue(BigInteger.valueOf(130), ethCoin) // FLASHNET seed
+            val oracleBond = TokenValue(BigInteger.valueOf(2_000_000_000_000_000L), ethCoin) // .002
+            coEvery {
+                swapGasCalculator.rebaseEvmSwapNetworkFee(ethCoin, any(), routeGas = 100_000L)
+            } returns gasResult(ethCoin, oracleBond.value)
+
+            val outcome =
+                pipeline.resolveNetworkFee(
+                    result =
+                        success(
+                            swapKitEvmQuote(
+                                ethCoin,
+                                routeGas = 0x186a0L, // 100_000
+                                gasPriceWei = "76833041", // 0x4946111 ≈ 0.077 gwei
+                                inboundFee = inboundPlaceholder,
+                            )
+                        ),
+                    src = src,
+                    vaultId = "vault",
+                    gasFee = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
+                    gasFeeChain = Chain.Ethereum,
+                    networkFeeTokenValue = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
+                )
+
+            val set = assertIs<NetworkFeeUpdate.Set>(outcome.networkFee)
+            assertEquals(oracleBond.value, set.tokenValue.value)
+            assertTrue(set.tokenValue.value != inboundPlaceholder.value)
+            // The SwapKit route was routed through the oracle rebase exactly like a 1inch quote.
+            coVerify(exactly = 1) {
+                swapGasCalculator.rebaseEvmSwapNetworkFee(ethCoin, any(), routeGas = 100_000L)
+            }
+        }
+
     @Test
     fun `leaves the network fee untouched for a Solana aggregator quote`() = runTest {
         val solCoin = coin(Chain.Solana)
@@ -108,6 +156,40 @@ internal class SwapQuotePipelineNetworkFeeTest {
         assertEquals(NetworkFeeUpdate.Clear, outcome.networkFee)
         coVerify(exactly = 0) { swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), any()) }
     }
+
+    // A SwapKit EVM route as SwapQuoteManager.fetchSwapKitQuote materialises it: SwapQuote.OneInch
+    // with provider "SwapKit", a sub-provider label, the near-zero inbound placeholder on `fees`,
+    // and SwapKit's stale sub-gwei `gasPrice` on the tx. Used to prove the placeholder never
+    // reaches
+    // the Network Fee (#5121).
+    private fun swapKitEvmQuote(
+        srcToken: Coin,
+        routeGas: Long,
+        gasPriceWei: String,
+        inboundFee: TokenValue,
+    ) =
+        SwapQuote.OneInch(
+            expectedDstValue = TokenValue(BigInteger.valueOf(400), srcToken),
+            fees = inboundFee,
+            expiredAt = Clock.System.now(),
+            data =
+                EVMSwapQuoteJson(
+                    dstAmount = "400",
+                    tx =
+                        OneInchSwapTxJson(
+                            from = "0xsrc",
+                            to = "0xrouter",
+                            gas = routeGas,
+                            data = "0xdata",
+                            value = "0",
+                            gasPrice = gasPriceWei,
+                            swapFee = inboundFee.value.toString(),
+                            swapFeeTokenContract = "",
+                        ),
+                ),
+            provider = "SwapKit",
+            subProvider = "FLASHNET",
+        )
 
     private fun oneInchQuote(dstToken: Coin, routeGas: Long) =
         SwapQuote.OneInch(
