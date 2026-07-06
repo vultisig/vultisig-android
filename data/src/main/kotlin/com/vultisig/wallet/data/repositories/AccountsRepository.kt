@@ -428,6 +428,7 @@ constructor(
                     Chain.Terra to Coins.Terra.LUNA,
                     Chain.TerraClassic to Coins.TerraClassic.LUNC,
                     Chain.Qbtc to Coins.Qbtc.QBTC,
+                    Chain.Ton to Coins.Ton.TON,
                 )
 
             val addressesByChain = addresses.associateBy { it.chain }
@@ -610,6 +611,9 @@ constructor(
             Chain.Terra -> true
             Chain.TerraClassic -> true
             Chain.Qbtc -> true
+            // TON surfaces a nominator-pool staking position; without this its coin is dropped from
+            // the DeFi candidate set and staked TON never appears in the aggregate Portfolio total.
+            Chain.Ton -> true
             else -> false
         }
     }

@@ -45,8 +45,13 @@ internal data class TonUnstakeUiState(
     val ticker: String = "",
     val poolAddress: String = "",
     val stakedDisplay: String = "",
+    /**
+     * Balance/fee resolution is in flight. Continue stays disabled until it clears so a fast tap
+     * can't act on the [hasSufficientBalance] default before [loadCoin] has actually checked funds.
+     */
+    val isLoading: Boolean = true,
     /** Liquid balance covers the 0.2 TON withdraw signal + network fee. */
-    val hasSufficientBalance: Boolean = true,
+    val hasSufficientBalance: Boolean = false,
     val isSubmitting: Boolean = false,
     val errorMessage: UiText? = null,
 )
@@ -97,7 +102,7 @@ constructor(
 
     fun submit() {
         val current = _state.value
-        if (current.isSubmitting || !current.hasSufficientBalance) return
+        if (current.isLoading || current.isSubmitting || !current.hasSufficientBalance) return
 
         _state.update { it.copy(isSubmitting = true, errorMessage = null) }
 
@@ -147,7 +152,7 @@ constructor(
             onError = { e ->
                 Timber.e(e, "Failed to load TON coin for unstake flow")
                 setError(R.string.ton_defi_error_ton_not_in_vault.asUiText())
-                _state.update { it.copy(hasSufficientBalance = false) }
+                _state.update { it.copy(isLoading = false, hasSufficientBalance = false) }
             }
         ) {
             val vault = withContext(ioDispatcher) { vaultRepository.get(route.vaultId) }
@@ -155,6 +160,7 @@ constructor(
                 vault?.coins?.firstOrNull { it.chain == Chain.Ton && it.isNativeToken }
                     ?: return@safeLaunch _state.update {
                         it.copy(
+                            isLoading = false,
                             hasSufficientBalance = false,
                             errorMessage = R.string.ton_defi_error_ton_not_in_vault.asUiText(),
                         )
@@ -181,7 +187,11 @@ constructor(
                 withContext(ioDispatcher) { balanceRepository.cachedSpendableBalance(nativeCoin) }
 
             _state.update {
-                it.copy(ticker = nativeCoin.ticker, hasSufficientBalance = balance >= required)
+                it.copy(
+                    isLoading = false,
+                    ticker = nativeCoin.ticker,
+                    hasSufficientBalance = balance >= required,
+                )
             }
         }
     }

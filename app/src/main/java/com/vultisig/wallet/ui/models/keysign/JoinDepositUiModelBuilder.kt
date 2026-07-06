@@ -47,6 +47,9 @@ constructor(
             is BlockChainSpecific.THORChain,
             is BlockChainSpecific.Ethereum,
             is BlockChainSpecific.Cosmos,
+            // TON nominator-pool stake/unstake builds a deposit; the joining co-signer must be able
+            // to render its verify screen so multi-device staking ceremonies aren't blocked.
+            is BlockChainSpecific.Ton,
             is BlockChainSpecific.UTXO -> Unit
 
             else -> error("BlockChainSpecific ${payload.blockChainSpecific} is not supported")

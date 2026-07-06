@@ -473,7 +473,7 @@
     <string name="send_form_ripple_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 XRP (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
     <string name="error_invalid_chain">Chain is invalid</string>
     <string name="ton_stake_error_unsupported_pool">This staking pool isn\'t supported</string>
-    <string name="ton_stake_error_min_amount">Minimum stake for this pool is %1$s TON</string>
+    <string name="ton_stake_error_min_amount">Minimum stake for this pool is %1$s %2$s</string>
     <string name="ton" translatable="false">TON</string>
     <string name="ton_defi_error_ton_not_in_vault">TON isn\'t in this vault</string>
     <string name="ton_defi_pending_withdrawal">Pending withdrawal</string>
@@ -481,6 +481,7 @@
     <string name="ton_defi_unlocks_in_days">Unlocks in %1$dd %2$dh</string>
     <string name="ton_defi_unlocks_in_hours">Unlocks in %1$dh %2$dm</string>
     <string name="ton_defi_staked_amount">Staked %1$s</string>
+    <string name="ton_defi_staked_label">Staked</string>
     <string name="ton_staking_select_pool">Select a pool</string>
     <string name="ton_staking_pool_header">Pool</string>
     <string name="ton_staking_apy_header">APY</string>

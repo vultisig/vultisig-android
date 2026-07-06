@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.models.defi
 
 import androidx.lifecycle.SavedStateHandle
 import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
-import com.vultisig.wallet.data.api.chains.ton.TonStakingPoolEntryJson
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SigningLibType
@@ -18,8 +17,9 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.deposit.DepositGasFeeHelper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -36,9 +36,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class TonStakeViewModelTest {
+internal class TonUnstakeViewModelTest {
 
-    private val decimals = Coins.Ton.TON.decimal
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private lateinit var vaultRepository: VaultRepository
@@ -62,8 +61,10 @@ internal class TonStakeViewModelTest {
         transactionRepository = mockk(relaxed = true)
         navigator = mockk(relaxed = true)
 
+        // Default: a resolvable native TON coin and a modest gas fee. Individual tests override.
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
-        coEvery { tonStakingApi.getStakingPools() } returns emptyList()
+        coEvery { depositGasFeeHelper.calculateGasFee(VAULT_ID, any(), any(), any()) } returns
+            TokenValue(value = BigInteger.valueOf(50_000_000L), unit = "GRAM", decimals = 9)
     }
 
     @AfterEach
@@ -71,107 +72,62 @@ internal class TonStakeViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun entry(
-        address: String,
-        apy: Double,
-        verified: Boolean = true,
-        implementation: String? = "whales",
-        minStake: Long = 50_000_000_000L,
-        current: Int? = null,
-        max: Int? = null,
-    ) =
-        TonStakingPoolEntryJson(
-            address = address,
-            name = address,
-            apy = apy,
-            minStake = minStake,
-            verified = verified,
-            currentNominators = current,
-            maxNominators = max,
-            implementation = implementation,
-        )
-
     @Test
-    fun `keeps only verified nominator pools`() {
-        val result =
-            TonStakeViewModel.filterAndSortPools(
-                listOf(
-                    entry("whales-ok", apy = 5.0, implementation = "whales"),
-                    entry("tf-ok", apy = 4.0, implementation = "tf"),
-                    entry("liquid-excluded", apy = 9.0, implementation = "liquidTF"),
-                    entry("unknown-excluded", apy = 8.0, implementation = "somethingElse"),
-                    entry("unverified-excluded", apy = 7.0, verified = false),
-                ),
-                decimals,
-            )
+    fun `fails closed when the vault is missing`() = runTest {
+        coEvery { vaultRepository.get(VAULT_ID) } returns null
 
-        result.map { it.address } shouldBe listOf("whales-ok", "tf-ok")
+        val state = createViewModel().state.value
+
+        state.isLoading.shouldBeFalse()
+        state.hasSufficientBalance.shouldBeFalse()
+        state.errorMessage.shouldNotBeNull()
     }
 
     @Test
-    fun `sorts by APY descending`() {
-        val result =
-            TonStakeViewModel.filterAndSortPools(
-                listOf(entry("low", apy = 2.0), entry("high", apy = 12.5), entry("mid", apy = 7.0)),
-                decimals,
-            )
+    fun `fails closed when the native TON coin is absent`() = runTest {
+        coEvery { vaultRepository.get(VAULT_ID) } returns VAULT.copy(coins = emptyList())
 
-        result.map { it.address } shouldBe listOf("high", "mid", "low")
+        val state = createViewModel().state.value
+
+        state.isLoading.shouldBeFalse()
+        state.hasSufficientBalance.shouldBeFalse()
+        state.errorMessage.shouldNotBeNull()
     }
 
     @Test
-    fun `excludes pools at nominator capacity but keeps those with room or unknown counts`() {
-        val result =
-            TonStakeViewModel.filterAndSortPools(
-                listOf(
-                    entry("full", apy = 9.0, current = 40, max = 40),
-                    entry("room", apy = 8.0, current = 10, max = 40),
-                    entry("unknown", apy = 7.0, current = null, max = null),
-                ),
-                decimals,
-            )
+    fun `fails closed when the gas-fee lookup throws instead of defaulting to zero`() = runTest {
+        stubSpendableBalance(nanoTon = 1_000_000_000L)
+        coEvery { depositGasFeeHelper.calculateGasFee(VAULT_ID, any(), any(), any()) } throws
+            RuntimeException("fee service down")
 
-        result.map { it.address } shouldBe listOf("room", "unknown")
+        val state = createViewModel().state.value
+
+        state.isLoading.shouldBeFalse()
+        state.hasSufficientBalance.shouldBeFalse()
+        state.errorMessage.shouldNotBeNull()
     }
 
     @Test
-    fun `scales min stake from nanotons to human-decimal TON`() {
-        val result =
-            TonStakeViewModel.filterAndSortPools(
-                listOf(entry("p", apy = 5.0, minStake = 50_000_000_000L)),
-                decimals,
-            )
+    fun `enables the action when the balance covers the withdraw fee and gas`() = runTest {
+        // Required = 0.2 TON withdraw fee + 0.05 TON gas = 0.25 TON; 1 TON covers it.
+        stubSpendableBalance(nanoTon = 1_000_000_000L)
 
-        result.single().minStake.stripTrailingZeros().toPlainString() shouldBe "50"
+        val state = createViewModel().state.value
+
+        state.isLoading.shouldBeFalse()
+        state.hasSufficientBalance.shouldBeTrue()
     }
 
     @Test
-    fun `display name falls back to a short address when unnamed`() {
-        val pool =
-            TonPoolUiModel(
-                address = "0:a45b17f28409229b78360e3290420f13e4fe20f90d7e2bf8c4ac6703259e22fa",
-                name = "",
-                apy = 5.0,
-                minStake = BigDecimal.TEN,
-                verified = true,
-            )
+    fun `disables the action when the balance cannot cover the fees`() = runTest {
+        // 0.1 TON < the 0.25 TON required.
+        stubSpendableBalance(nanoTon = 100_000_000L)
 
-        pool.displayName shouldContain "…"
+        val state = createViewModel().state.value
+
+        state.isLoading.shouldBeFalse()
+        state.hasSufficientBalance.shouldBeFalse()
     }
-
-    @Test
-    fun `stakeable balance reserves the deposit network fee, not the larger withdraw fee`() =
-        runTest {
-            // 1 TON spendable, 0.05 TON deposit network fee → 0.95 TON stakeable. Reserving the
-            // 0.2 TON withdraw fee here (the old bug) would leave only 0.8 TON.
-            stubSpendableBalance(nanoTon = 1_000_000_000L)
-            coEvery { depositGasFeeHelper.calculateGasFee(VAULT_ID, any(), any(), any()) } returns
-                TokenValue(value = BigInteger.valueOf(50_000_000L), unit = "GRAM", decimals = 9)
-
-            val vm = createViewModel()
-
-            vm.state.value.stakeableBalance.stripTrailingZeros().toPlainString() shouldBe "0.95"
-        }
 
     private fun stubSpendableBalance(nanoTon: Long) {
         coEvery { balanceRepository.getCachedTokenBalanceAndPrice(TON_ADDRESS, any()) } returns
@@ -190,11 +146,12 @@ internal class TonStakeViewModelTest {
             )
     }
 
-    private fun createViewModel(): TonStakeViewModel {
+    private fun createViewModel(): TonUnstakeViewModel {
         val savedStateHandle = mockk<SavedStateHandle>()
         every { savedStateHandle.get<String>("vaultId") } returns VAULT_ID
-        every { savedStateHandle.get<String>("poolAddress") } returns null
-        return TonStakeViewModel(
+        every { savedStateHandle.get<String>("poolAddress") } returns POOL
+        every { savedStateHandle.get<String>("stakedDisplay") } returns "50 GRAM"
+        return TonUnstakeViewModel(
             savedStateHandle = savedStateHandle,
             vaultRepository = vaultRepository,
             tonStakingApi = tonStakingApi,
@@ -211,6 +168,7 @@ internal class TonStakeViewModelTest {
     private companion object {
         const val VAULT_ID = "vault-1"
         const val TON_ADDRESS = "UQtonAddress"
+        const val POOL = "0:a45b17f28409229b78360e3290420f13e4fe20f90d7e2bf8c4ac6703259e22fa"
 
         val TON_COIN = Coins.Ton.TON.copy(address = TON_ADDRESS)
 

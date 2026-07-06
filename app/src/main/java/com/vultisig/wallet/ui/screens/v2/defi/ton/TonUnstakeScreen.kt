@@ -57,7 +57,7 @@ internal fun TonUnstakeScreen(viewModel: TonUnstakeViewModel = hiltViewModel()) 
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     InfoRow(
-                        title = stringResource(R.string.ton_defi_staked_amount, ticker),
+                        title = stringResource(R.string.ton_defi_staked_label),
                         value = state.stakedDisplay,
                     )
                     UiHorizontalDivider()
@@ -74,7 +74,7 @@ internal fun TonUnstakeScreen(viewModel: TonUnstakeViewModel = hiltViewModel()) 
                     color = Theme.v2.colors.text.secondary,
                 )
 
-                if (!state.hasSufficientBalance && state.errorMessage == null) {
+                if (!state.isLoading && !state.hasSufficientBalance && state.errorMessage == null) {
                     Text(
                         text = stringResource(R.string.insufficient_native_token, ticker),
                         style = Theme.brockmann.supplementary.caption,
@@ -95,7 +95,8 @@ internal fun TonUnstakeScreen(viewModel: TonUnstakeViewModel = hiltViewModel()) 
                 label = stringResource(R.string.cosmos_staking_continue),
                 variant = VsButtonVariant.CTA,
                 state =
-                    if (state.hasSufficientBalance && !state.isSubmitting) VsButtonState.Enabled
+                    if (!state.isLoading && state.hasSufficientBalance && !state.isSubmitting)
+                        VsButtonState.Enabled
                     else VsButtonState.Disabled,
                 isLoading = state.isSubmitting,
                 onClick = viewModel::submit,

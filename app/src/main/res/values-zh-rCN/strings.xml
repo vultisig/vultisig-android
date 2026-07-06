@@ -1205,13 +1205,14 @@
     <string name="send_form_ripple_reaping_warning">请确保账户中留有足够的资金以支付手续费。如果账户余额低于 1 XRP（存量保证金），账户将被停用（清算），剩余资金也将丢失。您可以随时通过存入高于存量保证金的金额来重新激活账户。但是，这无法找回已丢失的资金。</string>
     <string name="error_invalid_chain">链无效</string>
     <string name="ton_stake_error_unsupported_pool">不支持此质押池</string>
-    <string name="ton_stake_error_min_amount">此质押池的最低质押金额为 %1$s TON</string>
+    <string name="ton_stake_error_min_amount">此质押池的最低质押金额为 %1$s %2$s</string>
     <string name="ton_defi_error_ton_not_in_vault">此保险库中没有 TON</string>
     <string name="ton_defi_pending_withdrawal">待提取</string>
     <string name="ton_defi_unlock_ready">可提取</string>
     <string name="ton_defi_unlocks_in_days">%1$d 天 %2$d 小时后解锁</string>
     <string name="ton_defi_unlocks_in_hours">%1$d 小时 %2$d 分钟后解锁</string>
     <string name="ton_defi_staked_amount">已质押 %1$s</string>
+    <string name="ton_defi_staked_label">已质押</string>
     <string name="ton_staking_select_pool">选择质押池</string>
     <string name="ton_staking_pool_header">质押池</string>
     <string name="ton_staking_apy_header">年化收益率</string>

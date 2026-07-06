@@ -464,13 +464,14 @@
     <string name="send_form_ripple_reaping_warning">수수료를 충당할 충분한 자금을 남겨두세요. 계정 잔액이 1 XRP(최소 예치금) 아래로 떨어지면 계정이 비활성화(수확)되고 남은 자금이 손실됩니다. 언제든지 최소 예치금보다 큰 새 입금으로 주소를 재활성화할 수 있습니다. 그러나 손실된 자금은 복구되지 않습니다.</string>
     <string name="error_invalid_chain">체인이 유효하지 않습니다</string>
     <string name="ton_stake_error_unsupported_pool">이 스테이킹 풀은 지원되지 않습니다</string>
-    <string name="ton_stake_error_min_amount">이 풀의 최소 스테이킹 금액은 %1$s TON입니다</string>
+    <string name="ton_stake_error_min_amount">이 풀의 최소 스테이킹 금액은 %1$s %2$s입니다</string>
     <string name="ton_defi_error_ton_not_in_vault">이 볼트에 TON이 없습니다</string>
     <string name="ton_defi_pending_withdrawal">대기 중인 출금</string>
     <string name="ton_defi_unlock_ready">출금 가능</string>
     <string name="ton_defi_unlocks_in_days">%1$d일 %2$d시간 후 잠금 해제</string>
     <string name="ton_defi_unlocks_in_hours">%1$d시간 %2$d분 후 잠금 해제</string>
     <string name="ton_defi_staked_amount">스테이킹된 %1$s</string>
+    <string name="ton_defi_staked_label">스테이킹됨</string>
     <string name="ton_staking_select_pool">풀 선택</string>
     <string name="ton_staking_pool_header">풀</string>
     <string name="ton_staking_apy_header">APY</string>

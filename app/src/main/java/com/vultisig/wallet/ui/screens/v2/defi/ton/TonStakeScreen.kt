@@ -84,6 +84,7 @@ internal fun TonStakeScreen(viewModel: TonStakeViewModel = hiltViewModel()) {
                             stringResource(
                                 R.string.ton_stake_error_min_amount,
                                 state.requiredMinStake.stripTrailingZeros().toPlainString(),
+                                state.ticker.ifEmpty { "TON" },
                             ),
                         style = Theme.brockmann.supplementary.caption,
                         color = Theme.v2.colors.alerts.error,

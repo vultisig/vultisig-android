@@ -265,8 +265,20 @@ constructor(
                     )
             coin = nativeCoin
 
-            val gasReservation =
-                BigDecimal(TonNominatorPool.WITHDRAW_FEE).movePointLeft(nativeCoin.decimal)
+            // Reserve the actual deposit network fee (~0.05 TON, iOS `TonHelper.defaultFee`) off
+            // the
+            // spendable balance, not the 0.2 TON withdraw signal fee — reserving too much clamps a
+            // wallet just above the pool minimum below it and wrongly disables Continue.
+            val gasFee =
+                withContext(ioDispatcher) {
+                    depositGasFeeHelper.calculateGasFee(
+                        route.vaultId,
+                        Chain.Ton,
+                        nativeCoin,
+                        nativeCoin.address,
+                    )
+                }
+            val gasReservation = BigDecimal(gasFee.value).movePointLeft(nativeCoin.decimal)
             val total =
                 withContext(ioDispatcher) { balanceRepository.cachedSpendableBalance(nativeCoin) }
             val stakeable = (total - gasReservation).coerceAtLeast(BigDecimal.ZERO)
@@ -314,7 +326,9 @@ constructor(
                             verified = true,
                         )
                     }
-        if (existing != null) onPoolSelected(existing)
+        // Re-check after the async lookup: if the user picked a pool in the picker while the
+        // fetch was in flight, keep their choice rather than clobbering it with the prefill.
+        if (existing != null && _state.value.selectedPool == null) onPoolSelected(existing)
     }
 
     private fun setError(message: UiText) {

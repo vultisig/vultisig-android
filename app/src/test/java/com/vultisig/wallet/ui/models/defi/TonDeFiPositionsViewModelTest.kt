@@ -123,9 +123,47 @@ internal class TonDeFiPositionsViewModelTest {
         val data = (vm.state.value as TonDeFiUiState.Success).tonData
         assertTrue(data.isActionLocked)
 
-        // A locked position must not navigate into the unstake flow.
+        // A locked position must not navigate into the unstake flow. Assert against the real
+        // target (Route.TonUnstake) — the old Route.Deposit check passed even with the guard gone.
         vm.onUnstake()
-        coVerify(exactly = 0) { navigator.route(any<Route.Deposit>()) }
+        coVerify(exactly = 0) { navigator.route(any<Route.TonUnstake>()) }
+    }
+
+    @Test
+    fun `a locked position blocks the stake action too`() = runTest {
+        coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } returns
+            listOf(
+                TonAccountStakingInfoJson(
+                    pool = POOL,
+                    amount = 50_000_000_000L,
+                    pendingWithdraw = 50_000_000_000L,
+                )
+            )
+        coEvery { tonStakingApi.getStakingPool(POOL) } returns
+            TonStakingPoolInfoJson(name = "Whales", apy = 5.0, cycleEnd = 9_999_999_999L)
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.onStake()
+        coVerify(exactly = 0) { navigator.route(any<Route.TonStake>()) }
+    }
+
+    @Test
+    fun `drops a non-nominator position so no failing stake or unstake is offered`() = runTest {
+        coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } returns
+            listOf(TonAccountStakingInfoJson(pool = POOL, amount = 50_000_000_000L))
+        // A liquid-staking implementation this app can't deposit into.
+        coEvery { tonStakingApi.getStakingPool(POOL) } returns
+            TonStakingPoolInfoJson(name = "Tonstakers", apy = 5.0, implementation = "liquidTF")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val data = (vm.state.value as TonDeFiUiState.Success).tonData
+        assertFalse(data.hasPosition)
+
+        // No cached pool → unstake can't route.
+        vm.onUnstake()
+        coVerify(exactly = 0) { navigator.route(any<Route.TonUnstake>()) }
     }
 
     @Test

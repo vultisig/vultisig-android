@@ -874,13 +874,14 @@
     <string name="send_form_ripple_reaping_warning">Asegúrate de tener fondos suficientes para cubrir las comisiones. Si el saldo de una cuenta cae por debajo de 1 XRP (Depósito Existente), la cuenta se desactivará (se liquidará) y los fondos restantes se perderán. Puedes reactivar la dirección con un nuevo depósito superior al depósito existente en cualquier momento. Sin embargo, esto no recuperará los fondos perdidos.</string>
     <string name="error_invalid_chain">La cadena no es válida.</string>
     <string name="ton_stake_error_unsupported_pool">Este pool de staking no es compatible</string>
-    <string name="ton_stake_error_min_amount">El stake mínimo para este pool es de %1$s TON</string>
+    <string name="ton_stake_error_min_amount">El stake mínimo para este pool es de %1$s %2$s</string>
     <string name="ton_defi_error_ton_not_in_vault">TON no está en esta bóveda</string>
     <string name="ton_defi_pending_withdrawal">Retiro pendiente</string>
     <string name="ton_defi_unlock_ready">Listo para retirar</string>
     <string name="ton_defi_unlocks_in_days">Se desbloquea en %1$d d %2$d h</string>
     <string name="ton_defi_unlocks_in_hours">Se desbloquea en %1$d h %2$d min</string>
     <string name="ton_defi_staked_amount">En staking %1$s</string>
+    <string name="ton_defi_staked_label">En staking</string>
     <string name="ton_staking_select_pool">Selecciona un pool</string>
     <string name="ton_staking_pool_header">Pool</string>
     <string name="ton_staking_apy_header">APY</string>

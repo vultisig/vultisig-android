@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.chains.ton.TonAccountStakingInfoJson
 import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
+import com.vultisig.wallet.data.blockchain.ton.TonNominatorPool
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.VaultId
@@ -38,7 +39,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
 
-private const val TON_KEY = "TON"
+internal const val TON_KEY = "TON"
 
 /** UI model for the TON nominator-pool staking position. */
 @Immutable
@@ -86,9 +87,10 @@ internal sealed interface TonDeFiUiState {
  *
  * Reads the account's pools from tonapi, treats the largest as the primary position (mirrors
  * [com.vultisig.wallet.data.blockchain.ton.TonDeFiBalanceService] / vultisig-ios
- * `TonStakeInteractor`), and decorates it with the pool name + APY. Stake/Unstake route into the
- * existing Deposit flow, which carries the fund-safe transaction core (bounceable send,
- * per-implementation comment, amount rules) already shipped in #5073.
+ * `TonStakeInteractor`), and decorates it with the pool name + APY. [onStake]/[onUnstake] navigate
+ * to the dedicated [Route.TonStake]/[Route.TonUnstake] screens, which carry the fund-safe
+ * transaction core (bounceable send, per-implementation comment, amount rules) built in
+ * [buildPositionUiModel]'s sibling stake/unstake view-models.
  */
 @HiltViewModel
 internal class TonDeFiPositionsViewModel
@@ -163,17 +165,36 @@ constructor(
                         it.stakedTotal()
                     }
 
-                cachedPoolAddress = primary?.takeIf { it.stakedTotal() > BigInteger.ZERO }?.pool
-                cachedStakedDisplay =
-                    primary
-                        ?.takeIf { it.stakedTotal() > BigInteger.ZERO }
-                        ?.let {
-                            "${it.stakedTotal().toBigDecimal().movePointLeft(tonCoin.decimal).stripTrailingZeros().toPlainString()} ${tonCoin.ticker}"
-                        }
-                        .orEmpty()
+                val staked = primary?.stakedTotal() ?: BigInteger.ZERO
+                val hasStake = staked > BigInteger.ZERO
+
+                // Only a manageable nominator-pool position (built successfully below) drives the
+                // add-more/unstake routing; anything else clears the caches so no failing flow is
+                // offered.
+                val position =
+                    if (primary != null && hasStake) {
+                        buildPositionUiModel(
+                            staked = staked,
+                            pendingWithdraw =
+                                BigInteger.valueOf(primary.pendingWithdraw + primary.readyWithdraw),
+                            poolAddress = primary.pool,
+                            coin = tonCoin,
+                            price = price,
+                            currencyFormat = currencyFormat,
+                        )
+                    } else {
+                        null
+                    }
 
                 val tonData =
-                    if (primary == null || primary.stakedTotal() == BigInteger.ZERO) {
+                    if (position != null) {
+                        cachedPoolAddress = primary!!.pool
+                        cachedStakedDisplay =
+                            "${staked.toBigDecimal().movePointLeft(tonCoin.decimal).stripTrailingZeros().toPlainString()} ${tonCoin.ticker}"
+                        position
+                    } else {
+                        cachedPoolAddress = null
+                        cachedStakedDisplay = ""
                         // Show a zeroed position card (with a disabled Unstake) rather than an
                         // empty state, mirroring iOS/macOS which always render the card.
                         TonStakingUiModel(
@@ -181,16 +202,6 @@ constructor(
                             stakedDisplay = "0 ${tonCoin.ticker}",
                             stakedFiatDisplay = currencyFormat.format(BigDecimal.ZERO),
                             hasPosition = false,
-                        )
-                    } else {
-                        buildPositionUiModel(
-                            staked = primary.stakedTotal(),
-                            pendingWithdraw =
-                                BigInteger.valueOf(primary.pendingWithdraw + primary.readyWithdraw),
-                            poolAddress = primary.pool,
-                            coin = tonCoin,
-                            price = price,
-                            currencyFormat = currencyFormat,
                         )
                     }
 
@@ -210,7 +221,7 @@ constructor(
         coin: Coin,
         price: BigDecimal,
         currencyFormat: NumberFormat,
-    ): TonStakingUiModel {
+    ): TonStakingUiModel? {
         // Pool metadata (name/apy/cycle) is display-only, so a genuine lookup miss degrades to a
         // short fallback label. Cancellation must still propagate — otherwise a cancelled reload
         // could swallow the exception and let this coroutine publish a stale Success state.
@@ -222,6 +233,18 @@ constructor(
             } catch (_: Exception) {
                 null
             }
+
+        // A position in a pool this app can't stake into (liquid-staking Tonstakers/`liquidTF`)
+        // must not offer Stake/Unstake — the `"d"`/`"w"` text-comment deposit only fails deep in
+        // buildTonStakingTransaction. Mirror the Stake picker's filterAndSortPools filter. A
+        // metadata miss (null implementation) is treated permissively so a transient tonapi failure
+        // can't hide a genuine nominator position.
+        if (
+            poolInfo?.implementation != null &&
+                !TonNominatorPool.isNominatorImplementation(poolInfo.implementation)
+        ) {
+            return null
+        }
 
         val stakedTon = staked.toBigDecimal().movePointLeft(coin.decimal)
         val stakedFiat = currencyFormat.format(stakedTon.multiply(price))
@@ -300,11 +323,22 @@ constructor(
     }
 
     /**
+     * A pending withdrawal blocks both stake and unstake until the pool releases the balance. Read
+     * the lock from the latest loaded state, and treat an in-flight reload as locked so a
+     * resume-triggered refresh right after a Withdraw can't be raced by a stale unlocked snapshot.
+     */
+    private fun isActionLocked(): Boolean {
+        if (loadJob?.isActive == true) return true
+        return (_state.value as? TonDeFiUiState.Success)?.tonData?.isActionLocked ?: false
+    }
+
+    /**
      * Opens the dedicated Stake screen. An existing position prefills its pool (add-more); a
      * first-time stake leaves the pool unset so the user picks one there — mirroring macOS "Stake
      * TON".
      */
     fun onStake() {
+        if (isActionLocked()) return
         viewModelScope.safeLaunch(onError = { e -> Timber.e(e, "Failed to open TON stake") }) {
             if (cachedTonCoin == null) {
                 refresh()
@@ -315,8 +349,7 @@ constructor(
     }
 
     fun onUnstake() {
-        val locked = (_state.value as? TonDeFiUiState.Success)?.tonData?.isActionLocked ?: false
-        if (locked) return
+        if (isActionLocked()) return
         val poolAddress = cachedPoolAddress ?: return
         viewModelScope.safeLaunch(onError = { e -> Timber.e(e, "Failed to open TON unstake") }) {
             if (cachedTonCoin == null) {

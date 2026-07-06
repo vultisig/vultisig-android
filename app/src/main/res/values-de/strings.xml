@@ -876,13 +876,14 @@
     <string name="send_form_ripple_reaping_warning">Stellen Sie sicher, dass Ihr Konto ausreichend Guthaben zur Deckung der Gebühren aufweist. Fällt Ihr Kontostand unter 1 XRP (Einzahlung), wird das Konto deaktiviert (eingezogen) und das verbleibende Guthaben geht verloren. Sie können die Adresse jederzeit mit einer neuen Einzahlung, die höher als die Mindesteinzahlung ist, reaktivieren. Dadurch werden die verlorenen Guthaben jedoch nicht wiederhergestellt.</string>
     <string name="error_invalid_chain">Die Blockchain ist ungültig</string>
     <string name="ton_stake_error_unsupported_pool">Dieser Staking-Pool wird nicht unterstützt</string>
-    <string name="ton_stake_error_min_amount">Mindest-Stake für diesen Pool beträgt %1$s TON</string>
+    <string name="ton_stake_error_min_amount">Mindest-Stake für diesen Pool beträgt %1$s %2$s</string>
     <string name="ton_defi_error_ton_not_in_vault">TON ist nicht in diesem Tresor</string>
     <string name="ton_defi_pending_withdrawal">Ausstehende Auszahlung</string>
     <string name="ton_defi_unlock_ready">Bereit zur Auszahlung</string>
     <string name="ton_defi_unlocks_in_days">Freigabe in %1$d T %2$d Std</string>
     <string name="ton_defi_unlocks_in_hours">Freigabe in %1$d Std %2$d Min</string>
     <string name="ton_defi_staked_amount">Gestaked %1$s</string>
+    <string name="ton_defi_staked_label">Gestaked</string>
     <string name="ton_staking_select_pool">Pool auswählen</string>
     <string name="ton_staking_pool_header">Pool</string>
     <string name="ton_staking_apy_header">APY</string>

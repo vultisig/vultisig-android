@@ -47,6 +47,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
+import com.vultisig.wallet.ui.models.defi.TON_KEY
 import com.vultisig.wallet.ui.models.defi.TonDeFiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.TonDeFiUiState
 import com.vultisig.wallet.ui.models.defi.TonStakingUiModel
@@ -210,7 +211,7 @@ private fun TonDeFiPositionsScreenContent(
                         }
                         is TonDeFiUiState.Success -> {
                             val tonData = state.tonData
-                            val isTonSelected = state.selectedPositions.contains("TON")
+                            val isTonSelected = state.selectedPositions.contains(TON_KEY)
                             if (!isTonSelected) {
                                 item { NoPositionsContainer() }
                             } else {
@@ -424,11 +425,20 @@ private fun TonUnlockNotice(data: TonStakingUiModel) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = stringResource(R.string.ton_defi_pending_withdrawal),
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.secondary,
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = stringResource(R.string.ton_defi_pending_withdrawal),
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.secondary,
+            )
+            data.pendingWithdrawDisplay?.let { pending ->
+                Text(
+                    text = pending,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.primary,
+                )
+            }
+        }
         Text(
             text = unlockText,
             style = Theme.brockmann.body.s.medium,

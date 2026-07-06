@@ -874,13 +874,14 @@
     <string name="send_form_ripple_reaping_warning">Assicurati di lasciare fondi sufficienti per coprire le commissioni. Se il saldo di un conto scende al di sotto di 1 XRP (Deposito Esistenziale), il conto verrà disattivato (rimosso) e tutti i fondi rimanenti andranno persi. Puoi riattivare l\'indirizzo con un nuovo deposito superiore al deposito esistenziale in qualsiasi momento. Tuttavia, questo non recupererà i fondi persi.</string>
     <string name="error_invalid_chain">La catena non è valida</string>
     <string name="ton_stake_error_unsupported_pool">Questo pool di staking non è supportato</string>
-    <string name="ton_stake_error_min_amount">Lo stake minimo per questo pool è %1$s TON</string>
+    <string name="ton_stake_error_min_amount">Lo stake minimo per questo pool è %1$s %2$s</string>
     <string name="ton_defi_error_ton_not_in_vault">TON non è in questa cassaforte</string>
     <string name="ton_defi_pending_withdrawal">Prelievo in sospeso</string>
     <string name="ton_defi_unlock_ready">Pronto per il prelievo</string>
     <string name="ton_defi_unlocks_in_days">Si sblocca tra %1$d g %2$d h</string>
     <string name="ton_defi_unlocks_in_hours">Si sblocca tra %1$d h %2$d min</string>
     <string name="ton_defi_staked_amount">In staking %1$s</string>
+    <string name="ton_defi_staked_label">In staking</string>
     <string name="ton_staking_select_pool">Seleziona un pool</string>
     <string name="ton_staking_pool_header">Pool</string>
     <string name="ton_staking_apy_header">APY</string>
