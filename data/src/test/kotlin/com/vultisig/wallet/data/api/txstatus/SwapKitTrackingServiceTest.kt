@@ -57,7 +57,11 @@ class SwapKitTrackingServiceTest {
             finalisedAt = 1_700_000_000.0,
         )
 
-    private fun stubTonSwapRow(toContract: String, toIsNative: Boolean = false) {
+    private fun stubTonSwapRow(
+        toContract: String,
+        toIsNative: Boolean = false,
+        toDecimals: Int = 9,
+    ) {
         val payload =
             SwapTransactionHistoryData(
                 fromToken = "USDT",
@@ -74,10 +78,14 @@ class SwapKitTrackingServiceTest {
                 toIsNative = toIsNative,
                 fromAddress = userAddress,
                 toAmountDecimal = "1000.0",
+                toDecimals = toDecimals,
             )
         coEvery { transactionHistoryRepository.getTransaction("Ton", "0xton") } returns
             entityWith(payload)
     }
+
+    /** Expected out 1000.0 at 9 decimals → jetton/native fill threshold of 500 * 1e9. */
+    private fun aboveThreshold() = BigInteger.valueOf(600).multiply(BigInteger.TEN.pow(9))
 
     private fun entityWith(payload: TransactionHistoryData) =
         TransactionHistoryEntity(
@@ -162,13 +170,37 @@ class SwapKitTrackingServiceTest {
     }
 
     @Test
-    fun `TON deposit-leg completed with a jetton fill resolves to Confirmed`() = runTest {
+    fun `TON deposit-leg completed with a jetton fill above the threshold resolves to Confirmed`() =
+        runTest {
+            coEvery { api.track(any()) } returns depositLegResponse()
+            stubTonSwapRow(toContract = dstMaster)
+            coEvery { tonApi.getIncomingJettonTransfers(userAddress, any()) } returns
+                listOf(
+                    TonJettonTransfer(
+                        senderOwner = escrow,
+                        jettonMaster = dstMaster,
+                        amount = aboveThreshold(),
+                    )
+                )
+
+            service().checkSettlementStatus("0xton", Chain.Ton) shouldBe TransactionResult.Confirmed
+        }
+
+    @Test
+    fun `TON jetton fill below the threshold stays Pending`() = runTest {
         coEvery { api.track(any()) } returns depositLegResponse()
         stubTonSwapRow(toContract = dstMaster)
+        // An unrelated dust transfer of the destination jetton must not flip the row to Confirmed.
         coEvery { tonApi.getIncomingJettonTransfers(userAddress, any()) } returns
-            listOf(TonJettonTransfer(senderOwner = escrow, jettonMaster = dstMaster))
+            listOf(
+                TonJettonTransfer(
+                    senderOwner = escrow,
+                    jettonMaster = dstMaster,
+                    amount = BigInteger.valueOf(1_000L),
+                )
+            )
 
-        service().checkSettlementStatus("0xton", Chain.Ton) shouldBe TransactionResult.Confirmed
+        service().checkSettlementStatus("0xton", Chain.Ton) shouldBe TransactionResult.Pending
     }
 
     @Test
@@ -185,9 +217,9 @@ class SwapKitTrackingServiceTest {
         coEvery { api.track(any()) } returns depositLegResponse()
         stubTonSwapRow(toContract = "", toIsNative = true)
         coEvery { tonApi.getIncomingJettonTransfers(userAddress, any()) } returns emptyList()
-        // Expected out 1000.0 (9 decimals) → threshold 500 * 1e9; 600 * 1e9 clears it.
-        coEvery { tonApi.getMaxIncomingTonValue(userAddress, any()) } returns
-            BigInteger.valueOf(600).multiply(BigInteger.TEN.pow(9))
+        // Expected out 1000.0 (9 decimals) → threshold 500 * 1e9; 600 * 1e9 from the escrow clears.
+        coEvery { tonApi.getMaxIncomingTonValue(userAddress, any(), any()) } returns
+            aboveThreshold()
 
         service().checkSettlementStatus("0xton", Chain.Ton) shouldBe TransactionResult.Confirmed
     }
@@ -197,7 +229,7 @@ class SwapKitTrackingServiceTest {
         coEvery { api.track(any()) } returns depositLegResponse()
         stubTonSwapRow(toContract = "", toIsNative = true)
         coEvery { tonApi.getIncomingJettonTransfers(userAddress, any()) } returns emptyList()
-        coEvery { tonApi.getMaxIncomingTonValue(userAddress, any()) } returns
+        coEvery { tonApi.getMaxIncomingTonValue(userAddress, any(), any()) } returns
             BigInteger.valueOf(100_000_000L)
 
         service().checkSettlementStatus("0xton", Chain.Ton) shouldBe TransactionResult.Pending

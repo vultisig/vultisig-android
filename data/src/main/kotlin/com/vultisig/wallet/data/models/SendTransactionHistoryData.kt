@@ -90,6 +90,14 @@ data class SwapTransactionHistoryData(
      * stay readable. See [com.vultisig.wallet.data.api.txstatus.SwapKitTrackingService].
      */
     val toAmountDecimal: String = "",
+    /**
+     * Destination token's on-chain decimal precision, used to scale a raw incoming jetton-transfer
+     * amount against [toAmountDecimal] when thresholding a TON (Omniston) jetton fill on-chain.
+     * Default 0 so legacy rows stay readable (no Room migration); such rows also carry an empty
+     * [toAmountDecimal], which disables the threshold and keeps them in-flight rather than falsely
+     * Confirmed. See [com.vultisig.wallet.data.api.txstatus.SwapKitTrackingService].
+     */
+    val toDecimals: Int = 0,
 ) : TransactionHistoryData
 
 internal fun TransactionHistoryData.toEntity(

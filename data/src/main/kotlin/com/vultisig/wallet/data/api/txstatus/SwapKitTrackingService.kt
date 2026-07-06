@@ -93,8 +93,9 @@ constructor(
      * ([SwapKitTrackResponseJson.fromAsset]) from the `/track` response and the destination master
      * / native flag / user address from the persisted [SwapTransactionHistoryData]:
      * - an incoming transfer of the source jetton from the escrow → [TransactionResult.Refunded];
-     * - an incoming transfer of the destination asset (jetton by master, or native value ≥ half the
-     *   expected output to reject gas-excess dust) → [TransactionResult.Confirmed];
+     * - an incoming transfer of the destination asset, thresholded at half the expected output to
+     *   reject dust / gas-excess / unrelated transfers (jetton matched by master *and* amount;
+     *   native matched by escrow sender *and* value) → [TransactionResult.Confirmed];
      * - neither yet, or missing context (e.g. a legacy row) → [TransactionResult.Pending] so
      *   polling continues.
      */
@@ -124,13 +125,18 @@ constructor(
 
         val filled =
             if (payload.toIsNative) {
-                val threshold = nativeFillThreshold(payload.toAmountDecimal)
+                val threshold = fillThreshold(payload.toAmountDecimal, TON_NATIVE_DECIMALS)
                 threshold != null &&
-                    tonApi.getMaxIncomingTonValue(userOwner, startUtime) >= threshold
+                    tonApi.getMaxIncomingTonValue(userOwner, startUtime, escrow) >= threshold
             } else {
                 val dstMaster =
                     payload.toContractAddress.takeIf { it.isNotBlank() }?.let(::canonicalTon)
-                dstMaster != null && incoming.any { it.jettonMaster == dstMaster }
+                val threshold = fillThreshold(payload.toAmountDecimal, payload.toDecimals)
+                dstMaster != null &&
+                    threshold != null &&
+                    incoming.any {
+                        it.jettonMaster == dstMaster && (it.amount ?: BigInteger.ZERO) >= threshold
+                    }
             }
         return if (filled) TransactionResult.Confirmed else TransactionResult.Pending
     }
@@ -139,16 +145,20 @@ constructor(
     private fun canonicalTon(address: String): String = tonUserFriendlyAddress(address) ?: address
 
     /**
-     * Half the expected native output in nanoton, or `null` when [expectedOut] isn't a positive
-     * decimal. Guards the native-destination fill check against gas-excess dust returned by the
-     * escrow.
+     * Half the expected output in the destination token's smallest unit, or `null` when
+     * [expectedOut] isn't a positive decimal or [decimals] is negative. Guards a fill check against
+     * dust / gas-excess / unrelated transfers by requiring the incoming amount to clear a fraction
+     * of the expected output.
+     *
+     * @param expectedOut expected destination output as a plain decimal (e.g. `12.5`).
+     * @param decimals the destination token's on-chain decimal precision.
      */
-    private fun nativeFillThreshold(expectedOut: String): BigInteger? =
+    private fun fillThreshold(expectedOut: String, decimals: Int): BigInteger? =
         expectedOut
             .toBigDecimalOrNull()
-            ?.takeIf { it > BigDecimal.ZERO }
+            ?.takeIf { it > BigDecimal.ZERO && decimals >= 0 }
             ?.let {
-                it.multiply(BigDecimal.TEN.pow(TON_NATIVE_DECIMALS))
+                it.multiply(BigDecimal.TEN.pow(decimals))
                     .multiply(FILL_THRESHOLD_FRACTION)
                     .toBigInteger()
             }
