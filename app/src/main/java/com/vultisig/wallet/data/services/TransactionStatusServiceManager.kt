@@ -9,11 +9,18 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+/**
+ * Bound to the running foreground [TransactionStatusService], so it must be a singleton: every
+ * injection site (the poller that starts it and the screen that completes it) needs to observe and
+ * cancel the same bound service, not a fresh, never-bound instance.
+ */
+@Singleton
 class TransactionStatusServiceManager
 @Inject
 constructor(@param:ApplicationContext private val context: Context) {
