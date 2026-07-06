@@ -191,6 +191,7 @@
     <string name="verify_transaction_value">Vrijednost</string>
     <string name="send_error_no_address">Adresa je nevažeća</string>
     <string name="vault_settings_error_backup_file">dogodila se pogreška</string>
+    <string name="vault_settings_error_backup_failed">Sigurnosno kopiranje nije uspjelo. Nijedna datoteka nije spremljena. Pokušajte ponovno.</string>
     <string name="vault_settings_delete_vault_name">Ime sefa:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA ključ:</string>
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA ključ:</string>
@@ -204,6 +205,7 @@
     <string name="import_file_screen_password_error">Netočna lozinka, pokušajte ponovno</string>
     <string name="add_vault_save">Spremi</string>
     <string name="backup_password_screen_enter_password">Unesite lozinku</string>
+    <string name="backup_password_screen_error_too_short">Lozinka mora imati najmanje %1$d znakova</string>
     <string name="import_file_screen_enter_password_sub">Ova lozinka je postavljena prilikom izvoza dijeljenja trezora.</string>
     <string name="import_file_screen_hint_password">Lozinka</string>
     <string name="backup_password_screen_permission_required">Za sigurnosne kopije potrebno je dopuštenje datoteke.</string>
