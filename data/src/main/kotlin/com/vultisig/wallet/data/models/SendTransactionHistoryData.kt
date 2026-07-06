@@ -66,6 +66,22 @@ data class SwapTransactionHistoryData(
      * `payload` column, so a default keeps old rows readable — no Room migration).
      */
     val swapId: String? = null,
+    /**
+     * Destination token's contract (jetton master) address in registry (`EQ…`) form, or empty for a
+     * native destination. Persisted so a same-chain TON (Omniston) swap — whose `/track` response
+     * only ever describes the source deposit leg — can be resolved on-chain: a filled quote appears
+     * as an incoming transfer of this master. Default-valued so legacy rows stay readable (no Room
+     * migration). See [com.vultisig.wallet.data.api.txstatus.SwapKitTrackingService].
+     */
+    val toContractAddress: String = "",
+    /** Whether the destination token is the chain's native coin; see [toContractAddress]. */
+    val toIsNative: Boolean = false,
+    /**
+     * Source token's on-chain address (the vault's own address on the source chain), used as the
+     * `owner_address` when resolving a TON (Omniston) swap's settlement on-chain. Default-valued so
+     * legacy rows stay readable. See [toContractAddress].
+     */
+    val fromAddress: String = "",
 ) : TransactionHistoryData
 
 internal fun TransactionHistoryData.toEntity(
