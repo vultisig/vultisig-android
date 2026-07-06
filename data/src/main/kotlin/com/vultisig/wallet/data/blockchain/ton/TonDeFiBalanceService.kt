@@ -37,8 +37,7 @@ class TonDeFiBalanceService(
 
             val poolInfo = fetchPoolInfo(primary.pool)
 
-            // Mirror TonDeFiPositionsViewModel: a liquid-staking Tonstakers (`liquidTF`) position
-            // is
+            // Mirror TonDeFiPositionsViewModel: a liquid-staking Tonstakers (`liquidTF`) position is
             // not a native nominator stake, so it must not count toward the DeFi total — otherwise
             // the same stake reads zero on the DeFi screen but nonzero in the Portfolio total. A
             // metadata miss (null implementation) is treated permissively so a transient tonapi
