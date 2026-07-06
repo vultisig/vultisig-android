@@ -124,7 +124,7 @@ constructor(
 
         val filled =
             if (payload.toIsNative) {
-                val threshold = nativeFillThreshold(payload.toAmount)
+                val threshold = nativeFillThreshold(payload.toAmountDecimal)
                 threshold != null &&
                     tonApi.getMaxIncomingTonValue(userOwner, startUtime) >= threshold
             } else {

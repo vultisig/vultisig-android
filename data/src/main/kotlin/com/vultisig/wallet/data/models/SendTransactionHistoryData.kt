@@ -82,6 +82,14 @@ data class SwapTransactionHistoryData(
      * legacy rows stay readable. See [toContractAddress].
      */
     val fromAddress: String = "",
+    /**
+     * Expected destination output as a raw, machine-parseable plain decimal (e.g. `12.5`), distinct
+     * from the display-formatted [toAmount] (which carries grouping separators, `M`/`B` suffixes
+     * and locale decimal symbols, so it is not reliably parseable). Used as the native-destination
+     * fill threshold when resolving a TON (Omniston) swap on-chain. Default-valued so legacy rows
+     * stay readable. See [com.vultisig.wallet.data.api.txstatus.SwapKitTrackingService].
+     */
+    val toAmountDecimal: String = "",
 ) : TransactionHistoryData
 
 internal fun TransactionHistoryData.toEntity(

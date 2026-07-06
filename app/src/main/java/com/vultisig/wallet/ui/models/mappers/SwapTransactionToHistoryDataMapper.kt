@@ -26,5 +26,6 @@ internal class SwapTransactionToHistoryDataMapperImpl @Inject constructor() :
             toContractAddress = from.dst.token.contractAddress,
             toIsNative = from.dst.token.isNativeToken,
             fromAddress = from.src.token.address,
+            toAmountDecimal = from.expectedDstDecimal,
         )
 }
