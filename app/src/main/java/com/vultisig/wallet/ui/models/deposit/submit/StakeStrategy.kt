@@ -213,7 +213,7 @@ private fun resolveDepositAmount(
         throw InvalidTransactionDataException(
             UiText.FormattedText(
                 R.string.ton_stake_error_min_amount,
-                listOf(minDepositTon.toPlainString()),
+                listOf(minDepositTon.toPlainString(), token.ticker),
             )
         )
     }
