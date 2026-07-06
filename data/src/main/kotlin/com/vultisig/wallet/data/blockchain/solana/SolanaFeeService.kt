@@ -11,14 +11,12 @@ import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.utils.toUnit
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import wallet.core.jni.CoinType
 
 /**
  * Implementation of [FeeService] for Solana blockchain transactions.
@@ -52,7 +50,23 @@ import wallet.core.jni.CoinType
  *
  * @property solanaApi API interface for interacting with Solana blockchain RPC endpoints.
  */
-class SolanaFeeService @Inject constructor(private val solanaApi: SolanaApi) : FeeService {
+class SolanaFeeService
+internal constructor(
+    private val solanaApi: SolanaApi,
+    // Serializes a versioned Solana message for [getFeeForMessage]. Backed by WalletCore JNI in
+    // production; overridable so the fee-composition arithmetic can be unit-tested without the
+    // native library.
+    private val serializeVersionedMessage:
+        (vaultHexPubKey: String, payload: KeysignPayload) -> String,
+) : FeeService {
+
+    @Inject
+    constructor(
+        solanaApi: SolanaApi
+    ) : this(
+        solanaApi,
+        { vaultHexPubKey, payload -> SolanaHelper(vaultHexPubKey).getVersionedMessage(payload) },
+    )
 
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
         // Jupiter builds its own versioned tx at signing time. Serializing a fake SPL/SOL transfer
@@ -69,7 +83,7 @@ class SolanaFeeService @Inject constructor(private val solanaApi: SolanaApi) : F
 
         val keySignPayload = buildKeySignPayload(coin, toAddress, amount)
 
-        val serializedTx = SolanaHelper(vaultHexPubKey).getVersionedMessage(keySignPayload)
+        val serializedTx = serializeVersionedMessage(vaultHexPubKey, keySignPayload)
 
         // serializedTx carries the ComputeBudget instructions, so getFeeForMessage already returns
         // base signature fee + prioritization fee (price × limit / 1e6) — verified against mainnet
@@ -181,6 +195,10 @@ class SolanaFeeService @Inject constructor(private val solanaApi: SolanaApi) : F
     }
 
     private companion object {
-        val DEFAULT_COIN_TRANSFER_BASE_FEE = CoinType.SOLANA.toUnit("0.000105".toBigDecimal())
+        // 0.000105 SOL expressed in lamports (SOL has 9 decimals). Computed without CoinType so the
+        // service can be constructed and its fee arithmetic exercised in JVM unit tests, which have
+        // no WalletCore native library loaded.
+        val DEFAULT_COIN_TRANSFER_BASE_FEE: BigInteger =
+            "0.000105".toBigDecimal().movePointRight(9).toBigInteger()
     }
 }
