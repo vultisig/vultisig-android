@@ -1,6 +1,8 @@
 package com.vultisig.wallet.ui.models
 
 import android.net.Uri
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.common.AppZipEntry
@@ -22,6 +24,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -35,6 +38,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -173,5 +177,66 @@ internal class BackupPasswordViewModelTest {
             vaultsLoaded.complete(Unit)
             requestedFileName shouldBe "vaults_backup.zip"
             collectJob.cancel()
+        }
+
+    @Test
+    fun `a password shorter than the minimum keeps the next button disabled and shows a length error`() =
+        runTest(testDispatcher) {
+            // Regression test for issue #5197: a too-short backup password used to validate as
+            // Valid, enabling Next and letting a weak/failing export proceed.
+            coEvery { vaultRepository.get(any()) } returns testVault("vault-1")
+            coEvery { vaultRepository.getAll() } returns listOf(testVault("vault-1"))
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.passwordTextFieldState.setTextAndPlaceCursorAtEnd("abc")
+            vm.confirmPasswordTextFieldState.setTextAndPlaceCursorAtEnd("abc")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+
+            vm.state.value.isNextButtonEnabled shouldBe false
+            vm.state.value.passwordErrorMessage.shouldNotBeNull()
+        }
+
+    @Test
+    fun `a matching password meeting the minimum length enables the next button`() =
+        runTest(testDispatcher) {
+            coEvery { vaultRepository.get(any()) } returns testVault("vault-1")
+            coEvery { vaultRepository.getAll() } returns listOf(testVault("vault-1"))
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.passwordTextFieldState.setTextAndPlaceCursorAtEnd("abcd")
+            vm.confirmPasswordTextFieldState.setTextAndPlaceCursorAtEnd("abcd")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+
+            vm.state.value.isNextButtonEnabled shouldBe true
+            vm.state.value.passwordErrorMessage.shouldBeNull()
+        }
+
+    @Test
+    fun `a failed export deletes the empty document and surfaces a persistent error`() =
+        runTest(testDispatcher) {
+            // Regression test for issue #5197: when a backup fails, the 0 KB file SAF already
+            // created must be removed and the user must see a clear, persistent error instead of
+            // being left with a broken archive and only a transient snackbar.
+            val vaults = listOf(testVault("a"), testVault("b"))
+            coEvery { vaultRepository.get("vault-1") } returns vaults.first()
+            coEvery { vaultRepository.getAll() } returns vaults
+            every { createVaultBackup(any(), any()) } returns null
+
+            val vm = createViewModel()
+            val uri = mockk<Uri>()
+
+            vm.saveContentToUriResult(uri, "application/zip")
+
+            coVerify(timeout = 5_000) { deleteBackupDocument(uri) }
+            coVerify(exactly = 0) { saveBackupToUri(any(), any<List<AppZipEntry>>()) }
+
+            advanceUntilIdle()
+            vm.state.value.error.shouldNotBeNull()
         }
 }

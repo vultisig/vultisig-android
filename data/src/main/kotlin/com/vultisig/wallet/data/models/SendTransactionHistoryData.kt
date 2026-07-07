@@ -66,6 +66,38 @@ data class SwapTransactionHistoryData(
      * `payload` column, so a default keeps old rows readable — no Room migration).
      */
     val swapId: String? = null,
+    /**
+     * Destination token's contract (jetton master) address in registry (`EQ…`) form, or empty for a
+     * native destination. Persisted so a same-chain TON (Omniston) swap — whose `/track` response
+     * only ever describes the source deposit leg — can be resolved on-chain: a filled quote appears
+     * as an incoming transfer of this master. Default-valued so legacy rows stay readable (no Room
+     * migration). See [com.vultisig.wallet.data.api.txstatus.SwapKitTrackingService].
+     */
+    val toContractAddress: String = "",
+    /** Whether the destination token is the chain's native coin; see [toContractAddress]. */
+    val toIsNative: Boolean = false,
+    /**
+     * Source token's on-chain address (the vault's own address on the source chain), used as the
+     * `owner_address` when resolving a TON (Omniston) swap's settlement on-chain. Default-valued so
+     * legacy rows stay readable. See [toContractAddress].
+     */
+    val fromAddress: String = "",
+    /**
+     * Expected destination output as a raw, machine-parseable plain decimal (e.g. `12.5`), distinct
+     * from the display-formatted [toAmount] (which carries grouping separators, `M`/`B` suffixes
+     * and locale decimal symbols, so it is not reliably parseable). Used as the native-destination
+     * fill threshold when resolving a TON (Omniston) swap on-chain. Default-valued so legacy rows
+     * stay readable. See [com.vultisig.wallet.data.api.txstatus.SwapKitTrackingService].
+     */
+    val toAmountDecimal: String = "",
+    /**
+     * Destination token's on-chain decimal precision, used to scale a raw incoming jetton-transfer
+     * amount against [toAmountDecimal] when thresholding a TON (Omniston) jetton fill on-chain.
+     * Default 0 so legacy rows stay readable (no Room migration); such rows also carry an empty
+     * [toAmountDecimal], which disables the threshold and keeps them in-flight rather than falsely
+     * Confirmed. See [com.vultisig.wallet.data.api.txstatus.SwapKitTrackingService].
+     */
+    val toDecimals: Int = 0,
 ) : TransactionHistoryData
 
 internal fun TransactionHistoryData.toEntity(

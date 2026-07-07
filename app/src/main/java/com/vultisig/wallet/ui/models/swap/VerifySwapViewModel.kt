@@ -64,6 +64,10 @@ internal data class SwapTransactionUiModel(
     // SwapKit swap's Success can be gated on the destination-leg `/track` settlement. Null for
     // non-SwapKit providers and for SwapKit rows rebuilt on a cosigning peer without it.
     val swapId: String? = null,
+    // Expected destination output as a raw, machine-parseable plain decimal (e.g. `12.5`), unlike
+    // [dst]'s display-formatted value. Persisted onto the tx-history row as the native-destination
+    // fill threshold when resolving a TON (Omniston) swap's settlement on-chain.
+    val expectedDstDecimal: String = "",
     // External recipient the swap output is routed to, or null when it goes to the vault's own
     // address. Shown on the verify screen so the destination is never a silent default (#4858).
     // For native THORChain/MayaChain swaps this is resolved from the signed memo's destination

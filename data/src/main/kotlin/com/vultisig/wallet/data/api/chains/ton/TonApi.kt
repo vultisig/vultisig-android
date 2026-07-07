@@ -10,10 +10,30 @@ import io.ktor.client.request.setBody
 import java.math.BigInteger
 import java.util.Base64
 import javax.inject.Inject
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import wallet.core.jni.TONAddressConverter
 
 /** Display metadata for a jetton, resolved from its master contract. */
 data class TonJettonMetadata(val ticker: String, val decimals: Int, val logo: String?)
+
+/**
+ * An incoming jetton transfer, with addresses canonicalized to their user-friendly (`EQ…`) form so
+ * they compare equal to registry addresses. Used to detect a TON (Omniston) swap's on-chain
+ * settlement — a refund (source jetton back from the escrow) or a fill (destination jetton in).
+ *
+ * @property senderOwner owner of the sending jetton wallet (the transfer's source), or `null` when
+ *   the indexer omitted it.
+ * @property jettonMaster the transferred jetton's master address, or `null` when omitted.
+ * @property amount raw transferred amount in the jetton's smallest unit, or `null` when the indexer
+ *   omitted it. Used to threshold a fill against the expected output so an unrelated small transfer
+ *   (airdrop, dust) of the destination jetton can't be mistaken for settlement.
+ */
+data class TonJettonTransfer(
+    val senderOwner: String?,
+    val jettonMaster: String?,
+    val amount: BigInteger? = null,
+)
 
 /**
  * Canonicalize a TON address to its user-friendly bounceable form for equality comparison. Raw
@@ -63,6 +83,29 @@ interface TonApi {
     suspend fun estimateFee(address: String, serializedBoc: String): BigInteger
 
     suspend fun getTsStatus(txHash: String): TonStatusResult
+
+    /**
+     * Incoming jetton transfers received by [ownerAddress] at or after [startUtime] (unix seconds).
+     * Wraps toncenter `v3/jetton/transfers` (`direction=in`); addresses are canonicalized to their
+     * user-friendly form. Used to resolve a same-chain TON (Omniston) swap's settlement on-chain.
+     */
+    suspend fun getIncomingJettonTransfers(
+        ownerAddress: String,
+        startUtime: Long,
+    ): List<TonJettonTransfer>
+
+    /**
+     * Largest single incoming native-TON message value (nanoton) sent by [expectedSender] to
+     * [account] at or after [startUtime] (unix seconds), or [BigInteger.ZERO] when none. Wraps
+     * toncenter `v3/transactions` — used to detect a native-destination fill above a dust
+     * threshold. Filtering on the sender rejects unrelated incoming TON so only a transfer from the
+     * swap's escrow counts toward the fill.
+     */
+    suspend fun getMaxIncomingTonValue(
+        account: String,
+        startUtime: Long,
+        expectedSender: String,
+    ): BigInteger
 }
 
 internal class TonApiImpl @Inject constructor(private val http: HttpClient) : TonApi {
@@ -213,8 +256,78 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
             .get("$BASE_URL/v3/transactionsByMessage") { parameter("msg_hash", txHash) }
             .bodyOrThrow<TonStatusResult>()
 
+    override suspend fun getIncomingJettonTransfers(
+        ownerAddress: String,
+        startUtime: Long,
+    ): List<TonJettonTransfer> =
+        http
+            .get("$BASE_URL/v3/jetton/transfers") {
+                parameter("owner_address", ownerAddress)
+                parameter("direction", "in")
+                parameter("start_utime", startUtime)
+                parameter("limit", SETTLEMENT_PAGE_LIMIT)
+                parameter("sort", "desc")
+            }
+            .bodyOrThrow<JettonTransfersJson>()
+            .jettonTransfers
+            .map { transfer ->
+                TonJettonTransfer(
+                    senderOwner = transfer.source?.let { tonUserFriendlyAddress(it) ?: it },
+                    jettonMaster = transfer.jettonMaster?.let { tonUserFriendlyAddress(it) ?: it },
+                    amount = transfer.amount?.toBigIntegerOrNull(),
+                )
+            }
+
+    override suspend fun getMaxIncomingTonValue(
+        account: String,
+        startUtime: Long,
+        expectedSender: String,
+    ): BigInteger =
+        http
+            .get("$BASE_URL/v3/transactions") {
+                parameter("account", account)
+                parameter("start_utime", startUtime)
+                parameter("limit", SETTLEMENT_PAGE_LIMIT)
+                parameter("sort", "desc")
+            }
+            .bodyOrThrow<TonTransactionsJson>()
+            .transactions
+            .mapNotNull { it.inMsg }
+            .filter { (it.source?.let(::tonUserFriendlyAddress) ?: it.source) == expectedSender }
+            .mapNotNull { it.value?.toBigIntegerOrNull() }
+            .maxOrNull() ?: BigInteger.ZERO
+
     private companion object {
         const val BASE_URL = "https://api.vultisig.com/ton"
         const val DUPLICATE_MESSAGE_MARKER = "duplicate message"
+        // Bounds the settlement-scan pages (newest-first) so the genuine refund/fill transfer is
+        // resolved deterministically rather than depending on toncenter's default page size.
+        const val SETTLEMENT_PAGE_LIMIT = 100
     }
 }
+
+@Serializable
+internal data class JettonTransfersJson(
+    @SerialName("jetton_transfers") val jettonTransfers: List<JettonTransferJson> = emptyList()
+)
+
+@Serializable
+internal data class JettonTransferJson(
+    @SerialName("source") val source: String? = null,
+    @SerialName("jetton_master") val jettonMaster: String? = null,
+    @SerialName("amount") val amount: String? = null,
+)
+
+@Serializable
+internal data class TonTransactionsJson(
+    @SerialName("transactions") val transactions: List<TonTransactionEntryJson> = emptyList()
+)
+
+@Serializable
+internal data class TonTransactionEntryJson(@SerialName("in_msg") val inMsg: TonInMsgJson? = null)
+
+@Serializable
+internal data class TonInMsgJson(
+    @SerialName("value") val value: String? = null,
+    @SerialName("source") val source: String? = null,
+)

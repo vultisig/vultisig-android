@@ -654,6 +654,64 @@ internal class SwapGasCalculatorTest {
         assertEquals(BigInteger.valueOf(4_000_000), capturedParams.captured.gasFee.value)
     }
 
+    /**
+     * Proof for #5121 ("SwapKit EVM verify-screen Network Fee is understated"): the displayed
+     * network fee is re-based off the ORACLE gas price, never SwapKit's `fees[].inbound`
+     * placeholder or its stale quote-time `gasPrice`. Fed the exact FLASHNET/NEAR fixture from the
+     * issue — `tx.gas = 0x186a0` (100k), `tx.gasPrice = 0x4946111` (~0.077 gwei), inbound
+     * placeholder 130 wei — against a realistic 20 gwei oracle. The re-based fee is `20 gwei × 100k
+     * = 0.002 ETH`, which is neither the 130-wei placeholder nor SwapKit's `gasPrice × gas` seed
+     * (~7.68e12 wei).
+     *
+     * Structural point the assertion encodes: `rebaseEvmSwapNetworkFee` takes only (srcToken,
+     * baselineGasFee, routeGas) — the inbound placeholder is not even an input, so it cannot leak
+     * into the Network Fee by construction. (`baselineGasFee` is the oracle `maxFeePerGas × 600k`
+     * produced by `calculateGasFee`.)
+     */
+    @Test
+    fun `rebaseEvmSwapNetworkFee ignores the SwapKit inbound placeholder and returns the oracle bond (#5121)`() =
+        runTest {
+            val ethCoin = nativeCoinFor(Chain.Ethereum)
+            coEvery { tokenRepository.getNativeToken(Chain.Ethereum.id) } returns ethCoin
+
+            // Oracle maxFeePerGas = 20 gwei; baseline = 20 gwei × 600k (the flat swap bond).
+            val oracleMaxFeePerGasWei = BigInteger.valueOf(20_000_000_000L)
+            val baselineGasFee =
+                TokenValue(
+                    oracleMaxFeePerGasWei * BigInteger.valueOf(600_000L), // 1.2e16 wei
+                    ethCoin,
+                )
+            // Exact issue fixture (hex → decimal).
+            val routeGas = 0x186a0L // 100_000
+            val swapKitQuoteGasPriceWei = BigInteger.valueOf(0x4946111L) // ~0.077 gwei
+            val inboundPlaceholderWei = BigInteger.valueOf(130L) // FLASHNET near-zero placeholder
+
+            val expectedOracleBond =
+                oracleMaxFeePerGasWei * BigInteger.valueOf(routeGas) // 20 gwei × 100k = 2e15 wei
+            val capturedParams = slot<GasFeeParams>()
+            coEvery { gasFeeToEstimatedFee(capture(capturedParams)) } returns
+                estimatedFee(ethCoin, expectedOracleBond)
+
+            val result =
+                calculator.rebaseEvmSwapNetworkFee(
+                    srcToken = ethCoin,
+                    baselineGasFee = baselineGasFee,
+                    routeGas = routeGas,
+                )
+
+            requireNotNull(result)
+            // Network Fee = oracle bond (0.002 ETH), the fee the signed tx actually commits to.
+            assertEquals(expectedOracleBond, result.gasFee.value)
+            assertEquals(expectedOracleBond, capturedParams.captured.gasFee.value)
+            // …and provably NOT the SwapKit inbound placeholder…
+            assertTrue(result.gasFee.value != inboundPlaceholderWei)
+            // …nor SwapKit's stale quote-time `gasPrice × gas` seed (the value iOS #4707
+            // mis-showed).
+            assertTrue(
+                result.gasFee.value != swapKitQuoteGasPriceWei * BigInteger.valueOf(routeGas)
+            )
+        }
+
     // ── evmSwapDisplayGasLimit: the shared floor used by both initiator and joiner (#5056) ──
 
     @Test
