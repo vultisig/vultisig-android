@@ -39,6 +39,14 @@ internal fun computeJoinKeysignNetworkFee(
         // would understate a memo send on the co-signing device's approval screen.
         is BlockChainSpecific.Cardano ->
             TokenValue(value = blockChainSpecific.byteFee.toBigInteger(), token = nativeCoin)
+        // Cosmos signs `chainSpecific.gas` verbatim as the fee amount (see CosmosHelper /
+        // TerraHelper), so the joiner must surface that exact value — the initiator already priced
+        // it at the effective gas limit. Recomputing it locally via the fee service reprices Terra
+        // Classic's base at the static 300k limit and re-derives its burn tax from the joiner's own
+        // amount, so the co-signer's Verify screen diverges from the signed fee (issue: 8.5525
+        // LUNC).
+        is BlockChainSpecific.Cosmos ->
+            TokenValue(value = blockChainSpecific.gas, token = nativeCoin)
         else -> TokenValue(value = fallbackFeeAmount, token = nativeCoin)
     }
 
