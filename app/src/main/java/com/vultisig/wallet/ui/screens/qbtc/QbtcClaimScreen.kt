@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -225,10 +227,10 @@ private fun QbtcClaimHeroCard(totalEligibleSats: Long) {
             painter = painterResource(R.drawable.qbtc_claim_hero),
             contentDescription = null,
             modifier =
-                Modifier.align(Alignment.TopEnd)
-                    .width(200.78.dp)
-                    .height(206.dp)
-                    .offset(x = 31.78.dp, y = (-17).dp),
+                Modifier.align(Alignment.BottomEnd)
+                    .requiredWidth(200.78.dp)
+                    .requiredHeight(206.dp)
+                    .offset(x = 30.dp, y = 30.dp),
         )
         Column(
             verticalArrangement = Arrangement.spacedBy(6.dp),
