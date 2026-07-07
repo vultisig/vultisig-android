@@ -58,10 +58,10 @@ class SolanaStakingService @Inject constructor(private val solanaApi: SolanaApi)
             cachedValidators?.let {
                 if (isFresh(it.fetchedAt, validatorsTtlMillis)) return it.value
             }
-            val result = solanaApi.getVoteAccounts()
+            val result = solanaApi.getVoteAccounts() ?: return emptyList()
             val validators =
-                (result?.current.orEmpty().map { it.toValidator(delinquent = false) } +
-                    result?.delinquent.orEmpty().map { it.toValidator(delinquent = true) })
+                (result.current.orEmpty().map { it.toValidator(delinquent = false) } +
+                    result.delinquent.orEmpty().map { it.toValidator(delinquent = true) })
             cachedValidators = Cached(validators, clock())
             validators
         }
