@@ -83,6 +83,29 @@ internal class AmountManagerTest {
     }
 
     @Test
+    fun `validateTokenAmount rejects scientific notation`() {
+        val manager = build(emptyScope())
+        // Cannot be typed on the numeric keyboard, but reaches the field unfiltered via a
+        // vultisig://send deeplink amount; toBigDecimalOrNull would otherwise accept it.
+        assertEquals(R.string.send_error_no_amount, manager.validateTokenAmount("1e5").stringId())
+        assertEquals(R.string.send_error_no_amount, manager.validateTokenAmount("1E+2").stringId())
+        assertEquals(R.string.send_error_no_amount, manager.validateTokenAmount("2.5e3").stringId())
+    }
+
+    @Test
+    fun `validateTokenAmount rejects hex notation`() {
+        val manager = build(emptyScope())
+        assertEquals(R.string.send_error_no_amount, manager.validateTokenAmount("0x1F").stringId())
+    }
+
+    @Test
+    fun `validateTokenAmount rejects signed values`() {
+        val manager = build(emptyScope())
+        assertEquals(R.string.send_error_no_amount, manager.validateTokenAmount("-5").stringId())
+        assertEquals(R.string.send_error_no_amount, manager.validateTokenAmount("+5").stringId())
+    }
+
+    @Test
     fun `validateTokenAmount over-length returns invalid_amount error`() {
         val manager = build(emptyScope())
         val tooLong = "1".repeat(TextFieldUtils.AMOUNT_MAX_LENGTH + 1)
