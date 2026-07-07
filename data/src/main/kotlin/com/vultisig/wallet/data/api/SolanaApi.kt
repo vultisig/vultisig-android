@@ -543,7 +543,7 @@ constructor(
                 .result
         } catch (e: Exception) {
             if (e is CancellationException) throw e
-            Timber.e("Error getting minimum balance for rent exemption: ${e.message}")
+            Timber.e(e, "Error getting minimum balance for rent exemption")
             BigInteger.ZERO
         }
 

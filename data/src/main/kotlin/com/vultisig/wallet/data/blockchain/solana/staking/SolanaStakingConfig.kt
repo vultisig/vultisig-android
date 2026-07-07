@@ -26,7 +26,7 @@ object SolanaStakingConfig {
      * this offset restricts `getProgramAccounts` to the accounts a given wallet controls, so the
      * RPC node does the filtering instead of streaming every stake account on the network.
      */
-    const val WITHDRAWER_MEMCMP_OFFSET = 12
+    const val WITHDRAWER_MEMCMP_OFFSET = 44
 
     /** Lamports in one SOL (1e9). */
     val LAMPORTS_PER_SOL: BigInteger = BigInteger.valueOf(1_000_000_000L)
