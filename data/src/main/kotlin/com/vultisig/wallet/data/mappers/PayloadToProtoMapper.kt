@@ -93,6 +93,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                         gas = specific.gas.toString().toULong(),
                         transactionType = specific.transactionType,
                         ibcDenomTraces = specific.ibcDenomTraces,
+                        gasLimit = specific.gasLimit?.toString()?.toULong(),
                     )
                 } else null,
             solanaSpecific =

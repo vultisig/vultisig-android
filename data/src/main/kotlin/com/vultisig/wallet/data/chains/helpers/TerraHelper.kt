@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.blockchain.cosmos.TerraClassicTax
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.CosmoSignature
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -26,7 +27,48 @@ class TerraHelper(
     private val coinType: CoinType,
     private val denom: String,
     private val gasLimit: Long,
+    // Terra Classic (columbus-5) prices its fee as `gasLimit × price (+ burn tax)`, so its fee
+    // amount must scale with a relayed gas limit; plain Terra (phoenix-1) pays a flat fee and keeps
+    // the static amount. Mirrors vultisig-ios `TerraHelperStruct.getPreSignedInputData(_, chain:)`.
+    private val isTerraClassic: Boolean,
 ) {
+
+    /**
+     * Honor the relayed dynamic gas limit when an initiator set one; otherwise fall back to the
+     * static per-chain limit. Both co-signers hash this gas value (and the fee amount derived from
+     * it) into the SignDoc, so they must resolve to the identical limit or the MPC signature fails.
+     */
+    private fun effectiveGasLimit(atomData: BlockChainSpecific.Cosmos): Long =
+        atomData.gasLimit
+            ?.takeIf { it.signum() > 0 }
+            ?.let {
+                // BigInteger.longValueExact() is API 31+, but minSdk is 26. Reject out-of-range
+                // values ourselves so a truncated gas value can never diverge between co-signers.
+                require(it.bitLength() < Long.SIZE_BITS) {
+                    "Relayed gas limit $it exceeds the supported range"
+                }
+                it.toLong()
+            } ?: gasLimit
+
+    /**
+     * The signed fee amount for [effectiveGasLimit]: Terra Classic re-derives it from the relayed
+     * limit (its fee is priced per unit of gas), plain Terra keeps the static [atomData.gas]. Byte
+     * identical to [atomData.gas] when no limit is relayed (`effectiveGasLimit == gasLimit`).
+     */
+    private fun feeAmount(
+        keysignPayload: KeysignPayload,
+        atomData: BlockChainSpecific.Cosmos,
+        effectiveGasLimit: Long,
+    ): String =
+        if (isTerraClassic)
+            TerraClassicTax.scaledSendFee(
+                    staticFee = atomData.gas,
+                    contractAddress = keysignPayload.coin.contractAddress,
+                    isNativeToken = keysignPayload.coin.isNativeToken,
+                    gasLimit = effectiveGasLimit,
+                )
+                .toString()
+        else atomData.gas.toString()
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val result = getPreSignedInputData(keysignPayload)
@@ -53,6 +95,8 @@ class TerraHelper(
                 ?: error("Invalid blockChainSpecific for Cosmos")
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+        val effectiveGasLimit = effectiveGasLimit(atomData)
+        val feeAmount = feeAmount(keysignPayload, atomData, effectiveGasLimit)
 
         if (
             keysignPayload.coin.isNativeToken ||
@@ -92,12 +136,12 @@ class TerraHelper(
                     )
                     .setFee(
                         Cosmos.Fee.newBuilder()
-                            .setGas(gasLimit)
+                            .setGas(effectiveGasLimit)
                             .addAllAmounts(
                                 listOf(
                                     Cosmos.Amount.newBuilder()
                                         .setDenom(denom)
-                                        .setAmount(atomData.gas.toString())
+                                        .setAmount(feeAmount)
                                         .build()
                                 )
                             )
@@ -144,11 +188,11 @@ class TerraHelper(
                         )
                         .setFee(
                             Cosmos.Fee.newBuilder()
-                                .setGas(gasLimit)
+                                .setGas(effectiveGasLimit)
                                 .addAmounts(
                                     Cosmos.Amount.newBuilder()
                                         .setDenom(keysignPayload.coin.contractAddress)
-                                        .setAmount(atomData.gas.toString())
+                                        .setAmount(feeAmount)
                                         .build()
                                 )
                                 .build()
@@ -180,12 +224,9 @@ class TerraHelper(
 
                 val fee =
                     Cosmos.Fee.newBuilder()
-                        .setGas(gasLimit)
+                        .setGas(effectiveGasLimit)
                         .addAmounts(
-                            Cosmos.Amount.newBuilder()
-                                .setAmount(atomData.gas.toString())
-                                .setDenom(denom)
-                                .build()
+                            Cosmos.Amount.newBuilder().setAmount(feeAmount).setDenom(denom).build()
                         )
                         .build()
 

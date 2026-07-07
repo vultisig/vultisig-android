@@ -69,6 +69,21 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
         private val OSMOSIS_MIN_GAS_PRICE = BigDecimal("0.025")
         private val AKASH_MIN_GAS_PRICE = BigDecimal("0.025")
 
+        // Terra (LUNA, phoenix-1) minimum gas price, 0.025 uluna/gas. Unlike the flat floors above
+        // this is a genuine per-gas rate: at the static 300k limit it is the 7500 uluna fee, so
+        // deriving the amount from the limit keeps `fee.amount` consistent with a relayed gas limit
+        // honored in `CosmosHelper.buildCosmosFee` (Cosmos requires `fee.amount ≥ gasPrice × gas`).
+        private val TERRA_GAS_PRICE = BigDecimal("0.025")
+
+        /**
+         * Terra (LUNA) fee amount for [gasLimit], `0.025 uluna/gas × gasLimit` rounded up. Returns
+         * the flat 7500 uluna at the static 300k limit; scales with a relayed limit.
+         */
+        internal fun terraFeeAmount(gasLimit: Long): BigInteger =
+            (TERRA_GAS_PRICE * gasLimit.toBigDecimal())
+                .setScale(0, RoundingMode.CEILING)
+                .toBigInteger()
+
         // Chains whose sends WalletCore assembles as a native bank `MsgSend` (routed through
         // CosmosHelper in SigningHelper), so the simulated unsigned tx matches the broadcast tx.
         private val SIMULATION_SUPPORTED_CHAINS =
@@ -128,13 +143,14 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
                 GasFees(limit = gasLimit.toBigInteger(), amount = AKASH_MIN_FEE_UAKT.toBigInteger())
             Chain.GaiaChain,
             Chain.Kujira,
-            Chain.Terra,
             Chain.Qbtc -> GasFees(limit = gasLimit.toBigInteger(), amount = 7500.toBigInteger())
+            Chain.Terra ->
+                GasFees(limit = gasLimit.toBigInteger(), amount = terraFeeAmount(gasLimit))
             Chain.Noble -> GasFees(limit = gasLimit.toBigInteger(), amount = 20000L.toBigInteger())
             Chain.TerraClassic ->
                 GasFees(
                     limit = gasLimit.toBigInteger(),
-                    amount = terraClassicFeeAmount(transaction),
+                    amount = terraClassicFeeAmount(transaction, gasLimit),
                 )
             Chain.Dydx ->
                 GasFees(limit = gasLimit.toBigInteger(), amount = 2500000000000000L.toBigInteger())
@@ -244,9 +260,12 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
      * the send denom (native LUNC or USTC); CW20/IBC sends, whose fee is in uluna while the send is
      * in the token's own denom, get base gas only to avoid mixing denoms.
      */
-    private suspend fun terraClassicFeeAmount(transaction: BlockchainTransaction): BigInteger {
+    private suspend fun terraClassicFeeAmount(
+        transaction: BlockchainTransaction,
+        gasLimit: Long,
+    ): BigInteger {
         val coin = transaction.coin
-        val base = TerraClassicTax.baseGas(coin.contractAddress, coin.isNativeToken).toBigInteger()
+        val base = TerraClassicTax.baseGas(coin.contractAddress, coin.isNativeToken, gasLimit)
 
         val taxable =
             transaction is Transfer &&
