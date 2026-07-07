@@ -476,7 +476,25 @@
     <string name="send_error_xrp_destination_not_activated">Minimum amount to activate this address is %1$s %2$s.</string>
     <string name="error_invalid_chain">Chain is invalid</string>
     <string name="ton_stake_error_unsupported_pool">This staking pool isn\'t supported</string>
-    <string name="ton_stake_error_min_amount">Minimum stake for this pool is %1$s TON</string>
+    <string name="ton_stake_error_min_amount">Minimum stake for this pool is %1$s %2$s</string>
+    <string name="ton" translatable="false">TON</string>
+    <string name="ton_defi_error_ton_not_in_vault">TON isn\'t in this vault</string>
+    <string name="ton_defi_pending_withdrawal">Pending withdrawal</string>
+    <string name="ton_defi_unlock_ready">Ready to withdraw</string>
+    <string name="ton_defi_unlocks_in_days">Unlocks in %1$dd %2$dh</string>
+    <string name="ton_defi_unlocks_in_hours">Unlocks in %1$dh %2$dm</string>
+    <string name="ton_defi_staked_amount">Staked %1$s</string>
+    <string name="ton_defi_staked_label">Staked</string>
+    <string name="ton_staking_select_pool">Select a pool</string>
+    <string name="ton_staking_pool_header">Pool</string>
+    <string name="ton_staking_apy_header">APY</string>
+    <string name="ton_staking_no_pools_found">No staking pools found</string>
+    <string name="ton_staking_min_stake">Min %1$s TON</string>
+    <string name="ton_staking_apy_value">%1$s%%</string>
+    <string name="ton_stake_title">Stake %1$s</string>
+    <string name="ton_unstake_title">Unstake %1$s</string>
+    <string name="ton_staking_pool_address">Pool Address</string>
+    <string name="ton_unstake_full_withdrawal_notice">Nominator pools support full withdrawal only. Your entire staked balance will be returned.</string>
     <string name="send_error_invalid_plan_fee">Invalid Plan Fee</string>
     <string name="send_error_same_address">The to address must be different from the from address</string>
     <string name="select_vault_type_secure">Secure</string>

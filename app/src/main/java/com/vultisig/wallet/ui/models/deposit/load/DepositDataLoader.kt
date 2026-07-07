@@ -171,9 +171,8 @@ constructor(
                 Chain.Osmosis -> listOf(DepositOption.TransferIbc)
 
                 Chain.GaiaChain -> listOf(DepositOption.TransferIbc, DepositOption.Switch)
-                Chain.Ton -> {
-                    listOf(DepositOption.Stake, DepositOption.Unstake)
-                }
+                // TON staking moved to the dedicated DeFi-tab Stake/Unstake screens; it no longer
+                // surfaces Stake/Unstake in the generic deposit form (iOS Functions-flow parity).
                 else ->
                     buildList {
                         //                    add(DepositOption.Stake)

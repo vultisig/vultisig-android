@@ -44,6 +44,9 @@ class TonFeeService : FeeService {
     }
 
     private companion object {
-        val TON_DEFAULT_FEES = "10000000".toBigInteger()
+        // 0.05 TON, matching iOS/macOS `TonHelper.defaultFee`. TON refunds unused gas, so this is a
+        // reservation ceiling rather than the actual charge; keeping it in sync across platforms
+        // gives nominator-pool deposits enough forward gas and a consistent fee display.
+        val TON_DEFAULT_FEES = "50000000".toBigInteger()
     }
 }

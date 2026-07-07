@@ -97,6 +97,8 @@ internal class SendStrategiesSubmitForTest {
                 DeFiNavActions.REMOVE_LP to Target.DEFAULT,
                 DeFiNavActions.FREEZE_TRX to Target.DEFAULT,
                 DeFiNavActions.UNFREEZE_TRX to Target.DEFAULT,
+                DeFiNavActions.STAKE_TON to Target.DEFAULT,
+                DeFiNavActions.UNSTAKE_TON to Target.DEFAULT,
             )
     }
 }
