@@ -146,6 +146,7 @@ constructor(
             provider = provider.getSwapProviderId(),
             providerLabel = providerLabel,
             swapId = swapId,
+            expectedDstDecimal = from.expectedDstTokenValue.decimal.toPlainString(),
             externalRecipient = (from as? SwapTransaction.RegularSwapTransaction)?.externalRecipient,
         )
     }

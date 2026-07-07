@@ -37,6 +37,8 @@ internal class DeFiNavActionsTest {
         assertEquals(DeFiNavActions.REMOVE_LP, parseDepositType("remove_lp"))
         assertEquals(DeFiNavActions.FREEZE_TRX, parseDepositType("freeze_trx"))
         assertEquals(DeFiNavActions.UNFREEZE_TRX, parseDepositType("unfreeze_trx"))
+        assertEquals(DeFiNavActions.STAKE_TON, parseDepositType("stake_ton"))
+        assertEquals(DeFiNavActions.UNSTAKE_TON, parseDepositType("unstake_ton"))
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api
 
 import RippleBroadcastResponseResponseJson
+import RippleBroadcastResponseResponseResultJson
 import RippleBroadcastSuccessResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.models.Coin
@@ -34,50 +35,28 @@ interface RippleApi {
 internal class RippleApiImp @Inject constructor(private val http: HttpClient) : RippleApi {
 
     override suspend fun broadcastTransaction(tx: String): String {
-        try {
-            val payload =
-                RpcPayload(
-                    method = "submit",
-                    params = buildJsonArray { addJsonObject { put("tx_blob", tx) } },
-                )
-            val response = http.post(BASE_XRP_CLUSTER) { setBody(payload) }
-
-            val rpcResp = response.bodyOrThrow<RippleBroadcastResponseResponseJson>()
-
-            val engineResult = rpcResp.result.engineResult
-            val resultMessage = rpcResp.result.engineResultMessage
-            val hash = rpcResp.result.txJson?.hash
-
-            // A benign duplicate-broadcast race: the peer's identical transaction was already
-            // applied/queued, so the transaction is (or will be) on-chain and we can recover its
-            // hash rather than treat it as a failure.
-            val alreadyApplied =
-                resultMessage?.contains("The transaction was applied", ignoreCase = true) == true ||
-                    resultMessage.equals(
-                        "This sequence number has already passed.",
-                        ignoreCase = true,
-                    ) ||
-                    resultMessage.equals("The transaction is redundant.", ignoreCase = true)
-
-            if (engineResult == "tesSUCCESS" || alreadyApplied) {
-                if (!hash.isNullOrBlank()) {
-                    return hash
-                }
-                // Submitted but the node returned no hash. Don't invent one from the message; let
-                // the caller's on-chain recovery confirm using the locally computed hash instead.
-                error("XRP broadcast returned no transaction hash (engine_result=$engineResult)")
+        val result =
+            try {
+                val payload =
+                    RpcPayload(
+                        method = "submit",
+                        params = buildJsonArray { addJsonObject { put("tx_blob", tx) } },
+                    )
+                http
+                    .post(BASE_XRP_CLUSTER) { setBody(payload) }
+                    .bodyOrThrow<RippleBroadcastResponseResponseJson>()
+                    .result
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Timber.e(e, "Error in Broadcast XRP Transaction")
+                error(e.message ?: "Error in Broadcast XRP Transaction")
             }
 
-            // Any other engine result is a genuine rejection (e.g. temBAD_FEE, tecUNFUNDED). Throw
-            // the node's message instead of returning it as a fake txid, so the keysign surfaces
-            // the
-            // failure (matching iOS RippleService) rather than persisting the rejection text as a
-            // hash.
-            error(resultMessage ?: "XRP broadcast failed (engine_result=$engineResult)")
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
+        return try {
+            resolveBroadcastHash(result)
+        } catch (e: RippleBroadcastException) {
             Timber.e(e, "Error in Broadcast XRP Transaction")
-            error(e.message ?: "Error in Broadcast XRP Transaction")
+            throw e
         }
     }
 
@@ -155,6 +134,59 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
     private companion object {
         const val BASE_XRP_VULTISIG: String = "https://api.vultisig.com/ripple"
         const val BASE_XRP_CLUSTER: String = "https://xrplcluster.com"
+    }
+}
+
+private const val RIPPLE_ENGINE_RESULT_SUCCESS = "tesSUCCESS"
+
+/**
+ * Resolves an XRPL `submit` engine result into a trackable transaction hash, or throws a typed
+ * [RippleBroadcastException] carrying the real failure reason.
+ *
+ * XRPL echoes the deterministic `tx_json.hash` back regardless of the engine result. We return that
+ * hash for a successful submit (`tesSUCCESS`) and for a benign duplicate-broadcast race
+ * (`tefPAST_SEQ` / `tefALREADY`, or a node that only reports an "already applied/redundant"
+ * message) so on-chain recovery can verify it by hash without re-broadcasting. Every other engine
+ * result (`tem*`, `tec*`, other `tef*`, …) is a genuine rejection: we surface the engine code +
+ * message as an exception and never persist the engine message as a fake transaction id.
+ */
+internal fun resolveBroadcastHash(result: RippleBroadcastResponseResponseResultJson): String {
+    val trackable =
+        result.engineResult == RIPPLE_ENGINE_RESULT_SUCCESS ||
+            isDuplicateBroadcast(result.engineResult, result.engineResultMessage)
+
+    val hash = result.txJson?.hash
+    if (trackable && !hash.isNullOrBlank()) {
+        return hash
+    }
+    throw RippleBroadcastException(result.engineResult, result.engineResultMessage)
+}
+
+private fun isDuplicateBroadcast(engineResult: String, message: String?): Boolean {
+    if (engineResult == "tefPAST_SEQ" || engineResult == "tefALREADY") {
+        return true
+    }
+    // Fall back to the human-readable message for nodes/proxies that don't echo the engine code.
+    return message?.contains("The transaction was applied", ignoreCase = true) == true ||
+        message.equals("This sequence number has already passed.", ignoreCase = true) ||
+        message.equals("The transaction is redundant.", ignoreCase = true)
+}
+
+/**
+ * A genuine XRPL broadcast rejection. Carries the engine result code and message so the keysign
+ * flow surfaces the real reason instead of persisting a garbage transaction hash.
+ */
+internal class RippleBroadcastException(
+    val engineResult: String?,
+    val engineResultMessage: String?,
+) : Exception(buildRippleBroadcastMessage(engineResult, engineResultMessage))
+
+private fun buildRippleBroadcastMessage(code: String?, message: String?): String {
+    val resolvedCode = code?.takeIf { it.isNotBlank() } ?: "unknown"
+    return if (!message.isNullOrBlank()) {
+        "Ripple broadcast failed ($resolvedCode): $message"
+    } else {
+        "Ripple broadcast failed ($resolvedCode)"
     }
 }
 

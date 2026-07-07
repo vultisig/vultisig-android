@@ -2,6 +2,7 @@ package com.vultisig.wallet.app.activity.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
@@ -165,9 +166,13 @@ private fun MainActivityContent(
             OfflineBanner(isOffline)
             // Reserve the banner's height so content sits below it while it is shown. This
             // AnimatedVisibility mirrors the overlay's enter/exit so the reserved space grows and
-            // collapses in step with the banner sliding in and out.
+            // collapses in step with the banner sliding in and out. Seed the transition from a
+            // false MutableTransitionState so the expand runs even when a notification is already
+            // present on the first composition, keeping it in step with the overlay's slide-in.
+            val reserveState = remember { MutableTransitionState(false) }
+            reserveState.targetState = foregroundNotification != null
             AnimatedVisibility(
-                visible = foregroundNotification != null,
+                visibleState = reserveState,
                 enter = expandVertically(),
                 exit = shrinkVertically(),
             ) {
@@ -178,8 +183,14 @@ private fun MainActivityContent(
 
         // Banner drawn as overlay on top of navContent.
         key(lastNotification?.qrCodeData) {
+            // key(qrCodeData) disposes and recreates this node whenever a new request arrives, so
+            // it is born with visible == true and AnimatedVisibility(visible: Boolean) would skip
+            // its enter transition. Seeding a false MutableTransitionState and flipping targetState
+            // to true makes the slide-in run on the freshly keyed node.
+            val bannerState = remember { MutableTransitionState(false) }
+            bannerState.targetState = foregroundNotification != null
             AnimatedVisibility(
-                visible = foregroundNotification != null,
+                visibleState = bannerState,
                 enter = slideInVertically { -it },
                 exit = slideOutVertically { -it },
                 modifier =

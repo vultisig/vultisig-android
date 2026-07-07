@@ -49,16 +49,15 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             is SwapPayload.MayaChain ->
                 "https://www.explorer.mayachain.info/tx/${tx.removePrefix("0x")}"
             is SwapPayload.EVM -> {
-                if (payload.data.quote.tx.swapFee.toBigIntegerOrNull() != null) {
-                    if (
-                        payload.data.fromCoin.chain == payload.data.toCoin.chain &&
-                            payload.data.fromCoin.chain == Chain.Solana
-                    ) {
-                        "https://orb.helius.dev/tx/${tx}"
-                    } else "https://scan.li.fi/tx/${tx}"
-                } else {
-                    null
-                }
+                // The tracker exists independently of the affiliate `swapFee`; gating on it dropped
+                // the Track button for feeless routes (e.g. same-chain Solana Bonk -> SOL). Derive
+                // the link from src chain + tx hash, both always present for a broadcast swap.
+                if (
+                    payload.data.fromCoin.chain == payload.data.toCoin.chain &&
+                        payload.data.fromCoin.chain == Chain.Solana
+                ) {
+                    "https://orb.helius.dev/tx/${tx}"
+                } else "https://scan.li.fi/tx/${tx}"
             }
 
             else -> null

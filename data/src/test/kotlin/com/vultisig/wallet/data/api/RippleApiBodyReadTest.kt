@@ -53,10 +53,11 @@ class RippleApiBodyReadTest {
         assertEquals("RIPPLEHASH01", result)
     }
 
-    // A genuine rejection must throw, not return the engine result message as a fake txid — the
-    // keysign would otherwise persist the rejection text as a transaction hash and show success.
+    // A genuine rejection must throw a typed error carrying the engine code + message, not return
+    // the engine result message as a fake txid — the keysign would otherwise persist the rejection
+    // text as a transaction hash and show success.
     @Test
-    fun `broadcastTransaction throws engine_result_message when engineResult is a genuine rejection`() {
+    fun `broadcastTransaction throws typed RippleBroadcastException on a genuine rejection`() {
         val body =
             """
             {
@@ -73,11 +74,12 @@ class RippleApiBodyReadTest {
         val api = newApi(HttpStatusCode.OK, body)
 
         val error =
-            assertThrows<IllegalStateException> {
+            assertThrows<RippleBroadcastException> {
                 runBlocking { api.broadcastTransaction("signedtx") }
             }
 
-        assertEquals("Fee must be positive.", error.message)
+        assertEquals("temBAD_FEE", error.engineResult)
+        assertEquals("Fee must be positive.", error.engineResultMessage)
     }
 
     @Test

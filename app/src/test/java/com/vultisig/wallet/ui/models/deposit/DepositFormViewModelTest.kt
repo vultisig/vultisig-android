@@ -793,19 +793,6 @@ internal class DepositFormViewModelTest {
     }
 
     @Test
-    fun `loadData for Ton exposes only stake and unstake`() = runTest {
-        val vm = buildViewModel()
-
-        vm.loadData("vault1", Chain.Ton.raw, null, null)
-        advanceUntilIdle()
-
-        assertEquals(
-            listOf(DepositOption.Stake, DepositOption.Unstake),
-            vm.state.value.depositOptions,
-        )
-    }
-
-    @Test
     fun `validateProvider with blank provider sets providerError`() = runTest {
         val vm = buildViewModel()
         vm.loadData("vault1", Chain.ThorChain.raw, null, null)

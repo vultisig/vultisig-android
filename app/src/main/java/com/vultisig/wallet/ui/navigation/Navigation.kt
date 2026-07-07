@@ -457,6 +457,22 @@ internal sealed class Route {
     )
 
     /**
+     * Dedicated TON nominator-pool stake screen (mirrors iOS `TonStakeTransactionScreen` / macOS
+     * "Stake TON"): centered amount + 25/50/75/Max chips + balance, an inline pool picker row that
+     * opens the pool sheet, and a dynamic "minimum stake" hint. [poolAddress] is prefilled for an
+     * add-more stake (existing position); null for a first-time stake, where the user picks a pool.
+     */
+    @Serializable data class TonStake(val vaultId: String, val poolAddress: String? = null)
+
+    /**
+     * TON nominator-pool unstake confirmation (mirrors iOS `TonUnstakeTransactionScreen`).
+     * Nominator pools support full withdrawal only, so there is no amount input — the screen
+     * confirms the full-withdrawal message to [poolAddress]. [stakedDisplay] is shown for context.
+     */
+    @Serializable
+    data class TonUnstake(val vaultId: String, val poolAddress: String, val stakedDisplay: String)
+
+    /**
      * LUNA / LUNC delegate entry point. Opens
      * [com.vultisig.wallet.ui.screens.cosmosstaking .CosmosDelegateScreen], which collects amount +
      * validator and routes through the existing verify-deposit / keysign pipeline. Other staking
@@ -600,6 +616,8 @@ sealed interface ChainDashboardRoute {
     @Serializable data class PositionMaya(val vaultId: String) : ChainDashboardRoute
 
     @Serializable data class PositionTron(val vaultId: String) : ChainDashboardRoute
+
+    @Serializable data class PositionTon(val vaultId: String) : ChainDashboardRoute
 
     /**
      * LUNA / LUNC staking positions. Carries `chainId` because both Terra chains share the same

@@ -105,9 +105,10 @@ class ExplorerLinkRepositoryImplTest {
     }
 
     @Test
-    fun `SwapKit-routed EVM on untrackable source chain falls back to source-chain path`() {
+    fun `SwapKit-routed EVM on untrackable source chain falls back to LiFi tracker`() {
         // Hyperliquid is EVM-shaped but outside SwapKit's /track catalogue, so the SwapKit branch
-        // is skipped and the existing EVM source-chain logic applies (empty swapFee -> null).
+        // is skipped and the EVM source-chain logic applies. The tracker no longer depends on
+        // swapFee, so a feeless route still gets a Track link.
         val link =
             repository.getSwapProgressLink(
                 "0xabc",
@@ -117,7 +118,35 @@ class ExplorerLinkRepositoryImplTest {
                     swapFee = "",
                 ),
             )
-        assertEquals(null, link)
+        assertEquals("https://scan.li.fi/tx/0xabc", link)
+    }
+
+    @Test
+    fun `same-chain Solana swap with empty swapFee still yields Helius Track link`() {
+        // Regression for #5202: feeless routes (swapFee defaults to "") must not drop the tracker.
+        val hash = "solanaTxHash123"
+        val link =
+            repository.getSwapProgressLink(
+                hash,
+                evmPayload(
+                    Chain.Solana,
+                    SwapProvider.ONEINCH.getSwapProviderId(),
+                    toChain = Chain.Solana,
+                    swapFee = "",
+                ),
+            )
+        assertEquals("https://orb.helius.dev/tx/$hash", link)
+    }
+
+    @Test
+    fun `non-SwapKit EVM route with empty swapFee still yields LiFi Track link`() {
+        val hash = "0xdeadbeef"
+        val link =
+            repository.getSwapProgressLink(
+                hash,
+                evmPayload(Chain.Ethereum, SwapProvider.LIFI.getSwapProviderId(), swapFee = ""),
+            )
+        assertEquals("https://scan.li.fi/tx/$hash", link)
     }
 
     @Test
@@ -145,11 +174,16 @@ class ExplorerLinkRepositoryImplTest {
             )
         )
 
-    private fun evmPayload(srcChain: Chain, provider: String, swapFee: String = "0") =
+    private fun evmPayload(
+        srcChain: Chain,
+        provider: String,
+        toChain: Chain = Chain.Solana,
+        swapFee: String = "0",
+    ) =
         SwapPayload.EVM(
             EVMSwapPayloadJson(
                 fromCoin = coin(srcChain),
-                toCoin = coin(Chain.Solana),
+                toCoin = coin(toChain),
                 fromAmount = BigInteger.ONE,
                 toAmountDecimal = BigDecimal.ONE,
                 quote =

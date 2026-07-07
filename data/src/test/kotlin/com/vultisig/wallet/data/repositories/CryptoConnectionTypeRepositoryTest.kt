@@ -17,6 +17,7 @@ internal class CryptoConnectionTypeRepositoryTest {
                 Chain.ThorChain,
                 Chain.MayaChain,
                 Chain.Tron,
+                Chain.Ton,
                 Chain.Terra,
                 Chain.TerraClassic,
                 Chain.Qbtc,
