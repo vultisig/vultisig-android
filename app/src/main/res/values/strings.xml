@@ -340,9 +340,16 @@
     <string name="vault_settings_success_backup_message">File saved successfully</string>
     <string name="vault_settings_error_extension_backup_file">Extension not supported. Backup failed. Supported file extensions are: %s</string>
     <string name="reshare_start_screen_title">Reshare your vault</string>
-    <string name="reshare_start_screen_body">Reshare can be used to refresh, expand or reduce the amount of devices in a Vault.</string>
-    <string name="reshare_start_screen_warning">For all Reshare actions the threshold of devices is always required.</string>
+    <string name="reshare_start_screen_subtitle">Update your vault setup. Add or remove devices, or refresh shares.</string>
     <string name="reshare_start_screen_start_reshare">Start Reshare</string>
+    <string name="reshare_start_start_subtitle">You are changing this vault\'s device setup.</string>
+    <string name="reshare_start_join_subtitle">You received a reshare request from another device.</string>
+    <string name="before_reshare_title">Before you reshare</string>
+    <string name="before_reshare_subtitle">Resharing regenerates your vault shares. There are a few things to know first.</string>
+    <string name="before_reshare_backups_title">Old backups will stop working</string>
+    <string name="before_reshare_backups_body">Any existing .vult files become invalid. You\'ll need to create fresh backups after resharing.</string>
+    <string name="before_reshare_cosigners_title">All co-signers must be online</string>
+    <string name="before_reshare_cosigners_body">Every current device in your vault needs to participate in the reshare session.</string>
     <string name="threshold_error">Threshold not reached\nMissing enough initial devices</string>
     <string name="add_folder_folder_name_title">Folder Name</string>
 

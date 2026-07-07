@@ -248,8 +248,15 @@
     <string name="verify_transaction_network_fee">Сетевой сбор (авто)</string>
     <string name="vault_settings_success_backup_message">Файл успешно сохранен</string>
     <string name="reshare_start_screen_title">Перераспределение долей хранилища</string>
-    <string name="reshare_start_screen_body">Повторный доступ можно использовать для обновления, расширения или уменьшения количества устройств в хранилище.</string>
-    <string name="reshare_start_screen_warning">Для всех действий Reshare всегда требуется пороговое значение устройств.</string>
+    <string name="reshare_start_screen_subtitle">Обновите настройку вашего хранилища. Добавьте или удалите устройства либо обновите доли.</string>
+    <string name="reshare_start_start_subtitle">Вы меняете настройку устройств этого хранилища.</string>
+    <string name="reshare_start_join_subtitle">Вы получили запрос на перераспределение с другого устройства.</string>
+    <string name="before_reshare_title">Перед перераспределением</string>
+    <string name="before_reshare_subtitle">Перераспределение заново генерирует доли вашего хранилища. Сначала следует узнать несколько моментов.</string>
+    <string name="before_reshare_backups_title">Старые резервные копии перестанут работать</string>
+    <string name="before_reshare_backups_body">Все существующие файлы .vult станут недействительными. После перераспределения вам потребуется создать новые резервные копии.</string>
+    <string name="before_reshare_cosigners_title">Все соподписанты должны быть в сети</string>
+    <string name="before_reshare_cosigners_body">Каждое текущее устройство в вашем хранилище должно участвовать в сессии перераспределения.</string>
     <string name="reshare_start_screen_start_reshare">Начать перераспределение</string>
     <string name="threshold_error">Порог не достигнут\nОтсутствует достаточное количество начальных устройств</string>
     <string name="add_folder_folder_name_title">Имя папки</string>

@@ -576,7 +576,12 @@ internal sealed class Route {
     @Serializable
     data class SetupVaultInfo(val count: Int, val tssAction: TssAction = TssAction.KEYGEN)
 
-    @Serializable data class ChooseVaultCount(val tssAction: TssAction = TssAction.KEYGEN)
+    @Serializable
+    data class ChooseVaultCount(
+        val tssAction: TssAction = TssAction.KEYGEN,
+        // reshare: the existing vault being reshared (skips new-vault name/email entry)
+        val vaultId: VaultId? = null,
+    )
 
     @Serializable data object NotificationSettings
 

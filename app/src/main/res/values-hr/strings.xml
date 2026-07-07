@@ -249,8 +249,15 @@
     <string name="vault_settings_success_backup_message">Datoteka je uspješno spremljena</string>
     <string name="vault_settings_error_extension_backup_file">Proširenje nije podržano. Sigurnosno kopiranje nije uspjelo. Podržani nastavci datoteka su: %s</string>
     <string name="reshare_start_screen_title">Ponovno podijelite svoj trezor</string>
-    <string name="reshare_start_screen_body">Ponovno dijeljenje može se koristiti za osvježavanje, proširenje ili smanjenje količine uređaja u trezoru.</string>
-    <string name="reshare_start_screen_warning">Za sve radnje ponovnog dijeljenja uvijek je potreban prag uređaja.</string>
+    <string name="reshare_start_screen_subtitle">Ažurirajte postavke svog trezora. Dodajte ili uklonite uređaje ili osvježite dijelove.</string>
+    <string name="reshare_start_start_subtitle">Mijenjate postavke uređaja ovog trezora.</string>
+    <string name="reshare_start_join_subtitle">Primili ste zahtjev za ponovno dijeljenje s drugog uređaja.</string>
+    <string name="before_reshare_title">Prije ponovnog dijeljenja</string>
+    <string name="before_reshare_subtitle">Ponovno dijeljenje ponovno generira dijelove vašeg trezora. Najprije trebate znati nekoliko stvari.</string>
+    <string name="before_reshare_backups_title">Stare sigurnosne kopije prestat će raditi</string>
+    <string name="before_reshare_backups_body">Sve postojeće .vult datoteke postaju nevažeće. Nakon ponovnog dijeljenja morat ćete izraditi nove sigurnosne kopije.</string>
+    <string name="before_reshare_cosigners_title">Svi supotpisnici moraju biti na mreži</string>
+    <string name="before_reshare_cosigners_body">Svaki trenutni uređaj u vašem trezoru mora sudjelovati u sesiji ponovnog dijeljenja.</string>
     <string name="reshare_start_screen_start_reshare">Počnite ponovno dijeliti</string>
     <string name="threshold_error">Prag nije dosegnut Nedostaje dovoljno početnih uređaja</string>
     <string name="add_folder_folder_name_title">Naziv mape</string>

@@ -249,8 +249,15 @@
     <string name="vault_settings_success_backup_message">Ficheiro salvo com sucesso</string>
     <string name="vault_settings_error_extension_backup_file">Extensão não suportada. Falha no backup. As extensões de ficheiro suportadas são: %s</string>
     <string name="reshare_start_screen_title">Partilhe novamente o seu cofre</string>
-    <string name="reshare_start_screen_body">Partilhar novamente pode ser utilizado para atualizar, expandir ou reduzir a quantidade de dispositivos num Vault.</string>
-    <string name="reshare_start_screen_warning">Para todas as ações de repartilha, o limite de dispositivos é sempre necessário.</string>
+    <string name="reshare_start_screen_subtitle">Atualize a configuração do seu cofre. Adicione ou remova dispositivos, ou atualize as partes.</string>
+    <string name="reshare_start_start_subtitle">Está a alterar a configuração de dispositivos deste cofre.</string>
+    <string name="reshare_start_join_subtitle">Recebeu um pedido de partilha de outro dispositivo.</string>
+    <string name="before_reshare_title">Antes de partilhar novamente</string>
+    <string name="before_reshare_subtitle">Partilhar novamente regenera as partes do seu cofre. Há algumas coisas que deve saber primeiro.</string>
+    <string name="before_reshare_backups_title">Os backups antigos deixarão de funcionar</string>
+    <string name="before_reshare_backups_body">Todos os ficheiros .vult existentes tornam-se inválidos. Terá de criar novos backups após partilhar novamente.</string>
+    <string name="before_reshare_cosigners_title">Todos os cossignatários devem estar online</string>
+    <string name="before_reshare_cosigners_body">Todos os dispositivos atuais no seu cofre precisam de participar na sessão de partilha.</string>
     <string name="reshare_start_screen_start_reshare">Iniciar nova partilha</string>
     <string name="threshold_error">Limite não atingido\n Faltam dispositivos iniciais suficientes</string>
     <string name="add_folder_folder_name_title">Nome da pasta</string>

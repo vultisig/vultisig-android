@@ -249,8 +249,15 @@
     <string name="vault_settings_success_backup_message">File salvato con successo</string>
     <string name="vault_settings_error_extension_backup_file">Estensione non supportata. Backup non riuscito. Le estensioni di file supportate sono: %s</string>
     <string name="reshare_start_screen_title">Condividi nuovamente il tuo caveau</string>
-    <string name="reshare_start_screen_body">La condivisione può essere utilizzata per aggiornare, espandere o ridurre il numero di dispositivi in ​​un Vault.</string>
-    <string name="reshare_start_screen_warning">Per tutte le azioni di condivisione è sempre richiesta la soglia dei dispositivi.</string>
+    <string name="reshare_start_screen_subtitle">Aggiorna la configurazione del tuo caveau. Aggiungi o rimuovi dispositivi oppure aggiorna le quote.</string>
+    <string name="reshare_start_start_subtitle">Stai modificando la configurazione dei dispositivi di questo caveau.</string>
+    <string name="reshare_start_join_subtitle">Hai ricevuto una richiesta di ricondivisione da un altro dispositivo.</string>
+    <string name="before_reshare_title">Prima di ricondividere</string>
+    <string name="before_reshare_subtitle">La ricondivisione rigenera le quote del tuo caveau. Ci sono alcune cose da sapere prima.</string>
+    <string name="before_reshare_backups_title">I vecchi backup smetteranno di funzionare</string>
+    <string name="before_reshare_backups_body">Tutti i file .vult esistenti diventano non validi. Dovrai creare nuovi backup dopo la ricondivisione.</string>
+    <string name="before_reshare_cosigners_title">Tutti i co-firmatari devono essere online</string>
+    <string name="before_reshare_cosigners_body">Ogni dispositivo attuale nel tuo caveau deve partecipare alla sessione di ricondivisione.</string>
     <string name="reshare_start_screen_start_reshare">Inizia la condivisione</string>
     <string name="threshold_error">Soglia non raggiunta Mancano \n abbastanza dispositivi iniziali</string>
     <string name="add_folder_folder_name_title">Nome cartella</string>

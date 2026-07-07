@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -24,8 +26,11 @@ internal sealed interface ChooseDeviceCountUiEvent {
 @HiltViewModel
 internal class ChooseDeviceCountViewModel
 @Inject
-constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator<Destination>) :
-    ViewModel() {
+constructor(
+    savedStateHandle: SavedStateHandle,
+    private val navigator: Navigator<Destination>,
+    private val vaultRepository: VaultRepository,
+) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.ChooseVaultCount>()
 
@@ -51,7 +56,26 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
     private fun next() {
         viewModelScope.launch {
             val count = deviceCount.value
-            navigator.route(Route.SetupVaultInfo(count = count, tssAction = args.tssAction))
+            when (args.tssAction) {
+                // Reshare reuses this picker but keeps the existing vault: skip the new-vault
+                // name/email/password steps and hand the current vault straight to peer discovery.
+                TssAction.ReShare -> {
+                    val vaultId = args.vaultId ?: error("Reshare requires a vaultId")
+                    val vault =
+                        vaultRepository.get(vaultId) ?: error("Vault $vaultId does not exist")
+                    navigator.route(
+                        Route.Keygen.PeerDiscovery(
+                            action = TssAction.ReShare,
+                            vaultId = vaultId,
+                            vaultName = vault.name,
+                            deviceCount = count,
+                        )
+                    )
+                }
+
+                else ->
+                    navigator.route(Route.SetupVaultInfo(count = count, tssAction = args.tssAction))
+            }
         }
     }
 }
