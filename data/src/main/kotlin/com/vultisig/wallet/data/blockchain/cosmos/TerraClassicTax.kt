@@ -56,6 +56,14 @@ object TerraClassicTax {
     const val UUSD_BASE_GAS: Long = 225_000L
 
     /**
+     * The static gas limit that [ULUNA_BASE_GAS] / [UUSD_BASE_GAS] are priced at (`300k × per-gas
+     * price`). Mirrors `TerraHelper`'s static per-chain limit; [scaledSendFee] re-derives the fee
+     * amount by scaling the base from this limit to the effective (relayed) limit. Mirrors
+     * vultisig-ios `TerraClassicTax.staticGasLimit`.
+     */
+    const val STATIC_GAS_LIMIT: Long = 300_000L
+
+    /**
      * Burn tax on a send [amount] (in the denom's smallest unit) at [rate], rounded **up** so the
      * signed fee never undershoots the chain's check. Returns 0 for a non-positive amount or rate.
      */
@@ -111,6 +119,50 @@ object TerraClassicTax {
         val price =
             if (isBankDenom(contractAddress, isNativeToken)) UUSD_GAS_PRICE else ULUNA_GAS_PRICE
         return price.multiply(BigDecimal(gasLimit)).setScale(0, RoundingMode.CEILING).toBigInteger()
+    }
+
+    /**
+     * Scale a fee priced at [fromGasLimit] gas to [toGasLimit] gas, rounded **up**: `ceil(base ×
+     * toGasLimit / fromGasLimit)`. When `base == fromGasLimit × pricePerGas` this equals
+     * `ceil(toGasLimit × pricePerGas)` — the ante handler's required minimum at the signed
+     * `gas_wanted` — so the re-derived fee tracks the signed limit exactly. Returns [base]
+     * unchanged when the limit is unchanged (so the non-simulated path is byte-identical) or when
+     * [fromGasLimit] is non-positive. Mirrors vultisig-ios `CosmosGasPricedFee.scaled`.
+     */
+    fun scaled(base: BigInteger, fromGasLimit: Long, toGasLimit: Long): BigInteger {
+        if (fromGasLimit <= 0L || toGasLimit == fromGasLimit) return base
+        return BigDecimal(base)
+            .multiply(BigDecimal(toGasLimit))
+            .divide(BigDecimal(fromGasLimit), 0, RoundingMode.CEILING)
+            .toBigInteger()
+    }
+
+    /**
+     * Re-derive the Terra Classic send fee amount for a (possibly dynamic) [gasLimit], preserving
+     * any burn tax folded into the upstream [staticFee] (`chainSpecific.gas`). [staticFee] is
+     * priced for the static [STATIC_GAS_LIMIT], so once a relayed limit exceeds it the signed fee
+     * would undershoot Terra Classic's `fee >= gas_wanted × price (+ tax)` ante check
+     * ("insufficient fee"); this scales the base gas portion at the chain's per-gas price while
+     * carrying the burn tax — a fixed proportion of the SEND amount, independent of gas — over
+     * unchanged. At `gasLimit == STATIC_GAS_LIMIT` it returns [staticFee] verbatim, so the
+     * non-simulated path is byte-identical across co-signers. Pure function of [staticFee], the
+     * relayed limit and the static constants, so every co-signer derives the identical fee. Mirrors
+     * vultisig-ios `TerraClassicTax.scaledSendFee`.
+     */
+    fun scaledSendFee(
+        staticFee: BigInteger,
+        contractAddress: String,
+        isNativeToken: Boolean,
+        gasLimit: Long,
+    ): BigInteger {
+        val base =
+            if (isBankDenom(contractAddress, isNativeToken)) UUSD_BASE_GAS.toBigInteger()
+            else ULUNA_BASE_GAS.toBigInteger()
+        // Burn tax folded into `staticFee` upstream (0 for CW20 / IBC, which pay no folded tax).
+        // Guarded against underflow.
+        val tax = if (staticFee > base) staticFee - base else BigInteger.ZERO
+        val scaledBase = scaled(base, STATIC_GAS_LIMIT, gasLimit)
+        return scaledBase + tax
     }
 
     /**
