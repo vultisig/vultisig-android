@@ -878,7 +878,6 @@
         <item quantity="few">Oznaka mora imati između 1 i %d znakova</item>
         <item quantity="other">Oznaka mora imati između 1 i %d znakova</item>
     </plurals>
-    <string name="send_form_ripple_reaping_warning">Osigurajte dovoljno sredstava za pokrivanje naknada. Ako stanje na računu padne ispod 1 XRP (egzistencijalni depozit), račun će biti deaktiviran (potrošen) i sva preostala sredstva bit će izgubljena. Adresu možete ponovno aktivirati novim depozitom većim od egzistencijalnog depozita u bilo kojem trenutku. Međutim, to neće vratiti izgubljena sredstva.</string>
     <string name="send_error_xrp_destination_not_activated">Minimalni iznos za aktivaciju ove adrese je %1$s %2$s.</string>
     <string name="error_invalid_chain">Lanac nije valjan</string>
     <string name="ton_stake_error_unsupported_pool">Ovaj staking pool nije podržan</string>
