@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
+import com.vultisig.wallet.ui.models.send.toPlainBigDecimalOrNull
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -72,7 +73,8 @@ internal class MintStrategy(
                         )
                     }
 
-                    val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
+                    val tokenAmount =
+                        tokenAmountFieldState.text.toString().toPlainBigDecimalOrNull()
                     if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_no_amount)

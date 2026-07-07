@@ -77,7 +77,7 @@ internal class AmountManager(
         if (value.length > TextFieldUtils.AMOUNT_MAX_LENGTH) {
             return UiText.StringResource(R.string.send_from_invalid_amount)
         }
-        val decimal = value.toBigDecimalOrNull()
+        val decimal = value.toPlainBigDecimalOrNull()
         if (decimal == null || decimal <= BigDecimal.ZERO) {
             return UiText.StringResource(R.string.send_error_no_amount)
         }
@@ -108,7 +108,7 @@ internal class AmountManager(
     }
 
     private suspend fun handleTokenInput(token: Coin, tokenString: String) {
-        val tokenDecimal = tokenString.toBigDecimalOrNull()
+        val tokenDecimal = tokenString.toPlainBigDecimalOrNull()
         _isMaxAmount.value = tokenDecimal?.compareTo(maxAmount) == 0 && maxAmount > BigDecimal.ZERO
 
         val fiatValue =
@@ -151,7 +151,7 @@ internal class AmountManager(
             return
         }
 
-        val tokenDecimal = tokenValue.toBigDecimalOrNull()
+        val tokenDecimal = tokenValue.toPlainBigDecimalOrNull()
         _isMaxAmount.value = tokenDecimal?.compareTo(maxAmount) == 0 && maxAmount > BigDecimal.ZERO
 
         lastTokenValueUserInput = tokenValue
@@ -164,7 +164,7 @@ internal class AmountManager(
         token: Coin,
         transform: (value: BigDecimal, price: BigDecimal, token: Coin) -> BigDecimal,
     ): String? {
-        val decimalValue = value.toBigDecimalOrNull() ?: return ""
+        val decimalValue = value.toPlainBigDecimalOrNull() ?: return ""
 
         val price =
             try {
