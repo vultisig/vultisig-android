@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.hasExcessDecimals
+import com.vultisig.wallet.ui.models.send.toPlainBigDecimalOrNull
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asAddressInput
 import java.math.BigDecimal
@@ -52,7 +53,7 @@ internal class AccountValidator(
 
         val chain = selectedAccount.token.chain
 
-        val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
+        val tokenAmount = tokenAmountFieldState.text.toString().toPlainBigDecimalOrNull()
         if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_amount)

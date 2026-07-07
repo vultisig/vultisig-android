@@ -77,7 +77,7 @@ internal class AmountManager(
         if (value.length > TextFieldUtils.AMOUNT_MAX_LENGTH) {
             return UiText.StringResource(R.string.send_from_invalid_amount)
         }
-        val decimal = value.toBigDecimalOrNull()
+        val decimal = value.toPlainBigDecimalOrNull()
         if (decimal == null || decimal <= BigDecimal.ZERO) {
             return UiText.StringResource(R.string.send_error_no_amount)
         }
