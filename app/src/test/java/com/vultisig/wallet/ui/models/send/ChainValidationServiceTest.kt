@@ -260,16 +260,28 @@ internal class ChainValidationServiceTest {
     }
 
     @Test
-    fun `checkIsReapable - xrp balance below existential deposit returns ripple reaping warning`() {
-        // 11 XRP balance, sending 10 XRP, 0.5 XRP fee → 0.5 XRP remaining < 1 XRP threshold
-        val balance = BigInteger.valueOf(11_000_000L) // 11 XRP
-        val account = Account(xrpCoin, TokenValue(balance, "XRP", 6), null, null)
+    fun `checkIsReapable - xrp MAX send with owner reserves does not warn`() {
+        // getBalance already nets out the owner-aware reserve (base + OwnerCount * increment), so
+        // the account tokenValue here is the reserve-net spendable balance. A MAX send drains it to
+        // ~0 remainder. The reaping warning must NOT fire — subtracting a second static 1 XRP would
+        // double-count the reserve (issue #5208).
+        val reserveNetBalance = BigInteger.valueOf(10_000_000L) // 10 XRP spendable (reserve netted)
+        val account = Account(xrpCoin, TokenValue(reserveNetBalance, "XRP", 6), null, null)
+        val gasFee = TokenValue(BigInteger.valueOf(100_000L), "XRP", 6) // 0.1 XRP
+        // MAX amount = spendable - fee = 9.9 XRP → remainder 0
+        assertNull(service.checkIsReapable(account, xrpCoin, "9.9", gasFee))
+    }
+
+    @Test
+    fun `checkIsReapable - xrp remainder within one XRP band does not warn`() {
+        // Remainder lands inside the [reserve, reserve + 1 XRP] band that the old static check
+        // flagged. Since the reserve is already netted out of the balance, this is still a valid
+        // send and must not warn.
+        val reserveNetBalance = BigInteger.valueOf(11_000_000L) // 11 XRP spendable
+        val account = Account(xrpCoin, TokenValue(reserveNetBalance, "XRP", 6), null, null)
         val gasFee = TokenValue(BigInteger.valueOf(500_000L), "XRP", 6) // 0.5 XRP
-        val result = service.checkIsReapable(account, xrpCoin, "10.0", gasFee)
-        assertEquals(
-            R.string.send_form_ripple_reaping_warning,
-            (result as UiText.StringResource).resId,
-        )
+        // 11 - 10 - 0.5 = 0.5 XRP remainder (< old 1 XRP threshold)
+        assertNull(service.checkIsReapable(account, xrpCoin, "10.0", gasFee))
     }
 
     // validateRippleDestinationReserve tests
