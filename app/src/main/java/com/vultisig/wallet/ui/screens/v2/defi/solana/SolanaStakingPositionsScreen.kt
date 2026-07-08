@@ -37,6 +37,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.models.solanastaking.SolanaStakePositionRow
 import com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState
@@ -68,6 +69,8 @@ internal fun SolanaStakingPositionsScreen(
             viewModel.refresh()
         },
         onStake = viewModel::onStake,
+        onDeactivate = viewModel::onDeactivate,
+        onWithdraw = viewModel::onWithdraw,
     )
 
     if (state !is SolanaStakingPositionsUiState.Loading) {
@@ -82,6 +85,8 @@ internal fun SolanaStakingPositionsContent(
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
     onStake: () -> Unit = {},
+    onDeactivate: (String) -> Unit = {},
+    onWithdraw: (String) -> Unit = {},
 ) {
     Column(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
         PullToRefreshBox(
@@ -116,6 +121,8 @@ internal fun SolanaStakingPositionsContent(
                                     SolanaStakePositionCard(
                                         row = row,
                                         isBalanceVisible = state.isBalanceVisible,
+                                        onDeactivate = { onDeactivate(row.stakePubkey) },
+                                        onWithdraw = { onWithdraw(row.stakePubkey) },
                                     )
                                 }
                             }
@@ -151,8 +158,13 @@ private fun SolanaStakingHeader(totalFiat: String, isBalanceVisible: Boolean) {
 }
 
 @Composable
-private fun SolanaStakePositionCard(row: SolanaStakePositionRow, isBalanceVisible: Boolean) {
-    Row(
+private fun SolanaStakePositionCard(
+    row: SolanaStakePositionRow,
+    isBalanceVisible: Boolean,
+    onDeactivate: () -> Unit,
+    onWithdraw: () -> Unit,
+) {
+    Column(
         modifier =
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
@@ -162,48 +174,73 @@ private fun SolanaStakePositionCard(row: SolanaStakePositionRow, isBalanceVisibl
                     color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(16.dp),
                 )
-                .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
+                .padding(16.dp)
     ) {
-        MonogramAvatar(name = row.validatorName)
-        UiSpacer(size = 12.dp)
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = row.validatorName,
-                style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.text.primary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            UiSpacer(size = 2.dp)
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            MonogramAvatar(name = row.validatorName)
+            UiSpacer(size = 12.dp)
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = row.stateLabel.asString(),
+                    text = row.validatorName,
+                    style = Theme.brockmann.body.m.medium,
+                    color = Theme.v2.colors.text.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                UiSpacer(size = 2.dp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = row.stateLabel.asString(),
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.v2.colors.text.tertiary,
+                    )
+                    row.apyDisplay?.let {
+                        Text(
+                            text = "  •  ${stringResource(R.string.solana_staking_apy_label, it)}",
+                            style = Theme.brockmann.supplementary.caption,
+                            color = Theme.v2.colors.alerts.success,
+                        )
+                    }
+                }
+            }
+            UiSpacer(size = 12.dp)
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = if (isBalanceVisible) row.stakedDisplay else HIDE_BALANCE_CHARS,
+                    style = Theme.brockmann.body.m.medium,
+                    color = Theme.v2.colors.text.primary,
+                )
+                UiSpacer(size = 2.dp)
+                Text(
+                    text = if (isBalanceVisible) row.stakedFiatDisplay else HIDE_BALANCE_CHARS,
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.text.tertiary,
                 )
-                row.apyDisplay?.let {
-                    Text(
-                        text = "  •  ${stringResource(R.string.solana_staking_apy_label, it)}",
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.alerts.success,
+            }
+        }
+
+        if (row.canDeactivate || row.canWithdraw) {
+            UiSpacer(size = 12.dp)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (row.canDeactivate) {
+                    VsButton(
+                        label = stringResource(R.string.solana_staking_unstake_cta),
+                        variant = VsButtonVariant.Secondary,
+                        size = VsButtonSize.Small,
+                        onClick = onDeactivate,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                if (row.canWithdraw) {
+                    VsButton(
+                        label = stringResource(R.string.solana_staking_withdraw_cta),
+                        variant = VsButtonVariant.Primary,
+                        size = VsButtonSize.Small,
+                        onClick = onWithdraw,
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }
-        }
-        UiSpacer(size = 12.dp)
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                text = if (isBalanceVisible) row.stakedDisplay else HIDE_BALANCE_CHARS,
-                style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.text.primary,
-            )
-            UiSpacer(size = 2.dp)
-            Text(
-                text = if (isBalanceVisible) row.stakedFiatDisplay else HIDE_BALANCE_CHARS,
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.tertiary,
-            )
         }
     }
 }

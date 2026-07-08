@@ -916,6 +916,8 @@
     <string name="solana_delegate_commission">Provizija %1$s</string>
     <string name="solana_delegate_cta">Nastavi</string>
     <string name="solana_staking_stake_cta">Stakiraj</string>
+    <string name="solana_staking_unstake_cta">Poništi stake</string>
+    <string name="solana_staking_withdraw_cta">Povuci</string>
     <string name="vault_backup_verifying_pin">Provjera koda, molimo pričekajte</string>
     <string name="select_vault_type_next">Sljedeće</string>
     <string name="select_vault_type_choose_setup">Odaberite Postavljanje</string>

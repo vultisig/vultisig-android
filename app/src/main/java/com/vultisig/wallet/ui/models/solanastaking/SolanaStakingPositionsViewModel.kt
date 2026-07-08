@@ -4,18 +4,25 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.solana.staking.BuildSolanaStakingKeysignPayloadUseCase
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeAccount
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingConfig
+import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingPayload
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingService
 import com.vultisig.wallet.data.blockchain.solana.staking.ValidatorMetadata
 import com.vultisig.wallet.data.blockchain.solana.staking.ValidatorMetadataProvider
+import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
+import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -26,8 +33,10 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.RoundingMode
 import java.text.NumberFormat
+import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -77,6 +86,7 @@ internal sealed interface SolanaStakingPositionsUiState {
         val positions: List<SolanaStakePositionRow>,
         val isBalanceVisible: Boolean = true,
         val isReloading: Boolean = false,
+        val error: UiText? = null,
     ) : SolanaStakingPositionsUiState
 }
 
@@ -97,6 +107,9 @@ constructor(
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
+    private val blockChainSpecificRepository: BlockChainSpecificRepository,
+    private val buildKeysignPayload: BuildSolanaStakingKeysignPayloadUseCase,
+    private val depositTransactionRepository: DepositTransactionRepository,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
@@ -106,6 +119,8 @@ constructor(
 
     private var vaultId: VaultId = ""
     private var loadJob: Job? = null
+    private var solCoin: Coin? = null
+    private var accountsByPubkey: Map<String, SolanaStakeAccount> = emptyMap()
 
     fun setData(vaultId: VaultId) {
         this.vaultId = vaultId
@@ -120,6 +135,94 @@ constructor(
         if (vaultId.isEmpty()) return
         viewModelScope.safeLaunch(onError = { Timber.w(it, "open Solana delegate failed") }) {
             navigator.route(Route.SolanaDelegate(vaultId = vaultId))
+        }
+    }
+
+    /** Deactivate (unstake) a stake account — begins the ~1-epoch cooldown; carries no amount. */
+    fun onDeactivate(stakePubkey: String) {
+        val account = accountsByPubkey[stakePubkey] ?: return
+        buildStakingTxAndRoute(
+            payload = SolanaStakingPayload.unstake(stakeAccount = stakePubkey),
+            amount = account.delegatedStake,
+            dstAddress = stakePubkey,
+        )
+    }
+
+    /**
+     * Withdraw a fully-inactive stake account's lamports back to the wallet. Gated on the account
+     * being [SolanaStakeState.Inactive] (the row only surfaces Withdraw once cooled down), so no
+     * cooldown re-check is needed here.
+     */
+    fun onWithdraw(stakePubkey: String) {
+        val account =
+            accountsByPubkey[stakePubkey]?.takeIf { it.state == SolanaStakeState.Inactive }
+        if (account == null) return
+        buildStakingTxAndRoute(
+            payload =
+                SolanaStakingPayload.withdraw(
+                    stakeAccount = stakePubkey,
+                    lamports = account.lamports,
+                ),
+            amount = account.lamports,
+            dstAddress = stakePubkey,
+        )
+    }
+
+    private fun buildStakingTxAndRoute(
+        payload: SolanaStakingPayload,
+        amount: BigInteger,
+        dstAddress: String,
+    ) {
+        val coin = solCoin ?: return
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.e(e, "Failed to build Solana staking tx")
+                _state.update { current ->
+                    if (current is SolanaStakingPositionsUiState.Success)
+                        current.copy(error = (e.message ?: "").asUiText())
+                    else current
+                }
+            }
+        ) {
+            val vault = vaultRepository.get(vaultId) ?: error("Vault not found")
+            val gasFee = TokenValue(value = SolanaHelper.DefaultFeeInLamports, token = coin)
+            val specific =
+                blockChainSpecificRepository.getSpecific(
+                    chain = Chain.Solana,
+                    address = coin.address,
+                    token = coin,
+                    gasFee = gasFee,
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                )
+            val keysignPayload =
+                buildKeysignPayload(
+                    coin = coin,
+                    payload = payload,
+                    blockChainSpecific = specific.blockChainSpecific,
+                    balanceLamports = BigInteger.ZERO,
+                    vaultPublicKeyECDSA = vault.pubKeyECDSA,
+                    vaultLocalPartyID = vault.localPartyID,
+                    libType = vault.libType,
+                )
+            val depositTx =
+                DepositTransaction(
+                    id = UUID.randomUUID().toString(),
+                    vaultId = vaultId,
+                    srcToken = coin,
+                    srcAddress = coin.address,
+                    srcTokenValue = TokenValue(value = amount, token = coin),
+                    memo = "",
+                    dstAddress = dstAddress,
+                    estimatedFees = gasFee,
+                    estimateFeesFiat = "",
+                    blockChainSpecific = specific.blockChainSpecific,
+                    solanaStakingPayload = payload,
+                    signSolana = keysignPayload.signSolana,
+                )
+            depositTransactionRepository.addTransaction(depositTx)
+            navigator.route(Route.VerifyDeposit(vaultId = vaultId, transactionId = depositTx.id))
         }
     }
 
@@ -161,7 +264,9 @@ constructor(
                 val currencyFormat = appCurrencyRepository.getCurrencyFormat()
                 val price = cachedPrice(solCoin.id, currency)
 
+                this@SolanaStakingPositionsViewModel.solCoin = solCoin
                 val accounts = solanaStakingService.fetchStakeAccounts(solCoin.address)
+                accountsByPubkey = accounts.associateBy { it.stakePubkey }
                 val votePubkeys = accounts.mapNotNull { it.voter }.distinct()
                 val metadata =
                     if (votePubkeys.isEmpty()) emptyMap()

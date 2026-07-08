@@ -916,6 +916,8 @@
     <string name="solana_delegate_commission">Комиссия %1$s</string>
     <string name="solana_delegate_cta">Продолжить</string>
     <string name="solana_staking_stake_cta">Стейкинг</string>
+    <string name="solana_staking_unstake_cta">Вывести из стейкинга</string>
+    <string name="solana_staking_withdraw_cta">Вывести</string>
     <string name="vault_backup_verifying_pin">Подтверждение кода, пожалуйста, подождите.</string>
     <string name="select_vault_type_next">Далее</string>
     <string name="select_vault_type_choose_setup">Выберите конфигурацию</string>

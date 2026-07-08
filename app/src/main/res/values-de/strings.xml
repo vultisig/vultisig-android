@@ -913,6 +913,8 @@
     <string name="solana_delegate_commission">Provision %1$s</string>
     <string name="solana_delegate_cta">Weiter</string>
     <string name="solana_staking_stake_cta">Staken</string>
+    <string name="solana_staking_unstake_cta">Unstaken</string>
+    <string name="solana_staking_withdraw_cta">Auszahlen</string>
     <string name="vault_backup_verifying_pin">Code wird überprüft, bitte warten</string>
     <string name="select_vault_type_next">Weiter</string>
     <string name="select_vault_type_choose_setup">Wähle „Einrichtung“</string>

@@ -910,6 +910,8 @@
     <string name="solana_delegate_commission">Comissão %1$s</string>
     <string name="solana_delegate_cta">Continuar</string>
     <string name="solana_staking_stake_cta">Stake</string>
+    <string name="solana_staking_unstake_cta">Remover do stake</string>
+    <string name="solana_staking_withdraw_cta">Sacar</string>
     <string name="vault_backup_verifying_pin">Verificando código, aguarde</string>
     <string name="select_vault_type_next">Próximo</string>
     <string name="select_vault_type_choose_setup">Selecione Configurar</string>

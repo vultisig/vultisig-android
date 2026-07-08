@@ -908,6 +908,8 @@
     <string name="solana_delegate_commission">Commissie %1$s</string>
     <string name="solana_delegate_cta">Doorgaan</string>
     <string name="solana_staking_stake_cta">Staken</string>
+    <string name="solana_staking_unstake_cta">Ontstaken</string>
+    <string name="solana_staking_withdraw_cta">Opnemen</string>
     <string name="vault_backup_verifying_pin">Code verifiëren, even geduld a.u.b.</string>
     <string name="select_vault_type_next">Volgende</string>
     <string name="select_vault_type_choose_setup">Kies \'Instellen\'</string>
