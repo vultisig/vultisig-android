@@ -36,6 +36,8 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.models.solanastaking.SolanaStakePositionRow
 import com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState
 import com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsViewModel
@@ -65,6 +67,7 @@ internal fun SolanaStakingPositionsScreen(
             isRefreshing = true
             viewModel.refresh()
         },
+        onStake = viewModel::onStake,
     )
 
     if (state !is SolanaStakingPositionsUiState.Loading) {
@@ -78,40 +81,55 @@ internal fun SolanaStakingPositionsContent(
     state: SolanaStakingPositionsUiState,
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
+    onStake: () -> Unit = {},
 ) {
-    PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
-        Column(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
-            SolanaStakingHeader(
-                totalFiat =
-                    (state as? SolanaStakingPositionsUiState.Success)?.totalStakedFiatDisplay ?: "",
-                isBalanceVisible =
-                    (state as? SolanaStakingPositionsUiState.Success)?.isBalanceVisible ?: true,
-            )
+    Column(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = onRefresh,
+            modifier = Modifier.weight(1f),
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                SolanaStakingHeader(
+                    totalFiat =
+                        (state as? SolanaStakingPositionsUiState.Success)?.totalStakedFiatDisplay
+                            ?: "",
+                    isBalanceVisible =
+                        (state as? SolanaStakingPositionsUiState.Success)?.isBalanceVisible ?: true,
+                )
 
-            when (state) {
-                is SolanaStakingPositionsUiState.Loading ->
-                    CenteredMessage(stringResource(R.string.solana_staking_loading))
-                is SolanaStakingPositionsUiState.Error ->
-                    CenteredMessage(state.error.asString(), isError = true)
-                is SolanaStakingPositionsUiState.Success ->
-                    if (state.positions.isEmpty()) {
-                        CenteredMessage(stringResource(R.string.solana_staking_no_positions))
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            items(state.positions, key = { it.stakePubkey }) { row ->
-                                SolanaStakePositionCard(
-                                    row = row,
-                                    isBalanceVisible = state.isBalanceVisible,
-                                )
+                when (state) {
+                    is SolanaStakingPositionsUiState.Loading ->
+                        CenteredMessage(stringResource(R.string.solana_staking_loading))
+                    is SolanaStakingPositionsUiState.Error ->
+                        CenteredMessage(state.error.asString(), isError = true)
+                    is SolanaStakingPositionsUiState.Success ->
+                        if (state.positions.isEmpty()) {
+                            CenteredMessage(stringResource(R.string.solana_staking_no_positions))
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                items(state.positions, key = { it.stakePubkey }) { row ->
+                                    SolanaStakePositionCard(
+                                        row = row,
+                                        isBalanceVisible = state.isBalanceVisible,
+                                    )
+                                }
                             }
                         }
-                    }
+                }
             }
         }
+
+        VsButton(
+            label = stringResource(R.string.solana_staking_stake_cta),
+            variant = VsButtonVariant.CTA,
+            onClick = onStake,
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+        )
     }
 }
 

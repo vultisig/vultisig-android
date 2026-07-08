@@ -19,6 +19,9 @@ import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -94,6 +97,7 @@ constructor(
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
+    private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
     private val _state =
@@ -110,6 +114,13 @@ constructor(
 
     fun refresh() {
         if (vaultId.isNotEmpty()) loadData()
+    }
+
+    fun onStake() {
+        if (vaultId.isEmpty()) return
+        viewModelScope.safeLaunch(onError = { Timber.w(it, "open Solana delegate failed") }) {
+            navigator.route(Route.SolanaDelegate(vaultId = vaultId))
+        }
     }
 
     private fun loadData() {

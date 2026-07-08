@@ -464,6 +464,9 @@ internal sealed class Route {
      */
     @Serializable data class TonStake(val vaultId: String, val poolAddress: String? = null)
 
+    /** Solana native-staking delegate (stake) screen: pick a validator + amount. */
+    @Serializable data class SolanaDelegate(val vaultId: String)
+
     /**
      * TON nominator-pool unstake confirmation (mirrors iOS `TonUnstakeTransactionScreen`).
      * Nominator pools support full withdrawal only, so there is no amount input — the screen
