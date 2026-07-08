@@ -1236,6 +1236,12 @@
     <string name="solana_staking_state_deactivating">停用中</string>
     <string name="solana_staking_state_inactive">未激活</string>
     <string name="solana_staking_state_not_delegated">未委托</string>
+    <string name="solana_delegate_title">质押 SOL</string>
+    <string name="solana_delegate_amount_hint">数量 (SOL)</string>
+    <string name="solana_delegate_select_validator">选择验证者</string>
+    <string name="solana_delegate_commission">佣金 %1$s</string>
+    <string name="solana_delegate_cta">继续</string>
+    <string name="solana_staking_stake_cta">质押</string>
     <string name="vault_backup_verifying_pin">正在验证代码，请稍候</string>
     <string name="select_vault_type_next">下一步</string>
     <string name="select_vault_type_choose_setup">选择“设置”</string>

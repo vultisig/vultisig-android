@@ -495,6 +495,12 @@
     <string name="solana_staking_state_deactivating">비활성화 중</string>
     <string name="solana_staking_state_inactive">비활성</string>
     <string name="solana_staking_state_not_delegated">위임 안 됨</string>
+    <string name="solana_delegate_title">SOL 스테이킹</string>
+    <string name="solana_delegate_amount_hint">수량 (SOL)</string>
+    <string name="solana_delegate_select_validator">검증인 선택</string>
+    <string name="solana_delegate_commission">수수료 %1$s</string>
+    <string name="solana_delegate_cta">계속</string>
+    <string name="solana_staking_stake_cta">스테이킹</string>
     <string name="send_error_invalid_plan_fee">유효하지 않은 플랜 수수료</string>
     <string name="send_error_same_address">받는 주소는 보내는 주소와 달라야 합니다</string>
     <string name="select_vault_type_secure">보안</string>

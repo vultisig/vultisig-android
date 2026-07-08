@@ -905,6 +905,12 @@
     <string name="solana_staking_state_deactivating">Desactivando</string>
     <string name="solana_staking_state_inactive">Inactivo</string>
     <string name="solana_staking_state_not_delegated">Sin delegar</string>
+    <string name="solana_delegate_title">Hacer staking de SOL</string>
+    <string name="solana_delegate_amount_hint">Cantidad (SOL)</string>
+    <string name="solana_delegate_select_validator">Seleccionar un validador</string>
+    <string name="solana_delegate_commission">Comisión %1$s</string>
+    <string name="solana_delegate_cta">Continuar</string>
+    <string name="solana_staking_stake_cta">Stake</string>
     <string name="vault_backup_verifying_pin">Verificando código, por favor espere</string>
     <string name="select_vault_type_next">Siguiente</string>
     <string name="select_vault_type_choose_setup">Selecciona Configuración</string>

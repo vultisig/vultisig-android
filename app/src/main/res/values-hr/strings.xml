@@ -910,6 +910,12 @@
     <string name="solana_staking_state_deactivating">Deaktiviranje</string>
     <string name="solana_staking_state_inactive">Neaktivno</string>
     <string name="solana_staking_state_not_delegated">Nije delegirano</string>
+    <string name="solana_delegate_title">Stakiraj SOL</string>
+    <string name="solana_delegate_amount_hint">Iznos (SOL)</string>
+    <string name="solana_delegate_select_validator">Odaberi validatora</string>
+    <string name="solana_delegate_commission">Provizija %1$s</string>
+    <string name="solana_delegate_cta">Nastavi</string>
+    <string name="solana_staking_stake_cta">Stakiraj</string>
     <string name="vault_backup_verifying_pin">Provjera koda, molimo pričekajte</string>
     <string name="select_vault_type_next">Sljedeće</string>
     <string name="select_vault_type_choose_setup">Odaberite Postavljanje</string>
