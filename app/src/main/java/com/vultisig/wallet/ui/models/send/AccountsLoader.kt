@@ -278,18 +278,17 @@ internal class AccountsLoader(
         generation: Long,
     ) {
         if (generation != currentGeneration) return
-        // Without a bonded amount (e.g. a stale deep link) fall back to the wallet balance rather
-        // than showing a zero balance that would block the form entirely.
-        if (bondedAmount == null) {
-            publishLoaded(accounts, generation)
-            return
-        }
+        // The RUNE account from loadDeFiAddresses carries the vault's *combined* bond across every
+        // node (ThorchainDeFiBalanceService sums bonDetails), not this node's. If the per-node
+        // amount is missing (e.g. a stale deep link), we can't derive the real ceiling, so zero it
+        // out — better to block the form than let MAX/submit draw against another node's bond.
+        val ceiling = bondedAmount ?: BigInteger.ZERO
         val overridden =
             accounts.map { account ->
                 if (account.token.id.equals(Coins.ThorChain.RUNE.id, true)) {
                     val bondedTokenValue =
-                        account.tokenValue?.copy(value = bondedAmount)
-                            ?: TokenValue(value = bondedAmount, token = account.token)
+                        account.tokenValue?.copy(value = ceiling)
+                            ?: TokenValue(value = ceiling, token = account.token)
                     account.copy(
                         tokenValue = bondedTokenValue,
                         fiatValue =

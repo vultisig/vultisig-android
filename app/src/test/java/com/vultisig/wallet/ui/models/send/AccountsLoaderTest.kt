@@ -177,8 +177,11 @@ internal class AccountsLoaderTest {
         }
 
     @Test
-    fun `UNBOND without a bonded amount falls back to the wallet balance`() =
+    fun `UNBOND without a bonded amount zeroes the RUNE balance`() =
         runTest(mainDispatcher) {
+            // The RUNE DeFi account carries the combined bond across every node, not this node's.
+            // With no per-node amount the ceiling can't be derived, so it's zeroed to block the
+            // form rather than letting it draw against another node's bond.
             defiType = DeFiNavActions.UNBOND
             bondedAmount = null
             val runeAccount = thorAccount(Coins.ThorChain.RUNE)
@@ -197,7 +200,8 @@ internal class AccountsLoaderTest {
             loader.load(VAULT_ID)
             advanceUntilIdle()
 
-            assertEquals(listOf(runeAccount), loadedAccounts)
+            val published = loadedAccounts.single()
+            assertEquals(BigInteger.ZERO, published.tokenValue?.value)
         }
 
     @Test
