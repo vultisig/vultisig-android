@@ -74,7 +74,7 @@ internal fun SolanaStakingPositionsScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SolanaStakingPositionsContent(
+internal fun SolanaStakingPositionsContent(
     state: SolanaStakingPositionsUiState,
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
@@ -121,7 +121,7 @@ private fun SolanaStakingHeader(totalFiat: String, isBalanceVisible: Boolean) {
         Text(
             text = stringResource(R.string.solana_staking_total_staked),
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
         )
         UiSpacer(size = 4.dp)
         Text(
@@ -162,7 +162,7 @@ private fun SolanaStakePositionCard(row: SolanaStakePositionRow, isBalanceVisibl
                 Text(
                     text = row.stateLabel.asString(),
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                 )
                 row.apyDisplay?.let {
                     Text(
@@ -184,7 +184,7 @@ private fun SolanaStakePositionCard(row: SolanaStakePositionRow, isBalanceVisibl
             Text(
                 text = if (isBalanceVisible) row.stakedFiatDisplay else HIDE_BALANCE_CHARS,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
             )
         }
     }
@@ -213,7 +213,7 @@ private fun CenteredMessage(message: String, isError: Boolean = false) {
             text = message,
             textAlign = TextAlign.Center,
             style = Theme.brockmann.body.m.medium,
-            color = if (isError) Theme.v2.colors.alerts.error else Theme.v2.colors.text.extraLight,
+            color = if (isError) Theme.v2.colors.alerts.error else Theme.v2.colors.text.tertiary,
         )
     }
 }

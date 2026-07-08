@@ -214,6 +214,8 @@ class PreviewActivity : ComponentActivity() {
                     "swap_advanced_external_recipient" -> AdvancedExternalRecipientPreview()
                     "import_seedphrase" -> ImportSeedphrasePreview()
                     "defi_account_list" -> DeFiAccountListPreview()
+                    "solana_staking_positions" -> SolanaStakingPositionsLoadedPreview()
+                    "solana_staking_positions_empty" -> SolanaStakingPositionsEmptyPreview()
                     "share_qr_keysign" -> ShareQrKeysignPreview()
                     "share_qr_keysign_swap" -> ShareQrKeysignSwapPreview()
                     "share_qr_keygen" -> ShareQrKeygenPreview()
@@ -2279,6 +2281,85 @@ private fun CosmosStakingPositionsEmptyPreview() {
 /**
  * Populated state — one active delegation with rewards, so the Claim button + a position card show.
  */
+private fun solanaStakingPreviewRow(
+    stakePubkey: String,
+    validatorName: String,
+    staked: String,
+    fiat: String,
+    stateLabel: String,
+    apy: String?,
+    canDeactivate: Boolean,
+    canWithdraw: Boolean,
+) =
+    com.vultisig.wallet.ui.models.solanastaking.SolanaStakePositionRow(
+        stakePubkey = stakePubkey,
+        validatorName = validatorName,
+        validatorLogoUrl = null,
+        votePubkey = null,
+        stakedDisplay = "$staked SOL",
+        stakedFiatDisplay = fiat,
+        stateLabel = com.vultisig.wallet.ui.utils.UiText.DynamicString(stateLabel),
+        apyDisplay = apy,
+        canDeactivate = canDeactivate,
+        canWithdraw = canWithdraw,
+    )
+
+@Composable
+private fun SolanaStakingPositionsLoadedPreview() {
+    com.vultisig.wallet.ui.screens.v2.defi.solana.SolanaStakingPositionsContent(
+        state =
+            com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState.Success(
+                totalStakedFiatDisplay = "$1,284.55",
+                positions =
+                    listOf(
+                        solanaStakingPreviewRow(
+                            stakePubkey = "6nJq...aWWM",
+                            validatorName = "Everstake",
+                            staked = "8.5",
+                            fiat = "$1,190.00",
+                            stateLabel = "Active",
+                            apy = "7.12%",
+                            canDeactivate = true,
+                            canWithdraw = false,
+                        ),
+                        solanaStakingPreviewRow(
+                            stakePubkey = "9WzD...R2gH",
+                            validatorName = "Coinbase",
+                            staked = "0.5",
+                            fiat = "$70.00",
+                            stateLabel = "Activating",
+                            apy = "6.80%",
+                            canDeactivate = true,
+                            canWithdraw = false,
+                        ),
+                        solanaStakingPreviewRow(
+                            stakePubkey = "3xM8...gHR2",
+                            validatorName = "5tCa…9kPq",
+                            staked = "0.17",
+                            fiat = "$24.55",
+                            stateLabel = "Inactive",
+                            apy = null,
+                            canDeactivate = false,
+                            canWithdraw = true,
+                        ),
+                    ),
+                isBalanceVisible = true,
+            )
+    )
+}
+
+@Composable
+private fun SolanaStakingPositionsEmptyPreview() {
+    com.vultisig.wallet.ui.screens.v2.defi.solana.SolanaStakingPositionsContent(
+        state =
+            com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState.Success(
+                totalStakedFiatDisplay = "$0.00",
+                positions = emptyList(),
+                isBalanceVisible = true,
+            )
+    )
+}
+
 @Composable
 private fun CosmosStakingPositionsWithDelegationPreview() {
     CosmosStakingPositionsPreviewHost(
