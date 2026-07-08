@@ -160,7 +160,7 @@ constructor(
         Timber.tag("solanaApiImp").d(responseContent)
         val rpcResp = response.bodyOrThrow<RecentBlockHashResponseJson>()
         if (rpcResp.error != null) {
-            error("getRecentBlockHash RPC error: ${rpcResp.error}")
+            error("Solana RPC error: ${rpcResp.error}")
         }
         return rpcResp.result?.value?.blockHash ?: error("getRecentBlockHash error")
     }
