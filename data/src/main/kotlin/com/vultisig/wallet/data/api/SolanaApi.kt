@@ -173,10 +173,12 @@ constructor(
         Timber.tag("solanaApiImp").d(responseContent)
         val rpcResp = response.bodyOrThrow<RecentBlockHashResponseJson>()
         if (rpcResp.error != null) {
-            Timber.tag("solanaApiImp").d("get recent blockhash  error: ${rpcResp.error}")
+            Timber.tag("solanaApiImp")
+                .d("getLatestBlockhash(%s) rpc error: %s", commitment, rpcResp.error)
             return ""
         }
-        return rpcResp.result?.value?.blockHash ?: error("getRecentBlockHash error")
+        return rpcResp.result?.value?.blockHash
+            ?: error("getLatestBlockhash($commitment) returned no result")
     }
 
     override suspend fun getMedianPriorityFee(accounts: List<String>): BigInteger {
