@@ -619,6 +619,9 @@ sealed interface ChainDashboardRoute {
 
     @Serializable data class PositionTon(val vaultId: String) : ChainDashboardRoute
 
+    /** Solana native-staking positions — one row per stake account. */
+    @Serializable data class PositionSolana(val vaultId: String) : ChainDashboardRoute
+
     /**
      * LUNA / LUNC staking positions. Carries `chainId` because both Terra chains share the same
      * positions screen (separate validator sets, identical UI).

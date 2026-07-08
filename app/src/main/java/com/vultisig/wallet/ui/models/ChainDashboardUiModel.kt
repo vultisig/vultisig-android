@@ -87,6 +87,11 @@ constructor(
                 chainId = Chain.Ton.id
             }
 
+            is ChainDashboardRoute.PositionSolana -> {
+                vaultId = args.route.vaultId
+                chainId = Chain.Solana.id
+            }
+
             is ChainDashboardRoute.PositionCosmosStaking -> {
                 vaultId = args.route.vaultId
                 chainId = args.route.chainId
@@ -109,6 +114,7 @@ constructor(
                         Chain.MayaChain.id,
                         Chain.Tron.id,
                         Chain.Ton.id,
+                        Chain.Solana.id,
                         Chain.Terra.id,
                         Chain.TerraClassic.id,
                         Chain.Qbtc.id,
@@ -148,6 +154,8 @@ constructor(
                                     ChainDashboardRoute.PositionMaya(vaultId = vaultId)
                                 Chain.Tron.id -> ChainDashboardRoute.PositionTron(vaultId = vaultId)
                                 Chain.Ton.id -> ChainDashboardRoute.PositionTon(vaultId = vaultId)
+                                Chain.Solana.id ->
+                                    ChainDashboardRoute.PositionSolana(vaultId = vaultId)
                                 Chain.Terra.id,
                                 Chain.TerraClassic.id,
                                 Chain.Qbtc.id ->
