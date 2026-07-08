@@ -258,6 +258,12 @@
     <string name="before_reshare_backups_body">Cualquier archivo .vult existente quedará invalidado. Tendrás que crear nuevas copias de seguridad después de recompartir.</string>
     <string name="before_reshare_cosigners_title">Todos los cofirmantes deben estar en línea</string>
     <string name="before_reshare_cosigners_body">Cada dispositivo actual de tu bóveda debe participar en la sesión de recompartir.</string>
+    <string name="reshare_success_title">Bóveda recompartida</string>
+    <string name="reshare_success_title_highlight">Correctamente.</string>
+    <string name="reshare_backup_each_device_body">Esta es solo 1 copia de seguridad de tu bóveda, repite este proceso para los demás dispositivos.</string>
+    <string name="reshare_backup_store_separately_body">Guarda cada copia de seguridad en un lugar diferente. Si una se ve comprometida, tus fondos permanecen seguros.</string>
+    <string name="reshare_backup_old_wont_work_title">Las copias de seguridad antiguas no funcionarán</string>
+    <string name="reshare_backup_old_wont_work_body">No se pueden usar las copias de seguridad de configuraciones anteriores de la bóveda. Solo son válidas las copias de seguridad creadas durante esta configuración.</string>
     <string name="reshare_start_screen_start_reshare">Empezar a compartir</string>
     <string name="threshold_error">Umbral no alcanzado\n Faltan suficientes dispositivos iniciales</string>
     <string name="add_folder_folder_name_title">Nombre de la carpeta</string>

@@ -258,6 +258,12 @@
     <string name="before_reshare_backups_body">Alle vorhandenen .vult-Dateien werden ungültig. Sie müssen nach dem erneuten Teilen neue Backups erstellen.</string>
     <string name="before_reshare_cosigners_title">Alle Mitunterzeichner müssen online sein</string>
     <string name="before_reshare_cosigners_body">Jedes aktuelle Gerät in Ihrem Tresor muss an der Reshare-Sitzung teilnehmen.</string>
+    <string name="reshare_success_title">Tresor erneut geteilt</string>
+    <string name="reshare_success_title_highlight">Erfolgreich</string>
+    <string name="reshare_backup_each_device_body">Dies ist nur 1 Backup Ihres Tresors. Wiederholen Sie diesen Vorgang für die anderen Geräte.</string>
+    <string name="reshare_backup_store_separately_body">Bewahren Sie jedes Backup an einem anderen Ort auf. Wenn eines kompromittiert wird, bleiben Ihre Gelder sicher.</string>
+    <string name="reshare_backup_old_wont_work_title">Alte Backups funktionieren nicht</string>
+    <string name="reshare_backup_old_wont_work_body">Backups aus früheren Tresor-Einrichtungen können nicht verwendet werden. Nur während dieser Einrichtung erstellte Backups sind gültig.</string>
     <string name="reshare_start_screen_start_reshare">Neu teilen starten</string>
     <string name="threshold_error">Schwellenwert nicht erreicht.\n Es fehlen genügend Anfangsgeräte.</string>
     <string name="add_folder_folder_name_title">Ordnername</string>

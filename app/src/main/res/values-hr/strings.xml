@@ -258,6 +258,12 @@
     <string name="before_reshare_backups_body">Sve postojeće .vult datoteke postaju nevažeće. Nakon ponovnog dijeljenja morat ćete izraditi nove sigurnosne kopije.</string>
     <string name="before_reshare_cosigners_title">Svi supotpisnici moraju biti na mreži</string>
     <string name="before_reshare_cosigners_body">Svaki trenutni uređaj u vašem trezoru mora sudjelovati u sesiji ponovnog dijeljenja.</string>
+    <string name="reshare_success_title">Trezor ponovno podijeljen</string>
+    <string name="reshare_success_title_highlight">uspješno</string>
+    <string name="reshare_backup_each_device_body">Ovo je samo 1 sigurnosna kopija vašeg trezora, ponovite ovaj postupak za ostale uređaje.</string>
+    <string name="reshare_backup_store_separately_body">Čuvajte svaku sigurnosnu kopiju na različitom mjestu. Ako je jedna ugrožena, vaša sredstva ostaju sigurna.</string>
+    <string name="reshare_backup_old_wont_work_title">Stare sigurnosne kopije neće raditi</string>
+    <string name="reshare_backup_old_wont_work_body">Sigurnosne kopije iz prethodnih postavki trezora ne mogu se koristiti. Valjane su samo sigurnosne kopije izrađene tijekom ovog postavljanja.</string>
     <string name="reshare_start_screen_start_reshare">Počnite ponovno dijeliti</string>
     <string name="threshold_error">Prag nije dosegnut Nedostaje dovoljno početnih uređaja</string>
     <string name="add_folder_folder_name_title">Naziv mape</string>

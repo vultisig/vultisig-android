@@ -469,6 +469,12 @@
     <string name="before_reshare_backups_body">所有现有的 .vult 文件将失效。重新分享后，您需要创建新的备份。</string>
     <string name="before_reshare_cosigners_title">所有共同签名者必须在线</string>
     <string name="before_reshare_cosigners_body">您保险库中当前的每台设备都需要参与重新分享会话。</string>
+    <string name="reshare_success_title">保险库已重新分享</string>
+    <string name="reshare_success_title_highlight">成功</string>
+    <string name="reshare_backup_each_device_body">这只是您保险库的 1 个备份，请在其他设备上重复此过程。</string>
+    <string name="reshare_backup_store_separately_body">将每个备份保存在不同的地方。如果其中一个被泄露，您的资金仍然安全。</string>
+    <string name="reshare_backup_old_wont_work_title">旧备份将无法使用</string>
+    <string name="reshare_backup_old_wont_work_body">无法使用先前保险库设置中的备份。只有在本次设置期间创建的备份才有效。</string>
     <string name="reshare_start_screen_start_reshare">开始重新分享</string>
 
     <!-- Threshold Error -->

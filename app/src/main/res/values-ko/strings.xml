@@ -341,6 +341,12 @@
     <string name="before_reshare_backups_body">기존 .vult 파일은 모두 무효화됩니다. 재공유 후에는 새 백업을 생성해야 합니다.</string>
     <string name="before_reshare_cosigners_title">모든 공동 서명자가 온라인 상태여야 합니다</string>
     <string name="before_reshare_cosigners_body">볼트의 현재 모든 기기가 재공유 세션에 참여해야 합니다.</string>
+    <string name="reshare_success_title">볼트가</string>
+    <string name="reshare_success_title_highlight">성공적으로 재공유되었습니다</string>
+    <string name="reshare_backup_each_device_body">이것은 볼트의 백업 1개일 뿐입니다. 다른 기기에서도 이 과정을 반복하세요.</string>
+    <string name="reshare_backup_store_separately_body">각 백업을 서로 다른 장소에 보관하세요. 하나가 유출되더라도 자금은 안전하게 유지됩니다.</string>
+    <string name="reshare_backup_old_wont_work_title">이전 백업은 작동하지 않습니다</string>
+    <string name="reshare_backup_old_wont_work_body">이전 볼트 설정에서 만든 백업은 사용할 수 없습니다. 이번 설정 중에 생성된 백업만 유효합니다.</string>
     <string name="reshare_start_screen_start_reshare">재공유 시작</string>
     <string name="threshold_error">임계값에 도달하지 못했습니다\n초기 기기가 충분하지 않습니다</string>
     <string name="add_folder_folder_name_title">폴더 이름</string>

@@ -257,6 +257,12 @@
     <string name="before_reshare_backups_body">Alle bestaande .vult-bestanden worden ongeldig. U moet na het opnieuw delen nieuwe back-ups maken.</string>
     <string name="before_reshare_cosigners_title">Alle medeondertekenaars moeten online zijn</string>
     <string name="before_reshare_cosigners_body">Elk huidig apparaat in uw kluis moet deelnemen aan de reshare-sessie.</string>
+    <string name="reshare_success_title">Kluis opnieuw gedeeld</string>
+    <string name="reshare_success_title_highlight">Succesvol</string>
+    <string name="reshare_backup_each_device_body">Dit is slechts 1 back-up van uw kluis, herhaal dit proces voor de andere apparaten.</string>
+    <string name="reshare_backup_store_separately_body">Bewaar elke back-up op een andere plek. Als er één wordt gecompromitteerd, blijven uw fondsen veilig.</string>
+    <string name="reshare_backup_old_wont_work_title">Oude back-ups werken niet</string>
+    <string name="reshare_backup_old_wont_work_body">Back-ups van eerdere kluisconfiguraties kunnen niet worden gebruikt. Alleen back-ups die tijdens deze configuratie zijn gemaakt, zijn geldig.</string>
     <string name="reshare_start_screen_start_reshare">Start opnieuw delen</string>
     <string name="threshold_error">Drempelwaarde niet bereikt\nEr ontbreken voldoende initiële apparaten</string>
     <string name="add_folder_folder_name_title">Mapnaam</string>

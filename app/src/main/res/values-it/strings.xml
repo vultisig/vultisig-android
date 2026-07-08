@@ -258,6 +258,12 @@
     <string name="before_reshare_backups_body">Tutti i file .vult esistenti diventano non validi. Dovrai creare nuovi backup dopo la ricondivisione.</string>
     <string name="before_reshare_cosigners_title">Tutti i co-firmatari devono essere online</string>
     <string name="before_reshare_cosigners_body">Ogni dispositivo attuale nel tuo caveau deve partecipare alla sessione di ricondivisione.</string>
+    <string name="reshare_success_title">Vault ricondiviso</string>
+    <string name="reshare_success_title_highlight">con successo</string>
+    <string name="reshare_backup_each_device_body">Questo è solo 1 backup del tuo vault, ripeti questo processo per gli altri dispositivi.</string>
+    <string name="reshare_backup_store_separately_body">Conserva ogni backup in un luogo diverso. Se uno viene compromesso, i tuoi fondi restano al sicuro.</string>
+    <string name="reshare_backup_old_wont_work_title">I vecchi backup non funzioneranno</string>
+    <string name="reshare_backup_old_wont_work_body">I backup delle configurazioni precedenti del vault non possono essere utilizzati. Sono validi solo i backup creati durante questa configurazione.</string>
     <string name="reshare_start_screen_start_reshare">Inizia la condivisione</string>
     <string name="threshold_error">Soglia non raggiunta Mancano \n abbastanza dispositivi iniziali</string>
     <string name="add_folder_folder_name_title">Nome cartella</string>

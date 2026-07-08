@@ -350,6 +350,12 @@
     <string name="before_reshare_backups_body">Any existing .vult files become invalid. You\'ll need to create fresh backups after resharing.</string>
     <string name="before_reshare_cosigners_title">All co-signers must be online</string>
     <string name="before_reshare_cosigners_body">Every current device in your vault needs to participate in the reshare session.</string>
+    <string name="reshare_success_title">Vault reshared</string>
+    <string name="reshare_success_title_highlight">successfully</string>
+    <string name="reshare_backup_each_device_body">This is only 1 backup of your vault, repeat this process for the other devices.</string>
+    <string name="reshare_backup_store_separately_body">Keep each backup in a different place. If one is compromised, your funds stay safe.</string>
+    <string name="reshare_backup_old_wont_work_title">Old backups won\'t work</string>
+    <string name="reshare_backup_old_wont_work_body">Backups from previous vault setups can\'t be used. Only backups created during this setup are valid.</string>
     <string name="threshold_error">Threshold not reached\nMissing enough initial devices</string>
     <string name="add_folder_folder_name_title">Folder Name</string>
 

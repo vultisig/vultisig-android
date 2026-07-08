@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -14,6 +15,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 internal sealed interface ChooseDeviceCountUiEvent {
     data object Back : ChooseDeviceCountUiEvent
@@ -54,19 +56,23 @@ constructor(
     }
 
     private fun next() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             val count = deviceCount.value
             when (args.tssAction) {
                 // Reshare reuses this picker but keeps the existing vault: skip the new-vault
                 // name/email/password steps and hand the current vault straight to peer discovery.
                 TssAction.ReShare -> {
-                    val vaultId = args.vaultId ?: error("Reshare requires a vaultId")
-                    val vault =
-                        vaultRepository.get(vaultId) ?: error("Vault $vaultId does not exist")
+                    val vaultId = args.vaultId
+                    val vault = vaultId?.let { vaultRepository.get(it) }
+                    if (vault == null) {
+                        Timber.e("Reshare device-count step reached without a valid vault")
+                        navigator.navigate(Destination.Back)
+                        return@safeLaunch
+                    }
                     navigator.route(
                         Route.Keygen.PeerDiscovery(
                             action = TssAction.ReShare,
-                            vaultId = vaultId,
+                            vaultId = vault.id,
                             vaultName = vault.name,
                             deviceCount = count,
                         )

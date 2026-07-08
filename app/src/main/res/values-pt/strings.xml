@@ -258,6 +258,12 @@
     <string name="before_reshare_backups_body">Todos os ficheiros .vult existentes tornam-se inválidos. Terá de criar novos backups após partilhar novamente.</string>
     <string name="before_reshare_cosigners_title">Todos os cossignatários devem estar online</string>
     <string name="before_reshare_cosigners_body">Todos os dispositivos atuais no seu cofre precisam de participar na sessão de partilha.</string>
+    <string name="reshare_success_title">Cofre partilhado novamente</string>
+    <string name="reshare_success_title_highlight">Com sucesso</string>
+    <string name="reshare_backup_each_device_body">Este é apenas 1 backup do seu cofre, repita este processo para os outros dispositivos.</string>
+    <string name="reshare_backup_store_separately_body">Guarde cada backup num local diferente. Se um for comprometido, os seus fundos permanecem seguros.</string>
+    <string name="reshare_backup_old_wont_work_title">Os backups antigos não funcionarão</string>
+    <string name="reshare_backup_old_wont_work_body">Os backups de configurações anteriores do cofre não podem ser usados. Apenas os backups criados durante esta configuração são válidos.</string>
     <string name="reshare_start_screen_start_reshare">Iniciar nova partilha</string>
     <string name="threshold_error">Limite não atingido\n Faltam dispositivos iniciais suficientes</string>
     <string name="add_folder_folder_name_title">Nome da pasta</string>
