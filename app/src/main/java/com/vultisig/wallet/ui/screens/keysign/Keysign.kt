@@ -7,8 +7,12 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -54,6 +58,13 @@ import timber.log.Timber
 private const val RIVE_PROGRESS_PROPERTY = "progessPercentage" // typo in riv_keysign.riv
 private const val RIVE_TO_TOKEN_IMAGE_PROPERTY = "toToken"
 
+// Coarse phase keys for the top-level AnimatedContent. All in-progress signing sub-states share the
+// "progress" key so the Rive progress animation keeps running instead of restarting on each tick;
+// crossing into "finished" or "error" is what triggers the fade transition.
+private const val KEYSIGN_PHASE_PROGRESS = "progress"
+private const val KEYSIGN_PHASE_FINISHED = "finished"
+private const val KEYSIGN_PHASE_ERROR = "error"
+
 // The toToken logo only occupies a small slot in the animation, so cap the rasterized size.
 // Rive decodes the bytes we hand it via ImageDecoder.decodeToBitmap, which copies the image into
 // an IntArray (width * height ints) on the Java heap. A drawable with large/abnormal intrinsic
@@ -89,73 +100,97 @@ internal fun KeysignView(
         if (state.isInProgress) {
             KeepScreenOn()
         }
-        when (state) {
-            is KeysignState.KeysignFinished -> {
-                when (transactionTypeUiModel) {
-                    is TransactionTypeUiModel.Swap -> {
-                        var isTransactionDetailVisible by remember { mutableStateOf(false) }
-                        SwapTransactionOverviewScreen(
-                            showToolbar = showToolbar,
-                            transactionHash = txHash,
-                            approveTransactionHash = approveTransactionHash,
-                            transactionLink = transactionLink,
-                            transactionStatus = state.transactionStatus,
-                            approveTransactionLink = approveTransactionLink,
-                            onComplete = onComplete,
-                            progressLink = progressLink,
-                            onBack = onBack,
-                            transactionTypeUiModel = transactionTypeUiModel.swapTransactionUiModel,
-                            isTransactionDetailVisible = isTransactionDetailVisible,
-                            onTransactionDetailVisibleChange = { isTransactionDetailVisible = it },
-                            dappMetadata = dappMetadata,
-                        )
-                    }
-                    is TransactionTypeUiModel.Deposit,
-                    is TransactionTypeUiModel.Send -> {
-                        var isTransactionDetailVisible by remember { mutableStateOf(false) }
-                        SendTxOverviewScreen(
-                            transactionHash = txHash,
-                            transactionLink = transactionLink,
-                            onComplete = onComplete,
-                            onBack = onBack,
-                            transactionStatus = state.transactionStatus,
-                            tx = transactionTypeUiModel.toUiTransactionInfo(),
-                            showToolbar = showToolbar,
-                            onAddToAddressBook = onAddToAddressBook,
-                            showSaveToAddressBook = showSaveToAddressBook,
-                            isTransactionDetailVisible = isTransactionDetailVisible,
-                            onTransactionDetailVisibleChange = { isTransactionDetailVisible = it },
-                            dappMetadata = dappMetadata,
-                        )
-                    }
-                    else -> {
+        AnimatedContent(
+            targetState = state,
+            // Only animate when crossing between the coarse phases (in progress ↔ finished ↔
+            // error). Signing sub-states map to the same "progress" key so the Rive progress
+            // animation stays mounted and keeps running instead of restarting on each tick.
+            contentKey = { current ->
+                when (current) {
+                    is KeysignState.KeysignFinished -> KEYSIGN_PHASE_FINISHED
+                    is KeysignState.Error -> KEYSIGN_PHASE_ERROR
+                    else -> KEYSIGN_PHASE_PROGRESS
+                }
+            },
+            transitionSpec = {
+                fadeIn(animationSpec = tween(durationMillis = 220)) togetherWith
+                    fadeOut(animationSpec = tween(durationMillis = 150))
+            },
+            label = "keysign_phase",
+        ) { targetState ->
+            when (targetState) {
+                is KeysignState.KeysignFinished -> {
+                    when (transactionTypeUiModel) {
+                        is TransactionTypeUiModel.Swap -> {
+                            var isTransactionDetailVisible by remember { mutableStateOf(false) }
+                            SwapTransactionOverviewScreen(
+                                showToolbar = showToolbar,
+                                transactionHash = txHash,
+                                approveTransactionHash = approveTransactionHash,
+                                transactionLink = transactionLink,
+                                transactionStatus = targetState.transactionStatus,
+                                approveTransactionLink = approveTransactionLink,
+                                onComplete = onComplete,
+                                progressLink = progressLink,
+                                onBack = onBack,
+                                transactionTypeUiModel =
+                                    transactionTypeUiModel.swapTransactionUiModel,
+                                isTransactionDetailVisible = isTransactionDetailVisible,
+                                onTransactionDetailVisibleChange = {
+                                    isTransactionDetailVisible = it
+                                },
+                                dappMetadata = dappMetadata,
+                            )
+                        }
+                        is TransactionTypeUiModel.Deposit,
+                        is TransactionTypeUiModel.Send -> {
+                            var isTransactionDetailVisible by remember { mutableStateOf(false) }
+                            SendTxOverviewScreen(
+                                transactionHash = txHash,
+                                transactionLink = transactionLink,
+                                onComplete = onComplete,
+                                onBack = onBack,
+                                transactionStatus = targetState.transactionStatus,
+                                tx = transactionTypeUiModel.toUiTransactionInfo(),
+                                showToolbar = showToolbar,
+                                onAddToAddressBook = onAddToAddressBook,
+                                showSaveToAddressBook = showSaveToAddressBook,
+                                isTransactionDetailVisible = isTransactionDetailVisible,
+                                onTransactionDetailVisibleChange = {
+                                    isTransactionDetailVisible = it
+                                },
+                                dappMetadata = dappMetadata,
+                            )
+                        }
+                        else -> {
 
-                        val uriHandler = VsUriHandler()
-                        TransactionDoneView(
-                            transactionHash = txHash,
-                            approveTransactionHash = approveTransactionHash,
-                            transactionLink = transactionLink,
-                            approveTransactionLink = approveTransactionLink,
-                            onComplete = onComplete,
-                            onBack = onBack,
-                            transactionTypeUiModel = transactionTypeUiModel,
-                            showToolbar = showToolbar,
-                            onUriClick = uriHandler::openUri,
-                        )
+                            val uriHandler = VsUriHandler()
+                            TransactionDoneView(
+                                transactionHash = txHash,
+                                approveTransactionHash = approveTransactionHash,
+                                transactionLink = transactionLink,
+                                approveTransactionLink = approveTransactionLink,
+                                onComplete = onComplete,
+                                onBack = onBack,
+                                transactionTypeUiModel = transactionTypeUiModel,
+                                showToolbar = showToolbar,
+                                onUriClick = uriHandler::openUri,
+                            )
+                        }
                     }
                 }
-            }
 
-            is KeysignState.Error -> {
-                KeysignErrorScreen(
-                    errorMessage = state.errorMessage,
-                    tryAgain = onBack,
-                    onBack = onBack.takeIf { hasBackClick },
-                )
-            }
+                is KeysignState.Error -> {
+                    KeysignErrorScreen(
+                        errorMessage = targetState.errorMessage,
+                        tryAgain = onBack,
+                        onBack = onBack.takeIf { hasBackClick },
+                    )
+                }
 
-            else -> {
-                KeysignRiveProgress(progress = state.progress, coinLogoRes = coinLogoRes)
+                else -> {
+                    KeysignRiveProgress(progress = targetState.progress, coinLogoRes = coinLogoRes)
+                }
             }
         }
     }

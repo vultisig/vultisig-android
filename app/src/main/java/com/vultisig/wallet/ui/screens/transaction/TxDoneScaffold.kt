@@ -2,7 +2,16 @@ package com.vultisig.wallet.ui.screens.transaction
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -105,7 +114,24 @@ internal fun TxDoneScaffold(
                 onTransactionDetailVisibleChange = onTransactionDetailVisibleChange,
             )
         },
-        bottomBar = { bottomBarContent() },
+        bottomBar = {
+            // Terminal actions (Track / Done / Try again) slide up and fade in as the result
+            // settles, rather than snapping into place with the rest of the scaffold.
+            val bottomBarVisibility = remember {
+                MutableTransitionState(false).apply { targetState = true }
+            }
+            AnimatedVisibility(
+                visibleState = bottomBarVisibility,
+                enter =
+                    fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 120)) +
+                        slideInVertically(
+                            animationSpec = tween(durationMillis = 300, delayMillis = 120),
+                            initialOffsetY = { it / 2 },
+                        ),
+            ) {
+                bottomBarContent()
+            }
+        },
     )
 }
 
@@ -138,54 +164,75 @@ private fun SuccessTransaction(
                 val isTransactionFailed = transactionStatus is TransactionStatus.Failed
                 val isTransactionRefunded = transactionStatus is TransactionStatus.Refunded
                 val isTransactionSigned = transactionStatus == TransactionStatus.Signed
+                val statusTitle =
+                    when {
+                        isTransactionPending -> stringResource(R.string.transaction_status_pending)
+                        isTransactionRefunded ->
+                            stringResource(R.string.transaction_status_refunded)
+                        isTransactionFailed -> stringResource(R.string.transaction_failed)
+                        // PSBT co-signing flow: wallet signed, dApp broadcasts. Avoid
+                        // "Transaction successful" copy that would imply the tx is
+                        // already on-chain.
+                        isTransactionSigned ->
+                            stringResource(R.string.transaction_status_signed_label)
+                        else ->
+                            successTitle
+                                ?: stringResource(R.string.tx_transaction_successful_screen_title)
+                    }
                 Box(
                     modifier = Modifier.fillMaxWidth().heightIn(min = 300.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (isTransactionPending) {
-                        TransactionPending()
-                    } else if (isTransactionFailed || isTransactionRefunded) {
-                        RiveAnimation(
-                            animation = R.raw.riv_transaction_error,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    } else {
-                        Image(
-                            painter = painterResource(R.drawable.img_tx_overview_bg),
-                            contentDescription = null,
-                            alignment = Alignment.Center,
-                            modifier = Modifier.padding(horizontal = 48.dp).fillMaxWidth(),
-                        )
+                    // The status hero swaps in place as broadcasted → pending → successful/failed
+                    // lands: the icon scales+fades between the loading, error, and success visuals
+                    // instead of hard-cutting.
+                    AnimatedContent(
+                        targetState = transactionStatus,
+                        contentKey = { status -> statusHeroKey(status) },
+                        transitionSpec = {
+                            (scaleIn(initialScale = 0.8f, animationSpec = tween(300)) +
+                                fadeIn(animationSpec = tween(300))) togetherWith
+                                fadeOut(animationSpec = tween(150))
+                        },
+                        modifier = Modifier.fillMaxWidth().align(Alignment.Center),
+                        label = "tx_status_icon",
+                    ) { status ->
+                        when {
+                            status == TransactionStatus.Pending -> TransactionPending()
+                            status is TransactionStatus.Failed ||
+                                status is TransactionStatus.Refunded ->
+                                RiveAnimation(
+                                    animation = R.raw.riv_transaction_error,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            else ->
+                                Image(
+                                    painter = painterResource(R.drawable.img_tx_overview_bg),
+                                    contentDescription = null,
+                                    alignment = Alignment.Center,
+                                    modifier = Modifier.padding(horizontal = 48.dp).fillMaxWidth(),
+                                )
+                        }
                     }
-                    Text(
-                        text =
-                            when {
-                                isTransactionPending ->
-                                    stringResource(R.string.transaction_status_pending)
-                                isTransactionRefunded ->
-                                    stringResource(R.string.transaction_status_refunded)
-                                isTransactionFailed -> stringResource(R.string.transaction_failed)
-                                // PSBT co-signing flow: wallet signed, dApp broadcasts. Avoid
-                                // "Transaction successful" copy that would imply the tx is
-                                // already on-chain.
-                                isTransactionSigned ->
-                                    stringResource(R.string.transaction_status_signed_label)
-                                else ->
-                                    successTitle
-                                        ?: stringResource(
-                                            R.string.tx_transaction_successful_screen_title
-                                        )
-                            },
-                        textAlign = TextAlign.Center,
-                        style =
-                            Theme.brockmann.body.l.medium.copy(
-                                brush = Theme.v2.colors.gradients.primary
-                            ),
+                    // Title cross-fades as the status label changes.
+                    Crossfade(
+                        targetState = statusTitle,
+                        animationSpec = tween(durationMillis = 220),
                         modifier =
                             Modifier.fillMaxWidth()
                                 .align(Alignment.BottomCenter)
                                 .padding(bottom = 48.dp),
-                    )
+                        label = "tx_status_title",
+                    ) { title ->
+                        Text(
+                            text = title,
+                            textAlign = TextAlign.Center,
+                            style =
+                                Theme.brockmann.body.l.medium.copy(
+                                    brush = Theme.v2.colors.gradients.primary
+                                ),
+                        )
+                    }
                 }
             }
         }
@@ -272,6 +319,16 @@ private fun SuccessTransaction(
 private fun TransactionPending(modifier: Modifier = Modifier) {
     RiveAnimation(animation = R.raw.riv_transaction_pending, modifier = modifier.fillMaxWidth())
 }
+
+// Groups statuses that share a hero visual so the AnimatedContent only animates on a real visual
+// change: 0 = loading (pending), 1 = error (failed/refunded), 2 = success (broadcasted/signed/
+// confirmed).
+private fun statusHeroKey(status: TransactionStatus): Int =
+    when {
+        status == TransactionStatus.Pending -> 0
+        status is TransactionStatus.Failed || status is TransactionStatus.Refunded -> 1
+        else -> 2
+    }
 
 @Composable
 internal fun TransactionStatusRow(status: TransactionStatus, modifier: Modifier = Modifier) {
