@@ -534,7 +534,10 @@ constructor(
             try {
                 val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
 
-                val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
+                // THORChain hosts several coins (RUNE, RUJI, TCY…); staking is held against the
+                // RUNE account, so match the ticker explicitly rather than the first chain coin.
+                val runeCoin =
+                    vault?.coins?.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
                 if (runeCoin == null) {
                     Timber.e("Vault does not have RUNE coin")
@@ -870,7 +873,11 @@ constructor(
             viewModelScope.launch {
                 try {
                     val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
-                    val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
+                    // THORChain hosts several coins (RUNE, RUJI, TCY…); LP positions are held
+                    // against the RUNE account, so match the ticker explicitly rather than the
+                    // first chain coin.
+                    val runeCoin =
+                        vault?.coins?.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
                     if (runeCoin == null) {
                         Timber.e("Vault does not have RUNE coin for LP positions")

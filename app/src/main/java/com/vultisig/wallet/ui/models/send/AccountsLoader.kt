@@ -260,11 +260,10 @@ internal class AccountsLoader(
     }
 
     // Unbond draws from the RUNE already bonded to the selected node, not the vault's combined
-    // bond.
-    // loadDeFiAddresses returns the *combined* bond across every bonded node
-    // (ThorchainDeFiBalanceService sums bonDetails), so override the RUNE account's balance with
-    // this node's bonded amount (threaded via bondedAmountProvider). This makes the MAX/percentage
-    // base and the submit-time balance check operate on the per-node bonded amount — matching
+    // bond. loadDeFiAddresses returns the RUNE account carrying the *combined* bond across every
+    // bonded node (ThorchainDeFiBalanceService sums bonDetails), so override its balance with this
+    // node's bonded amount (threaded via bondedAmountProvider). This makes the MAX/percentage base
+    // and the submit-time balance check operate on the per-node bonded amount — matching
     // iOS/Windows.
     private suspend fun loadUnbondAccount(vaultId: VaultId, generation: Long) {
         val bondedAmount = bondedAmountProvider()
