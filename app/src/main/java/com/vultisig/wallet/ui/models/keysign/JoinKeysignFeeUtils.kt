@@ -15,7 +15,9 @@ import timber.log.Timber
 /**
  * Polymorphic fee helper shared by the join-keysign deposit and send branches — mirrors iOS's
  * `BlockChainSpecific.fee` getter. Ethereum returns `maxFeePerGasWei * gasLimit`, THORChain returns
- * `blockChainSpecific.fee`, and every other chain returns [fallbackFeeAmount].
+ * `blockChainSpecific.fee`, Cardano returns the transmitted `byteFee`, and Cosmos returns the
+ * initiator-priced `blockChainSpecific.gas` (all three read straight from [BlockChainSpecific] and
+ * never touch the fee service); every remaining chain returns [fallbackFeeAmount].
  *
  * Swap callers must use [computeJoinKeysignSwapNetworkFee] instead — it bakes in the
  * initiator-aligned EVM swap gas limit and rejects subtypes the swap branch can't reach, so an
