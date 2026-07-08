@@ -424,7 +424,10 @@ constructor(
                 // Load selected positions, if disabled then show nothing
                 try {
                     val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
-                    val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
+                    // THORChain vaults hold several coins (RUNE, RUJI, TCY, …); match RUNE
+                    // explicitly so we bond against the RUNE address, not the first THORChain coin.
+                    val runeCoin =
+                        vault?.coins?.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
                     if (runeCoin == null) {
                         Timber.e("Vault does not have RUNE coin")
