@@ -157,7 +157,13 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
 
     /**
      * Checks whether the send would leave the source account below the existential deposit on
-     * reaping-sensitive chains (Polkadot, Ripple).
+     * Polkadot.
+     *
+     * XRP is intentionally excluded: [RippleApi.getBalance] already returns the owner-aware,
+     * reserve-net balance (base + owner-count increment reserves subtracted live from
+     * `server_state`), so the spendable amount can never drop the account below its reserve.
+     * Subtracting a second static 1 XRP here would double-count the reserve and fire a spurious
+     * warning — always on a MAX send, where the remainder is exactly the netted reserve.
      *
      * @return A [UiText] warning, or null if there is no reaping risk.
      */
@@ -182,9 +188,6 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
                     selectedToken.ticker == Coins.Polkadot.DOT.ticker ->
                     PolkadotHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
 
-                selectedChain == Chain.Ripple && selectedToken.ticker == Coins.Ripple.XRP.ticker ->
-                    RippleHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
-
                 else -> return null
             }
 
@@ -192,7 +195,6 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
 
         return when (selectedChain) {
             Chain.Polkadot -> UiText.StringResource(R.string.send_form_polka_reaping_warning)
-            Chain.Ripple -> UiText.StringResource(R.string.send_form_ripple_reaping_warning)
             else -> null
         }
     }
