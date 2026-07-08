@@ -112,7 +112,6 @@ constructor(
                     ?: error("SOL not in this vault")
             coin = solCoin
 
-            val currentEpoch = solanaStakingService.fetchEpochInfo()?.epoch
             val acct =
                 solanaStakingService.fetchStakeAccounts(solCoin.address).firstOrNull {
                     it.stakePubkey == route.stakePubkey
