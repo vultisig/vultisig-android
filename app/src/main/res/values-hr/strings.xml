@@ -918,6 +918,15 @@
     <string name="solana_staking_stake_cta">Stakiraj</string>
     <string name="solana_staking_unstake_cta">Poništi stake</string>
     <string name="solana_staking_withdraw_cta">Povuci</string>
+    <string name="solana_staking_move_cta">Premjesti</string>
+    <string name="solana_move_title">Premjesti stake</string>
+    <string name="solana_move_description">Solana nema izravno preusmjeravanje. Premještanje stakea odvija se u nekoliko koraka kroz epohe.</string>
+    <string name="solana_move_step_deactivate">Deaktiviraj trenutni stake</string>
+    <string name="solana_move_step_waiting">Pričekaj razdoblje hlađenja (~1 epoha)</string>
+    <string name="solana_move_step_waiting_at">Hlađenje — otključava se u epohi %1$s</string>
+    <string name="solana_move_step_withdraw">Povuci, zatim stakiraj kod novog validatora</string>
+    <string name="solana_move_waiting_cta">Hlađenje…</string>
+    <string name="solana_move_stake_to_new_cta">Stakiraj kod novog validatora</string>
     <string name="vault_backup_verifying_pin">Provjera koda, molimo pričekajte</string>
     <string name="select_vault_type_next">Sljedeće</string>
     <string name="select_vault_type_choose_setup">Odaberite Postavljanje</string>

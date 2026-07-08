@@ -915,6 +915,15 @@
     <string name="solana_staking_stake_cta">Staken</string>
     <string name="solana_staking_unstake_cta">Unstaken</string>
     <string name="solana_staking_withdraw_cta">Auszahlen</string>
+    <string name="solana_staking_move_cta">Verschieben</string>
+    <string name="solana_move_title">Stake verschieben</string>
+    <string name="solana_move_description">Solana hat keine direkte Neudelegierung. Das Verschieben von Stake erfolgt in mehreren Schritten über Epochen hinweg.</string>
+    <string name="solana_move_step_deactivate">Aktuellen Stake deaktivieren</string>
+    <string name="solana_move_step_waiting">Auf die Abklingzeit warten (~1 Epoche)</string>
+    <string name="solana_move_step_waiting_at">Abklingzeit — freigegeben in Epoche %1$s</string>
+    <string name="solana_move_step_withdraw">Auszahlen, dann beim neuen Validator staken</string>
+    <string name="solana_move_waiting_cta">Abklingzeit…</string>
+    <string name="solana_move_stake_to_new_cta">Bei neuem Validator staken</string>
     <string name="vault_backup_verifying_pin">Code wird überprüft, bitte warten</string>
     <string name="select_vault_type_next">Weiter</string>
     <string name="select_vault_type_choose_setup">Wähle „Einrichtung“</string>

@@ -513,6 +513,15 @@
     <string name="solana_staking_stake_cta">Stake</string>
     <string name="solana_staking_unstake_cta">Unstake</string>
     <string name="solana_staking_withdraw_cta">Withdraw</string>
+    <string name="solana_staking_move_cta">Move</string>
+    <string name="solana_move_title">Move stake</string>
+    <string name="solana_move_description">Solana has no direct redelegate. Moving stake takes a few steps across epochs.</string>
+    <string name="solana_move_step_deactivate">Deactivate the current stake</string>
+    <string name="solana_move_step_waiting">Wait for the cooldown (~1 epoch)</string>
+    <string name="solana_move_step_waiting_at">Cooling down — unlocks at epoch %1$s</string>
+    <string name="solana_move_step_withdraw">Withdraw, then stake to the new validator</string>
+    <string name="solana_move_waiting_cta">Cooling down…</string>
+    <string name="solana_move_stake_to_new_cta">Stake to a new validator</string>
     <string name="send_error_invalid_plan_fee">Invalid Plan Fee</string>
     <string name="send_error_same_address">The to address must be different from the from address</string>
     <string name="select_vault_type_secure">Secure</string>

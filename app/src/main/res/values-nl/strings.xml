@@ -910,6 +910,15 @@
     <string name="solana_staking_stake_cta">Staken</string>
     <string name="solana_staking_unstake_cta">Ontstaken</string>
     <string name="solana_staking_withdraw_cta">Opnemen</string>
+    <string name="solana_staking_move_cta">Verplaatsen</string>
+    <string name="solana_move_title">Stake verplaatsen</string>
+    <string name="solana_move_description">Solana heeft geen directe herdelegatie. Stake verplaatsen gaat in enkele stappen over epochs heen.</string>
+    <string name="solana_move_step_deactivate">Huidige stake deactiveren</string>
+    <string name="solana_move_step_waiting">Wacht op de afkoelperiode (~1 epoch)</string>
+    <string name="solana_move_step_waiting_at">Afkoelen — ontgrendelt in epoch %1$s</string>
+    <string name="solana_move_step_withdraw">Opnemen en daarna staken bij de nieuwe validator</string>
+    <string name="solana_move_waiting_cta">Afkoelen…</string>
+    <string name="solana_move_stake_to_new_cta">Staken bij een nieuwe validator</string>
     <string name="vault_backup_verifying_pin">Code verifiëren, even geduld a.u.b.</string>
     <string name="select_vault_type_next">Volgende</string>
     <string name="select_vault_type_choose_setup">Kies \'Instellen\'</string>

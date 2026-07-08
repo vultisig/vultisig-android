@@ -71,6 +71,7 @@ internal fun SolanaStakingPositionsScreen(
         onStake = viewModel::onStake,
         onDeactivate = viewModel::onDeactivate,
         onWithdraw = viewModel::onWithdraw,
+        onMove = viewModel::onMove,
     )
 
     if (state !is SolanaStakingPositionsUiState.Loading) {
@@ -87,6 +88,7 @@ internal fun SolanaStakingPositionsContent(
     onStake: () -> Unit = {},
     onDeactivate: (String) -> Unit = {},
     onWithdraw: (String) -> Unit = {},
+    onMove: (String) -> Unit = {},
 ) {
     Column(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
         PullToRefreshBox(
@@ -123,6 +125,7 @@ internal fun SolanaStakingPositionsContent(
                                         isBalanceVisible = state.isBalanceVisible,
                                         onDeactivate = { onDeactivate(row.stakePubkey) },
                                         onWithdraw = { onWithdraw(row.stakePubkey) },
+                                        onMove = { onMove(row.stakePubkey) },
                                     )
                                 }
                             }
@@ -163,6 +166,7 @@ private fun SolanaStakePositionCard(
     isBalanceVisible: Boolean,
     onDeactivate: () -> Unit,
     onWithdraw: () -> Unit,
+    onMove: () -> Unit,
 ) {
     Column(
         modifier =
@@ -228,6 +232,13 @@ private fun SolanaStakePositionCard(
                         variant = VsButtonVariant.Secondary,
                         size = VsButtonSize.Small,
                         onClick = onDeactivate,
+                        modifier = Modifier.weight(1f),
+                    )
+                    VsButton(
+                        label = stringResource(R.string.solana_staking_move_cta),
+                        variant = VsButtonVariant.Secondary,
+                        size = VsButtonSize.Small,
+                        onClick = onMove,
                         modifier = Modifier.weight(1f),
                     )
                 }

@@ -138,6 +138,14 @@ constructor(
         }
     }
 
+    /** Open the guided move-stake flow for a delegated stake account. */
+    fun onMove(stakePubkey: String) {
+        if (vaultId.isEmpty()) return
+        viewModelScope.safeLaunch(onError = { Timber.w(it, "open Solana move-stake failed") }) {
+            navigator.route(Route.SolanaMoveStake(vaultId = vaultId, stakePubkey = stakePubkey))
+        }
+    }
+
     /** Deactivate (unstake) a stake account — begins the ~1-epoch cooldown; carries no amount. */
     fun onDeactivate(stakePubkey: String) {
         val account = accountsByPubkey[stakePubkey] ?: return

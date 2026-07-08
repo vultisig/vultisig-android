@@ -1244,6 +1244,15 @@
     <string name="solana_staking_stake_cta">质押</string>
     <string name="solana_staking_unstake_cta">解除质押</string>
     <string name="solana_staking_withdraw_cta">提现</string>
+    <string name="solana_staking_move_cta">转移</string>
+    <string name="solana_move_title">转移质押</string>
+    <string name="solana_move_description">Solana 没有直接的重新委托。转移质押需要跨多个纪元的几个步骤。</string>
+    <string name="solana_move_step_deactivate">停用当前质押</string>
+    <string name="solana_move_step_waiting">等待冷却期（约 1 个纪元）</string>
+    <string name="solana_move_step_waiting_at">冷却中 — 将在纪元 %1$s 解锁</string>
+    <string name="solana_move_step_withdraw">提现，然后质押给新的验证者</string>
+    <string name="solana_move_waiting_cta">冷却中…</string>
+    <string name="solana_move_stake_to_new_cta">质押给新的验证者</string>
     <string name="vault_backup_verifying_pin">正在验证代码，请稍候</string>
     <string name="select_vault_type_next">下一步</string>
     <string name="select_vault_type_choose_setup">选择“设置”</string>

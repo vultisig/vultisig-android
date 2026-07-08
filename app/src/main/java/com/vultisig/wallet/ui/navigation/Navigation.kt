@@ -468,6 +468,13 @@ internal sealed class Route {
     @Serializable data class SolanaDelegate(val vaultId: String)
 
     /**
+     * Solana guided move-stake flow for a source stake account. Because Solana has no native
+     * mainnet redelegate, moving stake to another validator is a cross-epoch sequence (Deactivate →
+     * wait for cooldown → Withdraw → Delegate-to-B) resumed from the account's on-chain state.
+     */
+    @Serializable data class SolanaMoveStake(val vaultId: String, val stakePubkey: String)
+
+    /**
      * TON nominator-pool unstake confirmation (mirrors iOS `TonUnstakeTransactionScreen`).
      * Nominator pools support full withdrawal only, so there is no amount input — the screen
      * confirms the full-withdrawal message to [poolAddress]. [stakedDisplay] is shown for context.
