@@ -39,6 +39,16 @@ data class DepositTransaction(
     val cosmosStakingPayload:
         com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingPayload? =
         null,
+    /**
+     * Solana native-staking intent (delegate / deactivate / withdraw). When set, the keysign
+     * payload builder turns it into the byte-parity `SignSolana.rawTransactions` artefact via
+     * [com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingSignDataResolver] and routes
+     * signing through the raw-transaction path. Local-only — never relayed to the peer. Null for
+     * all non-Solana-staking deposit flows.
+     */
+    val solanaStakingPayload:
+        com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingPayload? =
+        null,
 )
 
 const val OPERATION_MINT = "Mint"
