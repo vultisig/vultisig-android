@@ -223,7 +223,7 @@ constructor(
             val vault = shareViewModel.vault ?: return
             _currentVault = vault
             val keysignPayload = shareViewModel.keysignPayload
-            val modifiedKeysignPayload = updateSolanaKeysignPayload(keysignPayload)
+            val modifiedKeysignPayload = updateSolanaKeysignPayload(keysignPayload, vault)
             _keysignPayload = modifiedKeysignPayload
             val customMessagePayload = shareViewModel.customMessagePayload
             this.customMessagePayload = customMessagePayload

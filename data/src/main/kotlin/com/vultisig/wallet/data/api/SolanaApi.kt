@@ -59,6 +59,15 @@ interface SolanaApi {
 
     suspend fun getRecentBlockHash(): String
 
+    /**
+     * Blockhash fetched at `finalized` commitment — guaranteed to be known to every broadcast node,
+     * unlike a `confirmed` blockhash which can still be unknown to a load-balanced RPC node at
+     * signing time, at the cost of ~13s of the blockhash's validity window. See
+     * [com.vultisig.wallet.ui.models.keysign.UpdateSolanaKeysignPayloadUseCase] for when this
+     * trade-off is worth it.
+     */
+    suspend fun getFinalizedBlockHash(): String
+
     suspend fun getMedianPriorityFee(accounts: List<String>): BigInteger
 
     suspend fun broadcastTransaction(tx: String): String?
@@ -143,16 +152,20 @@ constructor(
             BigInteger.ZERO
         }
 
-    override suspend fun getRecentBlockHash(): String {
+    override suspend fun getRecentBlockHash(): String =
+        // `confirmed` is the standard commitment for sending: it tracks the tip closely, whereas
+        // `finalized` lags ~32 slots (~13s) behind and burns that much of the ~60-90s blockhash
+        // validity window before the keysign ceremony even starts (issue #4863).
+        fetchBlockHash("confirmed")
+
+    override suspend fun getFinalizedBlockHash(): String = fetchBlockHash("finalized")
+
+    private suspend fun fetchBlockHash(commitment: String): String {
         val payload =
             RpcPayload(
                 jsonrpc = "2.0",
                 method = "getLatestBlockhash",
-                // `confirmed` is the standard commitment for sending: it tracks the tip closely,
-                // whereas `finalized` lags ~32 slots (~13s) behind and burns that much of the
-                // ~60-90s blockhash validity window before the keysign ceremony even starts
-                // (issue #4863).
-                params = buildJsonArray { addJsonObject { put("commitment", "confirmed") } },
+                params = buildJsonArray { addJsonObject { put("commitment", commitment) } },
                 id = 1,
             )
         val response = httpClient.post(rpcEndpoint) { setBody(payload) }

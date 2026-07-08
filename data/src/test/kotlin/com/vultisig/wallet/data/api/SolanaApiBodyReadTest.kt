@@ -74,6 +74,71 @@ class SolanaApiBodyReadTest {
         assertEquals("AbCdEfGhIjKlMnOpQrStUvWxYz12345678901234567", result)
     }
 
+    @Test
+    fun `getRecentBlockHash sends commitment confirmed`() = runTest {
+        val capture = MockHttpClient.RequestCapture()
+        val api =
+            SolanaApiImp(
+                json = json,
+                httpClient =
+                    MockHttpClient.capturingRequest(
+                        HttpStatusCode.OK,
+                        """{ "result": { "value": { "blockhash": "hash" } } }""",
+                        capture,
+                        json,
+                    ),
+                splTokenSerializer = SplTokenResponseJsonSerializerImpl(json),
+            )
+
+        api.getRecentBlockHash()
+
+        assertEquals(true, capture.lastBody.contains("\"commitment\":\"confirmed\""))
+    }
+
+    // ── getFinalizedBlockHash ────────────────────────────────────────────────────
+
+    @Test
+    fun `getFinalizedBlockHash returns blockhash string from RecentBlockHashResponseJson`() =
+        runTest {
+            val body =
+                """
+                {
+                  "result": {
+                    "value": {
+                      "blockhash": "FinalizedBlockHash12345678901234567890123"
+                    }
+                  }
+                }
+                """
+                    .trimIndent()
+            val api = newApi(body)
+
+            val result = api.getFinalizedBlockHash()
+
+            assertEquals("FinalizedBlockHash12345678901234567890123", result)
+        }
+
+    @Test
+    fun `getFinalizedBlockHash sends commitment finalized`() = runTest {
+        val capture = MockHttpClient.RequestCapture()
+        val api =
+            SolanaApiImp(
+                json = json,
+                httpClient =
+                    MockHttpClient.capturingRequest(
+                        HttpStatusCode.OK,
+                        """{ "result": { "value": { "blockhash": "hash" } } }""",
+                        capture,
+                        json,
+                    ),
+                splTokenSerializer = SplTokenResponseJsonSerializerImpl(json),
+            )
+
+        api.getFinalizedBlockHash()
+
+        assertEquals(true, capture.lastBody.contains("\"commitment\":\"finalized\""))
+    }
+
     // ── broadcastTransaction ────────────────────────────────────────────────────
 
     @Test
