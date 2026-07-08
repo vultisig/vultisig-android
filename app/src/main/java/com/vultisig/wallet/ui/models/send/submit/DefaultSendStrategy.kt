@@ -28,6 +28,7 @@ import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendFocusField
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.models.send.selectGasFeeForFeeEstimation
+import com.vultisig.wallet.ui.models.send.toPlainBigDecimalOrNull
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -132,7 +133,8 @@ internal class DefaultSendStrategy(
 
                     val selectedToken = selectedAccount.token
 
-                    val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
+                    val tokenAmount =
+                        tokenAmountFieldState.text.toString().toPlainBigDecimalOrNull()
                     if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_no_amount)

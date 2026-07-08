@@ -226,6 +226,37 @@ class ChainHelpersTest {
         }
     }
 
+    // The relayed dynamic gas limit (proto `CosmosSpecific.gas_limit`) lands in the signed
+    // `AuthInfo.Fee.gas_limit`, which every co-signer hashes into the SignDoc. The pre-image hash
+    // is
+    // therefore a faithful witness that `buildCosmosFee` honors it: a relayed limit that differs
+    // from
+    // the static per-chain limit must change the hash, while a relayed limit equal to the static
+    // one
+    // must reproduce the static-limit hash byte-for-byte (proving the field drives `fee.gas` rather
+    // than being ignored). Derives from real COSMOS fixture data so the coin address / pubkey pass
+    // WalletCore validation.
+    @Test
+    fun cosmosRelayedGasLimitHonoredInSignedBytes() {
+        val staticLimit = CosmosHelper.DEFAULT_COSMOS_GAS_LIMIT
+        val helper = CosmosHelper(CoinType.COSMOS, ATOM_DENOM, staticLimit)
+        val basePayload =
+            loadTransactionData(COSMOS_JSON_FILE).first().keysignPayload.toInternalKeySignPayload()
+        val baseCosmos = basePayload.blockChainSpecific as BlockChainSpecific.Cosmos
+
+        fun hashWith(gasLimit: BigInteger?) =
+            helper.getPreSignedImageHash(
+                basePayload.copy(blockChainSpecific = baseCosmos.copy(gasLimit = gasLimit))
+            )
+
+        val staticHash = hashWith(gasLimit = null)
+        val relayedHash = hashWith(gasLimit = BigInteger.valueOf(staticLimit + 123_456))
+        val relayedEqualToStaticHash = hashWith(gasLimit = BigInteger.valueOf(staticLimit))
+
+        assertNotEquals(staticHash, relayedHash)
+        assertEquals(staticHash, relayedEqualToStaticHash)
+    }
+
     @Test
     fun sendSolana() {
         val transactions: List<TransactionData> = loadTransactionData(SOLANA_JSON_FILE)
@@ -329,12 +360,49 @@ class ChainHelpersTest {
         transactions.forEach { transaction ->
             val payload = transaction.keysignPayload.toInternalKeySignPayload()
             val coin = payload.coin.coinType
-            val helper = TerraHelper(coin, "uluna", 300000L)
+            val helper =
+                TerraHelper(
+                    coin,
+                    "uluna",
+                    300000L,
+                    isTerraClassic = payload.coin.chain == Chain.TerraClassic,
+                )
 
             val preImageHashes = helper.getPreSignedImageHash(payload)
 
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
+    }
+
+    // Terra / Terra Classic bank sends route through TerraHelper (not CosmosHelper), so the relayed
+    // gas limit must be honored there too — otherwise an iOS/macOS-initiated send that relays a
+    // simulated `gas_limit` produces a SignDoc whose `fee.gas` (and, for Terra Classic,
+    // `fee.amount`)
+    // diverges from what Android signs, and the threshold signature never forms. This pins byte
+    // parity: a relayed Terra Classic limit ≠ static changes the pre-image hash; a relayed limit ==
+    // static reproduces the static-limit hash byte-for-byte.
+    @Test
+    fun terraClassicRelayedGasLimitHonoredInSignedBytes() {
+        val staticLimit = 300_000L
+        val basePayload =
+            loadTransactionData(TERRA_JSON_FILE)
+                .map { it.keysignPayload.toInternalKeySignPayload() }
+                .first { it.coin.chain == Chain.TerraClassic }
+        val baseCosmos = basePayload.blockChainSpecific as BlockChainSpecific.Cosmos
+        val helper =
+            TerraHelper(basePayload.coin.coinType, "uluna", staticLimit, isTerraClassic = true)
+
+        fun hashWith(gasLimit: BigInteger?) =
+            helper.getPreSignedImageHash(
+                basePayload.copy(blockChainSpecific = baseCosmos.copy(gasLimit = gasLimit))
+            )
+
+        val staticHash = hashWith(gasLimit = null)
+        val relayedHash = hashWith(gasLimit = BigInteger.valueOf(staticLimit + 123_456))
+        val relayedEqualToStaticHash = hashWith(gasLimit = BigInteger.valueOf(staticLimit))
+
+        assertNotEquals(staticHash, relayedHash)
+        assertEquals(staticHash, relayedEqualToStaticHash)
     }
 
     @Test

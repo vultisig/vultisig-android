@@ -193,6 +193,8 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                                 gas = BigInteger(it.gas.toString()),
                                 ibcDenomTraces = it.ibcDenomTraces,
                                 transactionType = it.transactionType,
+                                gasLimit =
+                                    it.gasLimit?.let { limit -> BigInteger(limit.toString()) },
                             )
                         }
 
