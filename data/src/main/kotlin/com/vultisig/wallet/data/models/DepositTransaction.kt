@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.models
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
+import vultisig.keysign.v1.SignSolana
 import vultisig.keysign.v1.WasmExecuteContractPayload
 
 data class DepositTransaction(
@@ -49,6 +50,14 @@ data class DepositTransaction(
     val solanaStakingPayload:
         com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingPayload? =
         null,
+    /**
+     * Pre-built byte-parity `SignSolana` artefact for a Solana native-staking op — the relayed
+     * unsigned transaction bytes both co-signing devices sign. Built once at delegate/deactivate/
+     * withdraw time via [BuildSolanaStakingKeysignPayloadUseCase] and forwarded to the keysign
+     * payload here (mirrors [signDirect] for Cosmos). Null for all non-Solana-staking deposit
+     * flows.
+     */
+    val signSolana: SignSolana? = null,
 )
 
 const val OPERATION_MINT = "Mint"

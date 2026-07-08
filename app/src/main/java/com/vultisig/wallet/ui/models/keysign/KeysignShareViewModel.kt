@@ -205,6 +205,7 @@ constructor(
                 libType = vault.libType,
                 wasmExecuteContractPayload = transaction.wasmExecuteContractPayload,
                 signDirect = transaction.signDirect,
+                signSolana = transaction.signSolana,
                 defiAction =
                     if (transaction.operation == OPERATION_CIRCLE_WITHDRAW) {
                         DeFiAction.CIRCLE_USDC_WITHDRAW
