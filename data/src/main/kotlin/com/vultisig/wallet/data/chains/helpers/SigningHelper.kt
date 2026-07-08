@@ -285,7 +285,6 @@ object SigningHelper {
                                     coinType = chain.coinType,
                                     denom = chain.feeUnit,
                                     gasLimit = CosmosHelper.getChainGasLimit(chain),
-                                    isTerraClassic = chain == Chain.TerraClassic,
                                 )
                                 .getPreSignedImageHash(payload)
                         }
@@ -500,7 +499,6 @@ object SigningHelper {
                             coinType = chain.coinType,
                             denom = chain.feeUnit,
                             gasLimit = CosmosHelper.getChainGasLimit(chain),
-                            isTerraClassic = chain == Chain.TerraClassic,
                         )
                         .getSignedTransaction(keysignPayload, signatures)
                 }
