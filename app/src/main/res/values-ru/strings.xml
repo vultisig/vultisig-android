@@ -899,6 +899,17 @@
     <string name="ton_unstake_title">Вывести %1$s из стейкинга</string>
     <string name="ton_staking_pool_address">Адрес пула</string>
     <string name="ton_unstake_full_withdrawal_notice">Пулы номинаторов поддерживают только полный вывод. Весь застейканный баланс будет возвращён.</string>
+    <!-- Solana native staking (DeFi tab) -->
+    <string name="solana_staking_error_sol_not_in_vault">SOL отсутствует в этом хранилище</string>
+    <string name="solana_staking_total_staked">Всего в стейкинге</string>
+    <string name="solana_staking_loading">Загрузка позиций стейкинга…</string>
+    <string name="solana_staking_no_positions">Нет позиций стейкинга</string>
+    <string name="solana_staking_apy_label">APY %1$s</string>
+    <string name="solana_staking_state_activating">Активация</string>
+    <string name="solana_staking_state_active">Активно</string>
+    <string name="solana_staking_state_deactivating">Деактивация</string>
+    <string name="solana_staking_state_inactive">Неактивно</string>
+    <string name="solana_staking_state_not_delegated">Не делегировано</string>
     <string name="vault_backup_verifying_pin">Подтверждение кода, пожалуйста, подождите.</string>
     <string name="select_vault_type_next">Далее</string>
     <string name="select_vault_type_choose_setup">Выберите конфигурацию</string>

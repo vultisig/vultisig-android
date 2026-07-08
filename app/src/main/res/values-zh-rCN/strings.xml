@@ -1225,6 +1225,17 @@
     <string name="ton_unstake_title">解除质押 %1$s</string>
     <string name="ton_staking_pool_address">质押池地址</string>
     <string name="ton_unstake_full_withdrawal_notice">提名池仅支持全额提取。您的全部质押余额将被返还。</string>
+    <!-- Solana native staking (DeFi tab) -->
+    <string name="solana_staking_error_sol_not_in_vault">此保险库中没有 SOL</string>
+    <string name="solana_staking_total_staked">质押总额</string>
+    <string name="solana_staking_loading">正在加载质押仓位…</string>
+    <string name="solana_staking_no_positions">暂无质押仓位</string>
+    <string name="solana_staking_apy_label">APY %1$s</string>
+    <string name="solana_staking_state_activating">激活中</string>
+    <string name="solana_staking_state_active">活跃</string>
+    <string name="solana_staking_state_deactivating">停用中</string>
+    <string name="solana_staking_state_inactive">未激活</string>
+    <string name="solana_staking_state_not_delegated">未委托</string>
     <string name="vault_backup_verifying_pin">正在验证代码，请稍候</string>
     <string name="select_vault_type_next">下一步</string>
     <string name="select_vault_type_choose_setup">选择“设置”</string>

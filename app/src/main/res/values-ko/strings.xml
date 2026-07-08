@@ -484,6 +484,17 @@
     <string name="ton_unstake_title">%1$s 언스테이킹</string>
     <string name="ton_staking_pool_address">풀 주소</string>
     <string name="ton_unstake_full_withdrawal_notice">노미네이터 풀은 전액 인출만 지원합니다. 스테이킹한 잔액 전체가 반환됩니다.</string>
+    <!-- Solana native staking (DeFi tab) -->
+    <string name="solana_staking_error_sol_not_in_vault">이 볼트에 SOL이 없습니다</string>
+    <string name="solana_staking_total_staked">총 스테이킹</string>
+    <string name="solana_staking_loading">스테이킹 포지션 불러오는 중…</string>
+    <string name="solana_staking_no_positions">스테이킹 포지션 없음</string>
+    <string name="solana_staking_apy_label">APY %1$s</string>
+    <string name="solana_staking_state_activating">활성화 중</string>
+    <string name="solana_staking_state_active">활성</string>
+    <string name="solana_staking_state_deactivating">비활성화 중</string>
+    <string name="solana_staking_state_inactive">비활성</string>
+    <string name="solana_staking_state_not_delegated">위임 안 됨</string>
     <string name="send_error_invalid_plan_fee">유효하지 않은 플랜 수수료</string>
     <string name="send_error_same_address">받는 주소는 보내는 주소와 달라야 합니다</string>
     <string name="select_vault_type_secure">보안</string>

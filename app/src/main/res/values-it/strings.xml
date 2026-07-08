@@ -894,6 +894,17 @@
     <string name="ton_unstake_title">Rimuovi lo stake di %1$s</string>
     <string name="ton_staking_pool_address">Indirizzo del pool</string>
     <string name="ton_unstake_full_withdrawal_notice">I pool di nominator supportano solo il prelievo completo. L\'intero saldo in staking verrà restituito.</string>
+    <!-- Solana native staking (DeFi tab) -->
+    <string name="solana_staking_error_sol_not_in_vault">SOL non è in questa cassaforte</string>
+    <string name="solana_staking_total_staked">Totale in staking</string>
+    <string name="solana_staking_loading">Caricamento posizioni di staking…</string>
+    <string name="solana_staking_no_positions">Nessuna posizione di staking</string>
+    <string name="solana_staking_apy_label">APY %1$s</string>
+    <string name="solana_staking_state_activating">In attivazione</string>
+    <string name="solana_staking_state_active">Attivo</string>
+    <string name="solana_staking_state_deactivating">In disattivazione</string>
+    <string name="solana_staking_state_inactive">Inattivo</string>
+    <string name="solana_staking_state_not_delegated">Non delegato</string>
     <string name="vault_backup_verifying_pin">Verifica del PIN in corso, attendere</string>
     <string name="select_vault_type_next">Avanti</string>
     <string name="select_vault_type_choose_setup">Scegli configurazione</string>

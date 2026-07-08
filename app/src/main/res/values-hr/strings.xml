@@ -899,6 +899,17 @@
     <string name="ton_unstake_title">Povuci %1$s</string>
     <string name="ton_staking_pool_address">Adresa poola</string>
     <string name="ton_unstake_full_withdrawal_notice">Nominator poolovi podržavaju samo potpuno povlačenje. Vraća se cijeli stakirani saldo.</string>
+    <!-- Solana native staking (DeFi tab) -->
+    <string name="solana_staking_error_sol_not_in_vault">SOL nije u ovom trezoru</string>
+    <string name="solana_staking_total_staked">Ukupno stakirano</string>
+    <string name="solana_staking_loading">Učitavanje staking pozicija…</string>
+    <string name="solana_staking_no_positions">Nema staking pozicija</string>
+    <string name="solana_staking_apy_label">APY %1$s</string>
+    <string name="solana_staking_state_activating">Aktiviranje</string>
+    <string name="solana_staking_state_active">Aktivno</string>
+    <string name="solana_staking_state_deactivating">Deaktiviranje</string>
+    <string name="solana_staking_state_inactive">Neaktivno</string>
+    <string name="solana_staking_state_not_delegated">Nije delegirano</string>
     <string name="vault_backup_verifying_pin">Provjera koda, molimo pričekajte</string>
     <string name="select_vault_type_next">Sljedeće</string>
     <string name="select_vault_type_choose_setup">Odaberite Postavljanje</string>

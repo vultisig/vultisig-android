@@ -891,6 +891,17 @@
     <string name="ton_unstake_title">%1$s unstaken</string>
     <string name="ton_staking_pool_address">Pooladres</string>
     <string name="ton_unstake_full_withdrawal_notice">Nominator-pools ondersteunen alleen volledige opname. Je volledige gestakete saldo wordt teruggestort.</string>
+    <!-- Solana native staking (DeFi tab) -->
+    <string name="solana_staking_error_sol_not_in_vault">SOL staat niet in deze kluis</string>
+    <string name="solana_staking_total_staked">Totaal gestaket</string>
+    <string name="solana_staking_loading">Staking-posities laden…</string>
+    <string name="solana_staking_no_positions">Geen staking-posities</string>
+    <string name="solana_staking_apy_label">APY %1$s</string>
+    <string name="solana_staking_state_activating">Wordt geactiveerd</string>
+    <string name="solana_staking_state_active">Actief</string>
+    <string name="solana_staking_state_deactivating">Wordt gedeactiveerd</string>
+    <string name="solana_staking_state_inactive">Inactief</string>
+    <string name="solana_staking_state_not_delegated">Niet gedelegeerd</string>
     <string name="vault_backup_verifying_pin">Code verifiëren, even geduld a.u.b.</string>
     <string name="select_vault_type_next">Volgende</string>
     <string name="select_vault_type_choose_setup">Kies \'Instellen\'</string>

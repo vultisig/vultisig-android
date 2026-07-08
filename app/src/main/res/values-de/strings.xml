@@ -896,6 +896,17 @@
     <string name="ton_unstake_title">Unstaken %1$s</string>
     <string name="ton_staking_pool_address">Pool-Adresse</string>
     <string name="ton_unstake_full_withdrawal_notice">Nominator-Pools unterstützen nur die vollständige Abhebung. Dein gesamtes gestaktes Guthaben wird zurückgezahlt.</string>
+    <!-- Solana native staking (DeFi tab) -->
+    <string name="solana_staking_error_sol_not_in_vault">SOL ist nicht in diesem Tresor</string>
+    <string name="solana_staking_total_staked">Insgesamt gestaked</string>
+    <string name="solana_staking_loading">Staking-Positionen werden geladen…</string>
+    <string name="solana_staking_no_positions">Keine Staking-Positionen</string>
+    <string name="solana_staking_apy_label">APY %1$s</string>
+    <string name="solana_staking_state_activating">Wird aktiviert</string>
+    <string name="solana_staking_state_active">Aktiv</string>
+    <string name="solana_staking_state_deactivating">Wird deaktiviert</string>
+    <string name="solana_staking_state_inactive">Inaktiv</string>
+    <string name="solana_staking_state_not_delegated">Nicht delegiert</string>
     <string name="vault_backup_verifying_pin">Code wird überprüft, bitte warten</string>
     <string name="select_vault_type_next">Weiter</string>
     <string name="select_vault_type_choose_setup">Wähle „Einrichtung“</string>
