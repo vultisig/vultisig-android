@@ -74,6 +74,25 @@ class SolanaApiBodyReadTest {
         assertEquals("AbCdEfGhIjKlMnOpQrStUvWxYz12345678901234567", result)
     }
 
+    @Test
+    fun `getRecentBlockHash throws on a json-rpc error response instead of returning empty string`() =
+        runTest {
+            val body =
+                """
+                {
+                  "error": "transient node error",
+                  "result": null
+                }
+                """
+                    .trimIndent()
+            val api = newApi(body)
+
+            val error = runCatching { api.getRecentBlockHash() }.exceptionOrNull()
+
+            assertInstanceOf(IllegalStateException::class.java, error)
+            assertEquals(true, error?.message?.contains("transient node error"))
+        }
+
     // ── broadcastTransaction ────────────────────────────────────────────────────
 
     @Test
