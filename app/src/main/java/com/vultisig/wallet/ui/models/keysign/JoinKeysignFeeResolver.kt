@@ -88,7 +88,8 @@ constructor(
         if (
             blockChainSpecific is BlockChainSpecific.Ethereum ||
                 blockChainSpecific is BlockChainSpecific.THORChain ||
-                blockChainSpecific is BlockChainSpecific.Cardano
+                blockChainSpecific is BlockChainSpecific.Cardano ||
+                blockChainSpecific is BlockChainSpecific.Cosmos
         ) {
             // These subtypes read their fee straight from BlockChainSpecific in
             // computeJoinKeysignNetworkFee, so the fee-service fallback is never used — skip it.

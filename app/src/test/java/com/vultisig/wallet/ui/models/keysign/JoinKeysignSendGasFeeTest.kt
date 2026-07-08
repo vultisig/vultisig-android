@@ -62,6 +62,19 @@ internal class JoinKeysignSendGasFeeTest {
             isNativeToken = true,
         )
 
+    private val luncCoin =
+        Coin(
+            chain = Chain.TerraClassic,
+            ticker = "LUNC",
+            logo = "lunc",
+            address = "terra1addr",
+            decimal = 6,
+            hexPublicKey = "hex",
+            priceProviderID = "terra-luna",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
     /** Contract-call QR: gasLimit from payload (100,000) must be used, not the transfer default. */
     @Test
     fun `evm contract call uses gasLimit from payload`() {
@@ -128,6 +141,34 @@ internal class JoinKeysignSendGasFeeTest {
             )
 
         result shouldBe TokenValue(value = fallback, token = solCoin)
+    }
+
+    /**
+     * Cosmos (Terra Classic): the signer echoes `chainSpecific.gas` verbatim as the fee amount, so
+     * the joiner must surface that exact value and NOT the locally recomputed fallback (which
+     * reprices the base at the static limit + re-derives the burn tax, showing e.g. 8.5525 LUNC).
+     */
+    @Test
+    fun `cosmos uses gas from blockChainSpecific, not the recomputed fallback`() {
+        val signedGas = BigInteger.valueOf(11_046_750) // base priced at a relayed 390k limit + tax
+        val specific =
+            BlockChainSpecific.Cosmos(
+                accountNumber = BigInteger.ONE,
+                sequence = BigInteger.ZERO,
+                gas = signedGas,
+                ibcDenomTraces = null,
+                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+                gasLimit = BigInteger.valueOf(390_000),
+            )
+
+        val result =
+            computeJoinKeysignNetworkFee(
+                blockChainSpecific = specific,
+                nativeCoin = luncCoin,
+                fallbackFeeAmount = BigInteger.valueOf(8_552_500), // stale 300k-priced recompute
+            )
+
+        result shouldBe TokenValue(value = signedGas, token = luncCoin)
     }
 
     /** THORChain: fee must come from blockChainSpecific.fee, not the fallback. */

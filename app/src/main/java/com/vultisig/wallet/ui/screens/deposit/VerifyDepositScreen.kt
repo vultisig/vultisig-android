@@ -55,7 +55,6 @@ import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
-import java.math.BigDecimal
 
 @Composable
 internal fun VerifyDepositScreen(
@@ -227,21 +226,6 @@ internal fun VerifyDepositScreen(
                             title = stringResource(R.string.verify_transaction_memo_title),
                             subtitle = tx.memo,
                             showAllContent = true,
-                        )
-                    }
-
-                    if (
-                        tx.token.value.isNotEmpty() &&
-                            try {
-                                tx.token.value.toBigDecimal() > BigDecimal.ZERO
-                            } catch (e: Exception) {
-                                false
-                            }
-                    ) {
-                        VerifyCardDivider(0.dp)
-                        VerifyCardDetails(
-                            title = stringResource(R.string.verify_transaction_amount_title),
-                            subtitle = (tx.token.value),
                         )
                     }
 
