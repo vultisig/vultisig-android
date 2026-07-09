@@ -2294,11 +2294,12 @@ private fun solanaStakingPreviewRow(
     com.vultisig.wallet.ui.models.solanastaking.SolanaStakePositionRow(
         stakePubkey = stakePubkey,
         validatorName = validatorName,
+        validatorAddressDisplay = "CV4X…NNFz",
         validatorLogoUrl = null,
         votePubkey = null,
         stakedDisplay = "$staked SOL",
         stakedFiatDisplay = fiat,
-        rentReserveDisplay = "0.002283 SOL",
+        rentReserveDisplay = "0.00228288 SOL",
         stateLabel = com.vultisig.wallet.ui.utils.UiText.DynamicString(stateLabel),
         apyDisplay = apy,
         canDeactivate = canDeactivate,

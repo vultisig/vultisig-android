@@ -64,6 +64,7 @@ import timber.log.Timber
 internal data class SolanaStakePositionRow(
     val stakePubkey: String,
     val validatorName: String,
+    val validatorAddressDisplay: String,
     val validatorLogoUrl: String?,
     val votePubkey: String?,
     val stakedDisplay: String,
@@ -311,6 +312,7 @@ constructor(
         return SolanaStakePositionRow(
             stakePubkey = account.stakePubkey,
             validatorName = name,
+            validatorAddressDisplay = account.voter?.let { shortAddress(it) } ?: "",
             validatorLogoUrl = metadata?.logoUrl,
             votePubkey = account.voter,
             stakedDisplay = "${stakedSol.toPlainString()} ${SOL_TICKER}",

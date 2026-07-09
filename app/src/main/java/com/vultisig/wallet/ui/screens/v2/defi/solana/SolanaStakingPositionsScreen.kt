@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.solanastaking.SolanaStakePositionRow
 import com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState
 import com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsViewModel
+import com.vultisig.wallet.ui.screens.cosmosstaking.ValidatorAvatar
 import com.vultisig.wallet.ui.screens.v2.defi.ActionButton
 import com.vultisig.wallet.ui.screens.v2.defi.ApyInfoItem
 import com.vultisig.wallet.ui.screens.v2.defi.InfoItem
@@ -213,7 +214,12 @@ private fun StakeAccountContent(
 ) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            MonogramAvatar(name = row.validatorName)
+            ValidatorAvatar(
+                avatarUrl = row.validatorLogoUrl,
+                monogram = row.validatorName.take(1),
+                size = 40.dp,
+                colorKey = row.stakePubkey,
+            )
             UiSpacer(12.dp)
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -223,6 +229,14 @@ private fun StakeAccountContent(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                if (row.validatorAddressDisplay.isNotEmpty()) {
+                    UiSpacer(2.dp)
+                    Text(
+                        text = row.validatorAddressDisplay,
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.v2.colors.text.tertiary,
+                    )
+                }
                 UiSpacer(2.dp)
                 Text(
                     text = row.stateLabel.asString(),
@@ -251,11 +265,19 @@ private fun StakeAccountContent(
         }
 
         UiSpacer(16.dp)
-        InfoItem(
-            icon = R.drawable.ic_icon_percentage,
-            label = stringResource(R.string.solana_rent_reserve),
-            value = row.rentReserveDisplay,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            InfoItem(
+                icon = R.drawable.ic_icon_percentage,
+                label = stringResource(R.string.solana_rent_reserve),
+                value = null,
+            )
+            UiSpacer(1f)
+            Text(
+                text = row.rentReserveDisplay,
+                style = Theme.brockmann.body.m.medium,
+                color = Theme.v2.colors.text.primary,
+            )
+        }
 
         UiSpacer(16.dp)
         UiHorizontalDivider(color = Theme.v2.colors.border.light)
@@ -425,22 +447,6 @@ private fun SolanaTotalStakedCard(
             label = stringResource(R.string.solana_delegate_new_validator),
             modifier = Modifier.fillMaxWidth(),
             onClick = onDelegate,
-        )
-    }
-}
-
-@Composable
-private fun MonogramAvatar(name: String) {
-    val letter = name.firstOrNull { it.isLetterOrDigit() }?.uppercaseChar()?.toString() ?: "?"
-    Box(
-        modifier =
-            Modifier.size(36.dp).clip(CircleShape).background(Theme.v2.colors.backgrounds.tertiary),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = letter,
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.primary,
         )
     }
 }
