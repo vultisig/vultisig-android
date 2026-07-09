@@ -268,7 +268,7 @@ internal fun VerifySendScreen(
                         bracketValue = toDstLabel?.let { tx.dstAddress },
                     )
 
-                    if (tx.memo != null) {
+                    if (!tx.memo.isNullOrBlank()) {
                         VerifyCardDivider(0.dp)
 
                         VerifyCardDetails(

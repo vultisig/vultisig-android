@@ -70,7 +70,8 @@ class SigningHelperCustomMessageTest {
         // THORChain/Maya/Cosmos custom messages (Keplr ADR-36 signArbitrary) must be sha256'd
         // to match iOS/Windows/CLI; keccak256 here 404s cross-platform co-signing.
         val hexMessage = "0xabcdef0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d"
-        val payload = CustomMessagePayload(method = "sign", message = hexMessage, chain = "THORChain")
+        val payload =
+            CustomMessagePayload(method = "sign", message = hexMessage, chain = "THORChain")
 
         val messages = SigningHelper.getKeysignMessages(payload)
 
