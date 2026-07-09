@@ -328,25 +328,19 @@ private fun SolanaValidatorRow(
                 maxLines = 1,
             )
             Text(
-                text =
-                    stringResource(
-                        R.string.solana_delegate_commission,
-                        validator.commissionDisplay,
-                    ),
+                text = validator.activatedStakeDisplay,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.secondary,
+                color = Theme.v2.colors.text.tertiary,
                 maxLines = 1,
             )
         }
-        validator.apyDisplay?.let {
-            UiSpacer(size = 8.dp)
-            Text(
-                text = stringResource(R.string.solana_staking_apy_label, it),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.alerts.success,
-                maxLines = 1,
-            )
-        }
+        UiSpacer(size = 8.dp)
+        Text(
+            text = validator.commissionDisplay,
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.primary,
+            maxLines = 1,
+        )
     }
 }
 

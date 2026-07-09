@@ -47,6 +47,9 @@ internal data class SolanaValidatorOption(
     val votePubkey: String,
     val name: String,
     val logoUrl: String?,
+    /** Total activated stake in whole SOL with grouping, e.g. `"16,179,362 SOL"`. */
+    val activatedStakeDisplay: String,
+    /** Commission the validator takes, e.g. `"7%"`. */
     val commissionDisplay: String,
     val apyDisplay: String?,
 )
@@ -99,6 +102,7 @@ constructor(
 
     private var coin: Coin? = null
     private var balanceLamports: BigInteger = BigInteger.ZERO
+    private val stakeFormat = java.text.DecimalFormat("#,###")
 
     init {
         load()
@@ -190,6 +194,8 @@ constructor(
                         votePubkey = v.votePubkey,
                         name = md?.name?.takeIf { it.isNotBlank() } ?: shortAddress(v.votePubkey),
                         logoUrl = md?.logoUrl,
+                        activatedStakeDisplay =
+                            "${stakeFormat.format(v.activatedStake.toBigDecimal().movePointLeft(solCoin.decimal).toBigInteger())} ${solCoin.ticker}",
                         commissionDisplay = "${v.commission}%",
                         apyDisplay =
                             md?.apyEstimate?.let {
