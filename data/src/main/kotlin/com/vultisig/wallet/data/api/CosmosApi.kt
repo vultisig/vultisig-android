@@ -38,8 +38,11 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.util.encodeBase64
 import java.net.URLEncoder
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -126,6 +129,11 @@ constructor(
     private val cosmosThorChainResponseSerializer: CosmosThorChainResponseSerializer,
     private val customRpcRepository: CustomRpcRepository,
 ) : CosmosApiFactory {
+    // Shared across every CosmosApiImp this @Singleton factory hands out so the per-token
+    // bank-balance requests for one address collapse to a single round-trip. See
+    // CosmosBalanceCache.
+    private val balanceCache = CosmosBalanceCache()
+
     override fun createCosmosApi(chain: Chain): CosmosApi {
         val defaultApiUrl = CustomRpcDefaultEndpoint.cosmosUrl(chain)
 
@@ -139,7 +147,48 @@ constructor(
                 defaultApiUrl
             }
 
-        return CosmosApiImp(httpClient, apiUrl, json, cosmosThorChainResponseSerializer)
+        return CosmosApiImp(
+            httpClient,
+            apiUrl,
+            json,
+            cosmosThorChainResponseSerializer,
+            balanceCache,
+        )
+    }
+}
+
+/**
+ * Coalesces `/cosmos/bank/v1beta1/balances/{address}` reads. The bank endpoint returns every denom
+ * for an address in a single response, yet the balance layer calls it once per token — each picking
+ * one denom and discarding the rest — so opening the Select asset sheet fired ~N identical requests
+ * back-to-back (one per Cosmos token). A per-key [Mutex] gives concurrent in-flight sharing and a
+ * short TTL lets the sequential fan-out reuse the first response; a refresh past the window still
+ * hits the network. Mirrors the SimpleCache + per-key-mutex pattern already used by the DeFi
+ * balance path, but stores in a ConcurrentHashMap so reads across different keys stay thread-safe.
+ */
+internal class CosmosBalanceCache(private val ttlMs: Long = DEFAULT_TTL_MS) {
+
+    private class Entry(val value: List<CosmosBalance>, val expiresAt: Long)
+
+    private val entries = ConcurrentHashMap<String, Entry>()
+    private val locks = ConcurrentHashMap<String, Mutex>()
+
+    suspend fun getOrFetch(
+        key: String,
+        fetch: suspend () -> List<CosmosBalance>,
+    ): List<CosmosBalance> =
+        locks
+            .computeIfAbsent(key) { Mutex() }
+            .withLock {
+                val now = System.currentTimeMillis()
+                entries[key]?.takeIf { now < it.expiresAt }?.value
+                    ?: fetch().also { entries[key] = Entry(it, now + ttlMs) }
+            }
+
+    companion object {
+        // Long enough to absorb the per-token fan-out for one address, short enough that a later
+        // manual refresh still fetches fresh balances.
+        private const val DEFAULT_TTL_MS = 10_000L
     }
 }
 
@@ -148,12 +197,15 @@ internal class CosmosApiImp(
     private val rpcEndpoint: String,
     private val json: Json,
     private val cosmosThorChainResponseSerializer: CosmosThorChainResponseSerializer,
+    private val balanceCache: CosmosBalanceCache = CosmosBalanceCache(),
 ) : CosmosApi {
-    override suspend fun getBalance(address: String): List<CosmosBalance> {
-        val response = httpClient.get("$rpcEndpoint/cosmos/bank/v1beta1/balances/$address")
-        val resp = response.bodyOrThrow<CosmosBalanceResponse>()
-        return resp.balances ?: emptyList()
-    }
+    override suspend fun getBalance(address: String): List<CosmosBalance> =
+        balanceCache.getOrFetch("$rpcEndpoint|$address") {
+            httpClient
+                .get("$rpcEndpoint/cosmos/bank/v1beta1/balances/$address")
+                .bodyOrThrow<CosmosBalanceResponse>()
+                .balances ?: emptyList()
+        }
 
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
         val response = httpClient.get("$rpcEndpoint/cosmos/auth/v1beta1/accounts/$address") {}

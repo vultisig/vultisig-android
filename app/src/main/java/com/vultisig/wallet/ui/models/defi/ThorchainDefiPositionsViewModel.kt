@@ -210,6 +210,11 @@ constructor(
 
     private var lpDialogJob: Job? = null
     private var loadLpJob: Job? = null
+    private var loadBondedNodesJob: Job? = null
+
+    // Latest bonded nodes, kept so onClickUnBond can resolve the selected node's raw bonded amount
+    // (the UI model only carries the formatted string). Read/written on the main dispatcher.
+    private var activeBondedNodes: List<BondedNodePosition> = emptyList()
 
     fun setData(vaultId: VaultId) {
         this.vaultId = vaultId
@@ -389,7 +394,7 @@ constructor(
                 )
             }
 
-            launch { loadBondedNodes() }
+            loadBondedNodes()
 
             launch { loadStakingPositions() }
 
@@ -401,71 +406,80 @@ constructor(
     private fun loadBondedNodes() {
         loadedTabs.add(DeFiTab.BONDED.displayNameRes)
 
-        viewModelScope.launch {
-            if (!state.value.selectedPositions.hasBondPositions()) {
-                _totalValueBond.value = BigInteger.ZERO
+        // Cancel any in-flight collector before starting a new one. getActiveNodes never
+        // completes, so without this each refresh would stack another collector that writes
+        // `activeBondedNodes`/state out of order — leaving onClickUnBond to resolve a stale bond.
+        loadBondedNodesJob?.cancel()
+        loadBondedNodesJob =
+            viewModelScope.launch {
+                if (!state.value.selectedPositions.hasBondPositions()) {
+                    _totalValueBond.value = BigInteger.ZERO
 
-                state.update { it.copy(bonded = emptyBondedTabUiModel()) }
-                return@launch
-            }
-
-            state.update { it.copy(bonded = it.bonded.copy(isLoading = true)) }
-
-            // Load selected positions, if disabled then show nothing
-            try {
-                val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
-                val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
-
-                if (runeCoin == null) {
-                    Timber.e("Vault does not have RUNE coin")
-                    state.update { it.copy(bonded = it.bonded.copy(isLoading = false)) }
+                    state.update { it.copy(bonded = emptyBondedTabUiModel()) }
                     return@launch
                 }
 
-                val address = runeCoin.address
+                state.update { it.copy(bonded = it.bonded.copy(isLoading = true)) }
 
-                bondedNodesRefreshTrigger
-                    .flatMapLatest { bondUseCase.getActiveNodes(vaultId, address) }
-                    .catch { it ->
-                        Timber.e(it)
+                // Load selected positions, if disabled then show nothing
+                try {
+                    val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+                    // THORChain vaults hold several coins (RUNE, RUJI, TCY, …); match RUNE
+                    // explicitly so we bond against the RUNE address, not the first THORChain coin.
+                    val runeCoin =
+                        vault?.coins?.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
+
+                    if (runeCoin == null) {
+                        Timber.e("Vault does not have RUNE coin")
                         state.update { it.copy(bonded = it.bonded.copy(isLoading = false)) }
+                        return@launch
                     }
-                    .collect { activeNodes ->
-                        // Format UI data and show
-                        val nodeUiModels = activeNodes.map { it.toUiModel() }
-                        val totalBonded = calculateTotalBonded(activeNodes)
 
-                        val totalBondedRaw =
-                            activeNodes.fold(BigInteger.ZERO) { acc, node -> acc + node.amount }
+                    val address = runeCoin.address
 
-                        val bondedPrice = calculateBondedFiatPrice(totalBondedRaw)
-
-                        state.update {
-                            it.copy(
-                                isTotalAmountLoading = false,
-                                bonded =
-                                    BondedTabUiModel(
-                                        isLoading = false,
-                                        totalBondedAmount = totalBonded,
-                                        totalBondedPrice = bondedPrice,
-                                        nodes = nodeUiModels,
-                                    ),
-                            )
+                    bondedNodesRefreshTrigger
+                        .flatMapLatest { bondUseCase.getActiveNodes(vaultId, address) }
+                        .catch { it ->
+                            Timber.e(it)
+                            state.update { it.copy(bonded = it.bonded.copy(isLoading = false)) }
                         }
+                        .collect { activeNodes ->
+                            activeBondedNodes = activeNodes
+                            // Format UI data and show
+                            val nodeUiModels = activeNodes.map { it.toUiModel() }
+                            val totalBonded = calculateTotalBonded(activeNodes)
 
-                        updateTotalValueStatus(totalBondedRaw, false)
+                            val totalBondedRaw =
+                                activeNodes.fold(BigInteger.ZERO) { acc, node -> acc + node.amount }
+
+                            val bondedPrice = calculateBondedFiatPrice(totalBondedRaw)
+
+                            state.update {
+                                it.copy(
+                                    isTotalAmountLoading = false,
+                                    bonded =
+                                        BondedTabUiModel(
+                                            isLoading = false,
+                                            totalBondedAmount = totalBonded,
+                                            totalBondedPrice = bondedPrice,
+                                            nodes = nodeUiModels,
+                                        ),
+                                )
+                            }
+
+                            updateTotalValueStatus(totalBondedRaw, false)
+                        }
+                } catch (t: Throwable) {
+                    if (t is kotlinx.coroutines.CancellationException) throw t
+                    Timber.e(t)
+                    state.update {
+                        it.copy(
+                            isTotalAmountLoading = false,
+                            bonded = it.bonded.copy(isLoading = false),
+                        )
                     }
-            } catch (t: Throwable) {
-                if (t is kotlinx.coroutines.CancellationException) throw t
-                Timber.e(t)
-                state.update {
-                    it.copy(
-                        isTotalAmountLoading = false,
-                        bonded = it.bonded.copy(isLoading = false),
-                    )
                 }
             }
-        }
     }
 
     private fun updateTotalValueStatus(amount: BigInteger, loading: Boolean) {
@@ -520,7 +534,10 @@ constructor(
             try {
                 val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
 
-                val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
+                // THORChain hosts several coins (RUNE, RUJI, TCY…); staking is held against the
+                // RUNE account, so match the ticker explicitly rather than the first chain coin.
+                val runeCoin =
+                    vault?.coins?.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
                 if (runeCoin == null) {
                     Timber.e("Vault does not have RUNE coin")
@@ -856,7 +873,11 @@ constructor(
             viewModelScope.launch {
                 try {
                     val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
-                    val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
+                    // THORChain hosts several coins (RUNE, RUJI, TCY…); LP positions are held
+                    // against the RUNE account, so match the ticker explicitly rather than the
+                    // first chain coin.
+                    val runeCoin =
+                        vault?.coins?.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
                     if (runeCoin == null) {
                         Timber.e("Vault does not have RUNE coin for LP positions")
@@ -1100,7 +1121,7 @@ constructor(
 
             bondedNodesRefreshTrigger.value++
 
-            launch { loadBondedNodes() }
+            loadBondedNodes()
 
             launch { loadStakingPositions() }
 
@@ -1137,6 +1158,8 @@ constructor(
             val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
             if (runeCoin != null) {
+                val bondedAmount =
+                    activeBondedNodes.firstOrNull { it.node.address == nodeAddress }?.amount
                 navigator.route(
                     Route.Send(
                         vaultId = vaultId,
@@ -1144,6 +1167,7 @@ constructor(
                         chainId = Chain.ThorChain.id,
                         tokenId = runeCoin.id,
                         address = nodeAddress,
+                        bondedAmount = bondedAmount?.toString(),
                     )
                 )
             } else {

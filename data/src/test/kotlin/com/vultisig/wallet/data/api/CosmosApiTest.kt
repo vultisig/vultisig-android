@@ -10,8 +10,11 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -150,13 +153,103 @@ class CosmosApiTest {
         assertNull(api.getTerraClassicBurnTaxRate())
     }
 
-    private fun cosmosApi(engine: MockEngine): CosmosApi {
+    @Test
+    fun `getBalance coalesces repeat calls for one address into a single request`() = runTest {
+        val requests = AtomicInteger()
+        val api =
+            cosmosApi(
+                MockEngine {
+                    requests.incrementAndGet()
+                    respond(
+                        content = """{"balances":[{"denom":"uatom","amount":"100"}]}""",
+                        status = HttpStatusCode.OK,
+                        headers = jsonHeaders,
+                    )
+                }
+            )
+
+        repeat(10) { assertEquals("uatom", api.getBalance("cosmos1abc").single().denom) }
+
+        assertEquals(1, requests.get())
+    }
+
+    @Test
+    fun `getBalance shares one in-flight request across concurrent callers`() = runTest {
+        val requests = AtomicInteger()
+        val api =
+            cosmosApi(
+                MockEngine {
+                    requests.incrementAndGet()
+                    respond(
+                        content = """{"balances":[{"denom":"uatom","amount":"100"}]}""",
+                        status = HttpStatusCode.OK,
+                        headers = jsonHeaders,
+                    )
+                }
+            )
+
+        val results = (1..10).map { async { api.getBalance("cosmos1abc") } }.awaitAll()
+
+        assertEquals(1, requests.get())
+        assertEquals(10, results.count { it.single().denom == "uatom" })
+    }
+
+    @Test
+    fun `getBalance keys the cache by address so different addresses each fetch`() = runTest {
+        val requests = AtomicInteger()
+        val api =
+            cosmosApi(
+                MockEngine {
+                    requests.incrementAndGet()
+                    respond(
+                        content = """{"balances":[{"denom":"uatom","amount":"100"}]}""",
+                        status = HttpStatusCode.OK,
+                        headers = jsonHeaders,
+                    )
+                }
+            )
+
+        api.getBalance("cosmos1aaa")
+        api.getBalance("cosmos1bbb")
+
+        assertEquals(2, requests.get())
+    }
+
+    @Test
+    fun `getBalance refetches once the cache entry expires`() = runTest {
+        val requests = AtomicInteger()
+        val api =
+            cosmosApi(
+                engine =
+                    MockEngine {
+                        requests.incrementAndGet()
+                        respond(
+                            content = """{"balances":[{"denom":"uatom","amount":"100"}]}""",
+                            status = HttpStatusCode.OK,
+                            headers = jsonHeaders,
+                        )
+                    },
+                // ttl 0 => every entry is already expired, so caching never masks a stale balance.
+                balanceCache = CosmosBalanceCache(ttlMs = 0),
+            )
+
+        api.getBalance("cosmos1abc")
+        api.getBalance("cosmos1abc")
+
+        assertEquals(2, requests.get())
+    }
+
+    private fun cosmosApi(
+        engine: MockEngine,
+        balanceCache: CosmosBalanceCache = CosmosBalanceCache(),
+    ): CosmosApi {
         val json = Json { ignoreUnknownKeys = true }
         return CosmosApiImp(
             HttpClient(engine) { install(ContentNegotiation) { json(json) } },
             "https://example.test",
             json,
             CosmosThorChainResponseSerializerImpl(json),
+            balanceCache,
         )
     }
 }

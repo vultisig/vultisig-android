@@ -47,15 +47,21 @@ class SolanaStatusProviderTest {
     }
 
     @Test
-    fun `err set while only processed still returns Failed`() = runTest {
+    fun `err set while only processed returns Pending, not a terminal Failed`() = runTest {
         val err = JsonPrimitive("AccountInUse")
         coEvery { solanaApi.checkStatus(any()) } returns
             response(SolanaSignatureStatus(confirmationStatus = "processed", err = err))
 
-        assertEquals(
-            TransactionResult.Failed(err.toString()),
-            provider.checkStatus("h", Chain.Solana),
-        )
+        assertEquals(TransactionResult.Pending, provider.checkStatus("h", Chain.Solana))
+    }
+
+    @Test
+    fun `err set while only confirmed returns Pending, not a terminal Failed`() = runTest {
+        val err = JsonPrimitive("AccountInUse")
+        coEvery { solanaApi.checkStatus(any()) } returns
+            response(SolanaSignatureStatus(confirmationStatus = "confirmed", err = err))
+
+        assertEquals(TransactionResult.Pending, provider.checkStatus("h", Chain.Solana))
     }
 
     @Test
@@ -79,4 +85,14 @@ class SolanaStatusProviderTest {
 
         assertEquals(TransactionResult.Pending, provider.checkStatus("h", Chain.Solana))
     }
+
+    @Test
+    fun `err set with an unrecognized confirmationStatus returns NotFound, ignoring err`() =
+        runTest {
+            val err = JsonPrimitive("AccountInUse")
+            coEvery { solanaApi.checkStatus(any()) } returns
+                response(SolanaSignatureStatus(confirmationStatus = "unknown", err = err))
+
+            assertEquals(TransactionResult.NotFound, provider.checkStatus("h", Chain.Solana))
+        }
 }

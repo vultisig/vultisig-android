@@ -360,13 +360,7 @@ class ChainHelpersTest {
         transactions.forEach { transaction ->
             val payload = transaction.keysignPayload.toInternalKeySignPayload()
             val coin = payload.coin.coinType
-            val helper =
-                TerraHelper(
-                    coin,
-                    "uluna",
-                    300000L,
-                    isTerraClassic = payload.coin.chain == Chain.TerraClassic,
-                )
+            val helper = TerraHelper(coin, "uluna", 300000L)
 
             val preImageHashes = helper.getPreSignedImageHash(payload)
 
@@ -376,10 +370,13 @@ class ChainHelpersTest {
 
     // Terra / Terra Classic bank sends route through TerraHelper (not CosmosHelper), so the relayed
     // gas limit must be honored there too — otherwise an iOS/macOS-initiated send that relays a
-    // simulated `gas_limit` produces a SignDoc whose `fee.gas` (and, for Terra Classic,
-    // `fee.amount`)
-    // diverges from what Android signs, and the threshold signature never forms. This pins byte
-    // parity: a relayed Terra Classic limit ≠ static changes the pre-image hash; a relayed limit ==
+    // simulated `gas_limit` produces a SignDoc whose `fee.gas` diverges from what Android signs,
+    // and
+    // the threshold signature never forms. The fee AMOUNT is `chainSpecific.gas` verbatim (priced
+    // at
+    // the effective limit up front by the initiator), so the relayed limit moves only `fee.gas`.
+    // This pins byte parity: a relayed limit ≠ static changes the pre-image hash; a relayed limit
+    // ==
     // static reproduces the static-limit hash byte-for-byte.
     @Test
     fun terraClassicRelayedGasLimitHonoredInSignedBytes() {
@@ -389,8 +386,7 @@ class ChainHelpersTest {
                 .map { it.keysignPayload.toInternalKeySignPayload() }
                 .first { it.coin.chain == Chain.TerraClassic }
         val baseCosmos = basePayload.blockChainSpecific as BlockChainSpecific.Cosmos
-        val helper =
-            TerraHelper(basePayload.coin.coinType, "uluna", staticLimit, isTerraClassic = true)
+        val helper = TerraHelper(basePayload.coin.coinType, "uluna", staticLimit)
 
         fun hashWith(gasLimit: BigInteger?) =
             helper.getPreSignedImageHash(

@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.common
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.utils.Numeric
+import java.security.MessageDigest
 import org.bouncycastle.jcajce.provider.digest.Keccak
 
 fun ByteArray.toKeccak256(): String {
@@ -11,6 +12,10 @@ fun ByteArray.toKeccak256(): String {
 fun ByteArray.toKeccak256ByteArray(): ByteArray {
     val digest = Keccak.Digest256()
     return digest.digest(this)
+}
+
+fun ByteArray.toSha256ByteArray(): ByteArray {
+    return MessageDigest.getInstance("SHA-256").digest(this)
 }
 
 fun ByteArray.toByteString(): ByteString {
