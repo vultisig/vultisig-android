@@ -280,6 +280,7 @@ class PreviewActivity : ComponentActivity() {
                     "vault_detail_mldsa" -> VaultDetailPreview(withMldsa = true)
                     "error_screen_after" -> ErrorScreenAfterPreview()
                     "chain_selection" -> ChainSelectionClipPreview()
+                    "verify_send_empty_memo" -> VerifySendEmptyMemoPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -1158,6 +1159,36 @@ private fun ShareQrKeygenPreview() {
 private fun BlockaidHeroVerifySendPreview() {
     VerifySendScreen(
         state = blockaidHeroSendState(),
+        isConsentsEnabled = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+    )
+}
+
+@Composable
+private fun VerifySendEmptyMemoPreview() {
+    val rune = Coins.ThorChain.RUNE
+    VerifySendScreen(
+        state =
+            VerifyTransactionUiModel(
+                transaction =
+                    TransactionDetailsUiModel(
+                        token = ValuedToken(token = rune, value = "10", fiatValue = "$45.00"),
+                        srcAddress = "thor1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxf3l5h",
+                        srcVaultName = "Main Vault",
+                        dstAddress = "thor1zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz9k8lqe",
+                        memo = "",
+                        networkFeeFiatValue = "$0.02",
+                        networkFeeTokenValue = "0.02 RUNE",
+                    )
+            ),
         isConsentsEnabled = true,
         confirmTitle = "Sign",
         onFastSignClick = {},

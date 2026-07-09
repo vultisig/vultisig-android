@@ -5,12 +5,14 @@ package com.vultisig.wallet.data.chains.helpers
 import com.vultisig.wallet.data.api.swapAggregators.OneInchSwap
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.common.toKeccak256ByteArray
+import com.vultisig.wallet.data.common.toSha256ByteArray
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.crypto.TonHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
@@ -53,14 +55,23 @@ object SigningHelper {
             } else {
                 messagePayload.message.toByteArray()
             }
-        val isEddsa =
-            messagePayload.chain?.let { raw ->
-                runCatching { Chain.fromRaw(raw).TssKeysignType == TssKeyType.EDDSA }
-                    .getOrDefault(false)
-            } ?: false
-        // EdDSA chains (e.g. TON) deliver the precomputed digest directly; signing it again
-        // through keccak256 would diverge from the initiator's hash list.
-        val bytes = if (isEddsa) processedBytes else processedBytes.toKeccak256ByteArray()
+        val chain =
+            messagePayload.chain?.let { raw -> runCatching { Chain.fromRaw(raw) }.getOrNull() }
+        // Match the message digest to the chain, mirroring iOS
+        // (CustomMessagePayload.keysignMessages) and Windows (getCustomMessageHex.ts):
+        //  - Cosmos-family chains (incl. THORChain/Maya) sign the sha256 of the message
+        //    (Keplr ADR-36 signArbitrary over the StdSignDoc bytes). Previously these were
+        //    keccak256'd, so the digest — and the md5 message-ID derived from it — diverged
+        //    from the iOS/Windows/CLI initiator and cross-platform co-signing 404'd.
+        //  - EdDSA chains (e.g. Solana, TON) deliver the precomputed digest — sign it raw.
+        //  - Everything else (EVM, Tron) signs the keccak256.
+        val bytes =
+            when {
+                chain?.standard == TokenStandard.COSMOS ||
+                    chain?.standard == TokenStandard.THORCHAIN -> processedBytes.toSha256ByteArray()
+                chain?.TssKeysignType == TssKeyType.EDDSA -> processedBytes
+                else -> processedBytes.toKeccak256ByteArray()
+            }
         return listOf(bytes.toHexString())
     }
 
@@ -285,7 +296,6 @@ object SigningHelper {
                                     coinType = chain.coinType,
                                     denom = chain.feeUnit,
                                     gasLimit = CosmosHelper.getChainGasLimit(chain),
-                                    isTerraClassic = chain == Chain.TerraClassic,
                                 )
                                 .getPreSignedImageHash(payload)
                         }
@@ -500,7 +510,6 @@ object SigningHelper {
                             coinType = chain.coinType,
                             denom = chain.feeUnit,
                             gasLimit = CosmosHelper.getChainGasLimit(chain),
-                            isTerraClassic = chain == Chain.TerraClassic,
                         )
                         .getSignedTransaction(keysignPayload, signatures)
                 }

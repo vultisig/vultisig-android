@@ -1,7 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
-import com.vultisig.wallet.data.blockchain.cosmos.TerraClassicTax
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.CosmoSignature
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -27,10 +26,6 @@ class TerraHelper(
     private val coinType: CoinType,
     private val denom: String,
     private val gasLimit: Long,
-    // Terra Classic (columbus-5) prices its fee as `gasLimit × price (+ burn tax)`, so its fee
-    // amount must scale with a relayed gas limit; plain Terra (phoenix-1) pays a flat fee and keeps
-    // the static amount. Mirrors vultisig-ios `TerraHelperStruct.getPreSignedInputData(_, chain:)`.
-    private val isTerraClassic: Boolean,
 ) {
 
     /**
@@ -49,26 +44,6 @@ class TerraHelper(
                 }
                 it.toLong()
             } ?: gasLimit
-
-    /**
-     * The signed fee amount for [effectiveGasLimit]: Terra Classic re-derives it from the relayed
-     * limit (its fee is priced per unit of gas), plain Terra keeps the static [atomData.gas]. Byte
-     * identical to [atomData.gas] when no limit is relayed (`effectiveGasLimit == gasLimit`).
-     */
-    private fun feeAmount(
-        keysignPayload: KeysignPayload,
-        atomData: BlockChainSpecific.Cosmos,
-        effectiveGasLimit: Long,
-    ): String =
-        if (isTerraClassic)
-            TerraClassicTax.scaledSendFee(
-                    staticFee = atomData.gas,
-                    contractAddress = keysignPayload.coin.contractAddress,
-                    isNativeToken = keysignPayload.coin.isNativeToken,
-                    gasLimit = effectiveGasLimit,
-                )
-                .toString()
-        else atomData.gas.toString()
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val result = getPreSignedInputData(keysignPayload)
@@ -96,7 +71,13 @@ class TerraHelper(
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
         val effectiveGasLimit = effectiveGasLimit(atomData)
-        val feeAmount = feeAmount(keysignPayload, atomData, effectiveGasLimit)
+        // `atomData.gas` already carries the final fee AMOUNT priced for the effective gas limit:
+        // the initiator pins the Terra Classic base to that limit up front
+        // (`TerraClassicTax.baseGas`
+        // in CosmosFeeService), and plain Terra pays a flat fee. Either way the signer echoes it
+        // verbatim, so the signed fee equals the fee shown on Verify, while still honoring the
+        // relayed dynamic `gas_wanted`. Mirrors vultisig-ios `TerraHelperStruct`.
+        val feeAmount = atomData.gas.toString()
 
         if (
             keysignPayload.coin.isNativeToken ||

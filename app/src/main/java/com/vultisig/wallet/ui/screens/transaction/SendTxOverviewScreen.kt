@@ -48,7 +48,6 @@ import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
-import java.math.BigDecimal
 
 @Composable
 internal fun SendTxOverviewScreen(
@@ -163,25 +162,6 @@ internal fun SendTxOverviewScreen(
                         title = stringResource(R.string.tx_overview_screen_tx_memo),
                         subtitle = tx.memo,
                         showAllContent = true,
-                    )
-                }
-
-                // Skip the native "Amount" row for EVM contract calls — the function name above
-                // is the action, and a "0 ETH" amount underneath would mislead. Plain sends still
-                // render the native amount here. Parse as [BigDecimal] (not [BigInteger]) so a
-                // fractional native amount such as "0.001 ETH" still surfaces; the integer parser
-                // would silently null out and hide the row.
-                val nativeAmount = tx.token.value.toBigDecimalOrNull()
-                if (
-                    tx.functionName == null &&
-                        nativeAmount != null &&
-                        nativeAmount > BigDecimal.ZERO
-                ) {
-                    VerifyCardDivider(size = 1.dp)
-
-                    TextDetails(
-                        title = stringResource(R.string.deposit_screen_amount_title),
-                        subtitle = tx.token.value,
                     )
                 }
 

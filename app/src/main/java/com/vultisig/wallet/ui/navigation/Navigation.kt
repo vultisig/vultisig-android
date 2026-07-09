@@ -119,6 +119,10 @@ internal sealed class Route {
         val amount: String? = null,
         val memo: String? = null,
         val mscaAddress: String? = null,
+        // Base-unit amount currently bonded to the target node (THORChain UNBOND only). Overrides
+        // the wallet's spendable balance as the MAX/percentage base and the submit-time balance
+        // check, so the form unbonds against the bonded amount rather than the wallet balance.
+        val bondedAmount: String? = null,
     ) {
 
         @Serializable object SendMain
