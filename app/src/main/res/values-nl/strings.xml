@@ -907,6 +907,8 @@
     <string name="solana_delegate_amount_hint">Bedrag (SOL)</string>
     <string name="solana_delegate_select_validator">Selecteer een validator</string>
     <string name="solana_delegate_validator">Validator</string>
+    <string name="solana_delegate_amount_exceeds_balance">Bedrag mag het saldo niet overschrijden</string>
+    <string name="solana_delegate_min_delegation">Minimale delegatie is 1 SOL</string>
     <string name="solana_delegate_commission">Commissie %1$s</string>
     <string name="solana_delegate_cta">Doorgaan</string>
     <string name="solana_staking_unstake_cta">Ontstaken</string>

@@ -909,6 +909,8 @@
     <string name="solana_delegate_amount_hint">Quantia (SOL)</string>
     <string name="solana_delegate_select_validator">Selecionar um validador</string>
     <string name="solana_delegate_validator">Validador</string>
+    <string name="solana_delegate_amount_exceeds_balance">O valor não pode exceder o saldo</string>
+    <string name="solana_delegate_min_delegation">A delegação mínima é 1 SOL</string>
     <string name="solana_delegate_commission">Comissão %1$s</string>
     <string name="solana_delegate_cta">Continuar</string>
     <string name="solana_staking_unstake_cta">Remover do stake</string>

@@ -93,10 +93,20 @@ internal fun SolanaDelegateContent(
     onSubmit: () -> Unit,
 ) {
     val amount = amountFieldState.text.toString().toBigDecimalOrNull()
-    val belowMinimum = amount == null || amount < BigDecimal.ONE
-    val overBalance = amount != null && amount > state.stakeableBalance
+    // Live validation matching iOS: over-balance first, then the 1 SOL minimum-delegation floor.
+    val validationError: String? =
+        when {
+            amount == null -> null
+            amount > state.stakeableBalance ->
+                stringResource(R.string.solana_delegate_amount_exceeds_balance)
+            amount < BigDecimal.ONE -> stringResource(R.string.solana_delegate_min_delegation)
+            else -> null
+        }
     val canContinue =
-        state.selectedValidator != null && !belowMinimum && !overBalance && !state.isSubmitting
+        state.selectedValidator != null &&
+            amount != null &&
+            validationError == null &&
+            !state.isSubmitting
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -112,19 +122,19 @@ internal fun SolanaDelegateContent(
                 modifier = Modifier.weight(1f),
             )
 
-            SolanaValidatorPickerField(
-                selected = state.selectedValidator,
-                onClick = onPickValidator,
-            )
-
-            state.error?.let { error ->
+            (validationError ?: state.error?.asString())?.let { error ->
                 Text(
-                    text = error.asString(),
+                    text = error,
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.alerts.error,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                 )
             }
+
+            SolanaValidatorPickerField(
+                selected = state.selectedValidator,
+                onClick = onPickValidator,
+            )
         }
 
         VsButton(

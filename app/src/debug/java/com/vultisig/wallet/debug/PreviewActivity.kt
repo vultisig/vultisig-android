@@ -2343,10 +2343,21 @@ private fun SolanaDelegatePreview() {
             state =
                 com.vultisig.wallet.ui.models.solanastaking.SolanaDelegateUiState(
                     ticker = "SOL",
-                    stakeableBalance = java.math.BigDecimal("0.0945"),
+                    stakeableBalance = java.math.BigDecimal("0.094468061"),
+                    percentageSelected = 100,
+                    selectedValidator =
+                        com.vultisig.wallet.ui.models.solanastaking.SolanaValidatorOption(
+                            votePubkey = "Figment111",
+                            name = "Figment",
+                            logoUrl = null,
+                            activatedStakeDisplay = "16,179,362 SOL",
+                            commissionDisplay = "7%",
+                            apyDisplay = "5.15%",
+                        ),
                     isLoading = false,
                 ),
-            amountFieldState = androidx.compose.foundation.text.input.rememberTextFieldState(),
+            amountFieldState =
+                androidx.compose.foundation.text.input.rememberTextFieldState("0.094468061"),
             onPercentage = {},
             onPickValidator = {},
             onSubmit = {},
