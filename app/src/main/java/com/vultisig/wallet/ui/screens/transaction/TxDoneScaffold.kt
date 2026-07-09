@@ -5,6 +5,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -192,7 +193,8 @@ private fun SuccessTransaction(
                         transitionSpec = {
                             (scaleIn(initialScale = 0.8f, animationSpec = tween(300)) +
                                 fadeIn(animationSpec = tween(300))) togetherWith
-                                fadeOut(animationSpec = tween(150))
+                                fadeOut(animationSpec = tween(150)) using
+                                SizeTransform(clip = false)
                         },
                         modifier = Modifier.fillMaxWidth().align(Alignment.Center),
                         label = "tx_status_icon",
@@ -226,6 +228,7 @@ private fun SuccessTransaction(
                     ) { title ->
                         Text(
                             text = title,
+                            modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center,
                             style =
                                 Theme.brockmann.body.l.medium.copy(

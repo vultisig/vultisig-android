@@ -8,6 +8,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -114,7 +115,8 @@ internal fun KeysignView(
             },
             transitionSpec = {
                 fadeIn(animationSpec = tween(durationMillis = 220)) togetherWith
-                    fadeOut(animationSpec = tween(durationMillis = 150))
+                    fadeOut(animationSpec = tween(durationMillis = 150)) using
+                    SizeTransform(clip = false)
             },
             label = "keysign_phase",
         ) { targetState ->
