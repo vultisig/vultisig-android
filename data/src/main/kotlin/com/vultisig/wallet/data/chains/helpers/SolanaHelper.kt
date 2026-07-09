@@ -41,6 +41,9 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
     companion object {
         val DefaultFeeInLamports: BigInteger = 1000000.toBigInteger()
 
+        /** Byte length of an ed25519 signature, and of each slot in a Solana signature array. */
+        private const val SIGNATURE_LENGTH = 64
+
         /**
          * The Solana transaction id is the first signature in the signed transaction. WalletCore
          * populates [Solana.SigningOutput.getSignaturesList] (base58) on the
@@ -290,9 +293,10 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
             error("Signature verification failed")
         }
 
-        // Splice signer 0's signature into the original bytes; the message and any
-        // further signer slots stay exactly as the dApp built them, so the broadcast
+        // Splice signer 0's signature into signer 0's slot in the original bytes; the message and
+        // any further signer slots stay exactly as the dApp built them, so the broadcast
         // transaction matches the pre-image that was signed.
+        check(signature.size == SIGNATURE_LENGTH) { "Unexpected Solana signature length" }
         val signedTransaction = transaction.bytes.copyOf()
         signature.copyInto(signedTransaction, destinationOffset = transaction.firstSignatureOffset)
 
@@ -333,29 +337,37 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
     private fun parseRawTransaction(base64Transaction: String): RawSolanaTransaction {
         val bytes = base64Transaction.decodeBase64Bytes()
 
-        var offset = 0
-        var numSignatures = 0
-        var shift = 0
-        // Solana compact-u16 (shortvec): 7 payload bits per byte, high bit = continuation.
-        while (offset < bytes.size) {
-            val byte = bytes[offset].toInt() and 0xFF
-            numSignatures = numSignatures or ((byte and 0x7F) shl shift)
-            offset++
-            if (byte and 0x80 == 0) break
-            shift += 7
-            if (shift > 14) error("Malformed signature count in Solana transaction")
-        }
-        check(numSignatures >= 1) { "Solana transaction declares no signatures" }
+        val (signatureCount, firstSignatureOffset) = readCompactU16(bytes)
+        check(signatureCount >= 1) { "Solana transaction declares no signatures" }
 
-        val firstSignatureOffset = offset
-        val messageOffset = offset + numSignatures * 64
+        val messageOffset = firstSignatureOffset + signatureCount * SIGNATURE_LENGTH
         check(messageOffset < bytes.size) {
-            "Solana transaction too short for its $numSignatures declared signature(s)"
+            "Solana transaction too short for its $signatureCount declared signature(s)"
         }
         return RawSolanaTransaction(
             bytes = bytes,
             firstSignatureOffset = firstSignatureOffset,
             message = bytes.copyOfRange(messageOffset, bytes.size),
         )
+    }
+
+    /**
+     * Decodes the Solana compact-u16 (shortvec) at the start of [bytes] — up to three bytes, 7
+     * payload bits each with the high bit signalling "more bytes follow" — and returns the decoded
+     * value together with the offset just past it (where the signature slots begin).
+     */
+    private fun readCompactU16(bytes: ByteArray): Pair<Int, Int> {
+        var value = 0
+        var offset = 0
+        var shift = 0
+        while (offset < bytes.size) {
+            val byte = bytes[offset].toInt() and 0xFF
+            value = value or ((byte and 0x7F) shl shift)
+            offset++
+            if (byte and 0x80 == 0) return value to offset
+            shift += 7
+            if (shift > 14) error("Malformed compact-u16 in Solana transaction")
+        }
+        error("Truncated compact-u16 in Solana transaction")
     }
 }

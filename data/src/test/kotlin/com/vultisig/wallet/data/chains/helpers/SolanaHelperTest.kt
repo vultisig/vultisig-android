@@ -150,7 +150,7 @@ class SolanaHelperTest {
                     .getPreSignedImageHash(rawTxPayload(base64Of(ByteArray(4) { 0xFF.toByte() })))
             }
 
-        assertEquals("Malformed signature count in Solana transaction", error.message)
+        assertEquals("Malformed compact-u16 in Solana transaction", error.message)
     }
 
     /**
