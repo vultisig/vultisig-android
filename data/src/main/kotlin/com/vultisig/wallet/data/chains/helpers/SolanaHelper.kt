@@ -8,8 +8,10 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
+import io.ktor.util.decodeBase64Bytes
 import java.math.BigInteger
 import wallet.core.jni.AnyAddress
+import wallet.core.jni.Base58
 import wallet.core.jni.Base64
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
@@ -270,32 +272,8 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         return Base64.encode(dataMessage)
     }
 
-    private fun getPreSignedImageHashForRaw(base64Transaction: String): List<String> {
-        val txData = android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
-
-        val decodedData = wallet.core.jni.TransactionDecoder.decode(coinType, txData)
-        val decodingOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData)
-
-        if (decodingOutput.errorMessage.isNotEmpty()) {
-            error(decodingOutput.errorMessage)
-        }
-
-        if (!decodingOutput.hasTransaction()) {
-            error("Invalid transaction format")
-        }
-
-        val input =
-            Solana.SigningInput.newBuilder().setRawMessage(decodingOutput.transaction).build()
-
-        val inputData = input.toByteArray()
-
-        val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
-        val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-                .checkError()
-
-        return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
-    }
+    private fun getPreSignedImageHashForRaw(base64Transaction: String): List<String> =
+        listOf(Numeric.toHexStringNoPrefix(parseRawTransaction(base64Transaction).message))
 
     private fun signRawTransaction(
         coinHexPubKey: String,
@@ -305,59 +283,79 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         val pubkeyData = coinHexPubKey.toHexByteArray()
         val publicKey = PublicKey(pubkeyData, PublicKeyType.ED25519)
 
-        val txData =
-            android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
-                ?: error("Invalid base64 transaction")
-
-        val decodedData = wallet.core.jni.TransactionDecoder.decode(coinType, txData)
-        val decodingOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData)
-
-        if (decodingOutput.errorMessage.isNotEmpty()) {
-            error(decodingOutput.errorMessage)
-        }
-
-        if (!decodingOutput.hasTransaction()) {
-            error("Invalid transaction format")
-        }
-
-        val input =
-            Solana.SigningInput.newBuilder().setRawMessage(decodingOutput.transaction).build()
-
-        val inputData = input.toByteArray()
-
-        val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
-        val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-
-        if (preSigningOutput.errorMessage.isNotEmpty()) {
-            error(preSigningOutput.errorMessage)
-        }
-
-        val key = Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())
+        val transaction = parseRawTransaction(base64Transaction)
+        val key = Numeric.toHexStringNoPrefix(transaction.message)
         val signature = signatures[key]?.getSignature() ?: error("Signature not found")
-
-        if (!publicKey.verify(signature, preSigningOutput.data.toByteArray())) {
+        if (!publicKey.verify(signature, transaction.message)) {
             error("Signature verification failed")
         }
 
-        val allSignatures = DataVector()
-        val publicKeys = DataVector()
-        allSignatures.add(signature)
-        publicKeys.add(pubkeyData)
+        // Splice signer 0's signature into the original bytes; the message and any
+        // further signer slots stay exactly as the dApp built them, so the broadcast
+        // transaction matches the pre-image that was signed.
+        val signedTransaction = transaction.bytes.copyOf()
+        signature.copyInto(signedTransaction, destinationOffset = transaction.firstSignatureOffset)
 
-        val compiled =
-            TransactionCompiler.compileWithSignatures(
-                coinType,
-                inputData,
-                allSignatures,
-                publicKeys,
-            )
-
-        val output = Solana.SigningOutput.parseFrom(compiled).checkError()
-
+        // Android broadcasts Solana transactions with the RPC's default base58
+        // encoding (see SolanaApi.broadcastTransaction), unlike iOS which pins base64,
+        // so the signed transaction and its hash are base58 here.
         return SignedTransactionResult(
-            rawTransaction = output.encoded,
-            transactionHash = output.transactionHash(),
+            rawTransaction = Base58.encodeNoCheck(signedTransaction),
+            transactionHash = Base58.encodeNoCheck(signature),
+        )
+    }
+
+    /**
+     * A dApp-supplied raw Solana transaction split into its wire envelope `[compact-u16 signature
+     * count][count × 64-byte signature slot][message]`.
+     *
+     * [message] is the pre-image ed25519 signs verbatim; [firstSignatureOffset] is where signer 0's
+     * slot begins, so the produced signature can be spliced back into [bytes] without disturbing
+     * anything else.
+     */
+    private class RawSolanaTransaction(
+        val bytes: ByteArray,
+        val firstSignatureOffset: Int,
+        val message: ByteArray,
+    )
+
+    /**
+     * Parses the `[shortvec(numSignatures)][numSignatures × 64-byte slot][message]` envelope of a
+     * dApp-supplied raw transaction and returns its message bytes verbatim.
+     *
+     * Signing over these original bytes — rather than decoding into WalletCore's representation and
+     * re-serializing it (the `TransactionDecoder` → `SigningInput.rawMessage` →
+     * `TransactionCompiler` round trip) — keeps the pre-image hash independent of WalletCore's
+     * encoder. That re-encode is not guaranteed to reproduce the original bytes for a v0 message
+     * referencing an Address Lookup Table (the standard shape for DEX/aggregator swaps), which
+     * would make co-signing devices compute mismatching hashes and stall the ceremony.
+     */
+    private fun parseRawTransaction(base64Transaction: String): RawSolanaTransaction {
+        val bytes = base64Transaction.decodeBase64Bytes()
+
+        var offset = 0
+        var numSignatures = 0
+        var shift = 0
+        // Solana compact-u16 (shortvec): 7 payload bits per byte, high bit = continuation.
+        while (offset < bytes.size) {
+            val byte = bytes[offset].toInt() and 0xFF
+            numSignatures = numSignatures or ((byte and 0x7F) shl shift)
+            offset++
+            if (byte and 0x80 == 0) break
+            shift += 7
+            if (shift > 14) error("Malformed signature count in Solana transaction")
+        }
+        check(numSignatures >= 1) { "Solana transaction declares no signatures" }
+
+        val firstSignatureOffset = offset
+        val messageOffset = offset + numSignatures * 64
+        check(messageOffset < bytes.size) {
+            "Solana transaction too short for its $numSignatures declared signature(s)"
+        }
+        return RawSolanaTransaction(
+            bytes = bytes,
+            firstSignatureOffset = firstSignatureOffset,
+            message = bytes.copyOfRange(messageOffset, bytes.size),
         )
     }
 }
