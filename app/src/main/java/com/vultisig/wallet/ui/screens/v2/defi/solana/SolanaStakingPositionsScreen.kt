@@ -109,7 +109,7 @@ internal fun SolanaStakingPositionsContent(
                 title = Chain.Solana.raw,
                 isLoading = state.isLoading,
                 totalValue = state.totalStakedFiatDisplay,
-                image = R.drawable.solana,
+                image = R.drawable.referral_data_banner,
                 isBalanceVisible = state.isBalanceVisible,
             )
 
