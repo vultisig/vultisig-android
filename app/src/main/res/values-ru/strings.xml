@@ -914,6 +914,7 @@
     <string name="solana_delegate_title">Стейкинг SOL</string>
     <string name="solana_delegate_amount_hint">Сумма (SOL)</string>
     <string name="solana_delegate_select_validator">Выберите валидатора</string>
+    <string name="solana_delegate_validator">Валидатор</string>
     <string name="solana_delegate_commission">Комиссия %1$s</string>
     <string name="solana_delegate_cta">Продолжить</string>
     <string name="solana_staking_unstake_cta">Вывести из стейкинга</string>

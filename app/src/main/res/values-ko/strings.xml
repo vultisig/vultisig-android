@@ -499,6 +499,7 @@
     <string name="solana_delegate_title">SOL 스테이킹</string>
     <string name="solana_delegate_amount_hint">수량 (SOL)</string>
     <string name="solana_delegate_select_validator">검증인 선택</string>
+    <string name="solana_delegate_validator">검증인</string>
     <string name="solana_delegate_commission">수수료 %1$s</string>
     <string name="solana_delegate_cta">계속</string>
     <string name="solana_staking_unstake_cta">스테이킹 해제</string>

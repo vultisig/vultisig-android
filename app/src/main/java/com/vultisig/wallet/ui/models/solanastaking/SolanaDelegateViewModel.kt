@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingService
 import com.vultisig.wallet.data.blockchain.solana.staking.ValidatorMetadataProvider
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.BalanceRepository
@@ -29,6 +30,8 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
+import java.math.BigInteger
+import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,25 +46,33 @@ import timber.log.Timber
 internal data class SolanaValidatorOption(
     val votePubkey: String,
     val name: String,
+    val logoUrl: String?,
     val commissionDisplay: String,
     val apyDisplay: String?,
 )
 
 @Immutable
 internal data class SolanaDelegateUiState(
+    val ticker: String = "SOL",
     val validators: List<SolanaValidatorOption> = emptyList(),
-    val selectedVotePubkey: String? = null,
+    val selectedValidator: SolanaValidatorOption? = null,
+    /** Stakeable balance (human SOL) — total balance minus rent-exempt reserve + a fee buffer. */
+    val stakeableBalance: BigDecimal = BigDecimal.ZERO,
+    val percentageSelected: Int = -1,
+    val isShowingPicker: Boolean = false,
+    val validatorSearchQuery: String = "",
     val isLoading: Boolean = true,
     val isSubmitting: Boolean = false,
     val error: UiText? = null,
 )
 
 /**
- * Delegate (stake) flow for Solana native staking: pick a validator + amount, then build a
- * create-and-delegate transaction in one tx. Funding = entered amount + the live rent-exempt
- * reserve (the active stake equals the entered amount). The byte-parity `SignSolana` is built via
- * [BuildSolanaStakingKeysignPayloadUseCase] and carried on the [DepositTransaction] so the generic
- * VerifyDeposit -> keysign flow signs it. Mirrors the iOS delegate flow (vultisig-ios #4661).
+ * Delegate (stake) flow for Solana native staking: enter an amount (with 25/50/75/Max chips + the
+ * live stakeable balance) and pick a validator, then build a create-and-delegate transaction in one
+ * tx. Funding = entered amount + the live rent-exempt reserve (the active stake equals the entered
+ * amount). The byte-parity `SignSolana` is built via [BuildSolanaStakingKeysignPayloadUseCase] and
+ * carried on the [DepositTransaction] so the generic VerifyDeposit -> keysign flow signs it.
+ * Mirrors the iOS delegate flow (vultisig-ios #4661).
  */
 @HiltViewModel
 internal class SolanaDelegateViewModel
@@ -86,18 +97,58 @@ constructor(
     private val _state = MutableStateFlow(SolanaDelegateUiState())
     val state: StateFlow<SolanaDelegateUiState> = _state.asStateFlow()
 
+    private var coin: Coin? = null
+    private var balanceLamports: BigInteger = BigInteger.ZERO
+
     init {
-        loadValidators()
+        load()
     }
 
-    fun onValidatorSelected(votePubkey: String) {
-        _state.update { it.copy(selectedVotePubkey = votePubkey) }
+    fun onSearchQueryChange(query: String) {
+        _state.update { it.copy(validatorSearchQuery = query) }
     }
 
-    private fun loadValidators() {
+    fun openValidatorPicker() {
+        _state.update { it.copy(isShowingPicker = true, validatorSearchQuery = "") }
+    }
+
+    fun closeValidatorPicker() {
+        _state.update { it.copy(isShowingPicker = false) }
+    }
+
+    fun selectValidator(validator: SolanaValidatorOption) {
+        _state.update {
+            it.copy(selectedValidator = validator, isShowingPicker = false, error = null)
+        }
+    }
+
+    fun visibleValidators(state: SolanaDelegateUiState): List<SolanaValidatorOption> {
+        val query = state.validatorSearchQuery.trim()
+        if (query.isEmpty()) return state.validators
+        return state.validators.filter {
+            it.name.contains(query, ignoreCase = true) ||
+                it.votePubkey.contains(query, ignoreCase = true)
+        }
+    }
+
+    /** 25/50/75/100% chip → fill the amount field from the stakeable balance. */
+    fun onPercentageChange(percent: Int) {
+        _state.update { it.copy(percentageSelected = percent) }
+        val available = _state.value.stakeableBalance
+        if (available <= BigDecimal.ZERO) return
+        val amount =
+            available
+                .multiply(BigDecimal(percent))
+                .divide(BigDecimal(100), 9, RoundingMode.DOWN)
+                .stripTrailingZeros()
+                .toPlainString()
+        amountFieldState.edit { replace(0, length, amount) }
+    }
+
+    private fun load() {
         viewModelScope.safeLaunch(
             onError = { e ->
-                Timber.e(e, "Failed to load Solana validators")
+                Timber.e(e, "Failed to load Solana delegate data")
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -107,6 +158,25 @@ constructor(
                 }
             }
         ) {
+            val vault = vaultRepository.get(route.vaultId) ?: error("Vault not found")
+            val solCoin =
+                vault.coins.firstOrNull { it.chain == Chain.Solana && it.isNativeToken }
+                    ?: error("SOL not in this vault")
+            coin = solCoin
+
+            balanceLamports =
+                balanceRepository.getTokenValue(solCoin.address, solCoin).first().value
+            // Stakeable = balance − rent-exempt reserve − a small fee buffer, so a Max stake stays
+            // within balance once the rent reserve is added to the funding downstream.
+            val headroom =
+                SolanaStakingConfig.RENT_EXEMPT_RESERVE_FALLBACK_LAMPORTS +
+                    SolanaHelper.DefaultFeeInLamports
+            val stakeable =
+                (balanceLamports - headroom)
+                    .max(BigInteger.ZERO)
+                    .toBigDecimal()
+                    .movePointLeft(solCoin.decimal)
+
             val validators =
                 solanaStakingService
                     .fetchValidators()
@@ -119,19 +189,21 @@ constructor(
                     SolanaValidatorOption(
                         votePubkey = v.votePubkey,
                         name = md?.name?.takeIf { it.isNotBlank() } ?: shortAddress(v.votePubkey),
+                        logoUrl = md?.logoUrl,
                         commissionDisplay = "${v.commission}%",
                         apyDisplay =
                             md?.apyEstimate?.let {
                                 it.multiply(BigDecimal(100))
-                                    .setScale(2, java.math.RoundingMode.HALF_UP)
+                                    .setScale(2, RoundingMode.HALF_UP)
                                     .toPlainString() + "%"
                             },
                     )
                 }
             _state.update {
                 it.copy(
+                    ticker = solCoin.ticker,
                     validators = options,
-                    selectedVotePubkey = options.firstOrNull()?.votePubkey,
+                    stakeableBalance = stakeable,
                     isLoading = false,
                 )
             }
@@ -150,18 +222,17 @@ constructor(
             }
         ) {
             val vault = vaultRepository.get(route.vaultId) ?: error("Vault not found")
-            val coin =
-                vault.coins.firstOrNull { it.chain == Chain.Solana && it.isNativeToken }
-                    ?: error("SOL not in this vault")
+            val solCoin = coin ?: error("SOL not in this vault")
 
             val votePubkey =
-                _state.value.selectedVotePubkey ?: error("Select a validator to stake with")
+                _state.value.selectedValidator?.votePubkey
+                    ?: error("Select a validator to stake with")
 
             val amountSol =
                 amountFieldState.text.toString().trim().toBigDecimalOrNull()
                     ?: error("Enter a valid amount")
             val amountLamports =
-                amountSol.movePointRight(coin.decimal).toBigIntegerExact().also {
+                amountSol.movePointRight(solCoin.decimal).toBigIntegerExact().also {
                     require(it.signum() > 0) { "Amount must be greater than zero" }
                 }
             require(amountLamports >= SolanaStakingConfig.MINIMUM_DELEGATION_LAMPORTS) {
@@ -176,15 +247,15 @@ constructor(
             // Funding = active delegated stake (entered amount) + rent-exempt reserve.
             val funding = amountLamports + rentReserve
 
-            val balance = balanceRepository.getTokenValue(coin.address, coin).first().value
+            val balance = balanceRepository.getTokenValue(solCoin.address, solCoin).first().value
             require(funding <= balance) { "Insufficient balance for this stake + rent reserve" }
 
-            val gasFee = TokenValue(value = SolanaHelper.DefaultFeeInLamports, token = coin)
+            val gasFee = TokenValue(value = SolanaHelper.DefaultFeeInLamports, token = solCoin)
             val specific =
                 blockChainSpecificRepository.getSpecific(
                     chain = Chain.Solana,
-                    address = coin.address,
-                    token = coin,
+                    address = solCoin.address,
+                    token = solCoin,
                     gasFee = gasFee,
                     isSwap = false,
                     isMaxAmountEnabled = false,
@@ -194,7 +265,7 @@ constructor(
             val payload = SolanaStakingPayload.delegate(votePubkey = votePubkey, lamports = funding)
             val keysignPayload =
                 buildKeysignPayload(
-                    coin = coin,
+                    coin = solCoin,
                     payload = payload,
                     blockChainSpecific = specific.blockChainSpecific,
                     balanceLamports = balance,
@@ -207,9 +278,9 @@ constructor(
                 DepositTransaction(
                     id = UUID.randomUUID().toString(),
                     vaultId = route.vaultId,
-                    srcToken = coin,
-                    srcAddress = coin.address,
-                    srcTokenValue = TokenValue(value = funding, token = coin),
+                    srcToken = solCoin,
+                    srcAddress = solCoin.address,
+                    srcTokenValue = TokenValue(value = funding, token = solCoin),
                     memo = "",
                     dstAddress = votePubkey,
                     estimatedFees = gasFee,

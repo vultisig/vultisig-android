@@ -911,6 +911,7 @@
     <string name="solana_delegate_title">SOL staken</string>
     <string name="solana_delegate_amount_hint">Betrag (SOL)</string>
     <string name="solana_delegate_select_validator">Validator auswählen</string>
+    <string name="solana_delegate_validator">Validator</string>
     <string name="solana_delegate_commission">Provision %1$s</string>
     <string name="solana_delegate_cta">Weiter</string>
     <string name="solana_staking_unstake_cta">Unstaken</string>

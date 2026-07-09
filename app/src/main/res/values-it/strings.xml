@@ -909,6 +909,7 @@
     <string name="solana_delegate_title">Metti in staking SOL</string>
     <string name="solana_delegate_amount_hint">Importo (SOL)</string>
     <string name="solana_delegate_select_validator">Seleziona un validatore</string>
+    <string name="solana_delegate_validator">Validatore</string>
     <string name="solana_delegate_commission">Commissione %1$s</string>
     <string name="solana_delegate_cta">Continua</string>
     <string name="solana_staking_unstake_cta">Annulla staking</string>

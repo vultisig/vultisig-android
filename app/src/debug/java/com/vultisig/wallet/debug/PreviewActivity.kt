@@ -216,6 +216,7 @@ class PreviewActivity : ComponentActivity() {
                     "defi_account_list" -> DeFiAccountListPreview()
                     "solana_staking_positions" -> SolanaStakingPositionsLoadedPreview()
                     "solana_staking_positions_empty" -> SolanaStakingPositionsEmptyPreview()
+                    "solana_delegate" -> SolanaDelegatePreview()
                     "share_qr_keysign" -> ShareQrKeysignPreview()
                     "share_qr_keysign_swap" -> ShareQrKeysignSwapPreview()
                     "share_qr_keygen" -> ShareQrKeygenPreview()
@@ -2330,6 +2331,27 @@ private fun SolanaStakingPositionsLoadedPreview() {
                 isBalanceVisible = true,
             )
     )
+}
+
+@Composable
+private fun SolanaDelegatePreview() {
+    com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold(
+        title = "Stake SOL",
+        onBackClick = {},
+    ) {
+        com.vultisig.wallet.ui.screens.v2.defi.solana.SolanaDelegateContent(
+            state =
+                com.vultisig.wallet.ui.models.solanastaking.SolanaDelegateUiState(
+                    ticker = "SOL",
+                    stakeableBalance = java.math.BigDecimal("0.0945"),
+                    isLoading = false,
+                ),
+            amountFieldState = androidx.compose.foundation.text.input.rememberTextFieldState(),
+            onPercentage = {},
+            onPickValidator = {},
+            onSubmit = {},
+        )
+    }
 }
 
 @Composable
