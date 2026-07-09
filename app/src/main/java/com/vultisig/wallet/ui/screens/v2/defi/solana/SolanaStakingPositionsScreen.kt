@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.v2.defi.solana
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -29,6 +31,7 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -39,6 +42,8 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.solanastaking.SolanaStakePositionRow
@@ -46,8 +51,6 @@ import com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState
 import com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsViewModel
 import com.vultisig.wallet.ui.screens.v2.defi.ActionButton
 import com.vultisig.wallet.ui.screens.v2.defi.ApyInfoItem
-import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
-import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
 import com.vultisig.wallet.ui.screens.v2.defi.InfoItem
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
@@ -105,11 +108,9 @@ internal fun SolanaStakingPositionsContent(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = CenterHorizontally,
         ) {
-            BalanceBanner(
-                title = Chain.Solana.raw,
-                isLoading = state.isLoading,
+            SolanaHeaderBanner(
                 totalValue = state.totalStakedFiatDisplay,
-                image = R.drawable.referral_data_banner,
+                isLoading = state.isLoading,
                 isBalanceVisible = state.isBalanceVisible,
             )
 
@@ -127,15 +128,12 @@ internal fun SolanaStakingPositionsContent(
                 modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                HeaderDeFiWidget(
-                    title = stringResource(R.string.solana_staking_total_staked_sol),
-                    iconRes = R.drawable.solana,
-                    buttonText = stringResource(R.string.solana_delegate_new_validator),
-                    onClickAction = onStake,
+                SolanaTotalStakedCard(
                     totalAmount = state.totalStakedSolDisplay,
                     totalPrice = state.totalStakedFiatDisplay,
                     isLoading = state.isLoading,
                     isBalanceVisible = state.isBalanceVisible,
+                    onDelegate = onStake,
                 )
 
                 if (state.positions.isNotEmpty()) {
@@ -300,6 +298,134 @@ private fun StakeAccountContent(
                 )
             }
         }
+    }
+}
+
+/**
+ * Solana DeFi header box. The shared [com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner] takes a
+ * single full-bleed background image, and the repo has no wide Solana banner asset — so this local
+ * banner keeps the same box style while placing the Solana coin logo, contained in a ring, on the
+ * right (matching the iOS header) instead of overflowing the box.
+ */
+@Composable
+private fun SolanaHeaderBanner(totalValue: String, isLoading: Boolean, isBalanceVisible: Boolean) {
+    Box(
+        modifier =
+            Modifier.fillMaxWidth()
+                .height(118.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.light,
+                    shape = RoundedCornerShape(16.dp),
+                )
+    ) {
+        Box(
+            modifier =
+                Modifier.align(Alignment.CenterEnd)
+                    .padding(end = 20.dp)
+                    .size(76.dp)
+                    .clip(CircleShape)
+                    .border(1.dp, Theme.v2.colors.primary.accent4, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                painter = painterResource(R.drawable.solana),
+                contentDescription = null,
+                modifier = Modifier.size(40.dp),
+            )
+        }
+
+        Column(modifier = Modifier.padding(start = 16.dp, top = 25.dp)) {
+            Text(
+                text = Chain.Solana.raw,
+                color = Theme.v2.colors.text.primary,
+                style = Theme.brockmann.body.l.medium,
+            )
+            UiSpacer(6.dp)
+            if (isLoading) {
+                UiPlaceholderLoader(modifier = Modifier.size(width = 150.dp, height = 32.dp))
+            } else {
+                Text(
+                    text = if (isBalanceVisible) totalValue else HIDE_BALANCE_CHARS,
+                    color = Theme.v2.colors.text.primary,
+                    style = Theme.satoshi.price.title1,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * "Total Staked SOL" summary card + primary CTA. Mirrors the shared
+ * [com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget] but omits its baked-in `APY (approx.)
+ * 1%` row (there is no chain-wide APY for Solana native staking — APY is per stake account and
+ * shown on each row), matching the iOS layout.
+ */
+@Composable
+private fun SolanaTotalStakedCard(
+    totalAmount: String,
+    totalPrice: String,
+    isLoading: Boolean,
+    isBalanceVisible: Boolean,
+    onDelegate: () -> Unit,
+) {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.light,
+                    shape = RoundedCornerShape(16.dp),
+                )
+                .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = painterResource(R.drawable.solana),
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+            )
+            UiSpacer(12.dp)
+            Column {
+                Text(
+                    text = stringResource(R.string.solana_staking_total_staked_sol),
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+                UiSpacer(4.dp)
+                if (isLoading) {
+                    UiPlaceholderLoader(modifier = Modifier.size(width = 120.dp, height = 28.dp))
+                } else {
+                    Text(
+                        text = if (isBalanceVisible) totalAmount else HIDE_BALANCE_CHARS,
+                        style = Theme.brockmann.headings.title1,
+                        color = Theme.v2.colors.text.primary,
+                    )
+                    if (totalPrice.isNotEmpty()) {
+                        UiSpacer(4.dp)
+                        Text(
+                            text = if (isBalanceVisible) totalPrice else HIDE_BALANCE_CHARS,
+                            style = Theme.brockmann.supplementary.footnote,
+                            color = Theme.v2.colors.text.tertiary,
+                        )
+                    }
+                }
+            }
+        }
+
+        UiSpacer(16.dp)
+        UiHorizontalDivider(color = Theme.v2.colors.border.light)
+        UiSpacer(16.dp)
+
+        VsButton(
+            label = stringResource(R.string.solana_delegate_new_validator),
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onDelegate,
+        )
     }
 }
 
