@@ -486,9 +486,10 @@
     <string name="ton_unstake_full_withdrawal_notice">노미네이터 풀은 전액 인출만 지원합니다. 스테이킹한 잔액 전체가 반환됩니다.</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">이 볼트에 SOL이 없습니다</string>
-    <string name="solana_staking_total_staked">총 스테이킹</string>
-    <string name="solana_staking_loading">스테이킹 포지션 불러오는 중…</string>
-    <string name="solana_staking_no_positions">스테이킹 포지션 없음</string>
+    <string name="solana_staking_total_staked_sol">총 스테이킹 SOL</string>
+    <string name="solana_delegate_new_validator">새 검증인에게 위임</string>
+    <string name="solana_stake_accounts">스테이크 계정</string>
+    <string name="solana_rent_reserve">임대 예치금</string>
     <string name="solana_staking_apy_label">APY %1$s</string>
     <string name="solana_staking_state_activating">활성화 중</string>
     <string name="solana_staking_state_active">활성</string>
@@ -500,7 +501,6 @@
     <string name="solana_delegate_select_validator">검증인 선택</string>
     <string name="solana_delegate_commission">수수료 %1$s</string>
     <string name="solana_delegate_cta">계속</string>
-    <string name="solana_staking_stake_cta">스테이킹</string>
     <string name="solana_staking_unstake_cta">스테이킹 해제</string>
     <string name="solana_staking_withdraw_cta">출금</string>
     <string name="solana_staking_move_cta">이동</string>

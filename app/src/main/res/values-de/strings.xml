@@ -898,9 +898,10 @@
     <string name="ton_unstake_full_withdrawal_notice">Nominator-Pools unterstützen nur die vollständige Abhebung. Dein gesamtes gestaktes Guthaben wird zurückgezahlt.</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL ist nicht in diesem Tresor</string>
-    <string name="solana_staking_total_staked">Insgesamt gestaked</string>
-    <string name="solana_staking_loading">Staking-Positionen werden geladen…</string>
-    <string name="solana_staking_no_positions">Keine Staking-Positionen</string>
+    <string name="solana_staking_total_staked_sol">Insgesamt gestaked SOL</string>
+    <string name="solana_delegate_new_validator">An neuen Validator delegieren</string>
+    <string name="solana_stake_accounts">Stake-Konten</string>
+    <string name="solana_rent_reserve">Mietreserve</string>
     <string name="solana_staking_apy_label">APY %1$s</string>
     <string name="solana_staking_state_activating">Wird aktiviert</string>
     <string name="solana_staking_state_active">Aktiv</string>
@@ -912,7 +913,6 @@
     <string name="solana_delegate_select_validator">Validator auswählen</string>
     <string name="solana_delegate_commission">Provision %1$s</string>
     <string name="solana_delegate_cta">Weiter</string>
-    <string name="solana_staking_stake_cta">Staken</string>
     <string name="solana_staking_unstake_cta">Unstaken</string>
     <string name="solana_staking_withdraw_cta">Auszahlen</string>
     <string name="solana_staking_move_cta">Verschieben</string>

@@ -65,14 +65,13 @@ object SigningHelper {
         //    from the iOS/Windows/CLI initiator and cross-platform co-signing 404'd.
         //  - EdDSA chains (e.g. Solana, TON) deliver the precomputed digest — sign it raw.
         //  - Everything else (EVM, Tron) signs the keccak256.
-        val bytes = when {
-            chain?.standard == TokenStandard.COSMOS || chain?.standard == TokenStandard.THORCHAIN ->
-                processedBytes.toSha256ByteArray()
-            chain?.TssKeysignType == TssKeyType.EDDSA ->
-                processedBytes
-            else ->
-                processedBytes.toKeccak256ByteArray()
-        }
+        val bytes =
+            when {
+                chain?.standard == TokenStandard.COSMOS ||
+                    chain?.standard == TokenStandard.THORCHAIN -> processedBytes.toSha256ByteArray()
+                chain?.TssKeysignType == TssKeyType.EDDSA -> processedBytes
+                else -> processedBytes.toKeccak256ByteArray()
+            }
         return listOf(bytes.toHexString())
     }
 

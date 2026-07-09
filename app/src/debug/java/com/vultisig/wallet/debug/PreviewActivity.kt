@@ -2298,6 +2298,7 @@ private fun solanaStakingPreviewRow(
         votePubkey = null,
         stakedDisplay = "$staked SOL",
         stakedFiatDisplay = fiat,
+        rentReserveDisplay = "0.002283 SOL",
         stateLabel = com.vultisig.wallet.ui.utils.UiText.DynamicString(stateLabel),
         apyDisplay = apy,
         canDeactivate = canDeactivate,
@@ -2308,40 +2309,22 @@ private fun solanaStakingPreviewRow(
 private fun SolanaStakingPositionsLoadedPreview() {
     com.vultisig.wallet.ui.screens.v2.defi.solana.SolanaStakingPositionsContent(
         state =
-            com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState.Success(
-                totalStakedFiatDisplay = "$1,284.55",
+            com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState(
+                isLoading = false,
+                totalStakedFiatDisplay = "$78.04",
+                totalStakedSolDisplay = "1 SOL",
                 positions =
                     listOf(
                         solanaStakingPreviewRow(
                             stakePubkey = "6nJq...aWWM",
-                            validatorName = "Everstake",
-                            staked = "8.5",
-                            fiat = "$1,190.00",
+                            validatorName = "Helius",
+                            staked = "1",
+                            fiat = "$78.04",
                             stateLabel = "Active",
-                            apy = "7.12%",
+                            apy = "5.55%",
                             canDeactivate = true,
                             canWithdraw = false,
-                        ),
-                        solanaStakingPreviewRow(
-                            stakePubkey = "9WzD...R2gH",
-                            validatorName = "Coinbase",
-                            staked = "0.5",
-                            fiat = "$70.00",
-                            stateLabel = "Activating",
-                            apy = "6.80%",
-                            canDeactivate = true,
-                            canWithdraw = false,
-                        ),
-                        solanaStakingPreviewRow(
-                            stakePubkey = "3xM8...gHR2",
-                            validatorName = "5tCa…9kPq",
-                            staked = "0.17",
-                            fiat = "$24.55",
-                            stateLabel = "Inactive",
-                            apy = null,
-                            canDeactivate = false,
-                            canWithdraw = true,
-                        ),
+                        )
                     ),
                 isBalanceVisible = true,
             )
@@ -2352,8 +2335,10 @@ private fun SolanaStakingPositionsLoadedPreview() {
 private fun SolanaStakingPositionsEmptyPreview() {
     com.vultisig.wallet.ui.screens.v2.defi.solana.SolanaStakingPositionsContent(
         state =
-            com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState.Success(
+            com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState(
+                isLoading = false,
                 totalStakedFiatDisplay = "$0.00",
+                totalStakedSolDisplay = "0 SOL",
                 positions = emptyList(),
                 isBalanceVisible = true,
             )

@@ -896,9 +896,10 @@
     <string name="ton_unstake_full_withdrawal_notice">Los pools de nominadores solo permiten el retiro completo. Se devolverá todo tu saldo en staking.</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL no está en esta bóveda</string>
-    <string name="solana_staking_total_staked">Total en staking</string>
-    <string name="solana_staking_loading">Cargando posiciones de staking…</string>
-    <string name="solana_staking_no_positions">Sin posiciones de staking</string>
+    <string name="solana_staking_total_staked_sol">Total en staking de SOL</string>
+    <string name="solana_delegate_new_validator">Delegar a nuevo validador</string>
+    <string name="solana_stake_accounts">Cuentas de staking</string>
+    <string name="solana_rent_reserve">Reserva de renta</string>
     <string name="solana_staking_apy_label">APY %1$s</string>
     <string name="solana_staking_state_activating">Activando</string>
     <string name="solana_staking_state_active">Activo</string>
@@ -910,7 +911,6 @@
     <string name="solana_delegate_select_validator">Seleccionar un validador</string>
     <string name="solana_delegate_commission">Comisión %1$s</string>
     <string name="solana_delegate_cta">Continuar</string>
-    <string name="solana_staking_stake_cta">Stake</string>
     <string name="solana_staking_unstake_cta">Retirar del staking</string>
     <string name="solana_staking_withdraw_cta">Retirar</string>
     <string name="solana_staking_move_cta">Mover</string>

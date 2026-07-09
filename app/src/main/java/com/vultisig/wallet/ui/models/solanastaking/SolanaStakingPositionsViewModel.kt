@@ -68,27 +68,27 @@ internal data class SolanaStakePositionRow(
     val votePubkey: String?,
     val stakedDisplay: String,
     val stakedFiatDisplay: String,
+    val rentReserveDisplay: String,
     val stateLabel: UiText,
     val apyDisplay: String?,
     val canDeactivate: Boolean,
     val canWithdraw: Boolean,
 )
 
+/**
+ * Single-state model for the Solana staking positions screen so the shared DeFi scaffold renders
+ * the balance banner + Total-Staked summary card with skeleton loaders (no bespoke full-screen
+ * loading).
+ */
 @Immutable
-internal sealed interface SolanaStakingPositionsUiState {
-    data object Loading : SolanaStakingPositionsUiState
-
-    @Immutable data class Error(val error: UiText) : SolanaStakingPositionsUiState
-
-    @Immutable
-    data class Success(
-        val totalStakedFiatDisplay: String,
-        val positions: List<SolanaStakePositionRow>,
-        val isBalanceVisible: Boolean = true,
-        val isReloading: Boolean = false,
-        val error: UiText? = null,
-    ) : SolanaStakingPositionsUiState
-}
+internal data class SolanaStakingPositionsUiState(
+    val isLoading: Boolean = true,
+    val isBalanceVisible: Boolean = true,
+    val totalStakedFiatDisplay: String = "",
+    val totalStakedSolDisplay: String = "",
+    val positions: List<SolanaStakePositionRow> = emptyList(),
+    val error: UiText? = null,
+)
 
 /**
  * View-model for the Solana native-staking positions on the DeFi/Earn tab. Reads the wallet's stake
@@ -113,8 +113,7 @@ constructor(
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    private val _state =
-        MutableStateFlow<SolanaStakingPositionsUiState>(SolanaStakingPositionsUiState.Loading)
+    private val _state = MutableStateFlow(SolanaStakingPositionsUiState())
     val state: StateFlow<SolanaStakingPositionsUiState> = _state.asStateFlow()
 
     private var vaultId: VaultId = ""
@@ -185,11 +184,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to build Solana staking tx")
-                _state.update { current ->
-                    if (current is SolanaStakingPositionsUiState.Success)
-                        current.copy(error = (e.message ?: "").asUiText())
-                    else current
-                }
+                _state.update { it.copy(error = (e.message ?: "").asUiText()) }
             }
         ) {
             val vault = vaultRepository.get(vaultId) ?: error("Vault not found")
@@ -236,34 +231,26 @@ constructor(
 
     private fun loadData() {
         loadJob?.cancel()
-        _state.update { current ->
-            if (current is SolanaStakingPositionsUiState.Success) current.copy(isReloading = true)
-            else current
-        }
         loadJob =
             viewModelScope.safeLaunch(
                 onError = { e ->
                     Timber.e(e, "Failed to load Solana staking positions")
-                    if (_state.value !is SolanaStakingPositionsUiState.Success) {
-                        _state.value =
-                            SolanaStakingPositionsUiState.Error(
-                                R.string.error_view_default_description.asUiText()
-                            )
-                    } else {
-                        _state.update { current ->
-                            if (current is SolanaStakingPositionsUiState.Success)
-                                current.copy(isReloading = false)
-                            else current
-                        }
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = R.string.error_view_default_description.asUiText(),
+                        )
                     }
                 }
             ) {
                 val solCoin = findSolCoin(vaultId)
                 if (solCoin == null) {
-                    _state.value =
-                        SolanaStakingPositionsUiState.Error(
-                            R.string.solana_staking_error_sol_not_in_vault.asUiText()
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = R.string.solana_staking_error_sol_not_in_vault.asUiText(),
                         )
+                    }
                     return@safeLaunch
                 }
 
@@ -281,20 +268,25 @@ constructor(
                     else validatorMetadataProvider.metadata(votePubkeys)
 
                 val rows = accounts.map { buildRow(it, metadata[it.voter], price, currencyFormat) }
-                val totalStakedSol =
+                val totalStakedSolAmount =
                     accounts
                         .fold(BigDecimal.ZERO) { acc, account ->
                             acc + account.delegatedStake.toBigDecimal()
                         }
                         .movePointLeft(solCoin.decimal)
-                val totalFiat = currencyFormat.format(totalStakedSol.multiply(price))
+                val totalFiat = currencyFormat.format(totalStakedSolAmount.multiply(price))
 
-                _state.value =
-                    SolanaStakingPositionsUiState.Success(
-                        totalStakedFiatDisplay = totalFiat,
-                        positions = rows,
+                _state.update {
+                    it.copy(
+                        isLoading = false,
                         isBalanceVisible = isBalanceVisible,
+                        totalStakedFiatDisplay = totalFiat,
+                        totalStakedSolDisplay =
+                            "${totalStakedSolAmount.stripTrailingZeros().toPlainString()} $SOL_TICKER",
+                        positions = rows,
+                        error = null,
                     )
+                }
             }
     }
 
@@ -307,6 +299,11 @@ constructor(
         val stakedSol =
             account.delegatedStake.toBigDecimal().movePointLeft(SOL_DECIMALS).stripTrailingZeros()
         val stakedFiat = currencyFormat.format(stakedSol.multiply(price))
+        val rentReserveSol =
+            account.rentExemptReserve
+                .toBigDecimal()
+                .movePointLeft(SOL_DECIMALS)
+                .stripTrailingZeros()
         val name =
             metadata?.name?.takeIf { it.isNotBlank() }
                 ?: account.voter?.let { shortAddress(it) }
@@ -318,6 +315,7 @@ constructor(
             votePubkey = account.voter,
             stakedDisplay = "${stakedSol.toPlainString()} ${SOL_TICKER}",
             stakedFiatDisplay = stakedFiat,
+            rentReserveDisplay = "${rentReserveSol.toPlainString()} $SOL_TICKER",
             stateLabel = stateLabel(account.state),
             // metadata.apyEstimate is a fraction (0.0572); render as a percentage.
             apyDisplay =

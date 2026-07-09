@@ -901,9 +901,10 @@
     <string name="ton_unstake_full_withdrawal_notice">Пулы номинаторов поддерживают только полный вывод. Весь застейканный баланс будет возвращён.</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL отсутствует в этом хранилище</string>
-    <string name="solana_staking_total_staked">Всего в стейкинге</string>
-    <string name="solana_staking_loading">Загрузка позиций стейкинга…</string>
-    <string name="solana_staking_no_positions">Нет позиций стейкинга</string>
+    <string name="solana_staking_total_staked_sol">Всего в стейкинге SOL</string>
+    <string name="solana_delegate_new_validator">Делегировать новому валидатору</string>
+    <string name="solana_stake_accounts">Стейк-аккаунты</string>
+    <string name="solana_rent_reserve">Резерв за аренду</string>
     <string name="solana_staking_apy_label">APY %1$s</string>
     <string name="solana_staking_state_activating">Активация</string>
     <string name="solana_staking_state_active">Активно</string>
@@ -915,7 +916,6 @@
     <string name="solana_delegate_select_validator">Выберите валидатора</string>
     <string name="solana_delegate_commission">Комиссия %1$s</string>
     <string name="solana_delegate_cta">Продолжить</string>
-    <string name="solana_staking_stake_cta">Стейкинг</string>
     <string name="solana_staking_unstake_cta">Вывести из стейкинга</string>
     <string name="solana_staking_withdraw_cta">Вывести</string>
     <string name="solana_staking_move_cta">Переместить</string>
