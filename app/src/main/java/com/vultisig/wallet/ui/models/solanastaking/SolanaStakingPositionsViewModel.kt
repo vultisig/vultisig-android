@@ -312,7 +312,9 @@ constructor(
         return SolanaStakePositionRow(
             stakePubkey = account.stakePubkey,
             validatorName = name,
-            validatorAddressDisplay = account.voter?.let { shortAddress(it) } ?: "",
+            // iOS shows the truncated stake-account pubkey under the validator name (a wallet can
+            // hold multiple accounts on the same validator, so the account address disambiguates).
+            validatorAddressDisplay = shortAddress(account.stakePubkey),
             validatorLogoUrl = metadata?.logoUrl,
             votePubkey = account.voter,
             stakedDisplay = "${stakedSol.toPlainString()} ${SOL_TICKER}",
