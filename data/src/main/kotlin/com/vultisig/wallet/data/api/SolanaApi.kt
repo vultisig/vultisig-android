@@ -60,6 +60,7 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import timber.log.Timber
+import wallet.core.jni.SolanaAddress
 
 interface SolanaApi {
     suspend fun getBalance(address: String): BigInteger
@@ -119,13 +120,24 @@ interface SolanaApi {
     suspend fun getStakeAccounts(ownerAddress: String): List<SolanaProgramAccountJson>
 }
 
-internal class SolanaApiImp
-@Inject
-constructor(
+internal class SolanaApiImp(
     private val json: Json,
     private val httpClient: HttpClient,
     private val splTokenSerializer: SplTokenResponseJsonSerializer,
+    // Derives the associated-token-account address for (owner, mint) under the classic SPL or the
+    // Token-2022 program. Backed by WalletCore JNI in production; injected so the direct-derivation
+    // fallback in [getTokenAssociatedAccountByOwner] can be unit-tested without the native library,
+    // which is not loaded in JVM unit tests.
+    private val deriveAssociatedTokenAddress:
+        (owner: String, mint: String, token2022: Boolean) -> String?,
 ) : SolanaApi {
+
+    @Inject
+    constructor(
+        json: Json,
+        httpClient: HttpClient,
+        splTokenSerializer: SplTokenResponseJsonSerializer,
+    ) : this(json, httpClient, splTokenSerializer, ::deriveAssociatedTokenAddressWithWalletCore)
 
     private val rpcEndpoint = "https://api.vultisig.com/solana/"
     private val splTokensInfoEndpoint = "https://api.solana.fm/v1/tokens"
@@ -419,6 +431,28 @@ constructor(
         walletAddress: String,
         mintAddress: String,
     ): Pair<String?, Boolean> {
+        findAssociatedAccountViaOwner(walletAddress, mintAddress)?.let {
+            return it
+        }
+        // The primary getTokenAccountsByOwner lookup came back empty or failed. That can be a real
+        // "no account", but it can also be indexer/replica lag right after the ATA was created. If
+        // we trusted it, the sender would fail with a false "missing token account" error, and the
+        // recipient path would try to recreate an ATA that already exists — a non-idempotent op the
+        // on-chain program rejects. Derive the ATA directly and confirm with a point account-info
+        // lookup before concluding it truly does not exist. Mirrors iOS (SolanaService).
+        return findAssociatedAccountByDerivation(walletAddress, mintAddress)
+    }
+
+    /**
+     * Primary lookup: ask the indexer for the owner's associated token account for [mintAddress].
+     * Returns the (ATA address, isToken2022) pair when the index holds it, or null when the account
+     * is absent from the index or the RPC call fails — both of which route the caller to the
+     * direct-derivation fallback.
+     */
+    private suspend fun findAssociatedAccountViaOwner(
+        walletAddress: String,
+        mintAddress: String,
+    ): Pair<String, Boolean>? =
         try {
             val response =
                 httpClient.postRpc<SplAmountRpcResponseJson>(
@@ -432,27 +466,50 @@ constructor(
                         },
                 )
             if (response.error != null) {
-                Timber.d("getTokenAssociatedAccountByOwner error: ${response.error}")
-                return Pair(null, false)
+                Timber.tag("SolanaApiImp")
+                    .d("getTokenAssociatedAccountByOwner error: %s", response.error)
+                null
+            } else {
+                response.value?.value?.firstOrNull()?.let {
+                    Pair(it.pubKey, it.account.owner == TOKEN_PROGRAM_ID_2022)
+                }
             }
-            val value = response.value ?: error("getTokenAssociatedAccountByOwner error")
-            if (value.value.isEmpty()) {
-                Timber.d(
-                    "getTokenAssociatedAccountByOwner: no ATA found for %s / %s",
-                    walletAddress,
-                    mintAddress,
-                )
-                return Pair(null, false)
-            }
-            return Pair(
-                value.value[0].pubKey,
-                value.value[0].account.owner == TOKEN_PROGRAM_ID_2022,
-            )
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.e(e)
-            return Pair(null, false)
+            Timber.tag("SolanaApiImp").e(e, "getTokenAssociatedAccountByOwner failed")
+            null
         }
+
+    /**
+     * Fallback for when the index has no account or is unreachable: an ATA address is deterministic
+     * for a given (owner, mint, token program), so derive both the classic-SPL and Token-2022
+     * addresses and confirm on-chain existence with a direct account-info lookup. A given mint is
+     * owned by exactly one token program, so at most one derived address can exist. Returns
+     * (address, isToken2022) for the one that does, or (null, false) when neither exists.
+     */
+    private suspend fun findAssociatedAccountByDerivation(
+        walletAddress: String,
+        mintAddress: String,
+    ): Pair<String?, Boolean> {
+        for (isToken2022 in listOf(false, true)) {
+            val ata =
+                deriveAssociatedTokenAddress(walletAddress, mintAddress, isToken2022)?.takeIf {
+                    it.isNotEmpty()
+                } ?: continue
+            // A non-null owner means the account exists on-chain (every account has one); a missing
+            // account resolves the info value to null without an RPC error.
+            if (getAccountOwner(ata) != null) {
+                return Pair(ata, isToken2022)
+            }
+        }
+        Timber.tag("SolanaApiImp")
+            .d(
+                "getTokenAssociatedAccountByOwner: no ATA for %s / %s after direct-derivation fallback",
+                walletAddress,
+                mintAddress,
+            )
+        return Pair(null, false)
     }
 
     override suspend fun getAccountOwner(account: String): String? =
@@ -666,3 +723,19 @@ internal fun solanaBroadcastAction(
         else -> SolanaBroadcastAction.FATAL
     }
 }
+
+/**
+ * Derives the associated-token-account address for [owner] and [mint] under the classic SPL token
+ * program ([token2022] = false) or the Token-2022 program ([token2022] = true), via WalletCore.
+ * Returns null when WalletCore cannot derive it (e.g. a malformed owner address).
+ */
+private fun deriveAssociatedTokenAddressWithWalletCore(
+    owner: String,
+    mint: String,
+    token2022: Boolean,
+): String? =
+    runCatching {
+            val address = SolanaAddress(owner)
+            if (token2022) address.token2022Address(mint) else address.defaultTokenAddress(mint)
+        }
+        .getOrNull()
