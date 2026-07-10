@@ -131,7 +131,7 @@ internal class DefaultSendStrategy(
                                 UiText.StringResource(R.string.send_error_no_token)
                             )
 
-                    val memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() }
+                    val userMemo = memoFieldState.text.toString().takeIf { it.isNotEmpty() }
 
                     // XRP destination tag: from its own field, carried in the first-class proto
                     // field (not the memo). A non-empty non-canonical value is rejected so a bad
@@ -148,6 +148,19 @@ internal class DefaultSendStrategy(
                             }
                             RippleDestinationTag.parseCanonicalDestinationTag(rawTag)
                         } else null
+
+                    // Dual-write the tag into the memo when a tag is set and there's no distinct
+                    // memo, so a not-yet-updated co-signer that only reads the legacy memo-as-tag
+                    // carrier rebuilds the same DestinationTag (byte-identical sighash). Mirrors
+                    // iOS
+                    // dualWritingRippleTag; RippleHelper's memoEchoesTag drops this echo from the
+                    // signed tx, so no on-chain Memos blob is added.
+                    val memo =
+                        if (chain == Chain.Ripple && destinationTag != null && userMemo == null) {
+                            destinationTag.toString()
+                        } else {
+                            userMemo
+                        }
 
                     val selectedToken = selectedAccount.token
 
@@ -280,7 +293,12 @@ internal class DefaultSendStrategy(
                             chainValidationService.validateRippleDestinationTag(
                                 selectedToken = selectedToken,
                                 dstAddress = dstAddress,
-                                destinationTag = destinationTag,
+                                // A canonical numeric memo (no dedicated tag) is signed as a
+                                // DestinationTag by RippleHelper, so treat it as a present tag here
+                                // instead of falsely blocking the send.
+                                destinationTag =
+                                    destinationTag
+                                        ?: RippleDestinationTag.parseCanonicalDestinationTag(memo),
                             )
                         }
                     } else if (

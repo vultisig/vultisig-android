@@ -81,11 +81,14 @@ object RippleHelper {
             }
 
             memo != null -> {
-                // No first-class tag: a purely numeric memo is the legacy destination-tag carrier
+                // No first-class tag: a canonical uint32 memo is the legacy destination-tag carrier
                 // (older payloads and swap contracts); any other memo is an on-chain Memos blob.
-                val memoAsLong = memo.toLongOrNull()
-                if (memoAsLong != null) {
-                    operation.setDestinationTag(memoAsLong)
+                // Use the same canonical parser as the dedicated field, so "0", leading zeros and
+                // out-of-uint32 values are treated as a plain memo (matching iOS) instead of being
+                // silently reinterpreted — or overflowed — into a DestinationTag.
+                val memoAsTag = RippleDestinationTag.parseCanonicalDestinationTag(memo)
+                if (memoAsTag != null) {
+                    operation.setDestinationTag(memoAsTag.toLong())
                     input.setOpPayment(operation)
                 } else {
                     input.setRawJson(

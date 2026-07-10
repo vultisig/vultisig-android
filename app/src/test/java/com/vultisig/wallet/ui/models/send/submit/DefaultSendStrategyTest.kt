@@ -5,6 +5,9 @@ package com.vultisig.wallet.ui.models.send.submit
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.RippleAccountInfoResponseAccountDataJson
+import com.vultisig.wallet.data.api.RippleAccountInfoResponseJson
+import com.vultisig.wallet.data.api.RippleAccountInfoResponseResultJson
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
@@ -435,6 +438,117 @@ internal class DefaultSendStrategyTest {
                     // The reserve check throws before the strategy ever builds or persists a
                     // Transaction, so a non-null lastError already proves addTransaction was
                     // skipped.
+                } finally {
+                    unmockkStatic(Dispatchers::class)
+                }
+            }
+        } catch (e: Throwable) {
+            if (
+                e is UnsatisfiedLinkError ||
+                    e is ExceptionInInitializerError ||
+                    e is NoClassDefFoundError
+            ) {
+                assumeTrue(false, "WalletCore JNI not available: ${e.message}")
+            } else throw e
+        }
+    }
+
+    /**
+     * #5247 dual-write: an XRP send with a dedicated destination tag and no memo must persist the
+     * tag's canonical decimal in `Transaction.memo` too, so a not-yet-updated co-signer that only
+     * reads the legacy memo-as-tag carrier rebuilds the same DestinationTag (byte-identical
+     * sighash).
+     */
+    @Test
+    fun `submit dual-writes the XRP destination tag into the memo`() {
+        try {
+            runTest {
+                mockkStatic(Dispatchers::class)
+                every { Dispatchers.IO } returns mainDispatcher
+                try {
+                    val xrpCoin = xrpCoin()
+                    val account =
+                        Account(
+                            token = xrpCoin,
+                            tokenValue =
+                                TokenValue(BigInteger.valueOf(20_000_000L), xrpCoin), // 20 XRP
+                            fiatValue = null,
+                            price = null,
+                        )
+                    vaultId = "vault-1"
+                    selectedAccount = account
+                    addressFieldState.setTextAndPlaceCursorAtEnd("rDest")
+                    tokenAmountFieldState.setTextAndPlaceCursorAtEnd("5") // above 1 XRP reserve
+                    destinationTagFieldState.setTextAndPlaceCursorAtEnd("12345")
+                    // memo left empty on purpose.
+                    coEvery { accountValidator.validate() } returns
+                        ValidatedAccount(
+                            vaultId = "vault-1",
+                            selectedAccount = account,
+                            chain = Chain.Ripple,
+                            gasFee = TokenValue(BigInteger.valueOf(400L), xrpCoin),
+                            dstAddress = "rDest",
+                        )
+                    coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+                    coEvery {
+                        blockChainSpecificRepository.getSpecific(
+                            chain = any(),
+                            address = any(),
+                            token = any(),
+                            gasFee = any(),
+                            isSwap = any(),
+                            isMaxAmountEnabled = any(),
+                            isDeposit = any(),
+                            dstAddress = any(),
+                            tokenAmountValue = any(),
+                            memo = any(),
+                            isThorchainRouterDeposit = any(),
+                        )
+                    } returns
+                        BlockChainSpecificAndUtxo(
+                            BlockChainSpecific.Ripple(
+                                sequence = 1UL,
+                                lastLedgerSequence = 100UL,
+                                gas = 400UL,
+                            )
+                        )
+                    every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+                    coEvery { getAvailableTokenBalance(any(), any()) } returns
+                        TokenValue(BigInteger.valueOf(19_999_600L), xrpCoin)
+                    // Funded destination (accountData present) so the reserve check passes without
+                    // touching WalletCore.
+                    coEvery { rippleApi.fetchAccountsInfo("rDest") } returns
+                        RippleAccountInfoResponseJson(
+                            result =
+                                RippleAccountInfoResponseResultJson(
+                                    accountData =
+                                        RippleAccountInfoResponseAccountDataJson(
+                                            balance = "20000000",
+                                            flags = 0L,
+                                        )
+                                )
+                        )
+                    coEvery { gasFeeToEstimatedFee(any()) } returns
+                        EstimatedGasFee(
+                            formattedFiatValue = "$0.01",
+                            formattedTokenValue = "0.0001 XRP",
+                            tokenValue = TokenValue(BigInteger.valueOf(400L), xrpCoin),
+                            fiatValue = mockk(relaxed = true),
+                        )
+
+                    val captured = slot<Transaction>()
+                    coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+                    build(this).submit()
+                    advanceUntilIdle()
+
+                    assertNull(lastError, "Expected no error; got $lastError")
+                    val tx = captured.captured
+                    assertEquals("12345", tx.memo)
+                    assertEquals(
+                        12345u,
+                        (tx.blockChainSpecific as BlockChainSpecific.Ripple).destinationTag,
+                    )
                 } finally {
                     unmockkStatic(Dispatchers::class)
                 }
