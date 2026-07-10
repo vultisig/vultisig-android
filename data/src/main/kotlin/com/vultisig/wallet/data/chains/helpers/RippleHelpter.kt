@@ -54,10 +54,16 @@ object RippleHelper {
         val destinationTag = rippleSpecific.destinationTag
         val memo = memoValue?.takeIf { it.isNotBlank() }
 
+        // When the memo merely echoes the tag (memo == the tag's canonical decimal), it is not a
+        // distinct memo — drop it and sign tag-only. This keeps a co-signer that predates the
+        // destination_tag field byte-identical: it reads the numeric memo and builds the same
+        // DestinationTag, so the pre-image matches instead of diverging on a Memos blob.
+        val memoEchoesTag = memo != null && memo == destinationTag?.toString()
+
         when {
-            // Tag + free-text memo: WalletCore's OperationPayment can't carry both, so hand-build
-            // a Payment that sets DestinationTag and a Memos blob.
-            destinationTag != null && memo != null ->
+            // Tag + a distinct free-text memo: WalletCore's OperationPayment can't carry both, so
+            // hand-build a Payment that sets DestinationTag and a Memos blob.
+            destinationTag != null && memo != null && !memoEchoesTag ->
                 input.setRawJson(
                     buildPaymentRawJson(
                         keysignPayload = keysignPayload,
