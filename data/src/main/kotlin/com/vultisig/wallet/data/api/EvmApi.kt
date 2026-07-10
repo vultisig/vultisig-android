@@ -33,6 +33,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
@@ -480,28 +481,31 @@ class EvmApiImp(
         val jsonObject = response.bodyOrThrow<SendTransactionJson>()
         if (jsonObject.error != null) {
             val message = jsonObject.error.message
-            if (
-                message.contains(ERROR_KNOWN) ||
-                    message.contains(ERROR_ALREADY_KNOWN) ||
-                    message.contains(ERROR_TEMPORARILY_BANNED) ||
-                    message.contains(ERROR_NONCE_TOO_LOW_NEXT) ||
-                    message.contains(ERROR_NONCE_TOO_LOW_RANGE) ||
-                    message.contains(ERROR_TX_ALREADY_EXISTS) ||
-                    message.contains(
-                        ERROR_NONCE_TOO_LOW_ADDRESS
-                    ) || // this message happens on layer 2
-                    message.contains(ERROR_TX_IN_MEMPOOL) ||
-                    message.contains(ERROR_EXISTING_TX) ||
-                    message.contains(ERROR_TX_IN_CACHE) ||
-                    message.contains(ERROR_CODE_10055)
-            ) {
-                // even the server returns an error , but this still consider as success
-                return Numeric.hexStringToByteArray(signedTransaction).toKeccak256()
-            } else {
-                throw Exception(responseBody)
+            val localHash = Numeric.hexStringToByteArray(signedTransaction).toKeccak256()
+            return when {
+                // The node already holds our exact signed bytes, so the deterministic keccak hash
+                // is the canonical on-chain id — safe to report without re-verifying.
+                ALREADY_BROADCAST_ERRORS.any { message.contains(it) } -> localHash
+                // "nonce too low" is ambiguous: either our own tx already mined, or a DIFFERENT tx
+                // consumed the nonce (stale spec-build nonce, another wallet on the same address).
+                // Only report success if OUR hash is actually on chain; otherwise surface the
+                // error.
+                NONCE_TOO_LOW_ERRORS.any { message.contains(it) } ->
+                    if (isTxMined(localHash)) localHash else throw Exception(responseBody)
+                else -> throw Exception(responseBody)
             }
         }
         return jsonObject.result ?: error("send transaction failed")
+    }
+
+    // Confirms a specific tx hash landed by looking up its receipt (present only once mined, which
+    // is exactly the "nonce too low" case). Retries briefly to absorb receipt propagation lag.
+    private suspend fun isTxMined(txHash: String): Boolean {
+        repeat(TX_MINED_ATTEMPTS) { attempt ->
+            if (attempt > 0) delay(TX_MINED_BACKOFF_MS)
+            if (getTxStatus(txHash)?.result != null) return true
+        }
+        return false
     }
 
     override suspend fun findCustomToken(contractAddress: String): List<CustomTokenResponse> {
@@ -733,17 +737,28 @@ class EvmApiImp(
         private const val FETCH_ADDRESS_PREFIX = "0x3b3b57de"
         private const val ENS_REGISTRY_ADDRESS = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
 
-        private const val ERROR_KNOWN = "known"
-        private const val ERROR_ALREADY_KNOWN = "already known"
-        private const val ERROR_TEMPORARILY_BANNED = "Transaction is temporarily banned"
-        private const val ERROR_NONCE_TOO_LOW_NEXT = "nonce too low: next nonce"
-        private const val ERROR_NONCE_TOO_LOW_RANGE = "nonce too low. allowed nonce range:"
-        private const val ERROR_TX_ALREADY_EXISTS = "transaction already exists"
-        private const val ERROR_NONCE_TOO_LOW_ADDRESS = "nonce too low: address"
-        private const val ERROR_TX_IN_MEMPOOL = "tx already in mempool"
-        private const val ERROR_EXISTING_TX = "existing tx"
-        private const val ERROR_TX_IN_CACHE = "tx already exists in cache"
-        private const val ERROR_CODE_10055 = "code=10055"
+        // Node already has our exact signed tx; the keccak hash of our bytes is canonical.
+        // ("already known" replaces the old bare "known", which also matched "unknown …".)
+        private val ALREADY_BROADCAST_ERRORS =
+            listOf(
+                "already known",
+                "Transaction is temporarily banned",
+                "transaction already exists",
+                "tx already in mempool",
+                "existing tx",
+                "tx already exists in cache",
+                "code=10055",
+            )
+        // Nonce already consumed — verify our hash landed before treating as success.
+        private val NONCE_TOO_LOW_ERRORS =
+            listOf(
+                "nonce too low: next nonce",
+                "nonce too low. allowed nonce range:",
+                "nonce too low: address", // this message happens on layer 2
+            )
+
+        private const val TX_MINED_ATTEMPTS = 3
+        private const val TX_MINED_BACKOFF_MS = 2_000L
 
         // OP-stack GasPriceOracle predeploy, identical across all OP-stack L2s.
         private const val OP_STACK_GAS_PRICE_ORACLE = "0x420000000000000000000000000000000000000F"

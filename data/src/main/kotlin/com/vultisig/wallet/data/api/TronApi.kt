@@ -178,7 +178,13 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
         return try {
             httpClient
                 .post(tronGrid) {
-                    url { path("tron", "walletsolidity", "gettransactionbyid") }
+                    // Full node (`wallet`), not `walletsolidity`: the solidified node only returns
+                    // a
+                    // tx after ~60s of confirmations, far longer than the recovery verify window,
+                    // so
+                    // it would report a just-broadcast tx as a failure. The full node returns it as
+                    // soon as it is accepted.
+                    url { path("tron", "wallet", "gettransactionbyid") }
                     setBody(mapOf("value" to txHash))
                 }
                 .bodyOrThrow<TronTransactionStatusResponse?>()
