@@ -81,40 +81,4 @@ class CardanoApiBroadcastTest {
             runTest { api.broadcastTransaction(chain = "cardano", signedTransaction = "00") }
         }
     }
-
-    // Ogmios 3005 (EraMismatch) is transient near a hard-fork; Ogmios advises retrying.
-    private val eraBoundaryError =
-        """{"error":{"code":3005,"message":"Failed to submit the transaction in the current era."}}"""
-
-    @Test
-    fun `broadcastTransaction retries era boundary (3005) and succeeds`() = runTest {
-        val api =
-            CardanoApiImpl(
-                httpClient =
-                    MockHttpClient.respondingWithSequence(
-                        HttpStatusCode.BadRequest to eraBoundaryError,
-                        HttpStatusCode.OK to """{"result":{"transaction":{"id":"abc123"}}}""",
-                    ),
-                json = json,
-            )
-
-        assertEquals(
-            "abc123",
-            api.broadcastTransaction(chain = "cardano", signedTransaction = "00"),
-        )
-    }
-
-    @Test
-    fun `broadcastTransaction throws when era boundary (3005) persists`() {
-        val api =
-            CardanoApiImpl(
-                httpClient =
-                    MockHttpClient.respondingWith(HttpStatusCode.BadRequest, eraBoundaryError),
-                json = json,
-            )
-
-        assertThrows(IllegalStateException::class.java) {
-            runTest { api.broadcastTransaction(chain = "cardano", signedTransaction = "00") }
-        }
-    }
 }

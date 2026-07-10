@@ -19,7 +19,6 @@ import io.ktor.http.path
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
-import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -89,73 +88,57 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
     }
 
     override suspend fun broadcastTransaction(chain: String, signedTransaction: String): String? {
-        val payload = buildJsonObject {
-            put("jsonrpc", "2.0")
-            put("method", "submitTransaction")
-            put(
-                "params",
-                buildJsonObject {
-                    put("transaction", buildJsonObject { put("cbor", signedTransaction) })
-                },
-            )
-            put("id", 1)
-        }
-
-        repeat(SUBMIT_MAX_ATTEMPTS) { attempt ->
-            if (attempt > 0) delay(SUBMIT_RETRY_BACKOFF_MS)
-            try {
-                val response = httpClient.post(ogmiosUrl) { setBody(payload) }
-                val ogmiosResponse =
-                    when (response.status) {
-                        HttpStatusCode.OK -> response.bodyOrThrow<OgmiosTransactionResponse>()
-                        HttpStatusCode.BadRequest ->
-                            json.decodeFromString<OgmiosTransactionResponse>(response.bodyAsText())
-                        else -> {
-                            Timber.e("Failed to broadcast Cardano transaction: ${response.status}")
-                            error("Failed to broadcast transaction: ${response.status}")
-                        }
-                    }
-
-                ogmiosResponse.result?.transaction?.id?.let {
-                    return it
-                }
-
-                // Ogmios 3005 (era boundary, near a hard-fork) is transient; it advises retrying.
-                if (
-                    ogmiosResponse.error?.code == OGMIOS_ERROR_ERA_BOUNDARY &&
-                        attempt < SUBMIT_MAX_ATTEMPTS - 1
-                ) {
-                    Timber.w(
-                        "Cardano submit hit era boundary (3005); retrying %d/%d",
-                        attempt + 1,
-                        SUBMIT_MAX_ATTEMPTS,
-                    )
-                    return@repeat
-                }
-
-                // Any other failure (incl. unknownOutputReferences, whose txid is the PARENT tx
-                // that
-                // created the spent input, not the tx we broadcast) is a genuine rejection. Throw
-                // so
-                // BroadcastTxUseCase verifies our actual hash on-chain rather than reporting
-                // success
-                // under an unrelated hash.
-                val errorMessage = ogmiosResponse.error?.message ?: "Unknown error"
-                Timber.e("Cardano transaction submission failed: $errorMessage")
-                error("Failed to broadcast transaction: $errorMessage")
-            } catch (t: CancellationException) {
-                throw t
-            } catch (t: IllegalStateException) {
-                // Already-formatted rejection from the error() calls above — surface as-is.
-                throw t
-            } catch (t: Throwable) {
-                Timber.e(t, "Failed to broadcast Cardano transaction")
-                error("Failed to broadcast transaction : ${t.message}")
+        return try {
+            val payload = buildJsonObject {
+                put("jsonrpc", "2.0")
+                put("method", "submitTransaction")
+                put(
+                    "params",
+                    buildJsonObject {
+                        put("transaction", buildJsonObject { put("cbor", signedTransaction) })
+                    },
+                )
+                put("id", 1)
             }
+
+            val response = httpClient.post(ogmiosUrl) { setBody(payload) }
+
+            when (response.status) {
+                HttpStatusCode.OK -> {
+                    val ogmiosResponse = response.bodyOrThrow<OgmiosTransactionResponse>()
+
+                    ogmiosResponse.result?.transaction?.id
+                        ?: run {
+                            val errorMessage = ogmiosResponse.error?.message ?: "Unknown error"
+                            Timber.e("Cardano transaction submission failed: $errorMessage")
+                            error("Failed to broadcast transaction: $errorMessage")
+                        }
+                }
+
+                HttpStatusCode.BadRequest -> {
+                    // A 400 (e.g. unknownOutputReferences) is a genuine rejection. The txid inside
+                    // unknownOutputReferences is the PARENT tx that created the spent input, not
+                    // the
+                    // tx we broadcast — returning it would report success under an unrelated hash.
+                    // Throw instead so BroadcastTxUseCase can verify our actual hash on-chain and
+                    // only treat a real duplicate submission as success.
+                    val ogmiosError =
+                        json.decodeFromString<OgmiosTransactionResponse>(response.bodyAsText())
+                    val errorMessage = ogmiosError.error?.message ?: "Unknown error"
+                    Timber.e("Cardano transaction submission failed: $errorMessage")
+                    error("Failed to broadcast transaction: $errorMessage")
+                }
+
+                else -> {
+                    Timber.e("Failed to broadcast Cardano transaction: ${response.status}")
+                    error("Failed to broadcast transaction: ${response.status}")
+                }
+            }
+        } catch (t: Throwable) {
+            if (t is CancellationException) throw t
+            Timber.e(t, "Failed to broadcast Cardano transaction")
+            error("Failed to broadcast transaction : ${t.message}")
         }
-        error(
-            "Failed to broadcast transaction: era boundary persisted after $SUBMIT_MAX_ATTEMPTS attempts"
-        )
     }
 
     private suspend fun getCurrentSlot(): ULong {
@@ -183,12 +166,5 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
                 setBody(requestBody)
             }
         return response.bodyOrThrow<List<CardanoTxStatusResponseJson>>().firstOrNull()
-    }
-
-    private companion object {
-        // Ogmios SubmitTransactionFailure<EraMismatch>: transient near an era boundary/hard-fork.
-        const val OGMIOS_ERROR_ERA_BOUNDARY = 3005
-        const val SUBMIT_MAX_ATTEMPTS = 3
-        const val SUBMIT_RETRY_BACKOFF_MS = 2_000L
     }
 }
