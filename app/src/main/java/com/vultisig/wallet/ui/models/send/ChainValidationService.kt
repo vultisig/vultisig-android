@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.models.send
 
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.RippleApi
+import com.vultisig.wallet.data.api.requiresDestinationTag
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.models.Account
@@ -242,6 +243,41 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
                         selectedToken.ticker,
                     ),
                 )
+            )
+        }
+    }
+
+    /**
+     * Blocks an XRP send to a destination that has `lsfRequireDestTag` set when no destination tag
+     * is supplied — the ledger rejects such a payment with `tecDST_TAG_NEEDED` and, on an exchange
+     * deposit address, the funds are credited to the wrong account (effective loss).
+     *
+     * No-ops for non-Ripple sends and non-native tokens. Fails closed on a lookup failure, matching
+     * [validateRippleDestinationReserve]: skipping the check would reopen the exact loss it guards.
+     */
+    suspend fun validateRippleDestinationTag(
+        selectedToken: Coin,
+        dstAddress: String,
+        destinationTag: UInt?,
+    ) {
+        if (selectedToken.chain != Chain.Ripple || !selectedToken.isNativeToken) return
+        if (destinationTag != null) return
+
+        val accountInfo =
+            try {
+                rippleApi.fetchAccountsInfo(dstAddress)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to fetch Ripple account flags for %s", dstAddress)
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.network_connection_lost)
+                )
+            }
+
+        if (accountInfo?.requiresDestinationTag() == true) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_xrp_destination_tag_required)
             )
         }
     }

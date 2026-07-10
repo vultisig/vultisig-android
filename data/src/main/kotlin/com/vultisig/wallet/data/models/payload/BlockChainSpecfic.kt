@@ -95,8 +95,15 @@ sealed class BlockChainSpecific {
         val isActiveDestination: Boolean = false,
     ) : BlockChainSpecific()
 
-    data class Ripple(val sequence: ULong, val gas: ULong, val lastLedgerSequence: ULong) :
-        BlockChainSpecific()
+    data class Ripple(
+        val sequence: ULong,
+        val gas: ULong,
+        val lastLedgerSequence: ULong,
+        // XRPL DestinationTag (32-bit unsigned), null when the destination requires no tag.
+        // Carried in the first-class RippleSpecific.destination_tag proto field, independent of
+        // the free-text memo.
+        val destinationTag: UInt? = null,
+    ) : BlockChainSpecific()
 
     data class Tron(
         val timestamp: ULong,

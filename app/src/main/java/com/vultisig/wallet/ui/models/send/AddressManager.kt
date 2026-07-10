@@ -1,7 +1,9 @@
 package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import com.vultisig.wallet.data.chains.helpers.RippleDestinationTag
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.AddressParserRepository
@@ -32,6 +34,8 @@ internal class AddressManager(
     private val scope: CoroutineScope,
     private val addressFieldState: TextFieldState,
     private val providerBondFieldState: TextFieldState,
+    // XRP destination-tag field; X-address decoding autofills and locks it.
+    private val destinationTagFieldState: TextFieldState,
     private val selectedToken: StateFlow<Coin?>,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val addressParserRepository: AddressParserRepository,
@@ -44,6 +48,14 @@ internal class AddressManager(
 
     private val _dstAddressLabel = MutableStateFlow<String?>(null)
     val dstAddressLabel: StateFlow<String?> = _dstAddressLabel.asStateFlow()
+
+    // True while the destination tag was auto-filled from a pasted X-address (locks the field).
+    private val _destinationTagLocked = MutableStateFlow(false)
+    val destinationTagLocked: StateFlow<Boolean> = _destinationTagLocked.asStateFlow()
+
+    // The classic address an X-address normalized to; used to keep the lock while the field holds
+    // that normalized value, and to release it once the user replaces the address.
+    private var lockedClassicAddress: String? = null
 
     private val _isDstAddressComplete = MutableStateFlow(false)
     val isDstAddressComplete: StateFlow<Boolean> = _isDstAddressComplete.asStateFlow()
@@ -107,6 +119,25 @@ internal class AddressManager(
 
     private suspend fun handleAddressInput(addressStr: String, token: Coin) {
         val chain = token.chain
+
+        if (chain == Chain.Ripple) {
+            if (addressStr.startsWith("X")) {
+                val decoded = RippleDestinationTag.decodeXAddress(addressStr)
+                if (decoded != null) {
+                    applyXAddress(decoded, originalInput = addressStr)
+                    return
+                }
+                // An invalid X-address falls through to the normal (invalid-address) handling
+                // below.
+            } else if (lockedClassicAddress != null && addressStr != lockedClassicAddress) {
+                // The user replaced the normalized address: release the lock and drop the tag the
+                // X-address derived (a hand-typed tag is user intent and would not be locked).
+                if (_destinationTagLocked.value) destinationTagFieldState.clearText()
+                _destinationTagLocked.value = false
+                lockedClassicAddress = null
+            }
+        }
+
         when {
             chainAccountAddressRepository.isValid(chain, addressStr) -> {
                 // Only clear ENS label if the user typed a new raw address,
@@ -128,6 +159,25 @@ internal class AddressManager(
                 _dstAddressLabel.value = null
             }
         }
+    }
+
+    private fun applyXAddress(decoded: RippleDestinationTag.XAddress, originalInput: String) {
+        val tag = decoded.tag
+        if (tag != null) {
+            destinationTagFieldState.setTextAndPlaceCursorAtEnd(tag.toString())
+            _destinationTagLocked.value = true
+        } else {
+            // No embedded tag: normalize the address but leave the tag field editable.
+            _destinationTagLocked.value = false
+        }
+        lockedClassicAddress = decoded.classicAddress
+        if (addressFieldState.text.toString() != decoded.classicAddress) {
+            addressFieldState.setTextAndPlaceCursorAtEnd(decoded.classicAddress)
+        }
+        _resolvedDstAddress.value = decoded.classicAddress
+        // Surface the pasted X-address as the label so Verify/Done show what the user entered.
+        _dstAddressLabel.value = originalInput
+        _onAddressValidated.tryEmit(Unit)
     }
 
     private suspend fun tryResolveName(addressStr: String, token: Coin) {

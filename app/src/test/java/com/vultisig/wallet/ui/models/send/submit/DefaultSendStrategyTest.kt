@@ -66,6 +66,7 @@ internal class DefaultSendStrategyTest {
     private val tokenAmountFieldState = TextFieldState()
     private val fiatAmountFieldState = TextFieldState()
     private val memoFieldState = TextFieldState()
+    private val destinationTagFieldState = TextFieldState()
 
     private val accountValidator: AccountValidator = mockk(relaxed = true)
     private val chainAccountAddressRepository: ChainAccountAddressRepository = mockk(relaxed = true)
@@ -495,6 +496,7 @@ internal class DefaultSendStrategyTest {
             tokenAmountFieldState = tokenAmountFieldState,
             fiatAmountFieldState = fiatAmountFieldState,
             memoFieldState = memoFieldState,
+            destinationTagFieldState = destinationTagFieldState,
             accountValidator = accountValidator,
             chainAccountAddressRepository = chainAccountAddressRepository,
             blockChainSpecificRepository = blockChainSpecificRepository,

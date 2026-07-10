@@ -276,6 +276,15 @@ internal fun VerifySendScreen(
                             subtitle = tx.memo,
                         )
                     }
+
+                    if (!tx.destinationTag.isNullOrBlank()) {
+                        VerifyCardDivider(0.dp)
+
+                        VerifyCardDetails(
+                            title = stringResource(R.string.send_form_destination_tag),
+                            subtitle = tx.destinationTag,
+                        )
+                    }
                     tx.signAmino
                         ?.takeIf { it.isNotBlank() }
                         ?.let {

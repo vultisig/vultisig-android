@@ -4,6 +4,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.TerraClassicTax
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
+import com.vultisig.wallet.data.chains.helpers.RippleDestinationTag
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -55,6 +56,7 @@ internal class DefaultSendStrategy(
     private val tokenAmountFieldState: TextFieldState,
     private val fiatAmountFieldState: TextFieldState,
     private val memoFieldState: TextFieldState,
+    private val destinationTagFieldState: TextFieldState,
     private val accountValidator: AccountValidator,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
@@ -131,6 +133,22 @@ internal class DefaultSendStrategy(
 
                     val memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() }
 
+                    // XRP destination tag: from its own field, carried in the first-class proto
+                    // field (not the memo). A non-empty non-canonical value is rejected so a bad
+                    // paste can't send an untagged (or wrongly tagged) payment to an exchange.
+                    val rawTag = destinationTagFieldState.text.toString().takeIf { it.isNotEmpty() }
+                    val destinationTag =
+                        if (chain == Chain.Ripple) {
+                            if (RippleDestinationTag.isNonCanonicalTag(rawTag)) {
+                                throw InvalidTransactionDataException(
+                                    UiText.StringResource(
+                                        R.string.send_error_xrp_invalid_destination_tag
+                                    )
+                                )
+                            }
+                            RippleDestinationTag.parseCanonicalDestinationTag(rawTag)
+                        } else null
+
                     val selectedToken = selectedAccount.token
 
                     val tokenAmount =
@@ -197,6 +215,7 @@ internal class DefaultSendStrategy(
                                     chain,
                                 )
                             }
+                            .let { applyRippleDestinationTag(it, destinationTag) }
 
                     if (selectedToken.isNativeToken) {
                         val defiType = defiTypeProvider()
@@ -257,6 +276,11 @@ internal class DefaultSendStrategy(
                                 selectedToken = selectedToken,
                                 dstAddress = dstAddress,
                                 tokenAmountInt = tokenAmountInt,
+                            )
+                            chainValidationService.validateRippleDestinationTag(
+                                selectedToken = selectedToken,
+                                dstAddress = dstAddress,
+                                destinationTag = destinationTag,
                             )
                         }
                     } else if (
@@ -373,6 +397,14 @@ internal class DefaultSendStrategy(
                     hideLoading()
                 }
             }
+    }
+
+    private fun applyRippleDestinationTag(
+        specific: BlockChainSpecificAndUtxo,
+        destinationTag: UInt?,
+    ): BlockChainSpecificAndUtxo {
+        val ripple = specific.blockChainSpecific as? BlockChainSpecific.Ripple ?: return specific
+        return specific.copy(blockChainSpecific = ripple.copy(destinationTag = destinationTag))
     }
 
     private fun applyGasSettings(it: BlockChainSpecificAndUtxo): BlockChainSpecificAndUtxo {

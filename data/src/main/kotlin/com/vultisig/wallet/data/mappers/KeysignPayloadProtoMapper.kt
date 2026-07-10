@@ -252,6 +252,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                                 sequence = it.sequence,
                                 lastLedgerSequence = it.lastLedgerSequence,
                                 gas = it.gas,
+                                destinationTag = it.destinationTag,
                             )
                         }
 

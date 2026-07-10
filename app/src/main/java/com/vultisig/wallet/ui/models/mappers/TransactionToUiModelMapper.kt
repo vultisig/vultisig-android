@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.Transaction
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import javax.inject.Inject
@@ -28,6 +29,8 @@ constructor(
             dstAddress = from.dstAddress,
             dstLabel = from.dstLabel,
             memo = from.memo,
+            destinationTag =
+                (from.blockChainSpecific as? BlockChainSpecific.Ripple)?.destinationTag?.toString(),
             signAmino = from.signAmino,
             signDirect = from.signDirect,
             signSolana = from.signSolana,
