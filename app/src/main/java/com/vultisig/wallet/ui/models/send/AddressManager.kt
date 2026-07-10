@@ -127,14 +127,12 @@ internal class AddressManager(
                     applyXAddress(decoded, originalInput = addressStr)
                     return
                 }
-                // An invalid X-address falls through to the normal (invalid-address) handling
-                // below.
+                // Invalid X-address: drop any stale lock from a previous valid X-address before
+                // falling through to the normal invalid-address handling below.
+                if (lockedClassicAddress != null) releaseDerivedTagLock()
             } else if (lockedClassicAddress != null && addressStr != lockedClassicAddress) {
-                // The user replaced the normalized address: release the lock and drop the tag the
-                // X-address derived (a hand-typed tag is user intent and would not be locked).
-                if (_destinationTagLocked.value) destinationTagFieldState.clearText()
-                _destinationTagLocked.value = false
-                lockedClassicAddress = null
+                // The user replaced the normalized address with a different one.
+                releaseDerivedTagLock()
             }
         }
 
@@ -161,13 +159,26 @@ internal class AddressManager(
         }
     }
 
+    /**
+     * Releases an X-address-derived destination-tag lock. Only a tag the X-address derived (which
+     * was locked) is dropped; a hand-typed tag is user intent and is preserved.
+     */
+    private fun releaseDerivedTagLock() {
+        if (_destinationTagLocked.value) destinationTagFieldState.clearText()
+        _destinationTagLocked.value = false
+        lockedClassicAddress = null
+    }
+
     private fun applyXAddress(decoded: RippleDestinationTag.XAddress, originalInput: String) {
         val tag = decoded.tag
         if (tag != null) {
             destinationTagFieldState.setTextAndPlaceCursorAtEnd(tag.toString())
             _destinationTagLocked.value = true
         } else {
-            // No embedded tag: normalize the address but leave the tag field editable.
+            // No embedded tag: normalize the address and leave the tag field editable, but drop a
+            // tag a *previous* X-address derived (it was locked) so it can't ride onto this new
+            // address; a hand-typed tag is user intent and is preserved.
+            if (_destinationTagLocked.value) destinationTagFieldState.clearText()
             _destinationTagLocked.value = false
         }
         lockedClassicAddress = decoded.classicAddress

@@ -376,4 +376,33 @@ internal class AddressManagerTest {
             manager.destinationTagLocked.value.shouldBeFalse()
             destinationTagFieldState.text.toString() shouldBe ""
         }
+
+    @Test
+    fun `replacing a tagged X-address with an untagged one drops the derived tag`() =
+        runTest(mainDispatcher) {
+            val tagged = "X7AcgcsBL6XDcUb289X4mJ8djcdyKaGZMhc9YTE92ehJ2Fu"
+            val untagged = "X7AcgcsBL6XDcUb289X4mJ8djcdyKaB5hJDWMArnXr61cqZ"
+            val classic = "r9cZA1mLK5R5Am25ArfXFmqgNwjZgnfk59"
+            every { chainAccountAddressRepository.isValid(Chain.Ripple, classic) } returns true
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = xrpToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(tagged)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            destinationTagFieldState.text.toString() shouldBe "1"
+            manager.destinationTagLocked.value.shouldBeTrue()
+
+            // Paste an untagged X-address: the tag the previous X-address derived must not persist.
+            addressFieldState.setTextAndPlaceCursorAtEnd(untagged)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            destinationTagFieldState.text.toString() shouldBe ""
+            manager.destinationTagLocked.value.shouldBeFalse()
+        }
 }

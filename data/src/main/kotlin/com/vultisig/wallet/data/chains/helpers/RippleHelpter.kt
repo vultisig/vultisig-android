@@ -125,8 +125,10 @@ object RippleHelper {
                 "Destination" to keysignPayload.toAddress,
                 "Amount" to keysignPayload.toAmount.toString(),
                 "Fee" to gas.toString(),
-                "Sequence" to sequence,
-                "LastLedgerSequence" to lastLedgerSequence,
+                // org.json can't wrap a Kotlin ULong (a value class), so these would be dropped
+                // from the JSON — pass Long so Sequence/LastLedgerSequence serialize as numbers.
+                "Sequence" to sequence.toLong(),
+                "LastLedgerSequence" to lastLedgerSequence.toLong(),
                 "Memos" to
                     listOf(
                         mapOf(
