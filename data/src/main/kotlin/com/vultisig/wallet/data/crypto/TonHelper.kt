@@ -83,15 +83,14 @@ object TonHelper {
         val toAddress = AnyAddress(msg.to, CoinType.TON)
         val amount = msg.amount.toLongOrNull() ?: 0L
         val mode = calculateSendMode(sendMaxAmount = false)
-        // TonConnect addresses encode bounceability in the user-friendly prefix:
-        // EQ = bounceable, UQ = non-bounceable. Raw "workchain:hex" form has no flag,
-        // so fall back to the wallet's default.
-        val bounceable =
-            when {
-                msg.to.startsWith("EQ") -> true
-                msg.to.startsWith("UQ") -> false
-                else -> tonSpecific.bounceable
-            }
+        // Apply the wallet-level bounceable flag from tonSpecific to every TonConnect message,
+        // matching the initiating device (browser extension / desktop) which builds the setup
+        // message that all co-signers must reproduce. It does NOT derive bounceability per-address
+        // from the EQ/UQ friendly-address tag. Deriving it per-address here diverged the pre-image
+        // hash from the initiator whenever a message targeted a UQ (non-bounceable) address — e.g.
+        // STON.fi's self/peer message in a swap — so the md5 message-id differed, the joiner 404'd
+        // on the setup message, and co-signing never completed.
+        val bounceable = tonSpecific.bounceable
 
         return TheOpenNetwork.Transfer.newBuilder()
             .setDest(toAddress.description())
