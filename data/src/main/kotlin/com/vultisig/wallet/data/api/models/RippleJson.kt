@@ -27,7 +27,11 @@ data class RippleBroadcastSuccessResultJson(
     @SerialName("status") val status: String,
     @SerialName("tx_json") val txJson: RippleBroadcastSuccessTransactionJson,
     @SerialName("validated") val validated: Boolean,
+    @SerialName("meta") val meta: RippleTxMetaJson? = null,
 )
+
+@Serializable
+data class RippleTxMetaJson(@SerialName("TransactionResult") val transactionResult: String? = null)
 
 @Serializable
 data class RippleBroadcastSuccessTransactionJson(
