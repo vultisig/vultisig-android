@@ -266,6 +266,18 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
             // ).
             signAmino = keysignPayload.signAmino,
             signDirect = keysignPayload.signDirect,
+            // Same round-trip requirement as signAmino/signDirect above: these carry the
+            // pre-built, byte-parity signing artefacts (Solana native-staking raw tx, TON/Sui/
+            // Bitcoin sign data). Without relaying them, a co-signer receives them as null and
+            // rebuilds a default (plain-transfer) signing input — its message hash diverges from
+            // the initiator's, so the DKLS setup message 404s and keysign never completes. The
+            // inbound [KeysignPayloadProtoMapper] already reads all four; this makes it symmetric.
+            // Required for multi-device (secure vault) Solana staking (delegate / unstake / move /
+            // finish-move / withdraw).
+            signSolana = keysignPayload.signSolana,
+            signTon = keysignPayload.signTon,
+            signSui = keysignPayload.signSui,
+            signBitcoin = keysignPayload.signBitcoin,
             erc20ApprovePayload =
                 if (approvePayload is ERC20ApprovePayload) {
                     Erc20ApprovePayload(
