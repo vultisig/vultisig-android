@@ -899,7 +899,6 @@
     <string name="solana_delegate_new_validator">Delegar a novo validador</string>
     <string name="solana_stake_accounts">Contas de stake</string>
     <string name="solana_rent_reserve">Reserva de aluguel</string>
-    <string name="solana_staking_apy_label">APY %1$s</string>
     <string name="solana_staking_state_activating">Ativando</string>
     <string name="solana_staking_state_active">Ativo</string>
     <string name="solana_staking_state_deactivating">Desativando</string>

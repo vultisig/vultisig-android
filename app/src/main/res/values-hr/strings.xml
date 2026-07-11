@@ -905,7 +905,6 @@
     <string name="solana_delegate_new_validator">Delegiraj novom validatoru</string>
     <string name="solana_stake_accounts">Stake računi</string>
     <string name="solana_rent_reserve">Pričuva za najam</string>
-    <string name="solana_staking_apy_label">APY %1$s</string>
     <string name="solana_staking_state_activating">Aktiviranje</string>
     <string name="solana_staking_state_active">Aktivno</string>
     <string name="solana_staking_state_deactivating">Deaktiviranje</string>

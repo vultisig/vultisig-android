@@ -1231,7 +1231,6 @@
     <string name="solana_delegate_new_validator">委托给新验证者</string>
     <string name="solana_stake_accounts">质押账户</string>
     <string name="solana_rent_reserve">租金储备</string>
-    <string name="solana_staking_apy_label">APY %1$s</string>
     <string name="solana_staking_state_activating">激活中</string>
     <string name="solana_staking_state_active">活跃</string>
     <string name="solana_staking_state_deactivating">停用中</string>

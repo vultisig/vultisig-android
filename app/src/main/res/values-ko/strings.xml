@@ -490,7 +490,6 @@
     <string name="solana_delegate_new_validator">새 검증인에게 위임</string>
     <string name="solana_stake_accounts">스테이크 계정</string>
     <string name="solana_rent_reserve">임대 예치금</string>
-    <string name="solana_staking_apy_label">APY %1$s</string>
     <string name="solana_staking_state_activating">활성화 중</string>
     <string name="solana_staking_state_active">활성</string>
     <string name="solana_staking_state_deactivating">비활성화 중</string>

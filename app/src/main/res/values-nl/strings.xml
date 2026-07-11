@@ -897,7 +897,6 @@
     <string name="solana_delegate_new_validator">Delegeren aan nieuwe validator</string>
     <string name="solana_stake_accounts">Stake-accounts</string>
     <string name="solana_rent_reserve">Huurreserve</string>
-    <string name="solana_staking_apy_label">APY %1$s</string>
     <string name="solana_staking_state_activating">Wordt geactiveerd</string>
     <string name="solana_staking_state_active">Actief</string>
     <string name="solana_staking_state_deactivating">Wordt gedeactiveerd</string>
