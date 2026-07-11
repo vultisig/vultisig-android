@@ -3,6 +3,7 @@
 package com.vultisig.wallet.data.crypto
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.blockchain.ton.TonNominatorPool
 import com.vultisig.wallet.data.common.toHexByteArray
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -113,11 +114,18 @@ object TonHelper {
 
         val mode = calculateSendMode(tonSpecific.sendMaxAmount)
 
+        // Nominator-pool deposits/withdrawals MUST be sent bounceable so a message the pool
+        // rejects (e.g. an uninitialized or mis-funded pool) bounces back instead of being
+        // absorbed (lost). tonSpecific.bounceable resolves to false for an uninitialized
+        // destination, so force the flag for pool comments — matching the initiating device
+        // which does the same — otherwise the pre-image hash diverges and the joiner 404s.
+        val bounceable = tonSpecific.bounceable || TonNominatorPool.isTransferComment(payload.memo)
+
         return TheOpenNetwork.Transfer.newBuilder()
             .setDest(toAddress.description())
             .setAmount(ByteString.copyFrom(amount.toHexString().toHexByteArray()))
             .setMode(mode)
-            .setBounceable(tonSpecific.bounceable)
+            .setBounceable(bounceable)
             .apply { payload.memo?.let { setComment(it) } }
             .build()
     }
