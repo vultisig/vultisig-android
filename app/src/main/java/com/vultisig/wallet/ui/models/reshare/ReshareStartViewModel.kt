@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -24,8 +25,11 @@ internal enum class ReshareAction {
 @HiltViewModel
 internal class ReshareStartViewModel
 @Inject
-constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator<Destination>) :
-    ViewModel() {
+constructor(
+    savedStateHandle: SavedStateHandle,
+    private val navigator: Navigator<Destination>,
+    private val vaultRepository: VaultRepository,
+) : ViewModel() {
 
     private val vaultId: String = savedStateHandle.toRoute<Route.ReshareStartScreen>().vaultId
 
@@ -54,10 +58,17 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
         pendingAction.update { null }
         viewModelScope.launch {
             when (action) {
-                ReshareAction.Start ->
+                ReshareAction.Start -> {
+                    val vault =
+                        vaultRepository.get(vaultId) ?: error("Vault $vaultId does not exist")
                     navigator.route(
-                        Route.ChooseVaultCount(tssAction = TssAction.ReShare, vaultId = vaultId)
+                        Route.Keygen.PeerDiscovery(
+                            action = TssAction.ReShare,
+                            vaultId = vaultId,
+                            vaultName = vault.name,
+                        )
                     )
+                }
 
                 ReshareAction.Join -> navigator.route(Route.ScanQr())
             }
