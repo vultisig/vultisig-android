@@ -917,6 +917,9 @@
     <string name="solana_move_title">Mover SOL</string>
     <string name="solana_staking_stake_account">Cuenta de participación</string>
     <string name="solana_move_notice">Mover el stake requiere varios pasos y abarca varias épocas: esto desactiva la cuenta ahora; después del periodo de enfriamiento de ~2 días, finaliza el movimiento al nuevo validador.</string>
+    <string name="solana_finish_move_title">Finalizar movimiento</string>
+    <string name="solana_finish_move_cta">Finalizar movimiento</string>
+    <string name="solana_finish_move_notice">Esto vuelve a delegar la cuenta de stake ya enfriada al nuevo validador y completa el movimiento.</string>
     <string name="vault_backup_verifying_pin">Verificando código, por favor espere</string>
     <string name="select_vault_type_next">Siguiente</string>
     <string name="select_vault_type_choose_setup">Selecciona Configuración</string>

@@ -75,6 +75,8 @@ internal data class SolanaStakePositionRow(
     val apyDisplay: String?,
     val canDeactivate: Boolean,
     val canWithdraw: Boolean,
+    /** Total account lamports (raw). Re-delegated as-is when the account is moved (Finish Move). */
+    val accountLamports: BigInteger,
 )
 
 /**
@@ -157,6 +159,25 @@ constructor(
                     vaultId = vaultId,
                     stakePubkey = stakePubkey,
                     delegatedStake = account.delegatedStake.toString(),
+                )
+            )
+        }
+    }
+
+    /**
+     * Open move-stake step 2 ("Finish Move") for a cooled-down (Inactive) account: re-delegate it
+     * to a new validator. Gated on the row being Inactive (same as Withdraw), so no state re-check
+     * here.
+     */
+    fun onFinishMove(stakePubkey: String) {
+        if (vaultId.isEmpty()) return
+        val account = accountsByPubkey[stakePubkey] ?: return
+        viewModelScope.safeLaunch(onError = { Timber.w(it, "open Solana finish-move failed") }) {
+            navigator.route(
+                Route.SolanaFinishMove(
+                    vaultId = vaultId,
+                    stakePubkey = stakePubkey,
+                    lamports = account.lamports.toString(),
                 )
             )
         }
@@ -355,6 +376,7 @@ constructor(
                 account.state == SolanaStakeState.Active ||
                     account.state == SolanaStakeState.Activating,
             canWithdraw = account.state == SolanaStakeState.Inactive,
+            accountLamports = account.lamports,
         )
     }
 

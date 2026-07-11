@@ -919,6 +919,9 @@
     <string name="solana_move_title">SOL verschieben</string>
     <string name="solana_staking_stake_account">Stake-Konto</string>
     <string name="solana_move_notice">Das Verschieben von Stake erfolgt in mehreren Schritten und über mehrere Epochen: Dadurch wird das Konto jetzt deaktiviert; nach der Abkühlzeit von etwa 2 Tagen können Sie das Verschieben zum neuen Validator abschließen.</string>
+    <string name="solana_finish_move_title">Verschieben abschließen</string>
+    <string name="solana_finish_move_cta">Verschieben abschließen</string>
+    <string name="solana_finish_move_notice">Dadurch wird das abgekühlte Stake-Konto erneut an den neuen Validator delegiert und das Verschieben abgeschlossen.</string>
     <string name="vault_backup_verifying_pin">Code wird überprüft, bitte warten</string>
     <string name="select_vault_type_next">Weiter</string>
     <string name="select_vault_type_choose_setup">Wähle „Einrichtung“</string>

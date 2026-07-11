@@ -914,6 +914,9 @@
     <string name="solana_move_title">SOL verplaatsen</string>
     <string name="solana_staking_stake_account">Inzetaccount</string>
     <string name="solana_move_notice">Stake verplaatsen gebeurt in meerdere stappen en verspreid over epochs: dit deactiveert het account nu; na de afkoelperiode van ongeveer 2 dagen voltooit u de verplaatsing naar de nieuwe validator.</string>
+    <string name="solana_finish_move_title">Verplaatsing voltooien</string>
+    <string name="solana_finish_move_cta">Verplaatsing voltooien</string>
+    <string name="solana_finish_move_notice">Hiermee wordt het afgekoelde stake-account opnieuw gedelegeerd aan de nieuwe validator en wordt de verplaatsing voltooid.</string>
     <string name="vault_backup_verifying_pin">Code verifiëren, even geduld a.u.b.</string>
     <string name="select_vault_type_next">Volgende</string>
     <string name="select_vault_type_choose_setup">Kies \'Instellen\'</string>

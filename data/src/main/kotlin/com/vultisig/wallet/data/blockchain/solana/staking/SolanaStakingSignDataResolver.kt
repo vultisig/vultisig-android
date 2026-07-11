@@ -50,12 +50,18 @@ class SolanaStakingSignDataResolver @Inject constructor() {
         val lamports =
             payload.lamports?.takeIf { it.signum() > 0 }
                 ?: error("solana delegate: missing or zero delegation amount")
-        // `lamports` is the stake-account FUNDING (delegated amount + rent-exempt reserve, combined
-        // upstream). The signer also pays the tx fee, so reserve it here too — a full-balance stake
-        // would otherwise pass this guard and the ceremony would sign a chain-rejected tx.
-        val required = lamports + SolanaHelper.DefaultFeeInLamports
+        // A "Finish Move" re-delegates an EXISTING account — its lamports already sit on-chain, so
+        // the wallet only pays the tx fee. A fresh delegate funds the new account from the wallet:
+        // `lamports` is the funding (delegated amount + rent-exempt reserve, combined upstream),
+        // and
+        // the wallet also pays the fee. Guard against the applicable outflow — a full-balance stake
+        // would otherwise pass and the ceremony would sign a chain-rejected tx.
+        val isFinishMove = !payload.stakeAccount.isNullOrEmpty()
+        val required =
+            if (isFinishMove) SolanaHelper.DefaultFeeInLamports
+            else lamports + SolanaHelper.DefaultFeeInLamports
         check(required <= balanceLamports) {
-            "solana delegate: funding+fee $required exceeds balance $balanceLamports"
+            "solana delegate: required $required exceeds balance $balanceLamports"
         }
         require(votePubkey.isNotEmpty())
 

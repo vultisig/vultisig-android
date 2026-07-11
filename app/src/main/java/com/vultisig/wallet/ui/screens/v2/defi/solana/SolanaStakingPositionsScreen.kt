@@ -75,6 +75,7 @@ internal fun SolanaStakingPositionsScreen(
         onRefresh = viewModel::refresh,
         onStake = viewModel::onStake,
         onMove = viewModel::onMove,
+        onFinishMove = viewModel::onFinishMove,
         onDeactivate = viewModel::onDeactivate,
         onWithdraw = viewModel::onWithdraw,
     )
@@ -88,6 +89,7 @@ internal fun SolanaStakingPositionsContent(
     onRefresh: () -> Unit = {},
     onStake: () -> Unit = {},
     onMove: (String) -> Unit = {},
+    onFinishMove: (String) -> Unit = {},
     onDeactivate: (String) -> Unit = {},
     onWithdraw: (String) -> Unit = {},
 ) {
@@ -134,6 +136,7 @@ internal fun SolanaStakingPositionsContent(
                         onDeactivate = onDeactivate,
                         onWithdraw = onWithdraw,
                         onMove = onMove,
+                        onFinishMove = onFinishMove,
                         onStake = onStake,
                     )
                 }
@@ -157,6 +160,7 @@ private fun StakeAccountsWidget(
     onDeactivate: (String) -> Unit,
     onWithdraw: (String) -> Unit,
     onMove: (String) -> Unit,
+    onFinishMove: (String) -> Unit,
     onStake: () -> Unit,
 ) {
     Column(
@@ -191,6 +195,7 @@ private fun StakeAccountsWidget(
                 onDeactivate = { onDeactivate(row.stakePubkey) },
                 onWithdraw = { onWithdraw(row.stakePubkey) },
                 onMove = { onMove(row.stakePubkey) },
+                onFinishMove = { onFinishMove(row.stakePubkey) },
                 onStake = onStake,
             )
         }
@@ -204,6 +209,7 @@ private fun StakeAccountContent(
     onDeactivate: () -> Unit,
     onWithdraw: () -> Unit,
     onMove: () -> Unit,
+    onFinishMove: () -> Unit,
     onStake: () -> Unit,
 ) {
     Column {
@@ -285,9 +291,20 @@ private fun StakeAccountContent(
                 ActionButton(
                     title = stringResource(R.string.solana_staking_withdraw_cta),
                     icon = R.drawable.ic_circle_plus,
-                    background = Theme.v2.colors.primary.accent3,
+                    background = Color.Transparent,
+                    border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
                     contentColor = Theme.v2.colors.text.primary,
                     onClick = onWithdraw,
+                    modifier = Modifier.weight(1f),
+                    iconCircleColor = Theme.v2.colors.text.tertiary,
+                )
+                // A cooled-down account can also finish a move — re-delegate it to a new validator.
+                ActionButton(
+                    title = stringResource(R.string.solana_finish_move_cta),
+                    icon = R.drawable.ic_arrow_bottom_top,
+                    background = Theme.v2.colors.primary.accent3,
+                    contentColor = Theme.v2.colors.text.primary,
+                    onClick = onFinishMove,
                     modifier = Modifier.weight(1f),
                     iconCircleColor = Theme.v2.colors.primary.accent4,
                 )

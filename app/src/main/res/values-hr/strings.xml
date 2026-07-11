@@ -922,6 +922,9 @@
     <string name="solana_move_title">Premjesti SOL</string>
     <string name="solana_staking_stake_account">Ulog računa</string>
     <string name="solana_move_notice">Premještanje uloga odvija se u više koraka i traje kroz više epoha: ovo sada deaktivira račun; nakon razdoblja hlađenja od oko 2 dana dovršite premještanje na novog validatora.</string>
+    <string name="solana_finish_move_title">Dovrši premještanje</string>
+    <string name="solana_finish_move_cta">Dovrši premještanje</string>
+    <string name="solana_finish_move_notice">Ovo ponovno delegira ohlađeni račun uloga novom validatoru i dovršava premještanje.</string>
     <string name="vault_backup_verifying_pin">Provjera koda, molimo pričekajte</string>
     <string name="select_vault_type_next">Sljedeće</string>
     <string name="select_vault_type_choose_setup">Odaberite Postavljanje</string>

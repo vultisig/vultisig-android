@@ -210,6 +210,10 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
             com.vultisig.wallet.ui.screens.v2.defi.solana.SolanaMoveStakeScreen()
         }
 
+        composable<Route.SolanaFinishMove> {
+            com.vultisig.wallet.ui.screens.v2.defi.solana.SolanaFinishMoveScreen()
+        }
+
         composable<Route.TonUnstake> {
             com.vultisig.wallet.ui.screens.v2.defi.ton.TonUnstakeScreen()
         }

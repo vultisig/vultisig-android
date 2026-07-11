@@ -220,12 +220,18 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                 require(AnyAddress.isValid(votePubkey, coinType)) {
                     "solana delegate: invalid validator vote pubkey"
                 }
-                // stakeAccount is intentionally omitted so wallet-core derives it deterministically
-                // and emits create + initialize + delegate in one tx.
+                // A fresh stake omits stakeAccount so wallet-core derives it deterministically and
+                // emits create + initialize + delegate in one tx. A move-stake "Finish Move" sets
+                // the existing (cooled-down) account so wallet-core re-delegates it in place.
                 val delegate =
                     Solana.DelegateStake.newBuilder()
                         .setValidatorPubkey(votePubkey)
                         .setValue(lamports.toLong())
+                        .apply {
+                            payload.stakeAccount
+                                ?.takeIf { it.isNotEmpty() }
+                                ?.let { setStakeAccount(it) }
+                        }
                         .build()
                 input.setDelegateStakeTransaction(delegate).build().toByteArray()
             }

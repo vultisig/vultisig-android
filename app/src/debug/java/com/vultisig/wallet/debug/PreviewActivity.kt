@@ -2337,6 +2337,7 @@ private fun solanaStakingPreviewRow(
         apyDisplay = apy,
         canDeactivate = canDeactivate,
         canWithdraw = canWithdraw,
+        accountLamports = java.math.BigInteger.ZERO,
     )
 
 @Composable

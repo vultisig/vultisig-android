@@ -917,6 +917,9 @@
     <string name="solana_move_title">Sposta SOL</string>
     <string name="solana_staking_stake_account">Conto di staking</string>
     <string name="solana_move_notice">Lo spostamento dello stake richiede più passaggi e attraversa più epoche: questo disattiva ora l’account; dopo il periodo di raffreddamento di circa 2 giorni, completa lo spostamento verso il nuovo validatore.</string>
+    <string name="solana_finish_move_title">Completa spostamento</string>
+    <string name="solana_finish_move_cta">Completa spostamento</string>
+    <string name="solana_finish_move_notice">Questo ridelega l’account di stake raffreddato al nuovo validatore e completa lo spostamento.</string>
     <string name="vault_backup_verifying_pin">Verifica del PIN in corso, attendere</string>
     <string name="select_vault_type_next">Avanti</string>
     <string name="select_vault_type_choose_setup">Scegli configurazione</string>

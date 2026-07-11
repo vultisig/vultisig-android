@@ -922,6 +922,9 @@
     <string name="solana_move_title">Переместить SOL</string>
     <string name="solana_staking_stake_account">Счет для размещения ставок</string>
     <string name="solana_move_notice">Перемещение стейка выполняется в несколько шагов и занимает несколько эпох: сейчас аккаунт будет деактивирован; после периода ожидания около 2 дней завершите перемещение к новому валидатору.</string>
+    <string name="solana_finish_move_title">Завершить перемещение</string>
+    <string name="solana_finish_move_cta">Завершить перемещение</string>
+    <string name="solana_finish_move_notice">Это повторно делегирует охлажденный стейк-аккаунт новому валидатору и завершит перемещение.</string>
     <string name="vault_backup_verifying_pin">Подтверждение кода, пожалуйста, подождите.</string>
     <string name="select_vault_type_next">Далее</string>
     <string name="select_vault_type_choose_setup">Выберите конфигурацию</string>

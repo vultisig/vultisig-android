@@ -486,6 +486,14 @@ internal sealed class Route {
     )
 
     /**
+     * Solana move-stake step 2 ("Finish Move"): re-delegate a fully-inactive stake account to a new
+     * validator. Reached from a cooled-down account on the DeFi tab; [lamports] is the account's
+     * current balance being re-delegated. Mirrors Windows `SolanaFinishMove`.
+     */
+    @Serializable
+    data class SolanaFinishMove(val vaultId: String, val stakePubkey: String, val lamports: String)
+
+    /**
      * TON nominator-pool unstake confirmation (mirrors iOS `TonUnstakeTransactionScreen`).
      * Nominator pools support full withdrawal only, so there is no amount input — the screen
      * confirms the full-withdrawal message to [poolAddress]. [stakedDisplay] is shown for context.

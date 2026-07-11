@@ -1248,6 +1248,9 @@
     <string name="solana_move_title">转移 SOL</string>
     <string name="solana_staking_stake_account">权益账户</string>
     <string name="solana_move_notice">移动质押需要多个步骤并跨越多个 epoch：这会立即停用该账户；约 2 天冷却期结束后，再完成到新验证器的移动。</string>
+    <string name="solana_finish_move_title">完成移动</string>
+    <string name="solana_finish_move_cta">完成移动</string>
+    <string name="solana_finish_move_notice">这会将已冷却的质押账户重新委托给新验证器，并完成移动。</string>
     <string name="vault_backup_verifying_pin">正在验证代码，请稍候</string>
     <string name="select_vault_type_next">下一步</string>
     <string name="select_vault_type_choose_setup">选择“设置”</string>

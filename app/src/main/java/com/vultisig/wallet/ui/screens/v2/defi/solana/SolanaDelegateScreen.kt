@@ -74,7 +74,9 @@ internal fun SolanaDelegateScreen(viewModel: SolanaDelegateViewModel = hiltViewM
 
         if (state.isShowingPicker) {
             SolanaValidatorPickerSheet(
-                state = state,
+                isLoading = state.isLoading,
+                searchQuery = state.validatorSearchQuery,
+                selectedVotePubkey = state.selectedValidator?.votePubkey,
                 validators = viewModel.visibleValidators(state),
                 onSearchQueryChange = viewModel::onSearchQueryChange,
                 onValidatorSelected = viewModel::selectValidator,
@@ -150,7 +152,7 @@ internal fun SolanaDelegateContent(
 
 /** "Validator" opener row: label + chevron before selection; avatar + name after. */
 @Composable
-private fun SolanaValidatorPickerField(selected: SolanaValidatorOption?, onClick: () -> Unit) {
+internal fun SolanaValidatorPickerField(selected: SolanaValidatorOption?, onClick: () -> Unit) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
@@ -206,15 +208,17 @@ private fun SolanaValidatorPickerField(selected: SolanaValidatorOption?, onClick
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SolanaValidatorPickerSheet(
-    state: SolanaDelegateUiState,
+internal fun SolanaValidatorPickerSheet(
+    isLoading: Boolean,
+    searchQuery: String,
+    selectedVotePubkey: String?,
     validators: List<SolanaValidatorOption>,
     onSearchQueryChange: (String) -> Unit,
     onValidatorSelected: (SolanaValidatorOption) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val searchState = rememberTextFieldState(state.validatorSearchQuery)
+    val searchState = rememberTextFieldState(searchQuery)
     LaunchedEffect(searchState) {
         snapshotFlow { searchState.text.toString() }.collect { onSearchQueryChange(it) }
     }
@@ -274,7 +278,7 @@ private fun SolanaValidatorPickerSheet(
 
             Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                 when {
-                    state.isLoading ->
+                    isLoading ->
                         CenteredMessage(stringResource(R.string.cosmos_staking_loading_validators))
                     validators.isEmpty() ->
                         CenteredMessage(stringResource(R.string.solana_delegate_select_validator))
@@ -286,8 +290,7 @@ private fun SolanaValidatorPickerSheet(
                             items(validators, key = { it.votePubkey }) { validator ->
                                 SolanaValidatorRow(
                                     validator = validator,
-                                    isSelected =
-                                        validator.votePubkey == state.selectedValidator?.votePubkey,
+                                    isSelected = validator.votePubkey == selectedVotePubkey,
                                     onClick = { onValidatorSelected(validator) },
                                 )
                             }

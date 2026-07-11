@@ -517,6 +517,9 @@
     <string name="solana_move_title">Move SOL</string>
     <string name="solana_staking_stake_account">Stake account</string>
     <string name="solana_move_notice">Moving stake is multi-step and spans epochs: this deactivates the account now; after the ~2-day cooldown, finish moving it to the new validator.</string>
+    <string name="solana_finish_move_title">Finish Move</string>
+    <string name="solana_finish_move_cta">Finish Move</string>
+    <string name="solana_finish_move_notice">This re-delegates the cooled-down stake account to the new validator and completes the move.</string>
     <string name="send_error_invalid_plan_fee">Invalid Plan Fee</string>
     <string name="send_error_same_address">The to address must be different from the from address</string>
     <string name="select_vault_type_secure">Secure</string>

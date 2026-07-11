@@ -15,7 +15,9 @@ import java.math.BigInteger
  * which is the MPC byte-parity guarantee.
  *
  * Discriminated by [opType]. Field set per op:
- * - [SolanaStakingOpType.Delegate] → [votePubkey], [lamports]
+ * - [SolanaStakingOpType.Delegate] → [votePubkey], [lamports]; [stakeAccount] null for a fresh
+ *   stake (wallet-core derives + creates the account) or set to re-delegate an EXISTING cooled-down
+ *   account to a new validator (move-stake step 2 / "Finish Move")
  * - [SolanaStakingOpType.Unstake] → [stakeAccount] (deactivate; no amount)
  * - [SolanaStakingOpType.Withdraw] → [stakeAccount], [lamports]
  */
@@ -29,7 +31,10 @@ data class SolanaStakingPayload(
     val opType: SolanaStakingOpType,
     /** Vote account to delegate to ([SolanaStakingOpType.Delegate]). */
     val votePubkey: String? = null,
-    /** Source stake account for [SolanaStakingOpType.Unstake] / [SolanaStakingOpType.Withdraw]. */
+    /**
+     * Source stake account for [SolanaStakingOpType.Unstake] / [SolanaStakingOpType.Withdraw], or —
+     * on a [SolanaStakingOpType.Delegate] — the existing account to re-delegate ("Finish Move").
+     */
     val stakeAccount: String? = null,
     /**
      * Lamports for [SolanaStakingOpType.Delegate] / [SolanaStakingOpType.Withdraw]. Null for
@@ -42,6 +47,23 @@ data class SolanaStakingPayload(
             SolanaStakingPayload(
                 opType = SolanaStakingOpType.Delegate,
                 votePubkey = votePubkey,
+                lamports = lamports,
+            )
+
+        /**
+         * Move-stake step 2 ("Finish Move"): re-delegate an existing, fully-inactive [stakeAccount]
+         * to a new validator. Same delegate instruction as [delegate] but with [stakeAccount] set
+         * so wallet-core delegates the existing account instead of deriving/creating a fresh one.
+         */
+        fun finishMove(
+            stakeAccount: String,
+            votePubkey: String,
+            lamports: BigInteger,
+        ): SolanaStakingPayload =
+            SolanaStakingPayload(
+                opType = SolanaStakingOpType.Delegate,
+                votePubkey = votePubkey,
+                stakeAccount = stakeAccount,
                 lamports = lamports,
             )
 
