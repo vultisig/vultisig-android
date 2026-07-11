@@ -106,7 +106,21 @@ constructor(
                     .getSignedApproveTransaction(approvePayload, payload, signatures)
 
             val evmApi = evmApiFactory.createEvmApi(chain)
-            approveTxHash = evmApi.sendTransaction(signedApproveTransaction.rawTransaction)
+            approveTxHash =
+                try {
+                    evmApi.sendTransaction(signedApproveTransaction.rawTransaction)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // A joined (losing) co-signer's approve broadcast can be rejected as a
+                    // duplicate. Fall back to the locally computed hash and let
+                    // awaitApprovalConfirmation verify it on-chain, so we surface a proper
+                    // ApprovalNotConfirmed result instead of a generic error screen. This never
+                    // fabricates success — confirmation is still gated below. The initiating
+                    // device re-throws so a genuine broadcast failure is surfaced.
+                    val localHash = signedApproveTransaction.transactionHash
+                    if (!isInitiatingDevice && localHash.isNotBlank()) localHash else throw e
+                }
 
             Timber.d("Approval tx broadcast: %s, awaiting confirmation", approveTxHash)
 

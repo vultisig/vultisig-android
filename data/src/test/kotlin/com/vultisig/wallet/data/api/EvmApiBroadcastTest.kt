@@ -44,10 +44,27 @@ class EvmApiBroadcastTest {
     }
 
     @Test
+    fun `known transaction hash variant is treated as success without an on-chain check`() =
+        runTest {
+            // geth/Erigon emit "known transaction: 0x…"; the old bare "known" caught it, exact
+            // "already known" did not. Must stay a success (our exact bytes are already held).
+            val client =
+                MockHttpClient.respondingWith(
+                    HttpStatusCode.OK,
+                    errorResponse("known transaction: 0xabc").second,
+                )
+            val hash = api(client).sendTransaction(signedTx)
+            assert(hash.startsWith("0x")) { "expected a keccak hash, got $hash" }
+        }
+
+    @Test
     fun `nonce too low is success only when our hash is actually mined`() = runTest {
+        // error, then not-yet-mined (null receipt), then mined — exercises the retry loop so a
+        // regression to a single attempt or broken backoff fails.
         val client =
             MockHttpClient.respondingWithSequence(
                 errorResponse("nonce too low: next nonce 5"),
+                receiptResponse("null"),
                 receiptResponse("""{"status":"0x1"}"""),
             )
         val hash = api(client).sendTransaction(signedTx)

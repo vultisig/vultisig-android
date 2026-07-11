@@ -484,13 +484,18 @@ class EvmApiImp(
             val localHash = Numeric.hexStringToByteArray(signedTransaction).toKeccak256()
             return when {
                 // The node already holds our exact signed bytes, so the deterministic keccak hash
-                // is the canonical on-chain id — safe to report without re-verifying.
+                // is the canonical on-chain id — safe to report without re-verifying. Match the
+                // "known" concept case-insensitively ("already known", "known transaction: 0x…")
+                // while excluding the "unknown sender/block/method" collision, which is a real
+                // rejection.
+                message.contains("known", ignoreCase = true) &&
+                    !message.contains("unknown", ignoreCase = true) -> localHash
                 ALREADY_BROADCAST_ERRORS.any { message.contains(it) } -> localHash
-                // "nonce too low" is ambiguous: either our own tx already mined, or a DIFFERENT tx
-                // consumed the nonce (stale spec-build nonce, another wallet on the same address).
-                // Only report success if OUR hash is actually on chain; otherwise surface the
-                // error.
-                NONCE_TOO_LOW_ERRORS.any { message.contains(it) } ->
+                // Ambiguous errors: our own tx may have mined, or a DIFFERENT tx consumed the nonce
+                // (stale spec-build nonce, another wallet), or the tx-pool banned a permanently
+                // invalid tx. Only report success if OUR hash is actually on chain; otherwise
+                // surface the error.
+                VERIFY_BEFORE_SUCCESS_ERRORS.any { message.contains(it) } ->
                     if (isTxMined(localHash)) localHash else throw Exception(responseBody)
                 else -> throw Exception(responseBody)
             }
@@ -738,23 +743,22 @@ class EvmApiImp(
         private const val ENS_REGISTRY_ADDRESS = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
 
         // Node already has our exact signed tx; the keccak hash of our bytes is canonical.
-        // ("already known" replaces the old bare "known", which also matched "unknown …".)
         private val ALREADY_BROADCAST_ERRORS =
             listOf(
-                "already known",
-                "Transaction is temporarily banned",
                 "transaction already exists",
                 "tx already in mempool",
                 "existing tx",
                 "tx already exists in cache",
                 "code=10055",
             )
-        // Nonce already consumed — verify our hash landed before treating as success.
-        private val NONCE_TOO_LOW_ERRORS =
+        // Ambiguous — the nonce may be consumed by a different tx, or the tx-pool bans permanently
+        // invalid txs (Substrate), so verify our hash landed before treating as success.
+        private val VERIFY_BEFORE_SUCCESS_ERRORS =
             listOf(
                 "nonce too low: next nonce",
                 "nonce too low. allowed nonce range:",
                 "nonce too low: address", // this message happens on layer 2
+                "Transaction is temporarily banned",
             )
 
         private const val TX_MINED_ATTEMPTS = 3
