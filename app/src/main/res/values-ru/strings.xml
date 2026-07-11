@@ -921,15 +921,7 @@
     <string name="solana_delegate_cta">Продолжить</string>
     <string name="solana_staking_unstake_cta">Вывести из стейкинга</string>
     <string name="solana_staking_withdraw_cta">Вывести</string>
-    <string name="solana_staking_move_cta">Переместить</string>
-    <string name="solana_move_title">Перемещение стейка</string>
-    <string name="solana_move_description">В Solana нет прямого переделегирования. Перемещение стейка занимает несколько шагов в течение эпох.</string>
-    <string name="solana_move_step_deactivate">Деактивировать текущий стейк</string>
-    <string name="solana_move_step_waiting">Дождитесь периода охлаждения (~1 эпоха)</string>
-    <string name="solana_move_step_waiting_at">Охлаждение — разблокируется в эпоху %1$s</string>
-    <string name="solana_move_step_withdraw">Выведите, затем застейкайте у нового валидатора</string>
-    <string name="solana_move_waiting_cta">Охлаждение…</string>
-    <string name="solana_move_stake_to_new_cta">Застейкать у нового валидатора</string>
+    <string name="solana_staking_move_cta">Стейк</string>
     <string name="vault_backup_verifying_pin">Подтверждение кода, пожалуйста, подождите.</string>
     <string name="select_vault_type_next">Далее</string>
     <string name="select_vault_type_choose_setup">Выберите конфигурацию</string>

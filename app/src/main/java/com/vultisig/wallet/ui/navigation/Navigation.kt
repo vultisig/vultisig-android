@@ -476,7 +476,6 @@ internal sealed class Route {
      * mainnet redelegate, moving stake to another validator is a cross-epoch sequence (Deactivate →
      * wait for cooldown → Withdraw → Delegate-to-B) resumed from the account's on-chain state.
      */
-    @Serializable data class SolanaMoveStake(val vaultId: String, val stakePubkey: String)
 
     /**
      * TON nominator-pool unstake confirmation (mirrors iOS `TonUnstakeTransactionScreen`).

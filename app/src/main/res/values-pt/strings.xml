@@ -915,15 +915,7 @@
     <string name="solana_delegate_cta">Continuar</string>
     <string name="solana_staking_unstake_cta">Remover do stake</string>
     <string name="solana_staking_withdraw_cta">Sacar</string>
-    <string name="solana_staking_move_cta">Mover</string>
-    <string name="solana_move_title">Mover stake</string>
-    <string name="solana_move_description">A Solana não tem redelegação direta. Mover o stake leva alguns passos ao longo das épocas.</string>
-    <string name="solana_move_step_deactivate">Desativar o stake atual</string>
-    <string name="solana_move_step_waiting">Aguardar o período de espera (~1 época)</string>
-    <string name="solana_move_step_waiting_at">Em espera — desbloqueia na época %1$s</string>
-    <string name="solana_move_step_withdraw">Sacar e depois fazer stake no novo validador</string>
-    <string name="solana_move_waiting_cta">Em espera…</string>
-    <string name="solana_move_stake_to_new_cta">Fazer stake em um novo validador</string>
+    <string name="solana_staking_move_cta">Stake</string>
     <string name="vault_backup_verifying_pin">Verificando código, aguarde</string>
     <string name="select_vault_type_next">Próximo</string>
     <string name="select_vault_type_choose_setup">Selecione Configurar</string>

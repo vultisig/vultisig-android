@@ -82,7 +82,6 @@ internal fun SolanaStakingPositionsScreen(
         onStake = viewModel::onStake,
         onDeactivate = viewModel::onDeactivate,
         onWithdraw = viewModel::onWithdraw,
-        onMove = viewModel::onMove,
     )
 
     if (!state.isLoading) {
@@ -99,7 +98,6 @@ internal fun SolanaStakingPositionsContent(
     onStake: () -> Unit = {},
     onDeactivate: (String) -> Unit = {},
     onWithdraw: (String) -> Unit = {},
-    onMove: (String) -> Unit = {},
 ) {
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
         Column(
@@ -143,7 +141,7 @@ internal fun SolanaStakingPositionsContent(
                         isBalanceVisible = state.isBalanceVisible,
                         onDeactivate = onDeactivate,
                         onWithdraw = onWithdraw,
-                        onMove = onMove,
+                        onStake = onStake,
                     )
                 }
 
@@ -165,7 +163,7 @@ private fun StakeAccountsWidget(
     isBalanceVisible: Boolean,
     onDeactivate: (String) -> Unit,
     onWithdraw: (String) -> Unit,
-    onMove: (String) -> Unit,
+    onStake: () -> Unit,
 ) {
     Column(
         modifier =
@@ -198,7 +196,7 @@ private fun StakeAccountsWidget(
                 isBalanceVisible = isBalanceVisible,
                 onDeactivate = { onDeactivate(row.stakePubkey) },
                 onWithdraw = { onWithdraw(row.stakePubkey) },
-                onMove = { onMove(row.stakePubkey) },
+                onStake = onStake,
             )
         }
     }
@@ -210,7 +208,7 @@ private fun StakeAccountContent(
     isBalanceVisible: Boolean,
     onDeactivate: () -> Unit,
     onWithdraw: () -> Unit,
-    onMove: () -> Unit,
+    onStake: () -> Unit,
 ) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -314,7 +312,7 @@ private fun StakeAccountContent(
                     icon = R.drawable.ic_circle_plus,
                     background = Theme.v2.colors.primary.accent3,
                     contentColor = Theme.v2.colors.text.primary,
-                    onClick = onMove,
+                    onClick = onStake,
                     modifier = Modifier.weight(1f),
                     iconCircleColor = Theme.v2.colors.primary.accent4,
                 )
