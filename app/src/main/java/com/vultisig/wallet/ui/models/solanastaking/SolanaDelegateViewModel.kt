@@ -102,6 +102,9 @@ constructor(
 
     private var coin: Coin? = null
     private var balanceLamports: BigInteger = BigInteger.ZERO
+    // Live rent-exempt reserve fetched in [load]; reused in [submit] so the Max/percentage headroom
+    // and the submit-time funding guard agree on the same reserve.
+    private var rentReserveLamports: BigInteger? = null
     private val stakeFormat = java.text.DecimalFormat("#,###")
 
     init {
@@ -171,10 +174,12 @@ constructor(
             balanceLamports =
                 balanceRepository.getTokenValue(solCoin.address, solCoin).first().value
             // Stakeable = balance − rent-exempt reserve − a small fee buffer, so a Max stake stays
-            // within balance once the rent reserve is added to the funding downstream.
-            val headroom =
-                SolanaStakingConfig.RENT_EXEMPT_RESERVE_FALLBACK_LAMPORTS +
-                    SolanaHelper.DefaultFeeInLamports
+            // within balance once the rent reserve is added to the funding downstream. Fetch the
+            // live reserve here and cache it so submit() uses the identical value — a fallback that
+            // undershoots the live reserve would let Max produce a submit-time funding failure.
+            val rentReserve = fetchRentReserve()
+            rentReserveLamports = rentReserve
+            val headroom = rentReserve + SolanaHelper.DefaultFeeInLamports
             val stakeable =
                 (balanceLamports - headroom)
                     .max(BigInteger.ZERO)
@@ -216,6 +221,14 @@ constructor(
         }
     }
 
+    /**
+     * Live rent-exempt reserve for a stake account, falling back to the pinned constant on error.
+     */
+    private suspend fun fetchRentReserve(): BigInteger =
+        solanaApi
+            .getMinimumBalanceForRentExemption(SolanaStakingConfig.STAKE_ACCOUNT_SPACE)
+            .takeIf { it.signum() > 0 } ?: SolanaStakingConfig.RENT_EXEMPT_RESERVE_FALLBACK_LAMPORTS
+
     fun submit() {
         if (_state.value.isSubmitting) return
         _state.update { it.copy(isSubmitting = true, error = null) }
@@ -245,11 +258,9 @@ constructor(
                 "Minimum delegation is 1 SOL"
             }
 
-            val rentReserve =
-                solanaApi
-                    .getMinimumBalanceForRentExemption(SolanaStakingConfig.STAKE_ACCOUNT_SPACE)
-                    .takeIf { it.signum() > 0 }
-                    ?: SolanaStakingConfig.RENT_EXEMPT_RESERVE_FALLBACK_LAMPORTS
+            // Reuse the reserve cached by load() so the funding guard matches the Max headroom;
+            // fall back to a fresh fetch only if submit somehow runs before load resolved.
+            val rentReserve = rentReserveLamports ?: fetchRentReserve()
             // Funding = active delegated stake (entered amount) + rent-exempt reserve.
             val funding = amountLamports + rentReserve
 

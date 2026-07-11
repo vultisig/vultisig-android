@@ -72,27 +72,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                 .setV0Msg(true)
                 .setRecentBlockhash(solanaSpecific.recentBlockHash)
                 .setSender(keysignPayload.coin.address)
-                .setPriorityFeePrice(
-                    Solana.PriorityFeePrice.newBuilder()
-                        .setPrice(
-                            maxOf(
-                                solanaSpecific.priorityFee
-                                    .min(BigInteger.valueOf(Long.MAX_VALUE))
-                                    .toLong(),
-                                SOLANA_PRIORITY_FEE_PRICE,
-                            )
-                        )
-                        .build()
-                )
-                .setPriorityFeeLimit(
-                    Solana.PriorityFeeLimit.newBuilder()
-                        .setLimit(
-                            solanaSpecific.priorityLimit
-                                .min(BigInteger.valueOf(Int.MAX_VALUE.toLong()))
-                                .toInt()
-                        )
-                        .build()
-                )
+                .applyPriorityFee(solanaSpecific.priorityFee, solanaSpecific.priorityLimit)
 
         if (keysignPayload.coin.isNativeToken) {
             val transfer =
@@ -190,6 +170,31 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         return Base64.encode(Base58.decodeNoCheck(output.encoded))
     }
 
+    /**
+     * Applies the clamped priority-fee price + compute-unit limit shared by the transfer and
+     * staking signing inputs. Price is floored at [SOLANA_PRIORITY_FEE_PRICE] and both values are
+     * clamped to their proto field widths (price → Long, limit → Int).
+     */
+    private fun Solana.SigningInput.Builder.applyPriorityFee(
+        price: BigInteger,
+        limit: BigInteger,
+    ): Solana.SigningInput.Builder =
+        setPriorityFeePrice(
+                Solana.PriorityFeePrice.newBuilder()
+                    .setPrice(
+                        maxOf(
+                            price.min(BigInteger.valueOf(Long.MAX_VALUE)).toLong(),
+                            SOLANA_PRIORITY_FEE_PRICE,
+                        )
+                    )
+                    .build()
+            )
+            .setPriorityFeeLimit(
+                Solana.PriorityFeeLimit.newBuilder()
+                    .setLimit(limit.min(BigInteger.valueOf(Int.MAX_VALUE.toLong())).toInt())
+                    .build()
+            )
+
     private fun getStakingPreSignedInputData(
         payload: SolanaStakingPayload,
         senderAddress: String,
@@ -202,23 +207,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                 .setV0Msg(true)
                 .setRecentBlockhash(recentBlockHash)
                 .setSender(senderAddress)
-                .setPriorityFeePrice(
-                    Solana.PriorityFeePrice.newBuilder()
-                        .setPrice(
-                            maxOf(
-                                priorityFeePrice.min(BigInteger.valueOf(Long.MAX_VALUE)).toLong(),
-                                SOLANA_PRIORITY_FEE_PRICE,
-                            )
-                        )
-                        .build()
-                )
-                .setPriorityFeeLimit(
-                    Solana.PriorityFeeLimit.newBuilder()
-                        .setLimit(
-                            priorityFeeLimit.min(BigInteger.valueOf(Int.MAX_VALUE.toLong())).toInt()
-                        )
-                        .build()
-                )
+                .applyPriorityFee(priorityFeePrice, priorityFeeLimit)
 
         return when (payload.opType) {
             SolanaStakingOpType.Delegate -> {

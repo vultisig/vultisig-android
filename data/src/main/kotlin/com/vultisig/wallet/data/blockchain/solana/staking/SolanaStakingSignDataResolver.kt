@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.blockchain.solana.staking
 
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import java.math.BigInteger
+import javax.inject.Inject
 import vultisig.keysign.v1.SignSolana
 
 /**
@@ -17,7 +18,7 @@ import vultisig.keysign.v1.SignSolana
  * [SignSolana.rawTransactions]. Every device then signs the byte-identical message through the
  * raw-transaction path — the MPC byte-parity guarantee.
  */
-class SolanaStakingSignDataResolver {
+class SolanaStakingSignDataResolver @Inject constructor() {
 
     /**
      * Builds the [SignSolana] for a [SolanaStakingOpType.Delegate] payload.

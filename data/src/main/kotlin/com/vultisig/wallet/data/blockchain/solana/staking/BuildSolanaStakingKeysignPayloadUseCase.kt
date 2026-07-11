@@ -35,10 +35,10 @@ fun interface BuildSolanaStakingKeysignPayloadUseCase {
     ): KeysignPayload
 }
 
-internal class BuildSolanaStakingKeysignPayloadUseCaseImpl @Inject constructor() :
+internal class BuildSolanaStakingKeysignPayloadUseCaseImpl
+@Inject
+constructor(private val resolver: SolanaStakingSignDataResolver) :
     BuildSolanaStakingKeysignPayloadUseCase {
-
-    private val resolver = SolanaStakingSignDataResolver()
 
     override fun invoke(
         coin: Coin,

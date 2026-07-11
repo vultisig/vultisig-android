@@ -472,10 +472,18 @@ internal sealed class Route {
     @Serializable data class SolanaDelegate(val vaultId: String)
 
     /**
-     * Solana guided move-stake flow for a source stake account. Because Solana has no native
-     * mainnet redelegate, moving stake to another validator is a cross-epoch sequence (Deactivate →
-     * wait for cooldown → Withdraw → Delegate-to-B) resumed from the account's on-chain state.
+     * Solana move-stake step 1 ("Move SOL"): read-only source stake account + a cross-epoch notice.
+     * Continue deactivates the account (starting the ~1-epoch cooldown); the DeFi tab then surfaces
+     * the finish-move re-delegation once it is fully inactive. Mirrors Windows `SolanaMoveStake`.
+     * [delegatedStake] is the account's delegated lamports (raw), shown as the moved amount on
+     * verify.
      */
+    @Serializable
+    data class SolanaMoveStake(
+        val vaultId: String,
+        val stakePubkey: String,
+        val delegatedStake: String,
+    )
 
     /**
      * TON nominator-pool unstake confirmation (mirrors iOS `TonUnstakeTransactionScreen`).

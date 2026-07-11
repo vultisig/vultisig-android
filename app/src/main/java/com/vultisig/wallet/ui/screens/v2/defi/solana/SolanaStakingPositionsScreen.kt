@@ -74,6 +74,7 @@ internal fun SolanaStakingPositionsScreen(
         isRefreshing = state.isReloading,
         onRefresh = viewModel::refresh,
         onStake = viewModel::onStake,
+        onMove = viewModel::onMove,
         onDeactivate = viewModel::onDeactivate,
         onWithdraw = viewModel::onWithdraw,
     )
@@ -86,6 +87,7 @@ internal fun SolanaStakingPositionsContent(
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
     onStake: () -> Unit = {},
+    onMove: (String) -> Unit = {},
     onDeactivate: (String) -> Unit = {},
     onWithdraw: (String) -> Unit = {},
 ) {
@@ -131,6 +133,7 @@ internal fun SolanaStakingPositionsContent(
                         isBalanceVisible = state.isBalanceVisible,
                         onDeactivate = onDeactivate,
                         onWithdraw = onWithdraw,
+                        onMove = onMove,
                         onStake = onStake,
                     )
                 }
@@ -153,6 +156,7 @@ private fun StakeAccountsWidget(
     isBalanceVisible: Boolean,
     onDeactivate: (String) -> Unit,
     onWithdraw: (String) -> Unit,
+    onMove: (String) -> Unit,
     onStake: () -> Unit,
 ) {
     Column(
@@ -186,6 +190,7 @@ private fun StakeAccountsWidget(
                 isBalanceVisible = isBalanceVisible,
                 onDeactivate = { onDeactivate(row.stakePubkey) },
                 onWithdraw = { onWithdraw(row.stakePubkey) },
+                onMove = { onMove(row.stakePubkey) },
                 onStake = onStake,
             )
         }
@@ -198,6 +203,7 @@ private fun StakeAccountContent(
     isBalanceVisible: Boolean,
     onDeactivate: () -> Unit,
     onWithdraw: () -> Unit,
+    onMove: () -> Unit,
     onStake: () -> Unit,
 ) {
     Column {
@@ -299,6 +305,16 @@ private fun StakeAccountContent(
                 )
                 ActionButton(
                     title = stringResource(R.string.solana_staking_move_cta),
+                    icon = R.drawable.ic_arrow_bottom_top,
+                    background = Color.Transparent,
+                    border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
+                    contentColor = Theme.v2.colors.text.primary,
+                    onClick = onMove,
+                    modifier = Modifier.weight(1f),
+                    iconCircleColor = Theme.v2.colors.text.tertiary,
+                )
+                ActionButton(
+                    title = stringResource(R.string.solana_staking_stake_cta),
                     icon = R.drawable.ic_circle_plus,
                     background = Theme.v2.colors.primary.accent3,
                     contentColor = Theme.v2.colors.text.primary,

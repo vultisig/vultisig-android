@@ -143,6 +143,25 @@ constructor(
         }
     }
 
+    /**
+     * Open the move-stake step 1 ("Move SOL") screen for a stake account. Solana has no native
+     * redelegate, so moving A → B is a guided cross-epoch flow that starts by deactivating the
+     * source account; the screen carries the account's delegated stake for the verify summary.
+     */
+    fun onMove(stakePubkey: String) {
+        if (vaultId.isEmpty()) return
+        val account = accountsByPubkey[stakePubkey] ?: return
+        viewModelScope.safeLaunch(onError = { Timber.w(it, "open Solana move-stake failed") }) {
+            navigator.route(
+                Route.SolanaMoveStake(
+                    vaultId = vaultId,
+                    stakePubkey = stakePubkey,
+                    delegatedStake = account.delegatedStake.toString(),
+                )
+            )
+        }
+    }
+
     /** Deactivate (unstake) a stake account — begins the ~1-epoch cooldown; carries no amount. */
     fun onDeactivate(stakePubkey: String) {
         val account = accountsByPubkey[stakePubkey] ?: return
