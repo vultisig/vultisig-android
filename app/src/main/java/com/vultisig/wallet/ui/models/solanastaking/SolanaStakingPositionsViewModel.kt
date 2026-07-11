@@ -70,6 +70,7 @@ internal data class SolanaStakePositionRow(
     val stakedDisplay: String,
     val stakedFiatDisplay: String,
     val rentReserveDisplay: String,
+    val state: SolanaStakeState,
     val stateLabel: UiText,
     val apyDisplay: String?,
     val canDeactivate: Boolean,
@@ -84,6 +85,7 @@ internal data class SolanaStakePositionRow(
 @Immutable
 internal data class SolanaStakingPositionsUiState(
     val isLoading: Boolean = true,
+    val isReloading: Boolean = false,
     val isBalanceVisible: Boolean = true,
     val totalStakedFiatDisplay: String = "",
     val totalStakedSolDisplay: String = "",
@@ -121,6 +123,7 @@ constructor(
     private var loadJob: Job? = null
     private var solCoin: Coin? = null
     private var accountsByPubkey: Map<String, SolanaStakeAccount> = emptyMap()
+    private var isBuildingStakingTx: Boolean = false
 
     fun setData(vaultId: VaultId) {
         this.vaultId = vaultId
@@ -128,7 +131,9 @@ constructor(
     }
 
     fun refresh() {
-        if (vaultId.isNotEmpty()) loadData()
+        if (vaultId.isEmpty()) return
+        _state.update { it.copy(isReloading = true) }
+        loadData()
     }
 
     fun onStake() {
@@ -174,8 +179,11 @@ constructor(
         dstAddress: String,
     ) {
         val coin = solCoin ?: return
+        if (isBuildingStakingTx) return
+        isBuildingStakingTx = true
         viewModelScope.safeLaunch(
             onError = { e ->
+                isBuildingStakingTx = false
                 Timber.e(e, "Failed to build Solana staking tx")
                 _state.update { it.copy(error = (e.message ?: "").asUiText()) }
             }
@@ -219,6 +227,7 @@ constructor(
                 )
             depositTransactionRepository.addTransaction(depositTx)
             navigator.route(Route.VerifyDeposit(vaultId = vaultId, transactionId = depositTx.id))
+            isBuildingStakingTx = false
         }
     }
 
@@ -231,6 +240,7 @@ constructor(
                     _state.update {
                         it.copy(
                             isLoading = false,
+                            isReloading = false,
                             error = R.string.error_view_default_description.asUiText(),
                         )
                     }
@@ -241,6 +251,7 @@ constructor(
                     _state.update {
                         it.copy(
                             isLoading = false,
+                            isReloading = false,
                             error = R.string.solana_staking_error_sol_not_in_vault.asUiText(),
                         )
                     }
@@ -272,6 +283,7 @@ constructor(
                 _state.update {
                     it.copy(
                         isLoading = false,
+                        isReloading = false,
                         isBalanceVisible = isBalanceVisible,
                         totalStakedFiatDisplay = totalFiat,
                         totalStakedSolDisplay =
@@ -312,6 +324,7 @@ constructor(
             stakedDisplay = "${stakedSol.toPlainString()} ${SOL_TICKER}",
             stakedFiatDisplay = stakedFiat,
             rentReserveDisplay = "${rentReserveSol.toPlainString()} $SOL_TICKER",
+            state = account.state,
             stateLabel = stateLabel(account.state),
             // metadata.apyEstimate is a fraction (0.0572); render as a percentage.
             apyDisplay =

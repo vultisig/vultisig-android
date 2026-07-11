@@ -50,10 +50,11 @@ class SolanaStakingSignDataResolver {
             payload.lamports?.takeIf { it.signum() > 0 }
                 ?: error("solana delegate: missing or zero delegation amount")
         // `lamports` is the stake-account FUNDING (delegated amount + rent-exempt reserve, combined
-        // upstream). The signer pays that funding plus a negligible tx fee, so reject up front when
-        // it exceeds the balance — otherwise the ceremony signs a chain-rejected tx.
-        check(lamports <= balanceLamports) {
-            "solana delegate: funding $lamports exceeds balance $balanceLamports"
+        // upstream). The signer also pays the tx fee, so reserve it here too — a full-balance stake
+        // would otherwise pass this guard and the ceremony would sign a chain-rejected tx.
+        val required = lamports + SolanaHelper.DefaultFeeInLamports
+        check(required <= balanceLamports) {
+            "solana delegate: funding+fee $required exceeds balance $balanceLamports"
         }
         require(votePubkey.isNotEmpty())
 

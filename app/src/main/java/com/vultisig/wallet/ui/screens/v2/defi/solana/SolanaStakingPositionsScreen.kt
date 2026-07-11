@@ -23,9 +23,6 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -38,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
@@ -65,7 +63,6 @@ internal fun SolanaStakingPositionsScreen(
     viewModel: SolanaStakingPositionsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
-    var isRefreshing by remember { mutableStateOf(false) }
 
     LifecycleResumeEffect(vaultId) {
         viewModel.setData(vaultId)
@@ -74,19 +71,12 @@ internal fun SolanaStakingPositionsScreen(
 
     SolanaStakingPositionsContent(
         state = state,
-        isRefreshing = isRefreshing,
-        onRefresh = {
-            isRefreshing = true
-            viewModel.refresh()
-        },
+        isRefreshing = state.isReloading,
+        onRefresh = viewModel::refresh,
         onStake = viewModel::onStake,
         onDeactivate = viewModel::onDeactivate,
         onWithdraw = viewModel::onWithdraw,
     )
-
-    if (!state.isLoading) {
-        isRefreshing = false
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -239,7 +229,7 @@ private fun StakeAccountContent(
                 Text(
                     text = row.stateLabel.asString(),
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.alerts.success,
+                    color = stakeStateColor(row.state),
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
@@ -265,7 +255,7 @@ private fun StakeAccountContent(
         UiSpacer(16.dp)
         Row(verticalAlignment = Alignment.CenterVertically) {
             InfoItem(
-                icon = R.drawable.ic_icon_percentage,
+                icon = R.drawable.lock,
                 label = stringResource(R.string.solana_rent_reserve),
                 value = null,
             )
@@ -448,3 +438,18 @@ private fun SolanaTotalStakedCard(
         )
     }
 }
+
+/**
+ * Maps a stake account's lifecycle to its label color: green for a healthy Active stake, amber
+ * while a stake is transitioning (Activating/Deactivating), and muted for stakes that carry no
+ * active delegation (Inactive/NotDelegated).
+ */
+@Composable
+private fun stakeStateColor(state: SolanaStakeState): Color =
+    when (state) {
+        SolanaStakeState.Active -> Theme.v2.colors.alerts.success
+        SolanaStakeState.Activating,
+        SolanaStakeState.Deactivating -> Theme.v2.colors.alerts.warning
+        SolanaStakeState.Inactive,
+        SolanaStakeState.NotDelegated -> Theme.v2.colors.text.tertiary
+    }

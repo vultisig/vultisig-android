@@ -253,10 +253,12 @@ constructor(
             // Funding = active delegated stake (entered amount) + rent-exempt reserve.
             val funding = amountLamports + rentReserve
 
-            val balance = balanceRepository.getTokenValue(solCoin.address, solCoin).first().value
-            require(funding <= balance) { "Insufficient balance for this stake + rent reserve" }
-
             val gasFee = TokenValue(value = SolanaHelper.DefaultFeeInLamports, token = solCoin)
+            val balance = balanceRepository.getTokenValue(solCoin.address, solCoin).first().value
+            require(funding + gasFee.value <= balance) {
+                "Insufficient balance for this stake + rent reserve + network fee"
+            }
+
             val specific =
                 blockChainSpecificRepository.getSpecific(
                     chain = Chain.Solana,

@@ -51,9 +51,16 @@ class SolanaStakingDeFiBalanceService(
     }
 
     override suspend fun getCacheDeFiBalance(address: String, vaultId: String): List<DeFiBalance> {
-        val cached =
-            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Solana.SOL.id)
-        return balanceOf(cached?.stakeAmount ?: BigInteger.ZERO)
+        return try {
+            val cached =
+                stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Solana.SOL.id)
+            balanceOf(cached?.stakeAmount ?: BigInteger.ZERO)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "SolanaStakingDeFiBalanceService: failed to read cached stake balance")
+            emptyList()
+        }
     }
 
     /**

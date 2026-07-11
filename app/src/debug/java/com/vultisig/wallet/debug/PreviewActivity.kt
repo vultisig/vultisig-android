@@ -2332,6 +2332,7 @@ private fun solanaStakingPreviewRow(
         stakedDisplay = "$staked SOL",
         stakedFiatDisplay = fiat,
         rentReserveDisplay = "0.00228288 SOL",
+        state = com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState.Active,
         stateLabel = com.vultisig.wallet.ui.utils.UiText.DynamicString(stateLabel),
         apyDisplay = apy,
         canDeactivate = canDeactivate,
