@@ -20,11 +20,11 @@ import timber.log.Timber
  * those accounts (matching iOS `SolanaStakeDefiViewModel.totalStaked`), with a stake-weighted APY
  * folded in from the [ValidatorMetadataProvider] when available.
  *
- * A network failure returns an empty list rather than throwing — the DeFi balance fan-out runs each
- * chain inside an `async`, so a thrown exception here would cancel the whole load. Because a stale
- * position list would misreport what the user can deactivate/withdraw, the stake accounts are read
- * fresh every time (see [SolanaStakingService.fetchStakeAccounts]); only the aggregate balance is
- * persisted for the cached read.
+ * A network failure falls back to the last-known persisted balance rather than throwing — the DeFi
+ * balance fan-out runs each chain inside an `async`, so a thrown exception here would cancel the
+ * whole load. Because a stale position list would misreport what the user can deactivate/withdraw,
+ * the stake accounts are read fresh every time (see [SolanaStakingService.fetchStakeAccounts]);
+ * only the aggregate balance is persisted for the cached read.
  */
 class SolanaStakingDeFiBalanceService(
     private val solanaStakingService: SolanaStakingService,

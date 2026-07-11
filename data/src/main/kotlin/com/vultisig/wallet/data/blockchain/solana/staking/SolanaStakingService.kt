@@ -6,6 +6,8 @@ import com.vultisig.wallet.data.api.models.SolanaVoteAccountJson
 import java.math.BigInteger
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -45,8 +47,15 @@ class SolanaStakingService @Inject constructor(private val solanaApi: SolanaApi)
      * @param ownerAddress base58 SOL address whose withdrawer-owned stake accounts to fetch
      */
     suspend fun fetchStakeAccounts(ownerAddress: String): List<SolanaStakeAccount> {
-        val currentEpoch = fetchEpochInfo()?.epoch
-        return solanaApi.getStakeAccounts(ownerAddress).map { it.toStakeAccount(currentEpoch) }
+        // Epoch info and the stake-account read are independent — run them concurrently to save one
+        // RPC round-trip on every positions-screen load.
+        val (currentEpoch, accounts) =
+            coroutineScope {
+                val epoch = async { fetchEpochInfo()?.epoch }
+                val stakeAccounts = async { solanaApi.getStakeAccounts(ownerAddress) }
+                epoch.await() to stakeAccounts.await()
+            }
+        return accounts.map { it.toStakeAccount(currentEpoch) }
     }
 
     /**
