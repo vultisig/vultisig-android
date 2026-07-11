@@ -922,6 +922,8 @@
     <string name="solana_finish_move_title">Verschieben abschließen</string>
     <string name="solana_finish_move_cta">Verschieben abschließen</string>
     <string name="solana_finish_move_notice">Dadurch wird das abgekühlte Stake-Konto erneut an den neuen Validator delegiert und das Verschieben abgeschlossen.</string>
+    <string name="solana_unstake_title">SOL unstaken</string>
+    <string name="solana_unstake_notice">Durch die Deaktivierung beginnt eine Wartezeit – Ihr Einsatz bleibt für ca. 2 Tage gesperrt, bevor Sie ihn abheben können.</string>
     <string name="vault_backup_verifying_pin">Code wird überprüft, bitte warten</string>
     <string name="select_vault_type_next">Weiter</string>
     <string name="select_vault_type_choose_setup">Wähle „Einrichtung“</string>

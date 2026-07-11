@@ -925,6 +925,8 @@
     <string name="solana_finish_move_title">Dovrši premještanje</string>
     <string name="solana_finish_move_cta">Dovrši premještanje</string>
     <string name="solana_finish_move_notice">Ovo ponovno delegira ohlađeni račun uloga novom validatoru i dovršava premještanje.</string>
+    <string name="solana_unstake_title">Poništi stake za SOL</string>
+    <string name="solana_unstake_notice">Deaktiviranjem započinje hlađenje — vaš ulog ostaje zaključan ~2 dana prije nego što možete isplatiti novac.</string>
     <string name="vault_backup_verifying_pin">Provjera koda, molimo pričekajte</string>
     <string name="select_vault_type_next">Sljedeće</string>
     <string name="select_vault_type_choose_setup">Odaberite Postavljanje</string>

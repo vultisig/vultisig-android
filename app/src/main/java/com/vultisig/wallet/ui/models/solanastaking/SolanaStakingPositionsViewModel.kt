@@ -183,14 +183,22 @@ constructor(
         }
     }
 
-    /** Deactivate (unstake) a stake account — begins the ~1-epoch cooldown; carries no amount. */
+    /**
+     * Open the "Unstake SOL" confirmation screen for a stake account. Deactivating begins the
+     * ~1-epoch cooldown, so the user confirms on a dedicated screen before the tx is built.
+     */
     fun onDeactivate(stakePubkey: String) {
+        if (vaultId.isEmpty()) return
         val account = accountsByPubkey[stakePubkey] ?: return
-        buildStakingTxAndRoute(
-            payload = SolanaStakingPayload.unstake(stakeAccount = stakePubkey),
-            amount = account.delegatedStake,
-            dstAddress = stakePubkey,
-        )
+        viewModelScope.safeLaunch(onError = { Timber.w(it, "open Solana unstake failed") }) {
+            navigator.route(
+                Route.SolanaUnstake(
+                    vaultId = vaultId,
+                    stakePubkey = stakePubkey,
+                    delegatedStake = account.delegatedStake.toString(),
+                )
+            )
+        }
     }
 
     /**

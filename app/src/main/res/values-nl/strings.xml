@@ -917,6 +917,8 @@
     <string name="solana_finish_move_title">Verplaatsing voltooien</string>
     <string name="solana_finish_move_cta">Verplaatsing voltooien</string>
     <string name="solana_finish_move_notice">Hiermee wordt het afgekoelde stake-account opnieuw gedelegeerd aan de nieuwe validator en wordt de verplaatsing voltooid.</string>
+    <string name="solana_unstake_title">SOL ontstaken</string>
+    <string name="solana_unstake_notice">Na deactivering treedt een afkoelperiode in werking — uw inzet blijft ongeveer 2 dagen geblokkeerd voordat u deze kunt opnemen.</string>
     <string name="vault_backup_verifying_pin">Code verifiëren, even geduld a.u.b.</string>
     <string name="select_vault_type_next">Volgende</string>
     <string name="select_vault_type_choose_setup">Kies \'Instellen\'</string>

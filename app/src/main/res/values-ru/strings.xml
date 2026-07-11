@@ -925,6 +925,8 @@
     <string name="solana_finish_move_title">Завершить перемещение</string>
     <string name="solana_finish_move_cta">Завершить перемещение</string>
     <string name="solana_finish_move_notice">Это повторно делегирует охлажденный стейк-аккаунт новому валидатору и завершит перемещение.</string>
+    <string name="solana_unstake_title">Вывести SOL из стейкинга</string>
+    <string name="solana_unstake_notice">Деактивация запускает период ожидания — ваши средства остаются заблокированными примерно на 2 дней, прежде чем вы сможете их вывести.</string>
     <string name="vault_backup_verifying_pin">Подтверждение кода, пожалуйста, подождите.</string>
     <string name="select_vault_type_next">Далее</string>
     <string name="select_vault_type_choose_setup">Выберите конфигурацию</string>

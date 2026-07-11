@@ -920,6 +920,8 @@
     <string name="solana_finish_move_title">Completa spostamento</string>
     <string name="solana_finish_move_cta">Completa spostamento</string>
     <string name="solana_finish_move_notice">Questo ridelega l’account di stake raffreddato al nuovo validatore e completa lo spostamento.</string>
+    <string name="solana_unstake_title">Annulla staking SOL</string>
+    <string name="solana_unstake_notice">La disattivazione avvia un periodo di raffreddamento: la tua quota rimarrà bloccata per circa 2 giorni prima che tu possa prelevare.</string>
     <string name="vault_backup_verifying_pin">Verifica del PIN in corso, attendere</string>
     <string name="select_vault_type_next">Avanti</string>
     <string name="select_vault_type_choose_setup">Scegli configurazione</string>

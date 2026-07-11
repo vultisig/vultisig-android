@@ -472,6 +472,18 @@ internal sealed class Route {
     @Serializable data class SolanaDelegate(val vaultId: String)
 
     /**
+     * Solana "Unstake SOL" confirmation: read-only source stake account + a cooldown notice.
+     * Continue deactivates the account (~1-epoch cooldown before withdraw). [delegatedStake] is the
+     * account's delegated lamports (raw), shown as the amount on verify.
+     */
+    @Serializable
+    data class SolanaUnstake(
+        val vaultId: String,
+        val stakePubkey: String,
+        val delegatedStake: String,
+    )
+
+    /**
      * Solana move-stake step 1 ("Move SOL"): read-only source stake account + a cross-epoch notice.
      * Continue deactivates the account (starting the ~1-epoch cooldown); the DeFi tab then surfaces
      * the finish-move re-delegation once it is fully inactive. Mirrors Windows `SolanaMoveStake`.

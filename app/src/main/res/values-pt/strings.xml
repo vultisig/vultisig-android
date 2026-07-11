@@ -919,6 +919,8 @@
     <string name="solana_finish_move_title">Finalizar movimentação</string>
     <string name="solana_finish_move_cta">Finalizar movimentação</string>
     <string name="solana_finish_move_notice">Isso redelega a conta de stake já resfriada ao novo validador e conclui a movimentação.</string>
+    <string name="solana_unstake_title">Remover SOL do stake</string>
+    <string name="solana_unstake_notice">A desativação inicia um período de espera — seu token permanece bloqueado por aproximadamente 2 dias antes que você possa sacar.</string>
     <string name="vault_backup_verifying_pin">Verificando código, aguarde</string>
     <string name="select_vault_type_next">Próximo</string>
     <string name="select_vault_type_choose_setup">Selecione Configurar</string>

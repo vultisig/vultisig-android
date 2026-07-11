@@ -1251,6 +1251,8 @@
     <string name="solana_finish_move_title">完成移动</string>
     <string name="solana_finish_move_cta">完成移动</string>
     <string name="solana_finish_move_notice">这会将已冷却的质押账户重新委托给新验证器，并完成移动。</string>
+    <string name="solana_unstake_title">解除质押 SOL</string>
+    <string name="solana_unstake_notice">停用后会开始冷却期——您的质押将被锁定约2天，之后您才能提取。</string>
     <string name="vault_backup_verifying_pin">正在验证代码，请稍候</string>
     <string name="select_vault_type_next">下一步</string>
     <string name="select_vault_type_choose_setup">选择“设置”</string>
