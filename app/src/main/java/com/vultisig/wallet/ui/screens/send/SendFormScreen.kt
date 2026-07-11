@@ -423,6 +423,9 @@ private fun SendFormContent(
                 onSetOutputProvider = onSetProvider,
                 onScanProviderRequest = onScanProvider,
                 onAddressProviderBookClick = onProviderBookClick,
+                // Unbond draws from a specific bonded node; the amount ceiling is frozen to that
+                // node at navigation, so the address must stay locked to keep them in sync.
+                isAddressEditable = state.defiType != DeFiNavActions.UNBOND,
             )
         }
 

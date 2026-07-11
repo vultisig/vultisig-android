@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
+import java.math.BigInteger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -120,11 +121,13 @@ internal class SendFormGraph(
     private var vaultId: VaultId? = null
     private var defiType: DeFiNavActions? = null // Default is send, no defi form
     private var mscaAddress: String? = null
+    private var bondedAmount: BigInteger? = null
 
     private val vaultProvider: () -> Vault? = { vault }
     private val vaultIdProvider: () -> VaultId? = { vaultId }
     private val defiTypeProvider: () -> DeFiNavActions? = { defiType }
     private val mscaAddressProvider: () -> String? = { mscaAddress }
+    private val bondedAmountProvider: () -> BigInteger? = { bondedAmount }
 
     private val planFee = MutableStateFlow<Long?>(null)
     private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
@@ -161,6 +164,7 @@ internal class SendFormGraph(
             stakingDetailsRepository = stakingDetailsRepository,
             defiTypeProvider = defiTypeProvider,
             mscaAddressProvider = mscaAddressProvider,
+            bondedAmountProvider = bondedAmountProvider,
         )
     }
 
@@ -352,6 +356,7 @@ internal class SendFormGraph(
     fun initialize(args: Route.Send) {
         defiType = if (args.type == null) null else parseDepositType(args.type)
         mscaAddress = args.mscaAddress
+        bondedAmount = args.bondedAmount?.toBigIntegerOrNull()
         vaultId = args.vaultId
         accountsLoader.load(args.vaultId)
         loadVaultName()

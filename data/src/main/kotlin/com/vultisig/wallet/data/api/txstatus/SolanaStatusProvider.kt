@@ -14,19 +14,20 @@ internal class SolanaStatusProvider @Inject constructor(private val solanaApi: S
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult =
         try {
             val status = solanaApi.checkStatus(txHash)?.result?.value?.firstOrNull()
-            when {
+            when (status?.confirmationStatus) {
                 // A landed tx with `err` set executed but reverted (swap slippage, insufficient
                 // funds, etc.). Report failure instead of treating a finalized-but-failed tx as
-                // confirmed (matches iOS).
-                status?.err != null -> TransactionResult.Failed(status.err.toString())
-                else ->
-                    when (status?.confirmationStatus) {
-                        "finalized" -> TransactionResult.Confirmed
-                        "confirmed",
-                        "processed",
-                        null -> TransactionResult.Pending
-                        else -> TransactionResult.NotFound
-                    }
+                // confirmed (matches iOS). Only finalized is terminal: roughly 5% of blocks at
+                // processed/confirmed never finalize, so an `err` seen at those earlier levels
+                // can still change before finality and must not be reported as a permanent
+                // Failed (matches iOS, which nests its own err check inside `finalized` too).
+                "finalized" ->
+                    if (status.err != null) TransactionResult.Failed(status.err.toString())
+                    else TransactionResult.Confirmed
+                "confirmed",
+                "processed",
+                null -> TransactionResult.Pending
+                else -> TransactionResult.NotFound
             }
         } catch (e: CancellationException) {
             throw e
