@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.v2.defi.solana
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,35 +24,58 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.solanastaking.SolanaMoveStakeUiState
 import com.vultisig.wallet.ui.models.solanastaking.SolanaMoveStakeViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 
+/**
+ * Solana move-stake step 1 ("Move SOL") screen: the source stake account (read-only), a destination
+ * validator picker, and a cross-epoch notice. Continue remembers the chosen validator and
+ * deactivates the source account; the DeFi tab surfaces "Finish Move" (pre-filled with this
+ * validator) once the account has cooled down. Reuses the delegate screen's picker composables.
+ */
 @Composable
 internal fun SolanaMoveStakeScreen(viewModel: SolanaMoveStakeViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
-    SolanaMoveStakeContent(
-        state = state,
-        onBack = viewModel::back,
-        onContinue = viewModel::onContinue,
-    )
+
+    V2Scaffold(title = stringResource(R.string.solana_move_title), onBackClick = viewModel::back) {
+        SolanaMoveStakeContent(
+            state = state,
+            onPickValidator = viewModel::openValidatorPicker,
+            onContinue = viewModel::onContinue,
+        )
+
+        if (state.isShowingPicker) {
+            SolanaValidatorPickerSheet(
+                isLoading = state.isLoading,
+                searchQuery = state.validatorSearchQuery,
+                selectedVotePubkey = state.selectedValidator?.votePubkey,
+                validators = viewModel.visibleValidators(state),
+                onSearchQueryChange = viewModel::onSearchQueryChange,
+                onValidatorSelected = viewModel::selectValidator,
+                onDismiss = viewModel::closeValidatorPicker,
+            )
+        }
+    }
 }
 
 @Composable
 internal fun SolanaMoveStakeContent(
     state: SolanaMoveStakeUiState,
-    onBack: () -> Unit = {},
+    onPickValidator: () -> Unit = {},
     onContinue: () -> Unit = {},
 ) {
-    Column(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
-        VsTopAppBar(title = stringResource(R.string.solana_move_title), onBackClick = onBack)
+    val canContinue = state.selectedValidator != null && !state.isSubmitting
 
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier.weight(1f).padding(16.dp),
+            modifier = Modifier.fillMaxSize().padding(16.dp).padding(bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Column(
+            Row(
                 modifier =
                     Modifier.fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
@@ -61,25 +85,26 @@ internal fun SolanaMoveStakeContent(
                             color = Theme.v2.colors.border.light,
                             shape = RoundedCornerShape(12.dp),
                         )
-                        .padding(16.dp)
+                        .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(R.string.solana_staking_stake_account),
-                        style = Theme.brockmann.body.m.medium,
-                        color = Theme.v2.colors.text.primary,
-                    )
-                    UiSpacer(weight = 1f)
-                    Text(
-                        text = shortAddress(state.stakePubkey),
-                        style = Theme.brockmann.body.m.medium,
-                        color = Theme.v2.colors.text.tertiary,
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.solana_staking_stake_account),
+                    style = Theme.brockmann.body.m.medium,
+                    color = Theme.v2.colors.text.primary,
+                )
+                UiSpacer(weight = 1f)
+                Text(
+                    text = state.stakePubkey,
+                    style = Theme.brockmann.body.m.medium,
+                    color = Theme.v2.colors.text.tertiary,
+                )
             }
+
+            SolanaValidatorPickerField(
+                selected = state.selectedValidator,
+                onClick = onPickValidator,
+            )
 
             Column(
                 modifier =
@@ -94,27 +119,24 @@ internal fun SolanaMoveStakeContent(
                     color = Theme.v2.colors.text.tertiary,
                 )
             }
-        }
 
-        state.error?.let {
-            Text(
-                text = it,
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.alerts.error,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            UiSpacer(size = 8.dp)
+            state.error?.let {
+                Text(
+                    text = it.asString(),
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.alerts.error,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                )
+            }
         }
 
         VsButton(
             label = stringResource(R.string.cosmos_staking_continue),
-            state = if (state.isSubmitting) VsButtonState.Disabled else VsButtonState.Enabled,
+            variant = VsButtonVariant.CTA,
+            state = if (canContinue) VsButtonState.Enabled else VsButtonState.Disabled,
             isLoading = state.isSubmitting,
             onClick = onContinue,
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
         )
     }
 }
-
-private fun shortAddress(address: String): String =
-    if (address.length > 12) "${address.take(6)}…${address.takeLast(4)}" else address

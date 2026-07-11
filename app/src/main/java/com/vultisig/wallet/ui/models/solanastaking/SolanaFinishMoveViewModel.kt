@@ -7,8 +7,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.blockchain.solana.staking.BuildSolanaStakingKeysignPayloadUseCase
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingPayload
-import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingService
-import com.vultisig.wallet.data.blockchain.solana.staking.ValidatorMetadataProvider
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -17,6 +15,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
+import com.vultisig.wallet.data.repositories.SolanaMoveIntentRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
@@ -26,9 +25,6 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.math.BigDecimal
-import java.math.RoundingMode
-import java.text.DecimalFormat
 import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,8 +47,8 @@ internal class SolanaFinishMoveViewModel
 constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
-    private val solanaStakingService: SolanaStakingService,
-    private val validatorMetadataProvider: ValidatorMetadataProvider,
+    private val loadValidatorOptions: LoadSolanaValidatorOptionsUseCase,
+    private val moveIntentRepository: SolanaMoveIntentRepository,
     private val balanceRepository: BalanceRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val buildKeysignPayload: BuildSolanaStakingKeysignPayloadUseCase,
@@ -67,7 +63,6 @@ constructor(
     val state: StateFlow<SolanaFinishMoveUiState> = _state.asStateFlow()
 
     private var coin: Coin? = null
-    private val stakeFormat = DecimalFormat("#,###")
 
     init {
         load()
@@ -117,31 +112,15 @@ constructor(
                     ?: error("SOL not in this vault")
             coin = solCoin
 
-            val validators =
-                solanaStakingService
-                    .fetchValidators()
-                    .filter { !it.delinquent }
-                    .sortedByDescending { it.activatedStake }
-            val metadata = validatorMetadataProvider.metadata(validators.map { it.votePubkey })
-            val options =
-                validators.map { v ->
-                    val md = metadata[v.votePubkey]
-                    SolanaValidatorOption(
-                        votePubkey = v.votePubkey,
-                        name = md?.name?.takeIf { it.isNotBlank() } ?: shortAddress(v.votePubkey),
-                        logoUrl = md?.logoUrl,
-                        activatedStakeDisplay =
-                            "${stakeFormat.format(v.activatedStake.toBigDecimal().movePointLeft(solCoin.decimal).toBigInteger())} ${solCoin.ticker}",
-                        commissionDisplay = "${v.commission}%",
-                        apyDisplay =
-                            md?.apyEstimate?.let {
-                                it.multiply(BigDecimal(100))
-                                    .setScale(2, RoundingMode.HALF_UP)
-                                    .toPlainString() + "%"
-                            },
-                    )
+            val options = loadValidatorOptions(solCoin)
+            // Pre-select the destination the user picked when starting the move (step 1).
+            val remembered =
+                moveIntentRepository.getDestination(route.stakePubkey)?.let { saved ->
+                    options.firstOrNull { it.votePubkey == saved }
                 }
-            _state.update { it.copy(validators = options, isLoading = false) }
+            _state.update {
+                it.copy(validators = options, selectedValidator = remembered, isLoading = false)
+            }
         }
     }
 
@@ -205,6 +184,8 @@ constructor(
                     signSolana = keysignPayload.signSolana,
                 )
             depositTransactionRepository.addTransaction(depositTx)
+            // The move is finishing — the remembered destination is no longer needed.
+            moveIntentRepository.clear(route.stakePubkey)
             navigator.route(
                 Route.VerifyDeposit(vaultId = route.vaultId, transactionId = depositTx.id)
             )
