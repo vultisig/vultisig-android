@@ -36,7 +36,12 @@ class SolanaStakingService @Inject constructor(private val solanaApi: SolanaApi)
 
     private data class Cached<T>(val value: T, val fetchedAt: Long)
 
-    private val mutex = Mutex()
+    // One mutex per cache (not a shared lock) so a slow getVoteAccounts can't block an unrelated
+    // epoch read — and so the concurrent epoch + stake-accounts fan-out in fetchStakeAccounts stays
+    // parallel. Each still serializes its own cache fill across the network call, which is fine at
+    // these TTLs.
+    private val validatorsMutex = Mutex()
+    private val epochMutex = Mutex()
     private var cachedValidators: Cached<List<SolanaValidator>>? = null
     private var cachedEpoch: Cached<SolanaEpochInfo>? = null
 
@@ -63,7 +68,7 @@ class SolanaStakingService @Inject constructor(private val solanaApi: SolanaApi)
      * cached for [validatorsTtlMillis]. Empty when the RPC read fails.
      */
     suspend fun fetchValidators(): List<SolanaValidator> =
-        mutex.withLock {
+        validatorsMutex.withLock {
             cachedValidators?.let {
                 if (isFresh(it.fetchedAt, validatorsTtlMillis)) return it.value
             }
@@ -79,7 +84,7 @@ class SolanaStakingService @Inject constructor(private val solanaApi: SolanaApi)
      * Current cluster epoch progress, cached for [epochTtlMillis]. Null when the RPC read fails.
      */
     suspend fun fetchEpochInfo(): SolanaEpochInfo? =
-        mutex.withLock {
+        epochMutex.withLock {
             cachedEpoch?.let { if (isFresh(it.fetchedAt, epochTtlMillis)) return it.value }
             val result = solanaApi.getEpochInfo() ?: return null
             val epoch =
@@ -131,25 +136,33 @@ class SolanaStakingService @Inject constructor(private val solanaApi: SolanaApi)
         )
     }
 
-    private fun deriveStakeState(
-        hasDelegation: Boolean,
-        activationEpoch: Long?,
-        deactivationEpoch: Long?,
-        currentEpoch: Long?,
-    ): SolanaStakeState {
-        if (!hasDelegation) return SolanaStakeState.NotDelegated
-        // Without a current epoch we can't resolve warmup/cooldown; report Active for a live
-        // delegation and Deactivating once deactivation has been requested.
-        if (currentEpoch == null) {
-            return if (deactivationEpoch != null) SolanaStakeState.Deactivating
-            else SolanaStakeState.Active
+    internal companion object {
+        /**
+         * Pure resolution of a stake account's lifecycle state from its delegation epochs and the
+         * current cluster epoch. Extracted (and `internal`) so it can be unit-tested directly — it
+         * gates withdraw / finish-move availability, and callers pass a `deactivationEpoch` that is
+         * null when the on-chain `u64::MAX` "not deactivating" sentinel overflowed `Long`.
+         */
+        internal fun deriveStakeState(
+            hasDelegation: Boolean,
+            activationEpoch: Long?,
+            deactivationEpoch: Long?,
+            currentEpoch: Long?,
+        ): SolanaStakeState {
+            if (!hasDelegation) return SolanaStakeState.NotDelegated
+            // Without a current epoch we can't resolve warmup/cooldown; report Active for a live
+            // delegation and Deactivating once deactivation has been requested.
+            if (currentEpoch == null) {
+                return if (deactivationEpoch != null) SolanaStakeState.Deactivating
+                else SolanaStakeState.Active
+            }
+            if (deactivationEpoch != null) {
+                return if (currentEpoch > deactivationEpoch) SolanaStakeState.Inactive
+                else SolanaStakeState.Deactivating
+            }
+            return if (activationEpoch != null && currentEpoch > activationEpoch)
+                SolanaStakeState.Active
+            else SolanaStakeState.Activating
         }
-        if (deactivationEpoch != null) {
-            return if (currentEpoch > deactivationEpoch) SolanaStakeState.Inactive
-            else SolanaStakeState.Deactivating
-        }
-        return if (activationEpoch != null && currentEpoch > activationEpoch)
-            SolanaStakeState.Active
-        else SolanaStakeState.Activating
     }
 }

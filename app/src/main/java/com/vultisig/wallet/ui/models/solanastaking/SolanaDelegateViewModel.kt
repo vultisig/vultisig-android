@@ -11,8 +11,6 @@ import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.blockchain.solana.staking.BuildSolanaStakingKeysignPayloadUseCase
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingConfig
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingPayload
-import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingService
-import com.vultisig.wallet.data.blockchain.solana.staking.ValidatorMetadataProvider
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -83,8 +81,7 @@ internal class SolanaDelegateViewModel
 constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
-    private val solanaStakingService: SolanaStakingService,
-    private val validatorMetadataProvider: ValidatorMetadataProvider,
+    private val loadValidatorOptions: LoadSolanaValidatorOptionsUseCase,
     private val solanaApi: SolanaApi,
     private val balanceRepository: BalanceRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
@@ -105,7 +102,6 @@ constructor(
     // Live rent-exempt reserve fetched in [load]; reused in [submit] so the Max/percentage headroom
     // and the submit-time funding guard agree on the same reserve.
     private var rentReserveLamports: BigInteger? = null
-    private val stakeFormat = java.text.DecimalFormat("#,###")
 
     init {
         load()
@@ -186,30 +182,9 @@ constructor(
                     .toBigDecimal()
                     .movePointLeft(solCoin.decimal)
 
-            val validators =
-                solanaStakingService
-                    .fetchValidators()
-                    .filter { !it.delinquent }
-                    .sortedByDescending { it.activatedStake }
-            val metadata = validatorMetadataProvider.metadata(validators.map { it.votePubkey })
-            val options =
-                validators.map { v ->
-                    val md = metadata[v.votePubkey]
-                    SolanaValidatorOption(
-                        votePubkey = v.votePubkey,
-                        name = md?.name?.takeIf { it.isNotBlank() } ?: shortAddress(v.votePubkey),
-                        logoUrl = md?.logoUrl,
-                        activatedStakeDisplay =
-                            "${stakeFormat.format(v.activatedStake.toBigDecimal().movePointLeft(solCoin.decimal).toBigInteger())} ${solCoin.ticker}",
-                        commissionDisplay = "${v.commission}%",
-                        apyDisplay =
-                            md?.apyEstimate?.let {
-                                it.multiply(BigDecimal(100))
-                                    .setScale(2, RoundingMode.HALF_UP)
-                                    .toPlainString() + "%"
-                            },
-                    )
-                }
+            // Shared with the move / finish-move pickers so the fetch→filter→sort→enrich→format
+            // logic lives in exactly one place.
+            val options = loadValidatorOptions(solCoin)
             _state.update {
                 it.copy(
                     ticker = solCoin.ticker,
@@ -251,9 +226,14 @@ constructor(
                 amountFieldState.text.toString().trim().toBigDecimalOrNull()
                     ?: error("Enter a valid amount")
             val amountLamports =
-                amountSol.movePointRight(solCoin.decimal).toBigIntegerExact().also {
-                    require(it.signum() > 0) { "Amount must be greater than zero" }
-                }
+                amountSol
+                    .movePointRight(solCoin.decimal)
+                    // Round sub-lamport precision down rather than throwing on >9-decimal manual
+                    // entry — toBigIntegerExact() surfaces a raw "Rounding necessary"
+                    // ArithmeticException straight to the user via safeLaunch's onError.
+                    .setScale(0, RoundingMode.DOWN)
+                    .toBigInteger()
+                    .also { require(it.signum() > 0) { "Amount must be greater than zero" } }
             require(amountLamports >= SolanaStakingConfig.MINIMUM_DELEGATION_LAMPORTS) {
                 "Minimum delegation is 1 SOL"
             }
@@ -325,7 +305,4 @@ constructor(
     fun back() {
         viewModelScope.safeLaunch(onError = { Timber.w(it, "back failed") }) { navigator.back() }
     }
-
-    private fun shortAddress(address: String): String =
-        if (address.length > 12) "${address.take(6)}…${address.takeLast(4)}" else address
 }

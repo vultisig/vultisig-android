@@ -214,23 +214,34 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                 val votePubkey =
                     payload.votePubkey?.takeIf { it.isNotEmpty() }
                         ?: error("solana delegate: missing validator vote pubkey")
-                val lamports =
-                    payload.lamports?.takeIf { it.signum() > 0 }
-                        ?: error("solana delegate: missing or zero delegation amount")
                 require(AnyAddress.isValid(votePubkey, coinType)) {
                     "solana delegate: invalid validator vote pubkey"
                 }
-                // A fresh stake omits stakeAccount so wallet-core derives it deterministically and
-                // emits create + initialize + delegate in one tx. A move-stake "Finish Move" sets
-                // the existing (cooled-down) account so wallet-core re-delegates it in place.
+                val existingAccount = payload.stakeAccount?.takeIf { it.isNotEmpty() }
                 val delegate =
                     Solana.DelegateStake.newBuilder()
                         .setValidatorPubkey(votePubkey)
-                        .setValue(lamports.toLong())
                         .apply {
-                            payload.stakeAccount
-                                ?.takeIf { it.isNotEmpty() }
-                                ?.let { setStakeAccount(it) }
+                            if (existingAccount != null) {
+                                // Move-stake "Finish Move": re-delegate the existing (cooled-down)
+                                // account in place. It already holds its lamports on-chain, so
+                                // `value` is NOT a funding amount — leave it 0 so wallet-core can
+                                // never interpret it as lamports to move from the wallet. Matches
+                                // the resolver's finish-move funding guard, which reserves only the
+                                // fee.
+                                setStakeAccount(existingAccount)
+                            } else {
+                                // Fresh stake: wallet-core derives the account deterministically
+                                // and
+                                // emits create + initialize + delegate in one tx, funding the new
+                                // account with `value` lamports.
+                                val lamports =
+                                    payload.lamports?.takeIf { it.signum() > 0 }
+                                        ?: error(
+                                            "solana delegate: missing or zero delegation amount"
+                                        )
+                                setValue(lamports.toLong())
+                            }
                         }
                         .build()
                 input.setDelegateStakeTransaction(delegate).build().toByteArray()
