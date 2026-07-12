@@ -383,6 +383,24 @@ class ThorChainApiImplTest {
         }
 
     @Test
+    fun `getRujiStakeBalance falls back to bonded when the receipt amount is unparseable`() =
+        runBlocking {
+            // The receipt entry exists but carries a garbage amount: this is a read failure, not a
+            // genuine zero, so we fall back to the GraphQL bonded amount rather than reporting
+            // zero.
+            val api =
+                newRujiApi(
+                    stakeBody = rujiStakeBody(bondedAmount = "42"),
+                    balancesBody =
+                        """{"balances":[{"denom":"x/staking-x/ruji","amount":"not-a-number"}]}""",
+                )
+
+            val result = api.getRujiStakeBalance("thor1abc")
+
+            assertEquals(BigInteger("42"), result.stakeAmount)
+        }
+
+    @Test
     fun `getRujiStakeBalance falls back to the RUJI position not TCY when the balances read fails`() =
         runBlocking {
             // Real-world shape: TCY position (bonded 0) precedes RUJI in stakingV2. When the

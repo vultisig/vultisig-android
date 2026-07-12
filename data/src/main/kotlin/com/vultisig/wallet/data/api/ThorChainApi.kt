@@ -476,10 +476,23 @@ constructor(
      */
     private suspend fun readRujiReceiptBalance(address: String): BigInteger? =
         try {
-            getBalance(address)
-                .firstOrNull { it.denom == STAKING_RUJI_DENOM }
-                ?.amount
-                ?.toBigIntegerOrNull() ?: BigInteger.ZERO
+            val receipt = getBalance(address).firstOrNull { it.denom == STAKING_RUJI_DENOM }
+            when {
+                // No receipt held: a genuine zero balance.
+                receipt == null -> BigInteger.ZERO
+                // Receipt held but its amount is unparseable: treat as a read failure so the
+                // caller falls back to the GraphQL `bonded` amount rather than reporting a false
+                // zero.
+                else ->
+                    receipt.amount.toBigIntegerOrNull()
+                        ?: run {
+                            Timber.w(
+                                "RUJI receipt amount '%s' is unparseable; falling back to bonded",
+                                receipt.amount,
+                            )
+                            null
+                        }
+            }
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
