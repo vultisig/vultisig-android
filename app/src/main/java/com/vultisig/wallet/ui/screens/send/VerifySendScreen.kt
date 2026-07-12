@@ -356,7 +356,10 @@ internal fun VerifySendScreen(
                         ?.let {
                             VerifyCardDivider(0.dp)
 
-                            SignSolanaDisplayView(rawTransactions = it)
+                            SignSolanaDisplayView(
+                                rawTransactions = it,
+                                initiallyExpanded = initiallyExpandedDetails,
+                            )
                         }
 
                     tx.signSui

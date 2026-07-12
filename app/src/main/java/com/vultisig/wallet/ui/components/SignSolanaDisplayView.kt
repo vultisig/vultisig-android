@@ -37,8 +37,12 @@ import com.vultisig.wallet.ui.theme.Theme
 import timber.log.Timber
 
 @Composable
-fun SignSolanaDisplayView(rawTransactions: List<String>, modifier: Modifier = Modifier) {
-    var isExpanded by rememberSaveable { mutableStateOf(false) }
+fun SignSolanaDisplayView(
+    rawTransactions: List<String>,
+    modifier: Modifier = Modifier,
+    initiallyExpanded: Boolean = false,
+) {
+    var isExpanded by rememberSaveable { mutableStateOf(initiallyExpanded) }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(14.dp),

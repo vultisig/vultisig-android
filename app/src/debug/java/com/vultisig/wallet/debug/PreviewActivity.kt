@@ -205,6 +205,10 @@ class PreviewActivity : ComponentActivity() {
                     "solana_batch_verify" -> SolanaBatchVerifySendPreview(transactionCount = 2)
                     "solana_batch_verify_before" ->
                         SolanaBatchVerifySendPreview(transactionCount = 1)
+                    "solana_batch_verify_expanded" ->
+                        SolanaBatchVerifySendPreview(transactionCount = 2, expanded = true)
+                    "solana_batch_verify_before_expanded" ->
+                        SolanaBatchVerifySendPreview(transactionCount = 1, expanded = true)
                     "ton_display_single" -> TonDisplayPreview(messageCount = 1)
                     "ton_display_multi" -> TonDisplayPreview(messageCount = 4)
                     "verify_ton_jetton_before" -> VerifyTonJettonPreview(decoded = false)
@@ -766,7 +770,7 @@ private val SOLANA_BATCH_PREVIEW_TXS =
  * reproduces the pre-#5238 render, which surfaced only the first raw transaction of a batch.
  */
 @Composable
-private fun SolanaBatchVerifySendPreview(transactionCount: Int) {
+private fun SolanaBatchVerifySendPreview(transactionCount: Int, expanded: Boolean = false) {
     VerifySendScreen(
         state =
             VerifyTransactionUiModel(
@@ -792,6 +796,7 @@ private fun SolanaBatchVerifySendPreview(transactionCount: Int) {
         onConfirmScanning = {},
         onDismissScanning = {},
         hasToolbar = true,
+        initiallyExpandedDetails = expanded,
     )
 }
 
