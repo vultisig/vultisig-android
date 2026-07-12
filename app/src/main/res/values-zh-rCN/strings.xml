@@ -460,8 +460,21 @@
 
     <!-- Reshare -->
     <string name="reshare_start_screen_title">重新分享您的保险库</string>
-    <string name="reshare_start_screen_body">重新分享可用于刷新、扩展或减少保险库中的设备数量。</string>
-    <string name="reshare_start_screen_warning">对于所有重新分享操作，始终需要设备阈值。</string>
+    <string name="reshare_start_screen_subtitle">更新您的保险库设置。添加或移除设备，或刷新份额。</string>
+    <string name="reshare_start_start_subtitle">您正在更改此保险库的设备设置。</string>
+    <string name="reshare_start_join_subtitle">您收到了来自其他设备的重新分享请求。</string>
+    <string name="before_reshare_title">重新分享之前</string>
+    <string name="before_reshare_subtitle">重新分享会重新生成您的保险库份额。请先了解以下几点。</string>
+    <string name="before_reshare_backups_title">旧备份将停止工作</string>
+    <string name="before_reshare_backups_body">所有现有的 .vult 文件将失效。重新分享后，您需要创建新的备份。</string>
+    <string name="before_reshare_cosigners_title">所有共同签名者必须在线</string>
+    <string name="before_reshare_cosigners_body">您保险库中当前的每台设备都需要参与重新分享会话。</string>
+    <string name="reshare_success_title">保险库已重新分享</string>
+    <string name="reshare_success_title_highlight">成功</string>
+    <string name="reshare_backup_each_device_body">这只是您保险库的 1 个备份，请在其他设备上重复此过程。</string>
+    <string name="reshare_backup_store_separately_body">将每个备份保存在不同的地方。如果其中一个被泄露，您的资金仍然安全。</string>
+    <string name="reshare_backup_old_wont_work_title">旧备份将无法使用</string>
+    <string name="reshare_backup_old_wont_work_body">无法使用先前保险库设置中的备份。只有在本次设置期间创建的备份才有效。</string>
     <string name="reshare_start_screen_start_reshare">开始重新分享</string>
 
     <!-- Threshold Error -->
