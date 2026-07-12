@@ -191,7 +191,9 @@ constructor(
                             .broadcastTransaction(chain.name, tx.rawTransaction)
                             .orKnownHash(tx)
                     },
-                    verify = { hash -> cardanoApi.getTxStatus(hash)?.txHash?.isNotBlank() == true },
+                    // Koios tx_status echoes the queried hash back even for unknown txs, so
+                    // txHash is never blank; only a positive confirmation count proves it landed.
+                    verify = { hash -> (cardanoApi.getTxStatus(hash)?.numConfirmations ?: 0) > 0 },
                 )
         }
 

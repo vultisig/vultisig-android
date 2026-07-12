@@ -47,4 +47,20 @@ internal class TonNominatorPoolTest {
     fun `withdraw fee is fixed at 0_2 TON`() {
         assertEquals(BigInteger.valueOf(200_000_000L), TonNominatorPool.WITHDRAW_FEE)
     }
+
+    @Test
+    fun `all deposit and withdraw comments are recognized as transfer comments`() {
+        assertTrue(TonNominatorPool.isTransferComment("Deposit"))
+        assertTrue(TonNominatorPool.isTransferComment("Withdraw"))
+        assertTrue(TonNominatorPool.isTransferComment("d"))
+        assertTrue(TonNominatorPool.isTransferComment("w"))
+    }
+
+    @Test
+    fun `non-pool memos are not transfer comments`() {
+        assertFalse(TonNominatorPool.isTransferComment(null))
+        assertFalse(TonNominatorPool.isTransferComment(""))
+        assertFalse(TonNominatorPool.isTransferComment("hello"))
+        assertFalse(TonNominatorPool.isTransferComment("deposit")) // case-sensitive
+    }
 }
