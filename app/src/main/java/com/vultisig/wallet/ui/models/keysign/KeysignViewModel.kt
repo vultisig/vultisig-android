@@ -841,33 +841,25 @@ constructor(
                         )
                     }
                     saveTransactionHistory(txHash, result.chain)
-                    // A Solana dApp batch broadcasts several transactions; the extra ones are
-                    // persisted to history — each with its own explorer link, not the primary
-                    // tx's — while [txHash] stays the primary hash driving the done screen and
-                    // status polling.
-                    result.additionalTxHashes.forEach { hash ->
-                        saveTransactionHistory(
-                            txHash = hash,
-                            chain = result.chain,
-                            explorerUrl =
-                                explorerLinkRepository.getTransactionLink(result.chain, hash),
-                        )
-                    }
-                    if (txStatusConfigurationProvider.supportTxStatus(result.chain)) {
-                        startForegroundPolling(txHash, result.chain)
-                    } else {
-                        _state.update {
-                            it.copy(
-                                signingState =
-                                    KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
-                            )
-                        }
-                    }
+                }
+                // A Solana dApp batch broadcasts several transactions; the extra ones are
+                // persisted to history independently of the primary hash — each with its own
+                // explorer link, not the primary tx's — while [txHash] stays the primary hash
+                // driving the done screen and status polling.
+                result.additionalTxHashes.forEach { hash ->
+                    saveTransactionHistory(
+                        txHash = hash,
+                        chain = result.chain,
+                        explorerUrl = explorerLinkRepository.getTransactionLink(result.chain, hash),
+                    )
+                }
+                if (txHash != null && txStatusConfigurationProvider.supportTxStatus(result.chain)) {
+                    startForegroundPolling(txHash, result.chain)
                 } else {
-                    // The broadcast succeeded but produced no hash. Land on the terminal
-                    // "broadcasted" state instead of leaving signingState at the last signing
-                    // state forever (infinite spinner → the user may force-retry and double-send).
-                    // Without a hash we cannot save history or poll status.
+                    // Either the chain has no status polling or the broadcast produced no
+                    // primary hash. Land on the terminal "broadcasted" state instead of leaving
+                    // signingState at the last signing state forever (infinite spinner → the
+                    // user may force-retry and double-send).
                     _state.update {
                         it.copy(
                             signingState =

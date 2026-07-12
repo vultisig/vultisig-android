@@ -113,6 +113,31 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             }
         }
 
+    // The additional hashes of a batch are real broadcast transactions in their own right — a
+    // missing primary hash must not skip their history rows.
+    @Test
+    fun `broadcasted batch with null primary hash still persists additional hashes`() =
+        runTest(testDispatcher) {
+            every { explorerLinkRepository.getTransactionLink(Chain.Ethereum, "0xhash2") } returns
+                "https://etherscan.io/tx/0xhash2"
+            val vm = createViewModel(transactionHistoryData = sendTxData)
+
+            vm.applyBroadcastResult(
+                broadcasted(txHash = null).copy(additionalTxHashes = listOf("0xhash2"))
+            )
+
+            vm.state.value.signingState shouldBe
+                KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+            coVerify(exactly = 1) {
+                transactionHistoryRepository.recordTransaction(
+                    vaultId = "v1",
+                    txHash = "0xhash2",
+                    txData = sendTxData,
+                    genericData = any(),
+                )
+            }
+        }
+
     private val sendTxData =
         SendTransactionHistoryData(
             fromAddress = "0xsender",
