@@ -128,14 +128,16 @@ internal class KeysignViewModelApplyBroadcastResultTest {
 
             vm.state.value.signingState shouldBe
                 KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+            val genericData = slot<CommonTransactionHistoryData>()
             coVerify(exactly = 1) {
                 transactionHistoryRepository.recordTransaction(
                     vaultId = "v1",
                     txHash = "0xhash2",
                     txData = sendTxData,
-                    genericData = any(),
+                    genericData = capture(genericData),
                 )
             }
+            genericData.captured.explorerUrl shouldBe "https://etherscan.io/tx/0xhash2"
         }
 
     private val sendTxData =
