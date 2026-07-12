@@ -4,6 +4,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.TerraClassicTax
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
+import com.vultisig.wallet.data.chains.helpers.RippleDestinationTag
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -55,6 +56,7 @@ internal class DefaultSendStrategy(
     private val tokenAmountFieldState: TextFieldState,
     private val fiatAmountFieldState: TextFieldState,
     private val memoFieldState: TextFieldState,
+    private val destinationTagFieldState: TextFieldState,
     private val accountValidator: AccountValidator,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
@@ -129,7 +131,40 @@ internal class DefaultSendStrategy(
                                 UiText.StringResource(R.string.send_error_no_token)
                             )
 
-                    val memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() }
+                    // isNotBlank (not isNotEmpty) so a whitespace-only memo is treated as absent,
+                    // matching RippleHelper's own isNotBlank check — otherwise a blank memo would
+                    // suppress the dual-write here while the signer still drops it, and a
+                    // not-yet-updated co-signer would rebuild an untagged payment.
+                    val userMemo = memoFieldState.text.toString().takeIf { it.isNotBlank() }
+
+                    // XRP destination tag: from its own field, carried in the first-class proto
+                    // field (not the memo). A non-empty non-canonical value is rejected so a bad
+                    // paste can't send an untagged (or wrongly tagged) payment to an exchange.
+                    val rawTag = destinationTagFieldState.text.toString().takeIf { it.isNotEmpty() }
+                    val destinationTag =
+                        if (chain == Chain.Ripple) {
+                            if (RippleDestinationTag.isNonCanonicalTag(rawTag)) {
+                                throw InvalidTransactionDataException(
+                                    UiText.StringResource(
+                                        R.string.send_error_xrp_invalid_destination_tag
+                                    )
+                                )
+                            }
+                            RippleDestinationTag.parseCanonicalDestinationTag(rawTag)
+                        } else null
+
+                    // Dual-write the tag into the memo when a tag is set and there's no distinct
+                    // memo, so a not-yet-updated co-signer that only reads the legacy memo-as-tag
+                    // carrier rebuilds the same DestinationTag (byte-identical sighash). Mirrors
+                    // iOS
+                    // dualWritingRippleTag; RippleHelper's memoEchoesTag drops this echo from the
+                    // signed tx, so no on-chain Memos blob is added.
+                    val memo =
+                        if (chain == Chain.Ripple && destinationTag != null && userMemo == null) {
+                            destinationTag.toString()
+                        } else {
+                            userMemo
+                        }
 
                     val selectedToken = selectedAccount.token
 
@@ -197,6 +232,7 @@ internal class DefaultSendStrategy(
                                     chain,
                                 )
                             }
+                            .let { applyRippleDestinationTag(it, destinationTag) }
 
                     if (selectedToken.isNativeToken) {
                         val defiType = defiTypeProvider()
@@ -257,6 +293,16 @@ internal class DefaultSendStrategy(
                                 selectedToken = selectedToken,
                                 dstAddress = dstAddress,
                                 tokenAmountInt = tokenAmountInt,
+                            )
+                            chainValidationService.validateRippleDestinationTag(
+                                selectedToken = selectedToken,
+                                dstAddress = dstAddress,
+                                // A canonical numeric memo (no dedicated tag) is signed as a
+                                // DestinationTag by RippleHelper, so treat it as a present tag here
+                                // instead of falsely blocking the send.
+                                destinationTag =
+                                    destinationTag
+                                        ?: RippleDestinationTag.parseCanonicalDestinationTag(memo),
                             )
                         }
                     } else if (
@@ -373,6 +419,14 @@ internal class DefaultSendStrategy(
                     hideLoading()
                 }
             }
+    }
+
+    private fun applyRippleDestinationTag(
+        specific: BlockChainSpecificAndUtxo,
+        destinationTag: UInt?,
+    ): BlockChainSpecificAndUtxo {
+        val ripple = specific.blockChainSpecific as? BlockChainSpecific.Ripple ?: return specific
+        return specific.copy(blockChainSpecific = ripple.copy(destinationTag = destinationTag))
     }
 
     private fun applyGasSettings(it: BlockChainSpecificAndUtxo): BlockChainSpecificAndUtxo {

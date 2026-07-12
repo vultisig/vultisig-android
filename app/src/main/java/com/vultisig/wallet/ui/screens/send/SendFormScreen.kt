@@ -83,6 +83,7 @@ internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
             tokenAmountFieldState = viewModel.tokenAmountFieldState,
             fiatAmountFieldState = viewModel.fiatAmountFieldState,
             memoFieldState = viewModel.memoFieldState,
+            destinationTagFieldState = viewModel.destinationTagFieldState,
             onDstAddressLostFocus = { /* no-op */ },
             onTokenAmountLostFocus = viewModel::validateTokenAmount,
             onDismissError = viewModel::dismissError,
@@ -142,6 +143,7 @@ private fun SendFormScreen(
     tokenAmountFieldState: TextFieldState,
     fiatAmountFieldState: TextFieldState,
     memoFieldState: TextFieldState,
+    destinationTagFieldState: TextFieldState,
     onDstAddressLostFocus: () -> Unit = {},
     onTokenAmountLostFocus: () -> Unit = {},
     onDismissError: () -> Unit = {},
@@ -289,6 +291,7 @@ private fun SendFormScreen(
                         onChooseMaxTokenAmount = onChooseMaxTokenAmount,
                         onTokenAmountLostFocus = onTokenAmountLostFocus,
                         memoFieldState = memoFieldState,
+                        destinationTagFieldState = destinationTagFieldState,
 
                         // Bond
                         operatorFeeFieldState = operatorFeeFieldState,
@@ -341,6 +344,7 @@ private fun SendFormContent(
     onChooseMaxTokenAmount: () -> Unit,
     onTokenAmountLostFocus: () -> Unit = {},
     memoFieldState: TextFieldState,
+    destinationTagFieldState: TextFieldState,
 
     // Bond
     operatorFeeFieldState: TextFieldState,
@@ -371,6 +375,7 @@ private fun SendFormContent(
     val optionalInputs =
         OptionalInputs(
             memoFieldState = memoFieldState,
+            destinationTagFieldState = destinationTagFieldState,
             operatorFeeFieldState = operatorFeeFieldState,
             slippageFieldState = slippageFieldState,
             onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
@@ -503,6 +508,7 @@ private fun SendScreenPreview() {
         tokenAmountFieldState = TextFieldState("50"),
         fiatAmountFieldState = TextFieldState("$2,000.56"),
         memoFieldState = TextFieldState(),
+        destinationTagFieldState = TextFieldState(),
         onNetworkDragStart = {},
         onNetworkDrag = {},
         onNetworkDragEnd = {},

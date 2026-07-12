@@ -69,6 +69,9 @@ internal data class SendFormUiModel(
     val reapingError: UiText? = null,
     val bondProviderError: UiText? = null,
     val hasMemo: Boolean = false,
+    // XRP: show a dedicated destination-tag field instead of the free-text memo field.
+    val isDestinationTag: Boolean = false,
+    val destinationTagLocked: Boolean = false,
     val showGasFee: Boolean = true,
     val hasGasSettings: Boolean = false,
     val showGasSettings: Boolean = false,

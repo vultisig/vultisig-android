@@ -220,7 +220,16 @@ data class RippleAccountInfoResponseAccountDataJson(
     @SerialName("Balance") val balance: String? = null, // Total user balance = available + reserved
     @SerialName("Sequence") val sequence: Int? = null,
     @SerialName("OwnerCount") val ownerCount: Int = 0,
+    @SerialName("Flags") val flags: Long? = null,
 )
+
+// lsfRequireDestTag: set when an account rejects any payment that arrives without a destination
+// tag.
+private const val LSF_REQUIRE_DEST_TAG = 0x00020000L
+
+/** True when the destination account has the RequireDestinationTag flag set. */
+fun RippleAccountInfoResponseJson.requiresDestinationTag(): Boolean =
+    ((this.result?.accountData?.flags ?: 0L) and LSF_REQUIRE_DEST_TAG) != 0L
 
 @Serializable
 data class RippleServerStateResponseJson(
