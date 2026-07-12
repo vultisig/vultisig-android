@@ -614,6 +614,10 @@ constructor(
             // TON surfaces a nominator-pool staking position; without this its coin is dropped from
             // the DeFi candidate set and staked TON never appears in the aggregate Portfolio total.
             Chain.Ton -> true
+            // Solana surfaces a native-staking position (one row per stake account). Without this
+            // its coin is dropped from the candidate set, so it passes isDeFiSupported (selectable
+            // in the "Select DeFi chains" sheet) yet never appears in the Portfolio DeFi list.
+            Chain.Solana -> true
             else -> false
         }
     }
