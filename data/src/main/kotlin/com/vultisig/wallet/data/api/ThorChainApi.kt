@@ -438,14 +438,25 @@ constructor(
             throw Exception("Could not fetch balances: ${response.errors}")
         }
 
-        val stake = response.data?.node?.stakingV2?.firstOrNull() ?: return RujiStakeBalances()
+        // stakingV2 can hold several positions (e.g. TCY and RUJI); pick the RUJI one rather than
+        // the first, or the amount/rewards get read from an unrelated position.
+        val stake =
+            response.data?.node?.stakingV2?.firstOrNull {
+                it.bonded.asset.metadata?.symbol.equals(RUJI_STAKE_SYMBOL, ignoreCase = true)
+            }
 
-        val stakeAmount = stake.bonded.amount.toBigIntegerOrNull() ?: BigInteger.ZERO
-        val stakeTicker = stake.bonded.asset.metadata?.symbol ?: ""
-        val rewardsAmount = stake.pendingRevenue?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
-        val rewardsTicker = stake.pendingRevenue?.asset?.metadata?.symbol ?: DEFAULT_REWARDS_TICKER
+        val bondedAmount = stake?.bonded?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        // The on-chain x/staking-x/ruji receipt is the source of truth for what the vault holds;
+        // the GraphQL `bonded` field can report 0 even when receipts are held. Prefer the receipt
+        // (a successful zero stays zero), falling back to `bonded` only when the balance read
+        // failed. Mirrors vultisig-windows #4337.
+        val stakeAmount = readRujiReceiptBalance(address) ?: bondedAmount
+
+        val stakeTicker = stake?.bonded?.asset?.metadata?.symbol ?: RUJI_STAKE_SYMBOL
+        val rewardsAmount = stake?.pendingRevenue?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        val rewardsTicker = stake?.pendingRevenue?.asset?.metadata?.symbol ?: DEFAULT_REWARDS_TICKER
         val apr =
-            runCatching { (stake.pool?.summary?.apr?.value ?: "0.0").toDouble() }.getOrDefault(0.0)
+            runCatching { (stake?.pool?.summary?.apr?.value ?: "0.0").toDouble() }.getOrDefault(0.0)
 
         return RujiStakeBalances(
             stakeAmount = stakeAmount,
@@ -455,6 +466,26 @@ constructor(
             apr = apr,
         )
     }
+
+    /**
+     * Reads the on-chain sRUJI staking-receipt balance (denom [STAKING_RUJI_DENOM]) for the given
+     * THORChain address. Mirrors how sTCY derives its amount from the receipt denom. Returns
+     * [BigInteger.ZERO] when the balance read succeeds but no receipt is held (a genuine zero), and
+     * `null` only when the read fails — so the caller can distinguish a real zero from an unknown
+     * balance and fall back to the GraphQL `bonded` amount only in the latter case.
+     */
+    private suspend fun readRujiReceiptBalance(address: String): BigInteger? =
+        try {
+            getBalance(address)
+                .firstOrNull { it.denom == STAKING_RUJI_DENOM }
+                ?.amount
+                ?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to read on-chain RUJI receipt balance; falling back to bonded")
+            null
+        }
 
     override suspend fun existsReferralCode(code: String): Boolean {
         val response =
@@ -727,6 +758,8 @@ constructor(
         }
         """
         private const val STAKING_TCY_DENOM = "x/staking-tcy"
+        private const val STAKING_RUJI_DENOM = "x/staking-x/ruji"
+        private const val RUJI_STAKE_SYMBOL = "RUJI"
         private const val DEFAULT_REWARDS_TICKER = "USDC"
         private const val THOR_CHAIN_NAME = "THOR"
         private const val TCY_STAKER_NOT_FOUND_ERROR = "TCYStaker doesn't exist"

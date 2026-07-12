@@ -257,7 +257,9 @@ constructor(
 }
 
 // Denoms surfaced under the DeFi tab — must not be auto-discovered as wallet tokens.
-internal val DEFI_ONLY_THORCHAIN_DENOMS = setOf("x/staking-ruji")
+// The on-chain sRUJI receipt denom is "x/staking-x/ruji"; the legacy "x/staking-ruji" spelling is
+// kept defensively so the receipt stays excluded regardless of which the node reports.
+internal val DEFI_ONLY_THORCHAIN_DENOMS = setOf("x/staking-ruji", "x/staking-x/ruji")
 
 /**
  * Decodes the result of an ERC-20 `name()` / `symbol()` `eth_call` into text.
