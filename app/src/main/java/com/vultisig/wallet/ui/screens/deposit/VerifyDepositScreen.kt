@@ -179,6 +179,13 @@ internal fun VerifyDepositScreen(
                             VerifyCardDivider(0.dp)
                         }
 
+                    if (tx.validatorName.isNotEmpty()) {
+                        VerifyCardDetails(
+                            title = stringResource(R.string.solana_delegate_validator),
+                            subtitle = tx.validatorName,
+                        )
+                        VerifyCardDivider(0.dp)
+                    }
                     if (tx.dstAddress.isNotEmpty()) {
                         VerifyCardDetails(
                             title = stringResource(R.string.verify_transaction_to_title),

@@ -53,6 +53,7 @@ constructor(
             nodeAddress = from.nodeAddress,
             pairedAddress = from.pairedAddress,
             pool = from.pool,
+            validatorName = from.validatorName.orEmpty(),
         )
     }
 }

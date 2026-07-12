@@ -23,6 +23,12 @@ data class DepositTransaction(
     val nodeAddress: String = "",
     val pairedAddress: String = "",
     val pool: String = "",
+    /**
+     * Display-only destination validator name shown as a "Validator" row on the Verify screen (e.g.
+     * a Solana move-stake, where the user picks a validator by name). Null/blank for flows without
+     * a named destination validator. Not part of the signing payload.
+     */
+    val validatorName: String? = null,
     val utxos: List<UtxoInfo> = emptyList(),
     /**
      * Pre-built `signDirect` artefacts when the deposit carries an opaque, app-built SignDoc (e.g.

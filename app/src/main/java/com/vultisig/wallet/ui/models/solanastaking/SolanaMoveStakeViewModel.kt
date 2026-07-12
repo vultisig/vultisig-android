@@ -177,6 +177,7 @@ constructor(
                     srcTokenValue = TokenValue(value = movedStake, token = solCoin),
                     memo = "",
                     dstAddress = validator.votePubkey,
+                    validatorName = validator.name,
                     estimatedFees = gasFee,
                     estimateFeesFiat = "",
                     blockChainSpecific = specific.blockChainSpecific,
