@@ -30,7 +30,12 @@ constructor(
 
     fun start() {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: error("Vault $vaultId does not exist")
+            val vault =
+                vaultRepository.get(vaultId)
+                    ?: run {
+                        navigator.navigate(Destination.Back)
+                        return@launch
+                    }
 
             navigator.route(
                 Route.Keygen.PeerDiscovery(
