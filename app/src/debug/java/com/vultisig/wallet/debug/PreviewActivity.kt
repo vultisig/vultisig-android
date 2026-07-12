@@ -2321,6 +2321,7 @@ private fun solanaStakingPreviewRow(
     stateLabel: String,
     apy: String?,
     canManage: Boolean,
+    canUnstake: Boolean,
     canWithdraw: Boolean,
     state: com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState =
         com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState.Active,
@@ -2338,6 +2339,7 @@ private fun solanaStakingPreviewRow(
         stateLabel = com.vultisig.wallet.ui.utils.UiText.DynamicString(stateLabel),
         apyDisplay = apy,
         canManage = canManage,
+        canUnstake = canUnstake,
         canWithdraw = canWithdraw,
         accountLamports = java.math.BigInteger.ZERO,
     )
@@ -2360,9 +2362,10 @@ private fun SolanaStakingPositionsLoadedPreview() {
                             stateLabel = "Active",
                             apy = "5.55%",
                             canManage = true,
+                            canUnstake = true,
                             canWithdraw = false,
                         ),
-                        // Deactivating (cooling down) still shows the Unstake/Move/Stake row.
+                        // Deactivating (cooling down) shows Move/Stake but not Unstake.
                         solanaStakingPreviewRow(
                             stakePubkey = "CV4X...NNFz",
                             validatorName = "Jupiter",
@@ -2371,6 +2374,7 @@ private fun SolanaStakingPositionsLoadedPreview() {
                             stateLabel = "Deactivating",
                             apy = "5.26%",
                             canManage = true,
+                            canUnstake = false,
                             canWithdraw = false,
                             state =
                                 com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState
@@ -2385,6 +2389,7 @@ private fun SolanaStakingPositionsLoadedPreview() {
                             stateLabel = "Inactive",
                             apy = "5.54%",
                             canManage = false,
+                            canUnstake = false,
                             canWithdraw = true,
                             state =
                                 com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState

@@ -312,16 +312,20 @@ private fun StakeAccountContent(
                     )
                 }
                 if (row.canManage) {
-                    ActionButton(
-                        title = stringResource(R.string.solana_staking_unstake_cta),
-                        icon = R.drawable.ic_circle_minus,
-                        background = Color.Transparent,
-                        border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
-                        contentColor = Theme.v2.colors.text.primary,
-                        onClick = onDeactivate,
-                        modifier = Modifier.weight(1f),
-                        iconCircleColor = Theme.v2.colors.text.tertiary,
-                    )
+                    // Unstake is hidden while Deactivating (deactivating an already-deactivating
+                    // stake is a chain no-op); Move/Stake stay available through cooldown.
+                    if (row.canUnstake) {
+                        ActionButton(
+                            title = stringResource(R.string.solana_staking_unstake_cta),
+                            icon = R.drawable.ic_circle_minus,
+                            background = Color.Transparent,
+                            border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
+                            contentColor = Theme.v2.colors.text.primary,
+                            onClick = onDeactivate,
+                            modifier = Modifier.weight(1f),
+                            iconCircleColor = Theme.v2.colors.text.tertiary,
+                        )
+                    }
                     ActionButton(
                         title = stringResource(R.string.solana_staking_move_cta),
                         icon = R.drawable.ic_arrow_bottom_top,
