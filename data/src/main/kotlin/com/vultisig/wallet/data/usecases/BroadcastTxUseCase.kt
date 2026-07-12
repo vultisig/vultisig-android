@@ -142,9 +142,10 @@ constructor(
                     },
                     // A code=32 sequence mismatch on a joined co-signer means the peer's
                     // byte-identical tx already advanced the account sequence in a committed
-                    // block. The LCD returns 404 (null) until our hash is committed, so a non-null
-                    // status proves our tx — not an unrelated one — consumed the sequence.
-                    verify = { hash -> cosmosApi.getTxStatus(hash) != null },
+                    // block. The LCD returns 404 (null) until our hash is committed. A committed tx
+                    // can still have failed execution (non-zero code), so require code==0 — an
+                    // included-but-failed tx moved no funds and must not be reported as success.
+                    verify = { hash -> cosmosApi.getTxStatus(hash)?.txResponse?.code == 0 },
                 )
             }
 

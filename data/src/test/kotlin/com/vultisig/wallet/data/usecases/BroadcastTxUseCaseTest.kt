@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.api.models.ContextData
 import com.vultisig.wallet.data.api.models.TransactionData
 import com.vultisig.wallet.data.api.models.TransactionInfo
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTxStatusJson
+import com.vultisig.wallet.data.api.models.cosmos.TxResponse
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import io.mockk.coEvery
@@ -88,7 +89,7 @@ class BroadcastTxUseCaseTest {
         val cosmosApi = mockk<CosmosApi>()
         val cosmosApiFactory = mockk<CosmosApiFactory>()
         coEvery { cosmosApi.broadcastTransaction(RAW_TRANSACTION) } throws sequenceMismatch()
-        coEvery { cosmosApi.getTxStatus(KNOWN_TRANSACTION_HASH) } returns CosmosTxStatusJson()
+        coEvery { cosmosApi.getTxStatus(KNOWN_TRANSACTION_HASH) } returns txStatus(code = 0)
         every { cosmosApiFactory.createCosmosApi(Chain.Kujira) } returns cosmosApi
 
         val txHash =
@@ -96,6 +97,26 @@ class BroadcastTxUseCaseTest {
 
         assertEquals(KNOWN_TRANSACTION_HASH, txHash)
         coVerify(exactly = 1) { cosmosApi.broadcastTransaction(RAW_TRANSACTION) }
+    }
+
+    @Test
+    fun `cosmos rethrows a code-32 rejection when the committed tx failed execution`() = runTest {
+        val cosmosApi = mockk<CosmosApi>()
+        val cosmosApiFactory = mockk<CosmosApiFactory>()
+        val rejection = sequenceMismatch()
+        coEvery { cosmosApi.broadcastTransaction(RAW_TRANSACTION) } throws rejection
+        // Our hash is on chain but the execution failed (non-zero code): no funds moved.
+        coEvery { cosmosApi.getTxStatus(KNOWN_TRANSACTION_HASH) } returns txStatus(code = 5)
+        every { cosmosApiFactory.createCosmosApi(Chain.Kujira) } returns cosmosApi
+
+        val thrown =
+            assertFailsWith<CosmosBroadcastException> {
+                createUseCase(cosmosApiFactory = cosmosApiFactory)(
+                    Chain.Kujira,
+                    signedTransaction(),
+                )
+            }
+        assertEquals(rejection, thrown)
     }
 
     @Test
@@ -282,6 +303,11 @@ class BroadcastTxUseCaseTest {
             rippleApi = mockk<RippleApi>(relaxed = true),
             tronApi = mockk<TronApi>(relaxed = true),
             cardanoApi = mockk<CardanoApi>(relaxed = true),
+        )
+
+    private fun txStatus(code: Int) =
+        CosmosTxStatusJson(
+            txResponse = TxResponse(height = "1", txHash = KNOWN_TRANSACTION_HASH, code = code)
         )
 
     private fun sequenceMismatch() =
