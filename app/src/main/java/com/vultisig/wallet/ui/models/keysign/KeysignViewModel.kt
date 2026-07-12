@@ -842,10 +842,9 @@ constructor(
                     }
                     saveTransactionHistory(txHash, result.chain)
                 }
-                // A Solana dApp batch broadcasts several transactions; the extra ones are
-                // persisted to history independently of the primary hash — each with its own
-                // explorer link, not the primary tx's — while [txHash] stays the primary hash
-                // driving the done screen and status polling.
+                // Persisted outside the txHash != null gate: the extra transactions of a batch
+                // were broadcast in their own right, so a missing primary hash must not skip
+                // their history rows.
                 result.additionalTxHashes.forEach { hash ->
                     saveTransactionHistory(
                         txHash = hash,
@@ -856,10 +855,9 @@ constructor(
                 if (txHash != null && txStatusConfigurationProvider.supportTxStatus(result.chain)) {
                     startForegroundPolling(txHash, result.chain)
                 } else {
-                    // Either the chain has no status polling or the broadcast produced no
-                    // primary hash. Land on the terminal "broadcasted" state instead of leaving
-                    // signingState at the last signing state forever (infinite spinner → the
-                    // user may force-retry and double-send).
+                    // Land on the terminal "broadcasted" state instead of leaving signingState
+                    // at the last signing state forever (infinite spinner → the user may
+                    // force-retry and double-send).
                     _state.update {
                         it.copy(
                             signingState =

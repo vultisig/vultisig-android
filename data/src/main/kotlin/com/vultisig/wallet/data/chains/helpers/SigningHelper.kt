@@ -347,9 +347,11 @@ object SigningHelper {
     }
 
     /**
-     * Assembles every signed transaction the keysign produced. Only a Solana dApp
-     * `signAllTransactions` batch yields more than one transaction (issue #5238); every other
-     * payload shape assembles exactly one via [getSignedTransaction].
+     * Assembles every signed transaction the keysign produced; the result always has at least one
+     * entry. Only a Solana dApp `signAndSendAllTransactions` batch yields more than one transaction
+     * (issue #5238); every other payload shape assembles exactly one via [getSignedTransaction]. A
+     * payload carrying a swap payload is hashed by its swap signer rather than the `signSolana`
+     * expansion (see [getKeysignMessages]), so it must keep routing through the singular path.
      */
     fun getSignedTransactions(
         keysignPayload: KeysignPayload,

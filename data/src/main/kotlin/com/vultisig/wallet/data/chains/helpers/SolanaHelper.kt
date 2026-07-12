@@ -302,9 +302,9 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
 
     /**
      * Assembles one signed transaction per raw transaction in a dApp `signSolana` payload. A
-     * `signAllTransactions` batch is hashed and signed in a single keysign ceremony, so assembly
-     * must deliver every transaction rather than just the first (issue #5238). A payload without
-     * `signSolana` assembles the single WalletCore-built transaction.
+     * `signAndSendAllTransactions` batch is hashed and signed in a single keysign ceremony, so
+     * assembly must deliver every transaction rather than just the first (issue #5238). A payload
+     * without `signSolana` assembles the single WalletCore-built transaction.
      */
     fun getSignedTransactions(
         keysignPayload: KeysignPayload,

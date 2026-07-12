@@ -122,14 +122,17 @@ internal class BroadcastKeysignBatchTest {
     @Test
     fun `single transaction yields no additional hashes`() =
         runTest(testDispatcher) {
-            every { SigningHelper.getSignedTransactions(payload, vault, any(), any()) } returns
-                listOf(tx1)
+            val singlePayload =
+                payload.copy(signSolana = SignSolana(rawTransactions = listOf("AAA=")))
+            every {
+                SigningHelper.getSignedTransactions(singlePayload, vault, any(), any())
+            } returns listOf(tx1)
             coEvery { broadcastTx(Chain.Solana, tx1) } returns "hash1"
 
             val result =
                 createUseCase()(
                     vault = vault,
-                    payload = payload,
+                    payload = singlePayload,
                     signatures = emptyMap(),
                     isInitiatingDevice = false,
                 )

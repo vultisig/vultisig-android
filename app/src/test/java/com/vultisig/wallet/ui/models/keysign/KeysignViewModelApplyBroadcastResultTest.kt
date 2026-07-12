@@ -35,6 +35,18 @@ internal class KeysignViewModelApplyBroadcastResultTest {
 
     private val vault = Vault(id = "v1", name = "Test Vault")
 
+    private val sendTxData =
+        SendTransactionHistoryData(
+            fromAddress = "0xsender",
+            toAddress = "0xdest",
+            amount = "1",
+            token = "ETH",
+            tokenLogo = "eth",
+            feeEstimate = "0.001",
+            memo = "",
+            fiatValue = "100",
+        )
+
     private lateinit var txStatusConfigurationProvider: TxStatusConfigurationProvider
     private lateinit var transactionHistoryRepository: TransactionHistoryRepository
     private lateinit var explorerLinkRepository: ExplorerLinkRepository
@@ -94,8 +106,7 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             val vm = createViewModel(transactionHistoryData = sendTxData)
 
             vm.applyBroadcastResult(
-                broadcasted(txHash = "0xhash1")
-                    .copy(additionalTxHashes = listOf("0xhash2", "0xhash3"))
+                broadcasted(txHash = "0xhash1", additionalTxHashes = listOf("0xhash2", "0xhash3"))
             )
 
             vm.state.value.txHash shouldBe "0xhash1"
@@ -123,7 +134,7 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             val vm = createViewModel(transactionHistoryData = sendTxData)
 
             vm.applyBroadcastResult(
-                broadcasted(txHash = null).copy(additionalTxHashes = listOf("0xhash2"))
+                broadcasted(txHash = null, additionalTxHashes = listOf("0xhash2"))
             )
 
             vm.state.value.signingState shouldBe
@@ -140,19 +151,7 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             genericData.captured.explorerUrl shouldBe "https://etherscan.io/tx/0xhash2"
         }
 
-    private val sendTxData =
-        SendTransactionHistoryData(
-            fromAddress = "0xsender",
-            toAddress = "0xdest",
-            amount = "1",
-            token = "ETH",
-            tokenLogo = "eth",
-            feeEstimate = "0.001",
-            memo = "",
-            fiatValue = "100",
-        )
-
-    private fun broadcasted(txHash: String?) =
+    private fun broadcasted(txHash: String?, additionalTxHashes: List<String> = emptyList()) =
         KeysignBroadcastResult.Broadcasted(
             chain = Chain.Ethereum,
             txHash = txHash,
@@ -160,6 +159,7 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             swapProgressLink = null,
             approveTxHash = "",
             approveTxLink = "",
+            additionalTxHashes = additionalTxHashes,
         )
 
     private fun createViewModel(transactionHistoryData: TransactionHistoryData? = null) =
