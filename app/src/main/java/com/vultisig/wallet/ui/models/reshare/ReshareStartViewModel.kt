@@ -60,7 +60,11 @@ constructor(
             when (action) {
                 ReshareAction.Start -> {
                     val vault =
-                        vaultRepository.get(vaultId) ?: error("Vault $vaultId does not exist")
+                        vaultRepository.get(vaultId)
+                            ?: run {
+                                navigator.navigate(Destination.Back)
+                                return@launch
+                            }
                     navigator.route(
                         Route.Keygen.PeerDiscovery(
                             action = TssAction.ReShare,

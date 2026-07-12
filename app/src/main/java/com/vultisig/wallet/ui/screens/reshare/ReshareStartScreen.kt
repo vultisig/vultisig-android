@@ -10,9 +10,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +36,7 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.reshare.ReshareStartViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun ReshareStartScreen(model: ReshareStartViewModel = hiltViewModel()) {
@@ -144,9 +148,13 @@ private fun ReshareOptionCard(title: String, subtitle: String, onClick: () -> Un
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BeforeYouReshareBottomSheet(onDismiss: () -> Unit, onConfirm: () -> Unit) {
-    VsModalBottomSheet(onDismissRequest = onDismiss) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+
+    VsModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 16.dp)
         ) {
@@ -190,7 +198,11 @@ private fun BeforeYouReshareBottomSheet(onDismiss: () -> Unit, onConfirm: () -> 
 
             VsButton(
                 label = stringResource(id = R.string.vault_setup_i_understand),
-                onClick = onConfirm,
+                onClick = {
+                    scope
+                        .launch { sheetState.hide() }
+                        .invokeOnCompletion { if (!sheetState.isVisible) onConfirm() }
+                },
                 modifier = Modifier.fillMaxWidth(),
             )
         }
