@@ -84,8 +84,9 @@ object RippleHelper {
                 // No first-class tag: a canonical uint32 memo is the legacy destination-tag carrier
                 // (older payloads and swap contracts); any other memo is an on-chain Memos blob.
                 // Use the same canonical parser as the dedicated field, so "0", leading zeros and
-                // out-of-uint32 values are treated as a plain memo (matching iOS) instead of being
-                // silently reinterpreted — or overflowed — into a DestinationTag.
+                // out-of-uint32 values are kept as a plain memo instead of being silently
+                // reinterpreted — or overflowed — into a DestinationTag. (iOS rejects a bare "0"
+                // memo outright; we intentionally preserve it as free text rather than reject.)
                 val memoAsTag = RippleDestinationTag.parseCanonicalDestinationTag(memo)
                 if (memoAsTag != null) {
                     operation.setDestinationTag(memoAsTag.toLong())

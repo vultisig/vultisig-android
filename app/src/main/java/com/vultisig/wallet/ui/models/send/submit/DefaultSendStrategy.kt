@@ -131,7 +131,11 @@ internal class DefaultSendStrategy(
                                 UiText.StringResource(R.string.send_error_no_token)
                             )
 
-                    val userMemo = memoFieldState.text.toString().takeIf { it.isNotEmpty() }
+                    // isNotBlank (not isNotEmpty) so a whitespace-only memo is treated as absent,
+                    // matching RippleHelper's own isNotBlank check — otherwise a blank memo would
+                    // suppress the dual-write here while the signer still drops it, and a
+                    // not-yet-updated co-signer would rebuild an untagged payment.
+                    val userMemo = memoFieldState.text.toString().takeIf { it.isNotBlank() }
 
                     // XRP destination tag: from its own field, carried in the first-class proto
                     // field (not the memo). A non-empty non-canonical value is rejected so a bad
