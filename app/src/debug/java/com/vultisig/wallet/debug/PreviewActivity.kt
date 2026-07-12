@@ -2320,8 +2320,10 @@ private fun solanaStakingPreviewRow(
     fiat: String,
     stateLabel: String,
     apy: String?,
-    canDeactivate: Boolean,
+    canManage: Boolean,
     canWithdraw: Boolean,
+    state: com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState =
+        com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState.Active,
 ) =
     com.vultisig.wallet.ui.models.solanastaking.SolanaStakePositionRow(
         stakePubkey = stakePubkey,
@@ -2332,10 +2334,10 @@ private fun solanaStakingPreviewRow(
         stakedDisplay = "$staked SOL",
         stakedFiatDisplay = fiat,
         rentReserveDisplay = "0.00228288 SOL",
-        state = com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState.Active,
+        state = state,
         stateLabel = com.vultisig.wallet.ui.utils.UiText.DynamicString(stateLabel),
         apyDisplay = apy,
-        canDeactivate = canDeactivate,
+        canManage = canManage,
         canWithdraw = canWithdraw,
         accountLamports = java.math.BigInteger.ZERO,
     )
@@ -2357,9 +2359,37 @@ private fun SolanaStakingPositionsLoadedPreview() {
                             fiat = "$78.04",
                             stateLabel = "Active",
                             apy = "5.55%",
-                            canDeactivate = true,
+                            canManage = true,
                             canWithdraw = false,
-                        )
+                        ),
+                        // Deactivating (cooling down) still shows the Unstake/Move/Stake row.
+                        solanaStakingPreviewRow(
+                            stakePubkey = "CV4X...NNFz",
+                            validatorName = "Jupiter",
+                            staked = "1",
+                            fiat = "$77.97",
+                            stateLabel = "Deactivating",
+                            apy = "5.26%",
+                            canManage = true,
+                            canWithdraw = false,
+                            state =
+                                com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState
+                                    .Deactivating,
+                        ),
+                        // Fully Inactive → Withdraw + Finish Move.
+                        solanaStakingPreviewRow(
+                            stakePubkey = "D1ST...T2jy",
+                            validatorName = "Figment",
+                            staked = "1",
+                            fiat = "$77.99",
+                            stateLabel = "Inactive",
+                            apy = "5.54%",
+                            canManage = false,
+                            canWithdraw = true,
+                            state =
+                                com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState
+                                    .Inactive,
+                        ),
                     ),
                 isBalanceVisible = true,
             )

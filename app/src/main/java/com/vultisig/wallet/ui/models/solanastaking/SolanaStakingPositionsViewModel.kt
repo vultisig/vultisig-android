@@ -57,7 +57,9 @@ import timber.log.Timber
  * @property stakedFiatDisplay pre-formatted fiat value of the delegated stake
  * @property stateLabel localized lifecycle label (Active / Activating / Deactivating / Inactive)
  * @property apyDisplay pre-formatted APY (e.g. `"5.72%"`), or null when unknown
- * @property canDeactivate the account is Active/Activating and can be deactivated (unstaked)
+ * @property canManage the account is Active/Activating/Deactivating, so the manage-actions row
+ *   (Unstake / Move / Stake) is shown. Deactivating is included so those actions stay visible while
+ *   the account cools down.
  * @property canWithdraw the account is fully Inactive and its lamports can be withdrawn
  */
 @Immutable
@@ -73,7 +75,7 @@ internal data class SolanaStakePositionRow(
     val state: SolanaStakeState,
     val stateLabel: UiText,
     val apyDisplay: String?,
-    val canDeactivate: Boolean,
+    val canManage: Boolean,
     val canWithdraw: Boolean,
     /** Total account lamports (raw). Re-delegated as-is when the account is moved (Finish Move). */
     val accountLamports: BigInteger,
@@ -380,9 +382,10 @@ constructor(
                     it.multiply(BigDecimal(100)).setScale(2, RoundingMode.HALF_UP).toPlainString() +
                         "%"
                 },
-            canDeactivate =
+            canManage =
                 account.state == SolanaStakeState.Active ||
-                    account.state == SolanaStakeState.Activating,
+                    account.state == SolanaStakeState.Activating ||
+                    account.state == SolanaStakeState.Deactivating,
             canWithdraw = account.state == SolanaStakeState.Inactive,
             accountLamports = account.lamports,
         )

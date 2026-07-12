@@ -277,66 +277,71 @@ private fun StakeAccountContent(
             )
         }
 
-        UiSpacer(16.dp)
-        UiHorizontalDivider(color = Theme.v2.colors.border.light)
-        UiSpacer(16.dp)
+        // Only render the divider + action row when the account actually has actions, so states
+        // with none (e.g. NotDelegated) don't leave an empty gap under the details.
+        if (row.canWithdraw || row.canManage) {
+            UiSpacer(16.dp)
+            UiHorizontalDivider(color = Theme.v2.colors.border.light)
+            UiSpacer(16.dp)
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            if (row.canWithdraw) {
-                ActionButton(
-                    title = stringResource(R.string.solana_staking_withdraw_cta),
-                    icon = R.drawable.ic_circle_plus,
-                    background = Color.Transparent,
-                    border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
-                    contentColor = Theme.v2.colors.text.primary,
-                    onClick = onWithdraw,
-                    modifier = Modifier.weight(1f),
-                    iconCircleColor = Theme.v2.colors.text.tertiary,
-                )
-                // A cooled-down account can also finish a move — re-delegate it to a new validator.
-                ActionButton(
-                    title = stringResource(R.string.solana_finish_move_cta),
-                    icon = R.drawable.ic_arrow_bottom_top,
-                    background = Theme.v2.colors.primary.accent3,
-                    contentColor = Theme.v2.colors.text.primary,
-                    onClick = onFinishMove,
-                    modifier = Modifier.weight(1f),
-                    iconCircleColor = Theme.v2.colors.primary.accent4,
-                )
-            }
-            if (row.canDeactivate) {
-                ActionButton(
-                    title = stringResource(R.string.solana_staking_unstake_cta),
-                    icon = R.drawable.ic_circle_minus,
-                    background = Color.Transparent,
-                    border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
-                    contentColor = Theme.v2.colors.text.primary,
-                    onClick = onDeactivate,
-                    modifier = Modifier.weight(1f),
-                    iconCircleColor = Theme.v2.colors.text.tertiary,
-                )
-                ActionButton(
-                    title = stringResource(R.string.solana_staking_move_cta),
-                    icon = R.drawable.ic_arrow_bottom_top,
-                    background = Color.Transparent,
-                    border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
-                    contentColor = Theme.v2.colors.text.primary,
-                    onClick = onMove,
-                    modifier = Modifier.weight(1f),
-                    iconCircleColor = Theme.v2.colors.text.tertiary,
-                )
-                ActionButton(
-                    title = stringResource(R.string.solana_staking_stake_cta),
-                    icon = R.drawable.ic_circle_plus,
-                    background = Theme.v2.colors.primary.accent3,
-                    contentColor = Theme.v2.colors.text.primary,
-                    onClick = onStake,
-                    modifier = Modifier.weight(1f),
-                    iconCircleColor = Theme.v2.colors.primary.accent4,
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (row.canWithdraw) {
+                    ActionButton(
+                        title = stringResource(R.string.solana_staking_withdraw_cta),
+                        icon = R.drawable.ic_circle_plus,
+                        background = Color.Transparent,
+                        border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
+                        contentColor = Theme.v2.colors.text.primary,
+                        onClick = onWithdraw,
+                        modifier = Modifier.weight(1f),
+                        iconCircleColor = Theme.v2.colors.text.tertiary,
+                    )
+                    // A cooled-down account can also finish a move — re-delegate it to a new
+                    // validator.
+                    ActionButton(
+                        title = stringResource(R.string.solana_finish_move_cta),
+                        icon = R.drawable.ic_arrow_bottom_top,
+                        background = Theme.v2.colors.primary.accent3,
+                        contentColor = Theme.v2.colors.text.primary,
+                        onClick = onFinishMove,
+                        modifier = Modifier.weight(1f),
+                        iconCircleColor = Theme.v2.colors.primary.accent4,
+                    )
+                }
+                if (row.canManage) {
+                    ActionButton(
+                        title = stringResource(R.string.solana_staking_unstake_cta),
+                        icon = R.drawable.ic_circle_minus,
+                        background = Color.Transparent,
+                        border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
+                        contentColor = Theme.v2.colors.text.primary,
+                        onClick = onDeactivate,
+                        modifier = Modifier.weight(1f),
+                        iconCircleColor = Theme.v2.colors.text.tertiary,
+                    )
+                    ActionButton(
+                        title = stringResource(R.string.solana_staking_move_cta),
+                        icon = R.drawable.ic_arrow_bottom_top,
+                        background = Color.Transparent,
+                        border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
+                        contentColor = Theme.v2.colors.text.primary,
+                        onClick = onMove,
+                        modifier = Modifier.weight(1f),
+                        iconCircleColor = Theme.v2.colors.text.tertiary,
+                    )
+                    ActionButton(
+                        title = stringResource(R.string.solana_staking_stake_cta),
+                        icon = R.drawable.ic_circle_plus,
+                        background = Theme.v2.colors.primary.accent3,
+                        contentColor = Theme.v2.colors.text.primary,
+                        onClick = onStake,
+                        modifier = Modifier.weight(1f),
+                        iconCircleColor = Theme.v2.colors.primary.accent4,
+                    )
+                }
             }
         }
     }
