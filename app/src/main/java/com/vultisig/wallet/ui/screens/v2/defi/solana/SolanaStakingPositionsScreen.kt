@@ -163,41 +163,39 @@ private fun StakeAccountsWidget(
     onFinishMove: (String) -> Unit,
     onStake: () -> Unit,
 ) {
-    Column(
-        modifier =
-            Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Theme.v2.colors.backgrounds.secondary)
-                .border(
-                    width = 1.dp,
-                    color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
-                )
-                .padding(16.dp)
-    ) {
+    // The header is a plain label above the list; each stake account is its own separate card with
+    // spacing between them (rather than a single shared card with dividers), so cards read as
+    // distinct items.
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = stringResource(R.string.solana_stake_accounts),
             style = Theme.brockmann.button.medium.medium,
             color = Theme.v2.colors.text.secondary,
         )
 
-        positions.forEachIndexed { index, row ->
-            if (index == 0) {
-                UiSpacer(16.dp)
-            } else {
-                UiSpacer(16.dp)
-                UiHorizontalDivider(color = Theme.v2.colors.border.light)
-                UiSpacer(16.dp)
+        positions.forEach { row ->
+            Column(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Theme.v2.colors.backgrounds.secondary)
+                        .border(
+                            width = 1.dp,
+                            color = Theme.v2.colors.border.light,
+                            shape = RoundedCornerShape(16.dp),
+                        )
+                        .padding(16.dp)
+            ) {
+                StakeAccountContent(
+                    row = row,
+                    isBalanceVisible = isBalanceVisible,
+                    onDeactivate = { onDeactivate(row.stakePubkey) },
+                    onWithdraw = { onWithdraw(row.stakePubkey) },
+                    onMove = { onMove(row.stakePubkey) },
+                    onFinishMove = { onFinishMove(row.stakePubkey) },
+                    onStake = onStake,
+                )
             }
-            StakeAccountContent(
-                row = row,
-                isBalanceVisible = isBalanceVisible,
-                onDeactivate = { onDeactivate(row.stakePubkey) },
-                onWithdraw = { onWithdraw(row.stakePubkey) },
-                onMove = { onMove(row.stakePubkey) },
-                onFinishMove = { onFinishMove(row.stakePubkey) },
-                onStake = onStake,
-            )
         }
     }
 }
