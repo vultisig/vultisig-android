@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -30,7 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
+import com.vultisig.wallet.ui.components.bottomsheet.VsBottomSheet
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
@@ -154,7 +156,21 @@ private fun BeforeYouReshareBottomSheet(onDismiss: () -> Unit, onConfirm: () -> 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
-    VsModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+    // Animate the sheet out before running the action instead of yanking it from composition.
+    fun hideThen(action: () -> Unit) {
+        scope
+            .launch { sheetState.hide() }
+            .invokeOnCompletion { if (!sheetState.isVisible) action() }
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = { hideThen(onDismiss) },
+        sheetState = sheetState,
+        scrimColor = Theme.v2.colors.neutrals.n900.copy(alpha = 0.8f),
+        dragHandle = { VsBottomSheet.DragHandle() },
+        containerColor = Theme.v2.colors.backgrounds.primary,
+        modifier = Modifier.statusBarsPadding(),
+    ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 16.dp)
         ) {
@@ -198,11 +214,7 @@ private fun BeforeYouReshareBottomSheet(onDismiss: () -> Unit, onConfirm: () -> 
 
             VsButton(
                 label = stringResource(id = R.string.vault_setup_i_understand),
-                onClick = {
-                    scope
-                        .launch { sheetState.hide() }
-                        .invokeOnCompletion { if (!sheetState.isVisible) onConfirm() }
-                },
+                onClick = { hideThen(onConfirm) },
                 modifier = Modifier.fillMaxWidth(),
             )
         }
