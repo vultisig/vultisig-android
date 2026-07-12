@@ -60,4 +60,21 @@ object TonNominatorPool {
 
     /** Minimum deposit (in nanotons) for a pool whose `min_stake` is [minStakeNano]. */
     fun minimumDeposit(minStakeNano: BigInteger): BigInteger = minStakeNano + DEPOSIT_COMMISSION
+
+    /** Every deposit/withdraw comment across supported implementations. */
+    private val TRANSFER_COMMENTS: Set<String> =
+        setOfNotNull(
+            depositComment(IMPLEMENTATION_WHALES),
+            withdrawComment(IMPLEMENTATION_WHALES),
+            depositComment(IMPLEMENTATION_TF),
+            withdrawComment(IMPLEMENTATION_TF),
+        )
+
+    /**
+     * Whether [memo] is a nominator-pool deposit/withdraw comment. Such messages MUST be sent
+     * bounceable (see the class docs) so a message the pool rejects returns instead of being
+     * absorbed; the signing layer forces the bounce flag for these — matching the initiating device
+     * — so every co-signer reproduces an identical pre-image hash.
+     */
+    fun isTransferComment(memo: String?): Boolean = memo != null && memo in TRANSFER_COMMENTS
 }
