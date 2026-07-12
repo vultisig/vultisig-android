@@ -346,6 +346,29 @@ object SigningHelper {
         return messages.sorted()
     }
 
+    /**
+     * Assembles every signed transaction the keysign produced. Only a Solana dApp
+     * `signAllTransactions` batch yields more than one transaction (issue #5238); every other
+     * payload shape assembles exactly one via [getSignedTransaction].
+     */
+    fun getSignedTransactions(
+        keysignPayload: KeysignPayload,
+        vault: Vault,
+        signatures: Map<String, tss.KeysignResponse>,
+        nonceAcc: BigInteger,
+    ): List<SignedTransactionResult> {
+        val chain = keysignPayload.coin.chain
+        if (
+            chain == Chain.Solana &&
+                keysignPayload.signSolana != null &&
+                keysignPayload.swapPayload == null
+        ) {
+            return SolanaHelper(vault.getEddsaSigningKey(chain))
+                .getSignedTransactions(keysignPayload, signatures)
+        }
+        return listOf(getSignedTransaction(keysignPayload, vault, signatures, nonceAcc))
+    }
+
     fun getSignedTransaction(
         keysignPayload: KeysignPayload,
         vault: Vault,

@@ -841,6 +841,18 @@ constructor(
                         )
                     }
                     saveTransactionHistory(txHash, result.chain)
+                    // A Solana dApp batch broadcasts several transactions; the extra ones are
+                    // persisted to history — each with its own explorer link, not the primary
+                    // tx's — while [txHash] stays the primary hash driving the done screen and
+                    // status polling.
+                    result.additionalTxHashes.forEach { hash ->
+                        saveTransactionHistory(
+                            txHash = hash,
+                            chain = result.chain,
+                            explorerUrl =
+                                explorerLinkRepository.getTransactionLink(result.chain, hash),
+                        )
+                    }
                     if (txStatusConfigurationProvider.supportTxStatus(result.chain)) {
                         startForegroundPolling(txHash, result.chain)
                     } else {
@@ -867,12 +879,20 @@ constructor(
         }
     }
 
-    internal suspend fun saveTransactionHistory(txHash: String, chain: Chain) {
+    /**
+     * [explorerUrl] overrides the state-derived link for the extra transactions of a Solana dApp
+     * batch, whose ViewModel state only carries the primary tx's link.
+     */
+    internal suspend fun saveTransactionHistory(
+        txHash: String,
+        chain: Chain,
+        explorerUrl: String? = null,
+    ) {
         saveKeysignTransactionHistory(
             vaultId = vault.id,
             txHash = txHash,
             chain = chain,
-            explorerUrl = _state.value.let { it.swapProgressLink ?: it.txLink },
+            explorerUrl = explorerUrl ?: _state.value.let { it.swapProgressLink ?: it.txLink },
             transactionHistoryData = transactionHistoryData,
             // Polkadot extrinsics are mortal: persist the head block at broadcast so the status
             // poller can scan the absolute inclusion window instead of a head-relative one that

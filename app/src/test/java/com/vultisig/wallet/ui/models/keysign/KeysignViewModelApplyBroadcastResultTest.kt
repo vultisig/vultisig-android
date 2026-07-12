@@ -3,15 +3,22 @@
 package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.CommonTransactionHistoryData
+import com.vultisig.wallet.data.models.SendTransactionHistoryData
+import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.usecases.KeysignBroadcastResult
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import io.kotest.matchers.shouldBe
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -29,11 +36,15 @@ internal class KeysignViewModelApplyBroadcastResultTest {
     private val vault = Vault(id = "v1", name = "Test Vault")
 
     private lateinit var txStatusConfigurationProvider: TxStatusConfigurationProvider
+    private lateinit var transactionHistoryRepository: TransactionHistoryRepository
+    private lateinit var explorerLinkRepository: ExplorerLinkRepository
 
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         txStatusConfigurationProvider = mockk(relaxed = true)
+        transactionHistoryRepository = mockk(relaxed = true)
+        explorerLinkRepository = mockk(relaxed = true)
     }
 
     @AfterEach
@@ -69,6 +80,51 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             }
         }
 
+    // A Solana dApp batch broadcasts several transactions; each one must land in history with its
+    // own explorer link, with the first hash staying the primary one driving the done screen
+    // (issue #5238).
+    @Test
+    fun `broadcasted batch persists history for the primary and additional hashes`() =
+        runTest(testDispatcher) {
+            every { txStatusConfigurationProvider.supportTxStatus(any()) } returns false
+            every { explorerLinkRepository.getTransactionLink(Chain.Ethereum, any()) } answers
+                {
+                    "https://etherscan.io/tx/${secondArg<String>()}"
+                }
+            val vm = createViewModel(transactionHistoryData = sendTxData)
+
+            vm.applyBroadcastResult(
+                broadcasted(txHash = "0xhash1")
+                    .copy(additionalTxHashes = listOf("0xhash2", "0xhash3"))
+            )
+
+            vm.state.value.txHash shouldBe "0xhash1"
+            listOf("0xhash1", "0xhash2", "0xhash3").forEach { hash ->
+                val genericData = slot<CommonTransactionHistoryData>()
+                coVerify(exactly = 1) {
+                    transactionHistoryRepository.recordTransaction(
+                        vaultId = "v1",
+                        txHash = hash,
+                        txData = sendTxData,
+                        genericData = capture(genericData),
+                    )
+                }
+                genericData.captured.explorerUrl shouldBe "https://etherscan.io/tx/$hash"
+            }
+        }
+
+    private val sendTxData =
+        SendTransactionHistoryData(
+            fromAddress = "0xsender",
+            toAddress = "0xdest",
+            amount = "1",
+            token = "ETH",
+            tokenLogo = "eth",
+            feeEstimate = "0.001",
+            memo = "",
+            fiatValue = "100",
+        )
+
     private fun broadcasted(txHash: String?) =
         KeysignBroadcastResult.Broadcasted(
             chain = Chain.Ethereum,
@@ -79,7 +135,7 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             approveTxLink = "",
         )
 
-    private fun createViewModel() =
+    private fun createViewModel(transactionHistoryData: TransactionHistoryData? = null) =
         KeysignViewModel(
             vault = vault,
             keysignCommittee = emptyList(),
@@ -92,11 +148,11 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             customMessagePayload = null,
             transactionTypeUiModel = null,
             isInitiatingDevice = false,
-            transactionHistoryData = null,
+            transactionHistoryData = transactionHistoryData,
             thorChainApi = mockk(relaxed = true),
             evmApiFactory = mockk(relaxed = true),
             broadcastTx = mockk(relaxed = true),
-            explorerLinkRepository = mockk(relaxed = true),
+            explorerLinkRepository = explorerLinkRepository,
             navigator = mockk<Navigator<Destination>>(relaxed = true),
             sessionApi = mockk(relaxed = true),
             encryption = mockk(relaxed = true),
@@ -107,7 +163,7 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             txStatusPoller = mockk(relaxed = true),
             vaultRepository = mockk(relaxed = true),
             chainAccountAddressRepository = mockk(relaxed = true),
-            transactionHistoryRepository = mockk(relaxed = true),
+            transactionHistoryRepository = transactionHistoryRepository,
             balanceRepository = mockk(relaxed = true),
             gasFeeToEstimatedFee = mockk(relaxed = true),
             awaitApprovalConfirmation = mockk(relaxed = true),

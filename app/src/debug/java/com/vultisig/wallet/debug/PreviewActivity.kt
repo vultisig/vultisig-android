@@ -202,6 +202,9 @@ class PreviewActivity : ComponentActivity() {
                     "choose_vault" -> SelectVaultTypeScreenPreview()
                     "content_row" -> ContentRowPreview()
                     "solana_display" -> SolanaDisplayPreview()
+                    "solana_batch_verify" -> SolanaBatchVerifySendPreview(transactionCount = 2)
+                    "solana_batch_verify_before" ->
+                        SolanaBatchVerifySendPreview(transactionCount = 1)
                     "ton_display_single" -> TonDisplayPreview(messageCount = 1)
                     "ton_display_multi" -> TonDisplayPreview(messageCount = 4)
                     "verify_ton_jetton_before" -> VerifyTonJettonPreview(decoded = false)
@@ -738,6 +741,57 @@ private fun BondFormMayaPreview() {
         operatorFeeFieldState = TextFieldState(),
         tokenAmountFieldState = TextFieldState(),
         lpUnitsFieldState = TextFieldState("0"),
+    )
+}
+
+/**
+ * Two unsigned System Program transfers (0.25 SOL and 0.1 SOL to different recipients), the shape a
+ * dApp `signAllTransactions` batch arrives in. Valid legacy wire format so WalletCore decodes real
+ * instructions on expansion.
+ */
+private val SOLANA_BATCH_PREVIEW_TXS =
+    listOf(
+        "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAABAAEDfowIh2C/3h3dzzLBfyCbgkLuUqrxMfrNiNDqLG0LBvIr5RSn91UOtIIAsZJK" +
+            "26JaVZJJXZnPHQdXahEOnHb/fAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAxJrndgN4" +
+            "IFTxep3s6kO0ROug7bEsbx0xxuDkqEvwUusBAgIAAQwCAAAAgLLmDgAAAAA=",
+        "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAABAAEDfowIh2C/3h3dzzLBfyCbgkLuUqrxMfrNiNDqLG0LBvJhSg5NXp2oPpX2ZykH" +
+            "RRz279NzOiYl6BcT8F6LrGfVoQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAxJrndgN4" +
+            "IFTxep3s6kO0ROug7bEsbx0xxuDkqEvwUusBAgIAAQwCAAAAAOH1BQAAAAA=",
+    )
+
+/**
+ * The joining device's verify screen for a dApp `signSolana` request. [transactionCount] = 1
+ * reproduces the pre-#5238 render, which surfaced only the first raw transaction of a batch.
+ */
+@Composable
+private fun SolanaBatchVerifySendPreview(transactionCount: Int) {
+    VerifySendScreen(
+        state =
+            VerifyTransactionUiModel(
+                transaction =
+                    TransactionDetailsUiModel(
+                        token =
+                            ValuedToken(token = Coins.Solana.SOL, value = "0", fiatValue = "$0.00"),
+                        srcAddress = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+                        srcVaultName = "Main Vault",
+                        dstAddress = "3xM8c79mk7fvcz5ENZgMbChPJGWZAjFqwdDzZp4R2gHR",
+                        networkFeeFiatValue = "$0.01",
+                        networkFeeTokenValue = "0.000005 SOL",
+                        signSolana = SOLANA_BATCH_PREVIEW_TXS.take(transactionCount),
+                    )
+            ),
+        isConsentsEnabled = false,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
     )
 }
 

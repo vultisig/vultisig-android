@@ -46,6 +46,10 @@ internal sealed interface KeysignBroadcastResult {
      * @property swapProgressLink Swap-progress deep link, or null when not a swap.
      * @property approveTxHash Hash of the preceding approval, empty when not applicable.
      * @property approveTxLink Explorer link for [approveTxHash], empty when not applicable.
+     * @property additionalTxHashes Hashes of the remaining transactions when the keysign produced a
+     *   batch (Solana `signAndSendAllTransactions`, issue #5238); empty otherwise. They are
+     *   persisted to history alongside [txHash], which stays the primary hash driving the done
+     *   screen and status polling.
      */
     data class Broadcasted(
         val chain: Chain,
@@ -54,14 +58,17 @@ internal sealed interface KeysignBroadcastResult {
         val swapProgressLink: String?,
         val approveTxHash: String,
         val approveTxLink: String,
+        val additionalTxHashes: List<String> = emptyList(),
     ) : KeysignBroadcastResult
 }
 
 /**
  * Orchestrates the broadcast tail of a keysign: submits and confirms an optional ERC-20 approval,
- * assembles and broadcasts the signed transaction, and invalidates the balance caches. The
+ * assembles and broadcasts the signed transaction(s), and invalidates the balance caches. The
  * duplicate-broadcast race between co-signers is resolved one layer down in [BroadcastTxUseCase],
- * which verifies the tx is actually on chain before treating a rejection as success.
+ * which verifies the tx is actually on chain before treating a rejection as success. A Solana dApp
+ * `signAndSendAllTransactions` batch broadcasts every assembled transaction sequentially in payload
+ * order (issue #5238).
  *
  * Extracted from `KeysignViewModel` so the broadcast/recover logic can be unit-tested in isolation.
  * The use case has no UI dependencies: it returns a [KeysignBroadcastResult] that the ViewModel
@@ -155,15 +162,21 @@ constructor(
             nonceAcc++
         }
 
-        val signedTx =
-            SigningHelper.getSignedTransaction(
+        val signedTxs =
+            SigningHelper.getSignedTransactions(
                 keysignPayload = payload,
                 vault = vault,
                 signatures = signatures,
                 nonceAcc = nonceAcc,
             )
 
-        val txHash = broadcastTx(chain = chain, tx = signedTx)
+        // A Solana dApp batch assembles one signed transaction per raw transaction; broadcast
+        // them in payload order like the extension does, failing fast so a rejected transaction
+        // surfaces as an error instead of being silently skipped. Transactions broadcast before
+        // a mid-batch failure stay on chain but are not persisted locally — same trade-off as
+        // the extension, which races the identical batch and usually lands it in full.
+        val txHashes = signedTxs.map { broadcastTx(chain = chain, tx = it) }
+        val txHash = txHashes.first()
 
         Timber.d("transaction hash: %s", txHash)
         var txLink = ""
@@ -196,6 +209,7 @@ constructor(
                 if (approveTxHash.isNotEmpty())
                     explorerLinkRepository.getTransactionLink(chain, approveTxHash)
                 else "",
+            additionalTxHashes = txHashes.drop(1).filterNotNull(),
         )
     }
 }

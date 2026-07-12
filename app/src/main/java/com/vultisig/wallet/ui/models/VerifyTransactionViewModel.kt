@@ -87,7 +87,11 @@ internal data class TransactionDetailsUiModel(
     val destinationTag: String? = null,
     val signAmino: String? = null,
     val signDirect: String? = null,
-    val signSolana: String? = null,
+    /**
+     * Base64 raw transactions of a dApp-supplied `signSolana` request, one entry per transaction of
+     * a `signAllTransactions` batch (issue #5238). Empty for non-Solana-dApp transactions.
+     */
+    val signSolana: List<String> = emptyList(),
     /**
      * Base64 `TransactionData` BCS bytes of a dApp-supplied Sui PTB (SignSui), for verify display.
      */

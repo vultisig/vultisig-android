@@ -353,13 +353,11 @@ internal fun VerifySendScreen(
                             )
                         }
                     tx.signSolana
-                        ?.takeIf { it.isNotBlank() }
+                        .takeIf { it.isNotEmpty() }
                         ?.let {
                             VerifyCardDivider(0.dp)
 
-                            SignSolanaDisplayView(
-                                signSolana = SignSolana(rawTransactions = listOf(it))
-                            )
+                            SignSolanaDisplayView(signSolana = SignSolana(rawTransactions = it))
                         }
 
                     tx.signSui

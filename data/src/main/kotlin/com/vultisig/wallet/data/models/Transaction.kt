@@ -20,7 +20,11 @@ data class Transaction(
     val memo: String?,
     val signAmino: String? = null,
     val signDirect: String? = null,
-    val signSolana: String? = null,
+    /**
+     * Base64 raw transactions of a dApp-supplied `signSolana` request, surfaced for verify display.
+     * Carries every transaction of a `signAllTransactions` batch (issue #5238).
+     */
+    val signSolana: List<String> = emptyList(),
     /**
      * Base64 `TransactionData` BCS bytes of a dApp-supplied Sui PTB, surfaced for verify display.
      */
