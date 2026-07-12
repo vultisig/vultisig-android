@@ -104,10 +104,12 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
                     thorchainPlusEvmAggregators
                 else evmAggregators
 
+            // 1inch (#5256) and KyberSwap (#5255) are same-chain aggregators live-confirmed on
+            // Base; iOS and the SDK both offer them here. This makes Base match the BSC/Avalanche
+            // EVM arm.
             Chain.Base ->
-                if (isThorEligible(Chain.Base, ticker, thorBaseTokens))
-                    setOf(SwapProvider.LIFI, SwapProvider.THORCHAIN, SwapProvider.SWAPKIT)
-                else setOf(SwapProvider.LIFI, SwapProvider.SWAPKIT)
+                if (isThorEligible(Chain.Base, ticker, thorBaseTokens)) thorchainPlusEvmAggregators
+                else evmAggregators
 
             Chain.Optimism,
             Chain.Polygon -> evmAggregators
