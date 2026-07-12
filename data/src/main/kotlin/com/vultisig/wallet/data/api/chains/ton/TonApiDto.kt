@@ -201,4 +201,28 @@ data class TransactionJson(
 data class TonTransactionDescriptionJson(
     @SerialName("aborted") val aborted: Boolean? = null,
     @SerialName("destroyed") val destroyed: Boolean? = null,
+    @SerialName("compute_ph") val computePhase: TonComputePhaseJson? = null,
+    @SerialName("action") val actionPhase: TonActionPhaseJson? = null,
+)
+
+/**
+ * TVM compute phase of a TON transaction. A `null` [exitCode] means the message carried no compute
+ * phase (a plain transfer to a wallet), which is not a failure. Exit codes 0 and 1 are the TVM
+ * success conventions; any other code is a revert.
+ */
+@Serializable data class TonComputePhaseJson(@SerialName("exit_code") val exitCode: Int? = null)
+
+/**
+ * Action phase of a TON transaction — where the wallet contract actually emits its outgoing
+ * transfer message(s). Because every Vultisig TON send is signed with `IGNORE_ACTION_PHASE_ERRORS`,
+ * an action that can't be carried out (e.g. insufficient balance for value+fees) is silently
+ * skipped instead of aborting the transaction, so these fields — not `aborted` — are what reveal a
+ * transfer that never moved any funds.
+ */
+@Serializable
+data class TonActionPhaseJson(
+    @SerialName("success") val success: Boolean? = null,
+    @SerialName("no_funds") val noFunds: Boolean? = null,
+    @SerialName("result_code") val resultCode: Int? = null,
+    @SerialName("skipped_actions") val skippedActions: Int? = null,
 )
