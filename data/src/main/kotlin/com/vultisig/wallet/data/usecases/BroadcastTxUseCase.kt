@@ -135,7 +135,17 @@ constructor(
             Akash,
             Chain.Qbtc -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(chain)
-                cosmosApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        cosmosApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
+                    },
+                    // A code=32 sequence mismatch on a joined co-signer means the peer's
+                    // byte-identical tx already advanced the account sequence in a committed
+                    // block. The LCD returns 404 (null) until our hash is committed, so a non-null
+                    // status proves our tx — not an unrelated one — consumed the sequence.
+                    verify = { hash -> cosmosApi.getTxStatus(hash) != null },
+                )
             }
 
             MayaChain -> {

@@ -14,11 +14,13 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
+import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.api.models.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.api.models.BlockChairStatusResponse
 import com.vultisig.wallet.data.api.models.ContextData
 import com.vultisig.wallet.data.api.models.TransactionData
 import com.vultisig.wallet.data.api.models.TransactionInfo
+import com.vultisig.wallet.data.api.models.cosmos.CosmosTxStatusJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import io.mockk.coEvery
@@ -79,6 +81,42 @@ class BroadcastTxUseCaseTest {
             createUseCase(cosmosApiFactory = cosmosApiFactory)(Chain.Kujira, signedTransaction())
 
         assertEquals(BROADCAST_HASH, txHash)
+    }
+
+    @Test
+    fun `cosmos recovers with local hash when a code-32 rejection is already on chain`() = runTest {
+        val cosmosApi = mockk<CosmosApi>()
+        val cosmosApiFactory = mockk<CosmosApiFactory>()
+        coEvery { cosmosApi.broadcastTransaction(RAW_TRANSACTION) } throws sequenceMismatch()
+        coEvery { cosmosApi.getTxStatus(KNOWN_TRANSACTION_HASH) } returns CosmosTxStatusJson()
+        every { cosmosApiFactory.createCosmosApi(Chain.Kujira) } returns cosmosApi
+
+        val txHash =
+            createUseCase(cosmosApiFactory = cosmosApiFactory)(Chain.Kujira, signedTransaction())
+
+        assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+        coVerify(exactly = 1) { cosmosApi.broadcastTransaction(RAW_TRANSACTION) }
+    }
+
+    @Test
+    fun `cosmos rethrows a code-32 rejection when our tx is not on chain`() = runTest {
+        val cosmosApi = mockk<CosmosApi>()
+        val cosmosApiFactory = mockk<CosmosApiFactory>()
+        val rejection = sequenceMismatch()
+        coEvery { cosmosApi.broadcastTransaction(RAW_TRANSACTION) } throws rejection
+        // A different tx consumed the sequence, so the LCD never finds our hash.
+        coEvery { cosmosApi.getTxStatus(KNOWN_TRANSACTION_HASH) } returns null
+        every { cosmosApiFactory.createCosmosApi(Chain.Kujira) } returns cosmosApi
+
+        val thrown =
+            assertFailsWith<CosmosBroadcastException> {
+                createUseCase(cosmosApiFactory = cosmosApiFactory)(
+                    Chain.Kujira,
+                    signedTransaction(),
+                )
+            }
+        assertEquals(rejection, thrown)
+        coVerify(exactly = 3) { cosmosApi.getTxStatus(KNOWN_TRANSACTION_HASH) }
     }
 
     @Test
@@ -244,6 +282,14 @@ class BroadcastTxUseCaseTest {
             rippleApi = mockk<RippleApi>(relaxed = true),
             tronApi = mockk<TronApi>(relaxed = true),
             cardanoApi = mockk<CardanoApi>(relaxed = true),
+        )
+
+    private fun sequenceMismatch() =
+        CosmosBroadcastException.from(
+            code = 32,
+            codespace = "sdk",
+            rawLog = "account sequence mismatch, expected 5, got 4",
+            txHash = null,
         )
 
     private fun signedTransaction() =
