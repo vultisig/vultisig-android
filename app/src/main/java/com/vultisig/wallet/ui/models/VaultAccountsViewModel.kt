@@ -724,14 +724,24 @@ constructor(
     fun openAddChainAccount() {
         vaultId?.let { vaultId ->
             viewModelScope.launch {
-                if (uiState.value.cryptoConnectionType == CryptoConnectionType.Defi) {
+                val isDefi = uiState.value.cryptoConnectionType == CryptoConnectionType.Defi
+                if (isDefi) {
                     navigator.route(Route.AddDeFiChainAccount(vaultId = vaultId))
                 } else {
                     navigator.route(Route.AddChainAccount(vaultId = vaultId))
                 }
                 requestResultRepository.request<Unit>(REFRESH_CHAIN_DATA)
 
-                loadData(vaultId)
+                if (isDefi) {
+                    // Force a *network* DeFi reload after the chain picker closes. loadData()'s
+                    // non-refresh path only emits cached balances, and a just-enabled chain whose
+                    // balance isn't cached yet emits nothing — leaving the list stuck on "No chains
+                    // enabled" until the DeFi tab is re-entered. Refreshing fetches and emits the
+                    // newly-enabled chain immediately (same path the tab switch already uses).
+                    loadDeFiBalances(vaultId, isRefresh = true)
+                } else {
+                    loadData(vaultId)
+                }
             }
         }
     }

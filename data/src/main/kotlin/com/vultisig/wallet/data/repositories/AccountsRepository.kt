@@ -429,6 +429,7 @@ constructor(
                     Chain.TerraClassic to Coins.TerraClassic.LUNC,
                     Chain.Qbtc to Coins.Qbtc.QBTC,
                     Chain.Ton to Coins.Ton.TON,
+                    Chain.Solana to Coins.Solana.SOL,
                 )
 
             val addressesByChain = addresses.associateBy { it.chain }
