@@ -296,11 +296,7 @@ private fun StakeAccountContent(
                     modifier = Modifier.weight(1f),
                     iconCircleColor = Theme.v2.colors.text.tertiary,
                 )
-            }
-            // Only offered for a cooled-down account the user started a move on (destination
-            // persisted in step 1) — re-delegate it to the chosen validator. A plainly-unstaked
-            // Inactive account shows Withdraw only.
-            if (row.canFinishMove) {
+                // A cooled-down account can also finish a move — re-delegate it to a new validator.
                 ActionButton(
                     title = stringResource(R.string.solana_finish_move_cta),
                     icon = R.drawable.ic_arrow_bottom_top,
