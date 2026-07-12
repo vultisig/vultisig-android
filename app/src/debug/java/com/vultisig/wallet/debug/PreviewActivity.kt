@@ -2322,6 +2322,7 @@ private fun solanaStakingPreviewRow(
     apy: String?,
     canDeactivate: Boolean,
     canWithdraw: Boolean,
+    canFinishMove: Boolean = false,
 ) =
     com.vultisig.wallet.ui.models.solanastaking.SolanaStakePositionRow(
         stakePubkey = stakePubkey,
@@ -2337,6 +2338,7 @@ private fun solanaStakingPreviewRow(
         apyDisplay = apy,
         canDeactivate = canDeactivate,
         canWithdraw = canWithdraw,
+        canFinishMove = canFinishMove,
         accountLamports = java.math.BigInteger.ZERO,
     )
 
@@ -2359,7 +2361,31 @@ private fun SolanaStakingPositionsLoadedPreview() {
                             apy = "5.55%",
                             canDeactivate = true,
                             canWithdraw = false,
-                        )
+                        ),
+                        // Inactive account with a persisted move destination → Withdraw + Finish
+                        // Move.
+                        solanaStakingPreviewRow(
+                            stakePubkey = "CV4X...NNFz",
+                            validatorName = "Figment",
+                            staked = "1",
+                            fiat = "$77.99",
+                            stateLabel = "Inactive",
+                            apy = "5.54%",
+                            canDeactivate = false,
+                            canWithdraw = true,
+                            canFinishMove = true,
+                        ),
+                        // Plainly-unstaked Inactive account (no move intent) → Withdraw only.
+                        solanaStakingPreviewRow(
+                            stakePubkey = "D1ST...T2jy",
+                            validatorName = "Jupiter",
+                            staked = "1",
+                            fiat = "$77.97",
+                            stateLabel = "Inactive",
+                            apy = "5.26%",
+                            canDeactivate = false,
+                            canWithdraw = true,
+                        ),
                     ),
                 isBalanceVisible = true,
             )

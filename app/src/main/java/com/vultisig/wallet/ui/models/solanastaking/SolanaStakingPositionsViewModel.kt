@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
+import com.vultisig.wallet.data.repositories.SolanaMoveIntentRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -59,6 +60,10 @@ import timber.log.Timber
  * @property apyDisplay pre-formatted APY (e.g. `"5.72%"`), or null when unknown
  * @property canDeactivate the account is Active/Activating and can be deactivated (unstaked)
  * @property canWithdraw the account is fully Inactive and its lamports can be withdrawn
+ * @property canFinishMove the account is Inactive AND a move destination was persisted for it (i.e.
+ *   the user started a Move on this account), so the "Finish Move" re-delegate action is offered.
+ *   Distinct from [canWithdraw]: a plainly-unstaked Inactive account can be withdrawn but not
+ *   finish-moved.
  */
 @Immutable
 internal data class SolanaStakePositionRow(
@@ -75,6 +80,7 @@ internal data class SolanaStakePositionRow(
     val apyDisplay: String?,
     val canDeactivate: Boolean,
     val canWithdraw: Boolean,
+    val canFinishMove: Boolean,
     /** Total account lamports (raw). Re-delegated as-is when the account is moved (Finish Move). */
     val accountLamports: BigInteger,
 )
@@ -115,6 +121,7 @@ constructor(
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val buildKeysignPayload: BuildSolanaStakingKeysignPayloadUseCase,
     private val depositTransactionRepository: DepositTransactionRepository,
+    private val moveIntentRepository: SolanaMoveIntentRepository,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
@@ -166,8 +173,8 @@ constructor(
 
     /**
      * Open move-stake step 2 ("Finish Move") for a cooled-down (Inactive) account: re-delegate it
-     * to a new validator. Gated on the row being Inactive (same as Withdraw), so no state re-check
-     * here.
+     * to a new validator. The row only exposes this action when it is Inactive *and* has a
+     * persisted move destination (`row.canFinishMove`), so no state re-check here.
      */
     fun onFinishMove(stakePubkey: String) {
         if (vaultId.isEmpty()) return
@@ -319,7 +326,31 @@ constructor(
                     if (votePubkeys.isEmpty()) emptyMap()
                     else validatorMetadataProvider.metadata(votePubkeys)
 
-                val rows = accounts.map { buildRow(it, metadata[it.voter], price, currencyFormat) }
+                // "Finish Move" is only meaningful for an Inactive account the user actually
+                // started
+                // a move on (a destination validator was persisted in step 1). Look those up so the
+                // action is gated on move-intent, not merely on being withdrawable.
+                val movePendingPubkeys = buildSet {
+                    accounts.forEach { account ->
+                        if (
+                            account.state == SolanaStakeState.Inactive &&
+                                moveIntentRepository.getDestination(account.stakePubkey) != null
+                        ) {
+                            add(account.stakePubkey)
+                        }
+                    }
+                }
+
+                val rows =
+                    accounts.map {
+                        buildRow(
+                            account = it,
+                            metadata = metadata[it.voter],
+                            price = price,
+                            currencyFormat = currencyFormat,
+                            canFinishMove = it.stakePubkey in movePendingPubkeys,
+                        )
+                    }
                 val totalStakedSolAmount =
                     accounts
                         .fold(BigDecimal.ZERO) { acc, account ->
@@ -348,6 +379,7 @@ constructor(
         metadata: ValidatorMetadata?,
         price: BigDecimal,
         currencyFormat: NumberFormat,
+        canFinishMove: Boolean,
     ): SolanaStakePositionRow {
         val stakedSol =
             account.delegatedStake.toBigDecimal().movePointLeft(SOL_DECIMALS).stripTrailingZeros()
@@ -384,6 +416,7 @@ constructor(
                 account.state == SolanaStakeState.Active ||
                     account.state == SolanaStakeState.Activating,
             canWithdraw = account.state == SolanaStakeState.Inactive,
+            canFinishMove = canFinishMove,
             accountLamports = account.lamports,
         )
     }
