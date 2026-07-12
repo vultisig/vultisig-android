@@ -35,12 +35,10 @@ import com.vultisig.wallet.data.chains.helpers.ParsedSolanaTransaction
 import com.vultisig.wallet.data.chains.helpers.SolanaTransactionParser
 import com.vultisig.wallet.ui.theme.Theme
 import timber.log.Timber
-import vultisig.keysign.v1.SignSolana
 
 @Composable
-fun SignSolanaDisplayView(signSolana: SignSolana, modifier: Modifier = Modifier) {
+fun SignSolanaDisplayView(rawTransactions: List<String>, modifier: Modifier = Modifier) {
     var isExpanded by rememberSaveable { mutableStateOf(false) }
-    val rawTransactions = signSolana.rawTransactions
 
     Column(
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -130,6 +128,9 @@ private fun InstructionsSummarySection(
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             instructions.forEachIndexed { index, instruction ->
+                if (index > 0) {
+                    UiHorizontalDivider(color = Theme.v2.colors.border.normal)
+                }
                 InstructionRow(instruction = instruction, index = index)
             }
         }
@@ -198,7 +199,14 @@ private val PREVIEW_INSTRUCTIONS =
             instructionType = "Transfer",
             accountsCount = 2,
             dataLength = 12,
-        )
+        ),
+        ParsedSolanaTransaction.ParsedInstruction(
+            programId = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            programName = "Token Program",
+            instructionType = "Transfer Checked",
+            accountsCount = 4,
+            dataLength = 10,
+        ),
     )
 
 private val PREVIEW_RAW_TRANSACTIONS =
@@ -221,5 +229,5 @@ private fun PreviewSignSolanaInstructionsSection() {
 @Preview
 @Composable
 private fun PreviewSignSolanaDisplayView() {
-    SignSolanaDisplayView(signSolana = SignSolana(rawTransactions = PREVIEW_RAW_TRANSACTIONS))
+    SignSolanaDisplayView(rawTransactions = PREVIEW_RAW_TRANSACTIONS)
 }

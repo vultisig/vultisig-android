@@ -66,7 +66,6 @@ import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
-import vultisig.keysign.v1.SignSolana
 
 @Composable
 internal fun VerifySendScreen(viewModel: VerifyTransactionViewModel = hiltViewModel()) {
@@ -357,7 +356,7 @@ internal fun VerifySendScreen(
                         ?.let {
                             VerifyCardDivider(0.dp)
 
-                            SignSolanaDisplayView(signSolana = SignSolana(rawTransactions = it))
+                            SignSolanaDisplayView(rawTransactions = it)
                         }
 
                     tx.signSui
