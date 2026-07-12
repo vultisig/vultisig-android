@@ -13,10 +13,10 @@ import org.junit.jupiter.api.Test
  * pin the behavior that must be preserved across the body-read changes:
  * - **200 OK**: parsed via `body<OgmiosTransactionResponse>()` → `bodyOrThrow<...>()` — returns the
  *   transaction id.
- * - **400 BadRequest**: the error body is parsed (must not throw) to recover an already-known
- *   output reference — switches from `body<...>()` to a non-throwing
- *   `json.decodeFromString(bodyAsText())`.
- * - **400 BadRequest without recoverable reference**: surfaces an [IllegalStateException].
+ * - **400 BadRequest**: a genuine rejection. The txid in `unknownOutputReferences` is the PARENT tx
+ *   that created the spent input, not the tx we broadcast, so it must NOT be returned as success —
+ *   the error is surfaced ([IllegalStateException]) and `BroadcastTxUseCase` verifies our actual
+ *   hash on-chain instead (issue #5250).
  */
 class CardanoApiBroadcastTest {
 
@@ -45,7 +45,9 @@ class CardanoApiBroadcastTest {
     }
 
     @Test
-    fun `broadcastTransaction recovers id from unknownOutputReferences on BadRequest`() = runTest {
+    fun `broadcastTransaction throws on BadRequest with unknownOutputReferences`() {
+        // The txid inside unknownOutputReferences is the parent tx, not ours — returning it would
+        // report success under an unrelated hash, so this must surface as a rejection.
         val body =
             """
             {
@@ -59,9 +61,9 @@ class CardanoApiBroadcastTest {
                 .trimIndent()
         val api = newApi(HttpStatusCode.BadRequest, body)
 
-        val result = api.broadcastTransaction(chain = "cardano", signedTransaction = "00")
-
-        assertEquals("def456", result)
+        assertThrows(IllegalStateException::class.java) {
+            runTest { api.broadcastTransaction(chain = "cardano", signedTransaction = "00") }
+        }
     }
 
     @Test

@@ -96,6 +96,9 @@ constructor(
     val fiatAmountFieldState = TextFieldState()
     val memoFieldState = TextFieldState()
 
+    // XRP-only destination tag (shown below the memo field).
+    val destinationTagFieldState = TextFieldState()
+
     // bond node
     val operatorFeesBondFieldState = TextFieldState()
     val providerBondFieldState = TextFieldState()
@@ -169,6 +172,7 @@ constructor(
             tokenAmountFieldState = tokenAmountFieldState,
             fiatAmountFieldState = fiatAmountFieldState,
             memoFieldState = memoFieldState,
+            destinationTagFieldState = destinationTagFieldState,
             operatorFeesBondFieldState = operatorFeesBondFieldState,
             providerBondFieldState = providerBondFieldState,
             slippageFieldState = slippageFieldState,

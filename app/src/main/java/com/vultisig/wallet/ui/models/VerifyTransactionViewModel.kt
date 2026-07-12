@@ -73,6 +73,8 @@ internal data class TransactionDetailsUiModel(
     val dstAddressBookTitle: String? = null,
     val dstLabel: String? = null,
     val memo: String? = null,
+    // XRP destination tag (decimal), shown as its own row alongside the memo.
+    val destinationTag: String? = null,
     val signAmino: String? = null,
     val signDirect: String? = null,
     val signSolana: String? = null,

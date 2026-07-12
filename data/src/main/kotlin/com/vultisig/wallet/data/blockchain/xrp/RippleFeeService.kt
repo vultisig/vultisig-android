@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.blockchain.xrp
 
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.RippleServerStateResponseJson
-import com.vultisig.wallet.data.api.getBaseReserve
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Fee
@@ -25,43 +24,26 @@ import kotlinx.coroutines.supervisorScope
  * Implementation details:
  * - Query the XRPL server for the current fee and network state (server load factor).
  * - Dynamically estimate a safe transaction fee.
- * - If the destination account does not yet exist, add the "account reserve" cost (a one-time
- *   minimum balance requirement for account activation).
+ *
+ * The account-reserve required to activate a brand-new destination is NOT a transaction fee: it is
+ * part of the amount that must be sent to the destination, and is enforced separately as an amount
+ * constraint (see ChainValidationService.validateRippleDestinationReserve). Folding it into the fee
+ * would both mislabel it as a network fee and inflate the on-chain `Fee` field (burning the
+ * reserve).
  *
  * Reference: https://xrpl.org/docs/concepts/transactions/transaction-cost
  */
 class RippleFeeService @Inject constructor(private val rippleApi: RippleApi) : FeeService {
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee = supervisorScope {
-        // A swap's destination is an already-funded routing/vault account, so the
-        // activation-reserve
-        // probe (fetchAccountsInfo) would always resolve to zero — skip it and delegate to
-        // calculateDefaultFees, which returns only the dynamic network fee.
         if (transaction is Swap) {
             return@supervisorScope calculateDefaultFees(transaction)
         }
-        val toAddress = transaction.to
 
         val serverStateDeferred = async { rippleApi.fetchServerState() }
-        val accountStateDeferred = async { rippleApi.fetchAccountsInfo(toAddress) }
-
         val computedFee = computeServerStateFee(serverStateDeferred)
         val networkFee = maxOf(computedFee, MIN_PROTOCOL_FEE)
 
-        // Fetch the destination, check if it does not exist, and include reservedBase fees
-        val accountData = accountStateDeferred.await()?.result?.accountData
-
-        val accountActivationFee: BigInteger =
-            if (accountData == null) {
-                serverStateDeferred.await().getBaseReserve()
-            } else {
-                BigInteger.ZERO
-            }
-
-        RippleFees(
-            networkFee = networkFee,
-            accountActivationFee = accountActivationFee,
-            amount = networkFee + accountActivationFee,
-        )
+        RippleFees(networkFee = networkFee, amount = networkFee)
     }
 
     /**
@@ -84,11 +66,7 @@ class RippleFeeService @Inject constructor(private val rippleApi: RippleApi) : F
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
-        return RippleFees(
-            networkFee = DEFAULT_RIPPLE_FEE,
-            accountActivationFee = BigInteger.ZERO,
-            amount = DEFAULT_RIPPLE_FEE,
-        )
+        return RippleFees(networkFee = DEFAULT_RIPPLE_FEE, amount = DEFAULT_RIPPLE_FEE)
     }
 
     private companion object {
