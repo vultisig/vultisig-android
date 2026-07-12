@@ -116,14 +116,17 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
                 }
 
                 HttpStatusCode.BadRequest -> {
+                    // A 400 (e.g. unknownOutputReferences) is a genuine rejection. The txid inside
+                    // unknownOutputReferences is the PARENT tx that created the spent input, not
+                    // the
+                    // tx we broadcast — returning it would report success under an unrelated hash.
+                    // Throw instead so BroadcastTxUseCase can verify our actual hash on-chain and
+                    // only treat a real duplicate submission as success.
                     val ogmiosError =
                         json.decodeFromString<OgmiosTransactionResponse>(response.bodyAsText())
-                    ogmiosError.error?.data?.unknownOutputReferences?.firstOrNull()?.transaction?.id
-                        ?: run {
-                            val errorMessage = ogmiosError.error?.message ?: "Unknown error"
-                            Timber.e("Cardano transaction submission failed: $errorMessage")
-                            error("Failed to broadcast transaction: $errorMessage")
-                        }
+                    val errorMessage = ogmiosError.error?.message ?: "Unknown error"
+                    Timber.e("Cardano transaction submission failed: $errorMessage")
+                    error("Failed to broadcast transaction: $errorMessage")
                 }
 
                 else -> {
