@@ -71,6 +71,24 @@ class CoinIsLpTokenTest {
     }
 
     @Test
+    fun `ThorChain bRUNE is an LP token`() {
+        val c = coin(Chain.ThorChain, "bRUNE", "x/brune")
+        assertTrue(c.isLpToken)
+    }
+
+    @Test
+    fun `ThorChain ybRUNE staking denom is an LP token`() {
+        val c = coin(Chain.ThorChain, "ybRUNE", "x/staking-x/brune")
+        assertTrue(c.isLpToken)
+    }
+
+    @Test
+    fun `MayaChain x-brune is not an LP token`() {
+        val c = coin(Chain.MayaChain, "bRUNE", "x/brune")
+        assertFalse(c.isLpToken)
+    }
+
+    @Test
     fun `ThorChain native RUNE is not an LP token`() {
         val c = coin(Chain.ThorChain, "RUNE", "", isNativeToken = true)
         assertFalse(c.isLpToken)
