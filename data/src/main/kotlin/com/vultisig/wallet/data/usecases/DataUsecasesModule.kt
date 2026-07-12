@@ -288,4 +288,11 @@ internal interface DataUsecasesModule {
         impl:
             com.vultisig.wallet.data.blockchain.cosmos.staking.BuildCosmosStakingKeysignPayloadUseCaseImpl
     ): com.vultisig.wallet.data.blockchain.cosmos.staking.BuildCosmosStakingKeysignPayloadUseCase
+
+    @Binds
+    @Singleton
+    fun bindBuildSolanaStakingKeysignPayloadUseCase(
+        impl:
+            com.vultisig.wallet.data.blockchain.solana.staking.BuildSolanaStakingKeysignPayloadUseCaseImpl
+    ): com.vultisig.wallet.data.blockchain.solana.staking.BuildSolanaStakingKeysignPayloadUseCase
 }
