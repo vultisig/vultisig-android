@@ -268,12 +268,24 @@ internal fun VerifySendScreen(
                         bracketValue = toDstLabel?.let { tx.dstAddress },
                     )
 
-                    if (!tx.memo.isNullOrBlank()) {
+                    // A memo that merely echoes the destination tag is signed as tag-only, so it is
+                    // not shown as a separate Memo row (it appears in the Destination Tag row
+                    // below).
+                    if (!tx.memo.isNullOrBlank() && tx.memo != tx.destinationTag) {
                         VerifyCardDivider(0.dp)
 
                         VerifyCardDetails(
                             title = stringResource(R.string.verify_transaction_memo_title),
                             subtitle = tx.memo,
+                        )
+                    }
+
+                    if (!tx.destinationTag.isNullOrBlank()) {
+                        VerifyCardDivider(0.dp)
+
+                        VerifyCardDetails(
+                            title = stringResource(R.string.send_form_destination_tag),
+                            subtitle = tx.destinationTag,
                         )
                     }
                     tx.signAmino

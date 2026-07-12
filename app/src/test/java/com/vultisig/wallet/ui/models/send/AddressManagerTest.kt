@@ -49,6 +49,7 @@ internal class AddressManagerTest {
 
     private val addressFieldState = TextFieldState()
     private val providerBondFieldState = TextFieldState()
+    private val destinationTagFieldState = TextFieldState()
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
     @BeforeEach
@@ -268,6 +269,7 @@ internal class AddressManagerTest {
             scope = scope,
             addressFieldState = addressFieldState,
             providerBondFieldState = providerBondFieldState,
+            destinationTagFieldState = destinationTagFieldState,
             selectedToken = selectedToken,
             chainAccountAddressRepository = chainAccountAddressRepository,
             addressParserRepository = addressParserRepository,
@@ -288,4 +290,119 @@ internal class AddressManagerTest {
             contractAddress = "",
             isNativeToken = true,
         )
+
+    private fun xrpToken(): Coin =
+        Coin(
+            chain = Chain.Ripple,
+            ticker = "XRP",
+            logo = "",
+            address = "rSelf",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "ripple",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
+    @Test
+    fun `pasting a tagged X-address normalizes the address and locks the tag`() =
+        runTest(mainDispatcher) {
+            val xAddress = "X7AcgcsBL6XDcUb289X4mJ8djcdyKaGZMhc9YTE92ehJ2Fu"
+            val classic = "r9cZA1mLK5R5Am25ArfXFmqgNwjZgnfk59"
+            every { chainAccountAddressRepository.isValid(Chain.Ripple, classic) } returns true
+            every { chainAccountAddressRepository.isValid(Chain.Ripple, xAddress) } returns false
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = xrpToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(xAddress)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            addressFieldState.text.toString() shouldBe classic
+            destinationTagFieldState.text.toString() shouldBe "1"
+            manager.destinationTagLocked.value.shouldBeTrue()
+            manager.resolvedDstAddress.value shouldBe classic
+            manager.dstAddressLabel.value shouldBe xAddress
+        }
+
+    @Test
+    fun `pasting a no-tag X-address normalizes but leaves the tag editable`() =
+        runTest(mainDispatcher) {
+            val xAddress = "X7AcgcsBL6XDcUb289X4mJ8djcdyKaB5hJDWMArnXr61cqZ"
+            val classic = "r9cZA1mLK5R5Am25ArfXFmqgNwjZgnfk59"
+            every { chainAccountAddressRepository.isValid(Chain.Ripple, classic) } returns true
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = xrpToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(xAddress)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            addressFieldState.text.toString() shouldBe classic
+            destinationTagFieldState.text.toString() shouldBe ""
+            manager.destinationTagLocked.value.shouldBeFalse()
+        }
+
+    @Test
+    fun `replacing a normalized X-address releases the lock and drops the derived tag`() =
+        runTest(mainDispatcher) {
+            val xAddress = "X7AcgcsBL6XDcUb289X4mJ8djcdyKaGZMhc9YTE92ehJ2Fu"
+            val classic = "r9cZA1mLK5R5Am25ArfXFmqgNwjZgnfk59"
+            val other = "rOtherClassicAddress"
+            every { chainAccountAddressRepository.isValid(Chain.Ripple, classic) } returns true
+            every { chainAccountAddressRepository.isValid(Chain.Ripple, other) } returns true
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = xrpToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(xAddress)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            manager.destinationTagLocked.value.shouldBeTrue()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(other)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            manager.destinationTagLocked.value.shouldBeFalse()
+            destinationTagFieldState.text.toString() shouldBe ""
+        }
+
+    @Test
+    fun `replacing a tagged X-address with an untagged one drops the derived tag`() =
+        runTest(mainDispatcher) {
+            val tagged = "X7AcgcsBL6XDcUb289X4mJ8djcdyKaGZMhc9YTE92ehJ2Fu"
+            val untagged = "X7AcgcsBL6XDcUb289X4mJ8djcdyKaB5hJDWMArnXr61cqZ"
+            val classic = "r9cZA1mLK5R5Am25ArfXFmqgNwjZgnfk59"
+            every { chainAccountAddressRepository.isValid(Chain.Ripple, classic) } returns true
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = xrpToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(tagged)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            destinationTagFieldState.text.toString() shouldBe "1"
+            manager.destinationTagLocked.value.shouldBeTrue()
+
+            // Paste an untagged X-address: the tag the previous X-address derived must not persist.
+            addressFieldState.setTextAndPlaceCursorAtEnd(untagged)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            destinationTagFieldState.text.toString() shouldBe ""
+            manager.destinationTagLocked.value.shouldBeFalse()
+        }
 }

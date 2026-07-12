@@ -26,9 +26,10 @@ object RippleHelper {
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Ripple) { "Coin is not XRP" }
 
-        val (sequence, gas, lastLedgerSequence) =
+        val rippleSpecific =
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Ripple
                 ?: error("getPreSignedInputData: fail to get account number and sequence")
+        val (sequence, gas, lastLedgerSequence) = rippleSpecific
 
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
@@ -48,49 +49,112 @@ object RippleHelper {
                 .setDestination(keysignPayload.toAddress)
                 .setAmount(keysignPayload.toAmount.toLong())
 
-        if (!memoValue.isNullOrBlank()) {
-            val memoAsLong = memoValue.toLongOrNull()
-            if (memoAsLong != null) {
-                operation.setDestinationTag(memoAsLong).build()
-                input.setOpPayment(operation)
-            } else {
-                val txJson: MutableMap<String, Any> =
-                    mutableMapOf(
-                        "TransactionType" to "Payment",
-                        "Account" to keysignPayload.coin.address,
-                        "Destination" to keysignPayload.toAddress,
-                        "Amount" to keysignPayload.toAmount.toString(),
-                        "Fee" to gas.toString(),
-                        "Sequence" to sequence,
-                        "LastLedgerSequence" to lastLedgerSequence,
-                        "Memos" to
-                            listOf(
-                                mapOf(
-                                    "Memo" to
-                                        mapOf(
-                                            "MemoData" to
-                                                memoValue.toByteArray(Charsets.UTF_8).joinToString(
-                                                    ""
-                                                ) {
-                                                    "%02x".format(it)
-                                                }
-                                        )
-                                )
-                            ),
+        // The destination tag comes from its own send-form field, carried in the first-class
+        // RippleSpecific field. The memo field is an independent free-text memo.
+        val destinationTag = rippleSpecific.destinationTag
+        val memo = memoValue?.takeIf { it.isNotBlank() }
+
+        // When the memo merely echoes the tag (memo == the tag's canonical decimal), it is not a
+        // distinct memo — drop it and sign tag-only. This keeps a co-signer that predates the
+        // destination_tag field byte-identical: it reads the numeric memo and builds the same
+        // DestinationTag, so the pre-image matches instead of diverging on a Memos blob.
+        val memoEchoesTag = memo != null && memo == destinationTag?.toString()
+
+        when {
+            // Tag + a distinct free-text memo: WalletCore's OperationPayment can't carry both, so
+            // hand-build a Payment that sets DestinationTag and a Memos blob.
+            destinationTag != null && memo != null && !memoEchoesTag ->
+                input.setRawJson(
+                    buildPaymentRawJson(
+                        keysignPayload = keysignPayload,
+                        gas = gas,
+                        sequence = sequence,
+                        lastLedgerSequence = lastLedgerSequence,
+                        destinationTag = destinationTag.toLong(),
+                        memo = memo,
                     )
-                val jsonData =
-                    try {
-                        org.json.JSONObject(txJson).toString()
-                    } catch (e: Exception) {
-                        Timber.e("Failed to create JSON string ${e.message}")
-                        error("Failed to create JSON string ${e.message}")
-                    }
-                input.setRawJson(jsonData)
+                )
+
+            destinationTag != null -> {
+                operation.setDestinationTag(destinationTag.toLong())
+                input.setOpPayment(operation)
             }
-        } else {
-            input.setOpPayment(operation)
+
+            memo != null -> {
+                // No first-class tag: a canonical uint32 memo is the legacy destination-tag carrier
+                // (older payloads and swap contracts); any other memo is an on-chain Memos blob.
+                // Use the same canonical parser as the dedicated field, so "0", leading zeros and
+                // out-of-uint32 values are kept as a plain memo instead of being silently
+                // reinterpreted — or overflowed — into a DestinationTag. (iOS rejects a bare "0"
+                // memo outright; we intentionally preserve it as free text rather than reject.)
+                val memoAsTag = RippleDestinationTag.parseCanonicalDestinationTag(memo)
+                if (memoAsTag != null) {
+                    operation.setDestinationTag(memoAsTag.toLong())
+                    input.setOpPayment(operation)
+                } else {
+                    input.setRawJson(
+                        buildPaymentRawJson(
+                            keysignPayload = keysignPayload,
+                            gas = gas,
+                            sequence = sequence,
+                            lastLedgerSequence = lastLedgerSequence,
+                            destinationTag = null,
+                            memo = memo,
+                        )
+                    )
+                }
+            }
+
+            else -> input.setOpPayment(operation)
         }
         return input.build().toByteArray()
+    }
+
+    /**
+     * Hand-builds a Payment rawJSON carrying an on-chain Memos blob (and optionally a
+     * [destinationTag]) for cases WalletCore's typed [Ripple.OperationPayment] can't express.
+     */
+    private fun buildPaymentRawJson(
+        keysignPayload: KeysignPayload,
+        gas: ULong,
+        sequence: ULong,
+        lastLedgerSequence: ULong,
+        destinationTag: Long?,
+        memo: String,
+    ): String {
+        val txJson: MutableMap<String, Any> =
+            mutableMapOf(
+                "TransactionType" to "Payment",
+                "Account" to keysignPayload.coin.address,
+                "Destination" to keysignPayload.toAddress,
+                "Amount" to keysignPayload.toAmount.toString(),
+                "Fee" to gas.toString(),
+                // org.json can't wrap a Kotlin ULong (a value class), so these would be dropped
+                // from the JSON — pass Long so Sequence/LastLedgerSequence serialize as numbers.
+                "Sequence" to sequence.toLong(),
+                "LastLedgerSequence" to lastLedgerSequence.toLong(),
+                "Memos" to
+                    listOf(
+                        mapOf(
+                            "Memo" to
+                                mapOf(
+                                    "MemoData" to
+                                        memo.toByteArray(Charsets.UTF_8).joinToString("") {
+                                            "%02x".format(it)
+                                        }
+                                )
+                        )
+                    ),
+            )
+        if (destinationTag != null) {
+            txJson["DestinationTag"] = destinationTag
+        }
+        return try {
+            org.json.JSONObject(txJson).toString()
+        } catch (e: Exception) {
+            Timber.e("Failed to create JSON string ${e.message}")
+            error("Failed to create JSON string ${e.message}")
+        }
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {

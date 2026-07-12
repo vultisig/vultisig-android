@@ -105,6 +105,7 @@ internal class SendFormGraph(
     private val tokenAmountFieldState: TextFieldState,
     private val fiatAmountFieldState: TextFieldState,
     private val memoFieldState: TextFieldState,
+    private val destinationTagFieldState: TextFieldState,
     private val operatorFeesBondFieldState: TextFieldState,
     private val providerBondFieldState: TextFieldState,
     private val slippageFieldState: TextFieldState,
@@ -191,6 +192,7 @@ internal class SendFormGraph(
             scope = scope,
             addressFieldState = addressFieldState,
             providerBondFieldState = providerBondFieldState,
+            destinationTagFieldState = destinationTagFieldState,
             selectedToken = selectedToken,
             chainAccountAddressRepository = chainAccountAddressRepository,
             addressParserRepository = addressParserRepository,
@@ -320,6 +322,7 @@ internal class SendFormGraph(
                 tokenAmountFieldState = tokenAmountFieldState,
                 fiatAmountFieldState = fiatAmountFieldState,
                 memoFieldState = memoFieldState,
+                destinationTagFieldState = destinationTagFieldState,
                 slippageFieldState = slippageFieldState,
                 operatorFeesBondFieldState = operatorFeesBondFieldState,
                 providerBondFieldState = providerBondFieldState,
@@ -427,6 +430,11 @@ internal class SendFormGraph(
             addressManager.onAddressValidated.collect { expandSection(SendSections.Amount) }
         }
         scope.launch {
+            addressManager.destinationTagLocked.collect { locked ->
+                uiState.update { it.copy(destinationTagLocked = locked) }
+            }
+        }
+        scope.launch {
             amountManager.reapingError.collect { error ->
                 uiState.update { it.copy(reapingError = error) }
             }
@@ -458,6 +466,8 @@ internal class SendFormGraph(
                 if (switching) return@combine null // <-- SKIP during transitions
 
                 val address = token.address
+                // XRP shows a dedicated destination-tag field in addition to the memo field.
+                val isDestinationTag = token.chain == Chain.Ripple && token.isNativeToken
                 val hasMemo =
                     (token.isNativeToken || token.chain.standard == TokenStandard.COSMOS) &&
                         token.chain != Chain.Sui
@@ -478,7 +488,12 @@ internal class SendFormGraph(
 
                 advanceGasUiRepository.updateTokenStandard(token.chain.standard)
                 uiState.update {
-                    it.copy(srcAddress = address, selectedCoin = uiModel, hasMemo = hasMemo)
+                    it.copy(
+                        srcAddress = address,
+                        selectedCoin = uiModel,
+                        hasMemo = hasMemo,
+                        isDestinationTag = isDestinationTag,
+                    )
                 }
             }
             .collect()

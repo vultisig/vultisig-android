@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +31,7 @@ import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -64,6 +66,7 @@ internal data class AmountInputs(
 @Immutable
 internal data class OptionalInputs(
     val memoFieldState: TextFieldState,
+    val destinationTagFieldState: TextFieldState,
     val operatorFeeFieldState: TextFieldState,
     val slippageFieldState: TextFieldState,
     val onAutoCompoundCheckedChange: (Boolean) -> Unit,
@@ -88,6 +91,7 @@ internal fun FoldableAmountWidget(
     val onChooseMaxTokenAmount = amountInputs.onChooseMaxTokenAmount
     val onTokenAmountLostFocus = amountInputs.onTokenAmountLostFocus
     val memoFieldState = optionalInputs.memoFieldState
+    val destinationTagFieldState = optionalInputs.destinationTagFieldState
     val operatorFeeFieldState = optionalInputs.operatorFeeFieldState
     val slippageTextFieldState = optionalInputs.slippageFieldState
     val onAutoCompoundCheckedChange = optionalInputs.onAutoCompoundCheckedChange
@@ -288,6 +292,77 @@ internal fun FoldableAmountWidget(
                                 clipboardData.value
                                     ?.takeIf { it.isNotEmpty() }
                                     ?.let { memoFieldState.setTextAndPlaceCursorAtEnd(text = it) }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+
+                        UiSpacer(12.dp)
+                    }
+                }
+            }
+
+            // XRP destination tag: a collapsible field shown below the memo. Locked when
+            // auto-filled
+            // from a pasted X-address (which also auto-expands it so the value is visible).
+            if (state.isDestinationTag && state.defiType == null) {
+                var isTagExpanded by remember {
+                    mutableStateOf(destinationTagFieldState.text.isNotEmpty())
+                }
+
+                // Reveal the field when an X-address paste locks/fills the tag.
+                LaunchedEffect(state.destinationTagLocked) {
+                    if (state.destinationTagLocked) isTagExpanded = true
+                }
+
+                val tagRotationAngle by
+                    animateFloatAsState(
+                        targetValue = if (isTagExpanded) 180f else 0f,
+                        animationSpec = tween(durationMillis = 200),
+                        label = "tagCaretRotation",
+                    )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier =
+                        Modifier.clickable { isTagExpanded = !isTagExpanded }
+                            .padding(vertical = 2.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.send_form_add_destination_tag),
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.v2.colors.text.tertiary,
+                        modifier = Modifier.weight(1f),
+                    )
+
+                    UiIcon(
+                        drawableResId = R.drawable.ic_caret_down,
+                        tint = Theme.v2.colors.text.primary,
+                        size = 16.dp,
+                        modifier = Modifier.rotate(tagRotationAngle),
+                    )
+                }
+
+                UiSpacer(12.dp)
+
+                AnimatedVisibility(visible = isTagExpanded) {
+                    val tagClipboardData = VsClipboardService.getClipboardData()
+                    Column {
+                        VsTextInputField(
+                            textFieldState = destinationTagFieldState,
+                            hint = stringResource(R.string.send_form_enter_destination_tag),
+                            keyboardType = KeyboardType.Number,
+                            autoCorrectEnabled = false,
+                            enabled = !state.destinationTagLocked,
+                            trailingIcon = R.drawable.paste.takeIf { !state.destinationTagLocked },
+                            onTrailingIconClick = {
+                                tagClipboardData.value
+                                    ?.takeIf { it.isNotEmpty() }
+                                    ?.let {
+                                        destinationTagFieldState.setTextAndPlaceCursorAtEnd(
+                                            text = it
+                                        )
+                                    }
                             },
                             modifier = Modifier.fillMaxWidth(),
                         )
