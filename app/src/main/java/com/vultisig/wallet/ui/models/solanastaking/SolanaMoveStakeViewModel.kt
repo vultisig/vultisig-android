@@ -141,7 +141,6 @@ constructor(
             moveIntentRepository.setDestination(route.stakePubkey, validator.votePubkey)
 
             val payload = SolanaStakingPayload.unstake(stakeAccount = route.stakePubkey)
-            val delegatedStake = route.delegatedStake.toBigIntegerOrNull() ?: BigInteger.ZERO
             val gasFee = TokenValue(value = SolanaHelper.DefaultFeeInLamports, token = solCoin)
             val specific =
                 blockChainSpecificRepository.getSpecific(
@@ -169,7 +168,11 @@ constructor(
                     vaultId = route.vaultId,
                     srcToken = solCoin,
                     srcAddress = solCoin.address,
-                    srcTokenValue = TokenValue(value = delegatedStake, token = solCoin),
+                    // Move step 1 is a deactivate — nothing leaves the wallet, the whole stake
+                    // account cools down — so the verify screen shows 0, not the delegated stake
+                    // (which read as "You're sending 1 SOL"). Matches iOS
+                    // UnstakeTransactionBuilder.
+                    srcTokenValue = TokenValue(value = BigInteger.ZERO, token = solCoin),
                     memo = "",
                     dstAddress = route.stakePubkey,
                     estimatedFees = gasFee,
