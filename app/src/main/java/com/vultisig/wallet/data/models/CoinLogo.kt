@@ -134,6 +134,8 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "ruji" -> R.drawable.ruji
         "yrune" -> R.drawable.yrune
         "ytcy" -> R.drawable.ytcy
+        "brune",
+        "ybrune" -> R.drawable.brune
         "mantle" -> R.drawable.mantle
         "stcy" -> R.drawable.stcy
         "auto" -> R.drawable.auto_token_kujira

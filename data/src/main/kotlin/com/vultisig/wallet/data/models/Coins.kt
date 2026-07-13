@@ -2955,7 +2955,49 @@ object Coins {
                 isNativeToken = false,
             )
 
-        val all = listOf(RUNE, TCY, RUJI, KUJI, FUZN, NSTK, WINK, LVN, RKUJI, sTCY, yRUNE, yTCY)
+        val bRUNE =
+            Coin(
+                chain = Chain.ThorChain,
+                ticker = "bRUNE",
+                logo = "brune",
+                address = "",
+                decimal = 8,
+                hexPublicKey = "",
+                priceProviderID = "",
+                contractAddress = "x/brune",
+                isNativeToken = false,
+            )
+
+        val ybRUNE =
+            Coin(
+                chain = Chain.ThorChain,
+                ticker = "ybRUNE",
+                logo = "ybrune",
+                address = "",
+                decimal = 8,
+                hexPublicKey = "",
+                priceProviderID = "",
+                contractAddress = "x/staking-x/brune",
+                isNativeToken = false,
+            )
+
+        val all =
+            listOf(
+                RUNE,
+                TCY,
+                RUJI,
+                KUJI,
+                FUZN,
+                NSTK,
+                WINK,
+                LVN,
+                RKUJI,
+                sTCY,
+                yRUNE,
+                yTCY,
+                bRUNE,
+                ybRUNE,
+            )
     }
 
     object Ton {
