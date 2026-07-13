@@ -78,6 +78,12 @@ internal class GasFeeOrchestrator(
     private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
 ) {
     private val recalculateGasFee = MutableStateFlow(0L)
+    // Bumped in a finally at the end of every gas-fee/plan recompute (see collectGasFees /
+    // collectPlanFee). collectEstimatedFee combines on it so the estimate re-fires — and the
+    // loading flag clears — even when the numeric fee is unchanged (StateFlow suppresses equal
+    // values) or the recompute throws. Kept separate from recalculateGasFee, which feeds back into
+    // the compute flows, to avoid a recompute feedback loop.
+    private val estimateTrigger = MutableStateFlow(0L)
 
     fun start() {
         collectGasTokenBalance()
@@ -153,38 +159,42 @@ internal class GasFeeOrchestrator(
                         .debounce(350)
                         .distinctUntilChanged()
                         .mapNotNull { (token, dst, memo, tokenAmount) ->
-                            val vault = vaultProvider() ?: return@mapNotNull null
-                            val tokenAmount = tokenAmount.toString().toBigDecimalOrNull()
+                            try {
+                                val vault = vaultProvider() ?: return@mapNotNull null
+                                val tokenAmount = tokenAmount.toString().toBigDecimalOrNull()
 
-                            val tokenAmountInt =
-                                tokenAmount?.movePointRight(token.decimal)?.toBigInteger()
-                                    ?: return@mapNotNull null
+                                val tokenAmountInt =
+                                    tokenAmount?.movePointRight(token.decimal)?.toBigInteger()
+                                        ?: return@mapNotNull null
 
-                            val chain = token.chain
-                            val blockchainTransaction =
-                                Transfer(
-                                    coin = token,
-                                    vault =
-                                        VaultData(
-                                            vaultHexChainCode = vault.hexChainCode,
-                                            vaultHexPublicKey = vault.getPubKeyByChain(chain),
-                                        ),
-                                    amount = tokenAmountInt,
-                                    to = resolvedDstAddressProvider() ?: dst,
-                                    memo = memo,
-                                    isMax = false,
-                                )
+                                val chain = token.chain
+                                val blockchainTransaction =
+                                    Transfer(
+                                        coin = token,
+                                        vault =
+                                            VaultData(
+                                                vaultHexChainCode = vault.hexChainCode,
+                                                vaultHexPublicKey = vault.getPubKeyByChain(chain),
+                                            ),
+                                        amount = tokenAmountInt,
+                                        to = resolvedDstAddressProvider() ?: dst,
+                                        memo = memo,
+                                        isMax = false,
+                                    )
 
-                            val fees =
-                                withContext(Dispatchers.IO) {
-                                    feeServiceComposite.calculateFees(blockchainTransaction)
-                                }
-                            val nativeCoin =
-                                withContext(Dispatchers.IO) {
-                                    tokenRepository.getNativeToken(chain.id)
-                                }
+                                val fees =
+                                    withContext(Dispatchers.IO) {
+                                        feeServiceComposite.calculateFees(blockchainTransaction)
+                                    }
+                                val nativeCoin =
+                                    withContext(Dispatchers.IO) {
+                                        tokenRepository.getNativeToken(chain.id)
+                                    }
 
-                            TokenValue(value = fees.amount, token = nativeCoin)
+                                TokenValue(value = fees.amount, token = nativeCoin)
+                            } finally {
+                                estimateTrigger.update { it + 1 }
+                            }
                         }
                         .catch { Timber.e(it) },
                     gasSettings,
@@ -199,7 +209,9 @@ internal class GasFeeOrchestrator(
     // Re-arm the fee shimmer and re-disable Continue whenever an input that drives the gas-fee
     // estimate changes, so recomputes (switch token/chain, edit amount/address/memo, change gas
     // settings, pull-to-refresh) don't leave a stale fee on screen with Continue enabled.
-    // collectEstimatedFee flips isGasFeeLoading back to false once the new estimate resolves.
+    // collectEstimatedFee flips isGasFeeLoading back to false once the recompute finishes: it
+    // combines on estimateTrigger (bumped in a finally at the end of every recompute), so the clear
+    // always fires even when the numeric fee is unchanged or the recompute throws.
     private fun collectGasFeeLoading() {
         scope.launch {
             combine(
@@ -269,6 +281,8 @@ internal class GasFeeOrchestrator(
                         throw e
                     } catch (e: Exception) {
                         Timber.e(e)
+                    } finally {
+                        estimateTrigger.update { it + 1 }
                     }
                 }
                 .collect()
@@ -300,7 +314,8 @@ internal class GasFeeOrchestrator(
                     gasFee.filterNotNull(),
                     gasSettings,
                     planFee.filterNotNull(),
-                ) { token, gasFee, gasSettings, planFee ->
+                    estimateTrigger,
+                ) { token, gasFee, gasSettings, planFee, _ ->
                     val chain = token.chain
                     val evmGasSettings = gasSettings as? GasSettings.Eth
                     val estimatedFee =
