@@ -35,7 +35,8 @@ internal class IsUnderlyingOfSecuredAssetTest {
     @Test
     fun `a ticker outside the SECURE+ eligible set never matches`() {
         val sol = nativeCoin(Chain.Solana, ticker = "SOL")
-        val securedSol = securedCoin(ticker = "SOL", contractAddress = "avax-sol-0xfe6b19286")
+        // Same chain code and ticker as the underlying, so this fails only on eligibility.
+        val securedSol = securedCoin(ticker = "SOL", contractAddress = "sol-sol")
 
         assertFalse(sol.isUnderlyingOfSecuredAsset(securedSol))
     }

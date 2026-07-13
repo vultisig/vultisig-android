@@ -88,11 +88,40 @@ internal class ThorChainSecuredAssetRepositoryImplTest {
     }
 
     @Test
-    fun `returns an empty catalog and does not throw when the very first fetch fails`() = runTest {
+    fun `falls back to the static catalog when the very first fetch fails`() = runTest {
         coEvery { thorChainApi.getPools() } throws RuntimeException("boom")
 
         val coins = repo().getSecuredAssetCoins()
 
-        assertTrue(coins.isEmpty())
+        assertEquals(
+            setOf("BTC", "ETH", "BCH", "LTC", "DOGE", "AVAX", "BNB"),
+            coins.map { it.ticker }.toSet(),
+        )
+        assertTrue(coins.all { it.isSecuredAsset() })
     }
+
+    @Test
+    fun `the static fallback uses THORChain's BSC chain code for BNB, not the ticker`() = runTest {
+        coEvery { thorChainApi.getPools() } throws RuntimeException("boom")
+
+        val coins = repo().getSecuredAssetCoins()
+
+        assertEquals("bsc-bnb", coins.single { it.ticker == "BNB" }.contractAddress)
+    }
+
+    @Test
+    fun `a later failure keeps the live snapshot instead of reverting to the static fallback`() =
+        runTest {
+            coEvery { thorChainApi.getPools() } returns listOf(pool("ETH.ETH"))
+            val repo = repo()
+            val liveSnapshot = repo.getSecuredAssetCoins()
+            assertEquals(listOf("ETH"), liveSnapshot.map { it.ticker })
+
+            coEvery { thorChainApi.getPools() } throws RuntimeException("boom")
+            // Still inside the TTL window, so this read serves the cached live snapshot without
+            // re-fetching (and therefore without hitting the now-failing mock).
+            val secondRead = repo.getSecuredAssetCoins()
+
+            assertEquals(liveSnapshot, secondRead)
+        }
 }

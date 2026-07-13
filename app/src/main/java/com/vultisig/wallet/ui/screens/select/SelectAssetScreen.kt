@@ -177,20 +177,20 @@ private fun AssetItem(
                         )
                         .padding(horizontal = 12.dp, vertical = 8.dp),
             )
+        } else {
+            Text(
+                text = subtitle,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.secondary,
+                modifier =
+                    Modifier.border(
+                            width = 1.dp,
+                            color = Theme.v2.colors.border.light,
+                            shape = RoundedCornerShape(70.dp),
+                        )
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+            )
         }
-
-        Text(
-            text = subtitle,
-            style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.secondary,
-            modifier =
-                Modifier.border(
-                        width = 1.dp,
-                        color = Theme.v2.colors.border.light,
-                        shape = RoundedCornerShape(70.dp),
-                    )
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-        )
 
         Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f)) {
             if (!isDisabled) {

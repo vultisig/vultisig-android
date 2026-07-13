@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import javax.inject.Inject
@@ -12,7 +13,7 @@ import timber.log.Timber
 /**
  * The catalog of THORChain secured assets, derived live from THORChain's `Available` pools so every
  * poolable L1 asset (BTC, ETH, ETH-USDC, GAIA.ATOM, …) is discoverable, not just the ones already
- * held.
+ * held. Falls back to a small static list of well-known secured assets offline.
  */
 internal interface ThorChainSecuredAssetRepository {
     /** The current secured-asset catalog, refreshing from THORChain pools when stale. */
@@ -24,7 +25,10 @@ internal class ThorChainSecuredAssetRepositoryImpl
 @Inject
 constructor(private val thorChainApi: ThorChainApi) : ThorChainSecuredAssetRepository {
 
-    @Volatile private var cache: List<Coin> = emptyList()
+    // Seeded with the static fallback so a cold start (or a live fetch that never once
+    // succeeds) still surfaces the well-known secured assets instead of none at all. Once a
+    // live fetch succeeds, failures keep that last-good snapshot rather than reverting here.
+    @Volatile private var cache: List<Coin> = STATIC_FALLBACK
     @Volatile private var lastRefreshMs: Long = 0L
     private val mutex = Mutex()
 
@@ -68,25 +72,38 @@ constructor(private val thorChainApi: ThorChainApi) : ThorChainSecuredAssetRepos
         val rest = poolAsset.substring(dot + 1)
         val ticker = rest.substringBefore('-').uppercase()
         if (ticker.isBlank()) return null
-
-        return Coin(
-            chain = Chain.ThorChain,
-            ticker = ticker,
-            logo = ticker.lowercase(),
-            address = "",
-            // Every THORChain secured asset uses RUNE's 8-decimal precision, not the underlying
-            // chain's native decimals.
-            decimal = SECURED_ASSET_DECIMALS,
-            hexPublicKey = "",
-            priceProviderID = "",
-            contractAddress = "${chainPart.lowercase()}-${rest.lowercase()}",
-            isNativeToken = false,
-        )
+        return securedAssetCoin(chainCode = chainPart, ticker = ticker, denomTail = rest)
     }
 
     private companion object {
         const val STATUS_AVAILABLE = "available"
         const val SECURED_ASSET_DECIMALS = 8
         const val CACHE_TTL_MS = 5 * 60 * 1000L
+
+        /**
+         * Offline fallback for the SECURE_ASSETS_TICKERS chains: used only until a live pool fetch
+         * first succeeds. THORChain's chain code for BSC is `BSC`, not the `BNB` ticker.
+         */
+        val STATIC_FALLBACK: List<Coin> =
+            SECURE_ASSETS_TICKERS.map { ticker ->
+                val chainCode = if (ticker == "BNB") "BSC" else ticker
+                securedAssetCoin(chainCode = chainCode, ticker = ticker, denomTail = ticker)
+            }
+
+        /** Builds a secured-asset [Coin] with denom `<chainCode>-<denomTail>`, both lowercased. */
+        fun securedAssetCoin(chainCode: String, ticker: String, denomTail: String): Coin =
+            Coin(
+                chain = Chain.ThorChain,
+                ticker = ticker,
+                logo = ticker.lowercase(),
+                address = "",
+                // Every THORChain secured asset uses RUNE's 8-decimal precision, not the
+                // underlying chain's native decimals.
+                decimal = SECURED_ASSET_DECIMALS,
+                hexPublicKey = "",
+                priceProviderID = "",
+                contractAddress = "${chainCode.lowercase()}-${denomTail.lowercase()}",
+                isNativeToken = false,
+            )
     }
 }
