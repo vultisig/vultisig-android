@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.CurrencyToPrice
 import com.vultisig.wallet.data.api.LiQuestApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.thorchain.VaultRedemptionResponseJson
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
 import com.vultisig.wallet.data.models.Chain
@@ -388,7 +389,9 @@ constructor(
                 val thorTokens =
                     Coins.coins[Chain.ThorChain]?.filter {
                         it.contractAddress.startsWith("x/nami") ||
-                            it.contractAddress == "x/staking-tcy"
+                            it.contractAddress == "x/staking-tcy" ||
+                            it.contractAddress == BRUNE_DENOM ||
+                            it.contractAddress == YBRUNE_DENOM
                     } ?: emptyList()
 
                 val matchingTokens =
@@ -398,11 +401,13 @@ constructor(
 
                 val contracts =
                     matchingTokens.map {
+                        val addr = it.contractAddress.lowercase()
                         when {
-                            it.contractAddress.startsWith("x/nami") ->
-                                it.contractAddress.substringAfter("nav-").substringBefore("-rcpt")
-                            it.contractAddress == "x/staking-tcy" ->
+                            addr.startsWith("x/nami") ->
+                                addr.substringAfter("nav-").substringBefore("-rcpt")
+                            addr == "x/staking-tcy" ->
                                 "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
+                            addr == YBRUNE_DENOM -> BRUNE_STAKING_CONTRACT
                             else -> it.contractAddress
                         }
                     }
@@ -425,35 +430,43 @@ constructor(
                                 try {
                                     val token = matchingTokens[index]
 
-                                    val vaultData =
-                                        thorApi.getThorchainTokenPriceByContract(contract)
-
                                     val priceUsd =
-                                        if (token.contractAddress == "x/staking-tcy") {
-                                            val tcyPriceUSD =
-                                                getCachedPrice("tcy", AppCurrency.USD)
-                                                    ?: getPriceByPriceProviderId("tcy")
-
-                                            val liquidBondSize =
-                                                vaultData.data.liquidBondSize.toBigDecimalOrNull()
-                                                    ?: BigDecimal.ZERO
-                                            val liquidBondShares =
-                                                vaultData.data.liquidBondShares.toBigDecimalOrNull()
-                                                    ?: BigDecimal.ZERO
-
-                                            if (liquidBondShares > BigDecimal.ZERO) {
-                                                liquidBondSize.divide(
-                                                    liquidBondShares,
-                                                    8,
-                                                    RoundingMode.DOWN,
-                                                ) * tcyPriceUSD
-                                            } else {
-                                                BigDecimal.ONE * tcyPriceUSD
+                                        when (token.contractAddress.lowercase()) {
+                                            // bRUNE is ≥1:1 RUNE-backed with no THORChain pool, so
+                                            // it tracks RUNE at parity.
+                                            BRUNE_DENOM -> runePriceUsd()
+                                            // ybRUNE is the auto-compounding bRUNE staking receipt:
+                                            // NAV (liquid_bond_size / liquid_bond_shares) × bRUNE,
+                                            // and bRUNE ≈ RUNE. Same mechanism as sTCY.
+                                            YBRUNE_DENOM -> {
+                                                val nav =
+                                                    navPerShareFromStatus(
+                                                        thorApi.getThorchainTokenPriceByContract(
+                                                            contract
+                                                        )
+                                                    )
+                                                nav * runePriceUsd()
                                             }
-                                        } else {
-                                            // For NAMI tokens, use navPerShare
-                                            vaultData.data.navPerShare.toBigDecimalOrNull()
-                                                ?: BigDecimal.ZERO
+                                            "x/staking-tcy" -> {
+                                                val tcyPriceUSD =
+                                                    getCachedPrice("tcy", AppCurrency.USD)
+                                                        ?: getPriceByPriceProviderId("tcy")
+                                                val nav =
+                                                    navPerShareFromStatus(
+                                                        thorApi.getThorchainTokenPriceByContract(
+                                                            contract
+                                                        )
+                                                    )
+                                                nav * tcyPriceUSD
+                                            }
+                                            else -> {
+                                                // For NAMI tokens, use navPerShare
+                                                thorApi
+                                                    .getThorchainTokenPriceByContract(contract)
+                                                    .data
+                                                    .navPerShare
+                                                    .toBigDecimalOrNull() ?: BigDecimal.ZERO
+                                            }
                                         }
 
                                     tokenId to mapOf(currency to priceUsd * tetherPrice)
@@ -472,13 +485,35 @@ constructor(
                 savePrices(tokenIdToPrices, currency)
             } catch (t: Throwable) {
                 if (t is kotlinx.coroutines.CancellationException) throw t
-                Timber.e(t, "Could not update YTCY/YRUNE/sTCY prices")
+                Timber.e(t, "Could not update YTCY/YRUNE/sTCY/ybRUNE prices")
             }
         }
+
+    private suspend fun runePriceUsd(): BigDecimal =
+        getCachedPrice(Coins.ThorChain.RUNE.priceProviderID, AppCurrency.USD)
+            ?: getPriceByPriceProviderId(Coins.ThorChain.RUNE.priceProviderID)
+
+    // NAV per share from a `rujira-staking` `{"status":{}}` response:
+    // liquid_bond_size / liquid_bond_shares, falling back to 1 before any bonds exist.
+    private fun navPerShareFromStatus(vaultData: VaultRedemptionResponseJson): BigDecimal {
+        val size = vaultData.data.liquidBondSize.toBigDecimalOrNull() ?: BigDecimal.ZERO
+        val shares = vaultData.data.liquidBondShares.toBigDecimalOrNull() ?: BigDecimal.ZERO
+        return if (shares > BigDecimal.ZERO) {
+            size.divide(shares, 8, RoundingMode.DOWN)
+        } else {
+            BigDecimal.ONE
+        }
+    }
 
     companion object {
         private const val TETHER_PRICE_PROVIDER_ID = "tether"
         private const val CACAO_DECIMALS = 10
+
+        // Single source of truth: the curated denoms in Coins.kt.
+        private val BRUNE_DENOM = Coins.ThorChain.bRUNE.contractAddress
+        private val YBRUNE_DENOM = Coins.ThorChain.ybRUNE.contractAddress
+        private const val BRUNE_STAKING_CONTRACT =
+            "thor179fex2rxd45caedmz4hxsnu42sw20lu0djyh4yukyh965sq8muuqptru2g"
     }
 
     private fun mapThorPoolAsset(contractAddress: String): String {

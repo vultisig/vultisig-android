@@ -144,11 +144,27 @@ constructor(
                         symbol = denom.uppercase()
                     }
 
+                    // The generic derivation uppercases tickers ("BRUNE") and can't map a logo for
+                    // Rujira's liquid-bonding denoms. Restore their proper casing + curated logo,
+                    // and store the canonical (lowercase) denom so case-sensitive consumers
+                    // (isLpToken picker exclusion, contract-based pricing) stay on the right path.
+                    var contractAddress = it.denom
+                    when (it.denom.lowercase()) {
+                        Coins.ThorChain.bRUNE.contractAddress -> {
+                            symbol = Coins.ThorChain.bRUNE.ticker
+                            contractAddress = Coins.ThorChain.bRUNE.contractAddress
+                        }
+                        Coins.ThorChain.ybRUNE.contractAddress -> {
+                            symbol = Coins.ThorChain.ybRUNE.ticker
+                            contractAddress = Coins.ThorChain.ybRUNE.contractAddress
+                        }
+                    }
+
                     if (denom == "rune") {
                         null
                     } else {
                         Coin(
-                            contractAddress = it.denom,
+                            contractAddress = contractAddress,
                             chain = chain,
                             ticker = symbol,
                             logo = symbol,

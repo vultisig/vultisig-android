@@ -45,13 +45,13 @@ val Coin.isLpToken: Boolean
         when (chain) {
             Chain.ThorChain ->
                 contractAddress.startsWith("x/staking-") ||
-                    contractAddress.startsWith("x/nami-index-")
+                    contractAddress.startsWith("x/nami-index-") ||
+                    contractAddress == "x/brune"
             Chain.MayaChain ->
                 contractAddress.startsWith("x/bow-") ||
                     contractAddress.startsWith("x/ghost-vault/") ||
                     contractAddress.startsWith("x/staking-") ||
-                    contractAddress.startsWith("x/nami-index-") ||
-                    contractAddress == "x/brune"
+                    contractAddress.startsWith("x/nami-index-")
             else -> false
         }
 
