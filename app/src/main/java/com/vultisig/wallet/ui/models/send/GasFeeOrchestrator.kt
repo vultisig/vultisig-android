@@ -78,11 +78,14 @@ internal class GasFeeOrchestrator(
     private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
 ) {
     private val recalculateGasFee = MutableStateFlow(0L)
-    // Bumped in a finally at the end of every gas-fee/plan recompute (see collectGasFees /
-    // collectPlanFee). collectEstimatedFee combines on it so the estimate re-fires — and the
-    // loading flag clears — even when the numeric fee is unchanged (StateFlow suppresses equal
-    // values) or the recompute throws. Kept separate from recalculateGasFee, which feeds back into
-    // the compute flows, to avoid a recompute feedback loop.
+    // Bumped in a finally at the end of every gas-fee recompute (see collectGasFees).
+    // collectEstimatedFee combines on it so the estimate re-fires — and the loading flag clears —
+    // even when the numeric fee is unchanged (StateFlow suppresses equal values) or the recompute
+    // throws. Deliberately bumped only from collectGasFees (which carries the 350ms debounce +
+    // network call), not collectPlanFee: for non-UTXO chains collectPlanFee returns near-instantly,
+    // so clearing on its completion would drop the shimmer while the slower gas fee is still
+    // computing. Kept separate from recalculateGasFee, which feeds back into the compute flows, to
+    // avoid a recompute feedback loop.
     private val estimateTrigger = MutableStateFlow(0L)
 
     fun start() {
@@ -281,8 +284,6 @@ internal class GasFeeOrchestrator(
                         throw e
                     } catch (e: Exception) {
                         Timber.e(e)
-                    } finally {
-                        estimateTrigger.update { it + 1 }
                     }
                 }
                 .collect()
