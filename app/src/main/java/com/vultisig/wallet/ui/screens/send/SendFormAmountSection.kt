@@ -447,6 +447,7 @@ internal fun FoldableAmountWidget(
                 EstimatedNetworkFee(
                     tokenGas = state.totalGas.asString(),
                     fiatGas = state.estimatedFee.asString(),
+                    isLoading = state.isGasFeeLoading,
                 )
             }
         }

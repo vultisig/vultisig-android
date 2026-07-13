@@ -302,6 +302,7 @@ internal class GasFeeOrchestrator(
                         it.copy(
                             estimatedFee = UiText.DynamicString(estimatedFee.formattedFiatValue),
                             totalGas = UiText.DynamicString(estimatedFee.formattedTokenValue),
+                            isGasFeeLoading = false,
                         )
                     }
                 }
