@@ -53,6 +53,39 @@ object CardanoUtils {
         return Bech32.encode("addr", addressData)
     }
 
+    /**
+     * Upgrades a legacy 3-element Cardano transaction envelope `[body, witness_set,
+     * auxiliary_data]` (emitted by WalletCore) to the Conway-era 4-element form `[body,
+     * witness_set, is_valid, auxiliary_data]` by splicing `is_valid = true` (0xf5) before the
+     * auxiliary_data. Safe post-signing: the vkey signature and tx_id cover only the body (element
+     * 0), which is left byte-for-byte untouched. Already-4-element envelopes are returned
+     * unchanged.
+     */
+    fun addIsValidFlag(encoded: ByteArray): ByteArray {
+        require(encoded.isNotEmpty()) { "empty Cardano transaction" }
+        when (encoded[0].toInt() and 0xFF) {
+            0x84 -> return encoded // already Conway-era 4-element array
+            0x83 -> {} // legacy 3-element array — needs is_valid
+            else -> error("unexpected Cardano tx array header: 0x%02x".format(encoded[0]))
+        }
+
+        val afterBody = findEndOfCBORItem(encoded, 1)
+        val afterWitness = findEndOfCBORItem(encoded, afterBody)
+
+        return ByteArray(encoded.size + 1).also { out ->
+            out[0] = 0x84.toByte()
+            System.arraycopy(encoded, 1, out, 1, afterWitness - 1) // body + witness_set
+            out[afterWitness] = 0xF5.toByte() // is_valid = true
+            System.arraycopy(
+                encoded,
+                afterWitness,
+                out,
+                afterWitness + 1,
+                encoded.size - afterWitness,
+            )
+        }
+    }
+
     fun calculateCardanoTransactionHash(transactionData: ByteArray): String {
         return try {
             val transactionBodyData = extractCardanoTransactionBody(transactionData)
