@@ -93,6 +93,27 @@ class BroadcastTxUseCaseTest {
         }
 
     @Test
+    fun `thorchain recovers when the landed tx was refunded (a terminal on-chain outcome)`() =
+        runTest {
+            val thorChainApi = mockk<ThorChainApi>()
+            val statusRepo = mockk<TransactionStatusRepository>()
+            coEvery { thorChainApi.broadcastTransaction(RAW_TRANSACTION) } throws sequenceMismatch()
+            // A refunded swap still landed on chain; the sequence was consumed by our tx, so the
+            // rejection is a benign duplicate and the local hash is canonical.
+            coEvery {
+                statusRepo.checkTransactionStatus(KNOWN_TRANSACTION_HASH, Chain.ThorChain)
+            } returns TransactionResult.Refunded("swap refunded")
+
+            val txHash =
+                createUseCase(
+                    thorChainApi = thorChainApi,
+                    transactionStatusRepository = statusRepo,
+                )(Chain.ThorChain, signedTransaction())
+
+            assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+        }
+
+    @Test
     fun `mayachain rethrows a rejected broadcast when the tx is not confirmed on chain`() =
         runTest {
             val mayaChainApi = mockk<MayaChainApi>()

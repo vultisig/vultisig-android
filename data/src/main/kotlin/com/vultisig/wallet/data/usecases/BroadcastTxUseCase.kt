@@ -90,7 +90,7 @@ constructor(
                     broadcast = {
                         thorChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
                     },
-                    verify = { hash -> isConfirmedOnChain(hash, chain) },
+                    verify = { hash -> isLandedOnChain(hash, chain) },
                 )
 
             Bitcoin,
@@ -167,7 +167,7 @@ constructor(
                     broadcast = {
                         mayaChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
                     },
-                    verify = { hash -> isConfirmedOnChain(hash, chain) },
+                    verify = { hash -> isLandedOnChain(hash, chain) },
                 )
 
             Polkadot ->
@@ -271,9 +271,23 @@ constructor(
         return false
     }
 
-    private suspend fun isConfirmedOnChain(hash: String, chain: Chain): Boolean =
-        transactionStatusRepository.checkTransactionStatus(hash, chain) ==
-            TransactionResult.Confirmed
+    /**
+     * For duplicate-broadcast recovery we only need to know that the peer's byte-identical tx
+     * actually committed — not whether it succeeded. Any terminal on-chain outcome (confirmed,
+     * network-refunded, or failed execution) proves the sequence was consumed by our tx, so the
+     * locally computed hash is canonical. Only a still-pending / not-found / timed-out result means
+     * our tx isn't on chain yet, in which case the rejection must propagate rather than have the
+     * user re-send a landed transaction.
+     */
+    private suspend fun isLandedOnChain(hash: String, chain: Chain): Boolean =
+        when (transactionStatusRepository.checkTransactionStatus(hash, chain)) {
+            is TransactionResult.Confirmed,
+            is TransactionResult.Refunded,
+            is TransactionResult.Failed -> true
+            is TransactionResult.Pending,
+            is TransactionResult.NotFound,
+            is TransactionResult.TimedOut -> false
+        }
 
     private fun String?.orKnownHash(tx: SignedTransactionResult): String? =
         this ?: tx.transactionHash.takeIf { it.isNotBlank() }
