@@ -115,4 +115,20 @@ class CardanoUtilsTest {
         val upgraded = CardanoUtils.addIsValidFlag(hex(legacyEnvelopeHex))
         assertEquals(upgraded.toList(), CardanoUtils.addIsValidFlag(upgraded).toList())
     }
+
+    @Test
+    fun `addIsValidFlag walks a Conway tag-258 set in the witness without throwing`() {
+        // 83                      array(3)
+        //   a0                    body: empty map
+        //   a1 00 d9 0102 81      witness_set: { 0: tag(258) [ [h'00', h'00'] ] }
+        //      82 41 00 41 00
+        //   f6                    auxiliary_data: null
+        val legacy = hex("83a0a100d90102818241004100f6")
+        val upgraded = CardanoUtils.addIsValidFlag(legacy)
+
+        assertEquals(legacy.size + 1, upgraded.size)
+        assertEquals(0x84.toByte(), upgraded[0])
+        assertEquals(0xF5.toByte(), upgraded[upgraded.size - 2]) // is_valid spliced before aux
+        assertEquals(0xF6.toByte(), upgraded[upgraded.size - 1])
+    }
 }

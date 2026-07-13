@@ -175,6 +175,19 @@ object CardanoUtils {
                 index
             }
 
+            6 -> { // Tag (e.g. Conway-era set tag 258): tag number, then one tagged data item
+                index +=
+                    when (additionalInfo) {
+                        in 0..23 -> 0
+                        24 -> 1
+                        25 -> 2
+                        26 -> 4
+                        27 -> 8
+                        else -> error("Unsupported additional info for tag")
+                    }
+                findEndOfCBORItem(bytes, index)
+            }
+
             7 -> { // Simple value or float
                 index +
                     when (additionalInfo) {
