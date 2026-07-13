@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
+import androidx.annotation.VisibleForTesting
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
 import com.vultisig.wallet.data.models.Chain
@@ -33,20 +34,23 @@ constructor(private val thorChainApi: ThorChainApi) : ThorChainSecuredAssetRepos
     private val mutex = Mutex()
 
     override suspend fun getSecuredAssetCoins(): List<Coin> {
-        if (!isStale()) return cache
-        mutex.withLock {
-            if (!isStale()) return cache
-            runCatching { fetch() }
-                .onSuccess {
-                    cache = it
-                    lastRefreshMs = System.currentTimeMillis()
-                }
-                // Keep the last-good snapshot on failure.
-                .onFailure {
-                    Timber.w(it, "THORChain secured-asset pools refresh failed; keeping last-good")
-                }
+        if (isStale()) {
+            mutex.withLock { if (isStale()) refresh() }
         }
         return cache
+    }
+
+    /** Force-refreshes regardless of TTL, keeping the last-good [cache] on failure. */
+    @VisibleForTesting
+    internal suspend fun refresh() {
+        runCatching { fetch() }
+            .onSuccess {
+                cache = it
+                lastRefreshMs = System.currentTimeMillis()
+            }
+            .onFailure {
+                Timber.w(it, "THORChain secured-asset pools refresh failed; keeping last-good")
+            }
     }
 
     private fun isStale(): Boolean = System.currentTimeMillis() - lastRefreshMs >= CACHE_TTL_MS

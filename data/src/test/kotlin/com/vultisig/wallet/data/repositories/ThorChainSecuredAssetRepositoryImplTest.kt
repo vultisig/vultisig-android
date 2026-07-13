@@ -114,14 +114,14 @@ internal class ThorChainSecuredAssetRepositoryImplTest {
         runTest {
             coEvery { thorChainApi.getPools() } returns listOf(pool("ETH.ETH"))
             val repo = repo()
+            repo.refresh()
             val liveSnapshot = repo.getSecuredAssetCoins()
             assertEquals(listOf("ETH"), liveSnapshot.map { it.ticker })
 
+            // refresh() bypasses the TTL, forcing a real re-fetch attempt that then fails.
             coEvery { thorChainApi.getPools() } throws RuntimeException("boom")
-            // Still inside the TTL window, so this read serves the cached live snapshot without
-            // re-fetching (and therefore without hitting the now-failing mock).
-            val secondRead = repo.getSecuredAssetCoins()
+            repo.refresh()
 
-            assertEquals(liveSnapshot, secondRead)
+            assertEquals(liveSnapshot, repo.getSecuredAssetCoins())
         }
 }
