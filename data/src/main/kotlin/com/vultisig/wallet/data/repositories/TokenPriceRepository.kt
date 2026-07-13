@@ -401,12 +401,13 @@ constructor(
 
                 val contracts =
                     matchingTokens.map {
+                        val addr = it.contractAddress.lowercase()
                         when {
-                            it.contractAddress.startsWith("x/nami") ->
-                                it.contractAddress.substringAfter("nav-").substringBefore("-rcpt")
-                            it.contractAddress == "x/staking-tcy" ->
+                            addr.startsWith("x/nami") ->
+                                addr.substringAfter("nav-").substringBefore("-rcpt")
+                            addr == "x/staking-tcy" ->
                                 "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
-                            it.contractAddress == YBRUNE_DENOM -> BRUNE_STAKING_CONTRACT
+                            addr == YBRUNE_DENOM -> BRUNE_STAKING_CONTRACT
                             else -> it.contractAddress
                         }
                     }
@@ -430,7 +431,7 @@ constructor(
                                     val token = matchingTokens[index]
 
                                     val priceUsd =
-                                        when (token.contractAddress) {
+                                        when (token.contractAddress.lowercase()) {
                                             // bRUNE is ≥1:1 RUNE-backed with no THORChain pool, so
                                             // it tracks RUNE at parity.
                                             BRUNE_DENOM -> runePriceUsd()
@@ -508,8 +509,9 @@ constructor(
         private const val TETHER_PRICE_PROVIDER_ID = "tether"
         private const val CACAO_DECIMALS = 10
 
-        private const val BRUNE_DENOM = "x/brune"
-        private const val YBRUNE_DENOM = "x/staking-x/brune"
+        // Single source of truth: the curated denoms in Coins.kt.
+        private val BRUNE_DENOM = Coins.ThorChain.bRUNE.contractAddress
+        private val YBRUNE_DENOM = Coins.ThorChain.ybRUNE.contractAddress
         private const val BRUNE_STAKING_CONTRACT =
             "thor179fex2rxd45caedmz4hxsnu42sw20lu0djyh4yukyh965sq8muuqptru2g"
     }
