@@ -86,6 +86,7 @@ internal class GasFeeOrchestrator(
         collectMaxAmount()
         collectEstimatedFee()
         collectSpecific()
+        collectGasFeeLoading()
     }
 
     fun refresh() {
@@ -192,6 +193,28 @@ internal class GasFeeOrchestrator(
                     gasFee.value = adjustGasFee(gasFeeValue, gasSettings, specific)
                 }
                 .collect()
+        }
+    }
+
+    // Re-arm the fee shimmer and re-disable Continue whenever an input that drives the gas-fee
+    // estimate changes, so recomputes (switch token/chain, edit amount/address/memo, change gas
+    // settings, pull-to-refresh) don't leave a stale fee on screen with Continue enabled.
+    // collectEstimatedFee flips isGasFeeLoading back to false once the new estimate resolves.
+    private fun collectGasFeeLoading() {
+        scope.launch {
+            combine(
+                    combine(
+                        selectedToken.filterNotNull(),
+                        addressFieldState.textAsFlow(),
+                        memoFieldState.textAsFlow(),
+                        tokenAmountFieldState.textAsFlow(),
+                        recalculateGasFee,
+                    ) { _, _, _, _, _ ->
+                    },
+                    gasSettings,
+                ) { _, _ ->
+                }
+                .collect { uiState.update { it.copy(isGasFeeLoading = true) } }
         }
     }
 
