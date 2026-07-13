@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isLpToken
+import com.vultisig.wallet.data.models.isSecuredAsset
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -59,6 +60,7 @@ internal data class AssetUiModel(
     val amount: String,
     val value: String,
     val isDisabled: Boolean = false,
+    val isSecuredAsset: Boolean = false,
 )
 
 @HiltViewModel
@@ -121,6 +123,7 @@ constructor(
                                             amount = "0",
                                             value = "0",
                                             isDisabled = true,
+                                            isSecuredAsset = coin.isSecuredAsset(),
                                         )
                                     }
                             },
@@ -151,6 +154,7 @@ constructor(
                                         value =
                                             it.fiatValue?.let { fiatValueToString.invoke(it) }
                                                 ?: "0",
+                                        isSecuredAsset = it.token.isSecuredAsset(),
                                     )
                                 }
 

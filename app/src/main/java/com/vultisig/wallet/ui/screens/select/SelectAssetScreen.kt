@@ -57,7 +57,7 @@ internal fun SelectAssetScreen(model: SelectAssetViewModel = hiltViewModel()) {
 }
 
 @Composable
-private fun SelectAssetScreen(
+internal fun SelectAssetScreen(
     state: SelectAssetUiModel,
     searchFieldState: TextFieldState,
     onAssetClick: (AssetUiModel) -> Unit,
@@ -100,6 +100,7 @@ private fun SelectAssetScreen(
                             amount = item.amount,
                             value = item.value,
                             isDisabled = item.isDisabled,
+                            isSecuredAsset = item.isSecuredAsset,
                             modifier =
                                 Modifier.clickable(onClick = { onAssetClick(item) })
                                     .background(
@@ -142,6 +143,7 @@ private fun AssetItem(
     amount: String,
     value: String,
     isDisabled: Boolean,
+    isSecuredAsset: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -162,6 +164,20 @@ private fun AssetItem(
             color = Theme.v2.colors.text.primary,
             modifier = Modifier.weight(2f),
         )
+
+        if (isSecuredAsset) {
+            Text(
+                text = stringResource(R.string.select_asset_secured_badge),
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.primary,
+                modifier =
+                    Modifier.background(
+                            color = Theme.v2.colors.primary.accent3,
+                            shape = RoundedCornerShape(70.dp),
+                        )
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+            )
+        }
 
         Text(
             text = subtitle,

@@ -702,6 +702,7 @@
     <string name="verify_swap_recipient">Recipient</string>
     <string name="select_asset_title">Select asset</string>
     <string name="select_asset_no_result">No result found.</string>
+    <string name="select_asset_secured_badge">Secured</string>
     <string name="select_chain_chain_title">Chain</string>
     <string name="select_chain_balance_title">Balance</string>
     <string name="select_chain_title">Select chain</string>

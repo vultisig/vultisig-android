@@ -5,6 +5,7 @@ package com.vultisig.wallet.data.usecases.chaintokens
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.ThorChainSecuredAssetRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import io.mockk.coEvery
 import io.mockk.every
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.Test
 internal class GetChainTokensUseCaseTest {
 
     private val tokenRepository: TokenRepository = mockk()
+    private val securedAssetRepository: ThorChainSecuredAssetRepository = mockk()
     private val vault: Vault = mockk()
 
     private val useCase =
@@ -27,6 +29,7 @@ internal class GetChainTokensUseCaseTest {
             splTokenRepository = mockk(relaxed = true),
             oneInchApi = mockk(relaxed = true),
             oneInchToCoins = mockk(relaxed = true),
+            securedAssetRepository = securedAssetRepository,
         )
 
     @Test
@@ -64,13 +67,40 @@ internal class GetChainTokensUseCaseTest {
         assertEquals(setOf("AAA-${chain.id}", "BBB-${chain.id}"), emitted.map { it.id }.toSet())
     }
 
-    private fun coin(chain: Chain, ticker: String, contractAddress: String) =
+    @Test
+    fun `merges the secured-asset catalog into the ThorChain token list`() = runTest {
+        val rune = coin(Chain.ThorChain, ticker = "RUNE", contractAddress = "")
+        val btcSecured = coin(Chain.ThorChain, ticker = "BTC", contractAddress = "btc-btc")
+        every { tokenRepository.builtInTokens } returns flowOf(listOf(rune))
+        coEvery { tokenRepository.getRefreshTokens(any(), any()) } returns emptyList()
+        coEvery { securedAssetRepository.getSecuredAssetCoins() } returns listOf(btcSecured)
+
+        val emitted = useCase(Chain.ThorChain, vault).toList().last()
+
+        assertEquals(setOf(rune, btcSecured), emitted.toSet())
+    }
+
+    @Test
+    fun `an already-held secured asset wins over its zero-balance catalog duplicate`() = runTest {
+        val heldBtcSecured =
+            coin(Chain.ThorChain, ticker = "BTC", contractAddress = "btc-btc", decimal = 8)
+        val catalogBtcSecured = coin(Chain.ThorChain, ticker = "BTC", contractAddress = "btc-btc")
+        every { tokenRepository.builtInTokens } returns flowOf(emptyList())
+        coEvery { tokenRepository.getRefreshTokens(any(), any()) } returns listOf(heldBtcSecured)
+        coEvery { securedAssetRepository.getSecuredAssetCoins() } returns listOf(catalogBtcSecured)
+
+        val emitted = useCase(Chain.ThorChain, vault).toList().last()
+
+        assertEquals(listOf(heldBtcSecured), emitted)
+    }
+
+    private fun coin(chain: Chain, ticker: String, contractAddress: String, decimal: Int = 18) =
         Coin(
             chain = chain,
             ticker = ticker,
             logo = "",
             address = "addr",
-            decimal = 18,
+            decimal = decimal,
             hexPublicKey = "",
             priceProviderID = "",
             contractAddress = contractAddress,

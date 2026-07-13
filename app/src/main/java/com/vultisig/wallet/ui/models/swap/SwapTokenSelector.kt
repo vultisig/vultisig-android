@@ -3,11 +3,17 @@
 package com.vultisig.wallet.ui.models.swap
 
 import androidx.compose.ui.geometry.Offset
+import com.vultisig.wallet.data.crypto.getChainName
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.isSecuredAsset
+import com.vultisig.wallet.data.models.isSecuredAssetEligible
 import com.vultisig.wallet.data.models.isSwapSupported
+import com.vultisig.wallet.data.models.securedAssetChain
+import com.vultisig.wallet.data.models.securedAssetSymbol
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.ui.models.firstSendSrc
@@ -176,6 +182,7 @@ constructor(
         checkTokenSelectionResponse(
             targetArg,
             vaultId,
+            selectedSrc,
             selectedSrcId,
             selectedDstId,
             addresses,
@@ -186,12 +193,23 @@ constructor(
     private suspend fun checkTokenSelectionResponse(
         targetArg: String,
         vaultId: String,
+        selectedSrc: SendSrc?,
         selectedSrcId: MutableStateFlow<String?>,
         selectedDstId: MutableStateFlow<String?>,
         addresses: MutableStateFlow<List<Address>>,
         uiState: MutableStateFlow<SwapFormUiModel>,
     ) {
         val result = requestResultRepository.request<AssetSelected>(targetArg) ?: return
+
+        if (targetArg == ARG_SELECTED_DST_TOKEN_ID) {
+            val srcToken = selectedSrc?.account?.token
+            if (srcToken != null && srcToken.isUnderlyingOfSecuredAsset(result.token)) {
+                // Same-underlying-asset swap: route to the SECURE+ mint deposit flow instead of a
+                // wasteful 1:1 pool swap.
+                navigator.route(Route.Deposit(vaultId = vaultId, chainId = srcToken.chain.id))
+                return
+            }
+        }
 
         if (result.isDisabled) {
             uiState.update { it.copy(isLoading = true) }
@@ -237,3 +255,10 @@ constructor(
         const val ARG_SELECTED_DST_TOKEN_ID = "ARG_SELECTED_DST_TOKEN_ID"
     }
 }
+
+/** True when [securedAsset] is the THORChain secured form of this coin's own native asset. */
+internal fun Coin.isUnderlyingOfSecuredAsset(securedAsset: Coin): Boolean =
+    isSecuredAssetEligible() &&
+        securedAsset.isSecuredAsset() &&
+        getChainName().equals(securedAsset.securedAssetChain(), ignoreCase = true) &&
+        ticker.equals(securedAsset.securedAssetSymbol(), ignoreCase = true)

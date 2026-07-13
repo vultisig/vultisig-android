@@ -13,6 +13,7 @@
     <string name="vault_settings_delete_title">Löschen</string>
     <string name="select_asset_title">Asset auswählen</string>
     <string name="select_asset_no_result">Kein Ergebnis gefunden.</string>
+    <string name="select_asset_secured_badge">Gesichert</string>
     <string name="select_chain_chain_title">Blockchain</string>
     <string name="select_chain_balance_title">Guthaben</string>
     <string name="vault_settings_security_title">On-Chain-Sicherheit</string>
