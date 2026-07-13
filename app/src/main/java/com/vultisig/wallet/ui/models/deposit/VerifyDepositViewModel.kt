@@ -44,6 +44,7 @@ internal data class DepositTransactionUiModel(
     val nodeAddress: String = "",
     val pairedAddress: String = "",
     val pool: String = "",
+    val validatorName: String = "",
 )
 
 internal data class VerifyDepositUiModel(

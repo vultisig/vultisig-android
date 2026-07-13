@@ -298,6 +298,9 @@ val Chain.isDeFiSupported: Boolean
             Chain.Tron,
             // TON surfaces a nominator-pool staking positions view (stake / unstake).
             Chain.Ton,
+            // Solana surfaces a native-staking positions view — one row per stake account
+            // (delegate / deactivate / withdraw / move). Matches iOS DeFi-tab Solana staking.
+            Chain.Solana,
             // Terra family + QBTC surface a DeFi (staking) positions view — delegate / undelegate /
             // redelegate / claim. Matches Windows `supportedDefiChains` + iOS DeFi-tab `.stake`.
             Chain.Terra,

@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingOpType
+import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingPayload
 import com.vultisig.wallet.data.common.toHexByteArray
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
@@ -8,8 +10,10 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
+import io.ktor.util.decodeBase64Bytes
 import java.math.BigInteger
 import wallet.core.jni.AnyAddress
+import wallet.core.jni.Base58
 import wallet.core.jni.Base64
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
@@ -38,6 +42,9 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
 
     companion object {
         val DefaultFeeInLamports: BigInteger = 1000000.toBigInteger()
+
+        /** Byte length of an ed25519 signature, and of each slot in a Solana signature array. */
+        private const val SIGNATURE_LENGTH = 64
 
         /**
          * The Solana transaction id is the first signature in the signed transaction. WalletCore
@@ -69,27 +76,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                 .setV0Msg(true)
                 .setRecentBlockhash(solanaSpecific.recentBlockHash)
                 .setSender(keysignPayload.coin.address)
-                .setPriorityFeePrice(
-                    Solana.PriorityFeePrice.newBuilder()
-                        .setPrice(
-                            maxOf(
-                                solanaSpecific.priorityFee
-                                    .min(BigInteger.valueOf(Long.MAX_VALUE))
-                                    .toLong(),
-                                SOLANA_PRIORITY_FEE_PRICE,
-                            )
-                        )
-                        .build()
-                )
-                .setPriorityFeeLimit(
-                    Solana.PriorityFeeLimit.newBuilder()
-                        .setLimit(
-                            solanaSpecific.priorityLimit
-                                .min(BigInteger.valueOf(Int.MAX_VALUE.toLong()))
-                                .toInt()
-                        )
-                        .build()
-                )
+                .applyPriorityFee(solanaSpecific.priorityFee, solanaSpecific.priorityLimit)
 
         if (keysignPayload.coin.isNativeToken) {
             val transfer =
@@ -137,6 +124,160 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                     .toByteArray()
             }
         }
+    }
+
+    /**
+     * Builds the unsigned bytes for a native-staking op (delegate / deactivate / withdraw) and
+     * returns them base64-encoded — the encoding `SignSolana.rawTransactions` and the raw-signing
+     * path ([signRawTransaction]) consume.
+     *
+     * This is the MPC byte-parity contract for native staking: the initiating device builds these
+     * bytes ONCE — pinning [recentBlockHash] and, for delegate, letting wallet-core derive the
+     * stake-account address deterministically from sender + blockhash (so [SolanaStakingPayload]
+     * omits it) — then relays the bytes to the peer. Both devices sign the byte-identical message
+     * through the raw-transaction path, so the local-only [payload] never has to reach the peer.
+     *
+     * @param payload the local-only staking intent (validator + amount, or stake account)
+     * @param senderAddress base58 SOL address of the signer (the stake authority / funder)
+     * @param coinHexPublicKey the signer's ed25519 public key (hex), for the zero-signature
+     *   envelope
+     * @param recentBlockHash the pinned recent blockhash
+     * @param priorityFeePrice micro-lamports-per-CU price
+     * @param priorityFeeLimit compute-unit limit
+     */
+    fun buildStakingUnsignedTransaction(
+        payload: SolanaStakingPayload,
+        senderAddress: String,
+        coinHexPublicKey: String,
+        recentBlockHash: String,
+        priorityFeePrice: BigInteger,
+        priorityFeeLimit: BigInteger,
+    ): String {
+        val input =
+            getStakingPreSignedInputData(
+                payload = payload,
+                senderAddress = senderAddress,
+                recentBlockHash = recentBlockHash,
+                priorityFeePrice = priorityFeePrice,
+                priorityFeeLimit = priorityFeeLimit,
+            )
+        val publicKey = PublicKey(coinHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
+        val allSignatures = DataVector()
+        val publicKeys = DataVector()
+        allSignatures.add("0".repeat(128).toHexByteArray())
+        publicKeys.add(publicKey.data())
+        val compiled =
+            TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
+        val output = Solana.SigningOutput.parseFrom(compiled).checkError()
+        // WalletCore emits base58 (the signing input never sets txEncoding). Normalize to base64 —
+        // the encoding the raw-transaction signing path consumes.
+        return Base64.encode(Base58.decodeNoCheck(output.encoded))
+    }
+
+    /**
+     * Applies the clamped priority-fee price + compute-unit limit shared by the transfer and
+     * staking signing inputs. Price is floored at [SOLANA_PRIORITY_FEE_PRICE] and both values are
+     * clamped to their proto field widths (price → Long, limit → Int).
+     */
+    private fun Solana.SigningInput.Builder.applyPriorityFee(
+        price: BigInteger,
+        limit: BigInteger,
+    ): Solana.SigningInput.Builder =
+        setPriorityFeePrice(
+                Solana.PriorityFeePrice.newBuilder()
+                    .setPrice(
+                        maxOf(
+                            price.min(BigInteger.valueOf(Long.MAX_VALUE)).toLong(),
+                            SOLANA_PRIORITY_FEE_PRICE,
+                        )
+                    )
+                    .build()
+            )
+            .setPriorityFeeLimit(
+                Solana.PriorityFeeLimit.newBuilder()
+                    .setLimit(limit.min(BigInteger.valueOf(Int.MAX_VALUE.toLong())).toInt())
+                    .build()
+            )
+
+    private fun getStakingPreSignedInputData(
+        payload: SolanaStakingPayload,
+        senderAddress: String,
+        recentBlockHash: String,
+        priorityFeePrice: BigInteger,
+        priorityFeeLimit: BigInteger,
+    ): ByteArray {
+        val input =
+            Solana.SigningInput.newBuilder()
+                .setV0Msg(true)
+                .setRecentBlockhash(recentBlockHash)
+                .setSender(senderAddress)
+                .applyPriorityFee(priorityFeePrice, priorityFeeLimit)
+
+        return when (payload.opType) {
+            SolanaStakingOpType.Delegate -> {
+                val votePubkey =
+                    payload.votePubkey?.takeIf { it.isNotEmpty() }
+                        ?: error("solana delegate: missing validator vote pubkey")
+                require(AnyAddress.isValid(votePubkey, coinType)) {
+                    "solana delegate: invalid validator vote pubkey"
+                }
+                val existingAccount = payload.stakeAccount?.takeIf { it.isNotEmpty() }
+                val delegate =
+                    Solana.DelegateStake.newBuilder()
+                        .setValidatorPubkey(votePubkey)
+                        .apply {
+                            if (existingAccount != null) {
+                                // Move-stake "Finish Move": re-delegate the existing (cooled-down)
+                                // account in place. It already holds its lamports on-chain, so
+                                // `value` is NOT a funding amount — leave it 0 so wallet-core can
+                                // never interpret it as lamports to move from the wallet. Matches
+                                // the resolver's finish-move funding guard, which reserves only the
+                                // fee.
+                                setStakeAccount(existingAccount)
+                            } else {
+                                // Fresh stake: wallet-core derives the account deterministically
+                                // and
+                                // emits create + initialize + delegate in one tx, funding the new
+                                // account with `value` lamports.
+                                val lamports =
+                                    payload.lamports?.takeIf { it.signum() > 0 }
+                                        ?: error(
+                                            "solana delegate: missing or zero delegation amount"
+                                        )
+                                setValue(lamports.toLong())
+                            }
+                        }
+                        .build()
+                input.setDelegateStakeTransaction(delegate).build().toByteArray()
+            }
+            SolanaStakingOpType.Unstake -> {
+                val stakeAccount = validatedStakeAccount(payload.stakeAccount, "deactivate")
+                val deactivate =
+                    Solana.DeactivateStake.newBuilder().setStakeAccount(stakeAccount).build()
+                input.setDeactivateStakeTransaction(deactivate).build().toByteArray()
+            }
+            SolanaStakingOpType.Withdraw -> {
+                val stakeAccount = validatedStakeAccount(payload.stakeAccount, "withdraw")
+                val lamports =
+                    payload.lamports?.takeIf { it.signum() > 0 }
+                        ?: error("solana withdraw: missing or zero withdrawal amount")
+                val withdraw =
+                    Solana.WithdrawStake.newBuilder()
+                        .setStakeAccount(stakeAccount)
+                        .setValue(lamports.toLong())
+                        .build()
+                input.setWithdrawTransaction(withdraw).build().toByteArray()
+            }
+        }
+    }
+
+    private fun validatedStakeAccount(stakeAccount: String?, op: String): String {
+        val account =
+            stakeAccount?.takeIf { it.isNotEmpty() } ?: error("solana $op: missing stake account")
+        require(AnyAddress.isValid(account, coinType)) {
+            "solana $op: invalid stake account address"
+        }
+        return account
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
@@ -270,32 +411,8 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         return Base64.encode(dataMessage)
     }
 
-    private fun getPreSignedImageHashForRaw(base64Transaction: String): List<String> {
-        val txData = android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
-
-        val decodedData = wallet.core.jni.TransactionDecoder.decode(coinType, txData)
-        val decodingOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData)
-
-        if (decodingOutput.errorMessage.isNotEmpty()) {
-            error(decodingOutput.errorMessage)
-        }
-
-        if (!decodingOutput.hasTransaction()) {
-            error("Invalid transaction format")
-        }
-
-        val input =
-            Solana.SigningInput.newBuilder().setRawMessage(decodingOutput.transaction).build()
-
-        val inputData = input.toByteArray()
-
-        val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
-        val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-                .checkError()
-
-        return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
-    }
+    private fun getPreSignedImageHashForRaw(base64Transaction: String): List<String> =
+        listOf(Numeric.toHexStringNoPrefix(parseRawTransaction(base64Transaction).message))
 
     private fun signRawTransaction(
         coinHexPubKey: String,
@@ -305,59 +422,88 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         val pubkeyData = coinHexPubKey.toHexByteArray()
         val publicKey = PublicKey(pubkeyData, PublicKeyType.ED25519)
 
-        val txData =
-            android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
-                ?: error("Invalid base64 transaction")
-
-        val decodedData = wallet.core.jni.TransactionDecoder.decode(coinType, txData)
-        val decodingOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData)
-
-        if (decodingOutput.errorMessage.isNotEmpty()) {
-            error(decodingOutput.errorMessage)
-        }
-
-        if (!decodingOutput.hasTransaction()) {
-            error("Invalid transaction format")
-        }
-
-        val input =
-            Solana.SigningInput.newBuilder().setRawMessage(decodingOutput.transaction).build()
-
-        val inputData = input.toByteArray()
-
-        val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
-        val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-
-        if (preSigningOutput.errorMessage.isNotEmpty()) {
-            error(preSigningOutput.errorMessage)
-        }
-
-        val key = Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())
+        val transaction = parseRawTransaction(base64Transaction)
+        val key = Numeric.toHexStringNoPrefix(transaction.message)
         val signature = signatures[key]?.getSignature() ?: error("Signature not found")
-
-        if (!publicKey.verify(signature, preSigningOutput.data.toByteArray())) {
+        if (!publicKey.verify(signature, transaction.message)) {
             error("Signature verification failed")
         }
 
-        val allSignatures = DataVector()
-        val publicKeys = DataVector()
-        allSignatures.add(signature)
-        publicKeys.add(pubkeyData)
+        // Splice signer 0's signature into signer 0's slot in the original bytes; the message and
+        // any further signer slots stay exactly as the dApp built them, so the broadcast
+        // transaction matches the pre-image that was signed.
+        check(signature.size == SIGNATURE_LENGTH) { "Unexpected Solana signature length" }
+        val signedTransaction = transaction.bytes.copyOf()
+        signature.copyInto(signedTransaction, destinationOffset = transaction.firstSignatureOffset)
 
-        val compiled =
-            TransactionCompiler.compileWithSignatures(
-                coinType,
-                inputData,
-                allSignatures,
-                publicKeys,
-            )
-
-        val output = Solana.SigningOutput.parseFrom(compiled).checkError()
-
+        // Android broadcasts Solana transactions with the RPC's default base58
+        // encoding (see SolanaApi.broadcastTransaction), unlike iOS which pins base64,
+        // so the signed transaction and its hash are base58 here.
         return SignedTransactionResult(
-            rawTransaction = output.encoded,
-            transactionHash = output.transactionHash(),
+            rawTransaction = Base58.encodeNoCheck(signedTransaction),
+            transactionHash = Base58.encodeNoCheck(signature),
         )
+    }
+
+    /**
+     * A dApp-supplied raw Solana transaction split into its wire envelope `[compact-u16 signature
+     * count][count × 64-byte signature slot][message]`.
+     *
+     * [message] is the pre-image ed25519 signs verbatim; [firstSignatureOffset] is where signer 0's
+     * slot begins, so the produced signature can be spliced back into [bytes] without disturbing
+     * anything else.
+     */
+    private class RawSolanaTransaction(
+        val bytes: ByteArray,
+        val firstSignatureOffset: Int,
+        val message: ByteArray,
+    )
+
+    /**
+     * Parses the `[shortvec(numSignatures)][numSignatures × 64-byte slot][message]` envelope of a
+     * dApp-supplied raw transaction and returns its message bytes verbatim.
+     *
+     * Signing over these original bytes — rather than decoding into WalletCore's representation and
+     * re-serializing it (the `TransactionDecoder` → `SigningInput.rawMessage` →
+     * `TransactionCompiler` round trip) — keeps the pre-image hash independent of WalletCore's
+     * encoder. That re-encode is not guaranteed to reproduce the original bytes for a v0 message
+     * referencing an Address Lookup Table (the standard shape for DEX/aggregator swaps), which
+     * would make co-signing devices compute mismatching hashes and stall the ceremony.
+     */
+    private fun parseRawTransaction(base64Transaction: String): RawSolanaTransaction {
+        val bytes = base64Transaction.decodeBase64Bytes()
+
+        val (signatureCount, firstSignatureOffset) = readCompactU16(bytes)
+        check(signatureCount >= 1) { "Solana transaction declares no signatures" }
+
+        val messageOffset = firstSignatureOffset + signatureCount * SIGNATURE_LENGTH
+        check(messageOffset < bytes.size) {
+            "Solana transaction too short for its $signatureCount declared signature(s)"
+        }
+        return RawSolanaTransaction(
+            bytes = bytes,
+            firstSignatureOffset = firstSignatureOffset,
+            message = bytes.copyOfRange(messageOffset, bytes.size),
+        )
+    }
+
+    /**
+     * Decodes the Solana compact-u16 (shortvec) at the start of [bytes] — up to three bytes, 7
+     * payload bits each with the high bit signalling "more bytes follow" — and returns the decoded
+     * value together with the offset just past it (where the signature slots begin).
+     */
+    private fun readCompactU16(bytes: ByteArray): Pair<Int, Int> {
+        var value = 0
+        var offset = 0
+        var shift = 0
+        while (offset < bytes.size) {
+            val byte = bytes[offset].toInt() and 0xFF
+            value = value or ((byte and 0x7F) shl shift)
+            offset++
+            if (byte and 0x80 == 0) return value to offset
+            shift += 7
+            if (shift > 14) error("Malformed compact-u16 in Solana transaction")
+        }
+        error("Truncated compact-u16 in Solana transaction")
     }
 }

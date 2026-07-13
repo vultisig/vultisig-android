@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingDeFiBalan
 import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.maya.MayaDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance
+import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.ton.TonDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.tron.TronDeFiBalanceService
@@ -161,6 +162,7 @@ constructor(
     private val tronDeFiBalanceService: TronDeFiBalanceService,
     private val tonDeFiBalanceService: TonDeFiBalanceService,
     private val cosmosStakingDeFiBalanceService: CosmosStakingDeFiBalanceService,
+    private val solanaStakingDeFiBalanceService: SolanaStakingDeFiBalanceService,
 ) : BalanceRepository {
 
     private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12 * 1000)
@@ -198,6 +200,7 @@ constructor(
             MayaChain,
             Chain.Tron,
             Chain.Ton,
+            Solana,
             Chain.Terra,
             Chain.TerraClassic,
             Chain.Qbtc -> "${chain.id}:$vaultId:$address"
@@ -248,6 +251,7 @@ constructor(
                 MayaChain -> mayaDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 Chain.Tron -> tronDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 Chain.Ton -> tonDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+                Solana -> solanaStakingDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 Chain.Terra,
                 Chain.TerraClassic,
                 Chain.Qbtc ->
@@ -422,6 +426,7 @@ constructor(
             MayaChain -> mayaDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
             Chain.Tron -> tronDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
             Chain.Ton -> tonDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
+            Solana -> solanaStakingDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
             // Each staking chain has its own LCD (Terra / TerraClassic even share an address), so
             // the chain is passed explicitly.
             Chain.Terra,
