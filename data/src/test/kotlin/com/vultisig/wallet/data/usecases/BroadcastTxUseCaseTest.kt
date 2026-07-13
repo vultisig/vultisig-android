@@ -24,6 +24,8 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosTxStatusJson
 import com.vultisig.wallet.data.api.models.cosmos.TxResponse
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
+import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -70,6 +72,49 @@ class BroadcastTxUseCaseTest {
 
         assertEquals(KNOWN_TRANSACTION_HASH, txHash)
     }
+
+    @Test
+    fun `thorchain recovers with local hash when a rejected broadcast is already on chain`() =
+        runTest {
+            val thorChainApi = mockk<ThorChainApi>()
+            val statusRepo = mockk<TransactionStatusRepository>()
+            coEvery { thorChainApi.broadcastTransaction(RAW_TRANSACTION) } throws sequenceMismatch()
+            coEvery {
+                statusRepo.checkTransactionStatus(KNOWN_TRANSACTION_HASH, Chain.ThorChain)
+            } returns TransactionResult.Confirmed
+
+            val txHash =
+                createUseCase(
+                    thorChainApi = thorChainApi,
+                    transactionStatusRepository = statusRepo,
+                )(Chain.ThorChain, signedTransaction())
+
+            assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+        }
+
+    @Test
+    fun `mayachain rethrows a rejected broadcast when the tx is not confirmed on chain`() =
+        runTest {
+            val mayaChainApi = mockk<MayaChainApi>()
+            val statusRepo = mockk<TransactionStatusRepository>()
+            val rejection = sequenceMismatch()
+            coEvery { mayaChainApi.broadcastTransaction(RAW_TRANSACTION) } throws rejection
+            coEvery {
+                statusRepo.checkTransactionStatus(KNOWN_TRANSACTION_HASH, Chain.MayaChain)
+            } returns TransactionResult.Pending
+
+            val thrown =
+                assertFailsWith<CosmosBroadcastException> {
+                    createUseCase(
+                        mayaChainApi = mayaChainApi,
+                        transactionStatusRepository = statusRepo,
+                    )(Chain.MayaChain, signedTransaction())
+                }
+            assertEquals(rejection, thrown)
+            coVerify(exactly = 3) {
+                statusRepo.checkTransactionStatus(KNOWN_TRANSACTION_HASH, Chain.MayaChain)
+            }
+        }
 
     @Test
     fun `uses broadcast hash when cosmos broadcast returns hash`() = runTest {
@@ -288,6 +333,7 @@ class BroadcastTxUseCaseTest {
         mayaChainApi: MayaChainApi = mockk(relaxed = true),
         cosmosApiFactory: CosmosApiFactory = mockk(relaxed = true),
         blockChairApi: BlockChairApi = mockk(relaxed = true),
+        transactionStatusRepository: TransactionStatusRepository = mockk(relaxed = true),
     ) =
         BroadcastTxUseCaseImpl(
             thorChainApi = thorChainApi,
@@ -303,6 +349,7 @@ class BroadcastTxUseCaseTest {
             rippleApi = mockk<RippleApi>(relaxed = true),
             tronApi = mockk<TronApi>(relaxed = true),
             cardanoApi = mockk<CardanoApi>(relaxed = true),
+            transactionStatusRepository = transactionStatusRepository,
         )
 
     private fun txStatus(code: Int) =

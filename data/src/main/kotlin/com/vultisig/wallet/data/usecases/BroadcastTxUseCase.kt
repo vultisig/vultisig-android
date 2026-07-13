@@ -48,6 +48,8 @@ import com.vultisig.wallet.data.models.Chain.ThorChain
 import com.vultisig.wallet.data.models.Chain.Ton
 import com.vultisig.wallet.data.models.Chain.ZkSync
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
+import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.delay
@@ -73,13 +75,23 @@ constructor(
     private val rippleApi: RippleApi,
     private val tronApi: TronApi,
     private val cardanoApi: CardanoApi,
+    private val transactionStatusRepository: TransactionStatusRepository,
 ) : BroadcastTxUseCase {
 
     override suspend fun invoke(chain: Chain, tx: SignedTransactionResult) =
         when (chain) {
-            ThorChain -> {
-                thorChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
-            }
+            // THOR/Maya are account-sequence Cosmos chains: on a joined-device duplicate-broadcast
+            // race the loser's broadcast is rejected with a sequence mismatch. Confirm the peer's
+            // byte-identical tx actually committed on chain before reporting our local hash as
+            // success, mirroring every other chain's recover-if-already-broadcast path.
+            ThorChain ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        thorChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
+                    },
+                    verify = { hash -> isConfirmedOnChain(hash, chain) },
+                )
 
             Bitcoin,
             BitcoinCash,
@@ -149,9 +161,14 @@ constructor(
                 )
             }
 
-            MayaChain -> {
-                mayaChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
-            }
+            MayaChain ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        mayaChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
+                    },
+                    verify = { hash -> isConfirmedOnChain(hash, chain) },
+                )
 
             Polkadot ->
                 recoverIfAlreadyBroadcast(
@@ -253,6 +270,10 @@ constructor(
         }
         return false
     }
+
+    private suspend fun isConfirmedOnChain(hash: String, chain: Chain): Boolean =
+        transactionStatusRepository.checkTransactionStatus(hash, chain) ==
+            TransactionResult.Confirmed
 
     private fun String?.orKnownHash(tx: SignedTransactionResult): String? =
         this ?: tx.transactionHash.takeIf { it.isNotBlank() }
