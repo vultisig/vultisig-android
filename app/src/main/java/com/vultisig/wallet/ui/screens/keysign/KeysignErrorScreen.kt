@@ -72,36 +72,45 @@ internal fun resolveSigningError(rawMessage: String): SigningError {
                 errorState = ErrorState.WARNING,
             )
         rawMessage.contains(CosmosBroadcastException.BROADCAST_FAILURE_MARKER) -> {
-            // SEQUENCE_MISMATCH_MARKER is itself prefixed with BROADCAST_FAILURE_MARKER, so the
-            // sequence-mismatch check has to live inside the broadcast-failure branch — otherwise
-            // a future reorder of these two branches would silently route every sequence mismatch
-            // into the generic "rejected" copy.
-            if (rawMessage.contains(CosmosBroadcastException.SEQUENCE_MISMATCH_MARKER)) {
-                SigningError(
-                    title = stringResource(R.string.signing_error_transaction_failed_title),
-                    description = stringResource(R.string.signing_error_sequence_mismatch),
-                    errorState = ErrorState.WARNING,
-                )
-            } else {
-                val detail =
-                    rawMessage
-                        .substringAfter(CosmosBroadcastException.BROADCAST_FAILURE_MARKER)
-                        .trimStart(':', ' ')
-                        .let { raw ->
-                            if (raw.length > BROADCAST_DETAIL_MAX_LENGTH) {
-                                raw.take(BROADCAST_DETAIL_MAX_LENGTH).trimEnd() + "…"
-                            } else raw
-                        }
-                SigningError(
-                    title = stringResource(R.string.signing_error_transaction_failed_title),
-                    description =
-                        if (detail.isBlank()) {
-                            stringResource(R.string.signing_error_broadcast_rejected)
-                        } else {
-                            stringResource(R.string.signing_error_broadcast_rejected_s, detail)
-                        },
-                    errorState = ErrorState.CRITICAL,
-                )
+            // SEQUENCE_MISMATCH_MARKER and UNKNOWN_ADDRESS_MARKER are both prefixed with
+            // BROADCAST_FAILURE_MARKER, so those checks have to live inside the broadcast-failure
+            // branch — otherwise a future reorder would silently route them into the generic
+            // "rejected" copy, which for UNKNOWN_ADDRESS_MARKER would echo the node's raw_log
+            // (possibly undecodable address bytes) straight into the description.
+            when {
+                rawMessage.contains(CosmosBroadcastException.SEQUENCE_MISMATCH_MARKER) ->
+                    SigningError(
+                        title = stringResource(R.string.signing_error_transaction_failed_title),
+                        description = stringResource(R.string.signing_error_sequence_mismatch),
+                        errorState = ErrorState.WARNING,
+                    )
+                rawMessage.contains(CosmosBroadcastException.UNKNOWN_ADDRESS_MARKER) ->
+                    SigningError(
+                        title = stringResource(R.string.signing_error_transaction_failed_title),
+                        description = stringResource(R.string.signing_error_account_not_funded),
+                        errorState = ErrorState.WARNING,
+                    )
+                else -> {
+                    val detail =
+                        rawMessage
+                            .substringAfter(CosmosBroadcastException.BROADCAST_FAILURE_MARKER)
+                            .trimStart(':', ' ')
+                            .let { raw ->
+                                if (raw.length > BROADCAST_DETAIL_MAX_LENGTH) {
+                                    raw.take(BROADCAST_DETAIL_MAX_LENGTH).trimEnd() + "…"
+                                } else raw
+                            }
+                    SigningError(
+                        title = stringResource(R.string.signing_error_transaction_failed_title),
+                        description =
+                            if (detail.isBlank()) {
+                                stringResource(R.string.signing_error_broadcast_rejected)
+                            } else {
+                                stringResource(R.string.signing_error_broadcast_rejected_s, detail)
+                            },
+                        errorState = ErrorState.CRITICAL,
+                    )
+                }
             }
         }
         else ->
