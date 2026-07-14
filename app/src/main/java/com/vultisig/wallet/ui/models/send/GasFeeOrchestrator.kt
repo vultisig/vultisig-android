@@ -408,6 +408,10 @@ internal class GasFeeOrchestrator(
 
                     SpecificInput(token, gasFeeValue, dstAddress, cardanoAmount, cardanoMemo)
                 }
+                // Include the recompute nonce so pull-to-refresh re-runs getSpecific. Without this
+                // a failed first-load getSpecific leaves specific (and therefore planFee) null with
+                // no way to recover, since refresh alone doesn't change the specific inputs.
+                .combine(recalculateGasFee) { input, nonce -> input.copy(nonce = nonce) }
                 .distinctUntilChanged()
                 .collect { (token, gasFeeValue, dstAddress, cardanoAmount, cardanoMemo) ->
                     val chain = token.chain
@@ -442,7 +446,12 @@ internal class GasFeeOrchestrator(
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
+                        // getSpecific feeds planFee, which collectEstimatedFee (the sole clearer of
+                        // the loading flag) requires. A failure here would otherwise strand the
+                        // shimmer with Continue disabled forever, so drop the loading flag;
+                        // pull-to-refresh re-runs getSpecific via recalculateGasFee to recover.
                         Timber.e(e)
+                        uiState.update { it.copy(isGasFeeLoading = false) }
                     }
                 }
         }
@@ -482,6 +491,7 @@ private data class SpecificInput(
     val dstAddress: String,
     val cardanoAmount: BigInteger?,
     val cardanoMemo: String?,
+    val nonce: Long = 0,
 )
 
 private data class PlanFeeInput(
