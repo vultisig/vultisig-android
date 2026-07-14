@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AddressBookRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ContractAbiRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.TokenMetadataResolver
@@ -23,7 +24,7 @@ import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.mappers.SendTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
-import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
+import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import java.math.BigInteger
 import java.util.UUID
 import javax.inject.Inject
@@ -56,6 +57,7 @@ constructor(
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
     private val mapTransactionHistoryData: SendTransactionHistoryDataMapper,
     private val addressBookRepository: AddressBookRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val tokenMetadataResolver: TokenMetadataResolver,
     private val contractAbiRepository: ContractAbiRepository,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
@@ -183,16 +185,13 @@ constructor(
         val transactionToUiModel = mapTransactionToUiModel(transaction)
 
         val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
-        val normalizedDstAddress = normalizeAddressForLookup(payload.toAddress)
         val dstVaultName =
-            allVaults
-                .firstOrNull { v ->
-                    v.coins.any {
-                        it.chain == chain &&
-                            normalizeAddressForLookup(it.address) == normalizedDstAddress
-                    }
-                }
-                ?.name
+            resolveDstVaultName(
+                allVaults = allVaults,
+                chain = chain,
+                dstAddress = payload.toAddress,
+                chainAccountAddressRepository = chainAccountAddressRepository,
+            )
         val dstAddressBookTitle =
             if (dstVaultName == null) {
                 addressBookRepository.getEntry(chain.id, payload.toAddress)?.title

@@ -1158,8 +1158,9 @@
     <string name="transaction_status_confirmed">거래 확인됨</string>
     <string name="transaction_status_failed">거래 실패</string>
     <string name="transaction_status_refunded">거래 환불됨</string>
-    <string name="transaction_status_not_found">거래를 찾을 수 없음</string>
     <string name="transaction_status_pending">거래 대기 중…</string>
+    <string name="transaction_status_still_confirming">아직 확인 중…</string>
+    <string name="transaction_status_still_confirming_label">아직 확인 중</string>
     <string name="transaction_status_notification_title">거래 상태</string>
     <string name="transaction_status_checking_transaction">거래 확인 중…</string>
     <string name="raw_transaction_data">원시 거래 데이터</string>

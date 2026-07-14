@@ -34,6 +34,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.tokenLogoRes
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -65,8 +66,8 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
-import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import com.vultisig.wallet.ui.utils.or
+import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -179,6 +180,14 @@ sealed interface TransactionStatus {
     /** Transaction is in the mempool but not yet included in a block. */
     data object Pending : TransactionStatus
 
+    /**
+     * Polling reached its time budget without a terminal on-chain result. The transaction may still
+     * confirm later (or, for XRP, may have expired past its LastLedgerSequence without moving
+     * funds). This is a neutral terminal state — never a hard failure — so the user isn't told the
+     * send failed when funds were untouched.
+     */
+    data object StillConfirming : TransactionStatus
+
     /** Transaction has been confirmed on-chain. */
     data object Confirmed : TransactionStatus
 
@@ -264,6 +273,7 @@ constructor(
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val txStatusPoller: KeysignTxStatusPoller,
     private val vaultRepository: VaultRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
@@ -372,16 +382,13 @@ constructor(
         dstAddress: String,
     ): DestinationLabels {
         val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
-        val normalizedDstAddress = normalizeAddressForLookup(dstAddress)
         val dstVaultName =
-            allVaults
-                .firstOrNull { v ->
-                    v.coins.any {
-                        it.chain == chain &&
-                            normalizeAddressForLookup(it.address) == normalizedDstAddress
-                    }
-                }
-                ?.name
+            resolveDstVaultName(
+                allVaults = allVaults,
+                chain = chain,
+                dstAddress = dstAddress,
+                chainAccountAddressRepository = chainAccountAddressRepository,
+            )
 
         val isSavedBefore =
             addressBookRepository.entryExists(address = dstAddress, chainId = chain.id)
@@ -975,8 +982,7 @@ constructor(
             TransactionResult.Confirmed -> TransactionStatus.Confirmed
             is TransactionResult.Failed -> TransactionStatus.Failed(this.reason.asUiText())
             is TransactionResult.Refunded -> TransactionStatus.Refunded(this.reason.asUiText())
-            TransactionResult.TimedOut ->
-                TransactionStatus.Failed("Confirmation taking longer than expected".asUiText())
+            TransactionResult.TimedOut -> TransactionStatus.StillConfirming
             TransactionResult.NotFound,
             TransactionResult.Pending -> TransactionStatus.Pending
         }

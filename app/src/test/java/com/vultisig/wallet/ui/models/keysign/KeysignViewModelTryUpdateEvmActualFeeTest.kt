@@ -141,6 +141,7 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
             txStatusConfigurationProvider = mockk(relaxed = true),
             txStatusPoller = mockk(relaxed = true),
             vaultRepository = mockk(relaxed = true),
+            chainAccountAddressRepository = mockk(relaxed = true),
             transactionHistoryRepository = mockk(relaxed = true),
             balanceRepository = mockk(relaxed = true),
             gasFeeToEstimatedFee = gasFeeToEstimatedFee,

@@ -217,7 +217,7 @@ class TransactionStatusService : Service() {
             is TransactionResult.Failed -> getString(R.string.transaction_status_failed)
             is TransactionResult.Refunded -> getString(R.string.transaction_status_refunded)
             TransactionResult.NotFound -> getString(R.string.transaction_status_pending)
-            TransactionResult.TimedOut -> getString(R.string.transaction_status_not_found)
+            TransactionResult.TimedOut -> getString(R.string.transaction_status_still_confirming)
             TransactionResult.Pending -> getString(R.string.transaction_status_pending)
         }
 }

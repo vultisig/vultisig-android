@@ -175,8 +175,15 @@ internal fun FoldableAmountWidget(
                     focusRequester = amountFocusRequester,
                     onLostFocus = onTokenAmountLostFocus,
                     onKeyboardAction = {
-                        focusManager.clearFocus()
-                        onSend()
+                        // Gate the soft-keyboard send with the same condition as the Continue
+                        // button so it can't submit a stale gas fee while a fresh one is still
+                        // computing.
+                        val isContinueDisabled =
+                            state.isLoading || (state.showGasFee && state.isGasFeeLoading)
+                        if (!isContinueDisabled) {
+                            focusManager.clearFocus()
+                            onSend()
+                        }
                     },
                     modifier = Modifier.padding(horizontal = 54.dp).align(Alignment.Center),
                     inputModifier = Modifier.testTag("SendFormScreen.amountField"),
@@ -447,6 +454,7 @@ internal fun FoldableAmountWidget(
                 EstimatedNetworkFee(
                     tokenGas = state.totalGas.asString(),
                     fiatGas = state.estimatedFee.asString(),
+                    isLoading = state.isGasFeeLoading,
                 )
             }
         }

@@ -222,12 +222,13 @@ private fun SendFormScreen(
             },
         onBackClick = onBackClick,
         bottomBar = {
+            val isContinueDisabled = state.isLoading || (state.showGasFee && state.isGasFeeLoading)
             VsButton(
                 label = stringResource(R.string.send_continue_button),
-                state = if (state.isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
+                state = if (isContinueDisabled) VsButtonState.Disabled else VsButtonState.Enabled,
                 isLoading = state.isLoading,
                 onClick = {
-                    if (!state.isLoading) {
+                    if (!isContinueDisabled) {
                         focusManager.clearFocus()
                         onSend()
                     }
