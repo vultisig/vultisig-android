@@ -135,13 +135,42 @@ internal class TokenRefreshWorkerTest {
             every { vaultRepository.getEnabledTokens(vault.id) } returns flowOf(listOf(stale))
             coEvery { tokenRepository.getRefreshTokens(Chain.ThorChain, vault) } returns
                 listOf(corrected)
-            coEvery { vaultRepository.deleteTokenFromVault(any(), any()) } returns Unit
-            coEvery { vaultRepository.addTokenToVault(any(), any()) } returns Unit
+            coEvery { vaultRepository.replaceTokenInVault(any(), any(), any()) } returns Unit
 
             buildWorker().doWork()
 
-            coVerify(exactly = 1) { vaultRepository.deleteTokenFromVault(vault.id, stale) }
-            coVerify(exactly = 1) { vaultRepository.addTokenToVault(vault.id, corrected) }
+            coVerify(exactly = 1) {
+                vaultRepository.replaceTokenInVault(vault.id, stale, corrected)
+            }
+        }
+
+    @Test
+    fun `doWork corrects a token whose contractAddress and decimal drifted but ticker matches`() =
+        runTest {
+            // Ticker is unchanged (case identical); only the curated contractAddress/decimal moved.
+            // needsIdentityCorrection must still fire, exercising the non-ticker fields.
+            val stale =
+                Coin.EMPTY.copy(
+                    chain = Chain.ThorChain,
+                    ticker = "bRUNE",
+                    contractAddress = "x/brune-old",
+                    decimal = 6,
+                )
+            val corrected = stale.copy(contractAddress = "x/brune", decimal = 8)
+            val vault = vault(id = "vault-7", coins = listOf(coin(Chain.ThorChain)))
+
+            coEvery { vaultRepository.getAll() } returns listOf(vault)
+            coEvery { vaultRepository.getDisabledCoinIds(vault.id) } returns emptyList()
+            every { vaultRepository.getEnabledTokens(vault.id) } returns flowOf(listOf(stale))
+            coEvery { tokenRepository.getRefreshTokens(Chain.ThorChain, vault) } returns
+                listOf(corrected)
+            coEvery { vaultRepository.replaceTokenInVault(any(), any(), any()) } returns Unit
+
+            buildWorker().doWork()
+
+            coVerify(exactly = 1) {
+                vaultRepository.replaceTokenInVault(vault.id, stale, corrected)
+            }
         }
 
     @Test
@@ -158,6 +187,7 @@ internal class TokenRefreshWorkerTest {
 
         buildWorker().doWork()
 
+        coVerify(exactly = 0) { vaultRepository.replaceTokenInVault(any(), any(), any()) }
         coVerify(exactly = 0) { vaultRepository.deleteTokenFromVault(any(), any()) }
         coVerify(exactly = 0) { vaultRepository.addTokenToVault(any(), any()) }
     }

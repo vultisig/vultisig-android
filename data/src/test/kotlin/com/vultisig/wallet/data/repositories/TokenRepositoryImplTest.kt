@@ -181,6 +181,36 @@ internal class TokenRepositoryImplTest {
     }
 
     @Test
+    fun `getTokensWithBalance canonicalizes ybRUNE decimal to the curated value`() = runTest {
+        // ybRUNE shares the curated-override branch with bRUNE; guard it independently so a
+        // regression isolated to the ybRUNE case can't slip through.
+        val thorApi: ThorChainApi = mockk(relaxed = true)
+        coEvery { thorApi.getBalance(ADDRESS) } returns
+            listOf(CosmosBalance(denom = Coins.ThorChain.ybRUNE.contractAddress, amount = "100"))
+        coEvery { thorApi.getDenomMetaFromLCD(Coins.ThorChain.ybRUNE.contractAddress) } returns
+            DenomMetadata(
+                base = Coins.ThorChain.ybRUNE.contractAddress,
+                symbol = "x/ybrune",
+                display = null,
+                denomUnits =
+                    listOf(
+                        com.vultisig.wallet.data.api.models.DenomUnit(
+                            denom = "x/ybrune",
+                            exponent = 6,
+                        )
+                    ),
+            )
+
+        val coins =
+            newRepository(thorApi)
+                .getTokensWithBalance(Chain.ThorChain, ADDRESS, enabledDenoms = setOf("rune"))
+
+        val ybRune = coins.single { it.contractAddress == Coins.ThorChain.ybRUNE.contractAddress }
+        assertEquals(Coins.ThorChain.ybRUNE.ticker, ybRune.ticker)
+        assertEquals(Coins.ThorChain.ybRUNE.decimal, ybRune.decimal)
+    }
+
+    @Test
     fun `getTokensWithBalance for Terra delegates to the Cosmos bank coin finder`() = runTest {
         val cosmosBankCoinFinder: CosmosBankCoinFinder = mockk()
         val expected = listOf(Coins.Terra.ASTRO_IBC)

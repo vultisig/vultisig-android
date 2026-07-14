@@ -116,8 +116,10 @@ constructor(
             // to "bRUNE", or a canonicalized contractAddress/decimal) would otherwise be kept
             // forever. Overwrite it with the freshly derived identity when they disagree.
             if (existing.needsIdentityCorrection(refreshToken)) {
-                vaultRepository.deleteTokenFromVault(vault.id, existing)
-                vaultRepository.addTokenToVault(vault.id, refreshToken)
+                // Atomic swap: a mid-way failure must never drop the token, and a same-id
+                // correction (only contractAddress/decimal drifted) must not have its refreshed
+                // row deleted after being re-inserted.
+                vaultRepository.replaceTokenInVault(vault.id, existing, refreshToken)
             }
             return
         }

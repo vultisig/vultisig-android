@@ -210,6 +210,37 @@ internal class TokenPriceRepositoryImplTest {
     }
 
     @Test
+    fun `refreshing bRUNE and ybRUNE together fetches the live RUNE price at most once`() =
+        runTest {
+            // Cold RUNE cache + both denoms in one refresh: bRUNE and ybRUNE both price off
+            // RUNE-in-USD,
+            // so the live CoinGecko RUNE fetch must be shared, not fired once per token.
+            stubEmptyContractFallback()
+            coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.RUNE.id, "usd") } returns null
+            coEvery {
+                coinGeckoApi.getCryptoPrices(
+                    match { it.contains("thorchain") },
+                    match { it.contains("usd") },
+                )
+            } returns mapOf("thorchain" to mapOf("usd" to BigDecimal("5.0")))
+            // Any other id (e.g. the contract-fallback fan-out) resolves to nothing.
+            coEvery {
+                coinGeckoApi.getCryptoPrices(match { !it.contains("thorchain") }, any())
+            } returns emptyMap()
+            // ybRUNE NAV = 200 / 100 = 2.
+            coEvery { thorApi.getThorchainTokenPriceByContract(any()) } returns
+                redemption(bondSize = "200", bondShares = "100")
+
+            repository.refresh(listOf(bRune, ybRune))
+
+            assertPriceEquals("5", repository.getPrice(bRune, AppCurrency.USD).first())
+            assertPriceEquals("10", repository.getPrice(ybRune, AppCurrency.USD).first())
+            coVerify(exactly = 1) {
+                coinGeckoApi.getCryptoPrices(match { it.contains("thorchain") }, any())
+            }
+        }
+
+    @Test
     fun `does not persist a zero ybRUNE price when the NAV field is malformed`() = runTest {
         stubEmptyContractFallback()
         coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()

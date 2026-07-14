@@ -422,6 +422,22 @@ constructor(
                         fetchTetherPrice()
                     }
 
+                // bRUNE and ybRUNE both price off RUNE-in-USD. Fetch it once up front (only when a
+                // RUNE-backed denom is present) so concurrent per-token async blocks don't each
+                // miss
+                // a cold cache and fire a duplicate live CoinGecko call for the same value.
+                val runeUsdPrice =
+                    if (
+                        matchingTokens.any {
+                            val denom = it.contractAddress.lowercase()
+                            denom == BRUNE_DENOM || denom == YBRUNE_DENOM
+                        }
+                    ) {
+                        runePriceUsd()
+                    } else {
+                        BigDecimal.ZERO
+                    }
+
                 val tokenIdToPrices = coroutineScope {
                     contracts
                         .zip(tokenIds)
@@ -434,7 +450,7 @@ constructor(
                                         when (token.contractAddress.lowercase()) {
                                             // bRUNE is ≥1:1 RUNE-backed with no THORChain pool, so
                                             // it tracks RUNE at parity.
-                                            BRUNE_DENOM -> runePriceUsd()
+                                            BRUNE_DENOM -> runeUsdPrice
                                             // ybRUNE is the auto-compounding bRUNE staking receipt:
                                             // NAV (liquid_bond_size / liquid_bond_shares) × bRUNE,
                                             // and bRUNE ≈ RUNE. Same mechanism as sTCY.
@@ -445,7 +461,7 @@ constructor(
                                                             contract
                                                         )
                                                     )
-                                                nav * runePriceUsd()
+                                                nav * runeUsdPrice
                                             }
                                             "x/staking-tcy" -> {
                                                 val tcyPriceUSD =
