@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.AddressBookRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ContractAbiRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
@@ -43,7 +44,7 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
-import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
+import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -181,6 +182,7 @@ constructor(
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val addressBookRepository: AddressBookRepository,
     private val fourByteRepository: FourByteRepository,
     private val tokenMetadataResolver: TokenMetadataResolver,
@@ -332,16 +334,13 @@ constructor(
             val allVaults = withContext(ioDispatcher) { vaultRepository.getAll() }
             val chain = tx.token.chain
             val srcVaultName = allVaults.find { it.id == vaultId }?.name
-            val normalizedDstAddress = normalizeAddressForLookup(tx.dstAddress)
             val dstVaultName =
-                allVaults
-                    .firstOrNull { vault ->
-                        vault.coins.any {
-                            it.chain == chain &&
-                                normalizeAddressForLookup(it.address) == normalizedDstAddress
-                        }
-                    }
-                    ?.name
+                resolveDstVaultName(
+                    allVaults = allVaults,
+                    chain = chain,
+                    dstAddress = tx.dstAddress,
+                    chainAccountAddressRepository = chainAccountAddressRepository,
+                )
             val dstAddressBookTitle =
                 if (dstVaultName == null) {
                     addressBookRepository.getEntry(chain.id, tx.dstAddress)?.title
