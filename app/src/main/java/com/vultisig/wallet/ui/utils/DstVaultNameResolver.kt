@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -17,6 +18,7 @@ import kotlinx.coroutines.withContext
  *
  * @param allVaults every vault stored locally.
  * @param chainAccountAddressRepository derives a vault's per-chain address from its public key.
+ * @param dispatcher dispatcher the pubkey-derivation fallback runs on; overridable for tests.
  * @return the matching vault's name, or null when no local vault owns the address.
  */
 internal suspend fun resolveDstVaultName(
@@ -24,6 +26,7 @@ internal suspend fun resolveDstVaultName(
     chain: Chain,
     dstAddress: String,
     chainAccountAddressRepository: ChainAccountAddressRepository,
+    dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ): String? {
     val normalizedDstAddress = normalizeAddressForLookup(dstAddress)
 
@@ -37,7 +40,7 @@ internal suspend fun resolveDstVaultName(
             return it.name
         }
 
-    return withContext(Dispatchers.IO) {
+    return withContext(dispatcher) {
         allVaults
             .firstOrNull { v ->
                 try {

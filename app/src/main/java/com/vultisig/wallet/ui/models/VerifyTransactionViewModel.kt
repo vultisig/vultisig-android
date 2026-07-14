@@ -340,6 +340,7 @@ constructor(
                     chain = chain,
                     dstAddress = tx.dstAddress,
                     chainAccountAddressRepository = chainAccountAddressRepository,
+                    dispatcher = ioDispatcher,
                 )
             val dstAddressBookTitle =
                 if (dstVaultName == null) {
