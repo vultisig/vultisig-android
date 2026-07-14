@@ -40,7 +40,7 @@ internal class TransactionToUiModelMapperTronStakingTest {
         )
 
     @Test
-    fun `unfreeze surfaces the unfreeze header and hides the internal memo prefix`() = runTest {
+    fun `unfreeze surfaces the unfreeze header and keeps the resource in the memo`() = runTest {
         every { mapTokenValueToDecimalUiString(any()) } returns "0"
 
         val uiModel =
@@ -52,11 +52,11 @@ internal class TransactionToUiModelMapperTronStakingTest {
                 )
 
         uiModel.headerTitleRes shouldBe R.string.tron_unfreeze_screen_title
-        uiModel.memo shouldBe null
+        uiModel.memo shouldBe TronResourceType.BANDWIDTH.name
     }
 
     @Test
-    fun `freeze surfaces the freeze header and hides the internal memo prefix`() = runTest {
+    fun `freeze surfaces the freeze header and keeps the resource in the memo`() = runTest {
         every { mapTokenValueToDecimalUiString(any()) } returns "0"
 
         val uiModel =
@@ -68,7 +68,18 @@ internal class TransactionToUiModelMapperTronStakingTest {
                 )
 
         uiModel.headerTitleRes shouldBe R.string.tron_freeze_screen_title
-        uiModel.memo shouldBe null
+        uiModel.memo shouldBe TronResourceType.ENERGY.name
+    }
+
+    @Test
+    fun `a TRC20 send that echoes a staking memo is not mislabeled as staking`() = runTest {
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+
+        val stakingMemo = tronStakingMemo(TronStakingOperation.FREEZE, TronResourceType.ENERGY)
+        val uiModel = mapper().invoke(tronTransaction(stakingMemo, token = trc20))
+
+        uiModel.headerTitleRes shouldBe null
+        uiModel.memo shouldBe stakingMemo
     }
 
     @Test
@@ -81,17 +92,17 @@ internal class TransactionToUiModelMapperTronStakingTest {
         uiModel.memo shouldBe "gm"
     }
 
-    private fun tronTransaction(memo: String?): Transaction =
+    private fun tronTransaction(memo: String?, token: Coin = trx): Transaction =
         Transaction(
             id = "tx-1",
             vaultId = "vault-1",
             chainId = Chain.Tron.id,
-            token = trx,
+            token = token,
             srcAddress = "Towner",
             dstAddress = "Tdest",
-            tokenValue = TokenValue(value = BigInteger.TEN, token = trx),
+            tokenValue = TokenValue(value = BigInteger.TEN, token = token),
             fiatValue = FiatValue(BigDecimal.ZERO, "USD"),
-            gasFee = TokenValue(value = BigInteger.ONE, token = trx),
+            gasFee = TokenValue(value = BigInteger.ONE, token = token),
             totalGas = "0",
             memo = memo,
             estimatedFee = "0",
@@ -110,6 +121,13 @@ internal class TransactionToUiModelMapperTronStakingTest {
                 priceProviderID = "tron",
                 contractAddress = "",
                 isNativeToken = true,
+            )
+
+        val trc20 =
+            trx.copy(
+                ticker = "USDT",
+                contractAddress = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+                isNativeToken = false,
             )
     }
 }

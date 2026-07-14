@@ -33,23 +33,23 @@ constructor(
                 else null
         // TRON freeze/unfreeze is routed through the Send form and carries its operation only as an
         // internal memo prefix ("FREEZE:<resource>" / "UNFREEZE:<resource>"). Surface that as an
-        // operation-aware Verify header and drop the raw prefix so it doesn't leak into the Memo
-        // row.
+        // operation-aware Verify header, but keep the captured resource (BANDWIDTH/ENERGY) in the
+        // Memo row so the signed contract field stays visible. Gate on the native token so a TRC20
+        // send that merely echoes a matching memo isn't mislabeled as a staking operation.
+        val tronStakingMatch =
+            if (from.token.chain == Chain.Tron && from.token.isNativeToken)
+                from.memo?.let { TRON_STAKING_MEMO_REGEX.matchEntire(it) }
+            else null
         val tronStakingOperation =
-            if (from.token.chain == Chain.Tron) {
-                from.memo
-                    ?.let { TRON_STAKING_MEMO_REGEX.matchEntire(it) }
-                    ?.groupValues
-                    ?.get(1)
-                    ?.let { prefix ->
-                        TronStakingOperation.entries.firstOrNull { it.memoPrefix == prefix }
-                    }
-            } else null
+            tronStakingMatch?.groupValues?.get(1)?.let { prefix ->
+                TronStakingOperation.entries.firstOrNull { it.memoPrefix == prefix }
+            }
+        val tronStakingResource = tronStakingMatch?.groupValues?.get(2)
 
         val memo =
             when {
                 from.token.chain == Chain.Ripple && from.memo == destinationTag -> null
-                tronStakingOperation != null -> null
+                tronStakingOperation != null -> tronStakingResource
                 else -> from.memo
             }
 
