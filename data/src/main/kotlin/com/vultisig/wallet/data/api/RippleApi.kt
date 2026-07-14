@@ -76,7 +76,20 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
 
         val response = http.post(BASE_XRP_CLUSTER) { setBody(payload) }
 
-        return response.bodyOrThrow<RippleBroadcastSuccessResponseJson>()
+        val body = response.bodyOrThrow<RippleBroadcastSuccessResponseJson>()
+
+        // A signed XRPL tx that never reached a validating node before its LastLedgerSequence, or
+        // one still propagating, returns the `txnNotFound` error response (error_code 29). That is
+        // a clean "not on-chain yet" signal — not a failure — so report it as pending (null) rather
+        // than letting the strict deserializer throw on every poll.
+        if (
+            body.result.error == RIPPLE_TXN_NOT_FOUND ||
+                body.result.errorCode == RIPPLE_TXN_NOT_FOUND_CODE
+        ) {
+            return null
+        }
+
+        return body
     }
 
     override suspend fun getBalance(coin: Coin): BigInteger = supervisorScope {
@@ -134,6 +147,8 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
     private companion object {
         const val BASE_XRP_VULTISIG: String = "https://api.vultisig.com/ripple"
         const val BASE_XRP_CLUSTER: String = "https://xrplcluster.com"
+        const val RIPPLE_TXN_NOT_FOUND: String = "txnNotFound"
+        const val RIPPLE_TXN_NOT_FOUND_CODE: Int = 29
     }
 }
 

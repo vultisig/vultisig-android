@@ -162,12 +162,16 @@ private fun SuccessTransaction(
         AnimatedVisibility(isTransactionDetailVisible.not()) {
             Column {
                 val isTransactionPending = transactionStatus == TransactionStatus.Pending
+                val isTransactionStillConfirming =
+                    transactionStatus == TransactionStatus.StillConfirming
                 val isTransactionFailed = transactionStatus is TransactionStatus.Failed
                 val isTransactionRefunded = transactionStatus is TransactionStatus.Refunded
                 val isTransactionSigned = transactionStatus == TransactionStatus.Signed
                 val statusTitle =
                     when {
                         isTransactionPending -> stringResource(R.string.transaction_status_pending)
+                        isTransactionStillConfirming ->
+                            stringResource(R.string.transaction_status_still_confirming)
                         isTransactionRefunded ->
                             stringResource(R.string.transaction_status_refunded)
                         isTransactionFailed -> stringResource(R.string.transaction_failed)
@@ -200,7 +204,8 @@ private fun SuccessTransaction(
                         label = "tx_status_icon",
                     ) { status ->
                         when {
-                            status == TransactionStatus.Pending -> TransactionPending()
+                            status == TransactionStatus.Pending ||
+                                status == TransactionStatus.StillConfirming -> TransactionPending()
                             status is TransactionStatus.Failed ||
                                 status is TransactionStatus.Refunded ->
                                 RiveAnimation(
@@ -328,7 +333,7 @@ private fun TransactionPending(modifier: Modifier = Modifier) {
 // confirmed).
 private fun statusHeroKey(status: TransactionStatus): Int =
     when {
-        status == TransactionStatus.Pending -> 0
+        status == TransactionStatus.Pending || status == TransactionStatus.StillConfirming -> 0
         status is TransactionStatus.Failed || status is TransactionStatus.Refunded -> 1
         else -> 2
     }
@@ -352,6 +357,10 @@ internal fun TransactionStatusRow(status: TransactionStatus, modifier: Modifier 
             TransactionStatus.Signed ->
                 stringResource(R.string.transaction_status_signed_label) to
                     Theme.v2.colors.alerts.success
+
+            TransactionStatus.StillConfirming ->
+                stringResource(R.string.transaction_status_still_confirming_label) to
+                    Theme.v2.colors.text.secondary
 
             TransactionStatus.Broadcasted,
             TransactionStatus.Pending ->

@@ -78,6 +78,15 @@ internal class GasFeeOrchestrator(
     private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
 ) {
     private val recalculateGasFee = MutableStateFlow(0L)
+    // Bumped in a finally at the end of every gas-fee recompute (see collectGasFees).
+    // collectEstimatedFee combines on it so the estimate re-fires — and the loading flag clears —
+    // even when the numeric fee is unchanged (StateFlow suppresses equal values) or the recompute
+    // throws. Deliberately bumped only from collectGasFees (which carries the 350ms debounce +
+    // network call), not collectPlanFee: for non-UTXO chains collectPlanFee returns near-instantly,
+    // so clearing on its completion would drop the shimmer while the slower gas fee is still
+    // computing. Kept separate from recalculateGasFee, which feeds back into the compute flows, to
+    // avoid a recompute feedback loop.
+    private val estimateTrigger = MutableStateFlow(0L)
 
     fun start() {
         collectGasTokenBalance()
@@ -153,37 +162,61 @@ internal class GasFeeOrchestrator(
                         .distinctUntilChanged()
                         .mapNotNull { (token, dst, memo, tokenAmount) ->
                             val vault = vaultProvider() ?: return@mapNotNull null
-                            val tokenAmount = tokenAmount.toString().toBigDecimalOrNull()
-
                             val tokenAmountInt =
-                                tokenAmount?.movePointRight(token.decimal)?.toBigInteger()
-                                    ?: return@mapNotNull null
+                                tokenAmount
+                                    .toString()
+                                    .toBigDecimalOrNull()
+                                    ?.movePointRight(token.decimal)
+                                    ?.toBigInteger() ?: return@mapNotNull null
 
-                            val chain = token.chain
-                            val blockchainTransaction =
-                                Transfer(
-                                    coin = token,
-                                    vault =
-                                        VaultData(
-                                            vaultHexChainCode = vault.hexChainCode,
-                                            vaultHexPublicKey = vault.getPubKeyByChain(chain),
-                                        ),
-                                    amount = tokenAmountInt,
-                                    to = resolvedDstAddressProvider() ?: dst,
-                                    memo = memo,
-                                    isMax = false,
-                                )
+                            // A valid amount is present and we're about to (re)compute the fee:
+                            // show the shimmer and re-disable Continue. This lives inside the
+                            // debounced + distinctUntilChanged pipeline so the inputs that re-arm
+                            // loading can never exceed those that clear it (via estimateTrigger
+                            // below). Re-arming from a separate keystroke listener would arm on a
+                            // superset — an edit normalized away (trailing space) or leaving the
+                            // fee unchanged (memo on a UTXO chain) would set loading with no
+                            // matching clear and hang Continue forever.
+                            uiState.update { it.copy(isGasFeeLoading = true) }
 
-                            val fees =
-                                withContext(Dispatchers.IO) {
-                                    feeServiceComposite.calculateFees(blockchainTransaction)
-                                }
-                            val nativeCoin =
-                                withContext(Dispatchers.IO) {
-                                    tokenRepository.getNativeToken(chain.id)
-                                }
+                            try {
+                                val chain = token.chain
+                                val blockchainTransaction =
+                                    Transfer(
+                                        coin = token,
+                                        vault =
+                                            VaultData(
+                                                vaultHexChainCode = vault.hexChainCode,
+                                                vaultHexPublicKey = vault.getPubKeyByChain(chain),
+                                            ),
+                                        amount = tokenAmountInt,
+                                        to = resolvedDstAddressProvider() ?: dst,
+                                        memo = memo,
+                                        isMax = false,
+                                    )
 
-                            TokenValue(value = fees.amount, token = nativeCoin)
+                                val fees =
+                                    withContext(Dispatchers.IO) {
+                                        feeServiceComposite.calculateFees(blockchainTransaction)
+                                    }
+                                val nativeCoin =
+                                    withContext(Dispatchers.IO) {
+                                        tokenRepository.getNativeToken(chain.id)
+                                    }
+
+                                TokenValue(value = fees.amount, token = nativeCoin)
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                // Catch per item so a single failed estimate can't terminate the
+                                // flow and stop every later recompute; drop the shimmer so a
+                                // failure doesn't disable Continue with no recovery.
+                                Timber.e(e)
+                                uiState.update { it.copy(isGasFeeLoading = false) }
+                                null
+                            } finally {
+                                estimateTrigger.update { it + 1 }
+                            }
                         }
                         .catch { Timber.e(it) },
                     gasSettings,
@@ -277,32 +310,46 @@ internal class GasFeeOrchestrator(
                     gasFee.filterNotNull(),
                     gasSettings,
                     planFee.filterNotNull(),
-                ) { token, gasFee, gasSettings, planFee ->
+                    estimateTrigger,
+                ) { token, gasFee, gasSettings, planFee, _ ->
                     val chain = token.chain
                     val evmGasSettings = gasSettings as? GasSettings.Eth
-                    val estimatedFee =
-                        gasFeeToEstimatedFee(
-                            GasFeeParams(
-                                gasLimit =
-                                    if (evmGasSettings != null) evmGasSettings.gasLimit
-                                    else BigInteger.valueOf(1),
-                                gasFee =
-                                    selectGasFeeForFeeEstimation(
-                                        chain = chain,
-                                        gasFee = gasFee,
-                                        planFee = planFee,
-                                        evmGasSettings = evmGasSettings,
-                                    ),
-                                selectedToken = token,
-                                perUnit = true,
+                    try {
+                        val estimatedFee =
+                            gasFeeToEstimatedFee(
+                                GasFeeParams(
+                                    gasLimit =
+                                        if (evmGasSettings != null) evmGasSettings.gasLimit
+                                        else BigInteger.valueOf(1),
+                                    gasFee =
+                                        selectGasFeeForFeeEstimation(
+                                            chain = chain,
+                                            gasFee = gasFee,
+                                            planFee = planFee,
+                                            evmGasSettings = evmGasSettings,
+                                        ),
+                                    selectedToken = token,
+                                    perUnit = true,
+                                )
                             )
-                        )
 
-                    uiState.update {
-                        it.copy(
-                            estimatedFee = UiText.DynamicString(estimatedFee.formattedFiatValue),
-                            totalGas = UiText.DynamicString(estimatedFee.formattedTokenValue),
-                        )
+                        uiState.update {
+                            it.copy(
+                                estimatedFee =
+                                    UiText.DynamicString(estimatedFee.formattedFiatValue),
+                                totalGas = UiText.DynamicString(estimatedFee.formattedTokenValue),
+                                isGasFeeLoading = false,
+                            )
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        // The fee resolved; only its fiat conversion (e.g. a cold-cache price
+                        // fetch) failed. Catch per item so this sole clearer of the loading flag
+                        // survives, and drop the shimmer so a transient price fetch can't disable
+                        // Continue for the whole session.
+                        Timber.e(e)
+                        uiState.update { it.copy(isGasFeeLoading = false) }
                     }
                 }
                 .collect()
@@ -361,6 +408,10 @@ internal class GasFeeOrchestrator(
 
                     SpecificInput(token, gasFeeValue, dstAddress, cardanoAmount, cardanoMemo)
                 }
+                // Include the recompute nonce so pull-to-refresh re-runs getSpecific. Without this
+                // a failed first-load getSpecific leaves specific (and therefore planFee) null with
+                // no way to recover, since refresh alone doesn't change the specific inputs.
+                .combine(recalculateGasFee) { input, nonce -> input.copy(nonce = nonce) }
                 .distinctUntilChanged()
                 .collect { (token, gasFeeValue, dstAddress, cardanoAmount, cardanoMemo) ->
                     val chain = token.chain
@@ -395,7 +446,12 @@ internal class GasFeeOrchestrator(
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
+                        // getSpecific feeds planFee, which collectEstimatedFee (the sole clearer of
+                        // the loading flag) requires. A failure here would otherwise strand the
+                        // shimmer with Continue disabled forever, so drop the loading flag;
+                        // pull-to-refresh re-runs getSpecific via recalculateGasFee to recover.
                         Timber.e(e)
+                        uiState.update { it.copy(isGasFeeLoading = false) }
                     }
                 }
         }
@@ -435,6 +491,7 @@ private data class SpecificInput(
     val dstAddress: String,
     val cardanoAmount: BigInteger?,
     val cardanoMemo: String?,
+    val nonce: Long = 0,
 )
 
 private data class PlanFeeInput(

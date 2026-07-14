@@ -237,7 +237,10 @@ internal fun VerifySendScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         VsOverviewToken(
-                            header = stringResource(R.string.verify_deposit_sending),
+                            header =
+                                stringResource(
+                                    tx.headerTitleRes ?: R.string.verify_deposit_sending
+                                ),
                             valuedToken = tx.token,
                             shape = RoundedCornerShape(0.dp),
                             modifier = Modifier.fillMaxWidth(),
