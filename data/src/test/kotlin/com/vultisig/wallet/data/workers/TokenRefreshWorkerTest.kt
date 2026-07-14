@@ -145,15 +145,17 @@ internal class TokenRefreshWorkerTest {
         }
 
     @Test
-    fun `doWork corrects a token whose contractAddress and decimal drifted but ticker matches`() =
+    fun `doWork corrects a token whose contractAddress casing and decimal drifted but ticker matches`() =
         runTest {
-            // Ticker is unchanged (case identical); only the curated contractAddress/decimal moved.
-            // needsIdentityCorrection must still fire, exercising the non-ticker fields.
+            // Ticker is unchanged (case identical); the same contract was recased and the decimal
+            // moved. needsIdentityCorrection must still fire, exercising the non-ticker fields
+            // while
+            // staying on the same underlying contract (case-insensitive).
             val stale =
                 Coin.EMPTY.copy(
                     chain = Chain.ThorChain,
                     ticker = "bRUNE",
-                    contractAddress = "x/brune-old",
+                    contractAddress = "x/BRUNE",
                     decimal = 6,
                 )
             val corrected = stale.copy(contractAddress = "x/brune", decimal = 8)
@@ -171,6 +173,37 @@ internal class TokenRefreshWorkerTest {
             coVerify(exactly = 1) {
                 vaultRepository.replaceTokenInVault(vault.id, stale, corrected)
             }
+        }
+
+    @Test
+    fun `doWork does not hijack a token when a different contract shares an existing ticker`() =
+        runTest {
+            // Coin.id is ticker-based, so a second listing that a provider reports under an
+            // existing
+            // ticker matches the persisted coin by id. Because the contract genuinely differs (not
+            // just casing), the persisted send target must be left untouched — no replace, no
+            // delete/re-add that would flip it on every refresh.
+            val persisted =
+                Coin.EMPTY.copy(
+                    chain = Chain.ThorChain,
+                    ticker = "bRUNE",
+                    contractAddress = "x/brune",
+                )
+            val differentContract =
+                persisted.copy(contractAddress = "thor1adifferentcontractunderthesameticker")
+            val vault = vault(id = "vault-8", coins = listOf(coin(Chain.ThorChain)))
+
+            coEvery { vaultRepository.getAll() } returns listOf(vault)
+            coEvery { vaultRepository.getDisabledCoinIds(vault.id) } returns emptyList()
+            every { vaultRepository.getEnabledTokens(vault.id) } returns flowOf(listOf(persisted))
+            coEvery { tokenRepository.getRefreshTokens(Chain.ThorChain, vault) } returns
+                listOf(differentContract)
+
+            buildWorker().doWork()
+
+            coVerify(exactly = 0) { vaultRepository.replaceTokenInVault(any(), any(), any()) }
+            coVerify(exactly = 0) { vaultRepository.deleteTokenFromVault(any(), any()) }
+            coVerify(exactly = 0) { vaultRepository.addTokenToVault(any(), any()) }
         }
 
     @Test

@@ -113,8 +113,9 @@ constructor(
         if (existing != null) {
             // The token is already tracked. The id match is case-insensitive, so a stale entry
             // whose curated identity has since been corrected (e.g. a ticker recased from "BRUNE"
-            // to "bRUNE", or a canonicalized contractAddress/decimal) would otherwise be kept
-            // forever. Overwrite it with the freshly derived identity when they disagree.
+            // to "bRUNE", a recased contractAddress, or a drifted decimal) would otherwise be kept
+            // forever. Overwrite it with the freshly derived identity when they disagree — but only
+            // when it is genuinely the same token (see needsIdentityCorrection).
             if (existing.needsIdentityCorrection(refreshToken)) {
                 // Atomic swap: a mid-way failure must never drop the token, and a same-id
                 // correction (only contractAddress/decimal drifted) must not have its refreshed
@@ -134,13 +135,19 @@ constructor(
         vaultRepository.addTokenToVault(vault.id, refreshToken)
     }
 
-    // True when a persisted coin's curated identity (case-sensitive ticker, contractAddress, or
-    // decimal) has drifted from the freshly derived one and should be overwritten. Deliberately
-    // excludes address/hexPublicKey, which are vault-derived and always match for the same id.
-    private fun Coin.needsIdentityCorrection(refreshToken: Coin): Boolean =
-        ticker != refreshToken.ticker ||
+    // True when a persisted coin's curated identity (case-sensitive ticker, contractAddress casing,
+    // or decimal) has drifted from the freshly derived one and should be overwritten. Coin.id is
+    // ticker-based, so a provider that reports a *different* contract under an existing ticker must
+    // never trigger a correction — replacing the row would flip the send target to another contract
+    // on every refresh. Gate on the same contractAddress (case-insensitive) so only same-token
+    // recasing/decimal fixes survive. Deliberately excludes address/hexPublicKey, which are
+    // vault-derived and always match for the same id.
+    private fun Coin.needsIdentityCorrection(refreshToken: Coin): Boolean {
+        if (!contractAddress.equals(refreshToken.contractAddress, ignoreCase = true)) return false
+        return ticker != refreshToken.ticker ||
             contractAddress != refreshToken.contractAddress ||
             decimal != refreshToken.decimal
+    }
 
     companion object {
         const val ARG_VAULT_ID = "vault_id"
