@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -73,6 +74,13 @@ internal data class TransactionDetailsUiModel(
     val dstAddressBookTitle: String? = null,
     val dstLabel: String? = null,
     val memo: String? = null,
+    /**
+     * Operation-aware label rendered above the amount on the Verify screen. Null falls back to the
+     * generic "You're sending" header. Set for non-send operations routed through the Send form
+     * (e.g. TRON freeze/unfreeze) so the pre-signing checkpoint states the true intent instead of
+     * misreporting a stake/unstake as a plain send.
+     */
+    @StringRes val headerTitleRes: Int? = null,
     // XRP destination tag (decimal), shown as its own row alongside the memo.
     val destinationTag: String? = null,
     val signAmino: String? = null,
