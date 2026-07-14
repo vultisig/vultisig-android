@@ -56,6 +56,7 @@ internal data class SendFormUiModel(
     val totalGas: UiText = UiText.Empty,
     val gasTokenBalance: UiText? = null,
     val estimatedFee: UiText = UiText.Empty,
+    val isGasFeeLoading: Boolean = true,
 
     // type
     val defiType: DeFiNavActions? = null,
