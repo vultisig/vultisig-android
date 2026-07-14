@@ -60,6 +60,8 @@ interface VaultRepository {
     suspend fun deleteChainFromVault(vaultId: VaultId, chain: Chain)
 
     suspend fun addTokenToVault(vaultId: VaultId, token: Coin)
+
+    suspend fun replaceTokenInVault(vaultId: VaultId, oldToken: Coin, newToken: Coin)
 }
 
 internal class VaultRepositoryImpl
@@ -135,6 +137,10 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
 
     override suspend fun addTokenToVault(vaultId: String, token: Coin) {
         vaultDao.enableCoins(listOf(token.toCoinEntity(vaultId)))
+    }
+
+    override suspend fun replaceTokenInVault(vaultId: String, oldToken: Coin, newToken: Coin) {
+        vaultDao.replaceToken(vaultId, oldToken.id, newToken.toCoinEntity(vaultId))
     }
 
     private suspend fun VaultWithKeySharesAndTokens.toVault(): Vault {

@@ -82,6 +82,15 @@ interface VaultDao {
         coins.forEach { deleteFromDisabledCoin(vaultId = it.vaultId, coinId = it.id) }
     }
 
+    // Atomically swap a stale token for its corrected identity. Delete + enable run in one
+    // transaction so a mid-way failure can never leave the vault without the token; and when the
+    // corrected id is unchanged, the insert's REPLACE still wins because the delete precedes it.
+    @Transaction
+    suspend fun replaceToken(vaultId: String, oldTokenId: String, coin: CoinEntity) {
+        deleteTokenFromVault(vaultId, oldTokenId)
+        enableCoins(listOf(coin))
+    }
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDisabledCoin(disabledCoin: DisabledCoinEntity)
 

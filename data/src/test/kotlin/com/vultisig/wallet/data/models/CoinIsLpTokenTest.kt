@@ -83,6 +83,18 @@ class CoinIsLpTokenTest {
     }
 
     @Test
+    fun `ThorChain bRUNE with non-canonical casing is still an LP token`() {
+        val c = coin(Chain.ThorChain, "bRUNE", "x/BRUNE")
+        assertTrue(c.isLpToken)
+    }
+
+    @Test
+    fun `ThorChain staking denom with non-canonical casing is still an LP token`() {
+        val c = coin(Chain.ThorChain, "sTCY", "X/STAKING-TCY")
+        assertTrue(c.isLpToken)
+    }
+
+    @Test
     fun `MayaChain x-brune is not an LP token`() {
         val c = coin(Chain.MayaChain, "bRUNE", "x/brune")
         assertFalse(c.isLpToken)
