@@ -438,7 +438,7 @@ constructor(
                         // the zero-price filter below then drops bRUNE/ybRUNE for this cycle
                         // instead of overwriting their last-known good price.
                         try {
-                            runePriceUsd()
+                            runePriceUsd(currency)
                         } catch (e: Exception) {
                             if (e is kotlinx.coroutines.CancellationException) throw e
                             Timber.e(e, "Failed to fetch shared RUNE-in-USD price")
@@ -474,9 +474,7 @@ constructor(
                                                 nav * runeUsdPrice
                                             }
                                             "x/staking-tcy" -> {
-                                                val tcyPriceUSD =
-                                                    getCachedPrice("tcy", AppCurrency.USD)
-                                                        ?: getPriceByPriceProviderId("tcy")
+                                                val tcyPriceUSD = tcyPriceUsd(currency)
                                                 val nav =
                                                     navPerShareFromStatus(
                                                         thorApi.getThorchainTokenPriceByContract(
@@ -521,30 +519,58 @@ constructor(
             }
         }
 
-    private suspend fun runePriceUsd(): BigDecimal =
-        // Cache rows are keyed by Coin.id ("RUNE-THORChain"), not priceProviderID ("thorchain"), so
-        // the lookup must use the id or it can never hit and every call re-fetches live. The live
-        // fallback fetches RUNE explicitly in USD: getPriceByPriceProviderId returns the app
-        // currency, and callers multiply this result by tetherPrice (currency-per-USD), so a
-        // non-USD value here would double-apply FX.
-        getCachedPrice(Coins.ThorChain.RUNE.id, AppCurrency.USD) ?: fetchRunePriceUsdLive()
+    // RUNE-in-USD, used to price the RUNE-backed bRUNE/ybRUNE denoms.
+    // Cache rows are keyed by Coin.id ("RUNE-THORChain"), not priceProviderID ("thorchain"), so a
+    // lookup by provider id can never hit. The cached "usd" row is also only written while the app
+    // currency is USD and is never invalidated on a currency switch, so a non-USD user who once ran
+    // USD would otherwise read a frozen stale quote — only trust the cache while we are actually in
+    // USD, else fetch live. The live fallback fetches RUNE explicitly in USD
+    // (getPriceByPriceProviderId
+    // returns the app currency), and callers multiply by tetherPrice (currency-per-USD), so a
+    // non-USD value here would double-apply FX.
+    private suspend fun runePriceUsd(currency: String): BigDecimal {
+        if (currency.equals(AppCurrency.USD.ticker, ignoreCase = true)) {
+            getCachedPrice(Coins.ThorChain.RUNE.id, AppCurrency.USD)?.let {
+                return it
+            }
+        }
+        return fetchRunePriceUsdLive()
+    }
 
     private suspend fun fetchRunePriceUsdLive(): BigDecimal =
+        fetchCryptoPriceUsdLive(Coins.ThorChain.RUNE.priceProviderID)
+
+    // TCY-in-USD, used to price the sTCY staking receipt. Same rules as runePriceUsd: cache rows
+    // key
+    // on Coin.id ("TCY-THORChain"), not the "tcy" priceProviderID, and the cached usd row is only
+    // fresh while the app currency is USD. sTCY then multiplies this by NAV and the caller by
+    // tetherPrice, so a non-USD or provider-id-keyed value here would double-apply FX.
+    private suspend fun tcyPriceUsd(currency: String): BigDecimal {
+        if (currency.equals(AppCurrency.USD.ticker, ignoreCase = true)) {
+            getCachedPrice(Coins.ThorChain.TCY.id, AppCurrency.USD)?.let {
+                return it
+            }
+        }
+        return fetchCryptoPriceUsdLive(Coins.ThorChain.TCY.priceProviderID)
+    }
+
+    private suspend fun fetchCryptoPriceUsdLive(priceProviderId: String): BigDecimal =
         coinGeckoApi
-            .getCryptoPrices(
-                listOf(Coins.ThorChain.RUNE.priceProviderID),
-                listOf(AppCurrency.USD.ticker.lowercase()),
-            )
+            .getCryptoPrices(listOf(priceProviderId), listOf(AppCurrency.USD.ticker.lowercase()))
             .values
             .firstOrNull()
             ?.values
             ?.firstOrNull() ?: BigDecimal.ZERO
 
     // NAV per share from a `rujira-staking` `{"status":{}}` response:
-    // liquid_bond_size / liquid_bond_shares, falling back to 1 before any bonds exist.
+    // liquid_bond_size / liquid_bond_shares, falling back to 1 for a genuine pre-bond state (both
+    // fields present and zero). A malformed/empty 2xx leaves the fields at their "" default;
+    // pricing
+    // off that (nav = 1 → RUNE/TCY parity) would overwrite the accrued NAV price and slip past the
+    // caller's zero-filter, so treat an unparseable size/shares as 0 (dropped) instead.
     private fun navPerShareFromStatus(vaultData: VaultRedemptionResponseJson): BigDecimal {
-        val size = vaultData.data.liquidBondSize.toBigDecimalOrNull() ?: BigDecimal.ZERO
-        val shares = vaultData.data.liquidBondShares.toBigDecimalOrNull() ?: BigDecimal.ZERO
+        val size = vaultData.data.liquidBondSize.toBigDecimalOrNull() ?: return BigDecimal.ZERO
+        val shares = vaultData.data.liquidBondShares.toBigDecimalOrNull() ?: return BigDecimal.ZERO
         return if (shares > BigDecimal.ZERO) {
             size.divide(shares, 8, RoundingMode.DOWN)
         } else {

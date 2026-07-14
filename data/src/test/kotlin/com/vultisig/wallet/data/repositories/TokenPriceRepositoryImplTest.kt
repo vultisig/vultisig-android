@@ -257,6 +257,65 @@ internal class TokenPriceRepositoryImplTest {
     }
 
     @Test
+    fun `does not persist a nonzero parity price when the NAV status is empty`() = runTest {
+        stubEmptyContractFallback()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.RUNE.id, "usd") } returns "5.0"
+        // A malformed/empty 2xx leaves both bond fields at their "" default. NAV must resolve to 0
+        // (dropped), not 1 (RUNE parity), so it can't overwrite the last-known ybRUNE price.
+        coEvery { thorApi.getThorchainTokenPriceByContract(any()) } returns
+            redemption(bondSize = "", bondShares = "")
+
+        repository.refresh(listOf(ybRune))
+
+        coVerify(exactly = 0) { tokenPriceDao.insertTokenPrice(match { it.tokenId == ybRune.id }) }
+    }
+
+    private val sTcy = Coins.ThorChain.sTCY
+
+    @Test
+    fun `sTCY prices off the TCY cache keyed by coin id, not the tcy price provider`() = runTest {
+        stubEmptyContractFallback()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        // TCY-in-USD served from the cache, keyed by Coin.id ("TCY-THORChain") — a lookup by the
+        // "tcy" priceProviderID never hits, so this pins the coin-id path.
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.TCY.id, "usd") } returns "2.0"
+        // sTCY NAV = 200 / 100 = 2, so sTCY = 2 (TCY) × 2 (NAV) = 4.
+        coEvery { thorApi.getThorchainTokenPriceByContract(any()) } returns
+            redemption(bondSize = "200", bondShares = "100")
+
+        repository.refresh(listOf(sTcy))
+
+        assertPriceEquals("4", repository.getPrice(sTcy, AppCurrency.USD).first())
+    }
+
+    @Test
+    fun `sTCY live TCY fallback fetches TCY in USD and applies FX only once`() = runTest {
+        // Non-USD app currency, no cached TCY price: the live fallback must fetch TCY in USD and
+        // the
+        // caller applies the tether (currency-per-USD) rate exactly once. The old provider-id path
+        // returned the app currency and then multiplied by tether, so a EUR/JPY user saw sTCY
+        // roughly FX-times too high.
+        coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrency.EUR)
+        stubEmptyContractFallback()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.TCY.id, "usd") } returns null
+        coEvery {
+            coinGeckoApi.getCryptoPrices(match { it.contains("tcy") }, match { it.contains("usd") })
+        } returns mapOf("tcy" to mapOf("usd" to BigDecimal("2.0")))
+        coEvery { coinGeckoApi.getCryptoPrices(match { it.contains("tether") }, any()) } returns
+            mapOf("tether" to mapOf("eur" to BigDecimal("0.9")))
+        // sTCY NAV = 200 / 100 = 2.
+        coEvery { thorApi.getThorchainTokenPriceByContract(any()) } returns
+            redemption(bondSize = "200", bondShares = "100")
+
+        repository.refresh(listOf(sTcy))
+
+        // 2 USD (TCY) × 2 (NAV) × 0.9 EUR/USD = 3.6 EUR. A double-applied FX would yield 3.24.
+        assertPriceEquals("3.6", repository.getPrice(sTcy, AppCurrency.EUR).first())
+    }
+
+    @Test
     fun `VaultRedemption response maps the liquid bond JSON fields`() = runTest {
         // Pins the @SerialName mapping for the {"status":{}} contract query: a renamed field would
         // otherwise deserialize to the empty-string default and silently price ybRUNE at parity.
