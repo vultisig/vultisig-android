@@ -99,6 +99,7 @@ internal class KeysignViewModelSaveTransactionHistoryTest {
             txStatusConfigurationProvider = mockk(relaxed = true),
             txStatusPoller = mockk(relaxed = true),
             vaultRepository = mockk(relaxed = true),
+            chainAccountAddressRepository = mockk(relaxed = true),
             transactionHistoryRepository = transactionHistoryRepository,
             balanceRepository = mockk(relaxed = true),
             gasFeeToEstimatedFee = mockk(relaxed = true),

@@ -106,6 +106,7 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             txStatusConfigurationProvider = txStatusConfigurationProvider,
             txStatusPoller = mockk(relaxed = true),
             vaultRepository = mockk(relaxed = true),
+            chainAccountAddressRepository = mockk(relaxed = true),
             transactionHistoryRepository = mockk(relaxed = true),
             balanceRepository = mockk(relaxed = true),
             gasFeeToEstimatedFee = mockk(relaxed = true),

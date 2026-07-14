@@ -139,6 +139,7 @@ internal class VerifyTransactionViewModelTest {
             isVaultHasFastSignById = isVaultHasFastSignById,
             securityScannerService = securityScannerService,
             vaultRepository = vaultRepository,
+            chainAccountAddressRepository = mockk(relaxed = true),
             addressBookRepository = addressBookRepository,
             fourByteRepository = fourByteRepository,
             tokenMetadataResolver = tokenMetadataResolver,
