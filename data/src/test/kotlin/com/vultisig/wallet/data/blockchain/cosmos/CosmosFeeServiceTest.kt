@@ -100,6 +100,48 @@ class CosmosFeeServiceTest {
     }
 
     @Test
+    fun `terraGasLimitForFeeAmount inverts terraFeeAmount`() {
+        // floor(feeAmount / 0.025): 2877 uluna → 115_080 gas (the un-floored ~gas_used×1.3 fee).
+        assertEquals(
+            BigInteger("115080"),
+            CosmosFeeService.terraGasLimitForFeeAmount(BigInteger("2877")),
+        )
+        // the flat 7500 maps back to the static 300k limit — relaying it is a no-op, still valid.
+        assertEquals(
+            BigInteger("300000"),
+            CosmosFeeService.terraGasLimitForFeeAmount(BigInteger("7500")),
+        )
+    }
+
+    @Test
+    fun `relayed Terra gas limit is always covered by its fee amount`() {
+        // Core safety invariant of the #5279 fix: minGasPrice × relayedLimit ≤ signed fee amount,
+        // so a broadcast with the relayed (lower) gas_wanted can never be rejected "insufficient
+        // fee". Holds for any simulated gas because terraGasLimitForFeeAmount floor-divides.
+        val price = java.math.BigDecimal("0.025")
+        for (paddedLimit in listOf(50_000L, 88_516L, 115_071L, 250_000L)) {
+            val amount = CosmosFeeService.terraFeeAmount(paddedLimit)
+            val relayed = CosmosFeeService.terraGasLimitForFeeAmount(amount)
+            assertTrue(
+                price.multiply(relayed.toBigDecimal()) <= amount.toBigDecimal(),
+                "fee $amount must cover 0.025 × $relayed",
+            )
+        }
+    }
+
+    @Test
+    fun `non-native Terra token send keeps the static fee`() = runTest {
+        // CW20 / IBC Terra sends are not a native MsgSend, so they are never simulated and keep the
+        // static 300k limit + 7500 uluna (the un-floored simulated path is native-only).
+        val fee =
+            feeService.calculateDefaultFees(
+                transfer(Chain.Terra, contractAddress = "terra1token", isNativeToken = false)
+            ) as GasFees
+        assertEquals(BigInteger("300000"), fee.limit)
+        assertEquals(BigInteger("7500"), fee.amount)
+    }
+
+    @Test
     fun `Osmosis gas limit is 300000`() = runTest {
         val fee = feeService.calculateDefaultFees(transfer(Chain.Osmosis)) as GasFees
         assertEquals(BigInteger("300000"), fee.limit)

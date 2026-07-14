@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.chains.ton.tonUserFriendlyAddress
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.cosmos.CosmosFeeService
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUM_TRANSFER
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
@@ -485,6 +486,24 @@ constructor(
                         else -> null
                     }
 
+                // Terra (LUNA) native sends: relay a gas limit sized to the (simulate-derived) fee
+                // amount so the broadcast declares ~gas_used×1.3 instead of the static 300k
+                // ceiling,
+                // billing the real gas cost instead of the full 300k-gas fee (issue #5279). Derived
+                // from the signed `gasFee.value` itself so `amount ≥ gasPrice × gas_limit` holds by
+                // construction and the shown / signed / relayed values agree. Honored by every
+                // co-signer (Android #5191, iOS #4692, Windows/SDK); FastVault signs the hash.
+                // Native
+                // only — CW20 / IBC Terra sends use a different message and keep the static limit.
+                val relayedGasLimit =
+                    if (
+                        chain == Chain.Terra &&
+                            token.isNativeToken &&
+                            transactionType == TransactionType.TRANSACTION_TYPE_UNSPECIFIED
+                    ) {
+                        CosmosFeeService.terraGasLimitForFeeAmount(gasFee.value)
+                    } else null
+
                 BlockChainSpecificAndUtxo(
                     BlockChainSpecific.Cosmos(
                         accountNumber = BigInteger(account.accountNumber ?: "0"),
@@ -492,6 +511,7 @@ constructor(
                         gas = gasFee.value,
                         ibcDenomTraces = denomTrace,
                         transactionType = transactionType,
+                        gasLimit = relayedGasLimit,
                     )
                 )
             }

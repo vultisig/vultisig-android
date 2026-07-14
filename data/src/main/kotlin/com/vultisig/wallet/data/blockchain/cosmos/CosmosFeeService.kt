@@ -84,8 +84,27 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
                 .setScale(0, RoundingMode.CEILING)
                 .toBigInteger()
 
+        /**
+         * Inverse of [terraFeeAmount]: the largest gas limit whose minimum fee (`TERRA_GAS_PRICE ×
+         * limit`) is still covered by [feeAmount] (floor division). The initiator relays this
+         * alongside the signed fee amount so the broadcast declares `~gas_used × 1.3` instead of
+         * the static 300k ceiling, letting the fee bill the real gas cost instead of the full
+         * 300k-gas amount (issue #5279). Deriving the limit from the fee amount — rather than a
+         * second `/simulate` — keeps `feeAmount ≥ gasPrice × gasLimit` true by construction, so the
+         * shown, signed and relayed values can never disagree.
+         */
+        internal fun terraGasLimitForFeeAmount(feeAmount: BigInteger): BigInteger =
+            feeAmount
+                .toBigDecimal()
+                .divide(TERRA_GAS_PRICE, MathContext.DECIMAL64)
+                .setScale(0, RoundingMode.FLOOR)
+                .toBigInteger()
+
         // Chains whose sends WalletCore assembles as a native bank `MsgSend` (routed through
         // CosmosHelper in SigningHelper), so the simulated unsigned tx matches the broadcast tx.
+        // Terra's native LUNA send is also a `MsgSend` (TerraHelper's native branch), so the
+        // CosmosHelper-built simulation matches it; TerraClassic and Terra token sends (CW20 /
+        // IBC) use different messages and are excluded (see [simulatedGasUsed]).
         private val SIMULATION_SUPPORTED_CHAINS =
             setOf(
                 Chain.GaiaChain,
@@ -94,7 +113,16 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
                 Chain.Osmosis,
                 Chain.Noble,
                 Chain.Akash,
+                Chain.Terra,
             )
+
+        // Chains whose simulate-derived gas limit the initiator RELAYS (proto
+        // `CosmosSpecific.gas_limit`), so the broadcast tx declares that dynamic limit instead of
+        // the static one. For these the fee is priced at the dynamic limit with no static-amount
+        // floor — the on-chain minimum is `minGasPrice × dynamicLimit`, which the priced amount
+        // already meets. The static floor stays for every other chain, whose broadcast still
+        // declares the static limit (issue #5279 relies on the honor side shipped in #5191).
+        private val RELAYED_GAS_LIMIT_CHAINS = setOf(Chain.Terra)
     }
 
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
@@ -111,14 +139,23 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
         val gasUsed = simulatedGasUsed(transaction) ?: return staticFees
 
         val limit = gasUsed.toBigInteger().increaseByPercent(GAS_ADJUSTMENT_PERCENT)
-        val amount =
+        val pricedAmount =
             (limit.toBigDecimal() * simulatedGasPrice(chain, staticFees, staticLimit))
                 .setScale(0, RoundingMode.CEILING)
                 .toBigInteger()
+        val amount =
+            if (chain in RELAYED_GAS_LIMIT_CHAINS) {
+                // The initiator relays this dynamic `limit`, so the broadcast tx declares it (not
+                // the static one). The on-chain minimum is therefore `minGasPrice × dynamicLimit`
+                // = `pricedAmount`; applying the static-amount floor here would re-bill the full
+                // 300k-gas ceiling and reintroduce the overcharge (issue #5279).
+                pricedAmount
+            } else {
                 // The broadcast tx still declares the static `getChainGasLimit`, so the fee must
                 // cover at least the static per-chain amount (`minGasPrice × staticLimit`) or the
                 // mempool rejects it; never drop below that floor (issue #4847).
-                .max(staticFees.amount)
+                pricedAmount.max(staticFees.amount)
+            }
         return GasFees(limit = limit, amount = amount)
     }
 
@@ -181,7 +218,7 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
     /**
      * Simulates the unsigned transaction and returns `gas_info.gas_used`, or `null` to fall back to
      * the static gas limit. Only the chains whose sends WalletCore builds as native bank `MsgSend`
-     * are simulated; Terra/TerraClassic (TerraHelper, burn tax) and Qbtc (ML-DSA) keep their static
+     * are simulated; TerraClassic (TerraHelper, burn tax) and Qbtc (ML-DSA) keep their static
      * values.
      */
     private suspend fun simulatedGasUsed(transaction: BlockchainTransaction): Long? {
@@ -189,6 +226,12 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
         val chain = coin.chain
         if (chain !in SIMULATION_SUPPORTED_CHAINS) return null
         if (transaction !is Transfer) return null
+        // Only Terra's native LUNA send is a `MsgSend`; CW20 (`terra1…`) / IBC (`ibc/…`) token
+        // sends are wasm-execute / different messages, so a simulated `MsgSend` would under-measure
+        // their gas. Since Terra's fee is un-floored ([RELAYED_GAS_LIMIT_CHAINS]), an
+        // under-measurement can't be caught by the static floor — so never simulate a non-native
+        // Terra send.
+        if (chain == Chain.Terra && !coin.isNativeToken) return null
         val now = System.currentTimeMillis()
         cachedSimulatedGas?.let {
             if (it.chain == chain && now - it.fetchedAtMs < SIMULATED_GAS_TTL_MS) return it.gasUsed
