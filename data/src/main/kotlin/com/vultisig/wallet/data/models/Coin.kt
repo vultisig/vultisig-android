@@ -43,10 +43,15 @@ data class Coin(
 val Coin.isLpToken: Boolean
     get() =
         when (chain) {
-            Chain.ThorChain ->
-                contractAddress.startsWith("x/staking-") ||
-                    contractAddress.startsWith("x/nami-index-") ||
-                    contractAddress == "x/brune"
+            Chain.ThorChain -> {
+                // Compare on the lowercased denom so a persisted coin with non-canonical casing
+                // (e.g. a pre-canonicalization "x/BRUNE") is still recognized as an LP position and
+                // excluded from the swap pickers, matching the lowercase pricing path.
+                val addr = contractAddress.lowercase()
+                addr.startsWith("x/staking-") ||
+                    addr.startsWith("x/nami-index-") ||
+                    addr == "x/brune"
+            }
             Chain.MayaChain ->
                 contractAddress.startsWith("x/bow-") ||
                     contractAddress.startsWith("x/ghost-vault/") ||
