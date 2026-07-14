@@ -479,6 +479,12 @@ constructor(
                         }
                         .awaitAll()
                         .filterNotNull()
+                        // Drop zero prices rather than persist them. A transient failure (an
+                        // unparseable NAV, a rate-limited RUNE price) yields 0, and savePrices
+                        // only guards an empty currency map, so a $0 would overwrite the
+                        // last-known good price. signum() (not `!= ZERO`) is used so a scaled
+                        // zero like 0E-8 from a NAV division still counts as zero.
+                        .filter { (_, prices) -> prices.values.any { it.signum() != 0 } }
                         .toMap()
                 }
 
@@ -490,8 +496,23 @@ constructor(
         }
 
     private suspend fun runePriceUsd(): BigDecimal =
-        getCachedPrice(Coins.ThorChain.RUNE.priceProviderID, AppCurrency.USD)
-            ?: getPriceByPriceProviderId(Coins.ThorChain.RUNE.priceProviderID)
+        // Cache rows are keyed by Coin.id ("RUNE-THORChain"), not priceProviderID ("thorchain"), so
+        // the lookup must use the id or it can never hit and every call re-fetches live. The live
+        // fallback fetches RUNE explicitly in USD: getPriceByPriceProviderId returns the app
+        // currency, and callers multiply this result by tetherPrice (currency-per-USD), so a
+        // non-USD value here would double-apply FX.
+        getCachedPrice(Coins.ThorChain.RUNE.id, AppCurrency.USD) ?: fetchRunePriceUsdLive()
+
+    private suspend fun fetchRunePriceUsdLive(): BigDecimal =
+        coinGeckoApi
+            .getCryptoPrices(
+                listOf(Coins.ThorChain.RUNE.priceProviderID),
+                listOf(AppCurrency.USD.ticker.lowercase()),
+            )
+            .values
+            .firstOrNull()
+            ?.values
+            ?.firstOrNull() ?: BigDecimal.ZERO
 
     // NAV per share from a `rujira-staking` `{"status":{}}` response:
     // liquid_bond_size / liquid_bond_shares, falling back to 1 before any bonds exist.
