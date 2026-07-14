@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import java.io.IOException
@@ -112,6 +113,53 @@ internal class TokenRefreshWorkerTest {
         val result = buildWorker(inputData).doWork()
 
         assertEquals(ListenableWorker.Result.failure(), result)
+    }
+
+    @Test
+    fun `doWork corrects a stale ticker whose casing drifted from the curated identity`() =
+        runTest {
+            // A pre-canonicalization entry with the old uppercase ticker; the refreshed identity
+            // recases it. The ids match case-insensitively, so without a correction path the stale
+            // entry would be kept forever.
+            val stale =
+                Coin.EMPTY.copy(
+                    chain = Chain.ThorChain,
+                    ticker = "BRUNE",
+                    contractAddress = "x/brune",
+                )
+            val corrected = stale.copy(ticker = "bRUNE")
+            val vault = vault(id = "vault-5", coins = listOf(coin(Chain.ThorChain)))
+
+            coEvery { vaultRepository.getAll() } returns listOf(vault)
+            coEvery { vaultRepository.getDisabledCoinIds(vault.id) } returns emptyList()
+            every { vaultRepository.getEnabledTokens(vault.id) } returns flowOf(listOf(stale))
+            coEvery { tokenRepository.getRefreshTokens(Chain.ThorChain, vault) } returns
+                listOf(corrected)
+            coEvery { vaultRepository.deleteTokenFromVault(any(), any()) } returns Unit
+            coEvery { vaultRepository.addTokenToVault(any(), any()) } returns Unit
+
+            buildWorker().doWork()
+
+            coVerify(exactly = 1) { vaultRepository.deleteTokenFromVault(vault.id, stale) }
+            coVerify(exactly = 1) { vaultRepository.addTokenToVault(vault.id, corrected) }
+        }
+
+    @Test
+    fun `doWork leaves an already-correct token untouched`() = runTest {
+        val existing =
+            Coin.EMPTY.copy(chain = Chain.ThorChain, ticker = "bRUNE", contractAddress = "x/brune")
+        val vault = vault(id = "vault-6", coins = listOf(coin(Chain.ThorChain)))
+
+        coEvery { vaultRepository.getAll() } returns listOf(vault)
+        coEvery { vaultRepository.getDisabledCoinIds(vault.id) } returns emptyList()
+        every { vaultRepository.getEnabledTokens(vault.id) } returns flowOf(listOf(existing))
+        coEvery { tokenRepository.getRefreshTokens(Chain.ThorChain, vault) } returns
+            listOf(existing)
+
+        buildWorker().doWork()
+
+        coVerify(exactly = 0) { vaultRepository.deleteTokenFromVault(any(), any()) }
+        coVerify(exactly = 0) { vaultRepository.addTokenToVault(any(), any()) }
     }
 
     @Test

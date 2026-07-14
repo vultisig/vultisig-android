@@ -131,6 +131,56 @@ internal class TokenRepositoryImplTest {
         }
 
     @Test
+    fun `getTokensWithBalance surfaces bRUNE even when it is not in enabledDenoms`() = runTest {
+        // A fresh holder only ever seeded native RUNE, so enabledDenoms won't contain bRUNE. The
+        // curated liquid-bonding denom must bypass the gate and auto-surface anyway.
+        val thorApi: ThorChainApi = mockk(relaxed = true)
+        coEvery { thorApi.getBalance(ADDRESS) } returns
+            listOf(
+                CosmosBalance(denom = Coins.ThorChain.bRUNE.contractAddress, amount = "100"),
+                CosmosBalance(denom = "btc/btc", amount = "50"),
+            )
+        coEvery { thorApi.getDenomMetaFromLCD(any()) } returns null
+
+        val coins =
+            newRepository(thorApi)
+                .getTokensWithBalance(Chain.ThorChain, ADDRESS, enabledDenoms = setOf("rune"))
+
+        val bRune = coins.single { it.contractAddress == Coins.ThorChain.bRUNE.contractAddress }
+        assertEquals(Coins.ThorChain.bRUNE.ticker, bRune.ticker)
+        // A non-curated denom stays gated out.
+        assertTrue(coins.none { it.contractAddress == "btc/btc" })
+    }
+
+    @Test
+    fun `getTokensWithBalance canonicalizes bRUNE decimal to the curated value`() = runTest {
+        // The denom-metadata ladder reports a non-8 exponent; the curated override must reset
+        // decimal alongside ticker/contractAddress so the discovered coin can't disagree with the
+        // curated definition.
+        val thorApi: ThorChainApi = mockk(relaxed = true)
+        coEvery { thorApi.getBalance(ADDRESS) } returns
+            listOf(CosmosBalance(denom = Coins.ThorChain.bRUNE.contractAddress, amount = "100"))
+        coEvery { thorApi.getDenomMetaFromLCD(Coins.ThorChain.bRUNE.contractAddress) } returns
+            DenomMetadata(
+                base = Coins.ThorChain.bRUNE.contractAddress,
+                symbol = "x/brune",
+                display = null,
+                denomUnits =
+                    listOf(
+                        com.vultisig.wallet.data.api.models.DenomUnit(
+                            denom = "x/brune",
+                            exponent = 6,
+                        )
+                    ),
+            )
+
+        val coins = newRepository(thorApi).getTokensWithBalance(Chain.ThorChain, ADDRESS)
+
+        val bRune = coins.single()
+        assertEquals(Coins.ThorChain.bRUNE.decimal, bRune.decimal)
+    }
+
+    @Test
     fun `getTokensWithBalance for Terra delegates to the Cosmos bank coin finder`() = runTest {
         val cosmosBankCoinFinder: CosmosBankCoinFinder = mockk()
         val expected = listOf(Coins.Terra.ASTRO_IBC)

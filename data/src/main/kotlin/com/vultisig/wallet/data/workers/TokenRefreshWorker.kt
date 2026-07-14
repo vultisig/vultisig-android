@@ -106,11 +106,21 @@ constructor(
         refreshToken: Coin,
         vault: Vault,
     ) {
-        val isTokenExist =
-            enabledCoinIds.any { enabledCoinId ->
+        val existing =
+            enabledCoinIds.firstOrNull { enabledCoinId ->
                 enabledCoinId.id.equals(refreshToken.id, ignoreCase = true)
             }
-        if (isTokenExist) return
+        if (existing != null) {
+            // The token is already tracked. The id match is case-insensitive, so a stale entry
+            // whose curated identity has since been corrected (e.g. a ticker recased from "BRUNE"
+            // to "bRUNE", or a canonicalized contractAddress/decimal) would otherwise be kept
+            // forever. Overwrite it with the freshly derived identity when they disagree.
+            if (existing.needsIdentityCorrection(refreshToken)) {
+                vaultRepository.deleteTokenFromVault(vault.id, existing)
+                vaultRepository.addTokenToVault(vault.id, refreshToken)
+            }
+            return
+        }
 
         val withSameContractCoin =
             enabledCoinIds.firstOrNull { enabledCoin ->
@@ -121,6 +131,14 @@ constructor(
 
         vaultRepository.addTokenToVault(vault.id, refreshToken)
     }
+
+    // True when a persisted coin's curated identity (case-sensitive ticker, contractAddress, or
+    // decimal) has drifted from the freshly derived one and should be overwritten. Deliberately
+    // excludes address/hexPublicKey, which are vault-derived and always match for the same id.
+    private fun Coin.needsIdentityCorrection(refreshToken: Coin): Boolean =
+        ticker != refreshToken.ticker ||
+            contractAddress != refreshToken.contractAddress ||
+            decimal != refreshToken.decimal
 
     companion object {
         const val ARG_VAULT_ID = "vault_id"
