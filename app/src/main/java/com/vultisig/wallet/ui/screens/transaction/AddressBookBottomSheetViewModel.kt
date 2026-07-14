@@ -17,6 +17,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -73,23 +74,30 @@ constructor(
         }
 
         viewModelScope.launch {
+            val chain = Chain.fromRaw(args.chainId)
             val vaults =
                 vaultRepository.getAll().mapNotNull { vault ->
-                    vault.coins
-                        .find { it.chain.id == args.chainId }
-                        ?.address
-                        ?.let { existingAddress ->
-                            AddressEntryUiModel(
-                                model =
-                                    AddressBookEntry(
-                                        chain = Chain.fromRaw(args.chainId),
-                                        address = existingAddress,
-                                        title = vault.name,
-                                    ),
-                                title = vault.name,
-                                subtitle = existingAddress,
-                            )
-                        }
+                    // Prefer the already-enabled coin's address; otherwise derive the address
+                    // from the vault's public key so vaults that haven't enabled this chain are
+                    // still selectable as a destination.
+                    val address =
+                        vault.coins.find { it.chain.id == args.chainId }?.address
+                            ?: try {
+                                chainAccountAddressRepository.getAddress(chain, vault).first
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (_: Exception) {
+                                null
+                            }
+
+                    address?.let {
+                        AddressEntryUiModel(
+                            model =
+                                AddressBookEntry(chain = chain, address = it, title = vault.name),
+                            title = vault.name,
+                            subtitle = it,
+                        )
+                    }
                 }
 
             state.update { it.copy(vaults = vaults) }
