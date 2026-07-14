@@ -180,6 +180,14 @@ sealed interface TransactionStatus {
     /** Transaction is in the mempool but not yet included in a block. */
     data object Pending : TransactionStatus
 
+    /**
+     * Polling reached its time budget without a terminal on-chain result. The transaction may still
+     * confirm later (or, for XRP, may have expired past its LastLedgerSequence without moving
+     * funds). This is a neutral terminal state — never a hard failure — so the user isn't told the
+     * send failed when funds were untouched.
+     */
+    data object StillConfirming : TransactionStatus
+
     /** Transaction has been confirmed on-chain. */
     data object Confirmed : TransactionStatus
 
@@ -974,8 +982,7 @@ constructor(
             TransactionResult.Confirmed -> TransactionStatus.Confirmed
             is TransactionResult.Failed -> TransactionStatus.Failed(this.reason.asUiText())
             is TransactionResult.Refunded -> TransactionStatus.Refunded(this.reason.asUiText())
-            TransactionResult.TimedOut ->
-                TransactionStatus.Failed("Confirmation taking longer than expected".asUiText())
+            TransactionResult.TimedOut -> TransactionStatus.StillConfirming
             TransactionResult.NotFound,
             TransactionResult.Pending -> TransactionStatus.Pending
         }
