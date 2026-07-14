@@ -278,6 +278,7 @@
     <string name="signing_error_token_account_not_found_s">Не удалось загрузить токен-аккаунт %s. Попробуйте ещё раз.</string>
     <string name="signing_error_mixed_reshare">Смешанное подписание Reshare.\nПожалуйста, используйте общие ресурсы хранилища одного и того же цикла Reshare.</string>
     <string name="signing_error_sequence_mismatch">Порядковый номер аккаунта изменился — пожалуйста, повторите попытку.</string>
+    <string name="signing_error_account_not_funded">Этот аккаунт ещё не существует в сети.\nПожалуйста, сначала пополните кошелек.</string>
     <string name="signing_error_broadcast_rejected">Транзакция отклонена сетью.</string>
     <string name="signing_error_broadcast_rejected_s">Транзакция отклонена сетью: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Быстрая подпись</string>

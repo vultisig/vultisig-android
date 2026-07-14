@@ -279,6 +279,7 @@
     <string name="signing_error_token_account_not_found_s">Nije moguće učitati vaš %s token račun. Pokušajte ponovno.</string>
     <string name="signing_error_mixed_reshare">Potpisivanje mješovitog ponovnog dijeljenja.\nUpotrijebite dijeljenja trezora istog ciklusa ponovnog dijeljenja.</string>
     <string name="signing_error_sequence_mismatch">Slijed računa je promijenjen — pokušajte ponovno.</string>
+    <string name="signing_error_account_not_funded">Ovaj račun još ne postoji on-chain.\nMolimo prvo uplatite novčanik.</string>
     <string name="signing_error_broadcast_rejected">Mreža je odbila transakciju.</string>
     <string name="signing_error_broadcast_rejected_s">Mreža je odbila transakciju: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Brzi znak</string>

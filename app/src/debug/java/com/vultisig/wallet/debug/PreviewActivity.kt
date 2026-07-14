@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBlockedReason
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
@@ -119,6 +120,7 @@ import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
+import com.vultisig.wallet.ui.screens.keysign.KeysignErrorScreen
 import com.vultisig.wallet.ui.screens.keysign.KeysignView
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimScreen
@@ -282,6 +284,8 @@ class PreviewActivity : ComponentActivity() {
                     "vault_detail_no_mldsa" -> VaultDetailPreview(withMldsa = false)
                     "vault_detail_mldsa" -> VaultDetailPreview(withMldsa = true)
                     "error_screen_after" -> ErrorScreenAfterPreview()
+                    "qbtc_unknown_address_before" -> QbtcUnknownAddressBeforePreview()
+                    "qbtc_unknown_address_after" -> QbtcUnknownAddressAfterPreview()
                     "chain_selection" -> ChainSelectionClipPreview()
                     "verify_send_empty_memo" -> VerifySendEmptyMemoPreview()
                     else -> SwapConfirmPreview()
@@ -336,6 +340,42 @@ private fun ErrorScreenAfterPreview() {
             ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = {}),
         onBack = {},
     )
+}
+
+/**
+ * Reproduces the pre-#5043-fix keysign error screen for a QBTC/Cosmos `code=9` ("unknown address")
+ * broadcast rejection: the generic broadcast-rejected copy interpolates the node's raw_log
+ * verbatim, including its undecodable fee-payer address bytes.
+ */
+@Composable
+private fun QbtcUnknownAddressBeforePreview() {
+    KeysignErrorScreen(
+        errorMessage =
+            UiText.DynamicString(
+                "broadcast_failure: fee payer address: ��� does not exist: " + "unknown address"
+            ),
+        tryAgain = {},
+        onBack = {},
+    )
+}
+
+/**
+ * The fixed keysign error screen for the same `code=9` rejection: [CosmosBroadcastException.from]
+ * now tags it with [CosmosBroadcastException.UNKNOWN_ADDRESS_MARKER], so the screen shows a
+ * friendly "fund the wallet" message instead of the raw node text.
+ */
+@Composable
+private fun QbtcUnknownAddressAfterPreview() {
+    val message =
+        CosmosBroadcastException.from(
+                code = 9,
+                codespace = "sdk",
+                rawLog = "fee payer address: ��� does not exist: unknown address",
+                txHash = null,
+            )
+            .message
+            .orEmpty()
+    KeysignErrorScreen(errorMessage = UiText.DynamicString(message), tryAgain = {}, onBack = {})
 }
 
 @Composable

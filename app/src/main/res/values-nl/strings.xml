@@ -278,6 +278,7 @@
     <string name="signing_error_token_account_not_found_s">Kan je %s-tokenaccount niet laden. Probeer het opnieuw.</string>
     <string name="signing_error_mixed_reshare">Gemengde Reshare-ondertekening.\nGebruik kluisshares van dezelfde Reshare-cyclus.</string>
     <string name="signing_error_sequence_mismatch">De accountvolgorde is gewijzigd — probeer het opnieuw.</string>
+    <string name="signing_error_account_not_funded">Dit account bestaat nog niet on-chain.\nSchakel eerst geld in de wallet.</string>
     <string name="signing_error_broadcast_rejected">Transactie geweigerd door het netwerk.</string>
     <string name="signing_error_broadcast_rejected_s">Transactie geweigerd door het netwerk: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Snel teken</string>

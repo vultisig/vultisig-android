@@ -279,6 +279,7 @@
     <string name="signing_error_token_account_not_found_s">Não foi possível carregar a sua conta de token %s. Tente novamente.</string>
     <string name="signing_error_mixed_reshare">Assinatura mista de nova partilha. \nUtilizar partilhas do cofre do mesmo ciclo de nova partilha.</string>
     <string name="signing_error_sequence_mismatch">A sequência da conta foi alterada — por favor, tente novamente.</string>
+    <string name="signing_error_account_not_funded">Esta conta ainda não existe on-chain.\nPor favor, financie a carteira primeiro.</string>
     <string name="signing_error_broadcast_rejected">Transação rejeitada pela rede.</string>
     <string name="signing_error_broadcast_rejected_s">Transação rejeitada pela rede: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Sinal rápido</string>
