@@ -433,7 +433,17 @@ constructor(
                             denom == BRUNE_DENOM || denom == YBRUNE_DENOM
                         }
                     ) {
-                        runePriceUsd()
+                        // This runs outside the per-token async guards, so a failure here would
+                        // abort the whole batch (NAMI, sTCY, …). Contain it and fall back to 0 —
+                        // the zero-price filter below then drops bRUNE/ybRUNE for this cycle
+                        // instead of overwriting their last-known good price.
+                        try {
+                            runePriceUsd()
+                        } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) throw e
+                            Timber.e(e, "Failed to fetch shared RUNE-in-USD price")
+                            BigDecimal.ZERO
+                        }
                     } else {
                         BigDecimal.ZERO
                     }
