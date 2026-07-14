@@ -1,5 +1,8 @@
 package com.vultisig.wallet.ui.models.mappers
 
+import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
+import com.vultisig.wallet.data.blockchain.tron.TronStakingOperation
 import com.vultisig.wallet.data.chains.helpers.RippleDestinationTag
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.Chain
@@ -28,8 +31,34 @@ constructor(
                 ?: if (from.token.chain == Chain.Ripple)
                     RippleDestinationTag.parseCanonicalDestinationTag(from.memo)?.toString()
                 else null
+        // TRON freeze/unfreeze is routed through the Send form and carries its operation only as an
+        // internal memo prefix ("FREEZE:<resource>" / "UNFREEZE:<resource>"). Surface that as an
+        // operation-aware Verify header, but keep the captured resource (BANDWIDTH/ENERGY) in the
+        // Memo row so the signed contract field stays visible. Gate on the native token so a TRC20
+        // send that merely echoes a matching memo isn't mislabeled as a staking operation.
+        val tronStakingMatch =
+            if (from.token.chain == Chain.Tron && from.token.isNativeToken)
+                from.memo?.let { TRON_STAKING_MEMO_REGEX.matchEntire(it) }
+            else null
+        val tronStakingOperation =
+            tronStakingMatch?.groupValues?.get(1)?.let { prefix ->
+                TronStakingOperation.entries.firstOrNull { it.memoPrefix == prefix }
+            }
+        val tronStakingResource = tronStakingMatch?.groupValues?.get(2)
+
         val memo =
-            if (from.token.chain == Chain.Ripple && from.memo == destinationTag) null else from.memo
+            when {
+                from.token.chain == Chain.Ripple && from.memo == destinationTag -> null
+                tronStakingOperation != null -> tronStakingResource
+                else -> from.memo
+            }
+
+        val headerTitleRes =
+            when (tronStakingOperation) {
+                TronStakingOperation.FREEZE -> R.string.tron_freeze_screen_title
+                TronStakingOperation.UNFREEZE -> R.string.tron_unfreeze_screen_title
+                null -> null
+            }
 
         return TransactionDetailsUiModel(
             token =
@@ -42,6 +71,7 @@ constructor(
             dstAddress = from.dstAddress,
             dstLabel = from.dstLabel,
             memo = memo,
+            headerTitleRes = headerTitleRes,
             destinationTag = destinationTag,
             signAmino = from.signAmino,
             signDirect = from.signDirect,
