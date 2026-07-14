@@ -1184,7 +1184,6 @@
     <string name="transaction_status_confirmed">Transaction confirmed</string>
     <string name="transaction_status_failed">Transaction failed</string>
     <string name="transaction_status_refunded">Transaction refunded</string>
-    <string name="transaction_status_not_found">Transaction not found</string>
     <string name="transaction_status_pending">Transaction pending…</string>
     <string name="transaction_status_still_confirming">Still confirming…</string>
     <string name="transaction_status_still_confirming_label">Still confirming</string>

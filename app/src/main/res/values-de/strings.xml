@@ -1128,7 +1128,6 @@
     <string name="transaction_status_confirmed">Transaktion bestätigt</string>
     <string name="transaction_status_failed">Transaktion fehlgeschlagen</string>
     <string name="transaction_status_refunded">Transaktion erstattet</string>
-    <string name="transaction_status_not_found">Transaktion nicht gefunden</string>
     <string name="transaction_status_pending">Transaktion ausstehend…</string>
     <string name="transaction_status_still_confirming">Wird noch bestätigt…</string>
     <string name="transaction_status_still_confirming_label">Wird noch bestätigt</string>

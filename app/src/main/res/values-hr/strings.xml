@@ -1131,7 +1131,6 @@
     <string name="transaction_status_confirmed">Transakcija potvrđena</string>
     <string name="transaction_status_failed">Transakcija nije uspjela</string>
     <string name="transaction_status_refunded">Transakcija vraćena</string>
-    <string name="transaction_status_not_found">Transakcija nije pronađena</string>
     <string name="transaction_status_pending">Transakcija na čekanju…</string>
     <string name="transaction_status_still_confirming">Još se potvrđuje…</string>
     <string name="transaction_status_still_confirming_label">Još se potvrđuje</string>
