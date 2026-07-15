@@ -931,6 +931,38 @@ internal class SwapFormViewModelTest {
             assertFalse(vm.uiState.value.isLoading)
         }
 
+    @Test
+    fun `empty amount never raises the loading spinner on form open`() =
+        runTest(mainDispatcher) {
+            // Supported pair, but no amount has been entered yet.
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            // The initial pair emission plus the slippage / external-recipient StateFlows all flow
+            // through the pipeline on subscription. With an empty amount field there is nothing to
+            // quote, so the spinner must stay off across the whole debounce window rather than
+            // flashing the destination/fee skeletons true→false (blink).
+            assertFalse(vm.uiState.value.isLoading)
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            assertFalse(vm.uiState.value.isLoading)
+
+            // No quote fetch is attempted for an empty field.
+            coVerify(exactly = 0) {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            }
+        }
+
     // endregion
 
     // region pair eligibility (#4710)

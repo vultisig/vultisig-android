@@ -312,7 +312,7 @@ constructor(
                     // Unroutable pair: the "no route" guidance already showed on selection (#4710),
                     // so don't spin or fetch an indicative estimate for a pair we can't quote.
                     if (!isPairSupported) return@onEach
-                    isLoading = true
+                    startLoadingIfQuotable()
                     showIndicativeRate(input)
                 }
                 .combine(refreshQuoteState) { input, _ -> input }
@@ -323,8 +323,10 @@ constructor(
                 // #4969). The onEach rides each flow individually, so the silent refresh timer
                 // above
                 // doesn't flash the spinner.
-                .combine(slippageBps.onEach { isLoading = true }) { input, _ -> input }
-                .combine(externalRecipient.onEach { isLoading = true }) { input, _ -> input }
+                .combine(slippageBps.onEach { startLoadingIfQuotable() }) { input, _ -> input }
+                .combine(externalRecipient.onEach { startLoadingIfQuotable() }) { input, _ ->
+                    input
+                }
                 // Percentage / Max / paste skip the debounce (0ms); free typing still coalesces at
                 // 300ms so rapid edits fire a single quote fetch.
                 .debounce { input -> swapQuoteManager.quoteDebounceMillis(input.immediate) }
@@ -457,6 +459,19 @@ constructor(
                 isSwapDisabled = outcome.isSwapDisabled,
                 formError = outcome.formError,
             )
+        }
+    }
+
+    /**
+     * Raise the loading spinner only when there is genuinely a quote to fetch — a routable pair with
+     * a positive source amount. An empty or zero field has nothing to load, so gating here stops the
+     * destination/fee skeletons from flashing (isLoading true→false) on form open, a bare pair
+     * change, or a slippage/recipient change while the amount field is still empty (#4712).
+     */
+    private fun startLoadingIfQuotable() {
+        val amount = srcAmount
+        if (isPairSupported && amount != null && amount > BigDecimal.ZERO) {
+            isLoading = true
         }
     }
 
