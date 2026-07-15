@@ -98,17 +98,20 @@ internal data class SendFormUiModel(
 /**
  * Whether the Continue action should be disabled for the current form state.
  *
- * TRON freeze/unfreeze pays a fixed, amount-independent fee that resolves on entry, so Continue is
- * gated on a valid amount being present rather than on the gas-fee loading flag (which only clears
- * once an amount drives the estimation pipeline). All other flows keep the amount-dependent gating
- * on [isGasFeeLoading].
+ * TRON freeze/unfreeze pays a fixed, amount-independent fee that the orchestrator resolves on entry
+ * with a zero-amount placeholder (see GasFeeOrchestrator), so [isGasFeeLoading] clears before any
+ * amount is entered and can no longer stand in for "an amount is present". Continue is therefore
+ * gated on [isAmountValid]. On Unfreeze it is additionally gated on [isTronFrozenBalancesLoading]
+ * so it cannot enable before the frozen balance loads — otherwise submit coerces the still-null
+ * balance to zero and falsely rejects a fundable unfreeze. All other flows keep the
+ * amount-dependent gating on [isGasFeeLoading].
  *
  * @return true when Continue must stay disabled.
  */
 internal fun SendFormUiModel.isContinueDisabled(): Boolean =
     isLoading ||
         if (tronResourceType != null) {
-            !isAmountValid
+            !isAmountValid || isTronFrozenBalancesLoading
         } else {
             showGasFee && isGasFeeLoading
         }

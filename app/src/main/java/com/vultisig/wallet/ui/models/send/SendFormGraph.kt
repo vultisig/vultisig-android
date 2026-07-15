@@ -440,10 +440,14 @@ internal class SendFormGraph(
                 uiState.update { it.copy(reapingError = error) }
             }
         }
-        scope.launch {
-            tokenAmountFieldState.textAsFlow().collect { amount ->
-                val isValid = amountManager.validateTokenAmount(amount.toString()) == null
-                uiState.update { it.copy(isAmountValid = isValid) }
+        // Only the TRON freeze/unfreeze branch of isContinueDisabled reads isAmountValid, so limit
+        // this per-keystroke validation to staking flows instead of paying it on every send screen.
+        if (tronStakingService.isStakingType()) {
+            scope.launch {
+                tokenAmountFieldState.textAsFlow().collect { amount ->
+                    val isValid = amountManager.validateTokenAmount(amount.toString()) == null
+                    uiState.update { it.copy(isAmountValid = isValid) }
+                }
             }
         }
         scope.launch {
