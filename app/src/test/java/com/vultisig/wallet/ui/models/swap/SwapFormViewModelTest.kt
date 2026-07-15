@@ -64,6 +64,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -932,22 +933,40 @@ internal class SwapFormViewModelTest {
         }
 
     @Test
-    fun `empty amount never raises the loading spinner on form open`() =
+    fun `empty or zero amount never raises the loading spinner across the debounce window`() =
         runTest(mainDispatcher) {
-            // Supported pair, but no amount has been entered yet.
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+
             val vm = createViewModelWithSwapTokens()
             advanceUntilIdle()
 
+            // Collect every isLoading emission: advanceUntilIdle() settles the final value, so
+            // checking only the settled state would still pass a regression that flashed the
+            // spinner true→false mid-window. The blink is the transient true, so assert it never
+            // emits at all (#5296 review).
+            val loadingStates = mutableListOf(vm.uiState.value.isLoading)
+            val collectJob =
+                backgroundScope.launch(mainDispatcher) {
+                    vm.uiState.collect { loadingStates += it.isLoading }
+                }
+
             // The initial pair emission plus the slippage / external-recipient StateFlows all flow
-            // through the pipeline on subscription. With an empty amount field there is nothing to
-            // quote, so the spinner must stay off across the whole debounce window rather than
-            // flashing the destination/fee skeletons true→false (blink).
-            assertFalse(vm.uiState.value.isLoading)
+            // through the pipeline on subscription; a bare "0" adds an amount trigger. With nothing
+            // quotable the spinner must stay off across the whole debounce window rather than
+            // flashing the destination/fee skeletons.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            vm.setSlippageBps(300)
+            vm.setExternalRecipient(null)
             advanceTimeBy(400)
             advanceUntilIdle()
-            assertFalse(vm.uiState.value.isLoading)
+            collectJob.cancel()
 
-            // No quote fetch is attempted for an empty field.
+            assertFalse(loadingStates.any { it }, "spinner blinked on an empty/zero amount")
+
+            // No quote fetch is attempted for a non-quotable field.
             coVerify(exactly = 0) {
                 swapQuoteManager.fetchBestQuote(
                     any(),
@@ -961,6 +980,116 @@ internal class SwapFormViewModelTest {
                     any(),
                 )
             }
+        }
+
+    @Test
+    fun `a same-token pair never raises the loading spinner even with a positive amount`() =
+        runTest(mainDispatcher) {
+            // Same source and destination token: the pair is "supported" (no route guidance while
+            // mid-pick) but has no provider, so it can never be quoted and must not spin (#5296).
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddressWithBalance(BigInteger("1000000000000000000"))),
+                    srcTokenId = ETH_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            val loadingStates = mutableListOf(vm.uiState.value.isLoading)
+            val collectJob =
+                backgroundScope.launch(mainDispatcher) {
+                    vm.uiState.collect { loadingStates += it.isLoading }
+                }
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("10")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            collectJob.cancel()
+
+            assertFalse(loadingStates.any { it }, "spinner blinked on a same-token pair")
+        }
+
+    @Test
+    fun `a slippage change with a positive amount still raises the loading spinner`() =
+        runTest(mainDispatcher) {
+            // The shared startLoadingIfQuotable() gate must keep the #4858/#4969 safety net: a
+            // slippage change re-routes the quote, so the Swap button has to disable (isLoading)
+            // until the new quote lands — otherwise the prior, differently-routed quote is
+            // signable.
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("10")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            assertFalse(vm.uiState.value.isLoading)
+
+            vm.setSlippageBps(300)
+            runCurrent()
+            assertTrue(vm.uiState.value.isLoading)
+        }
+
+    @Test
+    fun `clearing the amount over a resolved quote disables swap and drops the stale quote at once`() =
+        runTest(mainDispatcher) {
+            // Before the debounce runs resetQuoteState ~300ms later, a cleared field must already
+            // disable Swap and drop the stale destination so the old, no-longer-valid quote can't
+            // be
+            // tapped (#5296 review).
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("10")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            assertTrue(vm.uiState.value.quoteDisplay.hasQuote)
+            assertFalse(vm.uiState.value.isSwapDisabled)
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("")
+            Snapshot.sendApplyNotifications()
+            // Advance well short of the 300ms debounce: the reset must land on the input onEach,
+            // not
+            // wait out the window that later runs resetQuoteState from collectLatest.
+            advanceTimeBy(100)
+
+            assertTrue(vm.uiState.value.isSwapDisabled)
+            assertFalse(vm.uiState.value.quoteDisplay.hasQuote)
+            assertFalse(vm.uiState.value.isLoading)
         }
 
     // endregion

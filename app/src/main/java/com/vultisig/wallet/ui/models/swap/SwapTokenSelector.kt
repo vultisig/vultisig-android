@@ -158,6 +158,7 @@ constructor(
         selectedDstId: MutableStateFlow<String?>,
         addresses: MutableStateFlow<List<Address>>,
         uiState: MutableStateFlow<SwapFormUiModel>,
+        hasQuotableAmount: Boolean,
     ) {
         navigator.route(
             Route.SelectAsset(
@@ -180,6 +181,7 @@ constructor(
             selectedDstId,
             addresses,
             uiState,
+            hasQuotableAmount,
         )
     }
 
@@ -190,19 +192,25 @@ constructor(
         selectedDstId: MutableStateFlow<String?>,
         addresses: MutableStateFlow<List<Address>>,
         uiState: MutableStateFlow<SwapFormUiModel>,
+        hasQuotableAmount: Boolean,
     ) {
         val result = requestResultRepository.request<AssetSelected>(targetArg) ?: return
 
         if (result.isDisabled) {
-            uiState.update { it.copy(isLoading = true) }
+            // Only raise the shared loading flag when there is an amount to quote; otherwise
+            // loading
+            // a not-yet-held token's account would flash the destination/fee skeletons true→false
+            // over an empty field — the same blink the pipeline gate removes (#5296 review).
+            val showLoading = hasQuotableAmount
+            if (showLoading) uiState.update { it.copy(isLoading = true) }
             try {
                 val account = accountsRepository.loadAccount(vaultId, result.token)
                 updateAccountInAddresses(account, addresses)
-                uiState.update { it.copy(isLoading = false) }
+                if (showLoading) uiState.update { it.copy(isLoading = false) }
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
                 Timber.e(e, "Failed to load account for token")
-                uiState.update { it.copy(isLoading = false) }
+                if (showLoading) uiState.update { it.copy(isLoading = false) }
                 return
             }
         }

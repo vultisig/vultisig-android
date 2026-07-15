@@ -365,6 +365,10 @@ constructor(
                 selectedDstId = selectedDstId,
                 addresses = addresses,
                 uiState = _uiState,
+                // With an empty/zero amount there is nothing to quote, so loading a not-yet-held
+                // token's account must not raise the quote skeletons — that reproduces the blink
+                // this gate removes on the pipeline side (#5296 review).
+                hasQuotableAmount = srcAmount?.let { it > BigDecimal.ZERO } ?: false,
             )
         }
     }

@@ -145,6 +145,10 @@ constructor(
     // SwapIsNotSupported only after the user typed an amount and waited out the debounce).
     private var isPairSupported = true
 
+    // A same-token pair is "supported" (no "no route" guidance while mid-pick) but has no provider
+    // and can never be quoted, so the loading gate keys off routability, not mere support (#5296).
+    private var isPairRoutable = false
+
     private val pairNotSupportedError = UiText.StringResource(R.string.swap_route_not_available)
 
     private val srcAmount: BigDecimal?
@@ -317,12 +321,13 @@ constructor(
                 }
                 .combine(refreshQuoteState) { input, _ -> input }
                 // A slippage or external-recipient change re-fetches with a different tolerance /
-                // routing, so raise isLoading to disable the Swap button until the new quote lands
-                // —
-                // otherwise the prior, differently-routed quote could be signed (#4858, review
-                // #4969). The onEach rides each flow individually, so the silent refresh timer
-                // above
-                // doesn't flash the spinner.
+                // routing, so — when there is actually something to quote — raise isLoading to
+                // disable the Swap button until the new quote lands, otherwise the prior,
+                // differently-routed quote could be signed (#4858, review #4969). Routed through
+                // startLoadingIfQuotable so an empty/zero amount stays quiet instead of blinking
+                // the
+                // skeletons (#5296). The onEach rides each flow individually, so the silent refresh
+                // timer above doesn't flash the spinner.
                 .combine(slippageBps.onEach { startLoadingIfQuotable() }) { input, _ -> input }
                 .combine(externalRecipient.onEach { startLoadingIfQuotable() }) { input, _ ->
                     input
@@ -463,15 +468,22 @@ constructor(
     }
 
     /**
-     * Raise the loading spinner only when there is genuinely a quote to fetch — a routable pair with
-     * a positive source amount. An empty or zero field has nothing to load, so gating here stops the
-     * destination/fee skeletons from flashing (isLoading true→false) on form open, a bare pair
-     * change, or a slippage/recipient change while the amount field is still empty (#4712).
+     * Reconciles quote-driven UI state with the current input on a trigger (typing, pair, slippage,
+     * or recipient change), ahead of the debounced fetch:
+     * - Routable pair (a real provider, so same-token is excluded) with a positive source amount:
+     *   raise the spinner so the destination/fee skeletons and disabled Swap button lead the fetch.
+     * - Nothing to quote (empty/zero field or an unroutable pair): leave the spinner off so the
+     *   skeletons never flash true→false (blink) on form open or a bare pair/slippage/recipient
+     *   change (#4712, #5296). If a resolved quote is still on screen, clear it now so a cleared or
+     *   zeroed amount disables Swap and drops the stale destination/fee immediately instead of
+     *   leaving them tappable until the 300ms debounce runs resetQuoteState (#5296 review).
      */
     private fun startLoadingIfQuotable() {
         val amount = srcAmount
-        if (isPairSupported && amount != null && amount > BigDecimal.ZERO) {
+        if (isPairRoutable && amount != null && amount > BigDecimal.ZERO) {
             isLoading = true
+        } else if (uiState.value.quoteDisplay.hasQuote) {
+            resetQuoteState()
         }
     }
 
@@ -569,9 +581,10 @@ constructor(
     private fun updatePairSupport(src: SendSrc, dst: SendSrc) {
         val srcToken = src.account.token
         val dstToken = dst.account.token
-        isPairSupported =
-            srcToken == dstToken ||
+        isPairRoutable =
+            srcToken != dstToken &&
                 swapQuoteRepository.getEligibleProviders(srcToken, dstToken).isNotEmpty()
+        isPairSupported = srcToken == dstToken || isPairRoutable
         if (!isPairSupported) {
             resetQuoteState(error = pairNotSupportedError, cause = null, tag = null)
         } else if (uiState.value.formError == pairNotSupportedError) {
