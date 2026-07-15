@@ -10,6 +10,10 @@ import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
 import java.security.MessageDigest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
@@ -23,8 +27,24 @@ object RippleHelper {
 
     const val DEFAULT_EXISTENTIAL_DEPOSIT = 1000000
 
+    private val rawJsonParser = Json { ignoreUnknownKeys = true }
+
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Ripple) { "Coin is not XRP" }
+
+        // dApp-supplied XRPL transaction (via the extension's GemWallet provider): the raw JSON is
+        // already a complete transaction — Account, Fee, Sequence, LastLedgerSequence and amounts
+        // are baked in — so sign it verbatim through WalletCore's rawJson path. Every co-signer
+        // rebuilds identical signing bytes from the same JSON, matching the extension and
+        // @vultisig/core-mpc byte-for-byte. Reconstructing an OperationPayment from
+        // toAddress/toAmount would diverge and produce a non-matching MPC signature.
+        keysignPayload.signRipple?.let { signRipple ->
+            return buildDappRawJsonInputData(
+                rawJson = signRipple.rawJson,
+                expectedAccount = keysignPayload.coin.address,
+                hexPublicKey = keysignPayload.coin.hexPublicKey,
+            )
+        }
 
         val rippleSpecific =
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Ripple
@@ -156,6 +176,61 @@ object RippleHelper {
             error("Failed to create JSON string ${e.message}")
         }
     }
+
+    /**
+     * Builds the WalletCore [Ripple.SigningInput] for a dApp-supplied transaction ([SignRipple]),
+     * signing the raw JSON verbatim. Fails closed first: rejects any transaction whose `Account`
+     * differs from this vault's derived XRP address, so a co-signer can never sign a spend from an
+     * account other than its own — the same defense as `@vultisig/core-mpc` 1.11.0.
+     *
+     * Only [setRawJson] and [setPublicKey] are set: the JSON is the source of truth for every tx
+     * field, and the vault ECDSA public key (identical across all co-signers) is what WalletCore
+     * embeds as `SigningPubKey` and hashes into the pre-image — so every device produces the same
+     * signing bytes.
+     */
+    private fun buildDappRawJsonInputData(
+        rawJson: String,
+        expectedAccount: String,
+        hexPublicKey: String,
+    ): ByteArray {
+        verifyDappTransactionAccount(rawJson, expectedAccount)
+
+        val publicKey = PublicKey(hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+
+        return Ripple.SigningInput.newBuilder()
+            .setRawJson(rawJson)
+            .setPublicKey(ByteString.copyFrom(publicKey.data()))
+            .build()
+            .toByteArray()
+    }
+
+    /**
+     * Fail-closed guard for a dApp-supplied [SignRipple] transaction: throws unless the JSON's
+     * `Account` equals this vault's derived XRP [expectedAccount]. Pure (no JNI), so it is
+     * unit-testable independently of WalletCore.
+     */
+    internal fun verifyDappTransactionAccount(rawJson: String, expectedAccount: String) {
+        require(rawJson.isNotBlank()) { "SignRipple rawJson is empty" }
+        val account =
+            parseRawJsonAccount(rawJson)
+                ?: error("SignRipple rawJson has no readable Account field")
+        require(account == expectedAccount) {
+            "SignRipple Account $account does not match this vault's XRP address $expectedAccount"
+        }
+    }
+
+    /** Extracts the XRPL `Account` from a raw transaction JSON, or null if absent/unparseable. */
+    internal fun parseRawJsonAccount(rawJson: String): String? =
+        try {
+            rawJsonParser
+                .parseToJsonElement(rawJson)
+                .jsonObject["Account"]
+                ?.jsonPrimitive
+                ?.contentOrNull
+        } catch (e: Exception) {
+            Timber.e("Failed to parse SignRipple rawJson: %s", e.message)
+            null
+        }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val inputData = getPreSignedInputData(keysignPayload)

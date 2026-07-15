@@ -53,6 +53,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             signSolana = from.signSolana,
             signTon = from.signTon,
             signSui = from.signSui,
+            signRipple = from.signRipple,
             signBitcoin = from.signBitcoin,
             swapPayload =
                 when {
@@ -145,6 +146,22 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                             referenceGasPrice = BigInteger.ZERO,
                             gasBudget = BigInteger.ZERO,
                             coins = emptyList(),
+                        )
+
+                    // A dApp-supplied XRPL transaction (`signRipple`) is signed verbatim from its
+                    // raw JSON via WalletCore's `rawJson` path — Fee / Sequence /
+                    // LastLedgerSequence are already encoded in the JSON, so the initiator omits
+                    // `rippleSpecific`. Stand in an empty placeholder so [RippleHelper], which
+                    // casts
+                    // `blockChainSpecific` to `Ripple`, has a value to read; its fields go unused
+                    // on
+                    // the signRipple path.
+                    from.signRipple != null ->
+                        BlockChainSpecific.Ripple(
+                            sequence = 0uL,
+                            gas = 0uL,
+                            lastLedgerSequence = 0uL,
+                            destinationTag = null,
                         )
 
                     from.ethereumSpecific != null ->

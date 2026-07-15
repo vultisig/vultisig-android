@@ -1,10 +1,63 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalStdlibApi::class)
 class RippleHelperTest {
+
+    private val vaultXrpAddress = "rB5TihdPbKgMrkFqrqUC3yLdE8hhv4BdeY"
+
+    private fun rawJson(account: String) =
+        """{"TransactionType":"Payment","Account":"$account",""" +
+            """"Destination":"rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY","Amount":"1500000"}"""
+
+    @Test
+    fun `verifyDappTransactionAccount passes when Account matches the vault address`() {
+        // Must not throw.
+        RippleHelper.verifyDappTransactionAccount(rawJson(vaultXrpAddress), vaultXrpAddress)
+    }
+
+    @Test
+    fun `verifyDappTransactionAccount rejects a transaction spending a different account`() {
+        val ex =
+            assertThrows(IllegalArgumentException::class.java) {
+                RippleHelper.verifyDappTransactionAccount(
+                    rawJson("rHacKerAcCounTxxxxxxxxxxxxxxxxxxxxx"),
+                    vaultXrpAddress,
+                )
+            }
+        assertEquals(true, ex.message?.contains("does not match"))
+    }
+
+    @Test
+    fun `verifyDappTransactionAccount rejects JSON with no Account field`() {
+        assertThrows(IllegalStateException::class.java) {
+            RippleHelper.verifyDappTransactionAccount(
+                """{"TransactionType":"Payment","Amount":"1"}""",
+                vaultXrpAddress,
+            )
+        }
+    }
+
+    @Test
+    fun `verifyDappTransactionAccount rejects blank rawJson`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            RippleHelper.verifyDappTransactionAccount("   ", vaultXrpAddress)
+        }
+    }
+
+    @Test
+    fun `parseRawJsonAccount extracts the Account field`() {
+        assertEquals(vaultXrpAddress, RippleHelper.parseRawJsonAccount(rawJson(vaultXrpAddress)))
+    }
+
+    @Test
+    fun `parseRawJsonAccount returns null for malformed JSON`() {
+        assertNull(RippleHelper.parseRawJsonAccount("not-json{"))
+    }
 
     /**
      * Canonical XRPL transaction ID derivation, checked against a real validated transaction
