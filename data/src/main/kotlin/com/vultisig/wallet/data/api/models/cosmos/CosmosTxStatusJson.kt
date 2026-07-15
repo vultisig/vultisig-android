@@ -17,8 +17,10 @@ data class TxResponse(
     // Cosmos LCD (gRPC-gateway) omits zero-value fields, so a successfully executed tx has no
     // `code` in the JSON. Default to 0 (success) so deserialization of a landed tx doesn't throw.
     @SerialName("code") val code: Int = 0,
-    @SerialName("rawLog") val rawLog: String? = null,
-    @SerialName("gasUsed") val gasUsed: String? = null,
-    @SerialName("gasWanted") val gasWanted: String? = null,
+    // The Cosmos LCD (gRPC-gateway) serializes these in snake_case; the previous camelCase
+    // @SerialName values never matched, so rawLog/gasUsed/gasWanted always deserialized to null.
+    @SerialName("raw_log") val rawLog: String? = null,
+    @SerialName("gas_used") val gasUsed: String? = null,
+    @SerialName("gas_wanted") val gasWanted: String? = null,
     @SerialName("timestamp") val timestamp: String? = null,
 )
