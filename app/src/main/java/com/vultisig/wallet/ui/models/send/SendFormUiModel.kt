@@ -79,6 +79,9 @@ internal data class SendFormUiModel(
     val specific: BlockChainSpecificAndUtxo? = null,
     val expandedSection: SendSections = SendSections.Asset,
     val usingTokenAmountInput: Boolean = true,
+    // Whether the entered token amount is present and valid. Used to gate Continue on the TRON
+    // freeze/unfreeze screens, where the network fee is amount-independent and resolves on entry.
+    val isAmountValid: Boolean = false,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isAmountSelectionLoading: Boolean = false,
@@ -91,6 +94,24 @@ internal data class SendFormUiModel(
     val isTronFrozenBalancesLoading: Boolean = false,
     val hasTronFrozenBalancesError: Boolean = false,
 )
+
+/**
+ * Whether the Continue action should be disabled for the current form state.
+ *
+ * TRON freeze/unfreeze pays a fixed, amount-independent fee that resolves on entry, so Continue is
+ * gated on a valid amount being present rather than on the gas-fee loading flag (which only clears
+ * once an amount drives the estimation pipeline). All other flows keep the amount-dependent gating
+ * on [isGasFeeLoading].
+ *
+ * @return true when Continue must stay disabled.
+ */
+internal fun SendFormUiModel.isContinueDisabled(): Boolean =
+    isLoading ||
+        if (tronResourceType != null) {
+            !isAmountValid
+        } else {
+            showGasFee && isGasFeeLoading
+        }
 
 internal data class SendSrc(val address: Address, val account: Account)
 

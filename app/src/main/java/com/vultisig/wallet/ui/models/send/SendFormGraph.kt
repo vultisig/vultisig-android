@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.textAsFlow
 import java.math.BigInteger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -437,6 +438,12 @@ internal class SendFormGraph(
         scope.launch {
             amountManager.reapingError.collect { error ->
                 uiState.update { it.copy(reapingError = error) }
+            }
+        }
+        scope.launch {
+            tokenAmountFieldState.textAsFlow().collect { amount ->
+                val isValid = amountManager.validateTokenAmount(amount.toString()) == null
+                uiState.update { it.copy(isAmountValid = isValid) }
             }
         }
         scope.launch {
