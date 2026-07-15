@@ -10,6 +10,8 @@ import com.vultisig.wallet.data.models.transactionHash
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import tss.KeysignResponse
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
@@ -27,6 +29,42 @@ class TerraHelper(
     private val denom: String,
     private val gasLimit: Long,
 ) {
+
+    companion object {
+        // Cosmos `/simulate` skips signature verification, so a dummy r||s of the secp256k1
+        // signature size is enough for the ante handler to meter gas. WalletCore's TERRAV2 signer,
+        // unlike the plain Cosmos signer, rejects an all-zero r||s as an invalid signature during
+        // compile ("Incorrect input parameter"), so use a canonical non-zero placeholder: r = s =
+        // 1,
+        // both in-range low-S scalars. The value is irrelevant — simulate never verifies it.
+        private const val SECP256K1_SIGNATURE_SIZE = 64
+
+        private val DUMMY_SIMULATE_SIGNATURE =
+            ByteArray(SECP256K1_SIGNATURE_SIZE).apply {
+                this[31] = 1 // r = 1
+                this[63] = 1 // s = 1
+            }
+    }
+
+    /**
+     * Builds the base64 `tx_bytes` of a zero-signature Terra transaction for
+     * `/cosmos/tx/v1beta1/simulate`. Terra native sends are assembled by [getPreSignedInputData]
+     * (not [CosmosHelper]) so the simulated tx matches the builder that signs the real send,
+     * keeping the metered gas aligned with the broadcast tx (issue #5279).
+     */
+    fun getZeroSignedTransaction(keysignPayload: KeysignPayload): String {
+        val input = getPreSignedInputData(keysignPayload)
+        val publicKey =
+            PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+        val allSignatures = DataVector().apply { add(DUMMY_SIMULATE_SIGNATURE.copyOf()) }
+        val allPublicKeys = DataVector().apply { add(publicKey.data()) }
+        val compiled = compileWithSignatures(coinType, input, allSignatures, allPublicKeys)
+        val output = Cosmos.SigningOutput.parseFrom(compiled).checkError()
+        return Json.parseToJsonElement(output.serialized)
+            .jsonObject["tx_bytes"]
+            ?.jsonPrimitive
+            ?.content ?: error("Simulate payload missing tx_bytes")
+    }
 
     /**
      * Honor the relayed dynamic gas limit when an initiator set one; otherwise fall back to the

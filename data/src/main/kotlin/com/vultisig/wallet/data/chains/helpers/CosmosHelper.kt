@@ -52,8 +52,16 @@ class CosmosHelper(
         const val ATOM_DENOM = "uatom"
 
         // Cosmos `/simulate` skips signature verification, so a dummy r||s of the secp256k1
-        // signature size is enough for the ante handler to meter gas.
+        // signature size is enough for the ante handler to meter gas. Use a canonical non-zero
+        // placeholder (r = s = 1, in-range low-S scalars): some WalletCore signers (e.g. TERRAV2)
+        // reject an all-zero r||s as invalid during compile. The value is never verified.
         private const val SECP256K1_SIGNATURE_SIZE = 64
+
+        private val DUMMY_SIMULATE_SIGNATURE =
+            ByteArray(SECP256K1_SIGNATURE_SIZE).apply {
+                this[31] = 1 // r = 1
+                this[63] = 1 // s = 1
+            }
     }
 
     /**
@@ -67,7 +75,7 @@ class CosmosHelper(
         val input = getPreSignedInputData(keysignPayload)
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-        val allSignatures = DataVector().apply { add(ByteArray(SECP256K1_SIGNATURE_SIZE)) }
+        val allSignatures = DataVector().apply { add(DUMMY_SIMULATE_SIGNATURE.copyOf()) }
         val allPublicKeys = DataVector().apply { add(publicKey.data()) }
         val compiled = compileWithSignatures(coinType, input, allSignatures, allPublicKeys)
         val output = Cosmos.SigningOutput.parseFrom(compiled).checkError()

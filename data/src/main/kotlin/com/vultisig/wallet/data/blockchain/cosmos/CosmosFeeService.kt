@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper
+import com.vultisig.wallet.data.chains.helpers.TerraHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -100,11 +101,12 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
                 .setScale(0, RoundingMode.FLOOR)
                 .toBigInteger()
 
-        // Chains whose sends WalletCore assembles as a native bank `MsgSend` (routed through
-        // CosmosHelper in SigningHelper), so the simulated unsigned tx matches the broadcast tx.
-        // Terra's native LUNA send is also a `MsgSend` (TerraHelper's native branch), so the
-        // CosmosHelper-built simulation matches it; TerraClassic and Terra token sends (CW20 /
-        // IBC) use different messages and are excluded (see [simulatedGasUsed]).
+        // Chains whose sends WalletCore assembles as a native bank `MsgSend`, so the simulated
+        // unsigned tx matches the broadcast tx. Most route through CosmosHelper; Terra's native
+        // LUNA
+        // send is a `MsgSend` too but is built by TerraHelper (its real signer — see
+        // [simulatedGasUsed]), since WalletCore's TERRAV2 signer rejects the CosmosHelper shape.
+        // TerraClassic and Terra token sends (CW20 / IBC) use different messages and are excluded.
         private val SIMULATION_SUPPORTED_CHAINS =
             setOf(
                 Chain.GaiaChain,
@@ -243,19 +245,34 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
             // sequence mismatch", so seed the unsigned tx with the live on-chain account state
             // instead of zeros — otherwise every funded account silently falls back to static gas.
             val account = api.getAccountNumber(coin.address)
+            val simulationPayload =
+                buildSimulationPayload(
+                    transaction = transaction,
+                    accountNumber = BigInteger(account.accountNumber ?: "0"),
+                    sequence = BigInteger(account.sequence ?: "0"),
+                )
+            // Terra native sends are assembled by TerraHelper (see SigningHelper), not
+            // CosmosHelper:
+            // WalletCore's TERRAV2 signer rejects the gas-limit-without-amount fee CosmosHelper
+            // emits
+            // for a zero-fee simulate tx ("Incorrect input parameter"). Simulating through the same
+            // builder that signs the real send also keeps the metered gas matched to the broadcast.
             val txBytes =
-                CosmosHelper(
-                        coinType = coin.coinType,
-                        denom = chain.feeUnit,
-                        gasLimit = staticLimit,
-                    )
-                    .getZeroSignedTransaction(
-                        buildSimulationPayload(
-                            transaction = transaction,
-                            accountNumber = BigInteger(account.accountNumber ?: "0"),
-                            sequence = BigInteger(account.sequence ?: "0"),
+                if (chain == Chain.Terra) {
+                    TerraHelper(
+                            coinType = coin.coinType,
+                            denom = chain.feeUnit,
+                            gasLimit = staticLimit,
                         )
-                    )
+                        .getZeroSignedTransaction(simulationPayload)
+                } else {
+                    CosmosHelper(
+                            coinType = coin.coinType,
+                            denom = chain.feeUnit,
+                            gasLimit = staticLimit,
+                        )
+                        .getZeroSignedTransaction(simulationPayload)
+                }
             api.simulate(txBytes)?.also { cachedSimulatedGas = CachedSimulatedGas(chain, it, now) }
         } catch (e: CancellationException) {
             throw e
