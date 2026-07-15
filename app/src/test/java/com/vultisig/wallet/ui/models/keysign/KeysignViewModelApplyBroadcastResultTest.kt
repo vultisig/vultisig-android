@@ -95,6 +95,7 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             transactionHistoryData = null,
             thorChainApi = mockk(relaxed = true),
             evmApiFactory = mockk(relaxed = true),
+            cosmosApiFactory = mockk(relaxed = true),
             broadcastTx = mockk(relaxed = true),
             explorerLinkRepository = mockk(relaxed = true),
             navigator = mockk<Navigator<Destination>>(relaxed = true),

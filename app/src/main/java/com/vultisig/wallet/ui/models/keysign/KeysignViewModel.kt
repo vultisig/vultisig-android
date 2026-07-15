@@ -6,6 +6,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.KeysignVerify
@@ -51,6 +52,7 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.KeysignBroadcastResult
 import com.vultisig.wallet.data.usecases.SaveKeysignTransactionHistoryUseCase
 import com.vultisig.wallet.data.usecases.UpdateEvmActualFeeUseCase
+import com.vultisig.wallet.data.usecases.UpdateTerraDisplayFeeUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
@@ -261,6 +263,7 @@ constructor(
     @Assisted private val transactionHistoryData: TransactionHistoryData?,
     private val thorChainApi: ThorChainApi,
     private val evmApiFactory: EvmApiFactory,
+    private val cosmosApiFactory: CosmosApiFactory,
     private val broadcastTx: BroadcastTxUseCase,
     private val awaitApprovalConfirmation: AwaitApprovalConfirmationUseCase,
     private val explorerLinkRepository: ExplorerLinkRepository,
@@ -338,6 +341,8 @@ constructor(
     private val saveKeysignTransactionHistory =
         SaveKeysignTransactionHistoryUseCase(transactionHistoryRepository)
     private val updateEvmActualFee = UpdateEvmActualFeeUseCase(evmApiFactory, gasFeeToEstimatedFee)
+    private val updateTerraDisplayFee =
+        UpdateTerraDisplayFeeUseCase(cosmosApiFactory, gasFeeToEstimatedFee)
     private val broadcastKeysign =
         BroadcastKeysignUseCase(
             broadcastTx = broadcastTx,
@@ -904,7 +909,10 @@ constructor(
                             )
                         }
                     }
-                if (terminal != null) tryUpdateEvmActualFee(txHash, chain)
+                if (terminal != null) {
+                    tryUpdateEvmActualFee(txHash, chain)
+                    tryUpdateTerraDisplayFee(txHash, chain)
+                }
             }
     }
 
@@ -935,6 +943,38 @@ constructor(
                             sendTx.tx.copy(
                                 networkFeeTokenValue = estimatedFee.formattedTokenValue,
                                 networkFeeFiatValue = estimatedFee.formattedFiatValue,
+                            )
+                        )
+                )
+            }
+        }
+    }
+
+    /**
+     * After a Terra send confirms, replaces the done-screen fee with `gas_used × min-gas-price`, to
+     * match the vultisig extension / iOS display. DISPLAY-ONLY — Terra does not refund unused gas,
+     * so the amount actually deducted is still the declared `fee.amount`; this only aligns the
+     * shown number across clients (issue #5279). Falls back silently to the declared fee on any
+     * error.
+     */
+    internal fun tryUpdateTerraDisplayFee(txHash: String, chain: Chain) {
+        if (chain != Chain.Terra) return
+        val coin = keysignPayload?.coin ?: return
+
+        viewModelScope.safeLaunch(
+            onError = { e -> Timber.w(e, "Failed to update Terra display fee for %s", txHash) }
+        ) {
+            val displayFee = updateTerraDisplayFee(txHash, chain, coin) ?: return@safeLaunch
+            _state.update { current ->
+                val sendTx =
+                    current.transactionUiModel as? TransactionTypeUiModel.Send
+                        ?: return@update current
+                current.copy(
+                    transactionUiModel =
+                        TransactionTypeUiModel.Send(
+                            sendTx.tx.copy(
+                                networkFeeTokenValue = displayFee.formattedTokenValue,
+                                networkFeeFiatValue = displayFee.formattedFiatValue,
                             )
                         )
                 )

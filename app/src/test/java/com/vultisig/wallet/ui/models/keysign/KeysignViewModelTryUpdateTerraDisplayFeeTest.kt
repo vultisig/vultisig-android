@@ -2,14 +2,15 @@
 
 package com.vultisig.wallet.ui.models.keysign
 
-import com.vultisig.wallet.data.api.EvmApi
-import com.vultisig.wallet.data.api.EvmApiFactory
-import com.vultisig.wallet.data.api.models.EvmRpcResponseJson
-import com.vultisig.wallet.data.api.models.EvmTxStatusJson
+import com.vultisig.wallet.data.api.CosmosApi
+import com.vultisig.wallet.data.api.CosmosApiFactory
+import com.vultisig.wallet.data.api.models.cosmos.CosmosTxStatusJson
+import com.vultisig.wallet.data.api.models.cosmos.TxResponse
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
@@ -23,6 +24,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
@@ -37,76 +39,57 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class KeysignViewModelTryUpdateEvmActualFeeTest {
+internal class KeysignViewModelTryUpdateTerraDisplayFeeTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
-    private lateinit var evmApiFactory: EvmApiFactory
-    private lateinit var evmApi: EvmApi
+    private lateinit var cosmosApiFactory: CosmosApiFactory
+    private lateinit var cosmosApi: CosmosApi
     private lateinit var gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase
 
     private val vault = Vault(id = "v1", name = "Test Vault")
-    private val ethCoin =
+    private val lunaCoin =
         Coin(
-            chain = Chain.Ethereum,
-            ticker = "ETH",
-            logo = "eth",
-            address = "0xsender",
-            decimal = 18,
+            chain = Chain.Terra,
+            ticker = "LUNA",
+            logo = "luna",
+            address = "terra1sender",
+            decimal = 6,
             hexPublicKey = "",
-            priceProviderID = "ethereum",
+            priceProviderID = "terra-luna-2",
             contractAddress = "",
             isNativeToken = true,
         )
-    private val ethKeysignPayload =
+    private val lunaKeysignPayload =
         KeysignPayload(
-            coin = ethCoin,
-            toAddress = "0xdest",
+            coin = lunaCoin,
+            toAddress = "terra1dest",
             toAmount = BigInteger.ZERO,
             blockChainSpecific =
-                BlockChainSpecific.Ethereum(
-                    maxFeePerGasWei = BigInteger.ZERO,
-                    priorityFeeWei = BigInteger.ZERO,
-                    nonce = BigInteger.ZERO,
-                    gasLimit = BigInteger.valueOf(21000),
+                BlockChainSpecific.Cosmos(
+                    accountNumber = BigInteger.ZERO,
+                    sequence = BigInteger.ZERO,
+                    gas = BigInteger.valueOf(7500),
+                    ibcDenomTraces = null,
+                    transactionType =
+                        vultisig.keysign.v1.TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
                 ),
             vaultPublicKeyECDSA = "",
             vaultLocalPartyID = "",
             libType = null,
             wasmExecuteContractPayload = null,
         )
-    private val btcCoin =
-        Coin(
-            chain = Chain.Bitcoin,
-            ticker = "BTC",
-            logo = "btc",
-            address = "bc1qsender",
-            decimal = 8,
-            hexPublicKey = "",
-            priceProviderID = "bitcoin",
-            contractAddress = "",
-            isNativeToken = true,
-        )
-    private val btcKeysignPayload =
-        KeysignPayload(
-            coin = btcCoin,
-            toAddress = "bc1qdest",
-            toAmount = BigInteger.ZERO,
-            blockChainSpecific =
-                BlockChainSpecific.UTXO(byteFee = BigInteger.ONE, sendMaxAmount = false),
-            vaultPublicKeyECDSA = "",
-            vaultLocalPartyID = "",
-            libType = null,
-            wasmExecuteContractPayload = null,
-        )
+    private val gaiaCoin =
+        lunaCoin.copy(chain = Chain.GaiaChain, ticker = "ATOM", address = "cosmos1sender")
+    private val gaiaKeysignPayload = lunaKeysignPayload.copy(coin = gaiaCoin)
 
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        evmApiFactory = mockk(relaxed = true)
-        evmApi = mockk(relaxed = true)
+        cosmosApiFactory = mockk(relaxed = true)
+        cosmosApi = mockk(relaxed = true)
         gasFeeToEstimatedFee = mockk(relaxed = true)
-        every { evmApiFactory.createEvmApi(Chain.Ethereum) } returns evmApi
+        every { cosmosApiFactory.createCosmosApi(Chain.Terra) } returns cosmosApi
     }
 
     @AfterEach
@@ -129,8 +112,8 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
             isInitiatingDevice = false,
             transactionHistoryData = null,
             thorChainApi = mockk(relaxed = true),
-            evmApiFactory = evmApiFactory,
-            cosmosApiFactory = mockk(relaxed = true),
+            evmApiFactory = mockk(relaxed = true),
+            cosmosApiFactory = cosmosApiFactory,
             broadcastTx = mockk(relaxed = true),
             explorerLinkRepository = mockk(relaxed = true),
             navigator = mockk<Navigator<Destination>>(relaxed = true),
@@ -150,98 +133,90 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
         )
 
     @Test
-    fun `EVM receipt with both fee fields updates resolvedTransactionUiModel`() =
+    fun `Terra tx prices the fee at gas_used times min gas price and updates the model`() =
         runTest(testDispatcher) {
-            val vm = createViewModel(ethKeysignPayload)
+            val vm = createViewModel(lunaKeysignPayload)
             vm.updateUiStateForTesting {
                 it.copy(
                     transactionUiModel =
                         TransactionTypeUiModel.Send(
                             TransactionDetailsUiModel(
-                                networkFeeTokenValue = "0.001 ETH",
-                                networkFeeFiatValue = "~$3",
+                                networkFeeTokenValue = "0.0075 LUNA",
+                                networkFeeFiatValue = "$0.00035",
                             )
                         )
                 )
             }
-            coEvery { evmApi.getTxStatus("0xabc") } returns
-                EvmRpcResponseJson(
-                    id = 1,
-                    result =
-                        EvmTxStatusJson(
-                            status = "0x1",
-                            gasUsed = "0x5208",
-                            effectiveGasPrice = "0x3b9aca00",
-                        ),
+            // 77779 gas × 0.025 uluna/gas = 1944.475 → floor 1944 uluna (matches the extension).
+            coEvery { cosmosApi.getTxStatus("hash") } returns
+                CosmosTxStatusJson(
+                    txResponse = TxResponse(height = "1", txHash = "hash", gasUsed = "77779")
                 )
-            coEvery { gasFeeToEstimatedFee(any()) } returns
+            val params = slot<GasFeeParams>()
+            coEvery { gasFeeToEstimatedFee(capture(params)) } returns
                 EstimatedGasFee(
-                    formattedTokenValue = "0.00042 ETH",
-                    formattedFiatValue = "$1.50",
-                    tokenValue = TokenValue(value = BigInteger.ONE, unit = "ETH", decimals = 18),
-                    fiatValue = FiatValue(value = BigDecimal("1.50"), currency = "USD"),
+                    formattedTokenValue = "0.001944 LUNA",
+                    formattedFiatValue = "$0.00008",
+                    tokenValue =
+                        TokenValue(value = BigInteger.valueOf(1944), unit = "LUNA", decimals = 6),
+                    fiatValue = FiatValue(value = BigDecimal("0.00008"), currency = "USD"),
                 )
 
-            vm.tryUpdateEvmActualFee("0xabc", Chain.Ethereum)
+            vm.tryUpdateTerraDisplayFee("hash", Chain.Terra)
             advanceUntilIdle()
 
+            assertEquals(BigInteger.valueOf(1944), params.captured.gasFee.value)
             val model = vm.state.value.transactionUiModel as TransactionTypeUiModel.Send
-            assertEquals("0.00042 ETH", model.tx.networkFeeTokenValue)
-            assertEquals("$1.50", model.tx.networkFeeFiatValue)
+            assertEquals("0.001944 LUNA", model.tx.networkFeeTokenValue)
+            assertEquals("$0.00008", model.tx.networkFeeFiatValue)
         }
 
     @Test
-    fun `non-EVM chain skips RPC call entirely`() =
+    fun `non-Terra Cosmos chain skips the RPC call and leaves the model unchanged`() =
         runTest(testDispatcher) {
-            val vm = createViewModel(btcKeysignPayload)
+            val vm = createViewModel(gaiaKeysignPayload)
             vm.updateUiStateForTesting {
                 it.copy(
                     transactionUiModel =
                         TransactionTypeUiModel.Send(
-                            TransactionDetailsUiModel(networkFeeTokenValue = "0.0001 BTC")
+                            TransactionDetailsUiModel(networkFeeTokenValue = "0.0075 ATOM")
                         )
                 )
             }
 
-            vm.tryUpdateEvmActualFee("0xabc", Chain.Bitcoin)
+            vm.tryUpdateTerraDisplayFee("hash", Chain.GaiaChain)
             advanceUntilIdle()
 
-            coVerify(exactly = 0) { evmApiFactory.createEvmApi(any()) }
+            coVerify(exactly = 0) { cosmosApiFactory.createCosmosApi(any()) }
             val model = vm.state.value.transactionUiModel as TransactionTypeUiModel.Send
-            assertEquals("0.0001 BTC", model.tx.networkFeeTokenValue)
+            assertEquals("0.0075 ATOM", model.tx.networkFeeTokenValue)
         }
 
     @Test
-    fun `receipt missing effectiveGasPrice leaves model unchanged`() =
+    fun `tx missing gas_used leaves the declared fee unchanged`() =
         runTest(testDispatcher) {
-            val vm = createViewModel(ethKeysignPayload)
+            val vm = createViewModel(lunaKeysignPayload)
             vm.updateUiStateForTesting {
                 it.copy(
                     transactionUiModel =
                         TransactionTypeUiModel.Send(
                             TransactionDetailsUiModel(
-                                networkFeeTokenValue = "0.001 ETH",
-                                networkFeeFiatValue = "~$3",
+                                networkFeeTokenValue = "0.0075 LUNA",
+                                networkFeeFiatValue = "$0.00035",
                             )
                         )
                 )
             }
-            coEvery { evmApi.getTxStatus("0xabc") } returns
-                EvmRpcResponseJson(
-                    id = 1,
-                    result =
-                        EvmTxStatusJson(
-                            status = "0x1",
-                            gasUsed = "0x5208",
-                            effectiveGasPrice = null,
-                        ),
+            coEvery { cosmosApi.getTxStatus("hash") } returns
+                CosmosTxStatusJson(
+                    txResponse = TxResponse(height = "1", txHash = "hash", gasUsed = null)
                 )
 
-            vm.tryUpdateEvmActualFee("0xabc", Chain.Ethereum)
+            vm.tryUpdateTerraDisplayFee("hash", Chain.Terra)
             advanceUntilIdle()
 
             val model = vm.state.value.transactionUiModel as TransactionTypeUiModel.Send
-            assertEquals("0.001 ETH", model.tx.networkFeeTokenValue)
-            assertEquals("~$3", model.tx.networkFeeFiatValue)
+            assertEquals("0.0075 LUNA", model.tx.networkFeeTokenValue)
+            assertEquals("$0.00035", model.tx.networkFeeFiatValue)
         }
 }
