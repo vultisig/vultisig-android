@@ -48,6 +48,7 @@ import com.vultisig.wallet.ui.models.send.SendFocusField
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
+import com.vultisig.wallet.ui.models.send.isContinueDisabled
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.tron.TronResourceTypeTab
@@ -222,7 +223,7 @@ private fun SendFormScreen(
             },
         onBackClick = onBackClick,
         bottomBar = {
-            val isContinueDisabled = state.isLoading || (state.showGasFee && state.isGasFeeLoading)
+            val isContinueDisabled = state.isContinueDisabled()
             VsButton(
                 label = stringResource(R.string.send_continue_button),
                 state = if (isContinueDisabled) VsButtonState.Disabled else VsButtonState.Enabled,

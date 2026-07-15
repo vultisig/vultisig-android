@@ -167,7 +167,13 @@ internal class GasFeeOrchestrator(
                                     .toString()
                                     .toBigDecimalOrNull()
                                     ?.movePointRight(token.decimal)
-                                    ?.toBigInteger() ?: return@mapNotNull null
+                                    ?.toBigInteger()
+                                    // TRON freeze/unfreeze pays a fixed, amount-independent fee, so
+                                    // compute it with a zero amount on entry instead of waiting for
+                                    // the user to type — otherwise the fee row shimmers forever.
+                                    // Every other flow keeps its amount-dependent fee.
+                                    ?: if (uiState.value.tronResourceType != null) BigInteger.ZERO
+                                    else return@mapNotNull null
 
                             // A valid amount is present and we're about to (re)compute the fee:
                             // show the shimmer and re-disable Continue. This lives inside the
