@@ -47,10 +47,12 @@ val CoinType.compatibleType: CoinType
 
 fun CoinType.compatibleChainId(chain: Chain? = null): String =
     when (this) {
-        CoinType.SEI -> "1329"
+        // SEI and Hyperliquid reuse the Ethereum coin type (see Chain.coinType), so their real EVM
+        // chainIds are applied here rather than via WalletCore's chainId().
         CoinType.ETHEREUM ->
             when (chain) {
-                Chain.Hyperliquid -> "999" // override when WC has no cointype
+                Chain.Hyperliquid -> "999"
+                Chain.Sei -> "1329"
                 else -> this.chainId()
             }
         else -> this.chainId()
