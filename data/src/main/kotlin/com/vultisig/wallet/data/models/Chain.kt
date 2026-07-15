@@ -122,7 +122,12 @@ val Chain.coinType: CoinType
             Chain.Zcash -> CoinType.ZCASH
             Chain.Cardano -> CoinType.CARDANO
             Chain.Mantle -> CoinType.MANTLE
-            Chain.Sei -> CoinType.SEI
+            // SEI is EVM-compatible: it reuses the Ethereum coin type (secp256k1, derivation
+            // path m/44'/60'/0'/0/0, 0x address format) exactly like Hyperliquid below. Its EVM
+            // chainId (1329) is applied via compatibleChainId. Mapping straight to ETHEREUM keeps
+            // the derivation path/address/coin type consistent with iOS and desktop, which also
+            // map SEI to the Ethereum coin type.
+            Chain.Sei -> CoinType.ETHEREUM
             Chain.Hyperliquid -> CoinType.ETHEREUM
             Chain.Qbtc -> CoinType.COSMOS
         }

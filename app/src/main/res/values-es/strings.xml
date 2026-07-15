@@ -279,6 +279,7 @@
     <string name="signing_error_token_account_not_found_s">No se pudo cargar tu cuenta del token %s. Inténtalo de nuevo.</string>
     <string name="signing_error_mixed_reshare">Firma de recompartición mixta.\n Utilice recursos compartidos de bóveda del mismo ciclo de recompartición.</string>
     <string name="signing_error_sequence_mismatch">La secuencia de la cuenta ha cambiado — por favor, vuelva a intentarlo.</string>
+    <string name="signing_error_account_not_funded">Esta cuenta todavía no existe en cadena.\nPor favor, cargue la billetera primero.</string>
     <string name="signing_error_broadcast_rejected">Transacción rechazada por la red.</string>
     <string name="signing_error_broadcast_rejected_s">Transacción rechazada por la red: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Firma rápida</string>

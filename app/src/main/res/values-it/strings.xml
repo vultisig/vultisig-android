@@ -279,6 +279,7 @@
     <string name="signing_error_token_account_not_found_s">Impossibile caricare il tuo account token %s. Riprova.</string>
     <string name="signing_error_mixed_reshare">Firma di condivisione mista.\nUtilizzare condivisioni Vault dello stesso ciclo di condivisione.</string>
     <string name="signing_error_sequence_mismatch">La sequenza dell&#8217;account è cambiata — riprova.</string>
+    <string name="signing_error_account_not_funded">Questo account non esiste ancora on-chain.\nSi prega di finanziare prima il portafoglio.</string>
     <string name="signing_error_broadcast_rejected">Transazione rifiutata dalla rete.</string>
     <string name="signing_error_broadcast_rejected_s">Transazione rifiutata dalla rete: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Firma rapida</string>

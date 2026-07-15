@@ -516,6 +516,7 @@
     <string name="signing_error_token_account_not_found_s">无法加载您的 %s 代币账户。请重试。</string>
     <string name="signing_error_mixed_reshare">混合重新分享签名。\n请使用相同重新分享周期的保险库份额。</string>
     <string name="signing_error_sequence_mismatch">账户序列号已更改 — 请重试。</string>
+    <string name="signing_error_account_not_funded">此账户尚未在链上存在。\n请先为钱包充值。</string>
     <string name="signing_error_broadcast_rejected">交易被网络拒绝。</string>
     <string name="signing_error_broadcast_rejected_s">交易被网络拒绝：%s</string>
 
