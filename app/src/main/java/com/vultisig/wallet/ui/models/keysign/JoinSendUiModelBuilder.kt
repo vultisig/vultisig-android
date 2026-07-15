@@ -161,6 +161,7 @@ constructor(
 
         val signSolana = payload.signSolana?.rawTransactions?.firstOrNull() ?: ""
         val signSui = payload.signSui?.unsignedTxMsg?.takeIf { it.isNotEmpty() }
+        val signRipple = payload.signRipple?.rawJson?.takeIf { it.isNotBlank() }
         val transaction =
             Transaction(
                 id = UUID.randomUUID().toString(),
@@ -180,6 +181,7 @@ constructor(
                 signDirect = signDirect,
                 signSolana = signSolana,
                 signSui = signSui,
+                signRipple = signRipple,
             )
 
         val transactionToUiModel = mapTransactionToUiModel(transaction)

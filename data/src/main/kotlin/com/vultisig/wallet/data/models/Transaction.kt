@@ -25,6 +25,8 @@ data class Transaction(
      * Base64 `TransactionData` BCS bytes of a dApp-supplied Sui PTB, surfaced for verify display.
      */
     val signSui: String? = null,
+    /** Raw XRPL transaction JSON of a dApp-supplied `SignRipple`, surfaced for verify display. */
+    val signRipple: String? = null,
     val estimatedFee: String,
     val blockChainSpecific: BlockChainSpecific,
     val utxos: List<UtxoInfo> = emptyList(),

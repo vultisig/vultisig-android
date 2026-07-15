@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.mappers
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
 import com.vultisig.wallet.data.blockchain.tron.TronStakingOperation
+import com.vultisig.wallet.data.chains.helpers.RippleDappTransactionDecoder
 import com.vultisig.wallet.data.chains.helpers.RippleDestinationTag
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.Chain
@@ -77,6 +78,10 @@ constructor(
             signDirect = from.signDirect,
             signSolana = from.signSolana,
             signSui = from.signSui,
+            signRipple =
+                from.signRipple
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { RippleDappTransactionDecoder.decode(it) },
             networkFeeFiatValue = from.estimatedFee,
             networkFeeTokenValue = from.totalGas,
         )

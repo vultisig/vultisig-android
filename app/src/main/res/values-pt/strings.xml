@@ -1135,6 +1135,8 @@
    <string name="transaction_status_checking_transaction">A verificar transação…</string>
     <string name="raw_transaction_data">Dados brutos de transação</string>
     <string name="sui_raw_transaction">Transação Sui</string>
+    <string name="ripple_dapp_transaction">Transação XRPL</string>
+    <string name="ripple_transaction_summary">Resumo da transação</string>
     <string name="sui_sender">De</string>
     <string name="solana_raw_transaction">Transação bruta de Solana</string>
     <string name="solana_instructions_summary">Resumo das instruções da transação</string>

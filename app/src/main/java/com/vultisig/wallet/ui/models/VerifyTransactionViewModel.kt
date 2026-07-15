@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
+import com.vultisig.wallet.data.chains.helpers.RippleDappTx
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
@@ -91,6 +92,12 @@ internal data class TransactionDetailsUiModel(
      * Base64 `TransactionData` BCS bytes of a dApp-supplied Sui PTB (SignSui), for verify display.
      */
     val signSui: String? = null,
+    /**
+     * Decoded terms of a dApp-supplied XRPL transaction (SignRipple), for verify display. Null for
+     * non-Ripple or native XRP sends. Carries the raw JSON so the screen can fall back to it when
+     * decoding yields no readable fields.
+     */
+    val signRipple: RippleDappTx? = null,
     /**
      * Per-message rows for a TonConnect signing request, each decoded from its BOC body into an
      * operation label, real recipient, forward amount, and the raw payload. Empty for non-TON or

@@ -1134,6 +1134,8 @@
     <string name="transaction_status_checking_transaction">Comprobando transacción…</string>
     <string name="raw_transaction_data">Datos de transacciones sin procesar</string>
     <string name="sui_raw_transaction">Transacción de Sui</string>
+    <string name="ripple_dapp_transaction">Transacción de XRPL</string>
+    <string name="ripple_transaction_summary">Resumen de la transacción</string>
     <string name="sui_sender">De</string>
     <string name="solana_raw_transaction">Transacción sin procesar de Solana</string>
     <string name="solana_instructions_summary">Resumen de instrucciones de transacción</string>

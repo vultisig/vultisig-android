@@ -36,6 +36,7 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
+import com.vultisig.wallet.ui.components.SignRippleDisplayView
 import com.vultisig.wallet.ui.components.SignSolanaDisplayView
 import com.vultisig.wallet.ui.components.SignSuiDisplayView
 import com.vultisig.wallet.ui.components.SignTonDisplayView
@@ -236,16 +237,45 @@ internal fun VerifySendScreen(
                         functionName = heroTitle,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        VsOverviewToken(
-                            header =
-                                stringResource(
-                                    tx.headerTitleRes ?: R.string.verify_deposit_sending
-                                ),
-                            valuedToken = tx.token,
-                            shape = RoundedCornerShape(0.dp),
-                            modifier = Modifier.fillMaxWidth(),
-                            withContainer = false,
-                        )
+                        val rippleDapp = tx.signRipple
+                        if (rippleDapp != null) {
+                            // A dApp XRPL transaction has no native send amount (`toAmount` is 0),
+                            // so a "You're sending 0 XRP" hero would be misleading. Show the
+                            // operation type instead; the decoded Selling / Buying / Issuer terms
+                            // render in the summary card below.
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.ripple_dapp_transaction),
+                                    style = Theme.brockmann.supplementary.captionSmall,
+                                    color = Theme.v2.colors.text.tertiary,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 1,
+                                )
+                                UiSpacer(12.dp)
+                                Text(
+                                    text =
+                                        rippleDapp.transactionType
+                                            ?: stringResource(R.string.ripple_dapp_transaction),
+                                    style = Theme.brockmann.headings.title2,
+                                    color = Theme.v2.colors.text.primary,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
+                        } else {
+                            VsOverviewToken(
+                                header =
+                                    stringResource(
+                                        tx.headerTitleRes ?: R.string.verify_deposit_sending
+                                    ),
+                                valuedToken = tx.token,
+                                shape = RoundedCornerShape(0.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                                withContainer = false,
+                            )
+                        }
                     }
 
                     UiSpacer(12.dp)
@@ -333,6 +363,14 @@ internal fun VerifySendScreen(
                                 initiallyExpanded = initiallyExpandedDetails,
                             )
                         }
+
+                    tx.signRipple?.let {
+                        VerifyCardDivider(0.dp)
+
+                        // Expanded by default: the decoded terms are the primary content for a
+                        // dApp XRPL tx (the hero shows no amount), mirroring the extension summary.
+                        SignRippleDisplayView(tx = it, initiallyExpanded = true)
+                    }
 
                     tx.tonMessages
                         .takeIf { it.isNotEmpty() }

@@ -148,6 +148,8 @@ constructor(
                                 R.string.notification_banner_send_summary,
                                 listOf(mapTokenValueToStringWithUnit(summary.tokenValue)),
                             )
+                        is KeysignTransactionSummary.DappTransaction ->
+                            UiText.DynamicString(summary.summary)
                         null -> UiText.Empty
                     }
                 _foregroundNotification.value =

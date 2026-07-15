@@ -1136,6 +1136,8 @@
     <string name="transaction_status_checking_transaction">Transaktion wird geprüft…</string>
     <string name="raw_transaction_data">Rohdaten der Transaktion</string>
     <string name="sui_raw_transaction">Sui-Transaktion</string>
+    <string name="ripple_dapp_transaction">XRPL-Transaktion</string>
+    <string name="ripple_transaction_summary">Transaktionsübersicht</string>
     <string name="sui_sender">Von</string>
     <string name="solana_raw_transaction">Solana-Rohdaten der Transaktion</string>
     <string name="solana_instructions_summary">Transaktionsanweisungen – Übersicht</string>

@@ -24,9 +24,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.chains.helpers.RippleDappTx
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.CopyIcon
+import com.vultisig.wallet.ui.components.SignRippleDisplayView
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsOverviewToken
@@ -104,22 +106,55 @@ internal fun SendTxOverviewScreen(
                 functionName = tx.functionName,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                VsOverviewToken(
-                    header =
-                        if (tx.type == UiTransactionInfoType.Send) {
-                            stringResource(R.string.tx_overview_screen_tx_send)
-                        } else {
-                            stringResource(R.string.tx_overview_screen_tx_deposit)
-                        },
-                    valuedToken = tx.token,
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                val rippleDapp = tx.signRipple
+                if (rippleDapp != null) {
+                    // A dApp XRPL transaction has no native send amount (`toAmount` is 0), so show
+                    // the operation type instead of a misleading "0 XRP"; the decoded terms render
+                    // in the summary card below.
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.ripple_dapp_transaction),
+                            style = Theme.brockmann.supplementary.captionSmall,
+                            color = Theme.v2.colors.text.tertiary,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                        )
+                        UiSpacer(12.dp)
+                        Text(
+                            text =
+                                rippleDapp.transactionType
+                                    ?: stringResource(R.string.ripple_dapp_transaction),
+                            style = Theme.brockmann.headings.title2,
+                            color = Theme.v2.colors.text.primary,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                } else {
+                    VsOverviewToken(
+                        header =
+                            if (tx.type == UiTransactionInfoType.Send) {
+                                stringResource(R.string.tx_overview_screen_tx_send)
+                            } else {
+                                stringResource(R.string.tx_overview_screen_tx_deposit)
+                            },
+                        valuedToken = tx.token,
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         },
         detailContent = {
             Column {
                 TransactionStatusRow(transactionStatus)
+
+                tx.signRipple?.let { rippleDapp ->
+                    VerifyCardDivider(size = 1.dp)
+                    SignRippleDisplayView(tx = rippleDapp, initiallyExpanded = true)
+                }
 
                 VerifyCardDivider(size = 1.dp)
 
@@ -129,30 +164,35 @@ internal fun SendTxOverviewScreen(
                     bracketValue = tx.fromLabel?.let { tx.from },
                 )
 
-                VerifyCardDivider(size = 1.dp)
+                // A dApp XRPL tx carries no native destination (`toAddress` is empty); the
+                // recipient,
+                // when any, is inside the decoded summary above, so skip the empty "To" row.
+                if (tx.signRipple == null) {
+                    VerifyCardDivider(size = 1.dp)
 
-                if (showSaveToAddressBook) {
-                    Column {
+                    if (showSaveToAddressBook) {
+                        Column {
+                            VerifyCardDetails(
+                                title = stringResource(R.string.tx_overview_screen_tx_to),
+                                subtitle = tx.toLabel ?: tx.to,
+                                bracketValue = tx.toLabel?.let { tx.to },
+                            )
+
+                            UiSpacer(8.dp)
+
+                            AddToAddressBookButton(
+                                modifier = Modifier.align(Alignment.End),
+                                onClick = onAddToAddressBook,
+                            )
+                            UiSpacer(size = 12.dp)
+                        }
+                    } else {
                         VerifyCardDetails(
                             title = stringResource(R.string.tx_overview_screen_tx_to),
                             subtitle = tx.toLabel ?: tx.to,
                             bracketValue = tx.toLabel?.let { tx.to },
                         )
-
-                        UiSpacer(8.dp)
-
-                        AddToAddressBookButton(
-                            modifier = Modifier.align(Alignment.End),
-                            onClick = onAddToAddressBook,
-                        )
-                        UiSpacer(size = 12.dp)
                     }
-                } else {
-                    VerifyCardDetails(
-                        title = stringResource(R.string.tx_overview_screen_tx_to),
-                        subtitle = tx.toLabel ?: tx.to,
-                        bracketValue = tx.toLabel?.let { tx.to },
-                    )
                 }
 
                 if (tx.memo.isNotEmpty()) {
@@ -379,6 +419,12 @@ internal data class UiTransactionInfo(
      * Carried through from [com.vultisig.wallet.ui.models.TransactionDetailsUiModel.heroContent].
      */
     val heroContent: HeroContent? = null,
+    /**
+     * Decoded terms of a dApp-supplied XRPL transaction (SignRipple). When present the done screen
+     * shows the decoded summary (Type / Selling / Buying / Issuer) instead of a "0 XRP" hero — the
+     * native `toAmount` is 0 because the real amounts live in the raw JSON.
+     */
+    val signRipple: RippleDappTx? = null,
 )
 
 internal enum class UiTransactionInfoType {
