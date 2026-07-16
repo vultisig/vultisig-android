@@ -127,7 +127,7 @@ constructor(
                 val depositTransactionUiModel =
                     mapTransactionToUiModel(transaction)
                         .withVaultLabels(
-                            vaultId = vaultId!!,
+                            vaultId = transaction.vaultId,
                             chain = transaction.srcToken.chain,
                             dstAddress = transaction.dstAddress,
                         )
