@@ -36,16 +36,25 @@ data class RippleBroadcastSuccessResultJson(
 @Serializable
 data class RippleTxMetaJson(@SerialName("TransactionResult") val transactionResult: String? = null)
 
+/**
+ * A validated XRPL transaction's `tx_json`. Every field is nullable/defaulted: XRPL only emits the
+ * fields a given `TransactionType` actually uses — a `Payment` carries `Destination`/`DeliverMax`,
+ * while an `OfferCreate` carries `TakerGets`/`TakerPays` and no `Destination` at all. Making these
+ * non-null broke status polling for every non-Payment type (co-signed dApp OfferCreate/TrustSet/…):
+ * the `tx` response deserialization threw `MissingFieldException`, which `RippleStatusProvider`
+ * swallowed as `Pending`, so a `tesSUCCESS` transaction was reported pending forever. Status only
+ * reads `validated` + `meta.TransactionResult`, so the exact `tx_json` shape is display-only.
+ */
 @Serializable
 data class RippleBroadcastSuccessTransactionJson(
-    @SerialName("Account") val account: String,
-    @SerialName("DeliverMax") val deliverMax: String,
-    @SerialName("Destination") val destination: String,
-    @SerialName("Fee") val fee: String,
-    @SerialName("Flags") val flags: Int,
-    @SerialName("LastLedgerSequence") val lastLedgerSequence: Int,
-    @SerialName("Sequence") val sequence: Int,
-    @SerialName("SigningPubKey") val signingPubKey: String,
-    @SerialName("TransactionType") val transactionType: String,
-    @SerialName("TxnSignature") val txnSignature: String,
+    @SerialName("Account") val account: String? = null,
+    @SerialName("DeliverMax") val deliverMax: String? = null,
+    @SerialName("Destination") val destination: String? = null,
+    @SerialName("Fee") val fee: String? = null,
+    @SerialName("Flags") val flags: Int? = null,
+    @SerialName("LastLedgerSequence") val lastLedgerSequence: Int? = null,
+    @SerialName("Sequence") val sequence: Int? = null,
+    @SerialName("SigningPubKey") val signingPubKey: String? = null,
+    @SerialName("TransactionType") val transactionType: String? = null,
+    @SerialName("TxnSignature") val txnSignature: String? = null,
 )
