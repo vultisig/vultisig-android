@@ -17,6 +17,8 @@ import com.vultisig.wallet.data.api.models.SolanaProgramAccountJson
 import com.vultisig.wallet.data.api.models.SolanaProgramAccountsResponseJson
 import com.vultisig.wallet.data.api.models.SolanaRpcResponseJson
 import com.vultisig.wallet.data.api.models.SolanaSignatureStatusesResult
+import com.vultisig.wallet.data.api.models.SolanaStakeAccountDataJson
+import com.vultisig.wallet.data.api.models.SolanaStakeAccountInfoResponseJson
 import com.vultisig.wallet.data.api.models.SolanaVoteAccountsResponseJson
 import com.vultisig.wallet.data.api.models.SolanaVoteAccountsResultJson
 import com.vultisig.wallet.data.api.models.SplAmountRpcResponseJson
@@ -113,9 +115,11 @@ interface SolanaApi {
     suspend fun getVoteAccounts(): SolanaVoteAccountsResultJson?
 
     /**
-     * `getProgramAccounts` against the Stake program, filtered to the stake accounts whose
-     * withdrawer authority is [ownerAddress] (`dataSize` + `memcmp`). Returns the parsed accounts,
-     * or an empty list on RPC failure. Never stale-cached — always a fresh read.
+     * The owner's stake accounts (withdrawer authority [ownerAddress]). Discovers the pubkeys with
+     * `getProgramAccounts` (`dataSize` + `memcmp`), then re-reads each account's live state with
+     * `getAccountInfo` to avoid the lagging secondary index some RPC providers serve
+     * `getProgramAccounts` from. Returns them in discovery order, or an empty list on RPC failure.
+     * Never stale-cached — always a fresh read.
      */
     suspend fun getStakeAccounts(ownerAddress: String): List<SolanaProgramAccountJson>
 }
@@ -637,7 +641,14 @@ internal class SolanaApiImp(
 
     override suspend fun getStakeAccounts(ownerAddress: String): List<SolanaProgramAccountJson> =
         try {
-            val resp =
+            // Discover the owner's stake-account pubkeys via getProgramAccounts, but take ONLY the
+            // addresses. Many RPC providers serve getProgramAccounts from a lagging secondary
+            // index,
+            // so its parsed delegation/deactivation fields flip between refreshes right after a
+            // stake/unstake (observed on the Defi screen). Each account's live state is re-read
+            // below
+            // with getAccountInfo — a direct bank read with no index lag. (vultisig-ios #4821)
+            val discovery =
                 httpClient.postRpc<SolanaProgramAccountsResponseJson>(
                     rpcEndpoint,
                     "getProgramAccounts",
@@ -663,12 +674,51 @@ internal class SolanaApiImp(
                             }
                         },
                 )
-            resp.error?.let { Timber.tag("SolanaApiImp").w("getProgramAccounts RPC error: %s", it) }
-            resp.result
+            discovery.error?.let {
+                Timber.tag("SolanaApiImp").w("getProgramAccounts RPC error: %s", it)
+            }
+            val pubkeys = discovery.result.map { it.pubkey }
+            val byPubkey =
+                coroutineScope {
+                        pubkeys
+                            .map { pubkey -> async { pubkey to getStakeAccountInfo(pubkey) } }
+                            .awaitAll()
+                    }
+                    .toMap()
+            // Preserve discovery order; drop any that stopped resolving (e.g. closed between
+            // discovery and the follow-up read).
+            pubkeys.mapNotNull { pubkey ->
+                byPubkey[pubkey]?.let { SolanaProgramAccountJson(pubkey = pubkey, account = it) }
+            }
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Timber.tag("SolanaApiImp").e(e, "Error getting stake accounts for %s", ownerAddress)
             emptyList()
+        }
+
+    /**
+     * Live state of a single stake account via getAccountInfo (jsonParsed). Null on RPC failure.
+     */
+    private suspend fun getStakeAccountInfo(pubkey: String): SolanaStakeAccountDataJson? =
+        try {
+            val response =
+                httpClient.postRpc<SolanaStakeAccountInfoResponseJson>(
+                    url = rpcEndpoint,
+                    method = "getAccountInfo",
+                    params =
+                        buildJsonArray {
+                            add(pubkey)
+                            addJsonObject { put("encoding", "jsonParsed") }
+                        },
+                )
+            response.error?.let {
+                Timber.tag("SolanaApiImp").w("getAccountInfo RPC error for %s: %s", pubkey, it)
+            }
+            response.result?.value
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.tag("SolanaApiImp").e(e, "Error reading stake account %s", pubkey)
+            null
         }
 
     companion object {

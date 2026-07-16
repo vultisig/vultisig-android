@@ -140,6 +140,19 @@ data class SolanaProgramAccountJson(
     @SerialName("account") val account: SolanaStakeAccountDataJson,
 )
 
+// getAccountInfo (jsonParsed) for a single stake account. Its `value` is the same shape as the
+// `account` field of a getProgramAccounts row, so it reuses SolanaStakeAccountDataJson.
+@Serializable
+data class SolanaStakeAccountInfoResponseJson(
+    @SerialName("error") val error: JsonObject? = null,
+    @SerialName("result") val result: SolanaStakeAccountInfoResultJson? = null,
+)
+
+@Serializable
+data class SolanaStakeAccountInfoResultJson(
+    @SerialName("value") val value: SolanaStakeAccountDataJson? = null
+)
+
 @Serializable
 data class SolanaStakeAccountDataJson(
     @SerialName("lamports") @Contextual val lamports: BigInteger,
