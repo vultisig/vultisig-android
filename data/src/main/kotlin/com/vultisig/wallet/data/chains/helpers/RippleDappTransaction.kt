@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import java.math.BigDecimal
+import java.math.BigInteger
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -8,8 +9,33 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import timber.log.Timber
 
-/** A single decoded label/value row of a dApp-supplied XRPL transaction, for the verify screen. */
-data class RippleDappTxField(val label: String, val value: String)
+/**
+ * Semantic identifier of a decoded XRPL field row. The data layer stores this key (never an English
+ * display label) so the Compose layer can map it to a localized string. Distinct issuer keys make
+ * clear which amount an `Issuer` row belongs to (e.g. [SELLING_ISSUER] vs [BUYING_ISSUER]).
+ */
+enum class RippleDappTxFieldKey {
+    TYPE,
+    FROM,
+    TO,
+    DESTINATION_TAG,
+    AMOUNT,
+    AMOUNT_ISSUER,
+    SEND_MAX,
+    SEND_MAX_ISSUER,
+    DELIVER_MIN,
+    DELIVER_MIN_ISSUER,
+    SELLING,
+    SELLING_ISSUER,
+    BUYING,
+    BUYING_ISSUER,
+    LIMIT,
+    LIMIT_ISSUER,
+    FEE,
+}
+
+/** A single decoded key/value row of a dApp-supplied XRPL transaction, for the verify screen. */
+data class RippleDappTxField(val key: RippleDappTxFieldKey, val value: String)
 
 /**
  * Human-readable decode of a dApp-supplied XRPL transaction ([SignRipple.rawJson]).
@@ -22,15 +48,15 @@ data class RippleDappTx(
     val fields: List<RippleDappTxField>,
     val rawJson: String,
 ) {
-    /** Value of the decoded field with [label], or null if absent. */
-    fun value(label: String): String? = fields.firstOrNull { it.label == label }?.value
+    /** Value of the decoded field with [key], or null if absent. */
+    fun value(key: RippleDappTxFieldKey): String? = fields.firstOrNull { it.key == key }?.value
 }
 
 /**
  * Decodes the raw XRPL transaction JSON a dApp hands the co-signer (via `SignRipple`) into readable
  * terms — type, source, destination, amounts (`Amount` / `SendMax` / `DeliverMin` / `TakerGets` /
- * `TakerPays`), issuer and destination tag. Pure (no JNI, no Android), so the verify screen renders
- * decoded terms and it stays unit-testable.
+ * `TakerPays`), issuer, destination tag and the signed `Fee`. Pure (no JNI, no Android), so the
+ * verify screen renders decoded terms and it stays unit-testable.
  *
  * Never throws: on any parse failure it returns an empty [RippleDappTx.fields] carrying the
  * original [rawJson], so the UI can fall back to the raw JSON.
@@ -53,23 +79,79 @@ object RippleDappTransactionDecoder {
 
         val transactionType = obj.stringOrNull("TransactionType")
         val fields = buildList {
-            transactionType?.let { add(RippleDappTxField("Type", it)) }
-            obj.stringOrNull("Account")?.let { add(RippleDappTxField("From", it)) }
-            obj.stringOrNull("Destination")?.let { add(RippleDappTxField("To", it)) }
-            obj.stringOrNull("DestinationTag")?.let {
-                add(RippleDappTxField("Destination Tag", it))
+            transactionType?.let { add(RippleDappTxField(RippleDappTxFieldKey.TYPE, it)) }
+            obj.stringOrNull("Account")?.let {
+                add(RippleDappTxField(RippleDappTxFieldKey.FROM, it))
             }
-            addAmount(key = "Amount", label = "Amount", obj = obj)
-            addAmount(key = "SendMax", label = "Send max", obj = obj)
-            addAmount(key = "DeliverMin", label = "Deliver min", obj = obj)
+            obj.stringOrNull("Destination")?.let {
+                add(RippleDappTxField(RippleDappTxFieldKey.TO, it))
+            }
+            obj.stringOrNull("DestinationTag")?.let {
+                add(RippleDappTxField(RippleDappTxFieldKey.DESTINATION_TAG, it))
+            }
+            addAmount(
+                key = "Amount",
+                amountKey = RippleDappTxFieldKey.AMOUNT,
+                issuerKey = RippleDappTxFieldKey.AMOUNT_ISSUER,
+                obj = obj,
+            )
+            addAmount(
+                key = "SendMax",
+                amountKey = RippleDappTxFieldKey.SEND_MAX,
+                issuerKey = RippleDappTxFieldKey.SEND_MAX_ISSUER,
+                obj = obj,
+            )
+            addAmount(
+                key = "DeliverMin",
+                amountKey = RippleDappTxFieldKey.DELIVER_MIN,
+                issuerKey = RippleDappTxFieldKey.DELIVER_MIN_ISSUER,
+                obj = obj,
+            )
             // OfferCreate: TakerGets is what the account sells, TakerPays what it buys. Match the
             // extension's Selling / Buying wording rather than the raw XRPL field names.
-            addAmount(key = "TakerGets", label = "Selling", obj = obj)
-            addAmount(key = "TakerPays", label = "Buying", obj = obj)
-            obj.stringOrNull("LimitAmount")?.let { add(RippleDappTxField("Limit", it)) }
+            addAmount(
+                key = "TakerGets",
+                amountKey = RippleDappTxFieldKey.SELLING,
+                issuerKey = RippleDappTxFieldKey.SELLING_ISSUER,
+                obj = obj,
+            )
+            addAmount(
+                key = "TakerPays",
+                amountKey = RippleDappTxFieldKey.BUYING,
+                issuerKey = RippleDappTxFieldKey.BUYING_ISSUER,
+                obj = obj,
+            )
+            // TrustSet's LimitAmount is an issued-currency object; handle it the same way.
+            addAmount(
+                key = "LimitAmount",
+                amountKey = RippleDappTxFieldKey.LIMIT,
+                issuerKey = RippleDappTxFieldKey.LIMIT_ISSUER,
+                obj = obj,
+            )
+            // The Fee that is actually signed (drops). Surfaced so the verify screen shows the real
+            // network fee baked into the JSON rather than a live re-estimate (a malicious inflated
+            // Fee must be visible, not masked by a normal-looking estimate).
+            obj.stringOrNull("Fee")?.let {
+                add(RippleDappTxField(RippleDappTxFieldKey.FEE, formatXrpDrops(it)))
+            }
         }
 
         return RippleDappTx(transactionType = transactionType, fields = fields, rawJson = rawJson)
+    }
+
+    /**
+     * The signed `Fee` in drops, or null when absent/unparseable. This is the fee actually encoded
+     * in the raw JSON that gets signed verbatim, so the verify screen surfaces it instead of a live
+     * network re-estimate that could hide a dApp-inflated fee.
+     */
+    fun feeDrops(rawJson: String): BigInteger? {
+        val obj =
+            try {
+                json.parseToJsonElement(rawJson).jsonObject
+            } catch (e: Exception) {
+                return null
+            }
+        return obj.stringOrNull("Fee")?.toBigIntegerOrNull()
     }
 
     /**
@@ -84,18 +166,19 @@ object RippleDappTransactionDecoder {
         val type = tx.transactionType ?: return null
         return when (type) {
             "OfferCreate" -> {
-                val gets = tx.value("Selling")
-                val pays = tx.value("Buying")
+                val gets = tx.value(RippleDappTxFieldKey.SELLING)
+                val pays = tx.value(RippleDappTxFieldKey.BUYING)
                 if (gets != null && pays != null) "$type: $gets → $pays" else type
             }
-            "Payment" -> tx.value("Amount")?.let { "$type: $it" } ?: type
+            "Payment" -> tx.value(RippleDappTxFieldKey.AMOUNT)?.let { "$type: $it" } ?: type
             else -> type
         }
     }
 
     private fun MutableList<RippleDappTxField>.addAmount(
         key: String,
-        label: String,
+        amountKey: RippleDappTxFieldKey,
+        issuerKey: RippleDappTxFieldKey,
         obj: JsonObject,
     ) {
         val element = obj[key] ?: return
@@ -103,7 +186,7 @@ object RippleDappTransactionDecoder {
         if (primitive != null) {
             // A bare string/number amount is XRP in drops.
             primitive.contentOrNull?.let { drops ->
-                add(RippleDappTxField(label, formatXrpDrops(drops)))
+                add(RippleDappTxField(amountKey, formatXrpDrops(drops)))
             }
             return
         }
@@ -113,8 +196,8 @@ object RippleDappTransactionDecoder {
         val currency = amountObj.stringOrNull("currency")
         val issuer = amountObj.stringOrNull("issuer")
         if (value != null && currency != null) {
-            add(RippleDappTxField(label, "$value $currency"))
-            issuer?.let { add(RippleDappTxField("Issuer", it)) }
+            add(RippleDappTxField(amountKey, "$value $currency"))
+            issuer?.let { add(RippleDappTxField(issuerKey, it)) }
         }
     }
 

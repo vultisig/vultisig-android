@@ -288,18 +288,26 @@ internal fun VerifySendScreen(
                         bracketValue = tx.srcVaultName?.let { tx.srcAddress },
                     )
 
-                    VerifyCardDivider(0.dp)
+                    // For a dApp XRPL tx the native `To` comes from the wire `toAddress`, which is
+                    // not the value being signed — the real recipient (if any) lives in the raw
+                    // JSON `Destination` and is rendered by SignRippleDisplayView below. Showing
+                    // the
+                    // wire address here would let a relay display a trusted label/vault while the
+                    // signed JSON sends elsewhere, so suppress the native To row for signRipple.
+                    if (tx.signRipple == null) {
+                        VerifyCardDivider(0.dp)
 
-                    val toDstLabel =
-                        tx.dstVaultName
-                            ?: tx.dstAddressBookTitle
-                            ?: tx.dstContractLabel
-                            ?: tx.dstLabel
-                    VerifyCardDetails(
-                        title = stringResource(R.string.verify_transaction_to_title),
-                        subtitle = toDstLabel ?: tx.dstAddress,
-                        bracketValue = toDstLabel?.let { tx.dstAddress },
-                    )
+                        val toDstLabel =
+                            tx.dstVaultName
+                                ?: tx.dstAddressBookTitle
+                                ?: tx.dstContractLabel
+                                ?: tx.dstLabel
+                        VerifyCardDetails(
+                            title = stringResource(R.string.verify_transaction_to_title),
+                            subtitle = toDstLabel ?: tx.dstAddress,
+                            bracketValue = toDstLabel?.let { tx.dstAddress },
+                        )
+                    }
 
                     // A memo that merely echoes the destination tag is signed as tag-only, so it is
                     // not shown as a separate Memo row (it appears in the Destination Tag row

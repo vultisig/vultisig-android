@@ -1141,6 +1141,17 @@
     <string name="sui_raw_transaction">Sui transakcija</string>
     <string name="ripple_dapp_transaction">XRPL transakcija</string>
     <string name="ripple_transaction_summary">Sažetak transakcije</string>
+    <string name="ripple_field_issuer">Izdavatelj</string>
+    <string name="ripple_field_send_max">Maksimalno slanje</string>
+    <string name="ripple_field_send_max_issuer">Izdavatelj maksimalnog slanja</string>
+    <string name="ripple_field_deliver_min">Minimalna isporuka</string>
+    <string name="ripple_field_deliver_min_issuer">Izdavatelj minimalne isporuke</string>
+    <string name="ripple_field_selling">Prodaja</string>
+    <string name="ripple_field_selling_issuer">Izdavatelj prodaje</string>
+    <string name="ripple_field_buying">Kupnja</string>
+    <string name="ripple_field_buying_issuer">Izdavatelj kupnje</string>
+    <string name="ripple_field_limit">Limit</string>
+    <string name="ripple_field_limit_issuer">Izdavatelj limita</string>
     <string name="sui_sender">Od</string>
     <string name="solana_raw_transaction">Solana Sirova transakcija</string>
     <string name="solana_instructions_summary">Sažetak uputa transakcije</string>

@@ -1141,6 +1141,17 @@
     <string name="sui_raw_transaction">Транзакция Sui</string>
     <string name="ripple_dapp_transaction">Транзакция XRPL</string>
     <string name="ripple_transaction_summary">Сводка транзакции</string>
+    <string name="ripple_field_issuer">Эмитент</string>
+    <string name="ripple_field_send_max">Макс. отправка</string>
+    <string name="ripple_field_send_max_issuer">Эмитент макс. отправки</string>
+    <string name="ripple_field_deliver_min">Мин. доставка</string>
+    <string name="ripple_field_deliver_min_issuer">Эмитент мин. доставки</string>
+    <string name="ripple_field_selling">Продажа</string>
+    <string name="ripple_field_selling_issuer">Эмитент продажи</string>
+    <string name="ripple_field_buying">Покупка</string>
+    <string name="ripple_field_buying_issuer">Эмитент покупки</string>
+    <string name="ripple_field_limit">Лимит</string>
+    <string name="ripple_field_limit_issuer">Эмитент лимита</string>
     <string name="sui_sender">От</string>
     <string name="solana_raw_transaction">Исходные данные транзакции Соланы</string>
     <string name="solana_instructions_summary">Сводка инструкций транзакции</string>

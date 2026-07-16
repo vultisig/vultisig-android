@@ -20,9 +20,10 @@ internal sealed interface KeysignTransactionSummary {
     /**
      * A dApp-supplied transaction signed verbatim (e.g. an XRPL `signRipple` OfferCreate/Payment),
      * where the native `toAmount` is 0. [summary] is a pre-decoded one-line description of the real
-     * operation so the notification banner reads the true terms instead of "Send 0 XRP".
+     * operation so the notification banner reads the true terms instead of "Send 0 XRP", or null
+     * when the JSON couldn't be decoded — the caller then supplies a localized fallback label.
      */
-    data class DappTransaction(val summary: String) : KeysignTransactionSummary
+    data class DappTransaction(val summary: String?) : KeysignTransactionSummary
 }
 
 internal interface GetKeysignTransactionSummaryUseCase :
@@ -57,13 +58,12 @@ constructor(
                         )
 
                     // A dApp XRPL tx carries its real amounts in rawJson, not toAmount (which is
-                    // 0);
-                    // decode a readable summary so the banner doesn't say "Send 0 XRP".
+                    // 0); decode a readable summary so the banner doesn't say "Send 0 XRP". A null
+                    // summary (undecodable JSON) is passed through so the caller can supply a
+                    // localized fallback rather than a hardcoded English literal here.
                     signRipple != null ->
                         KeysignTransactionSummary.DappTransaction(
-                            summary =
-                                RippleDappTransactionDecoder.summarize(signRipple.rawJson)
-                                    ?: "XRPL Transaction"
+                            summary = RippleDappTransactionDecoder.summarize(signRipple.rawJson)
                         )
 
                     else ->

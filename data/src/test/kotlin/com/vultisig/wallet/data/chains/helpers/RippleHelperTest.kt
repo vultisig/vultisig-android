@@ -15,16 +15,24 @@ class RippleHelperTest {
             """"Destination":"rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY","Amount":"1500000"}"""
 
     @Test
-    fun `verifyDappTransactionAccount passes when Account matches the vault address`() {
+    fun `verifyDappTransaction passes when Account matches the vault address`() {
         // Must not throw.
-        RippleHelper.verifyDappTransactionAccount(rawJson(vaultXrpAddress), vaultXrpAddress)
+        RippleHelper.verifyDappTransaction(rawJson(vaultXrpAddress), vaultXrpAddress)
     }
 
     @Test
-    fun `verifyDappTransactionAccount rejects a transaction spending a different account`() {
+    fun `verifyDappTransaction passes for every allowlisted transaction type`() {
+        listOf("Payment", "OfferCreate", "OfferCancel", "TrustSet").forEach { type ->
+            val json = """{"TransactionType":"$type","Account":"$vaultXrpAddress"}"""
+            RippleHelper.verifyDappTransaction(json, vaultXrpAddress)
+        }
+    }
+
+    @Test
+    fun `verifyDappTransaction rejects a transaction spending a different account`() {
         val ex =
             assertThrows(IllegalArgumentException::class.java) {
-                RippleHelper.verifyDappTransactionAccount(
+                RippleHelper.verifyDappTransaction(
                     rawJson("rHacKerAcCounTxxxxxxxxxxxxxxxxxxxxx"),
                     vaultXrpAddress,
                 )
@@ -33,9 +41,55 @@ class RippleHelperTest {
     }
 
     @Test
-    fun `verifyDappTransactionAccount rejects JSON with no Account field`() {
+    fun `verifyDappTransaction rejects a SetRegularKey even for the vault's own account`() {
+        // A key-rotation whose Account is our own (public) address must not slip through the guard
+        // just because the Account matches — the type is not on the allowlist.
+        val json =
+            """{"TransactionType":"SetRegularKey","Account":"$vaultXrpAddress",""" +
+                """"RegularKey":"rAttackerKeyxxxxxxxxxxxxxxxxxxxxxxx"}"""
+        val ex =
+            assertThrows(IllegalArgumentException::class.java) {
+                RippleHelper.verifyDappTransaction(json, vaultXrpAddress)
+            }
+        assertEquals(true, ex.message?.contains("is not supported"))
+    }
+
+    @Test
+    fun `verifyDappTransaction rejects an EscrowCreate off the allowlist`() {
+        val json =
+            """{"TransactionType":"EscrowCreate","Account":"$vaultXrpAddress","Amount":"1000000"}"""
+        assertThrows(IllegalArgumentException::class.java) {
+            RippleHelper.verifyDappTransaction(json, vaultXrpAddress)
+        }
+    }
+
+    @Test
+    fun `verifyDappTransaction rejects a tampered signing-mechanics field`() {
+        val json =
+            """{"TransactionType":"Payment","Account":"$vaultXrpAddress",""" +
+                """"Destination":"rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY","Amount":"1500000",""" +
+                """"TxnSignature":"DEADBEEF"}"""
+        val ex =
+            assertThrows(IllegalArgumentException::class.java) {
+                RippleHelper.verifyDappTransaction(json, vaultXrpAddress)
+            }
+        assertEquals(true, ex.message?.contains("signing-mechanics field"))
+    }
+
+    @Test
+    fun `verifyDappTransaction rejects JSON with no TransactionType`() {
         assertThrows(IllegalStateException::class.java) {
-            RippleHelper.verifyDappTransactionAccount(
+            RippleHelper.verifyDappTransaction(
+                """{"Account":"$vaultXrpAddress","Amount":"1"}""",
+                vaultXrpAddress,
+            )
+        }
+    }
+
+    @Test
+    fun `verifyDappTransaction rejects JSON with no Account field`() {
+        assertThrows(IllegalStateException::class.java) {
+            RippleHelper.verifyDappTransaction(
                 """{"TransactionType":"Payment","Amount":"1"}""",
                 vaultXrpAddress,
             )
@@ -43,9 +97,9 @@ class RippleHelperTest {
     }
 
     @Test
-    fun `verifyDappTransactionAccount rejects blank rawJson`() {
+    fun `verifyDappTransaction rejects blank rawJson`() {
         assertThrows(IllegalArgumentException::class.java) {
-            RippleHelper.verifyDappTransactionAccount("   ", vaultXrpAddress)
+            RippleHelper.verifyDappTransaction("   ", vaultXrpAddress)
         }
     }
 

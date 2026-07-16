@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.RippleDappTransactionDecoder
 import com.vultisig.wallet.data.chains.helpers.RippleDappTx
+import com.vultisig.wallet.data.chains.helpers.RippleDappTxFieldKey
 import com.vultisig.wallet.ui.theme.Theme
 
 /**
@@ -80,7 +82,7 @@ fun SignRippleDisplayView(
             ) {
                 tx.fields.forEach { field ->
                     VerifyCardJsonDetails(
-                        title = field.label,
+                        title = stringResource(field.key.labelRes),
                         subtitle = field.value,
                         modifier = rowModifier,
                     )
@@ -96,6 +98,35 @@ fun SignRippleDisplayView(
         }
     }
 }
+
+/**
+ * Maps a semantic [RippleDappTxFieldKey] to its localized display label. The data-layer decoder
+ * stores only the key (never an English literal), so all user-facing wording lives here and is
+ * translated across every locale. Distinct issuer keys keep the label unambiguous (e.g. "Selling
+ * issuer" vs "Buying issuer").
+ */
+@get:StringRes
+private val RippleDappTxFieldKey.labelRes: Int
+    get() =
+        when (this) {
+            RippleDappTxFieldKey.TYPE -> R.string.qr_share_label_type
+            RippleDappTxFieldKey.FROM -> R.string.verify_transaction_from_title
+            RippleDappTxFieldKey.TO -> R.string.verify_transaction_to_title
+            RippleDappTxFieldKey.DESTINATION_TAG -> R.string.send_form_destination_tag
+            RippleDappTxFieldKey.AMOUNT -> R.string.deposit_screen_amount_title
+            RippleDappTxFieldKey.AMOUNT_ISSUER -> R.string.ripple_field_issuer
+            RippleDappTxFieldKey.SEND_MAX -> R.string.ripple_field_send_max
+            RippleDappTxFieldKey.SEND_MAX_ISSUER -> R.string.ripple_field_send_max_issuer
+            RippleDappTxFieldKey.DELIVER_MIN -> R.string.ripple_field_deliver_min
+            RippleDappTxFieldKey.DELIVER_MIN_ISSUER -> R.string.ripple_field_deliver_min_issuer
+            RippleDappTxFieldKey.SELLING -> R.string.ripple_field_selling
+            RippleDappTxFieldKey.SELLING_ISSUER -> R.string.ripple_field_selling_issuer
+            RippleDappTxFieldKey.BUYING -> R.string.ripple_field_buying
+            RippleDappTxFieldKey.BUYING_ISSUER -> R.string.ripple_field_buying_issuer
+            RippleDappTxFieldKey.LIMIT -> R.string.ripple_field_limit
+            RippleDappTxFieldKey.LIMIT_ISSUER -> R.string.ripple_field_limit_issuer
+            RippleDappTxFieldKey.FEE -> R.string.verify_transaction_network_fee
+        }
 
 private val rowModifier: Modifier
     @Composable

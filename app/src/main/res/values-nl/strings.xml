@@ -1133,6 +1133,17 @@
     <string name="sui_raw_transaction">Sui-transactie</string>
     <string name="ripple_dapp_transaction">XRPL-transactie</string>
     <string name="ripple_transaction_summary">Transactieoverzicht</string>
+    <string name="ripple_field_issuer">Uitgever</string>
+    <string name="ripple_field_send_max">Max. verzending</string>
+    <string name="ripple_field_send_max_issuer">Uitgever max. verzending</string>
+    <string name="ripple_field_deliver_min">Min. levering</string>
+    <string name="ripple_field_deliver_min_issuer">Uitgever min. levering</string>
+    <string name="ripple_field_selling">Verkoop</string>
+    <string name="ripple_field_selling_issuer">Uitgever verkoop</string>
+    <string name="ripple_field_buying">Aankoop</string>
+    <string name="ripple_field_buying_issuer">Uitgever aankoop</string>
+    <string name="ripple_field_limit">Limiet</string>
+    <string name="ripple_field_limit_issuer">Uitgever limiet</string>
     <string name="sui_sender">Van</string>
     <string name="solana_raw_transaction">Solana Ruwe transactie</string>
     <string name="solana_instructions_summary">Overzicht transactie-instructies</string>

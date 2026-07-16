@@ -1469,6 +1469,17 @@
     <string name="sui_raw_transaction">Sui 交易</string>
     <string name="ripple_dapp_transaction">XRPL 交易</string>
     <string name="ripple_transaction_summary">交易摘要</string>
+    <string name="ripple_field_issuer">发行方</string>
+    <string name="ripple_field_send_max">最大发送额</string>
+    <string name="ripple_field_send_max_issuer">最大发送额发行方</string>
+    <string name="ripple_field_deliver_min">最小交付额</string>
+    <string name="ripple_field_deliver_min_issuer">最小交付额发行方</string>
+    <string name="ripple_field_selling">卖出</string>
+    <string name="ripple_field_selling_issuer">卖出发行方</string>
+    <string name="ripple_field_buying">买入</string>
+    <string name="ripple_field_buying_issuer">买入发行方</string>
+    <string name="ripple_field_limit">限额</string>
+    <string name="ripple_field_limit_issuer">限额发行方</string>
     <string name="sui_sender">从</string>
     <string name="solana_raw_transaction">Solana 原始交易数据</string>
     <string name="solana_instructions_summary">交易指令摘要</string>

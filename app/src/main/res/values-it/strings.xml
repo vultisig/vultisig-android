@@ -1138,6 +1138,17 @@
     <string name="sui_raw_transaction">Transazione Sui</string>
     <string name="ripple_dapp_transaction">Transazione XRPL</string>
     <string name="ripple_transaction_summary">Riepilogo della transazione</string>
+    <string name="ripple_field_issuer">Emittente</string>
+    <string name="ripple_field_send_max">Invio massimo</string>
+    <string name="ripple_field_send_max_issuer">Emittente invio massimo</string>
+    <string name="ripple_field_deliver_min">Consegna minima</string>
+    <string name="ripple_field_deliver_min_issuer">Emittente consegna minima</string>
+    <string name="ripple_field_selling">Vendita</string>
+    <string name="ripple_field_selling_issuer">Emittente vendita</string>
+    <string name="ripple_field_buying">Acquisto</string>
+    <string name="ripple_field_buying_issuer">Emittente acquisto</string>
+    <string name="ripple_field_limit">Limite</string>
+    <string name="ripple_field_limit_issuer">Emittente limite</string>
     <string name="sui_sender">Da</string>
     <string name="solana_raw_transaction">Transazioni grezze Solana</string>
     <string name="solana_instructions_summary">Riepilogo istruzioni della transazione</string>

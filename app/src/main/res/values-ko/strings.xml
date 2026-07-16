@@ -1168,6 +1168,17 @@
     <string name="sui_raw_transaction">Sui 거래</string>
     <string name="ripple_dapp_transaction">XRPL 거래</string>
     <string name="ripple_transaction_summary">거래 요약</string>
+    <string name="ripple_field_issuer">발행자</string>
+    <string name="ripple_field_send_max">최대 전송</string>
+    <string name="ripple_field_send_max_issuer">최대 전송 발행자</string>
+    <string name="ripple_field_deliver_min">최소 전달</string>
+    <string name="ripple_field_deliver_min_issuer">최소 전달 발행자</string>
+    <string name="ripple_field_selling">판매</string>
+    <string name="ripple_field_selling_issuer">판매 발행자</string>
+    <string name="ripple_field_buying">구매</string>
+    <string name="ripple_field_buying_issuer">구매 발행자</string>
+    <string name="ripple_field_limit">한도</string>
+    <string name="ripple_field_limit_issuer">한도 발행자</string>
     <string name="sui_sender">보내는 주소</string>
     <string name="solana_raw_transaction">Solana 원시 거래</string>
     <string name="solana_instructions_summary">거래 명령어 요약</string>
