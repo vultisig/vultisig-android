@@ -121,6 +121,7 @@
     <string name="verify_transaction_value">Waarde</string>
     <string name="verify_transaction_consent_address">Ik stuur naar het juiste adres</string>
     <string name="verify_transaction_consent_amount">Het bedrag is correct</string>
+    <string name="verify_transaction_consent_dapp_transaction">Ik heb de transactiedetails gecontroleerd</string>
     <string name="verify_transaction_error_not_enough_consent">Controleer alle toestemmingen</string>
     <string name="camera_permission_open_settings">Instellingen openen</string>
     <string name="transaction_done_title">Gedaan</string>
@@ -1131,6 +1132,19 @@
     <string name="transaction_status_checking_transaction">Transactie controleren…</string>
     <string name="raw_transaction_data">Ruwe transactiegegevens</string>
     <string name="sui_raw_transaction">Sui-transactie</string>
+    <string name="ripple_dapp_transaction">XRPL-transactie</string>
+    <string name="ripple_transaction_summary">Transactieoverzicht</string>
+    <string name="ripple_field_issuer">Uitgever</string>
+    <string name="ripple_field_send_max">Max. verzending</string>
+    <string name="ripple_field_send_max_issuer">Uitgever max. verzending</string>
+    <string name="ripple_field_deliver_min">Min. levering</string>
+    <string name="ripple_field_deliver_min_issuer">Uitgever min. levering</string>
+    <string name="ripple_field_selling">Verkoop</string>
+    <string name="ripple_field_selling_issuer">Uitgever verkoop</string>
+    <string name="ripple_field_buying">Aankoop</string>
+    <string name="ripple_field_buying_issuer">Uitgever aankoop</string>
+    <string name="ripple_field_limit">Limiet</string>
+    <string name="ripple_field_limit_issuer">Uitgever limiet</string>
     <string name="sui_sender">Van</string>
     <string name="solana_raw_transaction">Solana Ruwe transactie</string>
     <string name="solana_instructions_summary">Overzicht transactie-instructies</string>

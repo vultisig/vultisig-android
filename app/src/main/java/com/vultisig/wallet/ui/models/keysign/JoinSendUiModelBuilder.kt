@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
+import com.vultisig.wallet.data.chains.helpers.RippleDappTransactionDecoder
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.GasFeeParams
@@ -107,21 +108,34 @@ constructor(
             )
 
         val nativeCoin = withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
+        // A dApp XRPL tx is signed verbatim, so the fee that is actually paid is the `Fee` baked
+        // into its raw JSON — not a live re-estimate. Surface that exact value so an inflated Fee
+        // is
+        // visible on the co-signer's Verify screen instead of being masked by a normal-looking
+        // RippleFeeService estimate.
+        val rippleDappFeeDrops =
+            payload.signRipple?.rawJson?.let { RippleDappTransactionDecoder.feeDrops(it) }
         val gasFee =
-            if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                val utxoHelper = UtxoHelper.getHelper(vault, payloadToken.coinType)
-                val plan = utxoHelper.getBitcoinTransactionPlan(payload)
-                if (plan.error != SigningError.OK) {
-                    Timber.e("UTXO plan error: ${plan.error.name}")
+            when {
+                chain.standard == TokenStandard.UTXO && chain != Chain.Cardano -> {
+                    val utxoHelper = UtxoHelper.getHelper(vault, payloadToken.coinType)
+                    val plan = utxoHelper.getBitcoinTransactionPlan(payload)
+                    if (plan.error != SigningError.OK) {
+                        Timber.e("UTXO plan error: ${plan.error.name}")
+                    }
+                    TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
                 }
-                TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
-            } else {
-                feeResolver.resolveJoinKeysignNetworkFee(
-                    payload = payload,
-                    chain = chain,
-                    nativeCoin = nativeCoin,
-                    blockchainTransaction = blockchainTransaction,
-                )
+
+                rippleDappFeeDrops != null ->
+                    TokenValue(value = rippleDappFeeDrops, token = nativeCoin)
+
+                else ->
+                    feeResolver.resolveJoinKeysignNetworkFee(
+                        payload = payload,
+                        chain = chain,
+                        nativeCoin = nativeCoin,
+                        blockchainTransaction = blockchainTransaction,
+                    )
             }
 
         val totalGasAndFee =
@@ -161,6 +175,7 @@ constructor(
 
         val signSolana = payload.signSolana?.rawTransactions?.firstOrNull() ?: ""
         val signSui = payload.signSui?.unsignedTxMsg?.takeIf { it.isNotEmpty() }
+        val signRipple = payload.signRipple?.rawJson?.takeIf { it.isNotBlank() }
         val transaction =
             Transaction(
                 id = UUID.randomUUID().toString(),
@@ -180,6 +195,7 @@ constructor(
                 signDirect = signDirect,
                 signSolana = signSolana,
                 signSui = signSui,
+                signRipple = signRipple,
             )
 
         val transactionToUiModel = mapTransactionToUiModel(transaction)

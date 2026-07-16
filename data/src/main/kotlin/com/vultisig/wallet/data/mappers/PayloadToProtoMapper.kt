@@ -281,6 +281,14 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
             // relay gap. Fixing them is deliberately out of scope for this Solana PR (untested on
             // those chains); tracked as a separate follow-up so any regression stays bisectable.
             signSolana = keysignPayload.signSolana,
+            // Same round-trip requirement: the dApp's raw XRPL transaction must reach the peer
+            // co-signer verbatim. Without relaying it, a co-signer receives signRipple == null and
+            // rebuilds a native OperationPayment from toAddress/toAmount — its signing bytes
+            // diverge
+            // from the initiator's, the DKLS setup message (keyed by md5(hash)) 404s, and the
+            // co-sign never completes. The inbound [KeysignPayloadProtoMapper] already reads it;
+            // this makes the mapping symmetric. Required for Secure Vault XRPL dApp co-signing.
+            signRipple = keysignPayload.signRipple,
             erc20ApprovePayload =
                 if (approvePayload is ERC20ApprovePayload) {
                     Erc20ApprovePayload(

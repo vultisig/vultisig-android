@@ -106,6 +106,7 @@
     <string name="verify_transaction_amount_title">Montante</string>
     <string name="verify_transaction_consent_address">Estou enviando para o endereço correto</string>
     <string name="verify_transaction_consent_amount">A quantidade está correta</string>
+    <string name="verify_transaction_consent_dapp_transaction">Revisei os detalhes da transação</string>
     <string name="transaction_done_title">Concluído</string>
     <string name="transaction_done_overview">Visão geral</string>
     <string name="transaction_done_complete">Continuar</string>
@@ -1135,6 +1136,19 @@
    <string name="transaction_status_checking_transaction">A verificar transação…</string>
     <string name="raw_transaction_data">Dados brutos de transação</string>
     <string name="sui_raw_transaction">Transação Sui</string>
+    <string name="ripple_dapp_transaction">Transação XRPL</string>
+    <string name="ripple_transaction_summary">Resumo da transação</string>
+    <string name="ripple_field_issuer">Emissor</string>
+    <string name="ripple_field_send_max">Envio máximo</string>
+    <string name="ripple_field_send_max_issuer">Emissor do envio máximo</string>
+    <string name="ripple_field_deliver_min">Entrega mínima</string>
+    <string name="ripple_field_deliver_min_issuer">Emissor da entrega mínima</string>
+    <string name="ripple_field_selling">Venda</string>
+    <string name="ripple_field_selling_issuer">Emissor da venda</string>
+    <string name="ripple_field_buying">Compra</string>
+    <string name="ripple_field_buying_issuer">Emissor da compra</string>
+    <string name="ripple_field_limit">Limite</string>
+    <string name="ripple_field_limit_issuer">Emissor do limite</string>
     <string name="sui_sender">De</string>
     <string name="solana_raw_transaction">Transação bruta de Solana</string>
     <string name="solana_instructions_summary">Resumo das instruções da transação</string>

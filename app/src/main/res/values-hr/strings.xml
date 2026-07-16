@@ -102,6 +102,7 @@
     <string name="verify_transaction_amount_title">Iznos</string>
     <string name="verify_transaction_consent_address">Šaljem na pravu adresu</string>
     <string name="verify_transaction_consent_amount">Iznos je točan</string>
+    <string name="verify_transaction_consent_dapp_transaction">Pregledao sam pojedinosti transakcije</string>
     <string name="transaction_done_title">Gotovo</string>
     <string name="transaction_done_overview">Pregled</string>
     <string name="transaction_done_complete">Dovršeno</string>
@@ -1139,6 +1140,19 @@
     <string name="transaction_status_checking_transaction">Provjera transakcije…</string>
     <string name="raw_transaction_data">Sirovi podaci o transakciji</string>
     <string name="sui_raw_transaction">Sui transakcija</string>
+    <string name="ripple_dapp_transaction">XRPL transakcija</string>
+    <string name="ripple_transaction_summary">Sažetak transakcije</string>
+    <string name="ripple_field_issuer">Izdavatelj</string>
+    <string name="ripple_field_send_max">Maksimalno slanje</string>
+    <string name="ripple_field_send_max_issuer">Izdavatelj maksimalnog slanja</string>
+    <string name="ripple_field_deliver_min">Minimalna isporuka</string>
+    <string name="ripple_field_deliver_min_issuer">Izdavatelj minimalne isporuke</string>
+    <string name="ripple_field_selling">Prodaja</string>
+    <string name="ripple_field_selling_issuer">Izdavatelj prodaje</string>
+    <string name="ripple_field_buying">Kupnja</string>
+    <string name="ripple_field_buying_issuer">Izdavatelj kupnje</string>
+    <string name="ripple_field_limit">Limit</string>
+    <string name="ripple_field_limit_issuer">Izdavatelj limita</string>
     <string name="sui_sender">Od</string>
     <string name="solana_raw_transaction">Solana Sirova transakcija</string>
     <string name="solana_instructions_summary">Sažetak uputa transakcije</string>

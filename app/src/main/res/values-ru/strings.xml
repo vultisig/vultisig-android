@@ -121,6 +121,7 @@
     <string name="verify_transaction_value">Стоимость</string>
     <string name="verify_transaction_consent_address">Я отправляю на правильный адрес</string>
     <string name="verify_transaction_consent_amount">Сумма верна</string>
+    <string name="verify_transaction_consent_dapp_transaction">Я проверил детали транзакции</string>
     <string name="verify_transaction_error_not_enough_consent">Пожалуйста, проверьте все согласия</string>
     <string name="camera_permission_open_settings">Открыть настройки</string>
     <string name="transaction_done_title">Готово</string>
@@ -1139,6 +1140,19 @@
     <string name="transaction_status_checking_transaction">Проверка транзакции…</string>
     <string name="raw_transaction_data">Исходные данные транзакции</string>
     <string name="sui_raw_transaction">Транзакция Sui</string>
+    <string name="ripple_dapp_transaction">Транзакция XRPL</string>
+    <string name="ripple_transaction_summary">Сводка транзакции</string>
+    <string name="ripple_field_issuer">Эмитент</string>
+    <string name="ripple_field_send_max">Макс. отправка</string>
+    <string name="ripple_field_send_max_issuer">Эмитент макс. отправки</string>
+    <string name="ripple_field_deliver_min">Мин. доставка</string>
+    <string name="ripple_field_deliver_min_issuer">Эмитент мин. доставки</string>
+    <string name="ripple_field_selling">Продажа</string>
+    <string name="ripple_field_selling_issuer">Эмитент продажи</string>
+    <string name="ripple_field_buying">Покупка</string>
+    <string name="ripple_field_buying_issuer">Эмитент покупки</string>
+    <string name="ripple_field_limit">Лимит</string>
+    <string name="ripple_field_limit_issuer">Эмитент лимита</string>
     <string name="sui_sender">От</string>
     <string name="solana_raw_transaction">Исходные данные транзакции Соланы</string>
     <string name="solana_instructions_summary">Сводка инструкций транзакции</string>

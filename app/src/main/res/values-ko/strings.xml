@@ -196,6 +196,7 @@
     <string name="verify_transaction_value">금액</string>
     <string name="verify_transaction_consent_address">올바른 주소로 보내고 있습니다</string>
     <string name="verify_transaction_consent_amount">금액이 정확합니다</string>
+    <string name="verify_transaction_consent_dapp_transaction">거래 세부 정보를 검토했습니다</string>
     <string name="verify_transaction_error_not_enough_consent">모든 동의 항목을 확인해 주세요</string>
     <string name="camera_permission_open_settings">설정 열기</string>
     <string name="transaction_done_title">완료</string>
@@ -1166,6 +1167,19 @@
     <string name="transaction_status_checking_transaction">거래 확인 중…</string>
     <string name="raw_transaction_data">원시 거래 데이터</string>
     <string name="sui_raw_transaction">Sui 거래</string>
+    <string name="ripple_dapp_transaction">XRPL 거래</string>
+    <string name="ripple_transaction_summary">거래 요약</string>
+    <string name="ripple_field_issuer">발행자</string>
+    <string name="ripple_field_send_max">최대 전송</string>
+    <string name="ripple_field_send_max_issuer">최대 전송 발행자</string>
+    <string name="ripple_field_deliver_min">최소 전달</string>
+    <string name="ripple_field_deliver_min_issuer">최소 전달 발행자</string>
+    <string name="ripple_field_selling">판매</string>
+    <string name="ripple_field_selling_issuer">판매 발행자</string>
+    <string name="ripple_field_buying">구매</string>
+    <string name="ripple_field_buying_issuer">구매 발행자</string>
+    <string name="ripple_field_limit">한도</string>
+    <string name="ripple_field_limit_issuer">한도 발행자</string>
     <string name="sui_sender">보내는 주소</string>
     <string name="solana_raw_transaction">Solana 원시 거래</string>
     <string name="solana_instructions_summary">거래 명령어 요약</string>

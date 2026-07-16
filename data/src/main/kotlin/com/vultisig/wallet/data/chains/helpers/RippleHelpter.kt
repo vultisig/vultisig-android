@@ -10,6 +10,11 @@ import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
 import java.security.MessageDigest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
@@ -23,8 +28,44 @@ object RippleHelper {
 
     const val DEFAULT_EXISTENTIAL_DEPOSIT = 1000000
 
+    private val rawJsonParser = Json { ignoreUnknownKeys = true }
+
+    /**
+     * XRPL transaction types this wallet will co-sign for a dApp. A swap is an `OfferCreate`
+     * (optionally paired with `OfferCancel`); `Payment` and `TrustSet` round out the common
+     * surface. Anything outside this set — `AccountSet`, `SetRegularKey`, `SignerListSet`,
+     * `EscrowCreate`, hooks — is refused so a dApp (or a tampering relay) cannot slip a
+     * key-rotation or account-takeover past a co-signer who thinks they are approving a trade. This
+     * mirrors the Windows/extension `sanitizeRippleDappTx` allowlist; extend deliberately.
+     */
+    private val ALLOWED_DAPP_TRANSACTION_TYPES =
+        setOf("Payment", "OfferCreate", "OfferCancel", "TrustSet")
+
+    /**
+     * Signing-mechanics fields a dApp/relay has no business setting on an unsigned request:
+     * `SigningPubKey` is filled from the vault key at signing time, `TxnSignature` is the signature
+     * we are about to produce, and `Signers` is a multi-sign envelope irrelevant to single-sig MPC.
+     * Their presence means the raw JSON was tampered with, so we refuse rather than sign around
+     * them.
+     */
+    private val FORBIDDEN_DAPP_FIELDS = setOf("TxnSignature", "Signers", "SigningPubKey")
+
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Ripple) { "Coin is not XRP" }
+
+        // dApp-supplied XRPL transaction (via the extension's GemWallet provider): the raw JSON is
+        // already a complete transaction — Account, Fee, Sequence, LastLedgerSequence and amounts
+        // are baked in — so sign it verbatim through WalletCore's rawJson path. Every co-signer
+        // rebuilds identical signing bytes from the same JSON, matching the extension and
+        // @vultisig/core-mpc byte-for-byte. Reconstructing an OperationPayment from
+        // toAddress/toAmount would diverge and produce a non-matching MPC signature.
+        keysignPayload.signRipple?.let { signRipple ->
+            return buildDappRawJsonInputData(
+                rawJson = signRipple.rawJson,
+                expectedAccount = keysignPayload.coin.address,
+                hexPublicKey = keysignPayload.coin.hexPublicKey,
+            )
+        }
 
         val rippleSpecific =
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Ripple
@@ -156,6 +197,91 @@ object RippleHelper {
             error("Failed to create JSON string ${e.message}")
         }
     }
+
+    /**
+     * Builds the WalletCore [Ripple.SigningInput] for a dApp-supplied transaction ([SignRipple]),
+     * signing the raw JSON verbatim. Fails closed first: rejects any transaction whose `Account`
+     * differs from this vault's derived XRP address, so a co-signer can never sign a spend from an
+     * account other than its own — the same defense as `@vultisig/core-mpc` 1.11.0.
+     *
+     * Only [setRawJson] and [setPublicKey] are set: the JSON is the source of truth for every tx
+     * field, and the vault ECDSA public key (identical across all co-signers) is what WalletCore
+     * embeds as `SigningPubKey` and hashes into the pre-image — so every device produces the same
+     * signing bytes.
+     */
+    private fun buildDappRawJsonInputData(
+        rawJson: String,
+        expectedAccount: String,
+        hexPublicKey: String,
+    ): ByteArray {
+        verifyDappTransaction(rawJson, expectedAccount)
+
+        val publicKey = PublicKey(hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+
+        return Ripple.SigningInput.newBuilder()
+            .setRawJson(rawJson)
+            .setPublicKey(ByteString.copyFrom(publicKey.data()))
+            .build()
+            .toByteArray()
+    }
+
+    /**
+     * Fail-closed guard for a dApp-supplied [SignRipple] transaction, verbatim-signed so this is
+     * the only gate between the wire and the signer. Throws unless:
+     * - the `TransactionType` is on the [ALLOWED_DAPP_TRANSACTION_TYPES] allowlist — a
+     *   `SetRegularKey`/`SignerListSet`/`EscrowCreate`/etc. is refused even when its `Account` is
+     *   our own vault (public info), so a tampering relay can't get an account-takeover co-signed
+     *   under the guise of a trade;
+     * - the JSON's `Account` equals this vault's derived XRP [expectedAccount], so a co-signer
+     *   never signs a spend from an account other than its own;
+     * - no signing-mechanics field ([FORBIDDEN_DAPP_FIELDS]) is present, which would mean the JSON
+     *   was tampered with after the initiator sanitized it.
+     *
+     * Pure (no JNI), so it is unit-testable independently of WalletCore. Mirrors the Windows
+     * `sanitizeRippleDappTx` defense.
+     */
+    internal fun verifyDappTransaction(rawJson: String, expectedAccount: String) {
+        require(rawJson.isNotBlank()) { "SignRipple rawJson is empty" }
+        val obj =
+            try {
+                rawJsonParser.parseToJsonElement(rawJson).jsonObject
+            } catch (e: Exception) {
+                Timber.e("Failed to parse SignRipple rawJson: %s", e.message)
+                error("SignRipple rawJson is not a valid JSON object")
+            }
+
+        val transactionType =
+            (obj["TransactionType"] as? JsonPrimitive)?.contentOrNull
+                ?: error("SignRipple rawJson has no readable TransactionType field")
+        require(transactionType in ALLOWED_DAPP_TRANSACTION_TYPES) {
+            "SignRipple TransactionType $transactionType is not supported"
+        }
+
+        val account =
+            (obj["Account"] as? JsonPrimitive)?.contentOrNull
+                ?: error("SignRipple rawJson has no readable Account field")
+        require(account == expectedAccount) {
+            "SignRipple Account $account does not match this vault's XRP address $expectedAccount"
+        }
+
+        val tamperedField = FORBIDDEN_DAPP_FIELDS.firstOrNull { obj.containsKey(it) }
+        require(tamperedField == null) {
+            "SignRipple rawJson carries a signing-mechanics field ($tamperedField); refusing to sign"
+        }
+    }
+
+    /** Extracts the XRPL `Account` from a raw transaction JSON, or null if absent/unparseable. */
+    internal fun parseRawJsonAccount(rawJson: String): String? =
+        try {
+            rawJsonParser
+                .parseToJsonElement(rawJson)
+                .jsonObject["Account"]
+                ?.jsonPrimitive
+                ?.contentOrNull
+        } catch (e: Exception) {
+            Timber.e("Failed to parse SignRipple rawJson: %s", e.message)
+            null
+        }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val inputData = getPreSignedInputData(keysignPayload)
