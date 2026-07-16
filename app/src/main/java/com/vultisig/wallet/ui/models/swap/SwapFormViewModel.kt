@@ -10,6 +10,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -365,8 +366,27 @@ constructor(
                 selectedDstId = selectedDstId,
                 addresses = addresses,
                 uiState = _uiState,
+                // Raise the quote skeletons while loading a not-yet-held token's account only when
+                // the pair the pick forms could actually be quoted — a positive amount AND a
+                // routable (distinct, provider-backed) pair, mirroring the pipeline's own
+                // isPairRoutable && amount>0 gate. A bare amount>0 check would still blink over an
+                // unroutable or same-token pair before updatePairSupport catches it (#5296 review).
+                isSelectionQuotable = { selectedToken ->
+                    isSelectionQuotable(targetArg, selectedToken)
+                },
             )
         }
+    }
+
+    private fun isSelectionQuotable(targetArg: String, selectedToken: Coin): Boolean {
+        val amount = srcAmount ?: return false
+        if (amount <= BigDecimal.ZERO) return false
+        val (src, dst) =
+            when (targetArg) {
+                ARG_SELECTED_SRC_TOKEN_ID -> selectedToken to selectedDst.value?.account?.token
+                else -> selectedSrc.value?.account?.token to selectedToken
+            }
+        return src != null && dst != null && quotePipeline.isPairRoutable(src, dst)
     }
 
     fun flipSelectedTokens() {
