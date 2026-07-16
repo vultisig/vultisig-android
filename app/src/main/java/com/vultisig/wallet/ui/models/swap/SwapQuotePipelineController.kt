@@ -155,6 +155,19 @@ constructor(
     private val srcAmount: BigDecimal?
         get() = srcAmountState.text.toString().toBigDecimalOrNull()
 
+    /**
+     * True when the live field currently forms a quotable request: a routable pair (a real
+     * provider, so same-token is excluded) with a positive source amount. Shared by
+     * [startLoadingIfQuotable] and the late-result guard in [applyQuoteResult] so both agree on
+     * what "quotable" means, keeping zero/invalid amounts and unroutable pairs quiet on both the
+     * loading and result paths (#5296).
+     */
+    private val isLiveInputQuotable: Boolean
+        get() {
+            val amount = srcAmount
+            return isPairRoutable && amount != null && amount > BigDecimal.ZERO
+        }
+
     private var isLoading: Boolean
         get() = uiState.value.isLoading
         set(value) {
@@ -385,13 +398,15 @@ constructor(
         input: QuoteInput,
         result: SwapQuotePipelineResult.Success,
     ) {
-        // isAmountFieldEmpty is read once when resolveQuote is called, but the field can be cleared
+        // isAmountFieldEmpty is read once when resolveQuote is called, but the live input can
+        // change
         // while this fetch — queued on a prior debounce cycle — is still in flight, and
         // collectLatest
-        // can't cancel it until the empty input clears the debounce. Re-read the live field here so
+        // can't cancel it until the next input clears the debounce. Re-check the live input here so
         // a
-        // late-landing fetch drops the now-stale quote instead of resurrecting it (#5296 review).
-        if (srcAmountState.text.isEmpty()) {
+        // late-landing fetch for a now non-quotable field (cleared, zeroed, or an unroutable pair)
+        // drops the stale quote instead of resurrecting it (#5296 review).
+        if (!isLiveInputQuotable) {
             resetQuoteState()
             return
         }
@@ -491,8 +506,7 @@ constructor(
      *   leaving them tappable until the 300ms debounce runs resetQuoteState (#5296 review).
      */
     private fun startLoadingIfQuotable() {
-        val amount = srcAmount
-        if (isPairRoutable && amount != null && amount > BigDecimal.ZERO) {
+        if (isLiveInputQuotable) {
             isLoading = true
         } else if (uiState.value.quoteDisplay.hasQuote || uiState.value.isLoading) {
             // Clear a resolved quote OR a spinner we raised while a firm quote was still pending:

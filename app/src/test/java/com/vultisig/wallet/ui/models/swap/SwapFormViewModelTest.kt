@@ -1369,6 +1369,66 @@ internal class SwapFormViewModelTest {
             assertTrue(vm.uiState.value.isSwapDisabled)
         }
 
+    @Test
+    fun `a fetch that lands after the amount is zeroed never resurrects the stale quote`() =
+        runTest(mainDispatcher) {
+            // applyQuoteResult's live-input guard rejects every non-quotable field, not just an
+            // empty one: zeroing the amount while a prior-cycle fetch is still in flight must drop
+            // the late-landing quote just like clearing it does (#5296 review).
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            val fetchGate = CompletableDeferred<Unit>()
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } coAnswers
+                {
+                    fetchGate.await()
+                    createDefaultQuoteFetchResult()
+                }
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            runCurrent()
+            assertTrue(vm.uiState.value.isLoading)
+            assertFalse(vm.uiState.value.quoteDisplay.hasQuote)
+
+            // Zero the amount while the fetch is still in flight; the "0" input is now sitting in
+            // the
+            // debounce, so the fetch above is not cancelled yet but the live field is non-quotable.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0")
+            Snapshot.sendApplyNotifications()
+            runCurrent()
+
+            val quoteFlags = mutableListOf(vm.uiState.value.quoteDisplay.hasQuote)
+            val collectJob =
+                backgroundScope.launch(mainDispatcher) {
+                    vm.uiState.collect { quoteFlags += it.quoteDisplay.hasQuote }
+                }
+            fetchGate.complete(Unit)
+            advanceUntilIdle()
+            collectJob.cancel()
+
+            assertFalse(
+                quoteFlags.any { it },
+                "stale quote resurrected after the amount was zeroed",
+            )
+            assertTrue(vm.uiState.value.isSwapDisabled)
+        }
+
     // endregion
 
     // region pair eligibility (#4710)
