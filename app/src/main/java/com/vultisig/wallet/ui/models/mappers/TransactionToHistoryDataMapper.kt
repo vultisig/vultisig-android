@@ -19,9 +19,17 @@ internal class SendTransactionHistoryDataMapperImpl @Inject constructor() :
         // history row keeps its true meaning after a restart instead of downgrading to "0 XRP → ".
         val rippleDapp = from.signRipple
         val dappSummary = rippleDapp?.let { RippleDappTransactionDecoder.summarize(it.rawJson) }
+        // For a dApp XRPL tx the recipient must come only from the decoded JSON `Destination`.
+        // Offers/trust lines have none, so leave it empty rather than falling back to the wire
+        // `dstAddress` — a relay could set that to a trusted label/vault while the signed JSON
+        // sends elsewhere, making the history row's recipient a decoy. Native sends keep
+        // dstAddress.
         val toAddress =
-            rippleDapp?.value(RippleDappTxFieldKey.TO)?.takeIf { it.isNotBlank() }
-                ?: from.dstAddress
+            if (rippleDapp != null) {
+                rippleDapp.value(RippleDappTxFieldKey.TO).orEmpty()
+            } else {
+                from.dstAddress
+            }
 
         return SendTransactionHistoryData(
             fromAddress = from.srcAddress,

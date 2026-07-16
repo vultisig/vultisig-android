@@ -102,6 +102,7 @@
     <string name="verify_transaction_amount_title">Quantità</string>
     <string name="verify_transaction_consent_address">Sto inviando all\'indirizzo corretto</string>
     <string name="verify_transaction_consent_amount">La quantità è corretta</string>
+    <string name="verify_transaction_consent_dapp_transaction">Ho esaminato i dettagli della transazione</string>
     <string name="transaction_done_title">Fatto</string>
     <string name="transaction_done_overview">Panoramica</string>
     <string name="transaction_done_complete">Completo</string>

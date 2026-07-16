@@ -107,6 +107,7 @@ internal fun VerifySendScreen(viewModel: VerifyTransactionViewModel = hiltViewMo
         confirmTitle = stringResource(R.string.keysign_sign_transaction),
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
+        onConsentDappTransaction = viewModel::checkConsentDappTransaction,
         onConfirm = viewModel::joinKeySign,
         onBackClick = viewModel::back,
         onFastSignClick = viewModel::fastSign,
@@ -126,6 +127,7 @@ internal fun VerifySendScreen(
     dappMetadata: DAppMetadata? = null,
     onConsentAddress: (Boolean) -> Unit = {},
     onConsentAmount: (Boolean) -> Unit = {},
+    onConsentDappTransaction: (Boolean) -> Unit = {},
     onBackClick: () -> Unit = {},
     onConfirmScanning: () -> Unit = {},
     onDismissScanning: () -> Unit = {},
@@ -505,17 +507,32 @@ internal fun VerifySendScreen(
 
                 if (isConsentsEnabled) {
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        VsCheckField(
-                            title = stringResource(R.string.verify_transaction_consent_address),
-                            isChecked = state.consentAddress,
-                            onCheckedChange = onConsentAddress,
-                        )
+                        if (state.transaction.signRipple != null) {
+                            // A dApp XRPL tx has no native recipient/amount to attest to, so show a
+                            // single "reviewed the details" consent instead of the address/amount
+                            // pair, which would ask the co-signer to confirm values that aren't
+                            // what's being signed.
+                            VsCheckField(
+                                title =
+                                    stringResource(
+                                        R.string.verify_transaction_consent_dapp_transaction
+                                    ),
+                                isChecked = state.consentDappTransaction,
+                                onCheckedChange = onConsentDappTransaction,
+                            )
+                        } else {
+                            VsCheckField(
+                                title = stringResource(R.string.verify_transaction_consent_address),
+                                isChecked = state.consentAddress,
+                                onCheckedChange = onConsentAddress,
+                            )
 
-                        VsCheckField(
-                            title = stringResource(R.string.verify_transaction_consent_amount),
-                            isChecked = state.consentAmount,
-                            onCheckedChange = onConsentAmount,
-                        )
+                            VsCheckField(
+                                title = stringResource(R.string.verify_transaction_consent_amount),
+                                isChecked = state.consentAmount,
+                                onCheckedChange = onConsentAmount,
+                            )
+                        }
                     }
                 }
             }

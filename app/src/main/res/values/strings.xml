@@ -197,6 +197,7 @@
     <string name="verify_transaction_value">Value</string>
     <string name="verify_transaction_consent_address">I’m sending to the right address</string>
     <string name="verify_transaction_consent_amount">The amount is correct</string>
+    <string name="verify_transaction_consent_dapp_transaction">I have reviewed the transaction details</string>
     <string name="verify_transaction_error_not_enough_consent">Please check all consents</string>
     <string name="camera_permission_open_settings">Open Settings</string>
     <string name="transaction_done_title">Done</string>

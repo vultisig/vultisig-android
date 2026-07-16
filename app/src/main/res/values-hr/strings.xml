@@ -102,6 +102,7 @@
     <string name="verify_transaction_amount_title">Iznos</string>
     <string name="verify_transaction_consent_address">Šaljem na pravu adresu</string>
     <string name="verify_transaction_consent_amount">Iznos je točan</string>
+    <string name="verify_transaction_consent_dapp_transaction">Pregledao sam pojedinosti transakcije</string>
     <string name="transaction_done_title">Gotovo</string>
     <string name="transaction_done_overview">Pregled</string>
     <string name="transaction_done_complete">Dovršeno</string>

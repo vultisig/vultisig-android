@@ -157,6 +157,7 @@ internal data class VerifyTransactionUiModel(
     val transaction: TransactionDetailsUiModel = TransactionDetailsUiModel(),
     val consentAddress: Boolean = false,
     val consentAmount: Boolean = false,
+    val consentDappTransaction: Boolean = false,
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
     val txScanStatus: TransactionScanStatus = TransactionScanStatus.NotStarted,
@@ -164,7 +165,13 @@ internal data class VerifyTransactionUiModel(
     val isLoadingFees: Boolean = false,
 ) {
     val hasAllConsents: Boolean
-        get() = consentAddress && consentAmount
+        // A dApp XRPL tx (signRipple) has no native recipient/amount — an OfferCreate has no
+        // Destination and the native amount is 0 — so the "right address"/"amount is correct"
+        // consents are meaningless there. Gate it on a single "reviewed the details" consent
+        // instead; native sends keep the two-checkbox flow.
+        get() =
+            if (transaction.signRipple != null) consentDappTransaction
+            else consentAddress && consentAmount
 }
 
 /**
@@ -235,6 +242,10 @@ constructor(
 
     fun checkConsentAmount(checked: Boolean) {
         viewModelScope.launch { _uiState.update { it.copy(consentAmount = checked) } }
+    }
+
+    fun checkConsentDappTransaction(checked: Boolean) {
+        viewModelScope.launch { _uiState.update { it.copy(consentDappTransaction = checked) } }
     }
 
     fun authFastSign() {

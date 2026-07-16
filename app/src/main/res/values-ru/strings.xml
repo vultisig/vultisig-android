@@ -121,6 +121,7 @@
     <string name="verify_transaction_value">Стоимость</string>
     <string name="verify_transaction_consent_address">Я отправляю на правильный адрес</string>
     <string name="verify_transaction_consent_amount">Сумма верна</string>
+    <string name="verify_transaction_consent_dapp_transaction">Я проверил детали транзакции</string>
     <string name="verify_transaction_error_not_enough_consent">Пожалуйста, проверьте все согласия</string>
     <string name="camera_permission_open_settings">Открыть настройки</string>
     <string name="transaction_done_title">Готово</string>
