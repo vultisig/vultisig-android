@@ -2,10 +2,13 @@
 
 package com.vultisig.wallet.ui.models.mappers
 
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.OPERATION_BOND
+import com.vultisig.wallet.data.models.OPERATION_UNBOND
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.settings.AppCurrency
@@ -80,6 +83,27 @@ internal class DepositTransactionUiModelMapperTest {
         val uiModel = mapper().invoke(transaction(estimateFeesFiat = "$1.23"))
 
         uiModel.networkFeeFiatValue shouldBe "$1.23"
+    }
+
+    @Test
+    fun `title reads Unbonding when the operation is Unbond`() {
+        depositVerifyTitleRes(OPERATION_UNBOND, memo = "") shouldBe
+            R.string.verify_deposit_unbonding
+    }
+
+    @Test
+    fun `title reads Unbonding for the send-flow Unbond memo when operation is blank`() {
+        // The node-management Unbond flow leaves operation blank; the UNBOND memo prefix is the
+        // fallback signal so the header still reads "Unbonding" (#5301).
+        depositVerifyTitleRes(operation = "", memo = "UNBOND:thor1node:75000000") shouldBe
+            R.string.verify_deposit_unbonding
+    }
+
+    @Test
+    fun `title falls back to the generic sending label for non-Unbond operations`() {
+        depositVerifyTitleRes(OPERATION_BOND, memo = "BOND:thor1node") shouldBe
+            R.string.verify_deposit_sending
+        depositVerifyTitleRes(operation = "", memo = "") shouldBe R.string.verify_deposit_sending
     }
 
     private fun transaction(estimateFeesFiat: String): DepositTransaction =

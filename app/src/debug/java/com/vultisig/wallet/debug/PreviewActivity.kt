@@ -84,6 +84,8 @@ import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyValidatorRow
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
+import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
+import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.governance.GovernanceUiState
 import com.vultisig.wallet.ui.models.governance.ProposalStatus
 import com.vultisig.wallet.ui.models.governance.ProposalUi
@@ -117,6 +119,7 @@ import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingPositionsConten
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingVerifyContent
 import com.vultisig.wallet.ui.screens.cosmosstaking.StakingPositionSkeleton
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
+import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
@@ -288,6 +291,8 @@ class PreviewActivity : ComponentActivity() {
                     "qbtc_unknown_address_after" -> QbtcUnknownAddressAfterPreview()
                     "chain_selection" -> ChainSelectionClipPreview()
                     "verify_send_empty_memo" -> VerifySendEmptyMemoPreview()
+                    "unbond_verify_before" -> UnbondVerifyPreview(after = false)
+                    "unbond_verify_after" -> UnbondVerifyPreview(after = true)
                     else -> SwapConfirmPreview()
                 }
             }
@@ -1212,6 +1217,39 @@ private fun BlockaidHeroVerifySendPreview() {
         onConfirmScanning = {},
         onDismissScanning = {},
         hasToolbar = true,
+    )
+}
+
+/**
+ * THORChain Unbond "Function overview" confirmation (#5301). [after] = false reproduces the
+ * reported bug: the generic "You're sending" header and raw `thor1…` From/To. [after] = true is the
+ * fix — "Unbonding" header and From/To formatted as "VaultName (address)" (the destination is the
+ * vault's own self-operated node, so it resolves to the vault name). Data mirrors the issue
+ * screenshot.
+ */
+@Composable
+private fun UnbondVerifyPreview(after: Boolean) {
+    val nodeAddress = "thor12a9rpf9u2ulwuezxkh6uas4au7xnde8umdua5t"
+    val tx =
+        DepositTransactionUiModel(
+            token = ValuedToken(token = Coins.ThorChain.RUNE, value = "0", fiatValue = "$0.00"),
+            networkFeeTokenValue = "0.02 RUNE",
+            networkFeeFiatValue = "$0.00843",
+            srcAddress = nodeAddress,
+            dstAddress = nodeAddress,
+            srcVaultName = if (after) "Main Vault" else null,
+            dstVaultName = if (after) "Main Vault" else null,
+            memo = "UNBOND:$nodeAddress:75000000",
+            titleRes =
+                if (after) R.string.verify_deposit_unbonding else R.string.verify_deposit_sending,
+        )
+    VerifyDepositScreen(
+        state = VerifyDepositUiModel(depositTransactionUiModel = tx, isLoading = false),
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onFastSignClick = {},
+        onConfirm = {},
+        onBackClick = {},
     )
 }
 

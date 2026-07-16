@@ -1,7 +1,10 @@
 package com.vultisig.wallet.ui.models.mappers
 
+import androidx.annotation.StringRes
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.OPERATION_UNBOND
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
@@ -11,6 +14,19 @@ import kotlinx.coroutines.flow.first
 
 internal interface DepositTransactionToUiModelMapper :
     SuspendMapperFunc<DepositTransaction, DepositTransactionUiModel>
+
+/**
+ * Resolves the "Function overview" header for a deposit: an Unbond reads "Unbonding" rather than
+ * the generic "You're sending", since it isn't a send (issue #5301). The send-side node-management
+ * flow leaves [operation] blank, so the Unbond memo prefix is honored as a fallback signal.
+ */
+@StringRes
+internal fun depositVerifyTitleRes(operation: String, memo: String): Int =
+    if (operation == OPERATION_UNBOND || memo.trimStart().startsWith("UNBOND", ignoreCase = true)) {
+        R.string.verify_deposit_unbonding
+    } else {
+        R.string.verify_deposit_sending
+    }
 
 internal class DepositTransactionUiModelMapperImpl
 @Inject
@@ -54,6 +70,7 @@ constructor(
             pairedAddress = from.pairedAddress,
             pool = from.pool,
             validatorName = from.validatorName.orEmpty(),
+            titleRes = depositVerifyTitleRes(from.operation, from.memo),
         )
     }
 }

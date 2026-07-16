@@ -8,9 +8,12 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.data.utils.NetworkErrorKind
 import com.vultisig.wallet.data.utils.NetworkException
@@ -62,6 +65,9 @@ internal class VerifyDepositViewModelTest {
     private lateinit var depositTransactionRepository: DepositTransactionRepository
     private lateinit var balanceRepository: BalanceRepository
     private lateinit var vaultPasswordRepository: VaultPasswordRepository
+    private lateinit var vaultRepository: VaultRepository
+    private lateinit var addressBookRepository: AddressBookRepository
+    private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
     private lateinit var launchKeysign: LaunchKeysignUseCase
     private lateinit var isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase
 
@@ -76,6 +82,9 @@ internal class VerifyDepositViewModelTest {
         depositTransactionRepository = mockk(relaxed = true)
         balanceRepository = mockk(relaxed = true)
         vaultPasswordRepository = mockk(relaxed = true)
+        vaultRepository = mockk(relaxed = true)
+        addressBookRepository = mockk(relaxed = true)
+        chainAccountAddressRepository = mockk(relaxed = true)
         launchKeysign = mockk(relaxed = true)
         isVaultHasFastSignById = mockk(relaxed = true)
         // A relaxed mock can't synthesize the non-null DepositTransactionUiModel for this
@@ -99,6 +108,10 @@ internal class VerifyDepositViewModelTest {
             depositTransactionRepository = depositTransactionRepository,
             balanceRepository = balanceRepository,
             vaultPasswordRepository = vaultPasswordRepository,
+            vaultRepository = vaultRepository,
+            addressBookRepository = addressBookRepository,
+            chainAccountAddressRepository = chainAccountAddressRepository,
+            ioDispatcher = testDispatcher,
             launchKeysign = launchKeysign,
             isVaultHasFastSignById = isVaultHasFastSignById,
         )

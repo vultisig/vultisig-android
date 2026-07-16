@@ -495,6 +495,7 @@
     <string name="slippage_hint">Slippage percentage</string>
     <string name="verify_deposit_function_overview">Functieoverzicht</string>
     <string name="verify_deposit_sending">Je verstuurt</string>
+    <string name="verify_deposit_unbonding">Ontbinden</string>
     <string name="verify_deposit_network">Netwerk</string>
     <string name="referral_invite_sheet_description">Deel je unieke verwijzingscode om vrienden uit te nodigen. Zij krijgen een korting en hoe meer ze handelen, hoe meer jij verdient - direct geleverd in je kluis.</string>
     <string name="referral_create_referral">Verwijzing maken</string>

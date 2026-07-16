@@ -141,7 +141,7 @@ internal fun VerifyDepositScreen(
                             .padding(all = 24.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.verify_deposit_sending),
+                        text = stringResource(tx.titleRes),
                         style = Theme.brockmann.headings.subtitle,
                         color = Theme.v2.colors.text.secondary,
                     )
@@ -173,7 +173,8 @@ internal fun VerifyDepositScreen(
                         ?.let {
                             VerifyCardDetails(
                                 title = stringResource(R.string.verify_transaction_from_title),
-                                subtitle = tx.srcAddress,
+                                subtitle = tx.srcVaultName ?: tx.srcAddress,
+                                bracketValue = tx.srcVaultName?.let { tx.srcAddress },
                             )
 
                             VerifyCardDivider(0.dp)
@@ -187,9 +188,11 @@ internal fun VerifyDepositScreen(
                         VerifyCardDivider(0.dp)
                     }
                     if (tx.dstAddress.isNotEmpty()) {
+                        val toDstLabel = tx.dstVaultName ?: tx.dstAddressBookTitle
                         VerifyCardDetails(
                             title = stringResource(R.string.verify_transaction_to_title),
-                            subtitle = tx.dstAddress,
+                            subtitle = toDstLabel ?: tx.dstAddress,
+                            bracketValue = toDstLabel?.let { tx.dstAddress },
                         )
                         VerifyCardDivider(0.dp)
                     }
