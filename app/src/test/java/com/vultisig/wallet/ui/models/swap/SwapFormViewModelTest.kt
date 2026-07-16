@@ -39,6 +39,7 @@ import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import io.mockk.coEvery
@@ -56,6 +57,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -108,6 +110,7 @@ internal class SwapFormViewModelTest {
     private lateinit var swapTokenSelector: SwapTokenSelector
     private lateinit var swapQuoteManager: SwapQuoteManager
     private lateinit var tokenSelectorAccountsRepository: AccountsRepository
+    private lateinit var requestResultRepository: RequestResultRepository
     private lateinit var tokenBalanceMapper: AccountToTokenBalanceUiModelMapper
     private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
 
@@ -184,7 +187,7 @@ internal class SwapFormViewModelTest {
                 mockk<com.vultisig.wallet.ui.models.send.TokenBalanceUiModel>(relaxed = true)
                     .apply { every { model } returns src }
             }
-        val requestResultRepository: RequestResultRepository = mockk(relaxed = true)
+        requestResultRepository = mockk(relaxed = true)
 
         swapTokenSelector =
             SwapTokenSelector(
@@ -1033,10 +1036,13 @@ internal class SwapFormViewModelTest {
                 )
             } returns createDefaultQuoteFetchResult()
 
-            val vm = createViewModelWithSwapTokens()
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
             advanceUntilIdle()
 
-            vm.srcAmountState.setTextAndPlaceCursorAtEnd("10")
+            // Type a single character so amountChanges reads free typing (immediate = false); a
+            // multi-character jump would trip the paste heuristic, caching immediate = true so the
+            // slippage refetch below debounces at 0ms and resolves before the assertion runs.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
             Snapshot.sendApplyNotifications()
             advanceTimeBy(400)
             advanceUntilIdle()
@@ -1044,6 +1050,8 @@ internal class SwapFormViewModelTest {
 
             vm.setSlippageBps(300)
             runCurrent()
+            // runCurrent runs startLoadingIfQuotable's synchronous isLoading = true but stops well
+            // short of the 300ms typing debounce, so the spinner is still up when we assert.
             assertTrue(vm.uiState.value.isLoading)
         }
 
@@ -1070,10 +1078,13 @@ internal class SwapFormViewModelTest {
                 )
             } returns createDefaultQuoteFetchResult()
 
-            val vm = createViewModelWithSwapTokens()
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
             advanceUntilIdle()
 
-            vm.srcAmountState.setTextAndPlaceCursorAtEnd("10")
+            // A single character keeps the amount within the 10 ETH fixture balance so the
+            // insufficient-balance guard doesn't disable Swap, and reads as free typing rather than
+            // a paste.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
             Snapshot.sendApplyNotifications()
             advanceTimeBy(400)
             advanceUntilIdle()
@@ -1090,6 +1101,272 @@ internal class SwapFormViewModelTest {
             assertTrue(vm.uiState.value.isSwapDisabled)
             assertFalse(vm.uiState.value.quoteDisplay.hasQuote)
             assertFalse(vm.uiState.value.isLoading)
+        }
+
+    @Test
+    fun `picking a not-yet-held token that forms a routable pair raises loading during account load`() =
+        runTest(mainDispatcher) {
+            // Positive control for the token-selection gate: with a positive amount and a routable
+            // resulting pair, loading a not-yet-held token's account must raise the shared spinner
+            // so
+            // the Swap button disables until the fresh quote lands. loadGate suspends the account
+            // load so the assertion lands while only the selection gate — not the later re-quote —
+            // has
+            // touched isLoading (#5296 review).
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+            val loadGate = CompletableDeferred<Unit>()
+            coEvery { tokenSelectorAccountsRepository.loadAccount(any(), any()) } coAnswers
+                {
+                    loadGate.await()
+                    createAccount(USDC_COIN, BigInteger("1000000000"))
+                }
+            coEvery {
+                requestResultRepository.request<AssetSelected>(
+                    SwapTokenSelector.ARG_SELECTED_DST_TOKEN_ID
+                )
+            } returns AssetSelected(token = USDC_COIN, isDisabled = true)
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            assertFalse(vm.uiState.value.isLoading)
+
+            vm.selectDstToken()
+            advanceUntilIdle()
+            // Account load is parked on loadGate; selectedDstId is set only afterwards, so an
+            // isLoading true here is the selection gate's, not the subsequent re-quote's.
+            assertTrue(vm.uiState.value.isLoading)
+
+            loadGate.complete(Unit)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `picking a not-yet-held token that forms an unroutable pair never raises loading during account load`() =
+        runTest(mainDispatcher) {
+            // Roman's edge case: hasQuotableAmount checking only amount>0 would still blink the
+            // skeletons while loading the account of a token whose resulting pair can never quote.
+            // The
+            // gate now mirrors the pipeline's isPairRoutable && amount>0, so an unroutable pick
+            // stays
+            // silent (#5296 review).
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            // ETH → SOL has no provider: unroutable even though an amount is present.
+            every { swapQuoteRepository.getEligibleProviders(ETH_COIN, SOL_COIN) } returns
+                emptyList()
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+            val loadGate = CompletableDeferred<Unit>()
+            coEvery { tokenSelectorAccountsRepository.loadAccount(any(), any()) } coAnswers
+                {
+                    loadGate.await()
+                    createAccount(SOL_COIN, BigInteger("1000000000"))
+                }
+            coEvery {
+                requestResultRepository.request<AssetSelected>(
+                    SwapTokenSelector.ARG_SELECTED_DST_TOKEN_ID
+                )
+            } returns AssetSelected(token = SOL_COIN, isDisabled = true)
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            assertFalse(vm.uiState.value.isLoading)
+
+            vm.selectDstToken()
+            advanceUntilIdle()
+            assertFalse(
+                vm.uiState.value.isLoading,
+                "spinner blinked while loading an unroutable pick",
+            )
+
+            loadGate.complete(Unit)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `picking a not-yet-held token that forms a same-token pair never raises loading during account load`() =
+        runTest(mainDispatcher) {
+            // Same-token pairs are "supported" but never routable, so — like the unroutable case —
+            // loading the pick's account must not spin even with a positive amount. Exercises the
+            // selectSrcToken() path (#5296 review).
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+            val loadGate = CompletableDeferred<Unit>()
+            coEvery { tokenSelectorAccountsRepository.loadAccount(any(), any()) } coAnswers
+                {
+                    loadGate.await()
+                    createAccount(BTC_COIN, BigInteger("100000000"))
+                }
+            // Destination is BTC (createViewModelWithSwapTokens); picking BTC as the source forms a
+            // same-token pair.
+            coEvery {
+                requestResultRepository.request<AssetSelected>(
+                    SwapTokenSelector.ARG_SELECTED_SRC_TOKEN_ID
+                )
+            } returns AssetSelected(token = BTC_COIN, isDisabled = true)
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            assertFalse(vm.uiState.value.isLoading)
+
+            vm.selectSrcToken()
+            advanceUntilIdle()
+            assertFalse(
+                vm.uiState.value.isLoading,
+                "spinner blinked while loading a same-token pick",
+            )
+
+            loadGate.complete(Unit)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `clearing a quotable amount before its quote resolves clears the loading spinner at once`() =
+        runTest(mainDispatcher) {
+            // startLoadingIfQuotable raises the spinner the moment a quotable amount is typed,
+            // before
+            // the firm quote lands (hasQuote still false). Clearing the field then must clear the
+            // spinner immediately — gating the reset on hasQuote alone would strand isLoading =
+            // true
+            // for the rest of the debounce (#5296 review).
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            // A single character types as free input (300ms debounce), so the spinner is up while
+            // the
+            // firm quote is still pending.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            runCurrent()
+            assertTrue(vm.uiState.value.isLoading)
+            assertFalse(vm.uiState.value.quoteDisplay.hasQuote)
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("")
+            Snapshot.sendApplyNotifications()
+            runCurrent()
+            assertFalse(
+                vm.uiState.value.isLoading,
+                "spinner stayed stuck after the field was cleared",
+            )
+            assertTrue(vm.uiState.value.isSwapDisabled)
+        }
+
+    @Test
+    fun `a fetch that lands after the field is cleared never resurrects the stale quote`() =
+        runTest(mainDispatcher) {
+            // collectLatest can't cancel an in-flight fetch from a prior debounce cycle until the
+            // empty input clears the debounce, so a late-landing quote could re-apply itself over
+            // the
+            // cleared field. applyQuoteResult re-reads the live field and drops it instead (#5296
+            // review).
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            val fetchGate = CompletableDeferred<Unit>()
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } coAnswers
+                {
+                    fetchGate.await()
+                    createDefaultQuoteFetchResult()
+                }
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            // Past the 300ms debounce: collectLatest calls resolveQuote, which parks on fetchGate.
+            advanceTimeBy(400)
+            runCurrent()
+            assertTrue(vm.uiState.value.isLoading)
+            assertFalse(vm.uiState.value.quoteDisplay.hasQuote)
+
+            // Clear the field while the fetch is still in flight; the empty input is now sitting in
+            // the debounce, so the fetch above is not cancelled yet.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("")
+            Snapshot.sendApplyNotifications()
+            runCurrent()
+
+            // Collect hasQuote across the fetch landing: the resurrection is a transient true
+            // before
+            // the empty input eventually resets, so a settled-state check alone would miss it.
+            val quoteFlags = mutableListOf(vm.uiState.value.quoteDisplay.hasQuote)
+            val collectJob =
+                backgroundScope.launch(mainDispatcher) {
+                    vm.uiState.collect { quoteFlags += it.quoteDisplay.hasQuote }
+                }
+            fetchGate.complete(Unit)
+            advanceUntilIdle()
+            collectJob.cancel()
+
+            assertFalse(
+                quoteFlags.any { it },
+                "stale quote resurrected after the field was cleared",
+            )
+            assertTrue(vm.uiState.value.isSwapDisabled)
         }
 
     // endregion

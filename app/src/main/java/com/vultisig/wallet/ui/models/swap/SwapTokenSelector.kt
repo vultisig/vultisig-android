@@ -6,6 +6,7 @@ import androidx.compose.ui.geometry.Offset
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -158,7 +159,7 @@ constructor(
         selectedDstId: MutableStateFlow<String?>,
         addresses: MutableStateFlow<List<Address>>,
         uiState: MutableStateFlow<SwapFormUiModel>,
-        hasQuotableAmount: Boolean,
+        isSelectionQuotable: (Coin) -> Boolean,
     ) {
         navigator.route(
             Route.SelectAsset(
@@ -181,7 +182,7 @@ constructor(
             selectedDstId,
             addresses,
             uiState,
-            hasQuotableAmount,
+            isSelectionQuotable,
         )
     }
 
@@ -192,16 +193,23 @@ constructor(
         selectedDstId: MutableStateFlow<String?>,
         addresses: MutableStateFlow<List<Address>>,
         uiState: MutableStateFlow<SwapFormUiModel>,
-        hasQuotableAmount: Boolean,
+        isSelectionQuotable: (Coin) -> Boolean,
     ) {
         val result = requestResultRepository.request<AssetSelected>(targetArg) ?: return
 
         if (result.isDisabled) {
-            // Only raise the shared loading flag when there is an amount to quote; otherwise
-            // loading
-            // a not-yet-held token's account would flash the destination/fee skeletons true→false
-            // over an empty field — the same blink the pipeline gate removes (#5296 review).
-            val showLoading = hasQuotableAmount
+            // Only raise the shared loading flag when the pair the pick forms is actually quotable
+            // —
+            // a positive amount AND a routable (distinct, provider-backed) pair. Otherwise loading
+            // a
+            // not-yet-held token's account would flash the destination/fee skeletons true→false
+            // over
+            // a field that will never quote — the same blink the pipeline gate removes, and
+            // matching
+            // its isPairRoutable && amount>0 condition rather than a looser amount-only check
+            // (#5296
+            // review).
+            val showLoading = isSelectionQuotable(result.token)
             if (showLoading) uiState.update { it.copy(isLoading = true) }
             try {
                 val account = accountsRepository.loadAccount(vaultId, result.token)

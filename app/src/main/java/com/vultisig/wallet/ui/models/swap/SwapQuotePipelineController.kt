@@ -4,6 +4,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenStandard
@@ -384,6 +385,17 @@ constructor(
         input: QuoteInput,
         result: SwapQuotePipelineResult.Success,
     ) {
+        // isAmountFieldEmpty is read once when resolveQuote is called, but the field can be cleared
+        // while this fetch — queued on a prior debounce cycle — is still in flight, and
+        // collectLatest
+        // can't cancel it until the empty input clears the debounce. Re-read the live field here so
+        // a
+        // late-landing fetch drops the now-stale quote instead of resurrecting it (#5296 review).
+        if (srcAmountState.text.isEmpty()) {
+            resetQuoteState()
+            return
+        }
+
         val (src, _) = input.address
 
         quoteState.provider = result.provider
@@ -482,7 +494,11 @@ constructor(
         val amount = srcAmount
         if (isPairRoutable && amount != null && amount > BigDecimal.ZERO) {
             isLoading = true
-        } else if (uiState.value.quoteDisplay.hasQuote) {
+        } else if (uiState.value.quoteDisplay.hasQuote || uiState.value.isLoading) {
+            // Clear a resolved quote OR a spinner we raised while a firm quote was still pending:
+            // clearing a quotable amount before its quote lands leaves hasQuote false, so gating
+            // only on hasQuote would strand isLoading = true for the rest of the debounce (#5296
+            // review).
             resetQuoteState()
         }
     }
@@ -569,6 +585,18 @@ constructor(
     }
 
     /**
+     * Whether [srcToken] → [dstToken] can actually be quoted: a distinct pair with at least one
+     * eligible provider. Same-token pairs are "supported" but never routable. Shared by the pair
+     * gate here and the token-selection loading gate so both key off the same predicate as
+     * [startLoadingIfQuotable]'s [isPairRoutable] flag, rather than a looser amount-only check
+     * (#5296 review). [SwapQuoteRepository.getEligibleProviders] is a local table lookup, so this
+     * is instant and safe to call on the selection path.
+     */
+    fun isPairRoutable(srcToken: Coin, dstToken: Coin): Boolean =
+        srcToken != dstToken &&
+            swapQuoteRepository.getEligibleProviders(srcToken, dstToken).isNotEmpty()
+
+    /**
      * Resolves whether the selected source/destination pair has any eligible provider and surfaces
      * the "no route" guidance immediately on selection, instead of letting the quote pipeline throw
      * SwapIsNotSupported only after the user has typed an amount and waited for a quote (#4710).
@@ -581,9 +609,7 @@ constructor(
     private fun updatePairSupport(src: SendSrc, dst: SendSrc) {
         val srcToken = src.account.token
         val dstToken = dst.account.token
-        isPairRoutable =
-            srcToken != dstToken &&
-                swapQuoteRepository.getEligibleProviders(srcToken, dstToken).isNotEmpty()
+        isPairRoutable = isPairRoutable(srcToken, dstToken)
         isPairSupported = srcToken == dstToken || isPairRoutable
         if (!isPairSupported) {
             resetQuoteState(error = pairNotSupportedError, cause = null, tag = null)
