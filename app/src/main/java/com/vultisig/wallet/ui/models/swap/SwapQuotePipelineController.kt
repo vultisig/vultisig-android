@@ -412,15 +412,23 @@ constructor(
         // debounce, resume to 56 before 5's fetch lands). Also require the live amount to still
         // match the amount this fetch was resolved for, so a quote priced for the old amount can't
         // be applied — and then signed with a mismatched memo / slippage floor — over the new one
-        // (#5310).
-        val liveAmount = srcAmount
-        if (
-            !isLiveInputQuotable ||
-                input.amount == null ||
-                liveAmount == null ||
-                liveAmount.compareTo(input.amount) != 0
-        ) {
+        // (#5310). Match the source/destination quote endpoints as well: changing to another
+        // routable pair with the same amount creates the same pre-debounce landing window.
+        if (!isLiveInputQuotable) {
             resetQuoteState()
+            return
+        }
+
+        val liveAmount = srcAmount
+        val (inputSrc, inputDst) = input.address
+        val isSuperseded =
+            input.amount == null ||
+                liveAmount == null ||
+                liveAmount.compareTo(input.amount) != 0 ||
+                !inputSrc.hasSameQuoteEndpointAs(selectedSrc.value) ||
+                !inputDst.hasSameQuoteEndpointAs(selectedDst.value)
+        if (isSuperseded) {
+            discardSupersededQuoteResult()
             return
         }
 
@@ -650,6 +658,47 @@ constructor(
     /** Clears the quote, swap fee, and quote-derived form state without surfacing an error. */
     fun resetQuoteState() {
         resetQuoteState(error = null, cause = null, tag = null)
+    }
+
+    private fun SendSrc.hasSameQuoteEndpointAs(live: SendSrc?): Boolean =
+        live != null &&
+            account.token == live.account.token &&
+            address.chain == live.address.chain &&
+            address.address == live.address.address
+
+    /**
+     * Drops quote state owned by an older request without disturbing the newer quotable request's
+     * spinner or indicative destination estimate. The newer request has already passed through
+     * [startLoadingIfQuotable] / [showIndicativeRate] and is waiting in the debounce, so a full
+     * [resetQuoteState] here would make that active request look idle until its fetch completes.
+     */
+    private fun discardSupersededQuoteResult() {
+        refreshQuoteJob?.cancel()
+        refreshQuoteJob = null
+        quoteState.reset()
+        uiState.update {
+            it.copy(
+                srcFiatValue = "0",
+                quoteDisplay =
+                    it.quoteDisplay.copy(
+                        provider = UiText.Empty,
+                        hasQuote = false,
+                        expiredAt = null,
+                    ),
+                feeBreakdown =
+                    it.feeBreakdown.copy(
+                        fee = "0",
+                        totalFee = "0",
+                        outboundFee = null,
+                        swapFeePercent = null,
+                        priceImpactPercent = null,
+                        priceImpactLevel = null,
+                    ),
+                discountInfo = DiscountInfo(),
+                isSwapDisabled = true,
+                formError = null,
+            )
+        }
     }
 
     private fun resetQuoteState(error: UiText?, cause: Throwable?, tag: String?) {

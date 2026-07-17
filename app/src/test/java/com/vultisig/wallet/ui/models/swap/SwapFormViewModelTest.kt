@@ -1440,6 +1440,11 @@ internal class SwapFormViewModelTest {
             // signable) over 56 (#5310).
             every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
                 listOf(SwapProvider.THORCHAIN)
+            coEvery { swapQuoteManager.computeIndicativeQuote(any(), any(), any(), any()) } returns
+                IndicativeQuote(
+                    estimatedDstTokenValue = "newer-indicative",
+                    estimatedDstFiatValue = "$56.00",
+                )
             val firstFetchGate = CompletableDeferred<Unit>()
             coEvery {
                 swapQuoteManager.fetchBestQuote(
@@ -1477,6 +1482,9 @@ internal class SwapFormViewModelTest {
             vm.srcAmountState.setTextAndPlaceCursorAtEnd("56")
             Snapshot.sendApplyNotifications()
             runCurrent()
+            assertTrue(vm.uiState.value.isLoading)
+            assertTrue(vm.uiState.value.quoteDisplay.isDstEstimated)
+            assertEquals("newer-indicative", vm.uiState.value.quoteDisplay.estimatedDstTokenValue)
 
             // Land the 1-priced fetch before 56's debounce fires. Only runCurrent (not
             // advanceUntilIdle) so 56's own quote can't land and mask the check: applying the stale
@@ -1493,6 +1501,79 @@ internal class SwapFormViewModelTest {
             assertFalse(
                 quoteFlags.any { it },
                 "stale quote for the earlier amount was applied over the newer amount",
+            )
+            assertTrue(vm.uiState.value.isLoading, "newer amount stopped loading")
+            assertTrue(vm.uiState.value.quoteDisplay.isDstEstimated)
+            assertEquals("newer-indicative", vm.uiState.value.quoteDisplay.estimatedDstTokenValue)
+        }
+
+    @Test
+    fun `a fetch for the previous pair never applies after the pair changes with the same amount`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery { swapQuoteManager.computeIndicativeQuote(any(), any(), any(), any()) } returns
+                IndicativeQuote(
+                    estimatedDstTokenValue = "new-pair-indicative",
+                    estimatedDstFiatValue = "$1.00",
+                )
+            val firstFetchGate = CompletableDeferred<Unit>()
+            var fetchCount = 0
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } coAnswers
+                {
+                    fetchCount++
+                    if (fetchCount == 1) firstFetchGate.await()
+                    createDefaultQuoteFetchResult()
+                }
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            runCurrent()
+            assertTrue(vm.uiState.value.isLoading)
+
+            // Keep the amount unchanged while moving from ETH -> BTC to BTC -> ETH. The pair change
+            // is now waiting in the debounce, so the first pair's fetch has not been cancelled yet.
+            vm.flipSelectedTokens()
+            Snapshot.sendApplyNotifications()
+            runCurrent()
+            assertEquals(BTC_COIN.id, vm.uiState.value.selectedSrcToken?.model?.account?.token?.id)
+            assertEquals(ETH_COIN.id, vm.uiState.value.selectedDstToken?.model?.account?.token?.id)
+            assertTrue(vm.uiState.value.isLoading)
+
+            val quoteFlags = mutableListOf(vm.uiState.value.quoteDisplay.hasQuote)
+            val collectJob =
+                backgroundScope.launch(mainDispatcher) {
+                    vm.uiState.collect { quoteFlags += it.quoteDisplay.hasQuote }
+                }
+            firstFetchGate.complete(Unit)
+            runCurrent()
+            collectJob.cancel()
+
+            assertFalse(
+                quoteFlags.any { it },
+                "stale quote for the previous pair was applied over the new pair",
+            )
+            assertTrue(vm.uiState.value.isLoading, "new pair stopped loading")
+            assertTrue(vm.uiState.value.quoteDisplay.isDstEstimated)
+            assertEquals(
+                "new-pair-indicative",
+                vm.uiState.value.quoteDisplay.estimatedDstTokenValue,
             )
         }
 
