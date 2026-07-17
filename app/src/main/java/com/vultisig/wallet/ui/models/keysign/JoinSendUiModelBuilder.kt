@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ContractAbiRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.TokenMetadataResolver
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
@@ -52,6 +53,7 @@ internal class JoinSendUiModelBuilder
 @Inject
 constructor(
     private val tokenRepository: TokenRepository,
+    private val tokenPriceRepository: TokenPriceRepository,
     private val vaultRepository: VaultRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
@@ -108,6 +110,23 @@ constructor(
             )
 
         val nativeCoin = withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
+
+        // Force a live price refresh for the sent token and the chain's native fee token before
+        // converting to fiat. The initiator prices these from its freshly-refreshed portfolio rate,
+        // while a joining device would otherwise read whatever price is already persisted locally —
+        // `getPrice` only re-fetches when the cached value is exactly zero, so a stale-but-nonzero
+        // cached rate (seen on DYDX) makes the "You're sending" and "Network Fee" fiat totals
+        // differ
+        // between devices for identical crypto amounts. Refreshing here pins both devices to the
+        // same
+        // shared source (CoinGecko via the payload's priceProviderID) so the fiat values converge.
+        withContext(Dispatchers.IO) {
+            runCatching { tokenPriceRepository.refresh(listOf(payloadToken, nativeCoin)) }
+                .onFailure {
+                    if (it is CancellationException) throw it
+                    Timber.w(it, "Failed to refresh price for %s", chain.id)
+                }
+        }
         // A dApp XRPL tx is signed verbatim, so the fee that is actually paid is the `Fee` baked
         // into its raw JSON — not a live re-estimate. Surface that exact value so an inflated Fee
         // is
