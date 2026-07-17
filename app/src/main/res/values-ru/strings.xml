@@ -497,6 +497,7 @@
     <string name="slippage_hint">Процент проскальзывания</string>
     <string name="verify_deposit_function_overview">Обзор функций</string>
     <string name="verify_deposit_sending">Вы отправляете</string>
+    <string name="verify_deposit_unbonding">Отвязка</string>
     <string name="verify_deposit_network">Сеть</string>
     <string name="referral_invite_sheet_description">Поделитесь своим уникальным реферальным кодом, чтобы пригласить друзей. Они получат скидку, а чем больше они торгуют, тем больше вы зарабатываете — напрямую в вашем хранилище.</string>
     <string name="referral_create_referral">Создать реферала</string>

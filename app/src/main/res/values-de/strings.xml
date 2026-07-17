@@ -498,6 +498,7 @@
     <string name="slippage_hint">Slippage-Prozentsatz</string>
     <string name="verify_deposit_function_overview">Funktionsübersicht</string>
     <string name="verify_deposit_sending">Sie senden</string>
+    <string name="verify_deposit_unbonding">Entbinden</string>
     <string name="verify_deposit_network">Netzwerk</string>
     <string name="referral_invite_sheet_description">Teilen Sie Ihren einzigartigen Empfehlungscode, um Freunde einzuladen. Sie erhalten einen Rabatt und je mehr sie handeln, desto mehr verdienen Sie – direkt in Ihren Tresor geliefert.</string>
     <string name="referral_create_referral">Empfehlung erstellen</string>
