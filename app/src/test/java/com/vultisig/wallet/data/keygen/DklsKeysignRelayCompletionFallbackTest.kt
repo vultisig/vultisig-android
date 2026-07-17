@@ -7,12 +7,12 @@ import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.usecases.Encryption
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.maps.shouldBeEmpty
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.io.IOException
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -74,7 +74,7 @@ class DklsKeysignRelayCompletionFallbackTest {
             coEvery { sessionApi.checkKeysignComplete(any(), any()) } throws
                 IOException("not complete")
 
-            assertFailsWith<Exception> { keysign(sessionApi).keysignWithRetry() }
+            shouldThrow<Exception> { keysign(sessionApi).keysignWithRetry() }
 
             coVerify(atLeast = 1) { sessionApi.checkKeysignComplete(any(), eq(expectedMsgHash)) }
         }
@@ -87,8 +87,8 @@ class DklsKeysignRelayCompletionFallbackTest {
         coEvery { sessionApi.checkKeysignComplete(any(), any()) } throws IOException("not complete")
 
         val keysign = keysign(sessionApi)
-        assertFailsWith<Exception> { keysign.keysignWithRetry() }
+        shouldThrow<Exception> { keysign.keysignWithRetry() }
 
-        assertTrue(keysign.signatures.isEmpty())
+        keysign.signatures.shouldBeEmpty()
     }
 }
