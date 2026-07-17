@@ -200,7 +200,11 @@ internal fun VerifyDepositScreen(
                         VerifyCardDetails(title = stringResource(R.string.pool), subtitle = tx.pool)
                         VerifyCardDivider(0.dp)
                     }
-                    if (tx.nodeAddress.isNotEmpty()) {
+                    // Unbond sets dstAddress and nodeAddress to the same node address, so it
+                    // already
+                    // renders as the "To" row above; only show the Node address row when it adds a
+                    // distinct value (issue #5301).
+                    if (tx.nodeAddress.isNotEmpty() && tx.nodeAddress != tx.dstAddress) {
                         VerifyCardDetails(
                             title = stringResource(R.string.node_address),
                             subtitle = tx.nodeAddress,

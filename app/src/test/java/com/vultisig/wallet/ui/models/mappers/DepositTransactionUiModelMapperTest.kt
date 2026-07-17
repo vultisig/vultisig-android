@@ -87,23 +87,21 @@ internal class DepositTransactionUiModelMapperTest {
 
     @Test
     fun `title reads Unbonding when the operation is Unbond`() {
-        depositVerifyTitleRes(OPERATION_UNBOND, memo = "") shouldBe
-            R.string.verify_deposit_unbonding
+        depositVerifyTitleRes(OPERATION_UNBOND) shouldBe R.string.verify_deposit_unbonding
     }
 
     @Test
-    fun `title reads Unbonding for the send-flow Unbond memo when operation is blank`() {
-        // The node-management Unbond flow leaves operation blank; the UNBOND memo prefix is the
-        // fallback signal so the header still reads "Unbonding" (#5301).
-        depositVerifyTitleRes(operation = "", memo = "UNBOND:thor1node:75000000") shouldBe
-            R.string.verify_deposit_unbonding
+    fun `title ignores an unbond-shaped memo when the operation is not Unbond`() {
+        // A Custom deposit carries a free-text memo but a blank operation. The header must key off
+        // the structured operation alone so a memo that happens to start with "unbond" is not
+        // mislabeled "Unbonding" (#5301). Every real unbond producer sets the operation.
+        depositVerifyTitleRes(operation = "") shouldBe R.string.verify_deposit_sending
     }
 
     @Test
     fun `title falls back to the generic sending label for non-Unbond operations`() {
-        depositVerifyTitleRes(OPERATION_BOND, memo = "BOND:thor1node") shouldBe
-            R.string.verify_deposit_sending
-        depositVerifyTitleRes(operation = "", memo = "") shouldBe R.string.verify_deposit_sending
+        depositVerifyTitleRes(OPERATION_BOND) shouldBe R.string.verify_deposit_sending
+        depositVerifyTitleRes(operation = "") shouldBe R.string.verify_deposit_sending
     }
 
     private fun transaction(estimateFeesFiat: String): DepositTransaction =

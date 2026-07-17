@@ -117,7 +117,7 @@ constructor(
                         nodeAddress = transaction.nodeAddress,
                         pairedAddress = transaction.pairedAddress,
                         pool = transaction.pool,
-                        titleRes = depositVerifyTitleRes(transaction.operation, transaction.memo),
+                        titleRes = depositVerifyTitleRes(transaction.operation),
                     )
 
                 state.update {

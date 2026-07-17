@@ -17,12 +17,14 @@ internal interface DepositTransactionToUiModelMapper :
 
 /**
  * Resolves the "Function overview" header for a deposit: an Unbond reads "Unbonding" rather than
- * the generic "You're sending", since it isn't a send (issue #5301). The send-side node-management
- * flow leaves [operation] blank, so the Unbond memo prefix is honored as a fallback signal.
+ * the generic "You're sending", since it isn't a send (issue #5301). Keyed off the structured
+ * [operation] alone — never the raw memo — so a Custom deposit whose free-text memo happens to
+ * start with "unbond" is not mislabeled. Every unbond producer sets the operation: the two
+ * UnbondStrategy paths on the initiator, and the joiner via ThorchainMemoParser.
  */
 @StringRes
-internal fun depositVerifyTitleRes(operation: String, memo: String): Int =
-    if (operation == OPERATION_UNBOND || memo.trimStart().startsWith("UNBOND", ignoreCase = true)) {
+internal fun depositVerifyTitleRes(operation: String): Int =
+    if (operation == OPERATION_UNBOND) {
         R.string.verify_deposit_unbonding
     } else {
         R.string.verify_deposit_sending
@@ -70,7 +72,7 @@ constructor(
             pairedAddress = from.pairedAddress,
             pool = from.pool,
             validatorName = from.validatorName.orEmpty(),
-            titleRes = depositVerifyTitleRes(from.operation, from.memo),
+            titleRes = depositVerifyTitleRes(from.operation),
         )
     }
 }
