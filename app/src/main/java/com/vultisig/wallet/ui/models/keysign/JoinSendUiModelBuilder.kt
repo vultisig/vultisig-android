@@ -116,10 +116,9 @@ constructor(
         // while a joining device would otherwise read whatever price is already persisted locally —
         // `getPrice` only re-fetches when the cached value is exactly zero, so a stale-but-nonzero
         // cached rate (seen on DYDX) makes the "You're sending" and "Network Fee" fiat totals
-        // differ
-        // between devices for identical crypto amounts. Refreshing here pins both devices to the
-        // same
-        // shared source (CoinGecko via the payload's priceProviderID) so the fiat values converge.
+        // differ between devices for identical crypto amounts. Refreshing here pins both devices
+        // to the same shared source (CoinGecko via the payload's priceProviderID) so the fiat
+        // values converge.
         withContext(Dispatchers.IO) {
             runCatching { tokenPriceRepository.refresh(listOf(payloadToken, nativeCoin)) }
                 .onFailure {
