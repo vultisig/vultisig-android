@@ -123,6 +123,26 @@ class EvmApiBalanceTest {
         assertEquals(BigInteger.valueOf(10), balances[TOKEN])
     }
 
+    // #5308: a sub-call that reports success == true but carries empty/undecodable data (a
+    // non-standard token, a proxy that returns nothing without reverting) is a failed read, not a
+    // zero — it must be OMITTED so its cached balance is kept, not persisted as a fake 0.
+    @Test
+    fun `getBalances omits a success sub-call with empty return data instead of zeroing it`() =
+        runTest {
+            val response = aggregate3Response(listOf(true to null, true to 10L))
+            val client =
+                MockHttpClient.respondingWith(
+                    HttpStatusCode.OK,
+                    body = """{"id":1,"result":"$response","error":null}""",
+                )
+            val api = EvmApiImp(client, "https://api.vultisig.com/eth/", Chain.Ethereum)
+
+            val balances = api.getBalances(ADDRESS, listOf("", TOKEN))
+
+            assertNull(balances[""]) // undecodable success -> omitted, cached value preserved
+            assertEquals(BigInteger.valueOf(10), balances[TOKEN]) // sibling unaffected
+        }
+
     @Test
     fun `getBalances falls back to per-token native fetch on a chain without Multicall3`() =
         runTest {

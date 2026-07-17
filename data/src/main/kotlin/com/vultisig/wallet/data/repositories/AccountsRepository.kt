@@ -357,10 +357,26 @@ constructor(
             address.copy(
                 accounts =
                     address.accounts.map {
+                        // Isolate per-token failures: one token's failed balance read (e.g. an EVM
+                        // getBalance that now throws instead of returning a fake 0, #5308) must not
+                        // drop the whole emission and leave every sibling on this chain
+                        // unrefreshed.
+                        // On failure fall back to the cached value for just that token, matching
+                        // the
+                        // batch path's per-token isolation.
                         val balance =
-                            balanceRepository
-                                .getTokenBalanceAndPrice(tokenAddress, it.token)
-                                .first()
+                            try {
+                                balanceRepository
+                                    .getTokenBalanceAndPrice(tokenAddress, it.token)
+                                    .first()
+                            } catch (e: Exception) {
+                                if (e is kotlinx.coroutines.CancellationException) throw e
+                                Timber.e(e)
+                                balanceRepository.getCachedTokenBalanceAndPrice(
+                                    tokenAddress,
+                                    it.token,
+                                )
+                            }
 
                         it.applyBalance(balance.tokenBalance, balance.price)
                     }

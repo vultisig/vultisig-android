@@ -261,14 +261,16 @@ class EvmApiImp(
                 return fetchBalancesPerToken(address, contractAddresses)
             }
 
-        // A partial failure — the aggregate call succeeded but an individual sub-call reports
-        // `success == false` — is a failed read for that one token, not a zero balance. Omit it
-        // from the map (rather than mapping to ZERO) so the caller keeps its cached value and never
-        // persists a fake 0 (#5308).
+        // A failed read for a single token — the sub-call reports `success == false`, or reports
+        // success but carries empty/malformed data that can't be decoded (a non-standard token, a
+        // proxy returning no data without reverting) — is not a zero balance. Omit it from the map
+        // (rather than mapping to ZERO) so the caller keeps its cached value and never persists a
+        // fake 0 (#5308). A genuine on-chain zero is a full zero word and decodes to ZERO.
         return contractAddresses
             .mapIndexedNotNull { index, contract ->
                 val r = decoded[index]
-                if (r.success) contract to Multicall3.decodeUint256Word(r.returnData) else null
+                if (!r.success) null
+                else Multicall3.decodeUint256WordOrNull(r.returnData)?.let { contract to it }
             }
             .toMap()
     }
