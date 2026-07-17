@@ -406,7 +406,20 @@ constructor(
         // a
         // late-landing fetch for a now non-quotable field (cleared, zeroed, or an unroutable pair)
         // drops the stale quote instead of resurrecting it (#5296 review).
-        if (!isLiveInputQuotable) {
+        //
+        // isLiveInputQuotable only asks "is something quotable now"; it can't catch a fetch that
+        // resolved for an earlier, still-positive amount on the same pair (type 5, pause past the
+        // debounce, resume to 56 before 5's fetch lands). Also require the live amount to still
+        // match the amount this fetch was resolved for, so a quote priced for the old amount can't
+        // be applied — and then signed with a mismatched memo / slippage floor — over the new one
+        // (#5310).
+        val liveAmount = srcAmount
+        if (
+            !isLiveInputQuotable ||
+                input.amount == null ||
+                liveAmount == null ||
+                liveAmount.compareTo(input.amount) != 0
+        ) {
             resetQuoteState()
             return
         }

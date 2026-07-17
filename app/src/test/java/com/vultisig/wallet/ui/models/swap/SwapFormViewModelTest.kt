@@ -1429,6 +1429,73 @@ internal class SwapFormViewModelTest {
             assertTrue(vm.uiState.value.isSwapDisabled)
         }
 
+    @Test
+    fun `a fetch that lands for an earlier amount never applies over a newer amount on the same pair`() =
+        runTest(mainDispatcher) {
+            // A fetch queued for an earlier amount (1) can resolve after the user has typed a
+            // different, still-positive amount (56) for the same pair, before 56's own debounce
+            // fires. isLiveInputQuotable alone (routable pair + positive amount) passes for 56, so
+            // applyQuoteResult must also match input.amount against the live field and drop the
+            // 1-priced quote — otherwise a quote/memo/slippage-floor computed for 1 is applied (and
+            // signable) over 56 (#5310).
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            val firstFetchGate = CompletableDeferred<Unit>()
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } coAnswers
+                {
+                    // Gate only the first amount (1) so it can be made to land while 56 is still in
+                    // the debounce; any later amount resolves immediately.
+                    if (arg<BigDecimal>(8).compareTo(BigDecimal.ONE) == 0) firstFetchGate.await()
+                    createDefaultQuoteFetchResult()
+                }
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            // Past the 300ms debounce: collectLatest resolves the quote for 1, parking on the gate.
+            advanceTimeBy(400)
+            runCurrent()
+            assertTrue(vm.uiState.value.isLoading)
+            assertFalse(vm.uiState.value.quoteDisplay.hasQuote)
+
+            // Change to a different, still-positive amount on the same pair. 56 is now sitting in
+            // the debounce, so the in-flight fetch for 1 is not cancelled yet.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("56")
+            Snapshot.sendApplyNotifications()
+            runCurrent()
+
+            // Land the 1-priced fetch before 56's debounce fires. Only runCurrent (not
+            // advanceUntilIdle) so 56's own quote can't land and mask the check: applying the stale
+            // quote would be a transient hasQuote=true here.
+            val quoteFlags = mutableListOf(vm.uiState.value.quoteDisplay.hasQuote)
+            val collectJob =
+                backgroundScope.launch(mainDispatcher) {
+                    vm.uiState.collect { quoteFlags += it.quoteDisplay.hasQuote }
+                }
+            firstFetchGate.complete(Unit)
+            runCurrent()
+            collectJob.cancel()
+
+            assertFalse(
+                quoteFlags.any { it },
+                "stale quote for the earlier amount was applied over the newer amount",
+            )
+        }
+
     // endregion
 
     // region pair eligibility (#4710)
