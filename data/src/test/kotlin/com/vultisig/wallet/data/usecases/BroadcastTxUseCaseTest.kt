@@ -14,13 +14,18 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
+import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.api.models.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.api.models.BlockChairStatusResponse
 import com.vultisig.wallet.data.api.models.ContextData
 import com.vultisig.wallet.data.api.models.TransactionData
 import com.vultisig.wallet.data.api.models.TransactionInfo
+import com.vultisig.wallet.data.api.models.cosmos.CosmosTxStatusJson
+import com.vultisig.wallet.data.api.models.cosmos.TxResponse
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
+import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -69,6 +74,70 @@ class BroadcastTxUseCaseTest {
     }
 
     @Test
+    fun `thorchain recovers with local hash when a rejected broadcast is already on chain`() =
+        runTest {
+            val thorChainApi = mockk<ThorChainApi>()
+            val statusRepo = mockk<TransactionStatusRepository>()
+            coEvery { thorChainApi.broadcastTransaction(RAW_TRANSACTION) } throws sequenceMismatch()
+            coEvery {
+                statusRepo.checkTransactionStatus(KNOWN_TRANSACTION_HASH, Chain.ThorChain)
+            } returns TransactionResult.Confirmed
+
+            val txHash =
+                createUseCase(
+                    thorChainApi = thorChainApi,
+                    transactionStatusRepository = statusRepo,
+                )(Chain.ThorChain, signedTransaction())
+
+            assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+        }
+
+    @Test
+    fun `thorchain recovers when the landed tx was refunded (a terminal on-chain outcome)`() =
+        runTest {
+            val thorChainApi = mockk<ThorChainApi>()
+            val statusRepo = mockk<TransactionStatusRepository>()
+            coEvery { thorChainApi.broadcastTransaction(RAW_TRANSACTION) } throws sequenceMismatch()
+            // A refunded swap still landed on chain; the sequence was consumed by our tx, so the
+            // rejection is a benign duplicate and the local hash is canonical.
+            coEvery {
+                statusRepo.checkTransactionStatus(KNOWN_TRANSACTION_HASH, Chain.ThorChain)
+            } returns TransactionResult.Refunded("swap refunded")
+
+            val txHash =
+                createUseCase(
+                    thorChainApi = thorChainApi,
+                    transactionStatusRepository = statusRepo,
+                )(Chain.ThorChain, signedTransaction())
+
+            assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+        }
+
+    @Test
+    fun `mayachain rethrows a rejected broadcast when the tx is not confirmed on chain`() =
+        runTest {
+            val mayaChainApi = mockk<MayaChainApi>()
+            val statusRepo = mockk<TransactionStatusRepository>()
+            val rejection = sequenceMismatch()
+            coEvery { mayaChainApi.broadcastTransaction(RAW_TRANSACTION) } throws rejection
+            coEvery {
+                statusRepo.checkTransactionStatus(KNOWN_TRANSACTION_HASH, Chain.MayaChain)
+            } returns TransactionResult.Pending
+
+            val thrown =
+                assertFailsWith<CosmosBroadcastException> {
+                    createUseCase(
+                        mayaChainApi = mayaChainApi,
+                        transactionStatusRepository = statusRepo,
+                    )(Chain.MayaChain, signedTransaction())
+                }
+            assertEquals(rejection, thrown)
+            coVerify(exactly = 3) {
+                statusRepo.checkTransactionStatus(KNOWN_TRANSACTION_HASH, Chain.MayaChain)
+            }
+        }
+
+    @Test
     fun `uses broadcast hash when cosmos broadcast returns hash`() = runTest {
         val cosmosApi = mockk<CosmosApi>()
         val cosmosApiFactory = mockk<CosmosApiFactory>()
@@ -79,6 +148,62 @@ class BroadcastTxUseCaseTest {
             createUseCase(cosmosApiFactory = cosmosApiFactory)(Chain.Kujira, signedTransaction())
 
         assertEquals(BROADCAST_HASH, txHash)
+    }
+
+    @Test
+    fun `cosmos recovers with local hash when a code-32 rejection is already on chain`() = runTest {
+        val cosmosApi = mockk<CosmosApi>()
+        val cosmosApiFactory = mockk<CosmosApiFactory>()
+        coEvery { cosmosApi.broadcastTransaction(RAW_TRANSACTION) } throws sequenceMismatch()
+        coEvery { cosmosApi.getTxStatus(KNOWN_TRANSACTION_HASH) } returns txStatus(code = 0)
+        every { cosmosApiFactory.createCosmosApi(Chain.Kujira) } returns cosmosApi
+
+        val txHash =
+            createUseCase(cosmosApiFactory = cosmosApiFactory)(Chain.Kujira, signedTransaction())
+
+        assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+        coVerify(exactly = 1) { cosmosApi.broadcastTransaction(RAW_TRANSACTION) }
+    }
+
+    @Test
+    fun `cosmos rethrows a code-32 rejection when the committed tx failed execution`() = runTest {
+        val cosmosApi = mockk<CosmosApi>()
+        val cosmosApiFactory = mockk<CosmosApiFactory>()
+        val rejection = sequenceMismatch()
+        coEvery { cosmosApi.broadcastTransaction(RAW_TRANSACTION) } throws rejection
+        // Our hash is on chain but the execution failed (non-zero code): no funds moved.
+        coEvery { cosmosApi.getTxStatus(KNOWN_TRANSACTION_HASH) } returns txStatus(code = 5)
+        every { cosmosApiFactory.createCosmosApi(Chain.Kujira) } returns cosmosApi
+
+        val thrown =
+            assertFailsWith<CosmosBroadcastException> {
+                createUseCase(cosmosApiFactory = cosmosApiFactory)(
+                    Chain.Kujira,
+                    signedTransaction(),
+                )
+            }
+        assertEquals(rejection, thrown)
+    }
+
+    @Test
+    fun `cosmos rethrows a code-32 rejection when our tx is not on chain`() = runTest {
+        val cosmosApi = mockk<CosmosApi>()
+        val cosmosApiFactory = mockk<CosmosApiFactory>()
+        val rejection = sequenceMismatch()
+        coEvery { cosmosApi.broadcastTransaction(RAW_TRANSACTION) } throws rejection
+        // A different tx consumed the sequence, so the LCD never finds our hash.
+        coEvery { cosmosApi.getTxStatus(KNOWN_TRANSACTION_HASH) } returns null
+        every { cosmosApiFactory.createCosmosApi(Chain.Kujira) } returns cosmosApi
+
+        val thrown =
+            assertFailsWith<CosmosBroadcastException> {
+                createUseCase(cosmosApiFactory = cosmosApiFactory)(
+                    Chain.Kujira,
+                    signedTransaction(),
+                )
+            }
+        assertEquals(rejection, thrown)
+        coVerify(exactly = 3) { cosmosApi.getTxStatus(KNOWN_TRANSACTION_HASH) }
     }
 
     @Test
@@ -229,6 +354,7 @@ class BroadcastTxUseCaseTest {
         mayaChainApi: MayaChainApi = mockk(relaxed = true),
         cosmosApiFactory: CosmosApiFactory = mockk(relaxed = true),
         blockChairApi: BlockChairApi = mockk(relaxed = true),
+        transactionStatusRepository: TransactionStatusRepository = mockk(relaxed = true),
     ) =
         BroadcastTxUseCaseImpl(
             thorChainApi = thorChainApi,
@@ -244,6 +370,20 @@ class BroadcastTxUseCaseTest {
             rippleApi = mockk<RippleApi>(relaxed = true),
             tronApi = mockk<TronApi>(relaxed = true),
             cardanoApi = mockk<CardanoApi>(relaxed = true),
+            transactionStatusRepository = transactionStatusRepository,
+        )
+
+    private fun txStatus(code: Int) =
+        CosmosTxStatusJson(
+            txResponse = TxResponse(height = "1", txHash = KNOWN_TRANSACTION_HASH, code = code)
+        )
+
+    private fun sequenceMismatch() =
+        CosmosBroadcastException.from(
+            code = 32,
+            codespace = "sdk",
+            rawLog = "account sequence mismatch, expected 5, got 4",
+            txHash = null,
         )
 
     private fun signedTransaction() =

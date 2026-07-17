@@ -196,6 +196,7 @@
     <string name="verify_transaction_value">금액</string>
     <string name="verify_transaction_consent_address">올바른 주소로 보내고 있습니다</string>
     <string name="verify_transaction_consent_amount">금액이 정확합니다</string>
+    <string name="verify_transaction_consent_dapp_transaction">거래 세부 정보를 검토했습니다</string>
     <string name="verify_transaction_error_not_enough_consent">모든 동의 항목을 확인해 주세요</string>
     <string name="camera_permission_open_settings">설정 열기</string>
     <string name="transaction_done_title">완료</string>
@@ -368,6 +369,7 @@
     <string name="signing_error_token_account_not_found_s">%s 토큰 계정을 불러올 수 없습니다. 다시 시도해 주세요.</string>
     <string name="signing_error_mixed_reshare">혼합 재공유 서명.\n동일한 재공유 주기의 볼트 공유를 사용해 주세요.</string>
     <string name="signing_error_sequence_mismatch">계정 시퀀스가 변경되었습니다 — 다시 시도해 주세요.</string>
+    <string name="signing_error_account_not_funded">이 계정은 아직 온체인에 존재하지 않습니다.\n먼저 지갑에 자금을 충전해 주세요.</string>
     <string name="signing_error_broadcast_rejected">네트워크가 거래를 거부했습니다.</string>
     <string name="signing_error_broadcast_rejected_s">네트워크가 거래를 거부했습니다: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">빠른 서명</string>
@@ -755,6 +757,7 @@
 
     <string name="verify_deposit_function_overview">함수 개요</string>
     <string name="verify_deposit_sending">보내는 중</string>
+    <string name="verify_deposit_unbonding">언본딩</string>
     <string name="verify_deposit_network">네트워크</string>
 
     <string name="referral_invite_sheet_description">고유한 추천 코드를 공유하여 친구를 초대하세요. 친구는 할인을 받고 거래할수록 더 많은 보상을 받습니다 — 볼트로 직접 전달됩니다</string>
@@ -1159,12 +1162,26 @@
     <string name="transaction_status_confirmed">거래 확인됨</string>
     <string name="transaction_status_failed">거래 실패</string>
     <string name="transaction_status_refunded">거래 환불됨</string>
-    <string name="transaction_status_not_found">거래를 찾을 수 없음</string>
     <string name="transaction_status_pending">거래 대기 중…</string>
+    <string name="transaction_status_still_confirming">아직 확인 중…</string>
+    <string name="transaction_status_still_confirming_label">아직 확인 중</string>
     <string name="transaction_status_notification_title">거래 상태</string>
     <string name="transaction_status_checking_transaction">거래 확인 중…</string>
     <string name="raw_transaction_data">원시 거래 데이터</string>
     <string name="sui_raw_transaction">Sui 거래</string>
+    <string name="ripple_dapp_transaction">XRPL 거래</string>
+    <string name="ripple_transaction_summary">거래 요약</string>
+    <string name="ripple_field_issuer">발행자</string>
+    <string name="ripple_field_send_max">최대 전송</string>
+    <string name="ripple_field_send_max_issuer">최대 전송 발행자</string>
+    <string name="ripple_field_deliver_min">최소 전달</string>
+    <string name="ripple_field_deliver_min_issuer">최소 전달 발행자</string>
+    <string name="ripple_field_selling">판매</string>
+    <string name="ripple_field_selling_issuer">판매 발행자</string>
+    <string name="ripple_field_buying">구매</string>
+    <string name="ripple_field_buying_issuer">구매 발행자</string>
+    <string name="ripple_field_limit">한도</string>
+    <string name="ripple_field_limit_issuer">한도 발행자</string>
     <string name="sui_sender">보내는 주소</string>
     <string name="solana_raw_transaction">Solana 원시 거래</string>
     <string name="solana_instructions_summary">거래 명령어 요약</string>

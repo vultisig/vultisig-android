@@ -56,6 +56,7 @@ internal data class SendFormUiModel(
     val totalGas: UiText = UiText.Empty,
     val gasTokenBalance: UiText? = null,
     val estimatedFee: UiText = UiText.Empty,
+    val isGasFeeLoading: Boolean = true,
 
     // type
     val defiType: DeFiNavActions? = null,
@@ -78,6 +79,9 @@ internal data class SendFormUiModel(
     val specific: BlockChainSpecificAndUtxo? = null,
     val expandedSection: SendSections = SendSections.Asset,
     val usingTokenAmountInput: Boolean = true,
+    // Whether the entered token amount is present and valid. Used to gate Continue on the TRON
+    // freeze/unfreeze screens, where the network fee is amount-independent and resolves on entry.
+    val isAmountValid: Boolean = false,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isAmountSelectionLoading: Boolean = false,
@@ -90,6 +94,27 @@ internal data class SendFormUiModel(
     val isTronFrozenBalancesLoading: Boolean = false,
     val hasTronFrozenBalancesError: Boolean = false,
 )
+
+/**
+ * Whether the Continue action should be disabled for the current form state.
+ *
+ * The gas-fee-loading gate applies to every flow: while the network fee is (re)computing —
+ * including the recompute triggered by tapping a percentage/MAX button — Continue must stay
+ * disabled so it can't submit against a fee still shown as loading.
+ *
+ * TRON freeze/unfreeze pays a fixed, amount-independent fee that the orchestrator resolves on entry
+ * with a zero-amount placeholder (see GasFeeOrchestrator), so [isGasFeeLoading] clears before any
+ * amount is entered and can no longer stand in for "an amount is present". These flows are
+ * therefore additionally gated on [isAmountValid], and Unfreeze on [isTronFrozenBalancesLoading] so
+ * Continue cannot enable before the frozen balance loads — otherwise submit coerces the still-null
+ * balance to zero and falsely rejects a fundable unfreeze.
+ *
+ * @return true when Continue must stay disabled.
+ */
+internal fun SendFormUiModel.isContinueDisabled(): Boolean =
+    isLoading ||
+        (showGasFee && isGasFeeLoading) ||
+        (tronResourceType != null && (!isAmountValid || isTronFrozenBalancesLoading))
 
 internal data class SendSrc(val address: Address, val account: Account)
 

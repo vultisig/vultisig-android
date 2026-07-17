@@ -31,6 +31,8 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "cacao" -> R.drawable.cacao
         "maya" -> R.drawable.maya_token_02
         "usdc" -> R.drawable.usdc
+        "usdd" -> R.drawable.usdd
+        "stusdt" -> R.drawable.stusdt
         "usdt" -> R.drawable.usdt
         "link" -> R.drawable.link
         "uni" -> R.drawable.uni
@@ -134,6 +136,8 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "ruji" -> R.drawable.ruji
         "yrune" -> R.drawable.yrune
         "ytcy" -> R.drawable.ytcy
+        "brune",
+        "ybrune" -> R.drawable.brune
         "mantle" -> R.drawable.mantle
         "stcy" -> R.drawable.stcy
         "auto" -> R.drawable.auto_token_kujira

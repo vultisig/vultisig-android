@@ -164,6 +164,7 @@ constructor(
         selectedDstId: MutableStateFlow<String?>,
         addresses: MutableStateFlow<List<Address>>,
         uiState: MutableStateFlow<SwapFormUiModel>,
+        isSelectionQuotable: (Coin) -> Boolean,
     ) {
         navigator.route(
             Route.SelectAsset(
@@ -187,6 +188,7 @@ constructor(
             selectedDstId,
             addresses,
             uiState,
+            isSelectionQuotable,
         )
     }
 
@@ -198,6 +200,7 @@ constructor(
         selectedDstId: MutableStateFlow<String?>,
         addresses: MutableStateFlow<List<Address>>,
         uiState: MutableStateFlow<SwapFormUiModel>,
+        isSelectionQuotable: (Coin) -> Boolean,
     ) {
         val result = requestResultRepository.request<AssetSelected>(targetArg) ?: return
 
@@ -212,15 +215,27 @@ constructor(
         }
 
         if (result.isDisabled) {
-            uiState.update { it.copy(isLoading = true) }
+            // Only raise the shared loading flag when the pair the pick forms is actually quotable
+            // —
+            // a positive amount AND a routable (distinct, provider-backed) pair. Otherwise loading
+            // a
+            // not-yet-held token's account would flash the destination/fee skeletons true→false
+            // over
+            // a field that will never quote — the same blink the pipeline gate removes, and
+            // matching
+            // its isPairRoutable && amount>0 condition rather than a looser amount-only check
+            // (#5296
+            // review).
+            val showLoading = isSelectionQuotable(result.token)
+            if (showLoading) uiState.update { it.copy(isLoading = true) }
             try {
                 val account = accountsRepository.loadAccount(vaultId, result.token)
                 updateAccountInAddresses(account, addresses)
-                uiState.update { it.copy(isLoading = false) }
+                if (showLoading) uiState.update { it.copy(isLoading = false) }
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
                 Timber.e(e, "Failed to load account for token")
-                uiState.update { it.copy(isLoading = false) }
+                if (showLoading) uiState.update { it.copy(isLoading = false) }
                 return
             }
         }

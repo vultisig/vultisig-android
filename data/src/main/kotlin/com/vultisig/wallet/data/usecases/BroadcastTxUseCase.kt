@@ -48,6 +48,8 @@ import com.vultisig.wallet.data.models.Chain.ThorChain
 import com.vultisig.wallet.data.models.Chain.Ton
 import com.vultisig.wallet.data.models.Chain.ZkSync
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
+import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.delay
@@ -73,13 +75,23 @@ constructor(
     private val rippleApi: RippleApi,
     private val tronApi: TronApi,
     private val cardanoApi: CardanoApi,
+    private val transactionStatusRepository: TransactionStatusRepository,
 ) : BroadcastTxUseCase {
 
     override suspend fun invoke(chain: Chain, tx: SignedTransactionResult) =
         when (chain) {
-            ThorChain -> {
-                thorChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
-            }
+            // THOR/Maya are account-sequence Cosmos chains: on a joined-device duplicate-broadcast
+            // race the loser's broadcast is rejected with a sequence mismatch. Confirm the peer's
+            // byte-identical tx actually committed on chain before reporting our local hash as
+            // success, mirroring every other chain's recover-if-already-broadcast path.
+            ThorChain ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        thorChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
+                    },
+                    verify = { hash -> isLandedOnChain(hash, chain) },
+                )
 
             Bitcoin,
             BitcoinCash,
@@ -135,12 +147,28 @@ constructor(
             Akash,
             Chain.Qbtc -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(chain)
-                cosmosApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        cosmosApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
+                    },
+                    // A code=32 sequence mismatch on a joined co-signer means the peer's
+                    // byte-identical tx already advanced the account sequence in a committed
+                    // block. The LCD returns 404 (null) until our hash is committed. A committed tx
+                    // can still have failed execution (non-zero code), so require code==0 — an
+                    // included-but-failed tx moved no funds and must not be reported as success.
+                    verify = { hash -> cosmosApi.getTxStatus(hash)?.txResponse?.code == 0 },
+                )
             }
 
-            MayaChain -> {
-                mayaChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
-            }
+            MayaChain ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        mayaChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
+                    },
+                    verify = { hash -> isLandedOnChain(hash, chain) },
+                )
 
             Polkadot ->
                 recoverIfAlreadyBroadcast(
@@ -242,6 +270,24 @@ constructor(
         }
         return false
     }
+
+    /**
+     * For duplicate-broadcast recovery we only need to know that the peer's byte-identical tx
+     * actually committed — not whether it succeeded. Any terminal on-chain outcome (confirmed,
+     * network-refunded, or failed execution) proves the sequence was consumed by our tx, so the
+     * locally computed hash is canonical. Only a still-pending / not-found / timed-out result means
+     * our tx isn't on chain yet, in which case the rejection must propagate rather than have the
+     * user re-send a landed transaction.
+     */
+    private suspend fun isLandedOnChain(hash: String, chain: Chain): Boolean =
+        when (transactionStatusRepository.checkTransactionStatus(hash, chain)) {
+            is TransactionResult.Confirmed,
+            is TransactionResult.Refunded,
+            is TransactionResult.Failed -> true
+            is TransactionResult.Pending,
+            is TransactionResult.NotFound,
+            is TransactionResult.TimedOut -> false
+        }
 
     private fun String?.orKnownHash(tx: SignedTransactionResult): String? =
         this ?: tx.transactionHash.takeIf { it.isNotBlank() }

@@ -19,7 +19,7 @@ class RippleStatusProvider @Inject constructor(private val rippleApi: RippleApi)
                 // Not found yet, or found only in a not-yet-validated ledger: keep polling. A tx in
                 // an unvalidated ledger can still be dropped (LastLedgerSequence expiry, failed
                 // consensus), so it must not be reported terminally.
-                result == null || !result.validated -> TransactionResult.Pending
+                result == null || result.validated != true -> TransactionResult.Pending
                 // Validated but outcome unknown (meta absent): don't claim success, keep polling.
                 engineResult == null -> TransactionResult.Pending
                 // Only tesSUCCESS delivered funds. A validated tec* result (tecUNFUNDED_PAYMENT,

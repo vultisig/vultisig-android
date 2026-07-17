@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
+import com.vultisig.wallet.data.chains.helpers.RippleDappTransactionDecoder
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.GasFeeParams
@@ -12,6 +13,7 @@ import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AddressBookRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ContractAbiRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.TokenMetadataResolver
@@ -23,7 +25,7 @@ import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.mappers.SendTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
-import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
+import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import java.math.BigInteger
 import java.util.UUID
 import javax.inject.Inject
@@ -56,6 +58,7 @@ constructor(
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
     private val mapTransactionHistoryData: SendTransactionHistoryDataMapper,
     private val addressBookRepository: AddressBookRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val tokenMetadataResolver: TokenMetadataResolver,
     private val contractAbiRepository: ContractAbiRepository,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
@@ -105,21 +108,34 @@ constructor(
             )
 
         val nativeCoin = withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
+        // A dApp XRPL tx is signed verbatim, so the fee that is actually paid is the `Fee` baked
+        // into its raw JSON — not a live re-estimate. Surface that exact value so an inflated Fee
+        // is
+        // visible on the co-signer's Verify screen instead of being masked by a normal-looking
+        // RippleFeeService estimate.
+        val rippleDappFeeDrops =
+            payload.signRipple?.rawJson?.let { RippleDappTransactionDecoder.feeDrops(it) }
         val gasFee =
-            if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                val utxoHelper = UtxoHelper.getHelper(vault, payloadToken.coinType)
-                val plan = utxoHelper.getBitcoinTransactionPlan(payload)
-                if (plan.error != SigningError.OK) {
-                    Timber.e("UTXO plan error: ${plan.error.name}")
+            when {
+                chain.standard == TokenStandard.UTXO && chain != Chain.Cardano -> {
+                    val utxoHelper = UtxoHelper.getHelper(vault, payloadToken.coinType)
+                    val plan = utxoHelper.getBitcoinTransactionPlan(payload)
+                    if (plan.error != SigningError.OK) {
+                        Timber.e("UTXO plan error: ${plan.error.name}")
+                    }
+                    TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
                 }
-                TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
-            } else {
-                feeResolver.resolveJoinKeysignNetworkFee(
-                    payload = payload,
-                    chain = chain,
-                    nativeCoin = nativeCoin,
-                    blockchainTransaction = blockchainTransaction,
-                )
+
+                rippleDappFeeDrops != null ->
+                    TokenValue(value = rippleDappFeeDrops, token = nativeCoin)
+
+                else ->
+                    feeResolver.resolveJoinKeysignNetworkFee(
+                        payload = payload,
+                        chain = chain,
+                        nativeCoin = nativeCoin,
+                        blockchainTransaction = blockchainTransaction,
+                    )
             }
 
         val totalGasAndFee =
@@ -159,6 +175,7 @@ constructor(
 
         val signSolana = payload.signSolana?.rawTransactions?.firstOrNull() ?: ""
         val signSui = payload.signSui?.unsignedTxMsg?.takeIf { it.isNotEmpty() }
+        val signRipple = payload.signRipple?.rawJson?.takeIf { it.isNotBlank() }
         val transaction =
             Transaction(
                 id = UUID.randomUUID().toString(),
@@ -178,21 +195,19 @@ constructor(
                 signDirect = signDirect,
                 signSolana = signSolana,
                 signSui = signSui,
+                signRipple = signRipple,
             )
 
         val transactionToUiModel = mapTransactionToUiModel(transaction)
 
         val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
-        val normalizedDstAddress = normalizeAddressForLookup(payload.toAddress)
         val dstVaultName =
-            allVaults
-                .firstOrNull { v ->
-                    v.coins.any {
-                        it.chain == chain &&
-                            normalizeAddressForLookup(it.address) == normalizedDstAddress
-                    }
-                }
-                ?.name
+            resolveDstVaultName(
+                allVaults = allVaults,
+                chain = chain,
+                dstAddress = payload.toAddress,
+                chainAccountAddressRepository = chainAccountAddressRepository,
+            )
         val dstAddressBookTitle =
             if (dstVaultName == null) {
                 addressBookRepository.getEntry(chain.id, payload.toAddress)?.title

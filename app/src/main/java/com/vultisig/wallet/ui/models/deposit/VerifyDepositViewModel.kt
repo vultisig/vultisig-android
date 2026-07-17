@@ -1,24 +1,32 @@
 package com.vultisig.wallet.ui.models.deposit
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.depositVerifyTitleRes
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -45,6 +53,7 @@ internal data class DepositTransactionUiModel(
     val pairedAddress: String = "",
     val pool: String = "",
     val validatorName: String = "",
+    @StringRes val titleRes: Int = R.string.verify_deposit_sending,
 )
 
 internal data class VerifyDepositUiModel(
@@ -70,6 +79,10 @@ constructor(
     private val depositTransactionRepository: DepositTransactionRepository,
     private val balanceRepository: BalanceRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
+    private val vaultRepository: VaultRepository,
+    private val addressBookRepository: AddressBookRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     private val launchKeysign: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
 ) : ViewModel() {
@@ -104,13 +117,20 @@ constructor(
                         nodeAddress = transaction.nodeAddress,
                         pairedAddress = transaction.pairedAddress,
                         pool = transaction.pool,
+                        titleRes = depositVerifyTitleRes(transaction.operation),
                     )
 
                 state.update {
                     it.copy(isLoading = true, depositTransactionUiModel = initialTransaction)
                 }
 
-                val depositTransactionUiModel = mapTransactionToUiModel(transaction)
+                val depositTransactionUiModel =
+                    mapTransactionToUiModel(transaction)
+                        .withVaultLabels(
+                            vaultId = transaction.vaultId,
+                            chain = transaction.srcToken.chain,
+                            dstAddress = transaction.dstAddress,
+                        )
                 state.update { it.copy(depositTransactionUiModel = depositTransactionUiModel) }
 
                 // Keep isLoading true (Sign button disabled) until the balance lookup resolves, so
@@ -133,6 +153,43 @@ constructor(
 
         loadFastSign()
         loadPassword()
+    }
+
+    /**
+     * Resolves the From/To labels so the confirmation renders "VaultName (address)" instead of a
+     * raw `thor1…` string, matching the Send verify screen (issue #5301). From is the signing
+     * vault; To resolves to a locally-stored vault when the destination is one (e.g. a
+     * self-operated node), else an address-book title, else the raw address.
+     */
+    private suspend fun DepositTransactionUiModel.withVaultLabels(
+        vaultId: String,
+        chain: Chain,
+        dstAddress: String,
+    ): DepositTransactionUiModel {
+        val allVaults = withContext(ioDispatcher) { vaultRepository.getAll() }
+        val srcVaultName = allVaults.find { it.id == vaultId }?.name
+        val dstVaultName =
+            dstAddress
+                .takeIf { it.isNotEmpty() }
+                ?.let {
+                    resolveDstVaultName(
+                        allVaults = allVaults,
+                        chain = chain,
+                        dstAddress = it,
+                        chainAccountAddressRepository = chainAccountAddressRepository,
+                        dispatcher = ioDispatcher,
+                    )
+                }
+        val dstAddressBookTitle =
+            if (dstVaultName == null && dstAddress.isNotEmpty()) {
+                addressBookRepository.getEntry(chain.id, dstAddress)?.title
+            } else null
+
+        return copy(
+            srcVaultName = srcVaultName,
+            dstVaultName = dstVaultName,
+            dstAddressBookTitle = dstAddressBookTitle,
+        )
     }
 
     /**

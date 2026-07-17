@@ -197,6 +197,7 @@
     <string name="verify_transaction_value">Value</string>
     <string name="verify_transaction_consent_address">I’m sending to the right address</string>
     <string name="verify_transaction_consent_amount">The amount is correct</string>
+    <string name="verify_transaction_consent_dapp_transaction">I have reviewed the transaction details</string>
     <string name="verify_transaction_error_not_enough_consent">Please check all consents</string>
     <string name="camera_permission_open_settings">Open Settings</string>
     <string name="transaction_done_title">Done</string>
@@ -376,6 +377,7 @@
     <string name="signing_error_token_account_not_found_s">Could not load your %s token account. Please try again.</string>
     <string name="signing_error_mixed_reshare">Mixed Reshare signing.\nPlease use vault shares of the same Reshare cycle.</string>
     <string name="signing_error_sequence_mismatch">Account sequence changed — please retry the transaction.</string>
+    <string name="signing_error_account_not_funded">This account doesn\'t exist on-chain yet.\nPlease fund the wallet first.</string>
     <string name="signing_error_broadcast_rejected">Transaction rejected by the network.</string>
     <string name="signing_error_broadcast_rejected_s">Transaction rejected by the network: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Fast Sign</string>
@@ -763,6 +765,7 @@
 
     <string name="verify_deposit_function_overview">Function overview</string>
     <string name="verify_deposit_sending">You\'re sending</string>
+    <string name="verify_deposit_unbonding">Unbonding</string>
     <string name="verify_deposit_network">Network</string>
 
     <string name="referral_invite_sheet_description">Share your unique referral code to invite friends. They get a discount and the more they trade, the more you earn — directly delivered to your vault</string>
@@ -1185,12 +1188,26 @@
     <string name="transaction_status_confirmed">Transaction confirmed</string>
     <string name="transaction_status_failed">Transaction failed</string>
     <string name="transaction_status_refunded">Transaction refunded</string>
-    <string name="transaction_status_not_found">Transaction not found</string>
     <string name="transaction_status_pending">Transaction pending…</string>
+    <string name="transaction_status_still_confirming">Still confirming…</string>
+    <string name="transaction_status_still_confirming_label">Still confirming</string>
     <string name="transaction_status_notification_title">Transaction Status</string>
     <string name="transaction_status_checking_transaction">Checking transaction…</string>
     <string name="raw_transaction_data">Raw Transaction Data</string>
     <string name="sui_raw_transaction">Sui Transaction</string>
+    <string name="ripple_dapp_transaction">XRPL Transaction</string>
+    <string name="ripple_transaction_summary">Transaction summary</string>
+    <string name="ripple_field_issuer">Issuer</string>
+    <string name="ripple_field_send_max">Send max</string>
+    <string name="ripple_field_send_max_issuer">Send max issuer</string>
+    <string name="ripple_field_deliver_min">Deliver min</string>
+    <string name="ripple_field_deliver_min_issuer">Deliver min issuer</string>
+    <string name="ripple_field_selling">Selling</string>
+    <string name="ripple_field_selling_issuer">Selling issuer</string>
+    <string name="ripple_field_buying">Buying</string>
+    <string name="ripple_field_buying_issuer">Buying issuer</string>
+    <string name="ripple_field_limit">Limit</string>
+    <string name="ripple_field_limit_issuer">Limit issuer</string>
     <string name="sui_sender">From</string>
     <string name="solana_raw_transaction">Solana Raw Transaction</string>
     <string name="solana_instructions_summary">Transaction Instructions Summary</string>

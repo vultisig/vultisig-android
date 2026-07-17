@@ -44,6 +44,7 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.models.send.AmountFraction
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendSections
+import com.vultisig.wallet.ui.models.send.isContinueDisabled
 import com.vultisig.wallet.ui.screens.deposit.components.AutoCompoundToggle
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
@@ -175,8 +176,14 @@ internal fun FoldableAmountWidget(
                     focusRequester = amountFocusRequester,
                     onLostFocus = onTokenAmountLostFocus,
                     onKeyboardAction = {
-                        focusManager.clearFocus()
-                        onSend()
+                        // Gate the soft-keyboard send with the same condition as the Continue
+                        // button so it can't submit a stale gas fee while a fresh one is still
+                        // computing.
+                        val isContinueDisabled = state.isContinueDisabled()
+                        if (!isContinueDisabled) {
+                            focusManager.clearFocus()
+                            onSend()
+                        }
                     },
                     modifier = Modifier.padding(horizontal = 54.dp).align(Alignment.Center),
                     inputModifier = Modifier.testTag("SendFormScreen.amountField"),
@@ -447,6 +454,7 @@ internal fun FoldableAmountWidget(
                 EstimatedNetworkFee(
                     tokenGas = state.totalGas.asString(),
                     fiatGas = state.estimatedFee.asString(),
+                    isLoading = state.isGasFeeLoading,
                 )
             }
         }

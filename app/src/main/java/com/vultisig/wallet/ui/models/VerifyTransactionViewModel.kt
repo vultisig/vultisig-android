@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -7,10 +8,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
+import com.vultisig.wallet.data.chains.helpers.RippleDappTx
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.AddressBookRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ContractAbiRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
@@ -43,7 +46,7 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
-import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
+import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -73,6 +76,13 @@ internal data class TransactionDetailsUiModel(
     val dstAddressBookTitle: String? = null,
     val dstLabel: String? = null,
     val memo: String? = null,
+    /**
+     * Operation-aware label rendered above the amount on the Verify screen. Null falls back to the
+     * generic "You're sending" header. Set for non-send operations routed through the Send form
+     * (e.g. TRON freeze/unfreeze) so the pre-signing checkpoint states the true intent instead of
+     * misreporting a stake/unstake as a plain send.
+     */
+    @StringRes val headerTitleRes: Int? = null,
     // XRP destination tag (decimal), shown as its own row alongside the memo.
     val destinationTag: String? = null,
     val signAmino: String? = null,
@@ -82,6 +92,12 @@ internal data class TransactionDetailsUiModel(
      * Base64 `TransactionData` BCS bytes of a dApp-supplied Sui PTB (SignSui), for verify display.
      */
     val signSui: String? = null,
+    /**
+     * Decoded terms of a dApp-supplied XRPL transaction (SignRipple), for verify display. Null for
+     * non-Ripple or native XRP sends. Carries the raw JSON so the screen can fall back to it when
+     * decoding yields no readable fields.
+     */
+    val signRipple: RippleDappTx? = null,
     /**
      * Per-message rows for a TonConnect signing request, each decoded from its BOC body into an
      * operation label, real recipient, forward amount, and the raw payload. Empty for non-TON or
@@ -141,6 +157,7 @@ internal data class VerifyTransactionUiModel(
     val transaction: TransactionDetailsUiModel = TransactionDetailsUiModel(),
     val consentAddress: Boolean = false,
     val consentAmount: Boolean = false,
+    val consentDappTransaction: Boolean = false,
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
     val txScanStatus: TransactionScanStatus = TransactionScanStatus.NotStarted,
@@ -148,7 +165,13 @@ internal data class VerifyTransactionUiModel(
     val isLoadingFees: Boolean = false,
 ) {
     val hasAllConsents: Boolean
-        get() = consentAddress && consentAmount
+        // A dApp XRPL tx (signRipple) has no native recipient/amount — an OfferCreate has no
+        // Destination and the native amount is 0 — so the "right address"/"amount is correct"
+        // consents are meaningless there. Gate it on a single "reviewed the details" consent
+        // instead; native sends keep the two-checkbox flow.
+        get() =
+            if (transaction.signRipple != null) consentDappTransaction
+            else consentAddress && consentAmount
 }
 
 /**
@@ -181,6 +204,7 @@ constructor(
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val addressBookRepository: AddressBookRepository,
     private val fourByteRepository: FourByteRepository,
     private val tokenMetadataResolver: TokenMetadataResolver,
@@ -218,6 +242,10 @@ constructor(
 
     fun checkConsentAmount(checked: Boolean) {
         viewModelScope.launch { _uiState.update { it.copy(consentAmount = checked) } }
+    }
+
+    fun checkConsentDappTransaction(checked: Boolean) {
+        viewModelScope.launch { _uiState.update { it.copy(consentDappTransaction = checked) } }
     }
 
     fun authFastSign() {
@@ -332,16 +360,14 @@ constructor(
             val allVaults = withContext(ioDispatcher) { vaultRepository.getAll() }
             val chain = tx.token.chain
             val srcVaultName = allVaults.find { it.id == vaultId }?.name
-            val normalizedDstAddress = normalizeAddressForLookup(tx.dstAddress)
             val dstVaultName =
-                allVaults
-                    .firstOrNull { vault ->
-                        vault.coins.any {
-                            it.chain == chain &&
-                                normalizeAddressForLookup(it.address) == normalizedDstAddress
-                        }
-                    }
-                    ?.name
+                resolveDstVaultName(
+                    allVaults = allVaults,
+                    chain = chain,
+                    dstAddress = tx.dstAddress,
+                    chainAccountAddressRepository = chainAccountAddressRepository,
+                    dispatcher = ioDispatcher,
+                )
             val dstAddressBookTitle =
                 if (dstVaultName == null) {
                     addressBookRepository.getEntry(chain.id, tx.dstAddress)?.title

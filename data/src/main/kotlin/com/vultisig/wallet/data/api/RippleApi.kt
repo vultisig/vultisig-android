@@ -76,28 +76,40 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
 
         val response = http.post(BASE_XRP_CLUSTER) { setBody(payload) }
 
-        return response.bodyOrThrow<RippleBroadcastSuccessResponseJson>()
+        val body = response.bodyOrThrow<RippleBroadcastSuccessResponseJson>()
+
+        // A signed XRPL tx that never reached a validating node before its LastLedgerSequence, or
+        // one still propagating, returns the `txnNotFound` error response (error_code 29). That is
+        // a clean "not on-chain yet" signal — not a failure — so report it as pending (null) rather
+        // than letting the strict deserializer throw on every poll.
+        if (
+            body.result.error == RIPPLE_TXN_NOT_FOUND ||
+                body.result.errorCode == RIPPLE_TXN_NOT_FOUND_CODE
+        ) {
+            return null
+        }
+
+        return body
     }
 
+    // A network failure (timeout / no connectivity) must propagate so the balance layer can keep
+    // the last-known value or surface a loading/error state — never swallow it into ZERO, which is
+    // indistinguishable from a genuinely empty account and reads as "the funds disappeared". An
+    // unfunded account returns an HTTP 200 with a null `account_data` (actNotFound), so it still
+    // resolves to zero here without throwing.
     override suspend fun getBalance(coin: Coin): BigInteger = supervisorScope {
-        try {
-            val accountInfoDeferred = async { fetchAccountsInfo(coin.address) }
-            val reservedBalanceDeferred = async { fetchServerState() }
+        val accountInfoDeferred = async { fetchAccountsInfo(coin.address) }
+        val reservedBalanceDeferred = async { fetchServerState() }
 
-            val accountInfo = accountInfoDeferred.await()
-            val reservedBalance = reservedBalanceDeferred.await()
+        val accountInfo = accountInfoDeferred.await()
+        val reservedBalance = reservedBalanceDeferred.await()
 
-            val balance = accountInfo?.getBalance() ?: BigInteger.ZERO
-            val ownerCount = accountInfo?.getOwnerCount() ?: BigInteger.ZERO
-            val accountReservedBalance =
-                reservedBalance.getBaseReserve() + (ownerCount * reservedBalance.getIncReserve())
+        val balance = accountInfo?.getBalance() ?: BigInteger.ZERO
+        val ownerCount = accountInfo?.getOwnerCount() ?: BigInteger.ZERO
+        val accountReservedBalance =
+            reservedBalance.getBaseReserve() + (ownerCount * reservedBalance.getIncReserve())
 
-            maxOf(balance - accountReservedBalance, BigInteger.ZERO)
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.e("Error in getBalance: ${e.message}")
-            BigInteger.ZERO
-        }
+        maxOf(balance - accountReservedBalance, BigInteger.ZERO)
     }
 
     override suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountInfoResponseJson? {
@@ -118,8 +130,10 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
             response.bodyOrThrow<RippleAccountInfoResponseJson>()
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.e("Error in fetchTokenAccountsByOwner: ${e.message}")
-            error(e.message ?: "Error in fetchTokenAccountsByOwner")
+            Timber.e(e, "Error in fetchAccountsInfo")
+            // Rethrow the original exception so its transport cause (timeout / no connectivity) is
+            // preserved for classification instead of being flattened into a generic error.
+            throw e
         }
     }
 
@@ -134,6 +148,8 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
     private companion object {
         const val BASE_XRP_VULTISIG: String = "https://api.vultisig.com/ripple"
         const val BASE_XRP_CLUSTER: String = "https://xrplcluster.com"
+        const val RIPPLE_TXN_NOT_FOUND: String = "txnNotFound"
+        const val RIPPLE_TXN_NOT_FOUND_CODE: Int = 29
     }
 }
 

@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBlockedReason
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
@@ -85,6 +86,8 @@ import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyValidatorRow
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
+import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
+import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.governance.GovernanceUiState
 import com.vultisig.wallet.ui.models.governance.ProposalStatus
 import com.vultisig.wallet.ui.models.governance.ProposalUi
@@ -118,9 +121,11 @@ import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingPositionsConten
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingVerifyContent
 import com.vultisig.wallet.ui.screens.cosmosstaking.StakingPositionSkeleton
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
+import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
+import com.vultisig.wallet.ui.screens.keysign.KeysignErrorScreen
 import com.vultisig.wallet.ui.screens.keysign.KeysignView
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimScreen
@@ -289,8 +294,12 @@ class PreviewActivity : ComponentActivity() {
                     "vault_detail_no_mldsa" -> VaultDetailPreview(withMldsa = false)
                     "vault_detail_mldsa" -> VaultDetailPreview(withMldsa = true)
                     "error_screen_after" -> ErrorScreenAfterPreview()
+                    "qbtc_unknown_address_before" -> QbtcUnknownAddressBeforePreview()
+                    "qbtc_unknown_address_after" -> QbtcUnknownAddressAfterPreview()
                     "chain_selection" -> ChainSelectionClipPreview()
                     "verify_send_empty_memo" -> VerifySendEmptyMemoPreview()
+                    "unbond_verify_before" -> UnbondVerifyPreview(after = false)
+                    "unbond_verify_after" -> UnbondVerifyPreview(after = true)
                     else -> SwapConfirmPreview()
                 }
             }
@@ -343,6 +352,42 @@ private fun ErrorScreenAfterPreview() {
             ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = {}),
         onBack = {},
     )
+}
+
+/**
+ * Reproduces the pre-#5043-fix keysign error screen for a QBTC/Cosmos `code=9` ("unknown address")
+ * broadcast rejection: the generic broadcast-rejected copy interpolates the node's raw_log
+ * verbatim, including its undecodable fee-payer address bytes.
+ */
+@Composable
+private fun QbtcUnknownAddressBeforePreview() {
+    KeysignErrorScreen(
+        errorMessage =
+            UiText.DynamicString(
+                "broadcast_failure: fee payer address: ��� does not exist: " + "unknown address"
+            ),
+        tryAgain = {},
+        onBack = {},
+    )
+}
+
+/**
+ * The fixed keysign error screen for the same `code=9` rejection: [CosmosBroadcastException.from]
+ * now tags it with [CosmosBroadcastException.UNKNOWN_ADDRESS_MARKER], so the screen shows a
+ * friendly "fund the wallet" message instead of the raw node text.
+ */
+@Composable
+private fun QbtcUnknownAddressAfterPreview() {
+    val message =
+        CosmosBroadcastException.from(
+                code = 9,
+                codespace = "sdk",
+                rawLog = "fee payer address: ��� does not exist: unknown address",
+                txHash = null,
+            )
+            .message
+            .orEmpty()
+    KeysignErrorScreen(errorMessage = UiText.DynamicString(message), tryAgain = {}, onBack = {})
 }
 
 @Composable
@@ -1179,6 +1224,39 @@ private fun BlockaidHeroVerifySendPreview() {
         onConfirmScanning = {},
         onDismissScanning = {},
         hasToolbar = true,
+    )
+}
+
+/**
+ * THORChain Unbond "Function overview" confirmation (#5301). [after] = false reproduces the
+ * reported bug: the generic "You're sending" header and raw `thor1…` From/To. [after] = true is the
+ * fix — "Unbonding" header and From/To formatted as "VaultName (address)" (the destination is the
+ * vault's own self-operated node, so it resolves to the vault name). Data mirrors the issue
+ * screenshot.
+ */
+@Composable
+private fun UnbondVerifyPreview(after: Boolean) {
+    val nodeAddress = "thor12a9rpf9u2ulwuezxkh6uas4au7xnde8umdua5t"
+    val tx =
+        DepositTransactionUiModel(
+            token = ValuedToken(token = Coins.ThorChain.RUNE, value = "0", fiatValue = "$0.00"),
+            networkFeeTokenValue = "0.02 RUNE",
+            networkFeeFiatValue = "$0.00843",
+            srcAddress = nodeAddress,
+            dstAddress = nodeAddress,
+            srcVaultName = if (after) "Main Vault" else null,
+            dstVaultName = if (after) "Main Vault" else null,
+            memo = "UNBOND:$nodeAddress:75000000",
+            titleRes =
+                if (after) R.string.verify_deposit_unbonding else R.string.verify_deposit_sending,
+        )
+    VerifyDepositScreen(
+        state = VerifyDepositUiModel(depositTransactionUiModel = tx, isLoading = false),
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onFastSignClick = {},
+        onConfirm = {},
+        onBackClick = {},
     )
 }
 

@@ -4,9 +4,11 @@ import com.vultisig.wallet.data.api.CoinGeckoApi
 import com.vultisig.wallet.data.api.LiQuestApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.thorchain.VaultRedemptionResponseJson
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -17,6 +19,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -125,5 +128,199 @@ internal class TokenPriceRepositoryImplTest {
 
         val price = repository.getPrice(ezEth, AppCurrency.USD).first()
         assertEquals(BigDecimal("3400.0"), price)
+    }
+
+    private val bRune = Coins.ThorChain.bRUNE
+    private val ybRune = Coins.ThorChain.ybRUNE
+
+    // Silences the CoinGecko/LiFi contract-address fallback that any THORChain bank denom (empty
+    // priceProviderID) is fanned through, so only fetchThorContractPrices sets bRUNE/ybRUNE prices.
+    private fun stubEmptyContractFallback() {
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { liQuestApi.getLifiContractPriceUsd(any(), any()) } throws
+            RuntimeException("no lifi")
+        coEvery { thorApi.getPools() } returns emptyList()
+    }
+
+    // BigDecimal.equals is scale-sensitive (5.0 != 5.00000000); compare by value instead.
+    private fun assertPriceEquals(expected: String, actual: BigDecimal) =
+        assertEquals(
+            0,
+            BigDecimal(expected).compareTo(actual),
+            "expected $expected but was $actual",
+        )
+
+    private fun redemption(bondSize: String, bondShares: String): VaultRedemptionResponseJson =
+        Json.decodeFromString(
+            """{"data":{"liquid_bond_size":"$bondSize","liquid_bond_shares":"$bondShares"}}"""
+        )
+
+    @Test
+    fun `bRUNE tracks RUNE at parity and ybRUNE is NAV times RUNE`() = runTest {
+        stubEmptyContractFallback()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        // RUNE price is served from the cache, keyed by Coin.id.
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.RUNE.id, "usd") } returns "5.0"
+        // ybRUNE NAV = 200 / 100 = 2.
+        coEvery { thorApi.getThorchainTokenPriceByContract(any()) } returns
+            redemption(bondSize = "200", bondShares = "100")
+
+        repository.refresh(listOf(bRune, ybRune))
+
+        assertPriceEquals("5", repository.getPrice(bRune, AppCurrency.USD).first())
+        assertPriceEquals("10", repository.getPrice(ybRune, AppCurrency.USD).first())
+    }
+
+    @Test
+    fun `runePriceUsd reads the cache by coin id, not price provider id`() = runTest {
+        stubEmptyContractFallback()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.RUNE.id, "usd") } returns "5.0"
+
+        repository.refresh(listOf(bRune))
+
+        assertPriceEquals("5", repository.getPrice(bRune, AppCurrency.USD).first())
+        // A correct cache hit means no live RUNE fetch was needed.
+        coVerify(exactly = 0) {
+            coinGeckoApi.getCryptoPrices(match { it.contains("thorchain") }, any())
+        }
+    }
+
+    @Test
+    fun `runePriceUsd live fallback fetches RUNE in USD and applies FX only once`() = runTest {
+        // Non-USD app currency, no cached RUNE price: the live fallback must fetch RUNE in USD and
+        // the caller applies the tether (currency-per-USD) rate exactly once.
+        coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrency.EUR)
+        stubEmptyContractFallback()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.RUNE.id, "usd") } returns null
+        coEvery {
+            coinGeckoApi.getCryptoPrices(
+                match { it.contains("thorchain") },
+                match { it.contains("usd") },
+            )
+        } returns mapOf("thorchain" to mapOf("usd" to BigDecimal("5.0")))
+        coEvery { coinGeckoApi.getCryptoPrices(match { it.contains("tether") }, any()) } returns
+            mapOf("tether" to mapOf("eur" to BigDecimal("0.9")))
+
+        repository.refresh(listOf(bRune))
+
+        // 5 USD × 0.9 EUR/USD = 4.5 EUR. A double-applied FX would yield 4.05.
+        assertPriceEquals("4.5", repository.getPrice(bRune, AppCurrency.EUR).first())
+    }
+
+    @Test
+    fun `refreshing bRUNE and ybRUNE together fetches the live RUNE price at most once`() =
+        runTest {
+            // Cold RUNE cache + both denoms in one refresh: bRUNE and ybRUNE both price off
+            // RUNE-in-USD,
+            // so the live CoinGecko RUNE fetch must be shared, not fired once per token.
+            stubEmptyContractFallback()
+            coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.RUNE.id, "usd") } returns null
+            coEvery {
+                coinGeckoApi.getCryptoPrices(
+                    match { it.contains("thorchain") },
+                    match { it.contains("usd") },
+                )
+            } returns mapOf("thorchain" to mapOf("usd" to BigDecimal("5.0")))
+            // Any other id (e.g. the contract-fallback fan-out) resolves to nothing.
+            coEvery {
+                coinGeckoApi.getCryptoPrices(match { !it.contains("thorchain") }, any())
+            } returns emptyMap()
+            // ybRUNE NAV = 200 / 100 = 2.
+            coEvery { thorApi.getThorchainTokenPriceByContract(any()) } returns
+                redemption(bondSize = "200", bondShares = "100")
+
+            repository.refresh(listOf(bRune, ybRune))
+
+            assertPriceEquals("5", repository.getPrice(bRune, AppCurrency.USD).first())
+            assertPriceEquals("10", repository.getPrice(ybRune, AppCurrency.USD).first())
+            coVerify(exactly = 1) {
+                coinGeckoApi.getCryptoPrices(match { it.contains("thorchain") }, any())
+            }
+        }
+
+    @Test
+    fun `does not persist a zero ybRUNE price when the NAV field is malformed`() = runTest {
+        stubEmptyContractFallback()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.RUNE.id, "usd") } returns "5.0"
+        // Unparseable bond size with positive shares → NAV 0 → price 0, which must not overwrite
+        // the
+        // last-known price.
+        coEvery { thorApi.getThorchainTokenPriceByContract(any()) } returns
+            redemption(bondSize = "n/a", bondShares = "100")
+
+        repository.refresh(listOf(ybRune))
+
+        coVerify(exactly = 0) { tokenPriceDao.insertTokenPrice(match { it.tokenId == ybRune.id }) }
+    }
+
+    @Test
+    fun `does not persist a nonzero parity price when the NAV status is empty`() = runTest {
+        stubEmptyContractFallback()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.RUNE.id, "usd") } returns "5.0"
+        // A malformed/empty 2xx leaves both bond fields at their "" default. NAV must resolve to 0
+        // (dropped), not 1 (RUNE parity), so it can't overwrite the last-known ybRUNE price.
+        coEvery { thorApi.getThorchainTokenPriceByContract(any()) } returns
+            redemption(bondSize = "", bondShares = "")
+
+        repository.refresh(listOf(ybRune))
+
+        coVerify(exactly = 0) { tokenPriceDao.insertTokenPrice(match { it.tokenId == ybRune.id }) }
+    }
+
+    private val sTcy = Coins.ThorChain.sTCY
+
+    @Test
+    fun `sTCY prices off the TCY cache keyed by coin id, not the tcy price provider`() = runTest {
+        stubEmptyContractFallback()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        // TCY-in-USD served from the cache, keyed by Coin.id ("TCY-THORChain") — a lookup by the
+        // "tcy" priceProviderID never hits, so this pins the coin-id path.
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.TCY.id, "usd") } returns "2.0"
+        // sTCY NAV = 200 / 100 = 2, so sTCY = 2 (TCY) × 2 (NAV) = 4.
+        coEvery { thorApi.getThorchainTokenPriceByContract(any()) } returns
+            redemption(bondSize = "200", bondShares = "100")
+
+        repository.refresh(listOf(sTcy))
+
+        assertPriceEquals("4", repository.getPrice(sTcy, AppCurrency.USD).first())
+    }
+
+    @Test
+    fun `sTCY live TCY fallback fetches TCY in USD and applies FX only once`() = runTest {
+        // Non-USD app currency, no cached TCY price: the live fallback must fetch TCY in USD and
+        // the
+        // caller applies the tether (currency-per-USD) rate exactly once. The old provider-id path
+        // returned the app currency and then multiplied by tether, so a EUR/JPY user saw sTCY
+        // roughly FX-times too high.
+        coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrency.EUR)
+        stubEmptyContractFallback()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.TCY.id, "usd") } returns null
+        coEvery {
+            coinGeckoApi.getCryptoPrices(match { it.contains("tcy") }, match { it.contains("usd") })
+        } returns mapOf("tcy" to mapOf("usd" to BigDecimal("2.0")))
+        coEvery { coinGeckoApi.getCryptoPrices(match { it.contains("tether") }, any()) } returns
+            mapOf("tether" to mapOf("eur" to BigDecimal("0.9")))
+        // sTCY NAV = 200 / 100 = 2.
+        coEvery { thorApi.getThorchainTokenPriceByContract(any()) } returns
+            redemption(bondSize = "200", bondShares = "100")
+
+        repository.refresh(listOf(sTcy))
+
+        // 2 USD (TCY) × 2 (NAV) × 0.9 EUR/USD = 3.6 EUR. A double-applied FX would yield 3.24.
+        assertPriceEquals("3.6", repository.getPrice(sTcy, AppCurrency.EUR).first())
+    }
+
+    @Test
+    fun `VaultRedemption response maps the liquid bond JSON fields`() = runTest {
+        // Pins the @SerialName mapping for the {"status":{}} contract query: a renamed field would
+        // otherwise deserialize to the empty-string default and silently price ybRUNE at parity.
+        val response = redemption(bondSize = "123", bondShares = "45")
+        assertEquals("123", response.data.liquidBondSize)
+        assertEquals("45", response.data.liquidBondShares)
     }
 }

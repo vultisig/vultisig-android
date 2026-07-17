@@ -73,34 +73,41 @@ internal fun SendTransactionCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         TokenCircle(logo = item.tokenLogo, ticker = item.token, size = 24)
-                        SendAmountText(amount = item.amount, token = item.token)
+                        if (item.dappSummary != null) {
+                            DappSummaryText(summary = item.dappSummary)
+                        } else {
+                            SendAmountText(amount = item.amount, token = item.token)
+                        }
                     }
 
-                    UiSpacer(size = 8.dp)
+                    // A dApp offer/trust-line tx has no recipient — skip the empty "To" row.
+                    if (item.toAddress.isNotBlank()) {
+                        UiSpacer(size = 8.dp)
 
-                    ToSeparator(modifier = Modifier.fillMaxWidth())
+                        ToSeparator(modifier = Modifier.fillMaxWidth())
 
-                    UiSpacer(size = 8.dp)
+                        UiSpacer(size = 8.dp)
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.wallet),
-                            contentDescription = null,
-                            tint = Theme.v2.colors.text.tertiary,
-                            modifier = Modifier.size(24.dp),
-                        )
-                        Text(
-                            text = item.toAddress,
-                            style = Theme.brockmann.supplementary.caption,
-                            color = Theme.v2.colors.text.secondary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f),
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.wallet),
+                                contentDescription = null,
+                                tint = Theme.v2.colors.text.tertiary,
+                                modifier = Modifier.size(24.dp),
+                            )
+                            Text(
+                                text = item.toAddress,
+                                style = Theme.brockmann.supplementary.caption,
+                                color = Theme.v2.colors.text.secondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                     }
 
                     if (!item.provider.isNullOrEmpty()) {
@@ -126,10 +133,17 @@ internal fun SendTransactionCard(
                                         color = Theme.v2.colors.text.primary,
                                     )
                                 }
-                                SendAmountText(amount = item.amount, token = item.token)
+                                if (item.dappSummary != null) {
+                                    DappSummaryText(summary = item.dappSummary)
+                                } else {
+                                    SendAmountText(amount = item.amount, token = item.token)
+                                }
                             }
                         }
-                        SendAddressPill(address = item.toAddress.abbreviateAddress())
+                        // Offers/trust-line dApp txs carry no recipient — skip the empty "To" pill.
+                        if (item.toAddress.isNotBlank()) {
+                            SendAddressPill(address = item.toAddress.abbreviateAddress())
+                        }
                     }
                 }
             }
@@ -142,6 +156,18 @@ internal fun SendTransactionCard(
             }
         }
     }
+}
+
+@Composable
+private fun DappSummaryText(summary: String, modifier: Modifier = Modifier) {
+    Text(
+        text = summary,
+        style = Theme.brockmann.body.s.medium,
+        color = Theme.v2.colors.text.primary,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier,
+    )
 }
 
 @Composable
