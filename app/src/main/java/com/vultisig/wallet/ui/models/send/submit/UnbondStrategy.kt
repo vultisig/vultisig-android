@@ -5,6 +5,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.DepositMemo
 import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.OPERATION_UNBOND
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
@@ -155,6 +156,7 @@ internal class UnbondStrategy(
                                     .fiatFeesFor(gasFee, selectedToken)
                                     .formattedFiatValue,
                             blockChainSpecific = specific.blockChainSpecific,
+                            operation = OPERATION_UNBOND,
                         )
 
                     depositTransactionRepository.addTransaction(depositTx)

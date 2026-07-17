@@ -498,6 +498,7 @@
     <string name="slippage_hint">Percentuale di slippage</string>
     <string name="verify_deposit_function_overview">Panoramica delle funzioni</string>
     <string name="verify_deposit_sending">Stai inviando</string>
+    <string name="verify_deposit_unbonding">Svincolando</string>
     <string name="verify_deposit_network">Rete</string>
     <string name="referral_invite_sheet_description">Condividi il tuo codice di riferimento unico per invitare i tuoi amici. Loro riceveranno uno sconto e più operano, più guadagni tu, direttamente nel tuo deposito.</string>
     <string name="referral_create_referral">Crea referral</string>
