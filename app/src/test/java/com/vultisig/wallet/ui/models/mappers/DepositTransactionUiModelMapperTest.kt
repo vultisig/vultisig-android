@@ -91,30 +91,62 @@ internal class DepositTransactionUiModelMapperTest {
     }
 
     @Test
-    fun `title ignores an unbond-shaped memo when the operation is not Unbond`() {
-        // A Custom deposit carries a free-text memo but a blank operation. The header must key off
-        // the structured operation alone so a memo that happens to start with "unbond" is not
-        // mislabeled "Unbonding" (#5301). Every real unbond producer sets the operation.
-        depositVerifyTitleRes(operation = "") shouldBe R.string.verify_deposit_sending
-    }
-
-    @Test
     fun `title falls back to the generic sending label for non-Unbond operations`() {
         depositVerifyTitleRes(OPERATION_BOND) shouldBe R.string.verify_deposit_sending
         depositVerifyTitleRes(operation = "") shouldBe R.string.verify_deposit_sending
     }
 
-    private fun transaction(estimateFeesFiat: String): DepositTransaction =
+    @Test
+    fun `mapped titleRes reads Unbonding when the operation is Unbond`() = runTest {
+        stubMapperDeps()
+
+        val uiModel = mapper().invoke(transaction(operation = OPERATION_UNBOND))
+
+        uiModel.titleRes shouldBe R.string.verify_deposit_unbonding
+    }
+
+    @Test
+    fun `mapped titleRes ignores an unbond-shaped memo when the operation is not Unbond`() =
+        runTest {
+            stubMapperDeps()
+
+            // A Custom deposit carries a free-text memo but a blank operation. The mapper must key
+            // off the structured operation alone so a memo that happens to start with "UNBOND" is
+            // not mislabeled "Unbonding" (#5301). Every real unbond producer sets the operation.
+            val uiModel =
+                mapper().invoke(transaction(operation = "", memo = "UNBOND:thor1abc:75000000"))
+
+            uiModel.titleRes shouldBe R.string.verify_deposit_sending
+        }
+
+    private fun stubMapperDeps() {
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        every { mapTokenValueToStringWithUnit(any()) } returns "0 LUNC"
+        coEvery { fiatValueToStringMapper(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+        coEvery { convertTokenValueToFiat(luna, any(), AppCurrency.USD) } returns
+            FiatValue(BigDecimal.ZERO, "USD")
+    }
+
+    private fun transaction(
+        estimateFeesFiat: String = "$1.23",
+        operation: String = "",
+        memo: String = "",
+    ): DepositTransaction =
         DepositTransaction(
             id = "tx-1",
             vaultId = "vault-1",
             srcToken = luna,
             srcAddress = "terra-src",
             srcTokenValue = srcValue,
-            memo = "",
+            memo = memo,
             dstAddress = "terra-dst",
             estimatedFees = feeValue,
             estimateFeesFiat = estimateFeesFiat,
+            operation = operation,
             blockChainSpecific = mockk<BlockChainSpecific>(relaxed = true),
         )
 
