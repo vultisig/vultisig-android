@@ -185,20 +185,27 @@ class EvmApiImp(
                         "${rpcResp.error.message}",
             )
         }
-        return rpcResp.result?.let {
-            try {
-                EthereumFunction.balanceErc20Decoder(it)
-            } catch (e: Exception) {
-                Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: $e")
-                BigInteger.ZERO
-            }
-        }
-            ?: run {
-                Timber.d(
-                    "get erc20 balance,contract: $contractAddress,address: $address error: response is null"
+        // A null result or a decode failure is a malformed read, not a genuine zero (a healthy node
+        // returns a 32-byte zero word for an empty balance, which decodes cleanly). Propagate so
+        // the
+        // cached balance is kept rather than overwritten with a fake 0 (#5308).
+        val result =
+            rpcResp.result
+                ?: throw NetworkException(
+                    httpStatusCode = 0,
+                    message =
+                        "erc20 balance null result, contract=$contractAddress address=$address",
                 )
-                BigInteger.ZERO
-            }
+        return try {
+            EthereumFunction.balanceErc20Decoder(result)
+        } catch (e: Exception) {
+            throw NetworkException(
+                httpStatusCode = 0,
+                message =
+                    "erc20 balance decode failed, contract=$contractAddress address=$address: " +
+                        "${e.message}",
+            )
+        }
     }
 
     override suspend fun getBalances(
@@ -313,7 +320,24 @@ class EvmApiImp(
                 message = "eth balance rpc error, address=$address: ${rpcResp.error.message}",
             )
         }
-        return rpcResp.result.convertToBigIntegerOrZero()
+        // A null/malformed result with no explicit error is still a failed read, not an empty
+        // account (a healthy node returns "0x0" for zero) — propagate so the cached balance is kept
+        // (#5308).
+        val cleaned = rpcResp.result?.removePrefix("0x")
+        if (cleaned.isNullOrEmpty()) {
+            throw NetworkException(
+                httpStatusCode = 0,
+                message = "eth balance null result, address=$address",
+            )
+        }
+        return try {
+            BigInteger(cleaned, 16)
+        } catch (e: NumberFormatException) {
+            throw NetworkException(
+                httpStatusCode = 0,
+                message = "eth balance malformed result, address=$address: ${rpcResp.result}",
+            )
+        }
     }
 
     override suspend fun getNonce(address: String): BigInteger {
