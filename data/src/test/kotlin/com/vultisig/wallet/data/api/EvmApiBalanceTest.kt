@@ -3,12 +3,21 @@ package com.vultisig.wallet.data.api
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.testutils.MockHttpClient
+import com.vultisig.wallet.data.utils.NetworkException
 import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
+/**
+ * Behavioural tests for [EvmApiImp] balance reads around the failure vs. empty-account distinction
+ * (issue #5308): a failed read must propagate / be omitted rather than collapse into a fake `0`
+ * that gets persisted over the last-known balance, while a genuine on-chain zero still resolves to
+ * zero.
+ */
 class EvmApiBalanceTest {
 
     private val nativeCoin =
@@ -24,16 +33,16 @@ class EvmApiBalanceTest {
             isNativeToken = true,
         )
 
-    // Reproduces issue #4414: HyperEVM RPC proxy returns 403 with no Content-Type. Before the fix,
-    // the raw `.body<RpcResponse>()` call threw NoTransformationFoundException out of
-    // getETHBalance,
-    // surfacing in keysign as a misleading "Invalid QR code content" error.
+    // #5308: a transport/HTTP failure (here HyperEVM's 403, cf. #4414) must surface instead of
+    // being
+    // swallowed into a zero balance, so the balance layer keeps the last-known value rather than
+    // persisting a fake $0.00 that looks like the funds disappeared.
     @Test
-    fun `getBalance returns zero when RPC returns 403`() = runBlocking {
+    fun `getBalance propagates an RPC failure instead of swallowing it into zero`() {
         val client = MockHttpClient.respondingWith(HttpStatusCode.Forbidden, body = "")
         val api = EvmApiImp(client, "https://api.vultisig.com/hyperevm/", Chain.Hyperliquid)
 
-        assertEquals(BigInteger.ZERO, api.getBalance(nativeCoin))
+        assertThrows<NetworkException> { runBlocking { api.getBalance(nativeCoin) } }
     }
 
     @Test
@@ -46,6 +55,20 @@ class EvmApiBalanceTest {
         val api = EvmApiImp(client, "https://api.vultisig.com/hyperevm/", Chain.Hyperliquid)
 
         assertEquals(BigInteger.valueOf(5), api.getBalance(nativeCoin))
+    }
+
+    // A genuinely empty account (healthy node returning 0x0) must still resolve to a real zero
+    // without throwing — the one legitimate zero, distinct from a failed read.
+    @Test
+    fun `getBalance returns zero for a genuine on-chain zero without throwing`() = runBlocking {
+        val client =
+            MockHttpClient.respondingWith(
+                HttpStatusCode.OK,
+                body = """{"id":1,"result":"0x0","error":null}""",
+            )
+        val api = EvmApiImp(client, "https://api.vultisig.com/hyperevm/", Chain.Hyperliquid)
+
+        assertEquals(BigInteger.ZERO, api.getBalance(nativeCoin))
     }
 
     @Test
@@ -66,8 +89,10 @@ class EvmApiBalanceTest {
             assertEquals(BigInteger.valueOf(10), balances[TOKEN]) // ERC-20 via balanceOf
         }
 
+    // #5308: a Multicall3 partial failure (one sub-call reports success == false) must be OMITTED,
+    // not mapped to ZERO — so its cached balance is kept and the other tokens still resolve.
     @Test
-    fun `getBalances decodes a failed sub-call as zero without failing siblings`() = runBlocking {
+    fun `getBalances omits a failed sub-call instead of zeroing it`() = runBlocking {
         val response = aggregate3Response(listOf(false to null, true to 10L))
         val client =
             MockHttpClient.respondingWith(
@@ -78,7 +103,24 @@ class EvmApiBalanceTest {
 
         val balances = api.getBalances(ADDRESS, listOf("", TOKEN))
 
-        assertEquals(BigInteger.ZERO, balances[""]) // failed call -> zero
+        assertNull(balances[""]) // failed sub-call -> omitted, cached value preserved
+        assertEquals(BigInteger.valueOf(10), balances[TOKEN]) // sibling unaffected
+    }
+
+    // A genuine zero sub-call (success == true, returnData 0) stays a real zero in the map.
+    @Test
+    fun `getBalances keeps a genuine zero sub-call as zero`() = runBlocking {
+        val response = aggregate3Response(listOf(true to 0L, true to 10L))
+        val client =
+            MockHttpClient.respondingWith(
+                HttpStatusCode.OK,
+                body = """{"id":1,"result":"$response","error":null}""",
+            )
+        val api = EvmApiImp(client, "https://api.vultisig.com/eth/", Chain.Ethereum)
+
+        val balances = api.getBalances(ADDRESS, listOf("", TOKEN))
+
+        assertEquals(BigInteger.ZERO, balances[""])
         assertEquals(BigInteger.valueOf(10), balances[TOKEN])
     }
 
@@ -97,6 +139,17 @@ class EvmApiBalanceTest {
 
             assertEquals(BigInteger.valueOf(7), balances[""])
         }
+
+    // #5308: on the per-token fallback path a failed read is omitted, not zeroed.
+    @Test
+    fun `getBalances omits a failed per-token read on a chain without Multicall3`() = runBlocking {
+        val client = MockHttpClient.respondingWith(HttpStatusCode.Forbidden, body = "")
+        val api = EvmApiImp(client, "https://api.vultisig.com/zksync/", Chain.ZkSync)
+
+        val balances = api.getBalances(ADDRESS, listOf(""))
+
+        assertNull(balances[""])
+    }
 
     private companion object {
         const val ADDRESS = "0x1111111111111111111111111111111111111111"

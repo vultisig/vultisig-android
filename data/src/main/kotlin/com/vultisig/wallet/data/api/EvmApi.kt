@@ -28,7 +28,6 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import java.math.BigInteger
-import java.net.SocketTimeoutException
 import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -89,9 +88,11 @@ interface EvmApi {
      * balance (via `Multicall3.getEthBalance`); non-empty entries request `ERC20.balanceOf`.
      *
      * Returns a map keyed by each input contract address (the native "" key included) to its
-     * balance, with failed sub-calls decoded as [BigInteger.ZERO]. Falls back to per-token
+     * balance. A sub-call that fails is omitted from the map (never mapped to [BigInteger.ZERO]) so
+     * the caller keeps its cached value instead of persisting a fake 0 (#5308); a genuine on-chain
+     * zero is present with value [BigInteger.ZERO]. Falls back to per-token
      * [getERC20Balance]/[getBalance] on chains without a canonical Multicall3, for a single
-     * address, or when the multicall errors — keeping results byte-identical to the per-token path.
+     * address, or when the multicall errors.
      */
     suspend fun getBalances(
         address: String,
@@ -150,22 +151,14 @@ class EvmApiImp(
     private val chain: Chain,
 ) : EvmApi {
 
-    override suspend fun getBalance(coin: Coin): BigInteger {
-        return try {
-            if (coin.isNativeToken) getETHBalance(coin.address)
-            else getERC20Balance(coin.address, coin.contractAddress)
-        } catch (e: SocketTimeoutException) {
-            Timber.d("request time out, message: ${e.message}")
-            BigInteger.ZERO
-        } catch (e: NetworkException) {
-            Timber.d(
-                "RPC error fetching balance: status=%d message=%s",
-                e.httpStatusCode,
-                e.message,
-            )
-            BigInteger.ZERO
-        }
-    }
+    // A failed read must propagate, never collapse into ZERO: a zero is indistinguishable from a
+    // genuinely empty account and would be persisted over the last-known balance, reading as "my
+    // funds disappeared" (#5308). Letting it throw lets AccountsRepository's per-chain catch keep
+    // the cached value. A healthy node returning `0x0` for an empty account still resolves to a
+    // real zero inside the helpers below.
+    override suspend fun getBalance(coin: Coin): BigInteger =
+        if (coin.isNativeToken) getETHBalance(coin.address)
+        else getERC20Balance(coin.address, coin.contractAddress)
 
     override suspend fun getERC20Balance(address: String, contractAddress: String): BigInteger {
         val rpcResp =
@@ -183,10 +176,14 @@ class EvmApiImp(
                 },
             )
         if (rpcResp.error != null) {
-            Timber.d(
-                "get erc20 balance,contract: $contractAddress,address: $address error: ${rpcResp.error.message}"
+            // An RPC-level error (rate limiting, node error) is a failed read, not an empty
+            // balance — surface it so the balance layer keeps the cached value (#5308).
+            throw NetworkException(
+                httpStatusCode = 0,
+                message =
+                    "erc20 balance rpc error, contract=$contractAddress address=$address: " +
+                        "${rpcResp.error.message}",
             )
-            return BigInteger.ZERO
         }
         return rpcResp.result?.let {
             try {
@@ -257,11 +254,14 @@ class EvmApiImp(
                 return fetchBalancesPerToken(address, contractAddresses)
             }
 
+        // A partial failure — the aggregate call succeeded but an individual sub-call reports
+        // `success == false` — is a failed read for that one token, not a zero balance. Omit it
+        // from the map (rather than mapping to ZERO) so the caller keeps its cached value and never
+        // persists a fake 0 (#5308).
         return contractAddresses
-            .mapIndexed { index, contract ->
+            .mapIndexedNotNull { index, contract ->
                 val r = decoded[index]
-                contract to
-                    if (r.success) Multicall3.decodeUint256Word(r.returnData) else BigInteger.ZERO
+                if (r.success) contract to Multicall3.decodeUint256Word(r.returnData) else null
             }
             .toMap()
     }
@@ -273,31 +273,26 @@ class EvmApiImp(
         contractAddresses
             .map { contract ->
                 async {
-                    contract to
-                        try {
+                    try {
+                        contract to
                             if (contract.isEmpty()) getETHBalance(address)
                             else getERC20Balance(address, contract)
-                        } catch (e: SocketTimeoutException) {
-                            Timber.d(
-                                "per-token balance timeout, contract=%s address=%s message=%s",
-                                contract,
-                                address,
-                                e.message,
-                            )
-                            BigInteger.ZERO
-                        } catch (e: NetworkException) {
-                            Timber.d(
-                                "per-token balance RPC error, contract=%s address=%s status=%d message=%s",
-                                contract,
-                                address,
-                                e.httpStatusCode,
-                                e.message,
-                            )
-                            BigInteger.ZERO
-                        }
+                    } catch (e: NetworkException) {
+                        // Failed read — omit the token so its cached balance is preserved rather
+                        // than overwritten with a fake 0 (#5308).
+                        Timber.d(
+                            "per-token balance failed, contract=%s address=%s status=%d message=%s",
+                            contract,
+                            address,
+                            e.httpStatusCode,
+                            e.message,
+                        )
+                        null
+                    }
                 }
             }
             .awaitAll()
+            .filterNotNull()
             .toMap()
     }
 
@@ -311,8 +306,12 @@ class EvmApiImp(
                 },
             )
         if (rpcResp.error != null) {
-            Timber.d("get balance ,address: $address error: ${rpcResp.error.message}")
-            return BigInteger.ZERO
+            // A failed read, not an empty account — propagate so the cached balance is kept
+            // (#5308).
+            throw NetworkException(
+                httpStatusCode = 0,
+                message = "eth balance rpc error, address=$address: ${rpcResp.error.message}",
+            )
         }
         return rpcResp.result.convertToBigIntegerOrZero()
     }
