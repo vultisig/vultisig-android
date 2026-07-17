@@ -8,6 +8,8 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.repositories.AddressBookRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
@@ -15,6 +17,7 @@ import com.vultisig.wallet.data.usecases.ThorchainMemoParser
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
+import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import java.math.BigInteger
 import java.util.UUID
 import javax.inject.Inject
@@ -34,6 +37,8 @@ constructor(
     private val mapDepositTransactionToUiModel: DepositTransactionToUiModelMapper,
     private val mapDepositTransactionHistoryData: DepositTransactionHistoryDataMapper,
     private val thorchainMemoParser: ThorchainMemoParser,
+    private val addressBookRepository: AddressBookRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val feeResolver: JoinKeysignFeeResolver,
 ) {
 
@@ -120,7 +125,34 @@ constructor(
                 thorAddress = parsedThorMemo?.thorAddress.orEmpty(),
                 pool = parsedThorMemo?.pool.orEmpty(),
             )
-        val depositTransactionUiModel = mapDepositTransactionToUiModel(depositTransaction)
+        // Resolve the same From/To labels the initiator renders (issue #5301), so the joining
+        // co-signer sees "VaultName (address)" instead of raw thor1… addresses. Mirrors
+        // JoinSendUiModelBuilder's Send-side label resolution.
+        val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
+        val srcVaultName = vault.name
+        val dstVaultName =
+            payload.toAddress
+                .takeIf { it.isNotEmpty() }
+                ?.let {
+                    resolveDstVaultName(
+                        allVaults = allVaults,
+                        chain = chain,
+                        dstAddress = it,
+                        chainAccountAddressRepository = chainAccountAddressRepository,
+                    )
+                }
+        val dstAddressBookTitle =
+            if (dstVaultName == null && payload.toAddress.isNotEmpty()) {
+                addressBookRepository.getEntry(chain.id, payload.toAddress)?.title
+            } else null
+
+        val depositTransactionUiModel =
+            mapDepositTransactionToUiModel(depositTransaction)
+                .copy(
+                    srcVaultName = srcVaultName,
+                    dstVaultName = dstVaultName,
+                    dstAddressBookTitle = dstAddressBookTitle,
+                )
         return JoinKeysignVerifyResult(
             verifyUiModel = VerifyUiModel.Deposit(VerifyDepositUiModel(depositTransactionUiModel)),
             transactionTypeUiModel = TransactionTypeUiModel.Deposit(depositTransactionUiModel),

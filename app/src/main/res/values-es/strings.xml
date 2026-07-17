@@ -498,6 +498,7 @@
     <string name="slippage_hint">Porcentaje de deslizamiento</string>
     <string name="verify_deposit_function_overview">Descripción general de funciones</string>
     <string name="verify_deposit_sending">Estás enviando</string>
+    <string name="verify_deposit_unbonding">Desvinculando</string>
     <string name="verify_deposit_network">Red</string>
     <string name="referral_invite_sheet_description">Comparte tu código de referido único para invitar a tus amigos. Ellos obtienen un descuento y cuanto más operen, más ganarás tú, directamente en tu bóveda.</string>
     <string name="referral_create_referral">Crear referencia</string>
