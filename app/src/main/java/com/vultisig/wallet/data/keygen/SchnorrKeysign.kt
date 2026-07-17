@@ -417,6 +417,11 @@ class SchnorrKeysign(
             throw e
         } catch (e: Exception) {
             println("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
+            val keySignVerify = KeysignVerify(mediatorURL, sessionID, sessionApi)
+            keySignVerify.checkKeysignComplete(msgHash)?.let { resp ->
+                signatures[messageToSign] = resp
+                return
+            }
             val maxRetries = if (heardFromEver.isEmpty()) 1 else 3
             if (attempt < maxRetries) {
                 keysignOneMessageWithRetry(attempt + 1, messageToSign)
