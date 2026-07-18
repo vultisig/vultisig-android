@@ -90,6 +90,9 @@ class Multicall3Test {
         // Empty/malformed data is an undecodable success word: null so the caller omits it and
         // keeps the cached balance, rather than persisting a fake 0 (#5308).
         assertNull(Multicall3.decodeUint256WordOrNull("0x"))
+        // A short/truncated word is malformed too — omit it rather than decode a bogus balance,
+        // matching the per-token decoder (which rejects the same bytes).
+        assertNull(Multicall3.decodeUint256WordOrNull("0x0000000a"))
         // A genuine zero balance is a full 32-byte zero word and still decodes to ZERO.
         assertEquals(BigInteger.ZERO, Multicall3.decodeUint256WordOrNull("0x" + word(0)))
         assertEquals(BigInteger.valueOf(255), Multicall3.decodeUint256WordOrNull("0x" + word(255)))

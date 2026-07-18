@@ -588,8 +588,20 @@ constructor(
             finalAccount.accounts.firstOrNull { it.token.id == updatedToken.id }
                 ?: error("Account for token ${updatedToken.id} not found in mapped address")
 
+        // A live read now propagates a failed RPC read instead of a fake 0 (#5308). Isolate it here
+        // so loadAccount doesn't throw on a transient failure — fall back to the cached value, same
+        // as the batch/emitRefreshAddress paths. Otherwise the single-token callers (e.g. the swap
+        // token selector) would swallow the throw and silently drop the user's selection.
         val balance =
-            balanceRepository.getTokenBalanceAndPrice(finalAccount.address, updatedToken).first()
+            try {
+                balanceRepository
+                    .getTokenBalanceAndPrice(finalAccount.address, updatedToken)
+                    .first()
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Timber.e(e, "Failed to fetch balance for token %s, using cached", updatedToken.id)
+                balanceRepository.getCachedTokenBalanceAndPrice(finalAccount.address, updatedToken)
+            }
 
         loadPrices.await()
 

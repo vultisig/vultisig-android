@@ -110,7 +110,10 @@ object Multicall3 {
      */
     fun decodeUint256WordOrNull(returnData: String): BigInteger? {
         val cleaned = returnData.removePrefix("0x")
-        return if (cleaned.isEmpty()) null else cleaned.toBigIntegerOrNull(16)
+        // Only a full 32-byte word is a valid uint256 result. A short/truncated word (e.g. a 4-byte
+        // "0x0000000a") is malformed data — omit it (failed read) rather than decode it to a bogus
+        // balance, matching the per-token `balanceErc20Decoder`, which rejects the same bytes.
+        return if (cleaned.length != HEX_PER_WORD) null else cleaned.toBigIntegerOrNull(16)
     }
 
     private fun encodeCall3Tuple(call: Call3): String {
