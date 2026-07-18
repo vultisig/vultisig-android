@@ -479,7 +479,6 @@ constructor(
                 Timber.d(e, "Socket timeout during QR scan")
                 _currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.d(e, "Failed to parse QR code")
                 _currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
             }
