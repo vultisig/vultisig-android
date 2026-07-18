@@ -122,6 +122,18 @@ class MldsaKeysign(
             throw e
         } catch (e: Exception) {
             Timber.e(e, "Failed to sign message (%s)", messageToSign)
+            val keySignVerify = KeysignVerify(mediatorURL, sessionID, sessionApi)
+            keySignVerify.checkKeysignComplete(msgHash)?.let {
+                signatures[messageToSign] = it
+                // Recovery bypasses the normal pullInboundMessages success path, so clear any
+                // "waiting for peer" state ourselves — otherwise the screen stays pinned on
+                // WaitingForPeer through broadcast.
+                if (waitingNotified) {
+                    waitingNotified = false
+                    onPeersResumed?.invoke()
+                }
+                return
+            }
             val maxRetries = if (heardFromEver.isEmpty()) 1 else MAX_PROTOCOL_RETRIES
             if (attempt < maxRetries) {
                 keysignOneMessage(attempt + 1, messageToSign)
