@@ -400,10 +400,14 @@ internal class SwapTransactionBuilderTest {
             // The ERC20 approve spender is the dedicated allowance target, not the swap `to`.
             assertEquals("0xproxy", tx.approveSpender)
             assertTrue(tx.isApprovalRequired)
-            // OneInch always uses the passed gasFeeFiatValue (no estimated-fee fallback).
-            assertEquals(FiatValue(BigDecimal("2.00"), "USD"), tx.gasFeeFiatValue)
-            // gasFees still falls back to gasFee when no estimated network fee is available.
-            assertEquals(TokenValue(BigInteger.valueOf(8), srcToken), tx.gasFees)
+            // Without an override the displayed EVM network fee comes from the payload's signed gas
+            // params (maxFeePerGasWei 99 × the 600k display limit), the same value the joined
+            // device
+            // derives, re-priced from the gas-pass pair: 2.00 × 59_400_000 / 8 = 14_850_000
+            // (#5329).
+            assertEquals(BigInteger.valueOf(59_400_000), tx.gasFees.value)
+            assertEquals("USD", tx.gasFeeFiatValue.currency)
+            assertEquals(0, tx.gasFeeFiatValue.value.compareTo(BigDecimal("14850000")))
             val payload = assertIs<SwapPayload.EVM>(tx.payload)
             // On an Ethereum plan the tx gas price is patched with the plan's maxFeePerGas.
             assertEquals("99", payload.data.quote.tx.gasPrice)

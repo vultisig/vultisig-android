@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.swap
 
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
@@ -10,6 +11,7 @@ import com.vultisig.wallet.data.models.SwapTransaction.RegularSwapTransaction
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.isOpStackL2
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AllowanceRepository
@@ -283,6 +285,8 @@ constructor(
                 val (displayGasFees, displayGasFeeFiat) =
                     displayedSwapGasFee(
                         specific = specific,
+                        srcToken = srcToken,
+                        gasLimit = gasLimit,
                         overrideGasLimit = gasLimitOverride?.takeIf { it > 0L },
                         gasFee = gasFee,
                         gasFeeFiatValue = gasFeeFiatValue,
@@ -296,6 +300,17 @@ constructor(
                                 quote.data.tx.copy(
                                     gasPrice = specific.maxFeePerGasWei.toString(),
                                     gas = gasLimit,
+                                    // Stamp the displayed swap-fee amount and its coin context into
+                                    // the shared payload so every co-signing device reads the same
+                                    // "Swap Fee" from this single source. Without it a joined
+                                    // device
+                                    // re-derives the fee from a stale gasPrice × gas fallback and
+                                    // diverges from the initiator (#5329). Providers that already
+                                    // resolved the fee (Kyber / LI.FI) re-stamp the same values.
+                                    swapFee = quote.fees.value.toString(),
+                                    swapFeeChain = quote.fees.token.chain.id,
+                                    swapFeeTokenContract = quote.fees.token.contractAddress,
+                                    swapFeeDecimals = quote.fees.token.decimal,
                                 )
                         )
                     } else {
@@ -337,12 +352,21 @@ constructor(
     }
 
     /**
-     * Displayed/staged EVM swap network fee (never the signed tx): the route-gas estimate when
-     * present, else the gas-pass baseline, re-priced to a user gas-limit override (#4858) at the
-     * native price that estimate implies. Token and fiat stay a matched pair (#5056).
+     * Displayed/staged EVM swap network fee (never the signed tx). Without a user gas-limit
+     * override it is valued at the exact gas parameters stamped into the payload —
+     * [BlockChainSpecific.Ethereum.maxFeePerGasWei] times the co-signer-aligned display gas limit
+     * ([evmSwapDisplayGasLimit], falling back to [EthereumFeeService.DEFAULT_SWAP_LIMIT]) — the
+     * same formula the joiner applies in `computeJoinKeysignSwapNetworkFee`, so the initiator shows
+     * the same crypto network fee as every joined device and as the real on-chain cost, instead of
+     * a separately-fetched estimate that runs lower than what is signed (#5329, #5056). With an
+     * override the fee reprices the exact overridden limit (#4858). Fiat is re-priced from the
+     * matched estimate/gas-pass reference pair so token and fiat stay consistent; non-Ethereum
+     * plans keep the estimate/gas-pass baseline.
      */
     private fun displayedSwapGasFee(
         specific: BlockChainSpecific,
+        srcToken: Coin,
+        gasLimit: Long,
         overrideGasLimit: Long?,
         gasFee: TokenValue,
         gasFeeFiatValue: FiatValue,
@@ -350,24 +374,34 @@ constructor(
         estimatedNetworkFeeFiatValue: FiatValue?,
     ): Pair<TokenValue, FiatValue> {
         // Use the route-gas estimate when it is a real positive value, else fall back to the
-        // gas-pass baseline — a non-null zero estimate must not suppress the override (it would
-        // also
-        // make repriceFee divide by zero).
+        // gas-pass baseline — a non-null zero estimate must not suppress the re-price (it would
+        // also make repriceFee divide by zero).
         val estimate = estimatedNetworkFeeTokenValue?.takeIf { it.value.signum() > 0 }
         val referenceFee = estimate ?: gasFee
         val referenceFiat =
             if (estimate != null) estimatedNetworkFeeFiatValue ?: gasFeeFiatValue
             else gasFeeFiatValue
+        // OP-stack L2s keep the estimate when there is no override: their baseline folds in an
+        // un-scalable L1 data fee that maxFeePerGasWei × gasLimit would drop, which could show a
+        // fee lower than what is paid. Their cross-device parity is a separate concern outside
+        // #5329's ETH-mainnet scope.
         if (
             specific !is BlockChainSpecific.Ethereum ||
-                overrideGasLimit == null ||
-                referenceFee.value.signum() <= 0
+                referenceFee.value.signum() <= 0 ||
+                (overrideGasLimit == null && srcToken.chain.isOpStackL2)
         ) {
             return referenceFee to referenceFiat
         }
-        val overriddenFeeWei = overrideGasLimit.toBigInteger() * specific.maxFeePerGasWei
-        return gasFee.copy(value = overriddenFeeWei) to
-            repriceFee(overriddenFeeWei, referenceFee, referenceFiat)
+        val feeWei =
+            if (overrideGasLimit != null) {
+                overrideGasLimit.toBigInteger() * specific.maxFeePerGasWei
+            } else {
+                val displayLimit =
+                    evmSwapDisplayGasLimit(srcToken, gasLimit)
+                        ?: EthereumFeeService.DEFAULT_SWAP_LIMIT
+                specific.maxFeePerGasWei * displayLimit
+            }
+        return gasFee.copy(value = feeWei) to repriceFee(feeWei, referenceFee, referenceFiat)
     }
 
     /** Re-values [feeWei] at the native price implied by the matched [refFee]/[refFiat] pair. */
