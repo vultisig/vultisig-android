@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.catalogKey
 import com.vultisig.wallet.data.repositories.SplTokenRepository
 import com.vultisig.wallet.data.repositories.ThorChainSecuredAssetRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
@@ -95,12 +96,13 @@ constructor(
                 .flatten()
                 .asSequence()
                 .distinctBy { it.contractAddress to it.chain.id }
-                // The UI keys each row on Coin.id (ticker-chainId). Collapse any remaining
-                // collisions on that key so the same ticker sourced with two different contract
-                // addresses on one chain can't produce duplicate LazyColumn keys and crash on
-                // scroll (issue #4869). Built-in/refreshed tokens are ordered first, so the
-                // canonical entry wins over a searchable/provider duplicate.
-                .distinctBy { it.id }
+                // The UI keys each row on Coin.catalogKey (Coin.id, contract-qualified for
+                // secured assets so e.g. ETH.USDC and AVAX.USDC stay distinct). Collapse any
+                // remaining collisions on that key so the same ticker sourced with two different
+                // contract addresses on one chain can't produce duplicate LazyColumn keys and
+                // crash on scroll (issue #4869). Built-in/refreshed tokens are ordered first, so
+                // the canonical entry wins over a searchable/provider duplicate.
+                .distinctBy { it.catalogKey }
                 .toList()
                 .modifyIfNeeded()
         emit(coins)

@@ -20,6 +20,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,6 +30,8 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.catalogKey
+import com.vultisig.wallet.data.models.securedAssetChain
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.VsCenterHighlightCarousel
@@ -88,7 +91,8 @@ internal fun SelectAssetScreen(
                 }
             } else {
                 LazyColumn(contentPadding = PaddingValues(all = 16.dp)) {
-                    itemsIndexed(assets, key = { _, item -> item.token.id }) { index, item ->
+                    itemsIndexed(assets, key = { _, item -> item.token.catalogKey }) { index, item
+                        ->
                         val isFirst = index == 0
                         val isLast = index == assets.size - 1
                         val rounding = 12.dp
@@ -101,6 +105,8 @@ internal fun SelectAssetScreen(
                             value = item.value,
                             isDisabled = item.isDisabled,
                             isSecuredAsset = item.isSecuredAsset,
+                            sourceChain =
+                                item.token.securedAssetChain().takeIf { item.isSecuredAsset },
                             modifier =
                                 Modifier.clickable(onClick = { onAssetClick(item) })
                                     .background(
@@ -144,6 +150,7 @@ private fun AssetItem(
     value: String,
     isDisabled: Boolean,
     isSecuredAsset: Boolean,
+    sourceChain: String?,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -166,30 +173,16 @@ private fun AssetItem(
         )
 
         if (isSecuredAsset) {
-            Text(
+            // Matches iOS: a pill for the source chain (e.g. "ETH", "TRON") next to the
+            // "Secured" pill, so assets sharing a ticker across chains stay distinguishable.
+            sourceChain?.let { PillText(it) }
+            PillText(
                 text = stringResource(R.string.select_asset_secured_badge),
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.primary,
-                modifier =
-                    Modifier.background(
-                            color = Theme.v2.colors.primary.accent3,
-                            shape = RoundedCornerShape(70.dp),
-                        )
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                background = Theme.v2.colors.primary.accent3,
+                textColor = Theme.v2.colors.text.primary,
             )
         } else {
-            Text(
-                text = subtitle,
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.secondary,
-                modifier =
-                    Modifier.border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.border.light,
-                            shape = RoundedCornerShape(70.dp),
-                        )
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-            )
+            PillText(subtitle)
         }
 
         Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f)) {
@@ -208,6 +201,30 @@ private fun AssetItem(
             }
         }
     }
+}
+
+@Composable
+private fun PillText(
+    text: String,
+    background: Color? = null,
+    textColor: Color = Theme.v2.colors.text.secondary,
+) {
+    Text(
+        text = text,
+        style = Theme.brockmann.supplementary.caption,
+        color = textColor,
+        modifier =
+            (if (background != null) {
+                    Modifier.background(color = background, shape = RoundedCornerShape(70.dp))
+                } else {
+                    Modifier.border(
+                        width = 1.dp,
+                        color = Theme.v2.colors.border.light,
+                        shape = RoundedCornerShape(70.dp),
+                    )
+                })
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+    )
 }
 
 @Preview

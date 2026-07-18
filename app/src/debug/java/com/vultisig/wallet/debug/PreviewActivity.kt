@@ -1801,6 +1801,42 @@ private fun SelectAssetSecuredPreview(showSecured: Boolean) {
                     )
                 }
                 .takeIf { showSecured },
+            // Two different chains' USDC both survive as distinct rows (Johnny's P1: same
+            // ticker on different underlying chains must not collide/drop one).
+            securedAssetCoin(
+                    ticker = "USDC",
+                    contractAddress = "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                )
+                .let { coin ->
+                    AssetUiModel(
+                        token = coin,
+                        logo = getCoinLogo(coin.logo),
+                        title = coin.ticker,
+                        subtitle = Chain.ThorChain.raw,
+                        amount = "0",
+                        value = "0",
+                        isDisabled = true,
+                        isSecuredAsset = true,
+                    )
+                }
+                .takeIf { showSecured },
+            securedAssetCoin(
+                    ticker = "USDC",
+                    contractAddress = "avax-usdc-0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e",
+                )
+                .let { coin ->
+                    AssetUiModel(
+                        token = coin,
+                        logo = getCoinLogo(coin.logo),
+                        title = coin.ticker,
+                        subtitle = Chain.ThorChain.raw,
+                        amount = "0",
+                        value = "0",
+                        isDisabled = true,
+                        isSecuredAsset = true,
+                    )
+                }
+                .takeIf { showSecured },
         )
 
     SelectAssetScreen(

@@ -81,6 +81,33 @@ internal class GetChainTokensUseCaseTest {
     }
 
     @Test
+    fun `two secured assets sharing a ticker on different underlying chains both survive`() =
+        runTest {
+            // Johnny's P1: ETH.USDC and AVAX.USDC both have ticker USDC and chain=ThorChain, so
+            // they'd collide on the plain Coin.id-based dedup and silently drop one.
+            val ethUsdc =
+                coin(
+                    Chain.ThorChain,
+                    ticker = "USDC",
+                    contractAddress = "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                )
+            val avaxUsdc =
+                coin(
+                    Chain.ThorChain,
+                    ticker = "USDC",
+                    contractAddress = "avax-usdc-0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e",
+                )
+            every { tokenRepository.builtInTokens } returns flowOf(emptyList())
+            coEvery { tokenRepository.getRefreshTokens(any(), any()) } returns emptyList()
+            coEvery { securedAssetRepository.getSecuredAssetCoins() } returns
+                listOf(ethUsdc, avaxUsdc)
+
+            val emitted = useCase(Chain.ThorChain, vault).toList().last()
+
+            assertEquals(setOf(ethUsdc, avaxUsdc), emitted.toSet())
+        }
+
+    @Test
     fun `an already-held secured asset wins over its zero-balance catalog duplicate`() = runTest {
         val heldBtcSecured =
             coin(Chain.ThorChain, ticker = "BTC", contractAddress = "btc-btc", decimal = 8)

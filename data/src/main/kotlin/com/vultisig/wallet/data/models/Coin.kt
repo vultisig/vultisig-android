@@ -79,6 +79,15 @@ fun Coin.isSecuredAsset(): Boolean {
     return parts.size == 2 && parts[0].isNotBlank() && parts[1].isNotBlank()
 }
 
+/**
+ * A dedup/list-key identity, distinct from the persisted [Coin.id]. Secured assets on different
+ * underlying chains can share a ticker (e.g. `ETH.USDC` and `AVAX.USDC` both have ticker `USDC`),
+ * which would otherwise collide on `id` (always `<ticker>-thorchain`) and silently drop one from
+ * catalogs/lists keyed on it.
+ */
+val Coin.catalogKey: String
+    get() = if (isSecuredAsset()) "$id-$contractAddress" else id
+
 /** Returns true if this coin can be deposited into THORChain as a SECURE+ asset. */
 fun Coin.isSecuredAssetEligible(): Boolean {
     val eligibleTickers = listOf("BTC", "ETH", "BCH", "LTC", "DOGE", "AVAX", "BNB")
@@ -96,7 +105,13 @@ fun Coin.securedAssetSymbol(): String {
     return contractAddress.substringAfter("-").uppercase()
 }
 
-/** Returns the THORSwap-formatted asset name (e.g. "ETH.USDC-0xA0b..." or "THOR.RUNE"). */
+/**
+ * Returns the THORSwap-formatted asset name (e.g. "ETH.USDC-0xA0b..." or "THOR.RUNE") used as the
+ * wire value for swap quote/tx requests. THORChain secured assets are the exception: Thornode's
+ * quote endpoint expects the raw denom verbatim (e.g. "eth-usdc-0xa0b8...", matching
+ * [contractAddress] and iOS's `Coin.swapAsset`), not a dot-normalized form — see
+ * [swapAssetComparisonName] for the dot form still needed for same-asset comparisons.
+ */
 fun Coin.swapAssetName(): String =
     if (isNativeToken) {
         if (chain == Chain.GaiaChain) {
@@ -112,7 +127,7 @@ fun Coin.swapAssetName(): String =
             "${chain.swapAssetName()}.${ticker}"
         } else if (chain == Chain.ThorChain) {
             if (isSecuredAsset()) {
-                thorChainSecuredAssetSwapName()
+                contractAddress
             } else {
                 "${chain.swapAssetName()}.${ticker}"
             }
@@ -143,14 +158,20 @@ private fun Coin.thorChainSecuredAssetSwapName(): String {
 }
 
 /**
- * Normalizes [swapAssetName] for same-asset identity comparisons. EVM contract addresses are
- * lowercased to handle EIP-55 checksum-casing differences from QR payloads. THORChain secured
- * assets are also lowercased so the THORChain side (`THORCHAIN` standard) matches its native EVM
- * counterpart. Other non-EVM chains (e.g. Cosmos ibc/, Kujira factory/) use case-sensitive
- * canonical forms as returned by the THORChain API and are not altered.
+ * Normalizes this coin's asset name for same-asset identity comparisons (e.g. guarding against
+ * swapping a native L1 asset into its own THORChain-secured form). Uses the dot-normalized Thornode
+ * form ([thorChainSecuredAssetSwapName]) for THORChain secured assets rather than [swapAssetName]'s
+ * raw wire value, so a secured coin's identity matches its native-chain counterpart's (e.g.
+ * "eth.usdc-0xa0b8..." on both sides). EVM contract addresses are lowercased to handle EIP-55
+ * checksum-casing differences from QR payloads; THORChain secured assets are also lowercased so the
+ * THORChain side (`THORCHAIN` standard) matches its native EVM counterpart. Other non-EVM chains
+ * (e.g. Cosmos ibc/, Kujira factory/) use case-sensitive canonical forms as returned by the
+ * THORChain API and are not altered.
  */
 fun Coin.swapAssetComparisonName(): String {
-    val name = swapAssetName()
+    val name =
+        if (chain == Chain.ThorChain && isSecuredAsset()) thorChainSecuredAssetSwapName()
+        else swapAssetName()
     val needsLowercase =
         chain.standard == TokenStandard.EVM || (chain == Chain.ThorChain && isSecuredAsset())
     return if (needsLowercase) name.lowercase() else name

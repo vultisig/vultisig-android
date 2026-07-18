@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.catalogKey
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isLpToken
 import com.vultisig.wallet.data.models.isSecuredAsset
@@ -158,11 +159,14 @@ constructor(
                                     )
                                 }
 
-                        val filteredTokenIds = filteredAssets.map { it.token.id }.toSet()
+                        // catalogKey (not id) so a not-yet-held secured asset isn't wrongly hidden
+                        // as "already held" by a different held asset sharing its ticker (e.g.
+                        // held ETH.USDC must not suppress catalog AVAX.USDC).
+                        val heldCatalogKeys = filteredAssets.map { it.token.catalogKey }.toSet()
                         val additionalAssets =
                             allTokens.filter {
                                 it.token.id.contains(query, ignoreCase = true) &&
-                                    it.token.id !in filteredTokenIds
+                                    it.token.catalogKey !in heldCatalogKeys
                             }
 
                         filteredAssets + additionalAssets
