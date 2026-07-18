@@ -300,17 +300,13 @@ constructor(
                                 quote.data.tx.copy(
                                     gasPrice = specific.maxFeePerGasWei.toString(),
                                     gas = gasLimit,
-                                    // Stamp the displayed swap-fee amount and its coin context into
-                                    // the shared payload so every co-signing device reads the same
-                                    // "Swap Fee" from this single source. Without it a joined
-                                    // device
-                                    // re-derives the fee from a stale gasPrice × gas fallback and
-                                    // diverges from the initiator (#5329). Providers that already
-                                    // resolved the fee (Kyber / LI.FI) re-stamp the same values.
+                                    // The swap-fee amount and its coin context are already resolved
+                                    // and stamped onto the shared payload upstream
+                                    // (SwapQuoteManager
+                                    // .withResolvedSwapFee), so every co-signing device reads the
+                                    // same "Swap Fee" from this single source (#5329). They flow
+                                    // through this copy() unchanged.
                                     swapFee = quote.fees.value.toString(),
-                                    swapFeeChain = quote.fees.token.chain.id,
-                                    swapFeeTokenContract = quote.fees.token.contractAddress,
-                                    swapFeeDecimals = quote.fees.token.decimal,
                                 )
                         )
                     } else {
