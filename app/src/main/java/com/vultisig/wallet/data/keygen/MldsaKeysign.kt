@@ -122,6 +122,11 @@ class MldsaKeysign(
             throw e
         } catch (e: Exception) {
             Timber.e(e, "Failed to sign message (%s)", messageToSign)
+            val keySignVerify = KeysignVerify(mediatorURL, sessionID, sessionApi)
+            keySignVerify.checkKeysignComplete(msgHash)?.let {
+                signatures[messageToSign] = it
+                return
+            }
             val maxRetries = if (heardFromEver.isEmpty()) 1 else MAX_PROTOCOL_RETRIES
             if (attempt < maxRetries) {
                 keysignOneMessage(attempt + 1, messageToSign)
