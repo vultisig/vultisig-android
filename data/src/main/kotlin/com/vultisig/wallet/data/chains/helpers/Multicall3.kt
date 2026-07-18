@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.chains.helpers
 
-import com.vultisig.wallet.data.common.convertToBigIntegerOrZero
 import com.vultisig.wallet.data.common.remove0x
 import com.vultisig.wallet.data.models.Chain
 import java.math.BigInteger
@@ -103,8 +102,19 @@ object Multicall3 {
         }
     }
 
-    /** Decodes a single left-padded uint256 return word (e.g. a `balanceOf` result). */
-    fun decodeUint256Word(returnData: String): BigInteger = returnData.convertToBigIntegerOrZero()
+    /**
+     * Decodes a single left-padded uint256 return word (e.g. a `balanceOf` result), or null when
+     * the word is empty/malformed. A successful sub-call that carries no decodable data is a failed
+     * read, not a genuine zero (a real zero balance is a full 32-byte zero word) — returning null
+     * lets the caller omit it and keep the cached balance rather than persist a fake 0 (#5308).
+     */
+    fun decodeUint256WordOrNull(returnData: String): BigInteger? {
+        val cleaned = returnData.removePrefix("0x")
+        // Only a full 32-byte word is a valid uint256 result. A short/truncated word (e.g. a 4-byte
+        // "0x0000000a") is malformed data — omit it (failed read) rather than decode it to a bogus
+        // balance, matching the per-token `balanceErc20Decoder`, which rejects the same bytes.
+        return if (cleaned.length != HEX_PER_WORD) null else cleaned.toBigIntegerOrNull(16)
+    }
 
     private fun encodeCall3Tuple(call: Call3): String {
         val data = call.callData.remove0x()

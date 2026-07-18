@@ -615,37 +615,45 @@ constructor(
 
         val currency = appCurrencyRepository.currency.first()
 
-        return coins.associate { coin ->
-            val rawBalance = balances[coin.contractAddress] ?: BigInteger.ZERO
+        return coins
+            .mapNotNull { coin ->
+                // A missing key means the balance read failed (getBalances omits failed tokens):
+                // skip
+                // the write and the emission so the cached row is preserved rather than overwritten
+                // with a fake 0 (#5308). A genuine on-chain zero is present in the map and still
+                // persists below.
+                val rawBalance = balances[coin.contractAddress] ?: return@mapNotNull null
 
-            tokenValueDao.insertTokenValue(
-                TokenValueEntity(
-                    chain = coin.chain.id,
-                    address = address,
-                    ticker = coin.ticker,
-                    tokenValue = rawBalance.toString(),
-                    contractAddress = coin.contractAddress,
+                tokenValueDao.insertTokenValue(
+                    TokenValueEntity(
+                        chain = coin.chain.id,
+                        address = address,
+                        ticker = coin.ticker,
+                        tokenValue = rawBalance.toString(),
+                        contractAddress = coin.contractAddress,
+                    )
                 )
-            )
 
-            val tokenValue =
-                TokenValue(value = rawBalance, unit = coin.ticker, decimals = coin.decimal)
-            val price = tokenPriceRepository.getPrice(coin, currency).first()
+                val tokenValue =
+                    TokenValue(value = rawBalance, unit = coin.ticker, decimals = coin.decimal)
+                val price = tokenPriceRepository.getPrice(coin, currency).first()
 
-            coin.id to
-                TokenBalanceAndPrice(
-                    tokenBalance =
-                        TokenBalance(
-                            tokenValue = tokenValue,
-                            fiatValue =
-                                FiatValue(
-                                    value = tokenValue.decimal.multiply(price).scaledFor(currency),
-                                    currency = currency.ticker,
-                                ),
-                        ),
-                    price = FiatValue(value = price, currency = currency.ticker),
-                )
-        }
+                coin.id to
+                    TokenBalanceAndPrice(
+                        tokenBalance =
+                            TokenBalance(
+                                tokenValue = tokenValue,
+                                fiatValue =
+                                    FiatValue(
+                                        value =
+                                            tokenValue.decimal.multiply(price).scaledFor(currency),
+                                        currency = currency.ticker,
+                                    ),
+                            ),
+                        price = FiatValue(value = price, currency = currency.ticker),
+                    )
+            }
+            .toMap()
     }
 
     override suspend fun getMergeTokenValue(address: String, chain: Chain): List<MergeAccount> {
