@@ -1440,11 +1440,23 @@ internal class SwapFormViewModelTest {
             // signable) over 56 (#5310).
             every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
                 listOf(SwapProvider.THORCHAIN)
-            coEvery { swapQuoteManager.computeIndicativeQuote(any(), any(), any(), any()) } returns
-                IndicativeQuote(
-                    estimatedDstTokenValue = "newer-indicative",
-                    estimatedDstFiatValue = "$56.00",
-                )
+            // Distinct indicative per amount so the "newer-indicative" assertions actually prove
+            // 56's recompute replaced 1's estimate, rather than passing because both stubbed alike.
+            coEvery {
+                swapQuoteManager.computeIndicativeQuote(any(), any(), any(), any())
+            } coAnswers
+                {
+                    if (arg<BigDecimal>(2).compareTo(BigDecimal.ONE) == 0)
+                        IndicativeQuote(
+                            estimatedDstTokenValue = "older-indicative",
+                            estimatedDstFiatValue = "$1.00",
+                        )
+                    else
+                        IndicativeQuote(
+                            estimatedDstTokenValue = "newer-indicative",
+                            estimatedDstFiatValue = "$56.00",
+                        )
+                }
             val firstFetchGate = CompletableDeferred<Unit>()
             coEvery {
                 swapQuoteManager.fetchBestQuote(
@@ -1512,11 +1524,23 @@ internal class SwapFormViewModelTest {
         runTest(mainDispatcher) {
             every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
                 listOf(SwapProvider.THORCHAIN)
-            coEvery { swapQuoteManager.computeIndicativeQuote(any(), any(), any(), any()) } returns
-                IndicativeQuote(
-                    estimatedDstTokenValue = "new-pair-indicative",
-                    estimatedDstFiatValue = "$1.00",
-                )
+            // Distinct indicative per source token so "new-pair-indicative" proves the flipped pair
+            // recomputed its estimate, rather than passing because both pairs stubbed alike.
+            coEvery {
+                swapQuoteManager.computeIndicativeQuote(any(), any(), any(), any())
+            } coAnswers
+                {
+                    if (arg<Coin>(0).id == ETH_COIN.id)
+                        IndicativeQuote(
+                            estimatedDstTokenValue = "old-pair-indicative",
+                            estimatedDstFiatValue = "$1.00",
+                        )
+                    else
+                        IndicativeQuote(
+                            estimatedDstTokenValue = "new-pair-indicative",
+                            estimatedDstFiatValue = "$1.00",
+                        )
+                }
             val firstFetchGate = CompletableDeferred<Unit>()
             var fetchCount = 0
             coEvery {
@@ -1555,6 +1579,11 @@ internal class SwapFormViewModelTest {
             assertEquals(BTC_COIN.id, vm.uiState.value.selectedSrcToken?.model?.account?.token?.id)
             assertEquals(ETH_COIN.id, vm.uiState.value.selectedDstToken?.model?.account?.token?.id)
             assertTrue(vm.uiState.value.isLoading)
+            // The flipped pair recomputed its own indicative estimate before the old fetch lands.
+            assertEquals(
+                "new-pair-indicative",
+                vm.uiState.value.quoteDisplay.estimatedDstTokenValue,
+            )
 
             val quoteFlags = mutableListOf(vm.uiState.value.quoteDisplay.hasQuote)
             val collectJob =
@@ -1575,6 +1604,123 @@ internal class SwapFormViewModelTest {
                 "new-pair-indicative",
                 vm.uiState.value.quoteDisplay.estimatedDstTokenValue,
             )
+        }
+
+    @Test
+    fun `a fetch with old slippage never applies after the tolerance changes`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            val firstFetchGate = CompletableDeferred<Unit>()
+            var fetchCount = 0
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } coAnswers
+                {
+                    fetchCount++
+                    if (fetchCount == 1) firstFetchGate.await()
+                    createDefaultQuoteFetchResult()
+                }
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            runCurrent()
+            assertTrue(vm.uiState.value.isLoading)
+
+            // Tighten slippage while the Auto-slippage fetch is still in flight. The new tolerance
+            // is waiting in the debounce and must supersede the old memo / :LIM floor.
+            vm.setSlippageBps(100)
+            runCurrent()
+            assertTrue(vm.uiState.value.isLoading)
+
+            val quoteFlags = mutableListOf(vm.uiState.value.quoteDisplay.hasQuote)
+            val collectJob =
+                backgroundScope.launch(mainDispatcher) {
+                    vm.uiState.collect { quoteFlags += it.quoteDisplay.hasQuote }
+                }
+            firstFetchGate.complete(Unit)
+            runCurrent()
+            collectJob.cancel()
+
+            assertFalse(quoteFlags.any { it }, "quote fetched with abandoned slippage was applied")
+            assertTrue(vm.uiState.value.isLoading, "new slippage stopped loading")
+        }
+
+    @Test
+    fun `a fetch with the old recipient never applies after the recipient changes`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            every { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            val firstFetchGate = CompletableDeferred<Unit>()
+            var fetchCount = 0
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } coAnswers
+                {
+                    fetchCount++
+                    if (fetchCount == 1) firstFetchGate.await()
+                    createDefaultQuoteFetchResult()
+                }
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            runCurrent()
+            assertTrue(vm.uiState.value.isLoading)
+
+            // Set a valid recipient while the vault-address fetch is still in flight. The new
+            // recipient is waiting in the debounce and must supersede the old routing payload.
+            vm.setExternalRecipient("bc1qnewrecipient")
+            runCurrent()
+            assertEquals("bc1qnewrecipient", pipelineRecipient?.value)
+            assertTrue(vm.uiState.value.isLoading)
+
+            val quoteFlags = mutableListOf(vm.uiState.value.quoteDisplay.hasQuote)
+            val collectJob =
+                backgroundScope.launch(mainDispatcher) {
+                    vm.uiState.collect { quoteFlags += it.quoteDisplay.hasQuote }
+                }
+            firstFetchGate.complete(Unit)
+            runCurrent()
+            collectJob.cancel()
+
+            assertFalse(
+                quoteFlags.any { it },
+                "quote fetched for the abandoned recipient was applied",
+            )
+            assertTrue(vm.uiState.value.isLoading, "new recipient stopped loading")
         }
 
     // endregion

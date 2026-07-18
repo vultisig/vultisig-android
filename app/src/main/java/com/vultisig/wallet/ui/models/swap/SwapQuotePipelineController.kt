@@ -319,7 +319,13 @@ constructor(
                     updatePairSupport(src, dst)
                 }
                 .combine(amountChanges) { address, immediate ->
-                    QuoteInput(address = address, amount = srcAmount, immediate = immediate)
+                    QuoteInput(
+                        address = address,
+                        amount = srcAmount,
+                        slippageBps = slippageBps.value,
+                        externalRecipient = externalRecipient.value,
+                        immediate = immediate,
+                    )
                 }
                 // Fires on real user intent (typing, paste, percentage, token change) but not on
                 // the
@@ -342,9 +348,14 @@ constructor(
                 // the
                 // skeletons (#5296). The onEach rides each flow individually, so the silent refresh
                 // timer above doesn't flash the spinner.
-                .combine(slippageBps.onEach { startLoadingIfQuotable() }) { input, _ -> input }
-                .combine(externalRecipient.onEach { startLoadingIfQuotable() }) { input, _ ->
-                    input
+                .combine(slippageBps.onEach { startLoadingIfQuotable() }) { input, liveSlippageBps
+                    ->
+                    input.copy(slippageBps = liveSlippageBps)
+                }
+                .combine(externalRecipient.onEach { startLoadingIfQuotable() }) {
+                    input,
+                    liveExternalRecipient ->
+                    input.copy(externalRecipient = liveExternalRecipient)
                 }
                 // Percentage / Max / paste skip the debounce (0ms); free typing still coalesces at
                 // 300ms so rapid edits fire a single quote fetch.
@@ -371,8 +382,8 @@ constructor(
                                 referralCode = referralCode.value,
                                 currentDiscountInfo = uiState.value.discountInfo,
                                 selectedSrcTokenTitle = uiState.value.selectedSrcToken?.title,
-                                slippageBps = slippageBps.value,
-                                externalRecipient = externalRecipient.value,
+                                slippageBps = input.slippageBps,
+                                externalRecipient = input.externalRecipient,
                             )
                     ) {
                         SwapQuotePipelineResult.Empty -> resetQuoteState()
@@ -426,7 +437,9 @@ constructor(
                 liveAmount == null ||
                 liveAmount.compareTo(input.amount) != 0 ||
                 !inputSrc.hasSameQuoteEndpointAs(selectedSrc.value) ||
-                !inputDst.hasSameQuoteEndpointAs(selectedDst.value)
+                !inputDst.hasSameQuoteEndpointAs(selectedDst.value) ||
+                input.slippageBps != slippageBps.value ||
+                input.externalRecipient != externalRecipient.value
         if (isSuperseded) {
             discardSupersededQuoteResult()
             return
