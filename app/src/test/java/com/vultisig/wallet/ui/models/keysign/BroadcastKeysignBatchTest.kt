@@ -33,9 +33,8 @@ import org.junit.jupiter.api.Test
 import vultisig.keysign.v1.SignSolana
 
 /**
- * A Solana dApp `signAndSendAllTransactions` batch assembles one signed transaction per raw
- * transaction of the payload; the broadcast tail must submit every one of them in payload order
- * instead of failing after the ceremony (issue #5238).
+ * A Solana `signAndSendAllTransactions` batch must broadcast every assembled tx, in order
+ * (issue #5238).
  */
 internal class BroadcastKeysignBatchTest {
 
@@ -142,10 +141,7 @@ internal class BroadcastKeysignBatchTest {
             broadcasted.additionalTxHashes shouldBe emptyList()
         }
 
-    /**
-     * Mirrors the extension's sequential fail-fast broadcast: a rejected transaction surfaces as an
-     * error instead of being silently skipped, and the remaining transactions are not sent.
-     */
+    // Mirrors the extension's fail-fast broadcast: a rejection errors out, the rest go unsent.
     @Test
     fun `failing broadcast mid-batch propagates and skips the remaining transactions`() =
         runTest(testDispatcher) {

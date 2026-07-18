@@ -842,9 +842,7 @@ constructor(
                     }
                     saveTransactionHistory(txHash, result.chain)
                 }
-                // Persisted outside the txHash != null gate: the extra transactions of a batch
-                // were broadcast in their own right, so a missing primary hash must not skip
-                // their history rows.
+                // Outside the txHash-null gate: batch extras were broadcast in their own right.
                 result.additionalTxHashes.forEach { hash ->
                     saveTransactionHistory(
                         txHash = hash,
@@ -855,9 +853,8 @@ constructor(
                 if (txHash != null && txStatusConfigurationProvider.supportTxStatus(result.chain)) {
                     startForegroundPolling(txHash, result.chain)
                 } else {
-                    // Land on the terminal "broadcasted" state instead of leaving signingState
-                    // at the last signing state forever (infinite spinner → the user may
-                    // force-retry and double-send).
+                    // Land on "broadcasted" instead of leaving signingState stuck (infinite
+                    // spinner → user may double-send by retrying).
                     _state.update {
                         it.copy(
                             signingState =
@@ -869,10 +866,7 @@ constructor(
         }
     }
 
-    /**
-     * [explorerUrl] overrides the state-derived link for the extra transactions of a Solana dApp
-     * batch, whose ViewModel state only carries the primary tx's link.
-     */
+    /** [explorerUrl] overrides the state-derived link, needed for a batch's non-primary hashes. */
     internal suspend fun saveTransactionHistory(
         txHash: String,
         chain: Chain,

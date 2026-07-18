@@ -92,9 +92,7 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             }
         }
 
-    // A Solana dApp batch broadcasts several transactions; each one must land in history with its
-    // own explorer link, with the first hash staying the primary one driving the done screen
-    // (issue #5238).
+    // Each transaction of a batch must land in history with its own explorer link (issue #5238).
     @Test
     fun `broadcasted batch persists history for the primary and additional hashes`() =
         runTest(testDispatcher) {

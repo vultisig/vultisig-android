@@ -153,14 +153,10 @@ class SolanaHelperTest {
         assertEquals("Malformed compact-u16 in Solana transaction", error.message)
     }
 
-    /**
-     * A `signSolana` payload with an empty batch has nothing to assemble; it must fail with a clear
-     * message instead of returning an empty result. The guard runs before any WalletCore call, so
-     * it is exercised without the native library.
-     */
+    // The guard runs before any WalletCore call, so it is exercised without the native library.
     @Test
     fun `signSolana batch with no raw transactions is rejected before assembly`() {
-        val payload = solPayload(SignSolana(rawTransactions = emptyList()))
+        val payload = rawTxPayload()
 
         val error =
             assertThrows<IllegalArgumentException> {
@@ -169,14 +165,9 @@ class SolanaHelperTest {
         assertEquals("signSolana payload carries no raw transactions", error.message)
     }
 
-    /**
-     * The single-transaction assembly keeps its strict contract: a `signAllTransactions` batch must
-     * go through [SolanaHelper.getSignedTransactions], which delivers every transaction
-     * (issue #5238).
-     */
     @Test
     fun `single-transaction assembly rejects a multi-transaction batch`() {
-        val payload = solPayload(SignSolana(rawTransactions = listOf("AAA=", "BBB=")))
+        val payload = rawTxPayload("AAA=", "BBB=")
 
         val error =
             assertThrows<IllegalArgumentException> {
@@ -259,36 +250,4 @@ class SolanaHelperTest {
         )
 
     private fun base64Of(bytes: ByteArray): String = Base64.getEncoder().encodeToString(bytes)
-
-    private fun solPayload(signSolana: SignSolana) =
-        KeysignPayload(
-            coin =
-                Coin(
-                    chain = Chain.Solana,
-                    ticker = "SOL",
-                    logo = "",
-                    address = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
-                    decimal = 9,
-                    hexPublicKey = "",
-                    priceProviderID = "",
-                    contractAddress = "",
-                    isNativeToken = true,
-                ),
-            toAddress = "3xM8c79mk7fvcz5ENZgMbChPJGWZAjFqwdDzZp4R2gHR",
-            toAmount = BigInteger.ZERO,
-            blockChainSpecific =
-                BlockChainSpecific.Solana(
-                    recentBlockHash = "",
-                    priorityFee = BigInteger.ZERO,
-                    priorityLimit = SOLANA_PRIORITY_FEE_LIMIT.toBigInteger(),
-                    fromAddressPubKey = null,
-                    toAddressPubKey = null,
-                    programId = false,
-                ),
-            vaultPublicKeyECDSA = "",
-            vaultLocalPartyID = "",
-            libType = SigningLibType.GG20,
-            wasmExecuteContractPayload = null,
-            signSolana = signSolana,
-        )
 }

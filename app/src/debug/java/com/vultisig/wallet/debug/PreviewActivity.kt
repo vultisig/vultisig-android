@@ -748,11 +748,7 @@ private fun BondFormMayaPreview() {
     )
 }
 
-/**
- * Two unsigned System Program transfers (0.25 SOL and 0.1 SOL to different recipients), the shape a
- * dApp `signAllTransactions` batch arrives in. Valid legacy wire format so WalletCore decodes real
- * instructions on expansion.
- */
+// Two unsigned System Program transfers; valid wire format so WalletCore decodes real instructions.
 private val SOLANA_BATCH_PREVIEW_TXS =
     listOf(
         "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
@@ -765,10 +761,6 @@ private val SOLANA_BATCH_PREVIEW_TXS =
             "IFTxep3s6kO0ROug7bEsbx0xxuDkqEvwUusBAgIAAQwCAAAAAOH1BQAAAAA=",
     )
 
-/**
- * The joining device's verify screen for a dApp `signSolana` request. [transactionCount] = 1
- * reproduces the pre-#5238 render, which surfaced only the first raw transaction of a batch.
- */
 @Composable
 private fun SolanaBatchVerifySendPreview(transactionCount: Int, expanded: Boolean = false) {
     VerifySendScreen(

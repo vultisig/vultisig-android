@@ -46,10 +46,8 @@ internal sealed interface KeysignBroadcastResult {
      * @property swapProgressLink Swap-progress deep link, or null when not a swap.
      * @property approveTxHash Hash of the preceding approval, empty when not applicable.
      * @property approveTxLink Explorer link for [approveTxHash], empty when not applicable.
-     * @property additionalTxHashes Hashes of the remaining transactions when the keysign produced a
-     *   batch (Solana `signAndSendAllTransactions`, issue #5238); empty otherwise. They are
-     *   persisted to history alongside [txHash], which stays the primary hash driving the done
-     *   screen and status polling.
+     * @property additionalTxHashes Remaining hashes of a Solana batch keysign (issue #5238); empty
+     *   otherwise.
      */
     data class Broadcasted(
         val chain: Chain,
@@ -66,9 +64,7 @@ internal sealed interface KeysignBroadcastResult {
  * Orchestrates the broadcast tail of a keysign: submits and confirms an optional ERC-20 approval,
  * assembles and broadcasts the signed transaction(s), and invalidates the balance caches. The
  * duplicate-broadcast race between co-signers is resolved one layer down in [BroadcastTxUseCase],
- * which verifies the tx is actually on chain before treating a rejection as success. A Solana dApp
- * `signAndSendAllTransactions` batch broadcasts every assembled transaction sequentially in payload
- * order (issue #5238).
+ * which verifies the tx is actually on chain before treating a rejection as success.
  *
  * Extracted from `KeysignViewModel` so the broadcast/recover logic can be unit-tested in isolation.
  * The use case has no UI dependencies: it returns a [KeysignBroadcastResult] that the ViewModel
@@ -170,11 +166,8 @@ constructor(
                 nonceAcc = nonceAcc,
             )
 
-        // A Solana dApp batch assembles one signed transaction per raw transaction; broadcast
-        // them in payload order like the extension does, failing fast so a rejected transaction
-        // surfaces as an error instead of being silently skipped. Transactions broadcast before
-        // a mid-batch failure stay on chain but are not persisted locally — same trade-off as
-        // the extension, which races the identical batch and usually lands it in full.
+        // Broadcast sequentially, fail-fast: a rejected tx aborts the rest, and any earlier ones
+        // already broadcast stay on chain but aren't persisted locally (issue #5238).
         val txHashes = signedTxs.map { broadcastTx(chain = chain, tx = it) }
         val txHash = txHashes.first()
 
