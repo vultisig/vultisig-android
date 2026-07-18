@@ -319,7 +319,13 @@ constructor(
                     updatePairSupport(src, dst)
                 }
                 .combine(amountChanges) { address, immediate ->
-                    QuoteInput(address = address, amount = srcAmount, immediate = immediate)
+                    QuoteInput(
+                        address = address,
+                        amount = srcAmount,
+                        slippageBps = slippageBps.value,
+                        externalRecipient = externalRecipient.value,
+                        immediate = immediate,
+                    )
                 }
                 // Fires on real user intent (typing, paste, percentage, token change) but not on
                 // the
@@ -342,9 +348,14 @@ constructor(
                 // the
                 // skeletons (#5296). The onEach rides each flow individually, so the silent refresh
                 // timer above doesn't flash the spinner.
-                .combine(slippageBps.onEach { startLoadingIfQuotable() }) { input, _ -> input }
-                .combine(externalRecipient.onEach { startLoadingIfQuotable() }) { input, _ ->
-                    input
+                .combine(slippageBps.onEach { startLoadingIfQuotable() }) { input, liveSlippageBps
+                    ->
+                    input.copy(slippageBps = liveSlippageBps)
+                }
+                .combine(externalRecipient.onEach { startLoadingIfQuotable() }) {
+                    input,
+                    liveExternalRecipient ->
+                    input.copy(externalRecipient = liveExternalRecipient)
                 }
                 // Percentage / Max / paste skip the debounce (0ms); free typing still coalesces at
                 // 300ms so rapid edits fire a single quote fetch.
@@ -371,8 +382,8 @@ constructor(
                                 referralCode = referralCode.value,
                                 currentDiscountInfo = uiState.value.discountInfo,
                                 selectedSrcTokenTitle = uiState.value.selectedSrcToken?.title,
-                                slippageBps = slippageBps.value,
-                                externalRecipient = externalRecipient.value,
+                                slippageBps = input.slippageBps,
+                                externalRecipient = input.externalRecipient,
                             )
                     ) {
                         SwapQuotePipelineResult.Empty -> resetQuoteState()
@@ -406,8 +417,31 @@ constructor(
         // a
         // late-landing fetch for a now non-quotable field (cleared, zeroed, or an unroutable pair)
         // drops the stale quote instead of resurrecting it (#5296 review).
+        //
+        // isLiveInputQuotable only asks "is something quotable now"; it can't catch a fetch that
+        // resolved for an earlier, still-positive amount on the same pair (type 5, pause past the
+        // debounce, resume to 56 before 5's fetch lands). Also require the live amount to still
+        // match the amount this fetch was resolved for, so a quote priced for the old amount can't
+        // be applied — and then signed with a mismatched memo / slippage floor — over the new one
+        // (#5310). Match the source/destination quote endpoints as well: changing to another
+        // routable pair with the same amount creates the same pre-debounce landing window.
         if (!isLiveInputQuotable) {
             resetQuoteState()
+            return
+        }
+
+        val liveAmount = srcAmount
+        val (inputSrc, inputDst) = input.address
+        val isSuperseded =
+            input.amount == null ||
+                liveAmount == null ||
+                liveAmount.compareTo(input.amount) != 0 ||
+                !inputSrc.hasSameQuoteEndpointAs(selectedSrc.value) ||
+                !inputDst.hasSameQuoteEndpointAs(selectedDst.value) ||
+                input.slippageBps != slippageBps.value ||
+                input.externalRecipient != externalRecipient.value
+        if (isSuperseded) {
+            discardSupersededQuoteResult()
             return
         }
 
@@ -637,6 +671,47 @@ constructor(
     /** Clears the quote, swap fee, and quote-derived form state without surfacing an error. */
     fun resetQuoteState() {
         resetQuoteState(error = null, cause = null, tag = null)
+    }
+
+    private fun SendSrc.hasSameQuoteEndpointAs(live: SendSrc?): Boolean =
+        live != null &&
+            account.token == live.account.token &&
+            address.chain == live.address.chain &&
+            address.address == live.address.address
+
+    /**
+     * Drops quote state owned by an older request without disturbing the newer quotable request's
+     * spinner or indicative destination estimate. The newer request has already passed through
+     * [startLoadingIfQuotable] / [showIndicativeRate] and is waiting in the debounce, so a full
+     * [resetQuoteState] here would make that active request look idle until its fetch completes.
+     */
+    private fun discardSupersededQuoteResult() {
+        refreshQuoteJob?.cancel()
+        refreshQuoteJob = null
+        quoteState.reset()
+        uiState.update {
+            it.copy(
+                srcFiatValue = "0",
+                quoteDisplay =
+                    it.quoteDisplay.copy(
+                        provider = UiText.Empty,
+                        hasQuote = false,
+                        expiredAt = null,
+                    ),
+                feeBreakdown =
+                    it.feeBreakdown.copy(
+                        fee = "0",
+                        totalFee = "0",
+                        outboundFee = null,
+                        swapFeePercent = null,
+                        priceImpactPercent = null,
+                        priceImpactLevel = null,
+                    ),
+                discountInfo = DiscountInfo(),
+                isSwapDisabled = true,
+                formError = null,
+            )
+        }
     }
 
     private fun resetQuoteState(error: UiText?, cause: Throwable?, tag: String?) {

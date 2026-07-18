@@ -32,6 +32,8 @@ import kotlinx.datetime.Instant
 internal data class QuoteInput(
     val address: Pair<SendSrc, SendSrc>,
     val amount: BigDecimal?,
+    val slippageBps: Int?,
+    val externalRecipient: String?,
     // True when the change should bypass the typing debounce (percentage / Max / paste).
     val immediate: Boolean,
 )
