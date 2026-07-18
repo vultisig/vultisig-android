@@ -223,7 +223,7 @@ object TonHelper {
         signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
         val pubKeyData = vaultHexPublicKey.hexToByteArray()
-        PublicKey(pubKeyData, PublicKeyType.ED25519)
+        val publicKey = PublicKey(pubKeyData, PublicKeyType.ED25519)
         val inputData = getPreSignedInputData(payload)
         val hashes = TransactionCompiler.preImageHashes(CoinType.TON, inputData)
         val preSigningOutput =
@@ -236,6 +236,13 @@ object TonHelper {
         val signature =
             signatures[Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())]
                 ?.getSignature() ?: throw Exception("Signature not found")
+
+        // Verify against the vault key before broadcast, matching every sibling EdDSA helper. The
+        // signature can arrive from the relay (DKLS-family recovery), so gate it cryptographically
+        // rather than trusting the source.
+        if (!publicKey.verify(signature, preSigningOutput.data.toByteArray())) {
+            throw Exception("Invalid signature")
+        }
 
         allSignatures.add(signature)
         publicKeys.add(pubKeyData)
