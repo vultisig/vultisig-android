@@ -176,11 +176,33 @@ internal class DefaultSendStrategy(
                         )
                     }
 
-                    val tokenAmountInt =
-                        tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
-
                     val srcAddress = selectedToken.address
                     val isMaxAmount = tokenAmount.compareTo(amountManager.currentMaxAmount) == 0
+
+                    // "Max" is a one-shot snapshot: it captures the balance and gas fee at tap
+                    // time and never re-clamps if either moves before submit (a cached balance
+                    // correcting downward after network hydration, or EVM gas rising). A stale-high
+                    // snapshot then exceeds what's actually spendable and submit validation rejects
+                    // it as "insufficient" — which is why a max send can force the user to leave
+                    // some tokens behind. Re-derive the amount from the CURRENT balance and fee,
+                    // clamping DOWN only so we never send more than the user saw. Standard sends
+                    // only: DeFi flows (staking/unbond/frozen TRX) carry different balance
+                    // semantics and compute their own max.
+                    val tokenAmountInt =
+                        tokenAmount.movePointRight(selectedToken.decimal).toBigInteger().let {
+                            entered ->
+                            if (isMaxAmount && defiTypeProvider() == null) {
+                                val available =
+                                    getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
+                                if (available != null && available > BigInteger.ZERO) {
+                                    entered.coerceAtMost(available)
+                                } else {
+                                    entered
+                                }
+                            } else {
+                                entered
+                            }
+                        }
 
                     if (chain == Chain.Tron) {
                         val isTronStakingOp =
@@ -337,9 +359,12 @@ internal class DefaultSendStrategy(
                                 )
 
                         if (selectedTokenValue.value < tokenAmountInt) {
+                            // Token gas is paid in the native coin, not this token, so this is a
+                            // pure token-balance shortfall — keep the message free of any "with
+                            // fees" framing that would wrongly suggest reserving tokens for gas.
                             throw InvalidTransactionDataException(
                                 UiText.FormattedText(
-                                    R.string.send_error_insufficient_native_balance_with_fees,
+                                    R.string.send_error_insufficient_token_balance,
                                     listOf(selectedToken.ticker),
                                 )
                             )
