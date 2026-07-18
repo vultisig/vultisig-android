@@ -66,11 +66,44 @@ internal class SwapKitBtcSigner(
         signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
         val signBitcoin = decodeToSignBitcoin(psbtBytes)
+        val pubKeyBytes = derivedPublicKeyBytes()
+        val derSignatureBySighash = signatures.mapValues { it.value.derSignature }
+        verifySignatures(signBitcoin, pubKeyBytes, derSignatureBySighash)
         return compileSignedTransaction(
             signBitcoin = signBitcoin,
-            pubKeyBytes = derivedPublicKeyBytes(),
-            derSignatureBySighash = signatures.mapValues { it.value.derSignature },
+            pubKeyBytes = pubKeyBytes,
+            derSignatureBySighash = derSignatureBySighash,
         )
+    }
+
+    /**
+     * Reject any MPC signature that does not verify against the derived vault pubkey over the
+     * sighash it is keyed by — the same gate [UtxoHelper.getSignedTransaction] applies before it
+     * compiles. These signatures can arrive from the relay (a peer's completed keysign recovered on
+     * failure), so verify them cryptographically here instead of trusting the source: a mismatched
+     * signature is caught locally rather than spliced into a doomed broadcast. Kept out of the pure
+     * [compileSignedTransaction] so its serialization stays headless-testable without WalletCore.
+     */
+    private fun verifySignatures(
+        signBitcoin: SignBitcoin,
+        pubKeyBytes: ByteArray,
+        derSignatureBySighash: Map<String, String>,
+    ) {
+        val publicKey = PublicKey(pubKeyBytes, PublicKeyType.SECP256K1)
+        for (sighash in utxo.computeOurSighashes(signBitcoin)) {
+            val key = Numeric.toHexStringNoPrefix(sighash)
+            val derSignature =
+                derSignatureBySighash[key]
+                    ?: throw SwapKitBtcSignerException(
+                        "Missing signature for sighash ${key.take(16)}…"
+                    )
+            if (!publicKey.verifyAsDER(Numeric.hexStringToByteArray(derSignature), sighash)) {
+                throw SwapKitBtcSignerException(
+                    "SwapKit BTC signature for sighash ${key.take(16)}… does not verify against the " +
+                        "vault key"
+                )
+            }
+        }
     }
 
     /**
