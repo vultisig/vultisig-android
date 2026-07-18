@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.models.swapAssetComparisonName
 import com.vultisig.wallet.data.models.swapProviderFromWireId
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
 import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
@@ -55,6 +56,7 @@ internal class JoinSwapUiModelBuilder
 @Inject
 constructor(
     private val tokenRepository: TokenRepository,
+    private val tokenPriceRepository: TokenPriceRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val feeServiceComposite: FeeServiceComposite,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
@@ -84,6 +86,15 @@ constructor(
         val dstTokenValue = swapPayload.dstTokenValue
 
         val nativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
+
+        // Refresh live prices for the src/dst tokens and the fee token before the fiat
+        // conversions below so a joining co-signer doesn't render a stale-but-nonzero cached rate
+        // (seen on DYDX) that diverges from the initiator. Same rationale as the Send path — see
+        // [refreshVerifyPrices].
+        tokenPriceRepository.refreshVerifyPrices(
+            listOf(srcToken, dstToken, nativeToken),
+            srcToken.chain.id,
+        )
 
         val chain = srcToken.chain
         val blockChainSpecific = payload.blockChainSpecific

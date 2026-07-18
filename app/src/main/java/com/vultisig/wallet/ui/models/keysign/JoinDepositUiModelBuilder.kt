@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
@@ -32,6 +33,7 @@ internal class JoinDepositUiModelBuilder
 @Inject
 constructor(
     private val tokenRepository: TokenRepository,
+    private val tokenPriceRepository: TokenPriceRepository,
     private val vaultRepository: VaultRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val mapDepositTransactionToUiModel: DepositTransactionToUiModelMapper,
@@ -88,6 +90,12 @@ constructor(
             )
 
         val nativeCoin = withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
+
+        // Refresh live prices before the fiat conversion below so a joining co-signer doesn't
+        // render a stale-but-nonzero cached rate (seen on DYDX) that diverges from the initiator.
+        // Same rationale as the Send path — see [refreshVerifyPrices].
+        tokenPriceRepository.refreshVerifyPrices(listOf(payloadToken, nativeCoin), chain.id)
+
         val estimatedTokenFees =
             feeResolver.resolveJoinKeysignNetworkFee(
                 payload = payload,

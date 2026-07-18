@@ -111,21 +111,13 @@ constructor(
 
         val nativeCoin = withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
 
-        // Force a live price refresh for the sent token and the chain's native fee token before
-        // converting to fiat. The initiator prices these from its freshly-refreshed portfolio rate,
-        // while a joining device would otherwise read whatever price is already persisted locally —
-        // `getPrice` only re-fetches when the cached value is exactly zero, so a stale-but-nonzero
-        // cached rate (seen on DYDX) makes the "You're sending" and "Network Fee" fiat totals
-        // differ between devices for identical crypto amounts. Refreshing here pins both devices
-        // to the same shared source (CoinGecko via the payload's priceProviderID) so the fiat
-        // values converge.
-        withContext(Dispatchers.IO) {
-            runCatching { tokenPriceRepository.refresh(listOf(payloadToken, nativeCoin)) }
-                .onFailure {
-                    if (it is CancellationException) throw it
-                    Timber.w(it, "Failed to refresh price for %s", chain.id)
-                }
-        }
+        // Refresh live prices before converting to fiat so a joining device doesn't render a
+        // stale-but-nonzero cached rate (seen on DYDX) that diverges from the initiator. This
+        // narrows — but does not fully close — the gap: the initiator's fiat is frozen at compose
+        // time (DefaultSendStrategy copies the typed amount field verbatim and Verify never
+        // re-prices it), so a price tick between the two devices can still diverge. See
+        // [refreshVerifyPrices] for the timeout/failure handling.
+        tokenPriceRepository.refreshVerifyPrices(listOf(payloadToken, nativeCoin), chain.id)
         // A dApp XRPL tx is signed verbatim, so the fee that is actually paid is the `Fee` baked
         // into its raw JSON — not a live re-estimate. Surface that exact value so an inflated Fee
         // is
