@@ -184,6 +184,7 @@ constructor(
             chainId = coin.chain.id,
             address = address,
             ticker = coin.ticker,
+            contractAddress = coin.contractAddress,
         )
     }
 
@@ -438,7 +439,12 @@ constructor(
 
     private suspend fun getCachedTokenValue(address: String, coin: Coin): TokenValue? =
         tokenValueDao
-            .getTokenValue(chainId = coin.chain.id, address = address, ticker = coin.ticker)
+            .getTokenValue(
+                chainId = coin.chain.id,
+                address = address,
+                ticker = coin.ticker,
+                contractAddress = coin.contractAddress,
+            )
             ?.let {
                 TokenValue(value = it.toBigInteger(), unit = coin.ticker, decimals = coin.decimal)
             }
@@ -585,6 +591,7 @@ constructor(
                         address = address,
                         ticker = coin.ticker,
                         tokenValue = tokenValue.value.toString(),
+                        contractAddress = coin.contractAddress,
                     )
                 )
             }
@@ -623,6 +630,7 @@ constructor(
                         address = address,
                         ticker = coin.ticker,
                         tokenValue = rawBalance.toString(),
+                        contractAddress = coin.contractAddress,
                     )
                 )
 

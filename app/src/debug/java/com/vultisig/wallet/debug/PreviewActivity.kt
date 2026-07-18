@@ -44,7 +44,9 @@ import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
@@ -130,6 +132,9 @@ import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimScreen
 import com.vultisig.wallet.ui.screens.qbtc.QuantumSecurityIntroScreenContent
 import com.vultisig.wallet.ui.screens.referral.ContentRow
 import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
+import com.vultisig.wallet.ui.screens.select.AssetUiModel
+import com.vultisig.wallet.ui.screens.select.SelectAssetScreen
+import com.vultisig.wallet.ui.screens.select.SelectAssetUiModel
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
@@ -217,6 +222,8 @@ class PreviewActivity : ComponentActivity() {
                     "swap_advanced_slippage" -> AdvancedSlippagePreview()
                     "swap_advanced_gas_limit" -> AdvancedGasLimitPreview()
                     "swap_advanced_external_recipient" -> AdvancedExternalRecipientPreview()
+                    "select_asset_secured_before" -> SelectAssetSecuredPreview(showSecured = false)
+                    "select_asset_secured_after" -> SelectAssetSecuredPreview(showSecured = true)
                     "import_seedphrase" -> ImportSeedphrasePreview()
                     "defi_account_list" -> DeFiAccountListPreview()
                     "solana_staking_positions" -> SolanaStakingPositionsLoadedPreview()
@@ -1715,6 +1722,136 @@ private fun SelectChainPopupPreview() {
         itemContent = { item, distanceFromCenter ->
             ChainSelectorPickerItem(item = item, distanceFromCenter = distanceFromCenter)
         },
+    )
+}
+
+private fun securedAssetCoin(ticker: String, contractAddress: String): Coin =
+    Coins.ThorChain.RUNE.copy(
+        ticker = ticker,
+        logo = ticker.lowercase(),
+        contractAddress = contractAddress,
+        isNativeToken = false,
+        decimal = 8,
+    )
+
+/**
+ * Renders the swap destination picker over the swap form. `showSecured = false` reproduces the
+ * pre-fix catalog (no THORChain secured assets); `showSecured = true` adds them with their
+ * "Secured" badge (issue #5251).
+ */
+@Composable
+private fun SelectAssetSecuredPreview(showSecured: Boolean) {
+    SwapScreen(state = SwapFormUiModel(), srcAmountTextFieldState = TextFieldState())
+
+    val heldAssets =
+        listOf(
+            AssetUiModel(
+                token = Coins.ThorChain.RUNE,
+                logo = getCoinLogo(Coins.ThorChain.RUNE.logo),
+                title = "RUNE",
+                subtitle = Chain.ThorChain.raw,
+                amount = "128.42",
+                value = "$591.30",
+            ),
+            AssetUiModel(
+                token = Coins.ThorChain.TCY,
+                logo = getCoinLogo(Coins.ThorChain.TCY.logo),
+                title = "TCY",
+                subtitle = Chain.ThorChain.raw,
+                amount = "40.00",
+                value = "$12.60",
+            ),
+        )
+    val catalogAssets =
+        listOfNotNull(
+            AssetUiModel(
+                token = Coins.ThorChain.RUJI,
+                logo = getCoinLogo(Coins.ThorChain.RUJI.logo),
+                title = "RUJI",
+                subtitle = Chain.ThorChain.raw,
+                amount = "0",
+                value = "0",
+                isDisabled = true,
+            ),
+            securedAssetCoin(ticker = "BTC", contractAddress = "btc-btc")
+                .let { coin ->
+                    AssetUiModel(
+                        token = coin,
+                        logo = getCoinLogo(coin.logo),
+                        title = coin.ticker,
+                        subtitle = Chain.ThorChain.raw,
+                        amount = "0",
+                        value = "0",
+                        isDisabled = true,
+                        isSecuredAsset = true,
+                    )
+                }
+                .takeIf { showSecured },
+            securedAssetCoin(ticker = "ETH", contractAddress = "eth-eth")
+                .let { coin ->
+                    AssetUiModel(
+                        token = coin,
+                        logo = getCoinLogo(coin.logo),
+                        title = coin.ticker,
+                        subtitle = Chain.ThorChain.raw,
+                        amount = "0",
+                        value = "0",
+                        isDisabled = true,
+                        isSecuredAsset = true,
+                    )
+                }
+                .takeIf { showSecured },
+            // Two different chains' USDC both survive as distinct rows (Johnny's P1: same
+            // ticker on different underlying chains must not collide/drop one).
+            securedAssetCoin(
+                    ticker = "USDC",
+                    contractAddress = "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                )
+                .let { coin ->
+                    AssetUiModel(
+                        token = coin,
+                        logo = getCoinLogo(coin.logo),
+                        title = coin.ticker,
+                        subtitle = Chain.ThorChain.raw,
+                        amount = "0",
+                        value = "0",
+                        isDisabled = true,
+                        isSecuredAsset = true,
+                    )
+                }
+                .takeIf { showSecured },
+            securedAssetCoin(
+                    ticker = "USDC",
+                    contractAddress = "avax-usdc-0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e",
+                )
+                .let { coin ->
+                    AssetUiModel(
+                        token = coin,
+                        logo = getCoinLogo(coin.logo),
+                        title = coin.ticker,
+                        subtitle = Chain.ThorChain.raw,
+                        amount = "0",
+                        value = "0",
+                        isDisabled = true,
+                        isSecuredAsset = true,
+                    )
+                }
+                .takeIf { showSecured },
+        )
+
+    SelectAssetScreen(
+        state =
+            SelectAssetUiModel(
+                selectedChain = Chain.ThorChain,
+                chains =
+                    listOf(Chain.ThorChain, Chain.Bitcoin, Chain.Ethereum).map {
+                        it.toNetworkUiModel()
+                    },
+                assets = heldAssets + catalogAssets,
+            ),
+        searchFieldState = TextFieldState(),
+        onAssetClick = {},
+        onSelectChain = {},
     )
 }
 

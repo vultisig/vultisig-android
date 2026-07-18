@@ -79,10 +79,11 @@ constructor(
     private suspend fun saveTokenValueToDatabase(coin: Coin, splTokenData: SplTokenResponse) {
         tokenValueDao.insertTokenValue(
             TokenValueEntity(
-                Chain.Solana.id,
-                coin.address,
-                coin.ticker,
-                splTokenData.amount.toString(),
+                chain = Chain.Solana.id,
+                address = coin.address,
+                ticker = coin.ticker,
+                tokenValue = splTokenData.amount.toString(),
+                contractAddress = coin.contractAddress,
             )
         )
     }
@@ -106,7 +107,9 @@ constructor(
 
     override suspend fun getCachedBalance(coin: Coin): BigInteger {
         return try {
-            tokenValueDao.getTokenValue(Chain.Solana.id, coin.address, coin.ticker)!!.toBigInteger()
+            tokenValueDao
+                .getTokenValue(Chain.Solana.id, coin.address, coin.ticker, coin.contractAddress)!!
+                .toBigInteger()
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "get spl balance error")

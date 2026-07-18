@@ -247,7 +247,9 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
     private fun Coin.toCoinEntity(vaultId: String): CoinEntity =
         CoinEntity(
             vaultId = vaultId,
-            id = "${this.ticker}-${this.chain.raw}",
+            // Coin.id is the single source of truth (contract-qualified for secured assets) —
+            // reconstructing it manually here previously diverged from it silently.
+            id = this.id,
             chain = this.chain.raw,
             ticker = this.ticker,
             address = this.address,
