@@ -30,7 +30,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.ImageModel
-import com.vultisig.wallet.data.models.catalogKey
 import com.vultisig.wallet.data.models.securedAssetChain
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiGradientDivider
@@ -91,8 +90,7 @@ internal fun SelectAssetScreen(
                 }
             } else {
                 LazyColumn(contentPadding = PaddingValues(all = 16.dp)) {
-                    itemsIndexed(assets, key = { _, item -> item.token.catalogKey }) { index, item
-                        ->
+                    itemsIndexed(assets, key = { _, item -> item.token.id }) { index, item ->
                         val isFirst = index == 0
                         val isLast = index == assets.size - 1
                         val rounding = 12.dp

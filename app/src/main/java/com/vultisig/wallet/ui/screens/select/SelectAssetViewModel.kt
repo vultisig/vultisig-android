@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
-import com.vultisig.wallet.data.models.catalogKey
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isLpToken
 import com.vultisig.wallet.data.models.isSecuredAsset
@@ -159,14 +158,11 @@ constructor(
                                     )
                                 }
 
-                        // catalogKey (not id) so a not-yet-held secured asset isn't wrongly hidden
-                        // as "already held" by a different held asset sharing its ticker (e.g.
-                        // held ETH.USDC must not suppress catalog AVAX.USDC).
-                        val heldCatalogKeys = filteredAssets.map { it.token.catalogKey }.toSet()
+                        val filteredTokenIds = filteredAssets.map { it.token.id }.toSet()
                         val additionalAssets =
                             allTokens.filter {
                                 it.token.id.contains(query, ignoreCase = true) &&
-                                    it.token.catalogKey !in heldCatalogKeys
+                                    it.token.id !in filteredTokenIds
                             }
 
                         filteredAssets + additionalAssets
@@ -177,7 +173,14 @@ constructor(
         }
     }
 
+    private var isSelecting = false
+
     fun selectAsset(asset: AssetUiModel) {
+        // Guards against a double-tap on two rows (realistically possible now that same-ticker
+        // secured assets can be co-visible) firing two concurrent enable+respond calls before the
+        // first completes.
+        if (isSelecting) return
+        isSelecting = true
         viewModelScope.launch {
             val isDisabled = asset.isDisabled
             if (isDisabled) {

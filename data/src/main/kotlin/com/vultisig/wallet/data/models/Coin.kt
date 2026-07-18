@@ -17,8 +17,19 @@ data class Coin(
     val isNativeToken: Boolean,
     val usdPrice: BigDecimal? = null,
 ) {
+    /**
+     * Identity used for persistence (the [com.vultisig.wallet.data.db.models.CoinEntity] primary
+     * key), account resolution, and list/dedup keys throughout the app. THORChain secured assets
+     * are contract-qualified because different underlying chains can share a ticker (e.g. both
+     * `ETH.USDC` and `AVAX.USDC` have ticker `USDC`) — without it, two such assets would collide on
+     * this id, so enabling the second would silently overwrite the first's persisted row (Room's
+     * coin insert is REPLACE-on-conflict) and picker/account lookups keyed on id would resolve to
+     * whichever one happens to come first. Every other coin type keeps the plain `ticker-chainId`
+     * form unchanged.
+     */
     val id: TokenId
-        get() = "${ticker}-${chain.id}"
+        get() =
+            if (isSecuredAsset()) "$ticker-${chain.id}-$contractAddress" else "$ticker-${chain.id}"
 
     val coinType: CoinType
         get() = chain.coinType
@@ -78,15 +89,6 @@ fun Coin.isSecuredAsset(): Boolean {
     val parts = contractAddress.split("-", limit = 2)
     return parts.size == 2 && parts[0].isNotBlank() && parts[1].isNotBlank()
 }
-
-/**
- * A dedup/list-key identity, distinct from the persisted [Coin.id]. Secured assets on different
- * underlying chains can share a ticker (e.g. `ETH.USDC` and `AVAX.USDC` both have ticker `USDC`),
- * which would otherwise collide on `id` (always `<ticker>-thorchain`) and silently drop one from
- * catalogs/lists keyed on it.
- */
-val Coin.catalogKey: String
-    get() = if (isSecuredAsset()) "$id-$contractAddress" else id
 
 /** Returns true if this coin can be deposited into THORChain as a SECURE+ asset. */
 fun Coin.isSecuredAssetEligible(): Boolean {

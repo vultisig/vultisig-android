@@ -166,10 +166,15 @@ constructor(
         uiState: MutableStateFlow<SwapFormUiModel>,
         isSelectionQuotable: (Coin) -> Boolean,
     ) {
+        // A fresh id per visit (matching selectNetwork/selectNetworkPopup) — targetArg is a fixed
+        // constant shared by every source/destination pick, so using it directly as the requestId
+        // let a response buffered by RequestResultRepository (e.g. from a stale/racing selection)
+        // leak into a later, unrelated visit and silently resolve it.
+        val requestId = Uuid.random().toString()
         navigator.route(
             Route.SelectAsset(
                 vaultId = vaultId,
-                requestId = targetArg,
+                requestId = requestId,
                 preselectedNetworkId =
                     (when (targetArg) {
                             ARG_SELECTED_SRC_TOKEN_ID -> selectedSrc?.address?.chain
@@ -181,6 +186,7 @@ constructor(
             )
         )
         checkTokenSelectionResponse(
+            requestId,
             targetArg,
             vaultId,
             selectedSrc,
@@ -193,6 +199,7 @@ constructor(
     }
 
     private suspend fun checkTokenSelectionResponse(
+        requestId: String,
         targetArg: String,
         vaultId: String,
         selectedSrc: SendSrc?,
@@ -202,7 +209,7 @@ constructor(
         uiState: MutableStateFlow<SwapFormUiModel>,
         isSelectionQuotable: (Coin) -> Boolean,
     ) {
-        val result = requestResultRepository.request<AssetSelected>(targetArg) ?: return
+        val result = requestResultRepository.request<AssetSelected>(requestId) ?: return
 
         if (targetArg == ARG_SELECTED_DST_TOKEN_ID) {
             val srcToken = selectedSrc?.account?.token
