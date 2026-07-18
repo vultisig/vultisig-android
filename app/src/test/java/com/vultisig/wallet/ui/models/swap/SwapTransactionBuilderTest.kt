@@ -765,6 +765,60 @@ internal class SwapTransactionBuilderTest {
     }
 
     @Test
+    fun `falls back to the gas-pass pair when the estimate token is positive but its fiat is null`() =
+        runTest {
+            val srcToken =
+                coin(Chain.Ethereum, "USDC", "0xsrc", 6, isNative = false, contract = "0xtoken")
+            val dstToken = coin(Chain.Ethereum, "ETH", "0xdst", 18, isNative = true)
+            val nativeEth = coin(Chain.Ethereum, "ETH", "0xsrc", 18, isNative = true)
+            coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+                ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(10))
+            val tx0 =
+                OneInchSwapTxJson(
+                    from = "0xsrc",
+                    to = "0xrouter",
+                    allowanceTarget = "0xproxy",
+                    gas = 21_000,
+                    data = "0xdata",
+                    value = "0",
+                    gasPrice = "1",
+                )
+            val quote =
+                SwapQuote.OneInch(
+                    expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
+                    fees = TokenValue(BigInteger.valueOf(9), dstToken),
+                    expiredAt = Clock.System.now(),
+                    data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
+                    provider = "1inch",
+                )
+
+            val tx =
+                builder.build(
+                    vaultId = "vault-null-fiat-estimate",
+                    srcToken = srcToken,
+                    dstToken = dstToken,
+                    srcAddress = "0xsrc",
+                    srcTokenValue = TokenValue(BigInteger.valueOf(1_000), srcToken),
+                    quote = quote,
+                    gasFee = TokenValue(BigInteger.valueOf(1_000_000), nativeEth),
+                    gasFeeFiatValue = FiatValue(BigDecimal("3.00"), "USD"),
+                    // Token estimate is positive but its fiat estimate is null: the two must be
+                    // used as an atomic pair, so the re-price falls back to the gas-pass pair
+                    // instead of dividing gas-pass fiat by the unrelated estimate token fee.
+                    estimatedNetworkFeeTokenValue =
+                        TokenValue(BigInteger.valueOf(2_000_000), nativeEth),
+                    estimatedNetworkFeeFiatValue = null,
+                    gasLimitOverride = null,
+                )
+
+            // Display limit floors to 600k: 600_000 × 10 = 6_000_000 wei; re-valued via the
+            // gas-pass pair (3.00 ÷ 1_000_000): 3.00 × 6_000_000 / 1_000_000 = 18.00. The unmatched
+            // estimate pair would wrongly give 3.00 × 6_000_000 / 2_000_000 = 9.00.
+            assertEquals(BigInteger.valueOf(6_000_000), tx.gasFees.value)
+            assertEquals(0, tx.gasFeeFiatValue.value.compareTo(BigDecimal("18.00")))
+        }
+
+    @Test
     fun `stamps the external recipient on the built transaction for verify-screen surfacing`() =
         runTest {
             val srcToken = coin(Chain.Bitcoin, "BTC", "bc1qsrc", 8, isNative = true)

@@ -361,12 +361,14 @@ constructor(
     ): Pair<TokenValue, FiatValue> {
         // Use the route-gas estimate when it is a real positive value, else fall back to the
         // gas-pass baseline — a non-null zero estimate must not suppress the re-price (it would
-        // also make repriceFee divide by zero).
-        val estimate = estimatedNetworkFeeTokenValue?.takeIf { it.value.signum() > 0 }
-        val referenceFee = estimate ?: gasFee
-        val referenceFiat =
-            if (estimate != null) estimatedNetworkFeeFiatValue ?: gasFeeFiatValue
-            else gasFeeFiatValue
+        // also make repriceFee divide by zero). Take token and fiat as an atomic pair: a positive
+        // token estimate with a null fiat estimate must NOT reprice gas-pass fiat against the
+        // unrelated estimate token fee, so require both estimate values before using them.
+        val estimatePair =
+            estimatedNetworkFeeTokenValue
+                ?.takeIf { it.value.signum() > 0 }
+                ?.let { fee -> estimatedNetworkFeeFiatValue?.let { fiat -> fee to fiat } }
+        val (referenceFee, referenceFiat) = estimatePair ?: (gasFee to gasFeeFiatValue)
         if (specific !is BlockChainSpecific.Ethereum || referenceFee.value.signum() <= 0) {
             return referenceFee to referenceFiat
         }
