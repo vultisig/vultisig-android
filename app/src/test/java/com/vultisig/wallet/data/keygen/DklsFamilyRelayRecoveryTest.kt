@@ -5,9 +5,9 @@ import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.mediator.Message
 import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.Vault
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldContain
 import io.mockk.mockk
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -151,13 +151,9 @@ class DklsFamilyRelayRecoveryTest {
                 encryption = mockk(relaxed = true),
             )
 
-        assertFailsWith<RuntimeException> { keysign.keysignWithRetry() }
+        shouldThrow<RuntimeException> { keysign.keysignWithRetry() }
 
-        assertTrue(
-            expectedMsgHash in sessionApi.completionLookups,
-            "expected the relay to be queried with msgHash=$expectedMsgHash, " +
-                "but lookups were ${sessionApi.completionLookups}",
-        )
+        sessionApi.completionLookups shouldContain expectedMsgHash
     }
 
     @Test
@@ -176,13 +172,9 @@ class DklsFamilyRelayRecoveryTest {
                 encryption = mockk(relaxed = true),
             )
 
-        assertFailsWith<RuntimeException> { keysign.keysignWithRetry() }
+        shouldThrow<RuntimeException> { keysign.keysignWithRetry() }
 
-        assertTrue(
-            expectedMsgHash in sessionApi.completionLookups,
-            "expected the relay to be queried with msgHash=$expectedMsgHash, " +
-                "but lookups were ${sessionApi.completionLookups}",
-        )
+        sessionApi.completionLookups shouldContain expectedMsgHash
     }
 
     @Test
@@ -201,12 +193,8 @@ class DklsFamilyRelayRecoveryTest {
                 encryption = mockk(relaxed = true),
             )
 
-        assertFailsWith<RuntimeException> { keysign.keysignWithRetry() }
+        shouldThrow<RuntimeException> { keysign.keysignWithRetry() }
 
-        assertTrue(
-            expectedMsgHash in sessionApi.completionLookups,
-            "expected the relay to be queried with msgHash=$expectedMsgHash, " +
-                "but lookups were ${sessionApi.completionLookups}",
-        )
+        sessionApi.completionLookups shouldContain expectedMsgHash
     }
 }
