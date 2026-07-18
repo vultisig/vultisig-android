@@ -469,6 +469,59 @@ internal class SwapTransactionBuilderTest {
         }
 
     @Test
+    fun `values the OneInch swap fee off the stamped gas params for cross-device parity`() =
+        runTest {
+            val srcToken =
+                coin(Chain.Ethereum, "USDC", "0xsrc", 6, isNative = false, contract = "0xtoken")
+            val dstToken = coin(Chain.Ethereum, "ETH", "0xdst", 18, isNative = true)
+            coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+                ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(100))
+            val tx0 =
+                OneInchSwapTxJson(
+                    from = "0xsrc",
+                    to = "0xrouter",
+                    allowanceTarget = "0xproxy",
+                    gas = 21_000,
+                    data = "0xdata",
+                    value = "0",
+                    gasPrice = "1",
+                )
+            val quote =
+                SwapQuote.OneInch(
+                    // 1inch's original quoted gasPrice × gas, stamped by the manager as the
+                    // "Swap Fee" placeholder; the initiator overwrites tx.gasPrice/gas below.
+                    expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
+                    fees = TokenValue(BigInteger.valueOf(21_000), srcToken),
+                    expiredAt = Clock.System.now(),
+                    data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
+                    provider = "1inch",
+                )
+
+            val tx =
+                builder.build(
+                    vaultId = "vault-swap-fee-parity",
+                    srcToken = srcToken,
+                    dstToken = dstToken,
+                    srcAddress = "0xsrc",
+                    srcTokenValue = TokenValue(BigInteger.valueOf(1_000), srcToken),
+                    quote = quote,
+                    gasFee = TokenValue(BigInteger.valueOf(1_000_000), srcToken),
+                    gasFeeFiatValue = FiatValue(BigDecimal("1.00"), "USD"),
+                    estimatedNetworkFeeTokenValue = null,
+                    estimatedNetworkFeeFiatValue = null,
+                )
+
+            // The joiner re-derives the Swap Fee from the signed tx's gasPrice × gas
+            // (maxFeePerGasWei 100 × the stamped 21_000 gas limit = 2_100_000), so the initiator
+            // must value its Swap Fee off the same stamped params rather than 1inch's original
+            // 21_000 placeholder (#5329).
+            val payload = assertIs<SwapPayload.EVM>(tx.payload)
+            assertEquals("100", payload.data.quote.tx.gasPrice)
+            assertEquals(21_000L, payload.data.quote.tx.gas)
+            assertEquals(BigInteger.valueOf(2_100_000), tx.estimatedFees.value)
+        }
+
+    @Test
     fun `builds OneInch swap keeping the quote gas limit on Mantle`() = runTest {
         val srcToken =
             coin(Chain.Mantle, "USDC", "0xsrc", 6, isNative = false, contract = "0xtoken")

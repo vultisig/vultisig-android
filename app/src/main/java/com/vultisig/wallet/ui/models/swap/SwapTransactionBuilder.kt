@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapTransaction.RegularSwapTransaction
 import com.vultisig.wallet.data.models.THORChainSwapPayload
@@ -13,6 +14,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.models.swapProviderFromWireId
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import java.math.BigInteger
@@ -303,6 +305,23 @@ constructor(
                     } else {
                         quote.data
                     }
+                // A literal 1inch quote carries no affiliate fee, so `quote.fees` is 1inch's own
+                // quoted `gasPrice × gas` shown as the "Swap Fee". The joiner re-derives that same
+                // placeholder from the signed tx's `gasPrice × gas` (JoinSwapUiModelBuilder's
+                // `else`
+                // branch), which is the `maxFeePerGasWei`/`gasLimit` stamped just above — not the
+                // original quote values. Value the initiator's Swap Fee off the same stamped params
+                // so both co-signers show the same figure instead of diverging (#5329). Other
+                // providers routed through this branch (LI.FI / Kyber / SwapKit) carry a real fee
+                // the joiner reads via its own branches, so their `quote.fees` is left untouched.
+                val isLiteralOneInch =
+                    swapProviderFromWireId(quote.provider) == SwapProvider.ONEINCH
+                val estimatedFees =
+                    if (isLiteralOneInch && specific is BlockChainSpecific.Ethereum) {
+                        quote.fees.copy(value = specific.maxFeePerGasWei * gasLimit.toBigInteger())
+                    } else {
+                        quote.fees
+                    }
 
                 RegularSwapTransaction(
                     id = UUID.randomUUID().toString(),
@@ -314,7 +333,7 @@ constructor(
                     approveSpender = approveSpender,
                     expectedDstTokenValue = dstTokenValue,
                     blockChainSpecific = effectiveSpecificAndUtxo,
-                    estimatedFees = quote.fees,
+                    estimatedFees = estimatedFees,
                     gasFees = displayGasFees,
                     memo = null,
                     isApprovalRequired = isApprovalRequired,
