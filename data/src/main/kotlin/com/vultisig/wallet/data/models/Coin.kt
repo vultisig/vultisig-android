@@ -158,21 +158,30 @@ private fun Coin.thorChainSecuredAssetSwapName(): String {
 }
 
 /**
+ * True when this secured asset's underlying chain (per [securedAssetChain]) uses the EVM standard.
+ * Reuses [Chain.swapAssetName] — the same chain-code table the native-coin comparison side is built
+ * from — so the two sides of [swapAssetComparisonName] stay in sync.
+ */
+private fun Coin.securedAssetUnderlyingIsEvm(): Boolean {
+    val chainCode = securedAssetChain()
+    return Chain.entries.any { it.standard == TokenStandard.EVM && it.swapAssetName() == chainCode }
+}
+
+/**
  * Normalizes this coin's asset name for same-asset identity comparisons (e.g. guarding against
  * swapping a native L1 asset into its own THORChain-secured form). Uses the dot-normalized Thornode
  * form ([thorChainSecuredAssetSwapName]) for THORChain secured assets rather than [swapAssetName]'s
  * raw wire value, so a secured coin's identity matches its native-chain counterpart's (e.g.
  * "eth.usdc-0xa0b8..." on both sides). EVM contract addresses are lowercased to handle EIP-55
- * checksum-casing differences from QR payloads; THORChain secured assets are also lowercased so the
- * THORChain side (`THORCHAIN` standard) matches its native EVM counterpart. Other non-EVM chains
- * (e.g. Cosmos ibc/, Kujira factory/) use case-sensitive canonical forms as returned by the
- * THORChain API and are not altered.
+ * checksum-casing differences from QR payloads; a THORChain secured asset is also lowercased only
+ * when its underlying chain is EVM, so it matches that EVM counterpart. Non-EVM secured assets
+ * (BTC, LTC, ...) and other non-EVM chains (e.g. Cosmos ibc/, Kujira factory/) use case-sensitive
+ * canonical forms as returned by the THORChain API and are not altered.
  */
 fun Coin.swapAssetComparisonName(): String {
-    val name =
-        if (chain == Chain.ThorChain && isSecuredAsset()) thorChainSecuredAssetSwapName()
-        else swapAssetName()
+    val isSecured = chain == Chain.ThorChain && isSecuredAsset()
+    val name = if (isSecured) thorChainSecuredAssetSwapName() else swapAssetName()
     val needsLowercase =
-        chain.standard == TokenStandard.EVM || (chain == Chain.ThorChain && isSecuredAsset())
+        chain.standard == TokenStandard.EVM || (isSecured && securedAssetUnderlyingIsEvm())
     return if (needsLowercase) name.lowercase() else name
 }

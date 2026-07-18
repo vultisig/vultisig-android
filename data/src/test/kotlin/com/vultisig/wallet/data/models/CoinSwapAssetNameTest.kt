@@ -196,4 +196,19 @@ class CoinSwapAssetNameTest {
             )
         assertEquals(thorSide.swapAssetComparisonName(), ethSide.swapAssetComparisonName())
     }
+
+    @Test
+    fun `ThorChain secured BTC keeps canonical case, not lowercased`() {
+        // BTC's underlying chain is UTXO, not EVM — lowercasing it (as EVM secured assets are)
+        // would desync it from native BTC's uppercase comparison name below.
+        val c = coin(Chain.ThorChain, "BTC", "btc-btc", isNativeToken = false)
+        assertEquals("BTC.BTC", c.swapAssetComparisonName())
+    }
+
+    @Test
+    fun `ThorChain secured BTC and its native Bitcoin counterpart compare equal`() {
+        val thorSide = coin(Chain.ThorChain, "BTC", "btc-btc", isNativeToken = false)
+        val btcSide = coin(Chain.Bitcoin, "BTC", "", isNativeToken = true)
+        assertEquals(thorSide.swapAssetComparisonName(), btcSide.swapAssetComparisonName())
+    }
 }
