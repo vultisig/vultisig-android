@@ -151,7 +151,7 @@ class BittensorApiBodyReadTest {
                 .trimIndent()
         val api = newApi(body)
 
-        assertThrows<Exception> { api.broadcastTransaction(tx = "0x01") }
+        assertThrows<SubstrateBroadcastException> { api.broadcastTransaction(tx = "0x01") }
     }
 
     @Test
@@ -196,6 +196,6 @@ class BittensorApiBodyReadTest {
                     .trimIndent()
             val api = newApi(body)
 
-            assertThrows<Exception> { api.broadcastTransaction(tx = "0x01") }
+            assertThrows<SubstrateBroadcastException> { api.broadcastTransaction(tx = "0x01") }
         }
 }

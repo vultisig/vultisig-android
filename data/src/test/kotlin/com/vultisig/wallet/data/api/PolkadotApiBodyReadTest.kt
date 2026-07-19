@@ -5,7 +5,7 @@ import com.vultisig.wallet.data.utils.BigIntegerSerializerImpl
 import io.ktor.client.HttpClient
 import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
@@ -49,7 +49,7 @@ class PolkadotApiBodyReadTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `getNonce returns parsed BigInteger result`() = runBlocking {
+    fun `getNonce returns parsed BigInteger result`() = runTest {
         val body =
             """
             {
@@ -71,7 +71,7 @@ class PolkadotApiBodyReadTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `getBlockHash returns hash string`() = runBlocking {
+    fun `getBlockHash returns hash string`() = runTest {
         val body =
             """
             {
@@ -94,7 +94,7 @@ class PolkadotApiBodyReadTest {
 
     @Test
     fun `getRuntimeVersion returns specVersion and transactionVersion as BigInteger pair`() =
-        runBlocking {
+        runTest {
             val body =
                 """
             {
@@ -120,7 +120,7 @@ class PolkadotApiBodyReadTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `getBlockHeader parses hex block number and returns BigInteger`() = runBlocking {
+    fun `getBlockHeader parses hex block number and returns BigInteger`() = runTest {
         // "0x186a0" = 100000 decimal
         val body =
             """
@@ -145,7 +145,7 @@ class PolkadotApiBodyReadTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `broadcastTransaction returns result hash when error is absent`() = runBlocking {
+    fun `broadcastTransaction returns result hash when error is absent`() = runTest {
         val body =
             """
             {
@@ -163,10 +163,9 @@ class PolkadotApiBodyReadTest {
     }
 
     @Test
-    fun `broadcastTransaction returns null when error code is 1013 already imported`() =
-        runBlocking {
-            val body =
-                """
+    fun `broadcastTransaction returns null when error code is 1013 already imported`() = runTest {
+        val body =
+            """
             {
               "jsonrpc": "2.0",
               "error": {
@@ -177,16 +176,16 @@ class PolkadotApiBodyReadTest {
               "id": 1
             }
             """
-                    .trimIndent()
-            val api = newApiWith(clientForPlainJson(body))
+                .trimIndent()
+        val api = newApiWith(clientForPlainJson(body))
 
-            val result = api.broadcastTransaction(tx = "0x01")
+        val result = api.broadcastTransaction(tx = "0x01")
 
-            assertNull(result)
-        }
+        assertNull(result)
+    }
 
     @Test
-    fun `broadcastTransaction throws on temporarily-banned code 1012`() {
+    fun `broadcastTransaction throws on temporarily-banned code 1012`() = runTest {
         // 1012 is TemporarilyBanned, not AlreadyImported: a banned tx is retriable/potentially
         // invalid and must throw so the caller verifies on-chain rather than fabricating success.
         val body =
@@ -204,12 +203,12 @@ class PolkadotApiBodyReadTest {
                 .trimIndent()
         val api = newApiWith(clientForPlainJson(body))
 
-        assertThrows<Exception> { runBlocking { api.broadcastTransaction(tx = "0x01") } }
+        assertThrows<SubstrateBroadcastException> { api.broadcastTransaction(tx = "0x01") }
     }
 
     @Test
     fun `broadcastTransaction resolves duplicate to null on a non-2xx idempotent response`() =
-        runBlocking {
+        runTest {
             // Nodes may surface the idempotent 1013 error with a non-2xx status;
             // broadcastTransaction
             // reads the body regardless of status and must still resolve the duplicate to null.
@@ -232,25 +231,27 @@ class PolkadotApiBodyReadTest {
         }
 
     @Test
-    fun `broadcastTransaction throws on a truncated body with neither result nor error`() {
-        // Under production explicitNulls=false a body missing both fields decodes to (null, null);
-        // it must not be reported as a successful broadcast.
-        val body =
-            """
+    fun `broadcastTransaction throws on a truncated body with neither result nor error`() =
+        runTest {
+            // Under production explicitNulls=false a body missing both fields decodes to (null,
+            // null);
+            // it must not be reported as a successful broadcast.
+            val body =
+                """
             {
               "jsonrpc": "2.0",
               "id": 1
             }
             """
-                .trimIndent()
-        val api = newApiWith(clientForPlainJson(body))
+                    .trimIndent()
+            val api = newApiWith(clientForPlainJson(body))
 
-        assertThrows<Exception> { runBlocking { api.broadcastTransaction(tx = "0x01") } }
-    }
+            assertThrows<SubstrateBroadcastException> { api.broadcastTransaction(tx = "0x01") }
+        }
 
     @Test
     fun `broadcastTransaction resolves duplicate to null via case-insensitive message fallback`() =
-        runBlocking {
+        runTest {
             // A proxy that normalizes the numeric code away but preserves the message must still be
             // recognized as an idempotent duplicate.
             val body =
