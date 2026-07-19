@@ -188,6 +188,7 @@ class PreviewActivity : ComponentActivity() {
             OnBoardingComposeTheme {
                 when (screen) {
                     "swap_confirm" -> SwapConfirmPreview()
+                    "swap_confirm_chain" -> SwapChainIndicatorPreview()
                     "swap_confirm_disabled" -> SwapConfirmPreview(allConsents = false)
                     "swap_confirm_external_recipient" ->
                         SwapConfirmPreview(
@@ -692,6 +693,48 @@ private fun SwapConfirmPreview(allConsents: Boolean = true, externalRecipient: S
                             recommendations = "",
                         )
                     ),
+                vaultName = "Main Vault",
+            ),
+        hasToolbar = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onBackClick = {},
+    )
+}
+
+/**
+ * Swap overview with a native From asset (BTC) and a token To asset (USDC on Ethereum). Before the
+ * fix the From row omits the "on <chain>" indicator that the To row shows; after the fix both rows
+ * render it, so the two sides communicate their chain consistently.
+ */
+@Composable
+private fun SwapChainIndicatorPreview() {
+    val btcCoin = Coins.Bitcoin.BTC
+    val usdcCoin = Coins.Ethereum.USDC
+    val ethCoin = Coins.Ethereum.ETH
+
+    val tx =
+        SwapTransactionUiModel(
+            src = ValuedToken(token = btcCoin, value = "0.05", fiatValue = "$3,820.00"),
+            dst = ValuedToken(token = usdcCoin, value = "3,810.42", fiatValue = "$3,810.42"),
+            networkFee = ValuedToken(token = ethCoin, value = "0.0024", fiatValue = "$6.15"),
+            providerFee = ValuedToken(token = ethCoin, value = "0.0045", fiatValue = "$11.52"),
+            totalFee = "$17.67",
+            networkFeeFormatted = "0.0024 ETH ($6.15)",
+            providerFeeFormatted = "0.0045 ETH ($11.52)",
+            hasConsentAllowance = false,
+        )
+
+    VerifySwapScreen(
+        state =
+            VerifySwapUiModel(
+                tx = tx,
+                consentAmount = true,
+                consentReceiveAmount = true,
+                consentAllowance = false,
+                hasFastSign = true,
+                txScanStatus = TransactionScanStatus.NotStarted,
                 vaultName = "Main Vault",
             ),
         hasToolbar = true,
