@@ -178,16 +178,7 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
         // Read the RPC body regardless of HTTP status: nodes may surface the idempotent
         // "already in pool" errors (1012/1013) with a non-2xx status, and the duplicate
         // rebroadcast from a second signing device must still resolve to null rather than throw.
-        val responseContent = response.body<PolkadotBroadcastTransactionJson>()
-        if (responseContent.error != null) {
-            if (responseContent.error.code == 1012 || responseContent.error.code == 1013) {
-                return null
-            }
-            throw Exception(
-                "Error broadcasting transaction: ${responseContent.error.data ?: responseContent.error.message}"
-            )
-        }
-        return responseContent.result
+        return SubstrateBroadcast.classify(response.body<PolkadotBroadcastTransactionJson>())
     }
 
     override suspend fun getPartialFee(tx: String): BigInteger {
