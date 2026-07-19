@@ -45,7 +45,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.getProviderLogo
-import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.swapAssetName
@@ -384,7 +383,9 @@ internal fun SwapToken(
 ) {
     val token = valuedToken.token
     val value = valuedToken.value
-    val shouldShowOnChainLogo = isSwap && (!token.isNativeToken || token.chain.isLayer2)
+    // Show the "on <chain>" indicator on both swap rows so the From and To sides communicate
+    // their chain consistently — including native assets on their own L1.
+    val shouldShowOnChainLogo = isSwap
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
