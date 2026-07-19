@@ -117,7 +117,7 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {
-        // Broadcast stays manual due to error-field check
+        // Result/error interpretation is delegated to the shared SubstrateBroadcast classifier.
         val payload =
             RpcPayload(
                 jsonrpc = "2.0",

@@ -163,14 +163,14 @@ class PolkadotApiBodyReadTest {
     }
 
     @Test
-    fun `broadcastTransaction returns null when error code is 1012 already imported`() =
+    fun `broadcastTransaction returns null when error code is 1013 already imported`() =
         runBlocking {
             val body =
                 """
             {
               "jsonrpc": "2.0",
               "error": {
-                "code": 1012,
+                "code": 1013,
                 "message": "Already Imported",
                 "data": null
               },
@@ -183,6 +183,52 @@ class PolkadotApiBodyReadTest {
             val result = api.broadcastTransaction(tx = "0x01")
 
             assertNull(result)
+        }
+
+    @Test
+    fun `broadcastTransaction throws on temporarily-banned code 1012`() {
+        // 1012 is TemporarilyBanned, not AlreadyImported: a banned tx is retriable/potentially
+        // invalid and must throw so the caller verifies on-chain rather than fabricating success.
+        val body =
+            """
+            {
+              "jsonrpc": "2.0",
+              "error": {
+                "code": 1012,
+                "message": "Transaction is temporarily banned",
+                "data": null
+              },
+              "id": 1
+            }
+            """
+                .trimIndent()
+        val api = newApiWith(clientForPlainJson(body))
+
+        assertThrows<Exception> { runBlocking { api.broadcastTransaction(tx = "0x01") } }
+    }
+
+    @Test
+    fun `broadcastTransaction resolves duplicate to null on a non-2xx idempotent response`() =
+        runBlocking {
+            // Nodes may surface the idempotent 1013 error with a non-2xx status;
+            // broadcastTransaction
+            // reads the body regardless of status and must still resolve the duplicate to null.
+            val body =
+                """
+            {
+              "jsonrpc": "2.0",
+              "error": {
+                "code": 1013,
+                "message": "Transaction is already imported",
+                "data": null
+              },
+              "id": 1
+            }
+            """
+                    .trimIndent()
+            val api = newApiWith(MockHttpClient.respondingWith(HttpStatusCode.BadRequest, body))
+
+            assertNull(api.broadcastTransaction(tx = "0x01"))
         }
 
     @Test

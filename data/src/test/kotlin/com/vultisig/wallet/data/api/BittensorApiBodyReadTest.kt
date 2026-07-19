@@ -111,16 +111,16 @@ class BittensorApiBodyReadTest {
         }
 
     @Test
-    fun `broadcastTransaction resolves duplicate to null via numeric code 1012`() = runTest {
+    fun `broadcastTransaction resolves duplicate to null via numeric code 1013`() = runTest {
         // Bittensor previously matched only the case-sensitive "Already Imported" string and
-        // ignored the numeric code on the wire; the shared classifier now recognizes 1012/1013 too.
+        // ignored the numeric code on the wire; the shared classifier now recognizes code 1013.
         val body =
             """
             {
               "jsonrpc": "2.0",
               "error": {
-                "code": 1012,
-                "message": "Priority is too low",
+                "code": 1013,
+                "message": "Transaction is already imported",
                 "data": null
               },
               "id": 1
@@ -133,9 +133,59 @@ class BittensorApiBodyReadTest {
     }
 
     @Test
+    fun `broadcastTransaction throws on temporarily-banned code 1012`() = runTest {
+        // 1012 is TemporarilyBanned, not a harmless duplicate: it must throw so the caller verifies
+        // on-chain rather than fabricating a success hash.
+        val body =
+            """
+            {
+              "jsonrpc": "2.0",
+              "error": {
+                "code": 1012,
+                "message": "Transaction is temporarily banned",
+                "data": null
+              },
+              "id": 1
+            }
+            """
+                .trimIndent()
+        val api = newApi(body)
+
+        assertThrows<Exception> { api.broadcastTransaction(tx = "0x01") }
+    }
+
+    @Test
+    fun `broadcastTransaction resolves duplicate to null on a non-2xx idempotent response`() =
+        runTest {
+            // The relay may surface the idempotent "already imported" error with a non-2xx HTTP
+            // status; broadcastTransaction reads the body regardless of status and must still
+            // resolve the duplicate rebroadcast to null rather than throw.
+            val body =
+                """
+                {
+                  "jsonrpc": "2.0",
+                  "error": {
+                    "code": 1013,
+                    "message": "Transaction is already imported",
+                    "data": null
+                  },
+                  "id": 1
+                }
+                """
+                    .trimIndent()
+            val api =
+                BittensorApiImp(
+                    httpClient = MockHttpClient.respondingWith(HttpStatusCode.BadRequest, body)
+                )
+
+            assertNull(api.broadcastTransaction(tx = "0x01"))
+        }
+
+    @Test
     fun `broadcastTransaction throws on a truncated body with neither result nor error`() =
         runTest {
-            // (null, null) under explicitNulls=false must not be reported as a successful broadcast.
+            // (null, null) under explicitNulls=false must not be reported as a successful
+            // broadcast.
             val body =
                 """
             {

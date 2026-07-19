@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
+import com.vultisig.wallet.data.api.SubstrateBroadcastException
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
@@ -337,6 +338,73 @@ class BroadcastTxUseCaseTest {
         assertEquals(KNOWN_TRANSACTION_HASH, txHash)
     }
 
+    @Test
+    fun `bittensor uses broadcast hash when the extrinsic is accepted`() = runTest {
+        val bittensorApi = mockk<BittensorApi>()
+        coEvery { bittensorApi.broadcastTransaction(RAW_TRANSACTION) } returns BROADCAST_HASH
+
+        val txHash =
+            createUseCase(bittensorApi = bittensorApi)(Chain.Bittensor, signedTransaction())
+
+        assertEquals(BROADCAST_HASH, txHash)
+    }
+
+    @Test
+    fun `bittensor falls back to known hash on an idempotent duplicate rebroadcast`() = runTest {
+        val bittensorApi = mockk<BittensorApi>()
+        // A duplicate rebroadcast from a peer classifies to null; the local hash is canonical.
+        coEvery { bittensorApi.broadcastTransaction(RAW_TRANSACTION) } returns null
+
+        val txHash =
+            createUseCase(bittensorApi = bittensorApi)(Chain.Bittensor, signedTransaction())
+
+        assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+        coVerify(exactly = 1) { bittensorApi.broadcastTransaction(RAW_TRANSACTION) }
+    }
+
+    @Test
+    fun `bittensor recovers with local hash when a malformed broadcast is already on chain`() =
+        runTest {
+            val bittensorApi = mockk<BittensorApi>()
+            val statusRepo = mockk<TransactionStatusRepository>()
+            coEvery { bittensorApi.broadcastTransaction(RAW_TRANSACTION) } throws
+                substrateBroadcastFailure()
+            coEvery {
+                statusRepo.checkTransactionStatus(KNOWN_TRANSACTION_HASH, Chain.Bittensor)
+            } returns TransactionResult.Confirmed
+
+            val txHash =
+                createUseCase(
+                    bittensorApi = bittensorApi,
+                    transactionStatusRepository = statusRepo,
+                )(Chain.Bittensor, signedTransaction())
+
+            assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+        }
+
+    @Test
+    fun `bittensor rethrows a malformed broadcast when the tx is not on chain`() = runTest {
+        val bittensorApi = mockk<BittensorApi>()
+        val statusRepo = mockk<TransactionStatusRepository>()
+        val failure = substrateBroadcastFailure()
+        coEvery { bittensorApi.broadcastTransaction(RAW_TRANSACTION) } throws failure
+        coEvery {
+            statusRepo.checkTransactionStatus(KNOWN_TRANSACTION_HASH, Chain.Bittensor)
+        } returns TransactionResult.Pending
+
+        val thrown =
+            assertFailsWith<SubstrateBroadcastException> {
+                createUseCase(
+                    bittensorApi = bittensorApi,
+                    transactionStatusRepository = statusRepo,
+                )(Chain.Bittensor, signedTransaction())
+            }
+        assertEquals(failure, thrown)
+        coVerify(exactly = 3) {
+            statusRepo.checkTransactionStatus(KNOWN_TRANSACTION_HASH, Chain.Bittensor)
+        }
+    }
+
     private fun blockchairResult(blockId: Int) =
         BlockChainStatusDeserialized.Result(
             BlockChairStatusResponse(
@@ -354,6 +422,7 @@ class BroadcastTxUseCaseTest {
         mayaChainApi: MayaChainApi = mockk(relaxed = true),
         cosmosApiFactory: CosmosApiFactory = mockk(relaxed = true),
         blockChairApi: BlockChairApi = mockk(relaxed = true),
+        bittensorApi: BittensorApi = mockk(relaxed = true),
         transactionStatusRepository: TransactionStatusRepository = mockk(relaxed = true),
     ) =
         BroadcastTxUseCaseImpl(
@@ -364,7 +433,7 @@ class BroadcastTxUseCaseTest {
             cosmosApiFactory = cosmosApiFactory,
             solanaApi = mockk<SolanaApi>(relaxed = true),
             polkadotApi = mockk<PolkadotApi>(relaxed = true),
-            bittensorApi = mockk<BittensorApi>(relaxed = true),
+            bittensorApi = bittensorApi,
             suiApi = mockk<SuiApi>(relaxed = true),
             tonApi = mockk<TonApi>(relaxed = true),
             rippleApi = mockk<RippleApi>(relaxed = true),
@@ -377,6 +446,9 @@ class BroadcastTxUseCaseTest {
         CosmosTxStatusJson(
             txResponse = TxResponse(height = "1", txHash = KNOWN_TRANSACTION_HASH, code = code)
         )
+
+    private fun substrateBroadcastFailure() =
+        SubstrateBroadcastException("Substrate broadcast returned neither a result nor an error")
 
     private fun sequenceMismatch() =
         CosmosBroadcastException.from(

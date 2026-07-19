@@ -25,14 +25,22 @@ internal class SubstrateBroadcastException(message: String) : Exception(message)
  */
 internal object SubstrateBroadcast {
 
-    // Substrate transaction-pool JSON-RPC error codes for an already-known / already-imported
-    // extrinsic (a harmless duplicate rebroadcast).
-    private val IDEMPOTENT_CODES = setOf(1012, 1013)
+    // Substrate transaction-pool JSON-RPC error code for an already-imported extrinsic (a harmless
+    // duplicate rebroadcast). Only 1013 (`AlreadyImported`) is idempotent. 1012
+    // (`TemporarilyBanned`) is deliberately excluded: upstream bans a transaction after it was
+    // reported invalid, so it is retriable and potentially invalid — treating it as a duplicate
+    // would fabricate success and skip the on-chain verification path. It must throw and flow
+    // through the caller's recover-if-already-broadcast path instead.
+    private val IDEMPOTENT_CODES = setOf(1013)
 
-    // Case-insensitive message fallbacks for nodes / proxies that normalize the numeric code away
-    // (e.g. Polkadot's api.vultisig.com/dot proxy) while preserving the human-readable message.
-    private val IDEMPOTENT_MESSAGES =
-        listOf("already imported", "already known", "temporarily banned")
+    // Canonical duplicate messages for nodes / proxies that normalize the numeric code away (e.g.
+    // Polkadot's api.vultisig.com/dot proxy) while preserving the human-readable message. Matched
+    // with word boundaries (case-insensitive) so an unrelated error merely containing these words
+    // is not misclassified as a harmless duplicate.
+    private val IDEMPOTENT_MESSAGE_PATTERNS =
+        listOf("already imported", "already known").map {
+            Regex("\\b${Regex.escape(it)}\\b", RegexOption.IGNORE_CASE)
+        }
 
     /**
      * @return the broadcast hash, or null for an idempotent duplicate.
@@ -55,7 +63,7 @@ internal object SubstrateBroadcast {
 
     private fun isIdempotent(error: PolkadotBroadcastTransactionErrorJson): Boolean {
         if (error.code in IDEMPOTENT_CODES) return true
-        val message = error.message?.lowercase() ?: return false
-        return IDEMPOTENT_MESSAGES.any { message.contains(it) }
+        val message = error.message ?: return false
+        return IDEMPOTENT_MESSAGE_PATTERNS.any { it.containsMatchIn(message) }
     }
 }

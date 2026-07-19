@@ -33,14 +33,17 @@ class SubstrateBroadcastTest {
     }
 
     @Test
-    fun `idempotent code 1012 resolves to null`() {
+    fun `temporarily-banned code 1012 throws instead of resolving to a duplicate`() {
+        // 1012 is TemporarilyBanned (not AlreadyImported): the tx was banned after being reported
+        // invalid, so it is retriable and must flow through the on-chain recovery path, not be
+        // reported as a successful duplicate.
         val response =
             PolkadotBroadcastTransactionJson(
                 result = null,
-                error = error(1012, "Priority is too low"),
+                error = error(1012, "Transaction is temporarily banned"),
             )
 
-        assertNull(SubstrateBroadcast.classify(response))
+        assertThrows<SubstrateBroadcastException> { SubstrateBroadcast.classify(response) }
     }
 
     @Test
@@ -70,14 +73,28 @@ class SubstrateBroadcastTest {
     }
 
     @Test
-    fun `temporarily banned message resolves to null`() {
+    fun `temporarily banned message throws`() {
+        // A banned transaction is not a harmless duplicate; it must not be reported as success.
         val response =
             PolkadotBroadcastTransactionJson(
                 result = null,
                 error = error(6666, "Temporarily Banned"),
             )
 
-        assertNull(SubstrateBroadcast.classify(response))
+        assertThrows<SubstrateBroadcastException> { SubstrateBroadcast.classify(response) }
+    }
+
+    @Test
+    fun `unrelated error merely containing an idempotent word is not a duplicate`() {
+        // Word-boundary matching guards against substring false positives: an error that mentions
+        // e.g. "imported" in a different context must still throw rather than fabricate success.
+        val response =
+            PolkadotBroadcastTransactionJson(
+                result = null,
+                error = error(1010, "Extrinsic could not be imported: invalid signature"),
+            )
+
+        assertThrows<SubstrateBroadcastException> { SubstrateBroadcast.classify(response) }
     }
 
     @Test
