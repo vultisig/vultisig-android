@@ -15,12 +15,11 @@ import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.utils.UiText
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigDecimal
 import java.math.BigInteger
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -29,10 +28,12 @@ import org.junit.jupiter.api.Test
 /**
  * Covers the SwapKit swap-fee zeroing in [SwapQuotePipeline.buildSuccess] (#5321).
  *
- * SwapKit BTC broadcasts the provider's PSBT whose miner fee is already counted as the UTXO plan
- * network fee, so the duplicated inbound swap fee is zeroed to avoid double-counting. Cardano rides
- * in `TokenStandard.UTXO` but is not a secp256k1/PSBT UTXO chain and does not go through the UTXO
- * plan-fee path, so its swap fee must be shown, not zeroed.
+ * SwapKit UTXO-family sources (Bitcoin PSBT deposit, Cardano CBOR deposit) settle by broadcasting a
+ * deposit whose on-chain miner fee is the only network cost and is already surfaced on the Network
+ * Fee row. SwapKit reports that same deposit cost as its wire inbound fee, so counting it again as
+ * a swap fee would double-count the source-chain network cost. iOS discards the wire inbound fee
+ * for both families and shows the cost once as Network Fee, so both Bitcoin and Cardano zero the
+ * swap fee (the earlier Cardano carve-out reopened the double count).
  */
 internal class SwapQuotePipelineSwapKitFeeTest {
 
@@ -49,7 +50,6 @@ internal class SwapQuotePipelineSwapKitFeeTest {
             swapDiscountChecker = swapDiscountChecker,
             swapGasCalculator = mockk(relaxed = true),
             swapValidator = mockk(relaxed = true),
-            fiatValueToString = mockk(relaxed = true),
         )
 
     init {
@@ -72,12 +72,14 @@ internal class SwapQuotePipelineSwapKitFeeTest {
                     currentDiscountInfo = DiscountInfo(),
                 )
 
-            assertEquals(BigDecimal.ZERO, result.swapFeeFiat.value)
-            assertEquals("USD", result.swapFeeFiat.currency)
+            result.swapFeeFiat.value shouldBe BigDecimal.ZERO
+            result.swapFeeFiat.currency shouldBe "USD"
+            // Empty text hides the swap-fee breakdown row entirely (matches iOS).
+            result.feeText shouldBe ""
         }
 
     @Test
-    fun `keeps the SwapKit swap fee for a Cardano source (not a PSBT UTXO plan-fee swap) (#5321)`() =
+    fun `zeroes the SwapKit swap fee for a Cardano source (its deposit fee is the Network Fee) (#5321)`() =
         runTest {
             val ada = coin(Chain.Cardano)
             val result =
@@ -89,10 +91,13 @@ internal class SwapQuotePipelineSwapKitFeeTest {
                     currentDiscountInfo = DiscountInfo(),
                 )
 
-            assertEquals(swapFee, result.swapFeeFiat)
-            assertTrue(result.swapFeeFiat.value.signum() > 0)
-            // Cardano is not routed through the UTXO plan-fee path either.
-            assertTrue(!result.isUtxoSwap)
+            result.swapFeeFiat.value shouldBe BigDecimal.ZERO
+            result.swapFeeFiat.currency shouldBe "USD"
+            // Empty text hides the swap-fee breakdown row entirely (matches iOS).
+            result.feeText shouldBe ""
+            // Cardano is excluded from the Bitcoin UTXO plan-fee path; the flat send-style fee owns
+            // the Network Fee row.
+            result.isUtxoSwap shouldBe false
         }
 
     private fun bestSwapKitQuote(srcToken: Coin, txType: String): BestQuote {
