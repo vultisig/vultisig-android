@@ -331,7 +331,7 @@ internal class SwapQuotePipeline(
     }
 
     /** Builds the display-ready [SwapQuotePipelineResult.Success] from the winning quote. */
-    private suspend fun buildSuccess(
+    internal suspend fun buildSuccess(
         bestQuote: BestQuote,
         src: SendSrc,
         srcTokenValue: BigInteger,
@@ -387,7 +387,9 @@ internal class SwapQuotePipeline(
         // affiliate fee is already baked into expectedDstValue.
         val quote = quoteResult.quote
         val isSwapKitUtxoSwap =
-            quote is SwapQuote.SwapKit && srcToken.chain.standard == TokenStandard.UTXO
+            quote is SwapQuote.SwapKit &&
+                srcToken.chain.standard == TokenStandard.UTXO &&
+                srcToken.chain != Chain.Cardano
         val effectiveSwapFeeFiat =
             if (isSwapKitUtxoSwap) FiatValue(BigDecimal.ZERO, quoteResult.swapFeeFiat.currency)
             else quoteResult.swapFeeFiat

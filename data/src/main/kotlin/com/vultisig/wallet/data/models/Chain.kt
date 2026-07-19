@@ -45,7 +45,7 @@ enum class Chain(val raw: ChainId, val standard: TokenStandard, val feeUnit: Str
     Dogecoin("Dogecoin", UTXO, "Doge/vbyte"),
     Dash("Dash", UTXO, "DASH/vbyte"),
     Zcash("Zcash", UTXO, "ZEC/vbyte"),
-    Cardano("Cardano", UTXO, "ADA/vbyte"),
+    Cardano("Cardano", UTXO, "Lovelace"),
     GaiaChain("Cosmos", COSMOS, "uatom"),
     Kujira("Kujira", COSMOS, "ukuji"),
     Dydx("Dydx", COSMOS, "adydx"),
