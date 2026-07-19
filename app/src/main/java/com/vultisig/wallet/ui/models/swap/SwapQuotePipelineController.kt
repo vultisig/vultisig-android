@@ -119,7 +119,6 @@ constructor(
             swapDiscountChecker = swapDiscountChecker,
             swapGasCalculator = swapGasCalculator,
             swapValidator = swapValidator,
-            fiatValueToString = fiatValueToString,
         )
 
     /** Mutable swap-quote state and the quote-coupled swap fee, shared with the ViewModel. */

@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.crypto.SuiHelper
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenStandard
@@ -32,7 +33,15 @@ class SecurityScannerTransactionFactory(
             TokenStandard.EVM -> createEVMSecurityScannerTransaction(transaction)
             TokenStandard.SOL -> createSOLSecurityScannerTransaction(transaction)
             TokenStandard.SUI -> createSUISecurityScannerTransaction(transaction)
-            TokenStandard.UTXO -> createBTCSecurityScannerTransaction(transaction)
+            // Cardano rides in TokenStandard.UTXO but is ed25519 + CBOR, not a Bitcoin proto; the
+            // BTC path would build a Bitcoin tx for it. Unreachable today (Cardano isn't a Blockaid
+            // supported chain) — guard so it can't slip through if that list ever widens.
+            TokenStandard.UTXO ->
+                if (chain == Chain.Cardano) {
+                    throw SecurityScannerException("Security Scanner: Not supported ${chain.name}")
+                } else {
+                    createBTCSecurityScannerTransaction(transaction)
+                }
             else -> throw SecurityScannerException("Security Scanner: Not supported ${chain.name}")
         }
     }
