@@ -12,6 +12,7 @@ import kotlinx.serialization.modules.contextual
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 /**
  * Characterization tests for [PolkadotApiImp] methods that call `response.body<T>()`. They pin the
@@ -182,5 +183,45 @@ class PolkadotApiBodyReadTest {
             val result = api.broadcastTransaction(tx = "0x01")
 
             assertNull(result)
+        }
+
+    @Test
+    fun `broadcastTransaction throws on a truncated body with neither result nor error`() {
+        // Under production explicitNulls=false a body missing both fields decodes to (null, null);
+        // it must not be reported as a successful broadcast.
+        val body =
+            """
+            {
+              "jsonrpc": "2.0",
+              "id": 1
+            }
+            """
+                .trimIndent()
+        val api = newApiWith(clientForPlainJson(body))
+
+        assertThrows<Exception> { runBlocking { api.broadcastTransaction(tx = "0x01") } }
+    }
+
+    @Test
+    fun `broadcastTransaction resolves duplicate to null via case-insensitive message fallback`() =
+        runBlocking {
+            // A proxy that normalizes the numeric code away but preserves the message must still be
+            // recognized as an idempotent duplicate.
+            val body =
+                """
+            {
+              "jsonrpc": "2.0",
+              "error": {
+                "code": 0,
+                "message": "Transaction ALREADY known",
+                "data": null
+              },
+              "id": 1
+            }
+            """
+                    .trimIndent()
+            val api = newApiWith(clientForPlainJson(body))
+
+            assertNull(api.broadcastTransaction(tx = "0x01"))
         }
 }

@@ -11,6 +11,7 @@ import kotlinx.serialization.modules.contextual
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 /**
  * Characterization tests for [BittensorApiImp] that call `.body<T>()` or go through the shared
@@ -107,5 +108,44 @@ class BittensorApiBodyReadTest {
             val result = api.broadcastTransaction(tx = "0x01")
 
             assertNull(result)
+        }
+
+    @Test
+    fun `broadcastTransaction resolves duplicate to null via numeric code 1012`() = runTest {
+        // Bittensor previously matched only the case-sensitive "Already Imported" string and
+        // ignored the numeric code on the wire; the shared classifier now recognizes 1012/1013 too.
+        val body =
+            """
+            {
+              "jsonrpc": "2.0",
+              "error": {
+                "code": 1012,
+                "message": "Priority is too low",
+                "data": null
+              },
+              "id": 1
+            }
+            """
+                .trimIndent()
+        val api = newApi(body)
+
+        assertNull(api.broadcastTransaction(tx = "0x01"))
+    }
+
+    @Test
+    fun `broadcastTransaction throws on a truncated body with neither result nor error`() =
+        runTest {
+            // (null, null) under explicitNulls=false must not be reported as a successful broadcast.
+            val body =
+                """
+            {
+              "jsonrpc": "2.0",
+              "id": 1
+            }
+            """
+                    .trimIndent()
+            val api = newApi(body)
+
+            assertThrows<Exception> { api.broadcastTransaction(tx = "0x01") }
         }
 }
