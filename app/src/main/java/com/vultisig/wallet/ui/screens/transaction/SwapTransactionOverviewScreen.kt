@@ -154,15 +154,13 @@ internal fun SwapTransactionOverviewScreen(
 
                 VerifyCardDivider(size = 1.dp)
 
+                val dstAddress =
+                    transactionTypeUiModel.externalRecipient?.takeIf { it.isNotBlank() }
+                        ?: transactionTypeUiModel.dst.token.address
                 VerifyCardDetails(
                     title = stringResource(R.string.swap_form_dst_token_title),
-                    subtitle =
-                        transactionTypeUiModel.dstVaultName
-                            ?: transactionTypeUiModel.dst.token.address,
-                    bracketValue =
-                        transactionTypeUiModel.dstVaultName?.let {
-                            transactionTypeUiModel.dst.token.address
-                        },
+                    subtitle = transactionTypeUiModel.dstVaultName ?: dstAddress,
+                    bracketValue = transactionTypeUiModel.dstVaultName?.let { dstAddress },
                 )
 
                 VerifyCardDivider(size = 1.dp)

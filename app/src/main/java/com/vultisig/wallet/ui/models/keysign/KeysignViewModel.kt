@@ -1010,7 +1010,9 @@ private fun TransactionTypeUiModel.addressBookTarget(): AddressBookTarget? {
             is TransactionTypeUiModel.Deposit ->
                 depositTransactionUiModel.token.token.chain to depositTransactionUiModel.dstAddress
             is TransactionTypeUiModel.Swap ->
-                swapTransactionUiModel.dst.token.chain to swapTransactionUiModel.dst.token.address
+                swapTransactionUiModel.dst.token.chain to
+                    (swapTransactionUiModel.externalRecipient?.takeIf { it.isNotBlank() }
+                        ?: swapTransactionUiModel.dst.token.address)
             else -> return null
         }
     return if (dstAddress.isBlank()) null else AddressBookTarget(chain, dstAddress)
