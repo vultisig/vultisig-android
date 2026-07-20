@@ -46,6 +46,8 @@ internal sealed interface KeysignBroadcastResult {
      * @property swapProgressLink Swap-progress deep link, or null when not a swap.
      * @property approveTxHash Hash of the preceding approval, empty when not applicable.
      * @property approveTxLink Explorer link for [approveTxHash], empty when not applicable.
+     * @property additionalTxHashes Remaining hashes of a Solana batch keysign (issue #5238); empty
+     *   otherwise.
      */
     data class Broadcasted(
         val chain: Chain,
@@ -54,12 +56,13 @@ internal sealed interface KeysignBroadcastResult {
         val swapProgressLink: String?,
         val approveTxHash: String,
         val approveTxLink: String,
+        val additionalTxHashes: List<String> = emptyList(),
     ) : KeysignBroadcastResult
 }
 
 /**
  * Orchestrates the broadcast tail of a keysign: submits and confirms an optional ERC-20 approval,
- * assembles and broadcasts the signed transaction, and invalidates the balance caches. The
+ * assembles and broadcasts the signed transaction(s), and invalidates the balance caches. The
  * duplicate-broadcast race between co-signers is resolved one layer down in [BroadcastTxUseCase],
  * which verifies the tx is actually on chain before treating a rejection as success.
  *
@@ -155,15 +158,18 @@ constructor(
             nonceAcc++
         }
 
-        val signedTx =
-            SigningHelper.getSignedTransaction(
+        val signedTxs =
+            SigningHelper.getSignedTransactions(
                 keysignPayload = payload,
                 vault = vault,
                 signatures = signatures,
                 nonceAcc = nonceAcc,
             )
 
-        val txHash = broadcastTx(chain = chain, tx = signedTx)
+        // Broadcast sequentially, fail-fast: a rejected tx aborts the rest, and any earlier ones
+        // already broadcast stay on chain but aren't persisted locally (issue #5238).
+        val txHashes = signedTxs.map { broadcastTx(chain = chain, tx = it) }
+        val txHash = txHashes.first()
 
         Timber.d("transaction hash: %s", txHash)
         var txLink = ""
@@ -196,6 +202,7 @@ constructor(
                 if (approveTxHash.isNotEmpty())
                     explorerLinkRepository.getTransactionLink(chain, approveTxHash)
                 else "",
+            additionalTxHashes = txHashes.drop(1).filterNotNull(),
         )
     }
 }

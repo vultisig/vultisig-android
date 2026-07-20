@@ -300,6 +300,29 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
     }
 
+    /**
+     * One signed tx per signSolana raw transaction; a bare payload assembles the native WalletCore
+     * tx (issue #5238).
+     */
+    fun getSignedTransactions(
+        keysignPayload: KeysignPayload,
+        signatures: Map<String, tss.KeysignResponse>,
+    ): List<SignedTransactionResult> {
+        val signSolana =
+            keysignPayload.signSolana
+                ?: return listOf(getSignedTransaction(keysignPayload, signatures))
+        require(signSolana.rawTransactions.isNotEmpty()) {
+            "signSolana payload carries no raw transactions"
+        }
+        return signSolana.rawTransactions.map { base64Tx ->
+            signRawTransaction(
+                coinHexPubKey = keysignPayload.coin.hexPublicKey,
+                base64Transaction = base64Tx,
+                signatures = signatures,
+            )
+        }
+    }
+
     fun getSignedTransaction(
         keysignPayload: KeysignPayload,
         signatures: Map<String, tss.KeysignResponse>,

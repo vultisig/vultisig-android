@@ -12,14 +12,13 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.hasReaping
+import com.vultisig.wallet.data.models.nativeTokenTicker
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
-import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
@@ -139,7 +138,7 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
     ) {
         val minAmount = chain.getDustThreshold
         if (tokenAmountInt < minAmount) {
-            val symbol = chain.coinType.symbol
+            val symbol = chain.nativeTokenTicker
             val name = chain.raw
             val formattedMinAmount = chain.toValue(minAmount).toString()
             throw InvalidTransactionDataException(

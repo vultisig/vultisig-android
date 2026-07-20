@@ -841,21 +841,20 @@ constructor(
                         )
                     }
                     saveTransactionHistory(txHash, result.chain)
-                    if (txStatusConfigurationProvider.supportTxStatus(result.chain)) {
-                        startForegroundPolling(txHash, result.chain)
-                    } else {
-                        _state.update {
-                            it.copy(
-                                signingState =
-                                    KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
-                            )
-                        }
-                    }
+                }
+                // Outside the txHash-null gate: batch extras were broadcast in their own right.
+                result.additionalTxHashes.forEach { hash ->
+                    saveTransactionHistory(
+                        txHash = hash,
+                        chain = result.chain,
+                        explorerUrl = explorerLinkRepository.getTransactionLink(result.chain, hash),
+                    )
+                }
+                if (txHash != null && txStatusConfigurationProvider.supportTxStatus(result.chain)) {
+                    startForegroundPolling(txHash, result.chain)
                 } else {
-                    // The broadcast succeeded but produced no hash. Land on the terminal
-                    // "broadcasted" state instead of leaving signingState at the last signing
-                    // state forever (infinite spinner → the user may force-retry and double-send).
-                    // Without a hash we cannot save history or poll status.
+                    // Land on "broadcasted" instead of leaving signingState stuck (infinite
+                    // spinner → user may double-send by retrying).
                     _state.update {
                         it.copy(
                             signingState =
@@ -867,12 +866,17 @@ constructor(
         }
     }
 
-    internal suspend fun saveTransactionHistory(txHash: String, chain: Chain) {
+    /** [explorerUrl] overrides the state-derived link, needed for a batch's non-primary hashes. */
+    internal suspend fun saveTransactionHistory(
+        txHash: String,
+        chain: Chain,
+        explorerUrl: String? = null,
+    ) {
         saveKeysignTransactionHistory(
             vaultId = vault.id,
             txHash = txHash,
             chain = chain,
-            explorerUrl = _state.value.let { it.swapProgressLink ?: it.txLink },
+            explorerUrl = explorerUrl ?: _state.value.let { it.swapProgressLink ?: it.txLink },
             transactionHistoryData = transactionHistoryData,
             // Polkadot extrinsics are mortal: persist the head block at broadcast so the status
             // poller can scan the absolute inclusion window instead of a head-relative one that

@@ -153,6 +153,29 @@ class SolanaHelperTest {
         assertEquals("Malformed compact-u16 in Solana transaction", error.message)
     }
 
+    // The guard runs before any WalletCore call, so it is exercised without the native library.
+    @Test
+    fun `signSolana batch with no raw transactions is rejected before assembly`() {
+        val payload = rawTxPayload()
+
+        val error =
+            assertThrows<IllegalArgumentException> {
+                SolanaHelper("").getSignedTransactions(payload, signatures = emptyMap())
+            }
+        assertEquals("signSolana payload carries no raw transactions", error.message)
+    }
+
+    @Test
+    fun `single-transaction assembly rejects a multi-transaction batch`() {
+        val payload = rawTxPayload("AAA=", "BBB=")
+
+        val error =
+            assertThrows<IllegalArgumentException> {
+                SolanaHelper("").getSignedTransaction(payload, signatures = emptyMap())
+            }
+        assertEquals("Expected exactly one Solana raw transaction", error.message)
+    }
+
     /**
      * A raw Solana transaction envelope: `[shortvec count][count × zeroed 64-byte slot][message]`.
      */

@@ -64,6 +64,9 @@ internal class WithdrawSecuredAssetStrategy(
 
         val selectedSecureAsset = stateProvider().selectedSecuredAsset
 
+        // getChain() throws on an unrecognised ticker rather than silently defaulting to a chain —
+        // the DepositFormViewModel catch block turns that into a user-facing error instead of
+        // misrouting the withdrawal to the wrong chain.
         val secureAssetChain = selectedSecureAsset.ticker.getChain()
         val dstAddr =
             accountsRepository.loadAddress(vaultId, secureAssetChain).firstOrNull()
