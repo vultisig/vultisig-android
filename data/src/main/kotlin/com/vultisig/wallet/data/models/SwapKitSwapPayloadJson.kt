@@ -76,9 +76,7 @@ data class SwapKitSwapPayloadJson(
          * `meta.txType` discriminator for the **legacy P2PKH** Dogecoin signing path. DOGE never
          * had segwit, so its UTXOs are classic P2PKH and need legacy (non-BIP-143) sighashing —
          * handled by [com.vultisig.wallet.data.chains.helpers.SwapKitLegacyP2PKHSigner] via
-         * `CoinType.DOGECOIN`. Android/iOS stamp this onto their own initiated swaps; kept for
-         * backward compatibility with in-flight swaps — the join-side dispatcher picks the signer
-         * from the payload's `chain`, not this literal (see [isUtxoPsbtTxType]).
+         * `CoinType.DOGECOIN`. Legacy; dispatch now keys off `chain` (see [isUtxoPsbtTxType]).
          */
         const val TX_TYPE_PSBT_DOGE = "PSBT_DOGE"
 
@@ -86,20 +84,16 @@ data class SwapKitSwapPayloadJson(
          * `meta.txType` discriminator for the **legacy P2PKH** Bitcoin Cash signing path. BCH uses
          * a BIP-143-style preimage with `SIGHASH_FORKID` over a legacy `scriptCode`; WalletCore's
          * `CoinType.BITCOINCASH` injects the right hash type, so it rides the same
-         * [com.vultisig.wallet.data.chains.helpers.SwapKitLegacyP2PKHSigner] as DOGE/DASH. Android/
-         * iOS stamp this onto their own initiated swaps; kept for backward compatibility with
-         * in-flight swaps — the join-side dispatcher picks the signer from the payload's `chain`,
-         * not this literal (see [isUtxoPsbtTxType]).
+         * [com.vultisig.wallet.data.chains.helpers.SwapKitLegacyP2PKHSigner] as DOGE/DASH. Legacy;
+         * dispatch now keys off `chain` (see [isUtxoPsbtTxType]).
          */
         const val TX_TYPE_PSBT_BCH = "PSBT_BCH"
 
         /**
          * `meta.txType` discriminator for the **legacy P2PKH** Dash signing path. DASH forked from
          * Bitcoin pre-0.12.x and has no segwit, so it uses legacy sighashing via `CoinType.DASH`
-         * through [com.vultisig.wallet.data.chains.helpers.SwapKitLegacyP2PKHSigner]. Android/iOS
-         * stamp this onto their own initiated swaps; kept for backward compatibility with in-flight
-         * swaps — the join-side dispatcher picks the signer from the payload's `chain`, not this
-         * literal (see [isUtxoPsbtTxType]).
+         * through [com.vultisig.wallet.data.chains.helpers.SwapKitLegacyP2PKHSigner]. Legacy;
+         * dispatch now keys off `chain` (see [isUtxoPsbtTxType]).
          */
         const val TX_TYPE_PSBT_DASH = "PSBT_DASH"
 
@@ -108,9 +102,7 @@ data class SwapKitSwapPayloadJson(
          * is wrapped in a BIP-174 envelope but the body is Sapling-v4 (extra version-group id,
          * expiry height, value-balance, shielded counts) and the sighash is ZIP-243; handled by
          * [com.vultisig.wallet.data.chains.helpers.SwapKitZcashSigner] via `CoinType.ZCASH` with
-         * the native branch id. Android/iOS stamp this onto their own initiated swaps; kept for
-         * backward compatibility with in-flight swaps — the join-side dispatcher picks the signer
-         * from the payload's `chain`, not this literal (see [isUtxoPsbtTxType]).
+         * the native branch id. Legacy; dispatch now keys off `chain` (see [isUtxoPsbtTxType]).
          */
         const val TX_TYPE_PSBT_ZEC = "PSBT_ZEC"
 
@@ -215,16 +207,10 @@ data class SwapKitSwapPayloadJson(
             )
 
         /**
-         * True when [txType] means "this is a UTXO-family PSBT" — SwapKit's documented wire value
-         * ([TX_TYPE_PSBT]) is the same generic string for every UTXO source chain, and sometimes
-         * arrives blank when a peer's SDK omits `meta.txType` for the non-Bitcoin variants. Also
-         * true for the legacy per-chain literals Android/iOS invent for their own initiated swaps.
-         * `SigningHelper` picks the actual signer from the payload's `chain`, not from which of
-         * these matched, so a peer that doesn't share the invented per-chain convention can still
-         * be joined. Compared case-insensitively:
-         * [txTypeOf][com.vultisig.wallet.data.repositories.swap.SwapKitQuoteSource] already treats
-         * SwapKit's own `meta.type` casing as unreliable on the quote side, so the join-side check
-         * must not be stricter than the side that decodes the same field.
+         * True when [txType] means "this is a UTXO-family PSBT": the documented wire value
+         * ([TX_TYPE_PSBT]), blank (a peer's SDK may omit `meta.txType`), or a legacy per-chain
+         * literal. `SigningHelper` then picks the signer from `chain`, not from which literal
+         * matched. Case-insensitive, matching the quote side's own distrust of `meta.type` casing.
          */
         fun isUtxoPsbtTxType(txType: String): Boolean =
             txType.isBlank() || txType.uppercase(Locale.ROOT) in UTXO_PSBT_TX_TYPES

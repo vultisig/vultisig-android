@@ -123,13 +123,8 @@ object SigningHelper {
                 }
                 is SwapPayload.SwapKit -> {
                     val txType = swapPayload.data.txType
-                    // SwapKit's documented wire value for the whole UTXO family is the generic
-                    // "PSBT" — sometimes arriving blank when a peer's SDK omits `meta.txType` for
-                    // the non-Bitcoin variants. Android/iOS additionally stamp per-chain
-                    // PSBT_DOGE/PSBT_BCH/PSBT_DASH/PSBT_ZEC onto their own initiated swaps (kept
-                    // for backward compatibility). Either way the actual signer must come from the
-                    // payload's own `chain`, not from which literal happened to match, or a peer
-                    // that doesn't share the invented convention can't be joined.
+                    // See SwapKitSwapPayloadJson.isUtxoPsbtTxType for why the UTXO family is keyed
+                    // off `chain` rather than `txType`.
                     messages +=
                         if (SwapKitSwapPayloadJson.isUtxoPsbtTxType(txType)) {
                             when (chain) {
