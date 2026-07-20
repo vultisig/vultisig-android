@@ -27,7 +27,6 @@ import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -284,14 +283,14 @@ constructor(
         val vault = vaultId ?: return
         viewModelScope.launch {
             password.value =
-                withContext(Dispatchers.IO) { vaultPasswordRepository.getPassword(vault) }
+                withContext(ioDispatcher) { vaultPasswordRepository.getPassword(vault) }
         }
     }
 
     private fun loadFastSign() {
         val vault = vaultId ?: return
         viewModelScope.launch {
-            val hasFastSign = withContext(Dispatchers.IO) { isVaultHasFastSignById(vault) }
+            val hasFastSign = withContext(ioDispatcher) { isVaultHasFastSignById(vault) }
             state.update { it.copy(hasFastSign = hasFastSign) }
         }
     }
