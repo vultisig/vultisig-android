@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.swapAggregators.OneInchSwap
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.common.toKeccak256ByteArray
 import com.vultisig.wallet.data.common.toSha256ByteArray
+import com.vultisig.wallet.data.common.toSha512ByteArray
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.crypto.TonHelper
@@ -64,11 +65,15 @@ object SigningHelper {
         //    keccak256'd, so the digest — and the md5 message-ID derived from it — diverged
         //    from the iOS/Windows/CLI initiator and cross-platform co-signing 404'd.
         //  - EdDSA chains (e.g. Solana, TON) deliver the precomputed digest — sign it raw.
+        //  - Ripple (XRPL GemWallet signMessage / ripple-keypairs) signs SHA-512-half — the
+        //    first 32 bytes of SHA-512 — of the message bytes. keccak256 here diverges from
+        //    the extension initiator's digest and cross-platform co-signing 404s.
         //  - Everything else (EVM, Tron) signs the keccak256.
         val bytes =
             when {
                 chain?.standard == TokenStandard.COSMOS ||
                     chain?.standard == TokenStandard.THORCHAIN -> processedBytes.toSha256ByteArray()
+                chain == Chain.Ripple -> processedBytes.toSha512ByteArray().copyOf(32)
                 chain?.TssKeysignType == TssKeyType.EDDSA -> processedBytes
                 else -> processedBytes.toKeccak256ByteArray()
             }

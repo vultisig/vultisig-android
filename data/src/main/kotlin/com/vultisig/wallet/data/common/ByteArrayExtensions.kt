@@ -18,6 +18,10 @@ fun ByteArray.toSha256ByteArray(): ByteArray {
     return MessageDigest.getInstance("SHA-256").digest(this)
 }
 
+fun ByteArray.toSha512ByteArray(): ByteArray {
+    return MessageDigest.getInstance("SHA-512").digest(this)
+}
+
 fun ByteArray.toByteString(): ByteString {
     return ByteString.copyFrom(this)
 }
