@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
@@ -221,28 +222,28 @@ constructor(
 
         val transaction = transaction ?: return
         state.update { it.copy(isSigning = true) }
-        viewModelScope.launch {
-            try {
-                inboundHaltPreflight.assertSourceChainNotHalted(transaction)
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
+        viewModelScope.safeLaunch(
+            onError = { e ->
                 Timber.w(e, "Swap sign-time inbound preflight blocked signing")
                 state.update {
-                    it.copy(
-                        errorText = UiText.StringResource(R.string.swap_error_trading_halted),
-                        isSigning = false,
-                    )
+                    it.copy(errorText = UiText.StringResource(R.string.swap_error_trading_halted))
                 }
-                return@launch
             }
-            launchKeysign(
-                keysignInitType,
-                transactionId,
-                password.value,
-                Route.Keysign.Keysign.TxType.Swap,
-                vaultId,
-            )
+        ) {
+            try {
+                inboundHaltPreflight.assertSourceChainNotHalted(transaction)
+                launchKeysign(
+                    keysignInitType,
+                    transactionId,
+                    password.value,
+                    Route.Keysign.Keysign.TxType.Swap,
+                    vaultId,
+                )
+            } finally {
+                // The verify ViewModel can remain alive when navigation is cancelled or fails.
+                // Always re-enable signing so a later attempt cannot be permanently dead-ended.
+                state.update { it.copy(isSigning = false) }
+            }
         }
     }
 

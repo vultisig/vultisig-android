@@ -22,6 +22,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -157,6 +158,7 @@ internal class VerifySwapViewModelTest {
             vm.joinKeySign()
 
             vm.state.value.errorText.shouldBeNull()
+            vm.state.value.isSigning shouldBe false
             coVerify {
                 launchKeysign(
                     KeysignInitType.QR_CODE,
@@ -242,6 +244,7 @@ internal class VerifySwapViewModelTest {
             advanceUntilIdle()
 
             vm.state.value.errorText.shouldNotBeNull()
+            vm.state.value.isSigning shouldBe false
             coVerify(exactly = 0) { launchKeysign(any(), any(), any(), any(), any()) }
         }
 

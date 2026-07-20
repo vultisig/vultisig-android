@@ -56,6 +56,16 @@ internal class SwapInboundHaltPreflightTest {
     }
 
     @Test
+    fun `native route proceeds when source chain is absent from inbound response`() = runTest {
+        val transaction = transaction(SwapPayload.ThorChain(mockk(relaxed = true)), Chain.Bitcoin)
+        coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
+            listOf(inbound(chain = "ETH", halted = true))
+
+        // Matches the iOS gate: a missing entry is not treated as a confirmed source-chain halt.
+        preflight.assertSourceChainNotHalted(transaction)
+    }
+
+    @Test
     fun `native route fails closed when inbound fetch fails`() = runTest {
         val transaction = transaction(SwapPayload.MayaChain(mockk(relaxed = true)), Chain.Bitcoin)
         coEvery { mayaChainApi.getInboundAddresses() } throws IllegalStateException("offline")
