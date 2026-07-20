@@ -9,9 +9,11 @@ data class THORChainInboundAddress(
     @SerialName("chain") val chain: String,
     @SerialName("address") val address: String,
     @SerialName("halted") val halted: Boolean,
-    @SerialName("global_trading_paused") val globalTradingPaused: Boolean,
-    @SerialName("chain_trading_paused") val chainTradingPaused: Boolean,
-    @SerialName("chain_lp_actions_paused") val chainLPActionsPaused: Boolean,
+    // MayaChain omits pause fields when they are false, while THORChain currently emits them.
+    // Defaults keep the shared inbound model compatible with both protocols.
+    @SerialName("global_trading_paused") val globalTradingPaused: Boolean = false,
+    @SerialName("chain_trading_paused") val chainTradingPaused: Boolean = false,
+    @SerialName("chain_lp_actions_paused") val chainLPActionsPaused: Boolean = false,
     @SerialName("gas_rate") val gasRate: String,
     @SerialName("gas_rate_units") val gasRateUnits: String,
 )

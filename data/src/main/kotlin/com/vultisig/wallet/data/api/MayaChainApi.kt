@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
+import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.MAYA_STREAMING_INTERVAL
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
@@ -62,6 +63,8 @@ interface MayaChainApi {
     suspend fun getCacaoProvider(address: String): CacaoProviderResponse
 
     suspend fun getMayaConstants(): Map<String, Long>
+
+    suspend fun getInboundAddresses(): List<THORChainInboundAddress>
 
     suspend fun getAllNodes(): List<MayaNodeInfo>
 
@@ -303,6 +306,13 @@ constructor(
             throw e
         }
     }
+
+    override suspend fun getInboundAddresses(): List<THORChainInboundAddress> =
+        httpClient
+            .get("$MAYA_NODE_BASE/mayachain/inbound_addresses") {
+                header(xClientID, xClientIDValue)
+            }
+            .bodyOrThrow()
 
     override suspend fun getAllNodes(): List<MayaNodeInfo> =
         httpClient

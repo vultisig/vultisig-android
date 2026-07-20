@@ -103,6 +103,7 @@ internal data class VerifySwapUiModel(
     val txScanStatus: TransactionScanStatus = TransactionScanStatus.NotStarted,
     val showScanningWarning: Boolean = false,
     val vaultName: String = "",
+    val isSigning: Boolean = false,
 ) {
     val hasAllConsents: Boolean
         get() =
@@ -122,6 +123,7 @@ constructor(
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
+    private val inboundHaltPreflight: SwapInboundHaltPreflight,
 ) : ViewModel() {
 
     val state = MutableStateFlow(VerifySwapUiModel())
@@ -130,6 +132,7 @@ constructor(
     private val vaultId: VaultId = args.vaultId
     private val transactionId: String = args.transactionId
     private var _fastSign = false
+    private var transaction: SwapTransaction? = null
 
     private val _fastSignFlow = Channel<Boolean>()
     val fastSignFlow = _fastSignFlow.receiveAsFlow()
@@ -142,6 +145,7 @@ constructor(
                         navigator.back()
                         return@launch
                     }
+            this@VerifySwapViewModel.transaction = transaction
             val vault = vaultRepository.get(vaultId)
             val vaultName = vault?.name
             if (vaultName == null) {
@@ -204,23 +208,41 @@ constructor(
     }
 
     private fun keysign(keysignInitType: KeysignInitType) {
-        if (state.value.hasAllConsents) {
-            viewModelScope.launch {
-                launchKeysign(
-                    keysignInitType,
-                    transactionId,
-                    password.value,
-                    Route.Keysign.Keysign.TxType.Swap,
-                    vaultId,
-                )
-            }
-        } else {
+        if (!state.value.hasAllConsents) {
             state.update {
                 it.copy(
                     errorText =
                         UiText.StringResource(R.string.verify_transaction_error_not_enough_consent)
                 )
             }
+            return
+        }
+        if (state.value.isSigning) return
+
+        val transaction = transaction ?: return
+        state.update { it.copy(isSigning = true) }
+        viewModelScope.launch {
+            try {
+                inboundHaltPreflight.assertSourceChainNotHalted(transaction)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(e, "Swap sign-time inbound preflight blocked signing")
+                state.update {
+                    it.copy(
+                        errorText = UiText.StringResource(R.string.swap_error_trading_halted),
+                        isSigning = false,
+                    )
+                }
+                return@launch
+            }
+            launchKeysign(
+                keysignInitType,
+                transactionId,
+                password.value,
+                Route.Keysign.Keysign.TxType.Swap,
+                vaultId,
+            )
         }
     }
 
