@@ -122,67 +122,87 @@ object SigningHelper {
                     messages += message
                 }
                 is SwapPayload.SwapKit -> {
+                    val txType = swapPayload.data.txType
+                    // SwapKit's documented wire value for the whole UTXO family is the generic
+                    // "PSBT" — sometimes arriving blank when a peer's SDK omits `meta.txType` for
+                    // the non-Bitcoin variants. Android/iOS additionally stamp per-chain
+                    // PSBT_DOGE/PSBT_BCH/PSBT_DASH/PSBT_ZEC onto their own initiated swaps (kept
+                    // for backward compatibility). Either way the actual signer must come from the
+                    // payload's own `chain`, not from which literal happened to match, or a peer
+                    // that doesn't share the invented convention can't be joined.
                     messages +=
-                        when (swapPayload.data.txType) {
-                            // Segwit PSBT (BTC + LTC). CoinType is picked from the source chain;
-                            // the BIP-143 sighash + segwit serialization are otherwise identical.
-                            SwapKitSwapPayloadJson.TX_TYPE_PSBT ->
-                                SwapKitBtcSigner(ecdsaKey, ecdsaChainCode, chain.coinType)
-                                    .getPreSignedImageHash(
-                                        psbtBytes = swapPayload.data.txPayload,
-                                        targetAddress = swapPayload.data.targetAddress,
-                                        fromAmount = swapPayload.data.fromAmount,
-                                    )
-                            // Legacy P2PKH UTXO chains (DOGE / BCH / DASH). DOGE/DASH use classic
-                            // ECDSA sighashing; BCH adds SIGHASH_FORKID via its CoinType.
-                            SwapKitSwapPayloadJson.TX_TYPE_PSBT_DOGE,
-                            SwapKitSwapPayloadJson.TX_TYPE_PSBT_BCH,
-                            SwapKitSwapPayloadJson.TX_TYPE_PSBT_DASH ->
-                                SwapKitLegacyP2PKHSigner(ecdsaKey, ecdsaChainCode, chain.coinType)
-                                    .getPreSignedImageHash(
-                                        psbtBytes = swapPayload.data.txPayload,
-                                        targetAddress = swapPayload.data.targetAddress,
-                                        fromAmount = swapPayload.data.fromAmount,
-                                    )
-                            // Transparent ZEC (Sapling-v4 body, ZIP-243 sighash).
-                            SwapKitSwapPayloadJson.TX_TYPE_PSBT_ZEC ->
-                                SwapKitZcashSigner(ecdsaKey, ecdsaChainCode)
-                                    .getPreSignedImageHash(
-                                        psbtBytes = swapPayload.data.txPayload,
-                                        targetAddress = swapPayload.data.targetAddress,
-                                        fromAmount = swapPayload.data.fromAmount,
-                                        zcashBranchId = payload.zcashBranchId,
-                                    )
-                            SwapKitSwapPayloadJson.TX_TYPE_TRON ->
-                                SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
-                                    .getPreSignedImageHash(swapPayload.data.txPayload)
-                            SwapKitSwapPayloadJson.TX_TYPE_SUI ->
-                                SwapKitSuiSigner(eddsaKey)
-                                    .getPreSignedImageHash(swapPayload.data.txPayload)
-                            SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT ->
-                                SwapKitCardanoSigner(eddsaKey)
-                                    .getPreSignedImageHash(swapPayload.data.txPayload)
-                            // Deposit-only Cardano: no CBOR to sign — hash a plain ADA send to
-                            // targetAddress built from the blockChainSpecific, via the native path.
-                            SwapKitSwapPayloadJson.TX_TYPE_CARDANO ->
-                                CardanoHelper.getPreSignedImageHash(payload)
-                            // TON SwapKit is a plain native transfer to the deposit address. The
-                            // KeysignPayload already carries toAddress / toAmount / Ton specifics.
-                            // It reuses the native TonHelper path (no signTon, matching iOS).
-                            SwapKitSwapPayloadJson.TX_TYPE_TON ->
-                                TonHelper.getPreSignedImageHash(payload)
-                            // XRP is deposit-only: no SwapKit signer. SwapPayloadBuilder already
-                            // pointed the KeysignPayload's toAddress / toAmount / memo at the
-                            // deposit r-address, amount, and destination tag, so we reuse the
-                            // native RippleHelper path (which turns a numeric memo into the
-                            // destinationTag). Matches iOS, which lets XRP fall through to the
-                            // per-chain helper.
-                            SwapKitSwapPayloadJson.TX_TYPE_XRP ->
-                                RippleHelper.getPreSignedImageHash(payload)
-                            else ->
-                                error(
-                                    "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
-                                )
+                        if (SwapKitSwapPayloadJson.isUtxoPsbtTxType(txType)) {
+                            when (chain) {
+                                // Segwit PSBT (BTC + LTC). CoinType is picked from the source
+                                // chain; the BIP-143 sighash + segwit serialization are otherwise
+                                // identical.
+                                Chain.Bitcoin,
+                                Chain.Litecoin ->
+                                    SwapKitBtcSigner(ecdsaKey, ecdsaChainCode, chain.coinType)
+                                        .getPreSignedImageHash(
+                                            psbtBytes = swapPayload.data.txPayload,
+                                            targetAddress = swapPayload.data.targetAddress,
+                                            fromAmount = swapPayload.data.fromAmount,
+                                        )
+                                // Legacy P2PKH UTXO chains (DOGE / BCH / DASH). DOGE/DASH use
+                                // classic ECDSA sighashing; BCH adds SIGHASH_FORKID via its
+                                // CoinType.
+                                Chain.BitcoinCash,
+                                Chain.Dogecoin,
+                                Chain.Dash ->
+                                    SwapKitLegacyP2PKHSigner(
+                                            ecdsaKey,
+                                            ecdsaChainCode,
+                                            chain.coinType,
+                                        )
+                                        .getPreSignedImageHash(
+                                            psbtBytes = swapPayload.data.txPayload,
+                                            targetAddress = swapPayload.data.targetAddress,
+                                            fromAmount = swapPayload.data.fromAmount,
+                                        )
+                                // Transparent ZEC (Sapling-v4 body, ZIP-243 sighash).
+                                Chain.Zcash ->
+                                    SwapKitZcashSigner(ecdsaKey, ecdsaChainCode)
+                                        .getPreSignedImageHash(
+                                            psbtBytes = swapPayload.data.txPayload,
+                                            targetAddress = swapPayload.data.targetAddress,
+                                            fromAmount = swapPayload.data.fromAmount,
+                                            zcashBranchId = payload.zcashBranchId,
+                                        )
+                                else -> error("Unsupported SwapKit txType for signing: $txType")
+                            }
+                        } else {
+                            when (txType) {
+                                SwapKitSwapPayloadJson.TX_TYPE_TRON ->
+                                    SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
+                                        .getPreSignedImageHash(swapPayload.data.txPayload)
+                                SwapKitSwapPayloadJson.TX_TYPE_SUI ->
+                                    SwapKitSuiSigner(eddsaKey)
+                                        .getPreSignedImageHash(swapPayload.data.txPayload)
+                                SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT ->
+                                    SwapKitCardanoSigner(eddsaKey)
+                                        .getPreSignedImageHash(swapPayload.data.txPayload)
+                                // Deposit-only Cardano: no CBOR to sign — hash a plain ADA send to
+                                // targetAddress built from the blockChainSpecific, via the native
+                                // path.
+                                SwapKitSwapPayloadJson.TX_TYPE_CARDANO ->
+                                    CardanoHelper.getPreSignedImageHash(payload)
+                                // TON SwapKit is a plain native transfer to the deposit address.
+                                // The KeysignPayload already carries toAddress / toAmount / Ton
+                                // specifics. It reuses the native TonHelper path (no signTon,
+                                // matching iOS).
+                                SwapKitSwapPayloadJson.TX_TYPE_TON ->
+                                    TonHelper.getPreSignedImageHash(payload)
+                                // XRP is deposit-only: no SwapKit signer. SwapPayloadBuilder
+                                // already pointed the KeysignPayload's toAddress / toAmount / memo
+                                // at the deposit r-address, amount, and destination tag, so we
+                                // reuse the native RippleHelper path (which turns a numeric memo
+                                // into the destinationTag). Matches iOS, which lets XRP fall
+                                // through to the per-chain helper.
+                                SwapKitSwapPayloadJson.TX_TYPE_XRP ->
+                                    RippleHelper.getPreSignedImageHash(payload)
+                                else -> error("Unsupported SwapKit txType for signing: $txType")
+                            }
                         }
                 }
                 else -> Unit
@@ -385,66 +405,75 @@ object SigningHelper {
                 }
 
                 is SwapPayload.SwapKit -> {
-                    return when (swapPayload.data.txType) {
-                        SwapKitSwapPayloadJson.TX_TYPE_PSBT ->
-                            SwapKitBtcSigner(ecdsaKey, ecdsaChainCode, chain.coinType)
-                                .getSignedTransaction(swapPayload.data.txPayload, signatures)
-                        SwapKitSwapPayloadJson.TX_TYPE_PSBT_DOGE,
-                        SwapKitSwapPayloadJson.TX_TYPE_PSBT_BCH,
-                        SwapKitSwapPayloadJson.TX_TYPE_PSBT_DASH ->
-                            SwapKitLegacyP2PKHSigner(ecdsaKey, ecdsaChainCode, chain.coinType)
-                                .getSignedTransaction(
-                                    psbtBytes = swapPayload.data.txPayload,
-                                    targetAddress = swapPayload.data.targetAddress,
-                                    fromAmount = swapPayload.data.fromAmount,
+                    val txType = swapPayload.data.txType
+                    // See the matching dispatcher in getKeysignMessages for why the UTXO family is
+                    // keyed off `chain` rather than `txType`.
+                    return if (SwapKitSwapPayloadJson.isUtxoPsbtTxType(txType)) {
+                        when (chain) {
+                            Chain.Bitcoin,
+                            Chain.Litecoin ->
+                                SwapKitBtcSigner(ecdsaKey, ecdsaChainCode, chain.coinType)
+                                    .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                            Chain.BitcoinCash,
+                            Chain.Dogecoin,
+                            Chain.Dash ->
+                                SwapKitLegacyP2PKHSigner(ecdsaKey, ecdsaChainCode, chain.coinType)
+                                    .getSignedTransaction(
+                                        psbtBytes = swapPayload.data.txPayload,
+                                        targetAddress = swapPayload.data.targetAddress,
+                                        fromAmount = swapPayload.data.fromAmount,
+                                        signatures = signatures,
+                                    )
+                            Chain.Zcash ->
+                                SwapKitZcashSigner(ecdsaKey, ecdsaChainCode)
+                                    .getSignedTransaction(
+                                        psbtBytes = swapPayload.data.txPayload,
+                                        targetAddress = swapPayload.data.targetAddress,
+                                        fromAmount = swapPayload.data.fromAmount,
+                                        signatures = signatures,
+                                        zcashBranchId = keysignPayload.zcashBranchId,
+                                    )
+                            else -> error("Unsupported SwapKit txType for signing: $txType")
+                        }
+                    } else {
+                        when (txType) {
+                            SwapKitSwapPayloadJson.TX_TYPE_TRON ->
+                                SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
+                                    .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                            SwapKitSwapPayloadJson.TX_TYPE_SUI ->
+                                SwapKitSuiSigner(eddsaKey)
+                                    .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                            SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT ->
+                                SwapKitCardanoSigner(eddsaKey)
+                                    .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                            // Deposit-only Cardano: build & sign a plain ADA send to targetAddress
+                            // via the native Cardano path (same as a non-swap send).
+                            SwapKitSwapPayloadJson.TX_TYPE_CARDANO ->
+                                CardanoHelper.getSignedTransaction(
+                                    vaultHexPublicKey = eddsaKey,
+                                    vaultHexChainCode = vault.hexChainCode,
+                                    keysignPayload = keysignPayload,
                                     signatures = signatures,
                                 )
-                        SwapKitSwapPayloadJson.TX_TYPE_PSBT_ZEC ->
-                            SwapKitZcashSigner(ecdsaKey, ecdsaChainCode)
-                                .getSignedTransaction(
-                                    psbtBytes = swapPayload.data.txPayload,
-                                    targetAddress = swapPayload.data.targetAddress,
-                                    fromAmount = swapPayload.data.fromAmount,
+                            // TON SwapKit reuses the native TonHelper path (EdDSA), signing the
+                            // deposit transfer off the KeysignPayload's toAddress / toAmount —
+                            // matching iOS.
+                            SwapKitSwapPayloadJson.TX_TYPE_TON ->
+                                TonHelper.getSignedTransaction(
+                                    vaultHexPublicKey = eddsaKey,
+                                    payload = keysignPayload,
                                     signatures = signatures,
-                                    zcashBranchId = keysignPayload.zcashBranchId,
                                 )
-                        SwapKitSwapPayloadJson.TX_TYPE_TRON ->
-                            SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
-                                .getSignedTransaction(swapPayload.data.txPayload, signatures)
-                        SwapKitSwapPayloadJson.TX_TYPE_SUI ->
-                            SwapKitSuiSigner(eddsaKey)
-                                .getSignedTransaction(swapPayload.data.txPayload, signatures)
-                        SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT ->
-                            SwapKitCardanoSigner(eddsaKey)
-                                .getSignedTransaction(swapPayload.data.txPayload, signatures)
-                        // Deposit-only Cardano: build & sign a plain ADA send to targetAddress via
-                        // the native Cardano path (same as a non-swap send).
-                        SwapKitSwapPayloadJson.TX_TYPE_CARDANO ->
-                            CardanoHelper.getSignedTransaction(
-                                vaultHexPublicKey = eddsaKey,
-                                vaultHexChainCode = vault.hexChainCode,
-                                keysignPayload = keysignPayload,
-                                signatures = signatures,
-                            )
-                        // TON SwapKit reuses the native TonHelper path (EdDSA), signing the deposit
-                        // transfer off the KeysignPayload's toAddress / toAmount — matching iOS.
-                        SwapKitSwapPayloadJson.TX_TYPE_TON ->
-                            TonHelper.getSignedTransaction(
-                                vaultHexPublicKey = eddsaKey,
-                                payload = keysignPayload,
-                                signatures = signatures,
-                            )
-                        // XRP deposit-only: rebuild + sign a plain XRP Payment off the
-                        // KeysignPayload (toAddress / toAmount / memo) via the native RippleHelper.
-                        SwapKitSwapPayloadJson.TX_TYPE_XRP ->
-                            RippleHelper.getSignedTransaction(
-                                keysignPayload = keysignPayload,
-                                signatures = signatures,
-                            )
-                        else ->
-                            error(
-                                "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
-                            )
+                            // XRP deposit-only: rebuild + sign a plain XRP Payment off the
+                            // KeysignPayload (toAddress / toAmount / memo) via the native
+                            // RippleHelper.
+                            SwapKitSwapPayloadJson.TX_TYPE_XRP ->
+                                RippleHelper.getSignedTransaction(
+                                    keysignPayload = keysignPayload,
+                                    signatures = signatures,
+                                )
+                            else -> error("Unsupported SwapKit txType for signing: $txType")
+                        }
                     }
                 }
                 else -> {}
