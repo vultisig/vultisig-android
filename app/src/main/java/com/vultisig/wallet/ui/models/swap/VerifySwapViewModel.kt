@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SwapTransaction
@@ -224,10 +225,17 @@ constructor(
         state.update { it.copy(isSigning = true) }
         viewModelScope.safeLaunch(
             onError = { e ->
-                Timber.w(e, "Swap sign-time inbound preflight blocked signing")
-                state.update {
-                    it.copy(errorText = UiText.StringResource(R.string.swap_error_trading_halted))
-                }
+                // Only the preflight fails closed as a halt. A keysign/navigation failure must not
+                // masquerade as "trading halted", so it surfaces a generic error instead.
+                val errorMessage =
+                    if (e is SwapException.TradingHalted) {
+                        Timber.w(e, "Swap sign-time inbound preflight blocked signing")
+                        R.string.swap_error_trading_halted
+                    } else {
+                        Timber.e(e, "Swap keysign launch failed")
+                        R.string.error_view_default_title
+                    }
+                state.update { it.copy(errorText = UiText.StringResource(errorMessage)) }
             }
         ) {
             try {

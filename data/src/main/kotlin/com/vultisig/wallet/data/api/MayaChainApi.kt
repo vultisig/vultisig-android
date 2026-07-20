@@ -24,6 +24,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.path
@@ -311,6 +312,9 @@ constructor(
         httpClient
             .get("$MAYA_NODE_BASE/mayachain/inbound_addresses") {
                 header(xClientID, xClientIDValue)
+                // Inbound status drives a fail-closed halt gate, so it must never be served from
+                // the shared HttpCache if upstream ever starts sending cache headers.
+                header(HttpHeaders.CacheControl, "no-cache, no-store")
             }
             .bodyOrThrow()
 

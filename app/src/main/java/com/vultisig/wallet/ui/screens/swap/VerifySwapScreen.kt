@@ -362,6 +362,7 @@ private fun VerifySwapScreen(
                             } else {
                                 VsButtonState.Enabled
                             },
+                        isLoading = isSigning,
                     )
                 } else {
                     VsButton(
@@ -369,6 +370,7 @@ private fun VerifySwapScreen(
                         modifier = Modifier.fillMaxWidth(),
                         state =
                             if (!isSignEnabled) VsButtonState.Disabled else VsButtonState.Enabled,
+                        isLoading = isSigning,
                         onClick = onConfirm,
                     )
                 }
