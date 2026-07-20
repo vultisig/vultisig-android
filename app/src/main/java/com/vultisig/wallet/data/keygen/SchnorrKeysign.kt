@@ -343,7 +343,7 @@ class SchnorrKeysign(
         try {
             val keysignSetupMsg: ByteArray
 
-            if (isInitiateDevice) {
+            if (isInitiateDevice && attempt == 0) {
                 keysignSetupMsg = getKeysignSetupMessage(messageToSign)
 
                 sessionApi.uploadSetupMessage(
