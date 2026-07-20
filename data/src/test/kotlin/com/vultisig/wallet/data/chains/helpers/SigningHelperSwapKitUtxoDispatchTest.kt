@@ -136,4 +136,44 @@ class SigningHelperSwapKitUtxoDispatchTest {
             }
         assertTrue(e.message!!.contains("Unsupported SwapKit txType for signing"))
     }
+
+    @Test
+    fun `a blank txType on a non-UTXO chain still fails loudly rather than misdispatching`() {
+        val e =
+            assertThrows(IllegalStateException::class.java) {
+                SigningHelper.getKeysignMessages(swapKitKeysignPayload(Chain.Ethereum, ""), vault)
+            }
+        assertTrue(e.message!!.contains("Unsupported SwapKit txType for signing"))
+    }
+
+    @Test
+    fun `a lowercase generic psbt txType still dispatches to the legacy P2PKH signer`() {
+        // SwapKit's own casing isn't trusted on the quote-decoding side either
+        // (SwapKitQuoteSource normalizes response.meta.type to lowercase before matching) — the
+        // join-side check must not be stricter about a field it doesn't control.
+        assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
+            SigningHelper.getKeysignMessages(swapKitKeysignPayload(Chain.Dogecoin, "psbt"), vault)
+        }
+    }
+
+    @Test
+    fun `Litecoin source with the generic PSBT txType is not misrouted to the else branch`() {
+        // SwapKitBtcSigner needs the WalletCore JNI (vaultAddress derivation) before it reaches its
+        // own empty-payload check, so this can't assert a specific signer exception headlessly like
+        // the other cases. It instead pins the one thing that must hold regardless of JNI
+        // availability: a typo dropping Chain.Litecoin from the Bitcoin/Litecoin dispatch arm would
+        // silently fall through to `else -> error("Unsupported SwapKit txType for signing: ...")` —
+        // assert that specific failure mode never fires.
+        val e =
+            assertThrows(Throwable::class.java) {
+                SigningHelper.getKeysignMessages(
+                    swapKitKeysignPayload(Chain.Litecoin, SwapKitSwapPayloadJson.TX_TYPE_PSBT),
+                    vault,
+                )
+            }
+        assertTrue(
+            e !is IllegalStateException ||
+                e.message?.contains("Unsupported SwapKit txType for signing") != true
+        )
+    }
 }

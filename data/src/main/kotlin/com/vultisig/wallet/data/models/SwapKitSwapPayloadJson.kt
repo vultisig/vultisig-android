@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.models
 
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.Locale
 
 /**
  * SwapKit-routed swap whose wire shape doesn't fit [EVMSwapPayloadJson] — BTC PSBT, TON transfer
@@ -220,9 +221,12 @@ data class SwapKitSwapPayloadJson(
          * true for the legacy per-chain literals Android/iOS invent for their own initiated swaps.
          * `SigningHelper` picks the actual signer from the payload's `chain`, not from which of
          * these matched, so a peer that doesn't share the invented per-chain convention can still
-         * be joined.
+         * be joined. Compared case-insensitively:
+         * [txTypeOf][com.vultisig.wallet.data.repositories.swap.SwapKitQuoteSource] already treats
+         * SwapKit's own `meta.type` casing as unreliable on the quote side, so the join-side check
+         * must not be stricter than the side that decodes the same field.
          */
         fun isUtxoPsbtTxType(txType: String): Boolean =
-            txType.isBlank() || txType in UTXO_PSBT_TX_TYPES
+            txType.isBlank() || txType.uppercase(Locale.ROOT) in UTXO_PSBT_TX_TYPES
     }
 }
