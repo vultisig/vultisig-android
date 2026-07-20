@@ -14,10 +14,10 @@ import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.OPERATION_MINT
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.isSecuredAssetEligible
+import com.vultisig.wallet.data.models.nativeTokenTicker
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.toValue
@@ -25,7 +25,6 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
@@ -245,7 +244,7 @@ internal class SecuredAssetStrategy(
     private fun validateBtcLikeAmount(tokenAmountInt: BigInteger, chain: Chain) {
         val minAmount = chain.getDustThreshold
         if (tokenAmountInt < minAmount) {
-            val symbol = chain.coinType.symbol
+            val symbol = chain.nativeTokenTicker
             val name = chain.raw
             val formattedMinAmount = chain.toValue(minAmount).toString()
             throw InvalidTransactionDataException(

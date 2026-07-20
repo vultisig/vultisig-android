@@ -51,6 +51,10 @@ fun String.getChain(): Chain {
         "SEI" -> Chain.Sei
         "HYPE" -> Chain.Hyperliquid
         "QBTC" -> Chain.Qbtc
-        else -> Chain.ThorChain
+        else ->
+            error(
+                "Unknown native ticker '$this' — cannot resolve to a Chain. " +
+                    "A silent fallback here would misroute a fund path to the wrong chain."
+            )
     }
 }

@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.models.TokenStandard.TON
 import com.vultisig.wallet.data.models.TokenStandard.TRC20
 import com.vultisig.wallet.data.models.TokenStandard.UTXO
 import com.vultisig.wallet.data.utils.getDustThreshold
-import com.vultisig.wallet.data.utils.toValue
 import java.math.BigDecimal
 import java.math.BigInteger
 import wallet.core.jni.CoinType
@@ -515,6 +514,26 @@ val Chain.cosmosNativeDenom: String?
             else -> null
         }
 
-fun Chain.toValue(value: BigInteger): BigDecimal = coinType.toValue(value)
+/**
+ * The chain's native token as declared in [Coins] — the single source of truth for the native
+ * ticker and decimals.
+ *
+ * Prefer this (and [nativeTokenTicker] / [Chain.toValue]) over deriving `symbol`/`decimals` from
+ * [coinType]: several chains share a WalletCore [CoinType], so the WalletCore-derived values are
+ * wrong for display and amount math — MayaChain (CACAO/10 vs THORCHAIN's RUNE/8), Bittensor (TAO/9
+ * vs POLKADOT's DOT/10), and Qbtc (QBTC/8 vs COSMOS's ATOM/6).
+ */
+val Chain.nativeToken: Coin
+    get() =
+        Coins.coins[this]?.firstOrNull { it.isNativeToken }
+            ?: error("No native token registered in Coins for chain $name")
 
-fun Chain.toValue(value: BigDecimal): BigDecimal = coinType.toValue(value)
+/** Native token ticker from [Coins] — safe for display, unlike WalletCore's `coinType.symbol`. */
+val Chain.nativeTokenTicker: String
+    get() = nativeToken.ticker
+
+fun Chain.toValue(value: BigInteger): BigDecimal =
+    value.toBigDecimal().divide(BigDecimal.TEN.pow(nativeToken.decimal))
+
+fun Chain.toValue(value: BigDecimal): BigDecimal =
+    value.divide(BigDecimal.TEN.pow(nativeToken.decimal))
