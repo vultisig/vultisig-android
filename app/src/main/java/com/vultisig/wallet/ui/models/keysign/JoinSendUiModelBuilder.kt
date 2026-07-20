@@ -173,7 +173,7 @@ constructor(
         val signDirect =
             payload.signDirect?.let { json.encodeToString(parseCosmosMessage(it)) } ?: ""
 
-        val signSolana = payload.signSolana?.rawTransactions?.firstOrNull() ?: ""
+        val signSolana = payload.signSolana?.rawTransactions.orEmpty()
         val signSui = payload.signSui?.unsignedTxMsg?.takeIf { it.isNotEmpty() }
         val signRipple = payload.signRipple?.rawJson?.takeIf { it.isNotBlank() }
         val transaction =

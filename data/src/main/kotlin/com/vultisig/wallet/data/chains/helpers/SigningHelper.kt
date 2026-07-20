@@ -351,6 +351,30 @@ object SigningHelper {
         return messages.sorted()
     }
 
+    /**
+     * Assembles every signed tx (>=1 entry); only a Solana dApp batch yields more than one
+     * (issue #5238).
+     */
+    fun getSignedTransactions(
+        keysignPayload: KeysignPayload,
+        vault: Vault,
+        signatures: Map<String, tss.KeysignResponse>,
+        nonceAcc: BigInteger,
+    ): List<SignedTransactionResult> {
+        val chain = keysignPayload.coin.chain
+        // A swap payload is hashed by its swap signer, not the signSolana expansion, and must
+        // keep routing through the singular path below (mirrors getKeysignMessages).
+        if (
+            chain == Chain.Solana &&
+                keysignPayload.signSolana != null &&
+                keysignPayload.swapPayload == null
+        ) {
+            return SolanaHelper(vault.getEddsaSigningKey(chain))
+                .getSignedTransactions(keysignPayload, signatures)
+        }
+        return listOf(getSignedTransaction(keysignPayload, vault, signatures, nonceAcc))
+    }
+
     fun getSignedTransaction(
         keysignPayload: KeysignPayload,
         vault: Vault,
