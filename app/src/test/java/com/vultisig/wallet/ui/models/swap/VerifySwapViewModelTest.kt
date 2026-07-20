@@ -264,6 +264,7 @@ internal class VerifySwapViewModelTest {
             advanceUntilIdle()
 
             vm.state.value.errorText.shouldNotBeNull()
+            vm.state.value.isSigning shouldBe false
             coVerify(exactly = 0) { launchKeysign(any(), any(), any(), any(), any()) }
         }
 

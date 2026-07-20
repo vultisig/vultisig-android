@@ -14,6 +14,6 @@ data class THORChainInboundAddress(
     @SerialName("global_trading_paused") val globalTradingPaused: Boolean = false,
     @SerialName("chain_trading_paused") val chainTradingPaused: Boolean = false,
     @SerialName("chain_lp_actions_paused") val chainLPActionsPaused: Boolean = false,
-    @SerialName("gas_rate") val gasRate: String,
-    @SerialName("gas_rate_units") val gasRateUnits: String,
+    @SerialName("gas_rate") val gasRate: String = "",
+    @SerialName("gas_rate_units") val gasRateUnits: String = "",
 )
