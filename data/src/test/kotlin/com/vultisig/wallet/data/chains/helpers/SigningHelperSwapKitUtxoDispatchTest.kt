@@ -62,7 +62,7 @@ class SigningHelperSwapKitUtxoDispatchTest {
                     vault,
                 )
             }
-        assertTrue(e.message!!.contains("empty"))
+        assertTrue(e.message?.contains("empty") == true)
     }
 
     @Test
@@ -122,7 +122,7 @@ class SigningHelperSwapKitUtxoDispatchTest {
                     vault,
                 )
             }
-        assertTrue(e.message!!.contains("Unsupported SwapKit txType for signing"))
+        assertTrue(e.message?.contains("Unsupported SwapKit txType for signing") == true)
     }
 
     @Test
@@ -134,7 +134,7 @@ class SigningHelperSwapKitUtxoDispatchTest {
                     vault,
                 )
             }
-        assertTrue(e.message!!.contains("Unsupported SwapKit txType for signing"))
+        assertTrue(e.message?.contains("Unsupported SwapKit txType for signing") == true)
     }
 
     @Test
@@ -143,7 +143,7 @@ class SigningHelperSwapKitUtxoDispatchTest {
             assertThrows(IllegalStateException::class.java) {
                 SigningHelper.getKeysignMessages(swapKitKeysignPayload(Chain.Ethereum, ""), vault)
             }
-        assertTrue(e.message!!.contains("Unsupported SwapKit txType for signing"))
+        assertTrue(e.message?.contains("Unsupported SwapKit txType for signing") == true)
     }
 
     @Test
