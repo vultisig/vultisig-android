@@ -62,4 +62,26 @@ internal class DepositUiTransactionInfoTest {
         info.fromLabel shouldBe null
         info.toLabel shouldBe null
     }
+
+    @Test
+    fun `mint deposit carries operation and pool and leaves destination empty`() {
+        val model =
+            TransactionTypeUiModel.Deposit(
+                DepositTransactionUiModel(
+                    srcAddress = "maya12a9r",
+                    dstAddress = "",
+                    operation = "Mint",
+                    pool = "ARB.GLD-0xAFD091",
+                )
+            )
+
+        val info = model.toUiTransactionInfo()
+
+        info.operation shouldBe "Mint"
+        info.pool shouldBe "ARB.GLD-0xAFD091"
+        // No destination on an add-liquidity mint — the pool above is the target, so the done
+        // screen hides the "To" row rather than rendering an empty value (issue #5351).
+        info.to shouldBe ""
+        info.toLabel shouldBe null
+    }
 }

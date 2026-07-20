@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.RippleDappTx
+import com.vultisig.wallet.data.models.OPERATION_MINT
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.CopyIcon
@@ -133,17 +134,40 @@ internal fun SendTxOverviewScreen(
                         )
                     }
                 } else {
-                    VsOverviewToken(
-                        header =
-                            if (tx.type == UiTransactionInfoType.Send) {
-                                stringResource(R.string.tx_overview_screen_tx_send)
-                            } else {
-                                stringResource(R.string.tx_overview_screen_tx_deposit)
-                            },
-                        valuedToken = tx.token,
-                        shape = RoundedCornerShape(24.dp),
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth(),
-                    )
+                    ) {
+                        VsOverviewToken(
+                            header =
+                                if (tx.type == UiTransactionInfoType.Send) {
+                                    stringResource(R.string.tx_overview_screen_tx_send)
+                                } else {
+                                    stringResource(R.string.tx_overview_screen_tx_deposit)
+                                },
+                            valuedToken = tx.token,
+                            shape = RoundedCornerShape(24.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+
+                        // Surface the minted LP pool that the pre-sign overview shows, so a Mint
+                        // add-liquidity done screen isn't left showing only the deposited token
+                        // with no indication of what was minted (issue #5351).
+                        if (tx.operation == OPERATION_MINT && tx.pool.isNotEmpty()) {
+                            UiSpacer(8.dp)
+                            Text(
+                                text =
+                                    stringResource(
+                                        R.string.lp_destination_format,
+                                        tx.pool.substringBefore('-'),
+                                        tx.token.token.ticker,
+                                    ),
+                                style = Theme.brockmann.headings.title3,
+                                color = Theme.v2.colors.text.primary,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
                 }
             }
         },
@@ -165,9 +189,12 @@ internal fun SendTxOverviewScreen(
                 )
 
                 // A dApp XRPL tx carries no native destination (`toAddress` is empty); the
-                // recipient,
-                // when any, is inside the decoded summary above, so skip the empty "To" row.
-                if (tx.signRipple == null) {
+                // recipient, when any, is inside the decoded summary above. Some deposits (e.g. a
+                // Mint LP add-liquidity) likewise carry no destination — the pool below is the
+                // target — so skip the "To" row entirely rather than render it with an empty value
+                // (issue #5351).
+                val hasDestination = tx.to.isNotEmpty() || tx.toLabel != null
+                if (tx.signRipple == null && hasDestination) {
                     VerifyCardDivider(size = 1.dp)
 
                     if (showSaveToAddressBook) {
@@ -193,6 +220,12 @@ internal fun SendTxOverviewScreen(
                             bracketValue = tx.toLabel?.let { tx.to },
                         )
                     }
+                }
+
+                if (tx.pool.isNotEmpty()) {
+                    VerifyCardDivider(size = 1.dp)
+
+                    VerifyCardDetails(title = stringResource(R.string.pool), subtitle = tx.pool)
                 }
 
                 if (tx.memo.isNotEmpty()) {
@@ -380,10 +413,13 @@ private fun PreviewSendTxOverviewScreen(isTransactionDetailVisible: Boolean) {
                     depositTransactionUiModel =
                         DepositTransactionUiModel(
                             token = ValuedToken.Empty,
-                            srcAddress = "abx123abx123abx123abx123ab",
+                            srcAddress = "maya12a9rpf9u2ul4x7nde8um6z3zm",
+                            srcVaultName = "AE_QBTC_SAM",
                             networkFeeFiatValue = "",
-                            memo = "sdfsdfsdfsdfs",
-                            dstAddress = "abx123abx123abx123abx123ab",
+                            memo = "+:ARB.GLD-0XAFD091F140C21770F4E5D53D26B2859AE97555AA",
+                            operation = "Mint",
+                            pool = "ARB.GLD-0XAFD091F140C21770F4E5D53D26B2859AE97555AA",
+                            dstAddress = "",
                         )
                 )
                 .toUiTransactionInfo(),
@@ -404,6 +440,15 @@ internal data class UiTransactionInfo(
     val memo: String,
     val networkFeeTokenValue: String,
     val networkFeeFiatValue: String,
+    /**
+     * Structured deposit operation (e.g. Mint), used to surface the minted LP pool on the done
+     * screen. Empty for non-deposit transactions.
+     */
+    val operation: String = "",
+    /**
+     * Target liquidity pool for a deposit (e.g. `ARB.GLD-0x…`). Empty when not a pooled deposit.
+     */
+    val pool: String = "",
     val signMethod: String = "",
     val functionName: String? = null,
     val functionSignature: String? = null,

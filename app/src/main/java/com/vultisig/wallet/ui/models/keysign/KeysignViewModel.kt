@@ -348,6 +348,22 @@ constructor(
         )
 
     init {
+        // Resolve the signing vault's name up front so the From row renders "VaultName (address)"
+        // even for deposits with no destination — e.g. a Mint LP add-liquidity — which otherwise
+        // skip the destination-gated label block below and would show a raw address (issue #5351).
+        transactionTypeUiModel?.let { model ->
+            _state.update {
+                it.copy(
+                    transactionUiModel =
+                        model.withResolvedLabels(
+                            srcVaultName = vault.name,
+                            dstVaultName = null,
+                            dstAddressBookTitle = null,
+                        )
+                )
+            }
+        }
+
         // Both Send and Deposit done-screens resolve the same destination labels + "Add to Address
         // Book" affordance, so a Cosmos staking deposit renders identically on the initiator and a
         // joining device (issue #4939).
