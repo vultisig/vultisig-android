@@ -1134,11 +1134,8 @@ internal class SwapFormViewModelTest {
                     loadGate.await()
                     createAccount(USDC_COIN, BigInteger("1000000000"))
                 }
-            coEvery {
-                requestResultRepository.request<AssetSelected>(
-                    SwapTokenSelector.ARG_SELECTED_DST_TOKEN_ID
-                )
-            } returns AssetSelected(token = USDC_COIN, isDisabled = true)
+            coEvery { requestResultRepository.request<AssetSelected>(any()) } returns
+                AssetSelected(token = USDC_COIN, isDisabled = true)
 
             val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
             advanceUntilIdle()
@@ -1191,11 +1188,8 @@ internal class SwapFormViewModelTest {
                     loadGate.await()
                     createAccount(SOL_COIN, BigInteger("1000000000"))
                 }
-            coEvery {
-                requestResultRepository.request<AssetSelected>(
-                    SwapTokenSelector.ARG_SELECTED_DST_TOKEN_ID
-                )
-            } returns AssetSelected(token = SOL_COIN, isDisabled = true)
+            coEvery { requestResultRepository.request<AssetSelected>(any()) } returns
+                AssetSelected(token = SOL_COIN, isDisabled = true)
 
             val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
             advanceUntilIdle()
@@ -1245,11 +1239,8 @@ internal class SwapFormViewModelTest {
                 }
             // Destination is BTC (createViewModelWithSwapTokens); picking BTC as the source forms a
             // same-token pair.
-            coEvery {
-                requestResultRepository.request<AssetSelected>(
-                    SwapTokenSelector.ARG_SELECTED_SRC_TOKEN_ID
-                )
-            } returns AssetSelected(token = BTC_COIN, isDisabled = true)
+            coEvery { requestResultRepository.request<AssetSelected>(any()) } returns
+                AssetSelected(token = BTC_COIN, isDisabled = true)
 
             val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
             advanceUntilIdle()

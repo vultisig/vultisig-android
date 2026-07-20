@@ -179,9 +179,18 @@ constructor(
                     verify = { hash -> polkadotApi.isExtrinsicInChain(hash, VERIFY_SCAN_DEPTH) },
                 )
 
-            Chain.Bittensor -> {
-                bittensorApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
-            }
+            // Mirrors Polkadot: a malformed / truncated RPC body now throws instead of resolving to
+            // a fabricated success hash, so it must go through the recover path that verifies the
+            // extrinsic is actually on-chain (via the Bittensor status provider) before reporting
+            // success. A duplicate rebroadcast from a peer still resolves to the known hash.
+            Chain.Bittensor ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        bittensorApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
+                    },
+                    verify = { hash -> isLandedOnChain(hash, chain) },
+                )
 
             // Sui digest is not pre-computable from the raw transaction, so transactionHash
             // is always blank and recovery cannot work; broadcast directly.
