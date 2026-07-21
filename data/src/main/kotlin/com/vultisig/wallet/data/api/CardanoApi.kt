@@ -149,6 +149,9 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
         } catch (t: Throwable) {
             if (t is CancellationException) throw t
             if (t is CardanoTransactionAlreadyBroadcastException) throw t
+            // Let fatal errors (OOM, StackOverflow) propagate rather than masking them as a
+            // broadcast rejection.
+            if (t is Error) throw t
             Timber.e(t, "Failed to broadcast Cardano transaction")
             error("Failed to broadcast transaction : ${t.message}")
         }
