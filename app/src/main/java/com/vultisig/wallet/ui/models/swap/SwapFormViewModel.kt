@@ -286,6 +286,19 @@ constructor(
                     estimatedNetworkFeeFiatValue = inputs.estimatedNetworkFeeFiatValue,
                     gasLimitOverride = gasLimitOverride.value,
                     externalRecipient = externalRecipient.value,
+                    feeDisplay =
+                        _uiState.value.let { state ->
+                            SwapFeeDisplay(
+                                swapFeePercent = state.feeBreakdown.swapFeePercent,
+                                swapFeeIncludedInRate = state.feeBreakdown.swapFeeIncludedInRate,
+                                vultBpsDiscount = state.discountInfo.vultBpsDiscount,
+                                vultBpsDiscountFiatValue =
+                                    state.discountInfo.vultBpsDiscountFiatValue,
+                                referralBpsDiscount = state.discountInfo.referralBpsDiscount,
+                                referralBpsDiscountFiatValue =
+                                    state.discountInfo.referralBpsDiscountFiatValue,
+                            )
+                        },
                 )
 
             swapTransactionRepository.addTransaction(transaction)

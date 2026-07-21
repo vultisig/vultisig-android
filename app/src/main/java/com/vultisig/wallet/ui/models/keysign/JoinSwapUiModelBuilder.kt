@@ -38,6 +38,7 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.evmSwapDisplayGasLimit
+import com.vultisig.wallet.ui.models.swap.formatAffiliatePercent
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import com.vultisig.wallet.ui.models.swap.resolveExternalSwapRecipient
 import java.math.BigInteger
@@ -245,6 +246,17 @@ constructor(
 
                 val estimatedFee = convertTokenValueToFiat(feeToken, estimatedTokenFees, currency)
 
+                // Literal 1inch bakes the affiliate fee into the quoted rate and never itemizes it,
+                // so the co-signer shows "included in quoted rate" — matching the initiator —
+                // rather
+                // than the gas placeholder the else-branch above computes for `value` (#5358,
+                // #5329). The join device can't know the initiator's VULT discount, so the row uses
+                // the base rate. Other providers carry a real fee and are unaffected.
+                val isOneInchIncludedInRate = provider == SwapProvider.ONEINCH.getSwapProviderId()
+                val swapFeeForTotal =
+                    if (isOneInchIncludedInRate) networkGasFeeFiatValue
+                    else estimatedFee + networkGasFeeFiatValue
+
                 val swapTransaction =
                     SwapTransactionUiModel(
                         src =
@@ -287,12 +299,11 @@ constructor(
                         networkFeeFormatted =
                             mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
                                 " ${estimatedNetworkGasFee.tokenValue.unit}",
-                        totalFee =
-                            fiatValueToStringMapper(
-                                estimatedFee + networkGasFeeFiatValue,
-                                asFee = true,
-                            ),
+                        totalFee = fiatValueToStringMapper(swapFeeForTotal, asFee = true),
                         provider = provider,
+                        swapFeeIncludedInRate = isOneInchIncludedInRate,
+                        swapFeePercent =
+                            if (isOneInchIncludedInRate) formatAffiliatePercent(null) else null,
                     )
 
                 JoinKeysignVerifyResult(
@@ -476,6 +487,11 @@ constructor(
                         providerFeeToken = srcToken,
                         currency = currency,
                         providerLabel = providerLabel,
+                        // BTC/Cardano SwapKit deposits report the deposit cost as their inbound
+                        // fee,
+                        // already shown as the Network Fee — hide the Swap Fee row so it isn't
+                        // double-counted, matching the initiator and the form (#5358, #5321).
+                        swapFeeHidden = srcToken.chain.standard == TokenStandard.UTXO,
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -503,6 +519,9 @@ constructor(
         externalRecipient: String? = null,
         swapFee: TokenValue? = null,
         outboundFee: TokenValue? = null,
+        // Hides the Swap Fee row and drops it from the total for a SwapKit UTXO deposit whose cost
+        // is already the Network Fee — matching the initiator's verify screen and the form (#5358).
+        swapFeeHidden: Boolean = false,
     ): SwapTransactionUiModel {
         val estimatedFee = convertTokenValueToFiat(providerFeeToken, providerFee, currency)
 
@@ -557,12 +576,14 @@ constructor(
                     " ${estimatedNetworkGasFee.tokenValue.unit}",
             totalFee =
                 fiatValueToStringMapper(
-                    feesFiatForTotal + estimatedNetworkGasFee.fiatValue,
+                    if (swapFeeHidden) estimatedNetworkGasFee.fiatValue
+                    else feesFiatForTotal + estimatedNetworkGasFee.fiatValue,
                     asFee = true,
                 ),
             provider = provider,
             providerLabel = providerLabel,
             externalRecipient = externalRecipient,
+            swapFeeHidden = swapFeeHidden,
         )
     }
 

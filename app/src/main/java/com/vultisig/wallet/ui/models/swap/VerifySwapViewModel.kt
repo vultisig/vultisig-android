@@ -81,6 +81,24 @@ internal data class SwapTransactionUiModel(
     // destination is external / unresolved (falls back to the bare address). Rendered as
     // `VaultName (Address)` on the transaction-complete screen (#5333).
     val dstVaultName: String? = null,
+    // Affiliate fee percentage for the Swap Fee row title (e.g. "0.50%"), or null to show the plain
+    // "Swap Fee" title. Sourced from the form so the verify screen matches it (#5358).
+    val swapFeePercent: String? = null,
+    // True when the affiliate fee is baked into the quoted rate (1inch): the Swap Fee row shows
+    // "included in quoted rate" instead of the fiat amount, matching the form (#5358).
+    val swapFeeIncludedInRate: Boolean = false,
+    // True when the Swap Fee row must be hidden entirely — a SwapKit UTXO deposit whose cost is
+    // already the Network Fee, so showing it again would double-count. Matches the form, which
+    // hides the row for these swaps (#5358, #5321).
+    val swapFeeHidden: Boolean = false,
+    // VULT-tier discount (bps) and its pre-formatted fiat value, rendered as the tier row on the
+    // verify screen; null when no discount applies or it's unavailable (co-signer) (#5358).
+    val vultBpsDiscount: Int? = null,
+    val vultBpsDiscountFiatValue: String? = null,
+    // Referral discount (bps) and its pre-formatted fiat value, rendered as the referral row; null
+    // when there's no referral (non-THORChain, or unavailable to a co-signer) (#5358).
+    val referralBpsDiscount: Int? = null,
+    val referralBpsDiscountFiatValue: String? = null,
 )
 
 internal data class ValuedToken(
