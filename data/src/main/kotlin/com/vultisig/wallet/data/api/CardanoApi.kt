@@ -117,8 +117,17 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
 
                     ogmiosResponse.result?.transaction?.id
                         ?: run {
-                            val errorMessage = ogmiosResponse.error?.message ?: "Unknown error"
+                            // Ogmios can convey a submission error under HTTP 200. Mirror the 400
+                            // handling so a duplicate-broadcast rejection recovers regardless of
+                            // the
+                            // status Ogmios uses to report it.
+                            val dataError = ogmiosResponse.error?.data?.error
+                            val errorMessage =
+                                dataError ?: ogmiosResponse.error?.message ?: "Unknown error"
                             Timber.e("Cardano transaction submission failed: $errorMessage")
+                            if (dataError?.isAlreadyBroadcast() == true) {
+                                throw CardanoTransactionAlreadyBroadcastException(errorMessage)
+                            }
                             error("Failed to broadcast transaction: $errorMessage")
                         }
                 }
