@@ -66,10 +66,35 @@ internal data class QuoteFetchResult(
     val sourceGasWei: BigInteger? = null,
     val outboundFeeText: String? = null,
     val swapFeePercent: String? = null,
+    // True when the provider bakes the affiliate fee into the quoted destination amount and never
+    // itemizes it as a separate charge (1inch): the fee is real but already reflected in the rate,
+    // so the Swap Fee row shows "included in quoted rate" instead of a fabricated fiat amount and
+    // [swapFeeFiat] contributes nothing to the headline total (#5358).
+    val swapFeeIncludedInRate: Boolean = false,
     // Fractional price impact of the winning quote (e.g. 0.0133 == 1.33%), or null when the
     // provider doesn't expose it. Formatted into the Price Impact row downstream.
     val priceImpact: BigDecimal? = null,
 )
+
+/**
+ * Base Vultisig affiliate fee, in basis points, charged before any VULT tier discount. Every swap
+ * provider quotes against the same 50 bps base (THORChain/Maya `AFFILIATE_FEE_RATE`, the aggregator
+ * `*_AFFILIATE_FEE_BPS` constants, and 1inch's 0.5% `referrer` fee), so the displayed rate is
+ * uniform.
+ */
+internal const val BASE_AFFILIATE_FEE_BPS = 50
+
+/**
+ * Formats the affiliate fee percentage shown in the Swap Fee row, sourced from the net bps actually
+ * sent to the provider — [BASE_AFFILIATE_FEE_BPS] reduced by the vault's [vultBPSDiscount] and
+ * clamped at zero — rather than a client-side fiat division that breaks when source fiat is
+ * unavailable (#5358). Returns e.g. `"0.50%"` with no discount and `"0.00%"` at the Ultimate tier.
+ * A null discount is treated as zero (no discount applied).
+ */
+internal fun formatAffiliatePercent(vultBPSDiscount: Int?): String {
+    val netBps = (BASE_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0)).coerceAtLeast(0)
+    return String.format(Locale.US, "%.2f%%", netBps.toBigDecimal().divide(BigDecimal(100)))
+}
 
 internal data class QuoteCandidate(
     val provider: SwapProvider,
@@ -328,9 +353,22 @@ constructor(
                 is SwapQuote.MayaChain -> quote.data.fees
                 else -> null
             }
+        // Displayed affiliate percentage sourced from the net bps actually sent to the provider —
+        // base 50 bps reduced by the VULT tier discount, clamped at zero — not the client-side
+        // fiat division this used to do, which returned null whenever source fiat was unavailable
+        // and rounded oddly (#5358). 0.50% with no discount; 0.00% at the Ultimate tier (full 50
+        // bps discount). Every provider charges the same base affiliate, so this is uniform.
+        val swapFeePercent = formatAffiliatePercent(vultBPSDiscount)
+
+        // 1inch never returns the affiliate fee as a separate field — it is taken as a percentage
+        // of the swap and already reflected in the quoted destination amount. Show "included in
+        // quoted rate" rather than mislabeling gas (gasPrice × gas) as the Swap Fee, which
+        // duplicated the Network Fee row and double-counted it in the headline total (#5358, #5334,
+        // #5335). Every other provider itemizes a real fee, so this only affects pure 1inch.
+        val swapFeeIncludedInRate = provider == SwapProvider.ONEINCH
+
         val resolvedFeeText: String
         val outboundFeeText: String?
-        val swapFeePercent: String?
         val resolvedSwapFeeFiat: FiatValue
         if (rawFees != null) {
             val affiliateFiat =
@@ -345,16 +383,6 @@ constructor(
                     dstToken.convertToTokenValue(rawFees.outbound),
                     currency,
                 )
-            swapFeePercent =
-                if (srcFiatValue.value > BigDecimal.ZERO)
-                    String.format(
-                        Locale.US,
-                        "%.2f%%",
-                        affiliateFiat.value
-                            .divide(srcFiatValue.value, 4, RoundingMode.HALF_UP)
-                            .multiply(BigDecimal(100)),
-                    )
-                else null
             resolvedFeeText = fiatValueToString(affiliateFiat, asFee = true)
             outboundFeeText = fiatValueToString(outboundFiat, asFee = true)
             // Headline total must reconcile to the breakdown rows (Swap Fee + Outbound Fee).
@@ -365,10 +393,15 @@ constructor(
                     value = affiliateFiat.value + outboundFiat.value,
                     currency = fiatFees.currency,
                 )
+        } else if (swapFeeIncludedInRate) {
+            // Baked into the rate: nothing to itemize and nothing to add to the total. The row
+            // renders "included in quoted rate" from [swapFeeIncludedInRate] downstream.
+            resolvedFeeText = ""
+            outboundFeeText = null
+            resolvedSwapFeeFiat = FiatValue(BigDecimal.ZERO, fiatFees.currency)
         } else {
             resolvedFeeText = fiatValueToString(fiatFees, asFee = true)
             outboundFeeText = null
-            swapFeePercent = null
             resolvedSwapFeeFiat = fiatFees
         }
 
@@ -385,6 +418,7 @@ constructor(
             sourceGasWei = sourceGasWei(provider, quote),
             outboundFeeText = outboundFeeText,
             swapFeePercent = swapFeePercent,
+            swapFeeIncludedInRate = swapFeeIncludedInRate,
             priceImpact = quote.priceImpact,
         )
     }

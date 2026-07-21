@@ -310,6 +310,7 @@
     <string name="swap_form_from_title">从</string>
     <string name="swap_form_estimated_fees_title">交换费用</string>
     <string name="swap_form_estimated_fees_with_percent_title">交换费用 (%1$s)</string>
+    <string name="swap_form_estimated_fees_included_in_rate">已包含在报价汇率中</string>
     <string name="swap_form_outbound_fee_title">出金手续费</string>
     <string name="swap_form_price_impact_title">价格影响</string>
     <string name="swap_price_impact_good">良好</string>

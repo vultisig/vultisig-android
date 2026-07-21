@@ -811,6 +811,148 @@ internal class SwapQuoteManagerTest {
     }
 
     @Test
+    fun `formatAffiliatePercent sources the net rate from the sent bps`() {
+        // Base 50 bps with no discount, reduced by the VULT discount, clamped at zero. This is the
+        // Swap Fee row title (#5358).
+        formatAffiliatePercent(null) shouldBe "0.50%"
+        formatAffiliatePercent(0) shouldBe "0.50%"
+        formatAffiliatePercent(20) shouldBe "0.30%"
+        formatAffiliatePercent(50) shouldBe "0.00%" // Ultimate tier: full discount.
+        formatAffiliatePercent(60) shouldBe "0.00%" // Over-discount never goes negative.
+    }
+
+    @Test
+    fun `fetchQuote marks 1inch fee as included in the rate rather than showing gas`() = runTest {
+        // 1inch never returns the affiliate fee separately — it is baked into the quoted rate. The
+        // Swap Fee row must read "included in quoted rate" (empty fee text + flag) and contribute
+        // nothing to the total, never gasPrice × gas mislabeled as the swap fee (#5358, #5334).
+        val eth = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
+        val usdc = coin(Chain.Ethereum, "USDC", "0xdst", 6)
+        coEvery { tokenRepository.getNativeToken(any()) } returns eth
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.ONEINCH, any()) } returns
+            SwapQuoteResult.Evm(
+                evmQuote(dstAmount = "1000000", gas = 150_000, gasPrice = "20000000000")
+            )
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal("2"), "USD")
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+
+        val result =
+            createManager()
+                .fetchQuote(
+                    provider = SwapProvider.ONEINCH,
+                    src = mockk(relaxed = true),
+                    dst = mockk(relaxed = true),
+                    srcToken = eth,
+                    dstToken = usdc,
+                    srcTokenValue = BigInteger.ONE,
+                    tokenValue = TokenValue(BigInteger.ONE, eth),
+                    currency = AppCurrency.USD,
+                    vultBPSDiscount = null,
+                    referral = null,
+                    amount = BigDecimal.ONE,
+                )
+
+        result.swapFeeIncludedInRate shouldBe true
+        result.feeText shouldBe ""
+        result.swapFeeFiat shouldBe FiatValue(BigDecimal.ZERO, "USD")
+        result.swapFeePercent shouldBe "0.50%"
+    }
+
+    @Test
+    fun `fetchQuote 1inch swap fee percent reflects the VULT discount`() = runTest {
+        val eth = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
+        val usdc = coin(Chain.Ethereum, "USDC", "0xdst", 6)
+        coEvery { tokenRepository.getNativeToken(any()) } returns eth
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.ONEINCH, any()) } returns
+            SwapQuoteResult.Evm(evmQuote(dstAmount = "1000000"))
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, "USD")
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+
+        val result =
+            createManager()
+                .fetchQuote(
+                    provider = SwapProvider.ONEINCH,
+                    src = mockk(relaxed = true),
+                    dst = mockk(relaxed = true),
+                    srcToken = eth,
+                    dstToken = usdc,
+                    srcTokenValue = BigInteger.ONE,
+                    tokenValue = TokenValue(BigInteger.ONE, eth),
+                    currency = AppCurrency.USD,
+                    vultBPSDiscount = 20,
+                    referral = null,
+                    amount = BigDecimal.ONE,
+                )
+
+        result.swapFeePercent shouldBe "0.30%"
+        result.swapFeeIncludedInRate shouldBe true
+    }
+
+    @Test
+    fun `fetchQuote sources THORChain swap fee percent from the sent bps, itemized not baked`() =
+        runTest {
+            val btc = coin(Chain.Bitcoin, "BTC", "bc1qsrc", 8)
+            val eth = coin(Chain.Ethereum, "ETH", "0xdst", 18)
+            val thorDst = TokenValue(BigInteger.valueOf(100), eth)
+            val thorQuote =
+                SwapQuote.ThorChain(
+                    expectedDstValue = thorDst,
+                    fees = TokenValue(BigInteger.valueOf(7), eth),
+                    expiredAt = Clock.System.now().plus(5.minutes),
+                    recommendedMinTokenValue = TokenValue(BigInteger.ZERO, eth),
+                    data =
+                        THORChainSwapQuote(
+                            dustThreshold = null,
+                            expectedAmountOut = "100",
+                            expiry = BigInteger.ZERO,
+                            fees = Fees(affiliate = "3", asset = "0", outbound = "4", total = "7"),
+                            inboundAddress = "thorinbound",
+                            inboundConfirmationBlocks = null,
+                            inboundConfirmationSeconds = null,
+                            maxStreamingQuantity = 0,
+                            memo = "memo",
+                            notes = "",
+                            outboundDelayBlocks = BigInteger.ZERO,
+                            outboundDelaySeconds = BigInteger.ZERO,
+                            recommendedMinAmountIn = "0",
+                            streamingSwapBlocks = BigInteger.ZERO,
+                            totalSwapSeconds = 0L,
+                            warning = "",
+                            router = null,
+                            error = null,
+                        ),
+                )
+            coEvery { tokenRepository.getNativeToken(any()) } returns btc
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } returns
+                SwapQuoteResult.Native(thorQuote)
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+                FiatValue(BigDecimal("5"), "USD")
+            every { mapTokenValueToDecimalUiString(any()) } returns "0"
+
+            val result =
+                createManager()
+                    .fetchQuote(
+                        provider = SwapProvider.THORCHAIN,
+                        src = mockk(relaxed = true),
+                        dst = mockk(relaxed = true),
+                        srcToken = btc,
+                        dstToken = eth,
+                        srcTokenValue = BigInteger.ONE,
+                        tokenValue = TokenValue(BigInteger.ONE, btc),
+                        currency = AppCurrency.USD,
+                        vultBPSDiscount = null,
+                        referral = null,
+                        amount = BigDecimal.ONE,
+                    )
+
+            // Percentage from the sent bps, and THORChain itemizes a real fee (never baked).
+            result.swapFeePercent shouldBe "0.50%"
+            result.swapFeeIncludedInRate shouldBe false
+        }
+
+    @Test
     fun `fetchQuote exposes source gas as gas times gasPrice for an EVM aggregator`() = runTest {
         // gas 150_000 × gasPrice 20 gwei = 3e15 wei — the value the in-band lower-gas tie-break
         // compares.

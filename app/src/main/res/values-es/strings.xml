@@ -166,6 +166,7 @@
     <string name="swap_form_from_title">De</string>
     <string name="swap_form_estimated_fees_title">Tarifa de intercambio</string>
     <string name="swap_form_estimated_fees_with_percent_title">Tarifa de intercambio (%1$s)</string>
+    <string name="swap_form_estimated_fees_included_in_rate">incluida en la tarifa cotizada</string>
     <string name="swap_form_outbound_fee_title">Tarifa de salida</string>
     <string name="swap_form_price_impact_title">Impacto del Precio</string>
     <string name="swap_price_impact_good">Bueno</string>

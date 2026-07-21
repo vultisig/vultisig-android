@@ -249,6 +249,7 @@
     <string name="swap_form_from_title">보내는 토큰</string>
     <string name="swap_form_estimated_fees_title">스왑 수수료</string>
     <string name="swap_form_estimated_fees_with_percent_title">스왑 수수료 (%1$s)</string>
+    <string name="swap_form_estimated_fees_included_in_rate">견적 환율에 포함됨</string>
     <string name="swap_form_outbound_fee_title">출금 수수료</string>
     <string name="swap_form_price_impact_title">가격 영향</string>
     <string name="swap_price_impact_good">양호</string>

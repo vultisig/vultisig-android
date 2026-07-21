@@ -179,6 +179,7 @@
     <string name="verify_swap_agree_receive_amount">Ich bin mit dem Mindestbetrag einverstanden, den ich erhalte</string>
     <string name="swap_form_estimated_fees_title">Swap Gebühr</string>
     <string name="swap_form_estimated_fees_with_percent_title">Swap Gebühr (%1$s)</string>
+    <string name="swap_form_estimated_fees_included_in_rate">im angegebenen Kurs enthalten</string>
     <string name="swap_form_outbound_fee_title">Ausgehende Gebühr</string>
     <string name="swap_form_price_impact_title">Preisauswirkung</string>
     <string name="swap_price_impact_good">Gut</string>
