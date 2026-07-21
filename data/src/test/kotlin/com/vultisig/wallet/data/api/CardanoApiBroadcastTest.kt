@@ -67,6 +67,29 @@ class CardanoApiBroadcastTest {
     }
 
     @Test
+    fun `broadcastTransaction throws AlreadyBroadcast on spent-inputs rejection`() {
+        // Loser of a multi-device keysign race: Ogmios says the inputs are spent because the peer's
+        // byte-identical tx already landed. This must be distinguishable so recovery reports the
+        // local hash as success instead of a hard failure (issue #5337).
+        val body =
+            """
+            {
+              "error": {
+                "code": 3997,
+                "message": "The transaction couldn't be added to the mempool...",
+                "data": { "error": "All inputs are spent. Transaction has probably already been included" }
+              }
+            }
+            """
+                .trimIndent()
+        val api = newApi(HttpStatusCode.BadRequest, body)
+
+        assertThrows(CardanoTransactionAlreadyBroadcastException::class.java) {
+            runTest { api.broadcastTransaction(chain = "cardano", signedTransaction = "00") }
+        }
+    }
+
+    @Test
     fun `broadcastTransaction throws on BadRequest error without output references`() {
         val body =
             """

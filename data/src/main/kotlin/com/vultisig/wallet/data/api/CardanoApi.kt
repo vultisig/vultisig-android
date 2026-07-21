@@ -24,6 +24,14 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import timber.log.Timber
 
+/**
+ * The Ogmios node rejected our broadcast because the inputs are already spent — its own message
+ * ("Transaction has probably already been included") is the duplicate-broadcast signal on the
+ * losing device of a multi-device keysign. Since the peer's byte-identical tx spent those exact
+ * inputs, our locally computed hash is canonical (issue #5337).
+ */
+class CardanoTransactionAlreadyBroadcastException(message: String) : Exception(message)
+
 interface CardanoApi {
     suspend fun getBalance(coin: Coin): BigInteger
 
@@ -124,8 +132,12 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
                     // only treat a real duplicate submission as success.
                     val ogmiosError =
                         json.decodeFromString<OgmiosTransactionResponse>(response.bodyAsText())
-                    val errorMessage = ogmiosError.error?.message ?: "Unknown error"
+                    val dataError = ogmiosError.error?.data?.error
+                    val errorMessage = dataError ?: ogmiosError.error?.message ?: "Unknown error"
                     Timber.e("Cardano transaction submission failed: $errorMessage")
+                    if (dataError?.isAlreadyBroadcast() == true) {
+                        throw CardanoTransactionAlreadyBroadcastException(errorMessage)
+                    }
                     error("Failed to broadcast transaction: $errorMessage")
                 }
 
@@ -136,10 +148,17 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
             }
         } catch (t: Throwable) {
             if (t is CancellationException) throw t
+            if (t is CardanoTransactionAlreadyBroadcastException) throw t
             Timber.e(t, "Failed to broadcast Cardano transaction")
             error("Failed to broadcast transaction : ${t.message}")
         }
     }
+
+    // Ogmios reports spent inputs as "All inputs are spent. Transaction has probably already been
+    // included" — the loser of a duplicate-broadcast race, not a genuine rejection.
+    private fun String.isAlreadyBroadcast(): Boolean =
+        contains("already been included", ignoreCase = true) ||
+            contains("inputs are spent", ignoreCase = true)
 
     private suspend fun getCurrentSlot(): ULong {
         val response = httpClient.get(url) { url { path(apiV1Path, "tip") } }

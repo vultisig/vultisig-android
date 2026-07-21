@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
+import com.vultisig.wallet.data.api.CardanoTransactionAlreadyBroadcastException
 import com.vultisig.wallet.data.api.CosmosApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -405,6 +406,36 @@ class BroadcastTxUseCaseTest {
         }
     }
 
+    @Test
+    fun `recovers local hash when cardano rejects a duplicate broadcast`() = runTest {
+        // Loser device of a multi-device keysign: Ogmios rejects the byte-identical rebroadcast
+        // because the inputs are already spent. The tx is on-chain under our local hash, so we must
+        // report success even though it has 0 confirmations within the short verify window.
+        val cardanoApi = mockk<CardanoApi>(relaxed = true)
+        coEvery { cardanoApi.broadcastTransaction(Chain.Cardano.name, RAW_TRANSACTION) } throws
+            CardanoTransactionAlreadyBroadcastException("All inputs are spent")
+
+        val txHash = createUseCase(cardanoApi = cardanoApi)(Chain.Cardano, signedTransaction())
+
+        assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+        coVerify(exactly = 0) { cardanoApi.getTxStatus(any()) }
+    }
+
+    @Test
+    fun `propagates cardano rejection that is not a duplicate broadcast`() = runTest {
+        val cardanoApi = mockk<CardanoApi>(relaxed = true)
+        val failure = IllegalStateException("Failed to broadcast transaction: invalid transaction")
+        coEvery { cardanoApi.broadcastTransaction(Chain.Cardano.name, RAW_TRANSACTION) } throws
+            failure
+        coEvery { cardanoApi.getTxStatus(KNOWN_TRANSACTION_HASH) } returns null
+
+        val thrown =
+            assertFailsWith<IllegalStateException> {
+                createUseCase(cardanoApi = cardanoApi)(Chain.Cardano, signedTransaction())
+            }
+        assertEquals(failure, thrown)
+    }
+
     private fun blockchairResult(blockId: Int) =
         BlockChainStatusDeserialized.Result(
             BlockChairStatusResponse(
@@ -423,6 +454,7 @@ class BroadcastTxUseCaseTest {
         cosmosApiFactory: CosmosApiFactory = mockk(relaxed = true),
         blockChairApi: BlockChairApi = mockk(relaxed = true),
         bittensorApi: BittensorApi = mockk(relaxed = true),
+        cardanoApi: CardanoApi = mockk(relaxed = true),
         transactionStatusRepository: TransactionStatusRepository = mockk(relaxed = true),
     ) =
         BroadcastTxUseCaseImpl(
@@ -438,7 +470,7 @@ class BroadcastTxUseCaseTest {
             tonApi = mockk<TonApi>(relaxed = true),
             rippleApi = mockk<RippleApi>(relaxed = true),
             tronApi = mockk<TronApi>(relaxed = true),
-            cardanoApi = mockk<CardanoApi>(relaxed = true),
+            cardanoApi = cardanoApi,
             transactionStatusRepository = transactionStatusRepository,
         )
 
