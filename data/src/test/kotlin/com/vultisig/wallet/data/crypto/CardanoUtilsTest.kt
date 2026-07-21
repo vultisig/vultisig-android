@@ -117,6 +117,14 @@ class CardanoUtilsTest {
     }
 
     @Test
+    fun `calculateCardanoTransactionHash returns blank when the envelope cannot be parsed`() {
+        // A hash we can't derive must fail closed: a blake2b over the whole envelope would be a
+        // txid that never exists on-chain, and duplicate-broadcast recovery would report it as an
+        // untrackable success. Blank makes the recovery paths rethrow instead.
+        assertEquals("", CardanoUtils.calculateCardanoTransactionHash(hex("00")))
+    }
+
+    @Test
     fun `addIsValidFlag walks a Conway tag-258 set in the witness without throwing`() {
         // 83                      array(3)
         //   a0                    body: empty map

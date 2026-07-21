@@ -92,11 +92,12 @@ object CardanoUtils {
             val txidHash = Utils.blake2bHash(transactionBodyData)
             txidHash.joinToString("") { "%02x".format(it) }
         } catch (e: Exception) {
-            Timber.e("Error parsing Cardano CBOR: ${e.message}")
-            val txidHash = Utils.blake2bHash(transactionData)
-            val fallbackHash = txidHash.joinToString("") { "%02x".format(it) }
-            Timber.w("Using fallback TX ID from COMPLETE transaction: $fallbackHash")
-            fallbackHash
+            // Fail closed: blake2b over the whole envelope is a txid that can never exist
+            // on-chain, and duplicate-broadcast recovery would report it as a success nothing can
+            // track. A blank hash makes every recovery path rethrow instead, while a normal
+            // broadcast still succeeds with the node-returned id.
+            Timber.e("Error parsing Cardano CBOR, no local txid available: ${e.message}")
+            ""
         }
     }
 

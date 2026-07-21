@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
+import com.vultisig.wallet.data.api.CardanoTransactionAlreadyBroadcastException
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
@@ -224,9 +225,17 @@ constructor(
                 recoverIfAlreadyBroadcast(
                     tx = tx,
                     broadcast = {
-                        cardanoApi
-                            .broadcastTransaction(chain.name, tx.rawTransaction)
-                            .orKnownHash(tx)
+                        try {
+                            cardanoApi
+                                .broadcastTransaction(chain.name, tx.rawTransaction)
+                                .orKnownHash(tx)
+                        } catch (e: CardanoTransactionAlreadyBroadcastException) {
+                            // Ogmios says the inputs are already spent by the peer's byte-identical
+                            // tx, so our locally computed hash is canonical. A Cardano block takes
+                            // ~20s, far longer than the verify window, so this node signal is the
+                            // only timely proof the tx landed (issue #5337).
+                            tx.transactionHash.takeIf { it.isNotBlank() } ?: throw e
+                        }
                     },
                     // Koios tx_status echoes the queried hash back even for unknown txs, so
                     // txHash is never blank; only a positive confirmation count proves it landed.
