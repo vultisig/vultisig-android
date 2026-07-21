@@ -39,7 +39,7 @@ internal fun VultDiscountRow(
     fiatValue: String?,
     modifier: Modifier = Modifier,
 ) {
-    if (vultBpsDiscount == null || fiatValue == null) return
+    if (vultBpsDiscount == null || fiatValue == null || tierType == null) return
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,

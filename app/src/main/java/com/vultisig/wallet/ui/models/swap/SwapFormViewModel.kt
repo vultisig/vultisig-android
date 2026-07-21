@@ -261,6 +261,21 @@ constructor(
                 return
             }
 
+        // Snapshot the fee/discount display alongside `inputs`, before launching. Reading
+        // _uiState.value inside the coroutine could attach a later quote's fee label or discounts
+        // to this transaction if polling lands a new quote in the meantime (#5358).
+        val feeDisplay =
+            _uiState.value.let { state ->
+                SwapFeeDisplay(
+                    swapFeePercent = state.feeBreakdown.swapFeePercent,
+                    swapFeeIncludedInRate = state.feeBreakdown.swapFeeIncludedInRate,
+                    vultBpsDiscount = state.discountInfo.vultBpsDiscount,
+                    vultBpsDiscountFiatValue = state.discountInfo.vultBpsDiscountFiatValue,
+                    referralBpsDiscount = state.discountInfo.referralBpsDiscount,
+                    referralBpsDiscountFiatValue = state.discountInfo.referralBpsDiscountFiatValue,
+                )
+            }
+
         viewModelScope.safeLaunch(
             onError = { e ->
                 isLoadingNextScreen = false
@@ -286,19 +301,7 @@ constructor(
                     estimatedNetworkFeeFiatValue = inputs.estimatedNetworkFeeFiatValue,
                     gasLimitOverride = gasLimitOverride.value,
                     externalRecipient = externalRecipient.value,
-                    feeDisplay =
-                        _uiState.value.let { state ->
-                            SwapFeeDisplay(
-                                swapFeePercent = state.feeBreakdown.swapFeePercent,
-                                swapFeeIncludedInRate = state.feeBreakdown.swapFeeIncludedInRate,
-                                vultBpsDiscount = state.discountInfo.vultBpsDiscount,
-                                vultBpsDiscountFiatValue =
-                                    state.discountInfo.vultBpsDiscountFiatValue,
-                                referralBpsDiscount = state.discountInfo.referralBpsDiscount,
-                                referralBpsDiscountFiatValue =
-                                    state.discountInfo.referralBpsDiscountFiatValue,
-                            )
-                        },
+                    feeDisplay = feeDisplay,
                 )
 
             swapTransactionRepository.addTransaction(transaction)
