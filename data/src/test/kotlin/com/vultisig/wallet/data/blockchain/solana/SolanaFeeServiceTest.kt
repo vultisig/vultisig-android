@@ -108,8 +108,8 @@ class SolanaFeeServiceTest {
             val fee = service.calculateFees(swap()) as GasFees
 
             // priorityAmount = 1_000_000 * 100_000 / 1_000_000 = 100_000 lamports
-            // amount = base(105_000) + 100_000 = 205_000
-            assertEquals(BigInteger.valueOf(205_000L), fee.amount)
+            // amount = base(5_000) + 100_000 = 105_000 (priority counted once, not doubled)
+            assertEquals(BigInteger.valueOf(105_000L), fee.amount)
             assertEquals(pricePerCu, fee.price)
             assertEquals(SOLANA_PRIORITY_FEE_LIMIT.toBigInteger(), fee.limit)
         }

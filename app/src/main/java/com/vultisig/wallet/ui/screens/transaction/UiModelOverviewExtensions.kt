@@ -43,6 +43,8 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
                 memo = this.depositTransactionUiModel.memo,
                 networkFeeFiatValue = this.depositTransactionUiModel.networkFeeFiatValue,
                 networkFeeTokenValue = this.depositTransactionUiModel.networkFeeTokenValue,
+                operation = this.depositTransactionUiModel.operation,
+                pool = this.depositTransactionUiModel.pool,
             )
         }
         is TransactionTypeUiModel.SignMessage -> {

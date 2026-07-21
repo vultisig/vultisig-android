@@ -190,15 +190,18 @@ internal constructor(
         return GasFees(
             price = dynamicFeePrice,
             limit = SOLANA_PRIORITY_FEE_LIMIT.toBigInteger(),
-            amount = DEFAULT_COIN_TRANSFER_BASE_FEE + priorityAmount,
+            amount = BASE_SIGNATURE_FEE + priorityAmount,
         )
     }
 
     private companion object {
-        // 0.000105 SOL expressed in lamports (SOL has 9 decimals). Computed without CoinType so the
-        // service can be constructed and its fee arithmetic exercised in JVM unit tests, which have
-        // no WalletCore native library loaded.
-        val DEFAULT_COIN_TRANSFER_BASE_FEE: BigInteger =
-            "0.000105".toBigDecimal().movePointRight(9).toBigInteger()
+        // Base signature fee for the single-signer swap estimate: 5000 lamports (0.000005 SOL).
+        // The swap path signs one Jupiter-built tx with the vault key, so one signature is assumed;
+        // the priority fee is added on top exactly once in calculateDefaultFees.
+        // Expressed in raw lamports (SOL has 9 decimals) rather than via CoinType so the fee
+        // arithmetic can be exercised in JVM unit tests, which have no WalletCore native lib
+        // loaded.
+        val BASE_SIGNATURE_FEE: BigInteger =
+            "0.000005".toBigDecimal().movePointRight(9).toBigInteger()
     }
 }

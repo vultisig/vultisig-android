@@ -143,6 +143,7 @@ internal fun VerifySwapScreen(
         scanStatus = state.txScanStatus,
         hasToShowWarningScanning = state.showScanningWarning,
         hasAllConsents = state.hasAllConsents,
+        isSigning = state.isSigning,
         consentAmount = state.consentAmount,
         consentReceiveAmount = state.consentReceiveAmount,
         consentAllowance = state.consentAllowance,
@@ -169,6 +170,7 @@ private fun VerifySwapScreen(
     scanStatus: TransactionScanStatus,
     hasToShowWarningScanning: Boolean,
     hasAllConsents: Boolean,
+    isSigning: Boolean,
     consentAmount: Boolean,
     consentReceiveAmount: Boolean,
     consentAllowance: Boolean,
@@ -186,6 +188,8 @@ private fun VerifySwapScreen(
     onContinueAnyway: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
+    val isSignEnabled = (!isConsentsEnabled || hasAllConsents) && !isSigning
+
     V2Scaffold(
         title = stringResource(R.string.verify_swap_swap_overview).takeIf { hasToolbar },
         onBackClick = onBackClick.takeIf { hasToolbar },
@@ -389,19 +393,20 @@ private fun VerifySwapScreen(
                         onFastSignClick = onFastSignClick,
                         onPairedSignClick = onConfirm,
                         state =
-                            if (isConsentsEnabled && !hasAllConsents) {
+                            if (!isSignEnabled) {
                                 VsButtonState.Disabled
                             } else {
                                 VsButtonState.Enabled
                             },
+                        isLoading = isSigning,
                     )
                 } else {
                     VsButton(
                         label = confirmTitle,
                         modifier = Modifier.fillMaxWidth(),
                         state =
-                            if (isConsentsEnabled && !hasAllConsents) VsButtonState.Disabled
-                            else VsButtonState.Enabled,
+                            if (!isSignEnabled) VsButtonState.Disabled else VsButtonState.Enabled,
+                        isLoading = isSigning,
                         onClick = onConfirm,
                     )
                 }
@@ -706,6 +711,7 @@ private fun VerifySwapScreenPreview() {
         hasToolbar = true,
         onBackClick = {},
         hasAllConsents = false,
+        isSigning = false,
         hasToShowWarningScanning = false,
         scanStatus = TransactionScanStatus.NotStarted,
         consentAmount = true,

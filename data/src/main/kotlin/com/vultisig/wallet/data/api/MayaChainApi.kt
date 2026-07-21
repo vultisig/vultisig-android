@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
+import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.MAYA_STREAMING_INTERVAL
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
@@ -23,6 +24,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.path
@@ -62,6 +64,8 @@ interface MayaChainApi {
     suspend fun getCacaoProvider(address: String): CacaoProviderResponse
 
     suspend fun getMayaConstants(): Map<String, Long>
+
+    suspend fun getInboundAddresses(): List<THORChainInboundAddress>
 
     suspend fun getAllNodes(): List<MayaNodeInfo>
 
@@ -303,6 +307,16 @@ constructor(
             throw e
         }
     }
+
+    override suspend fun getInboundAddresses(): List<THORChainInboundAddress> =
+        httpClient
+            .get("$MAYA_NODE_BASE/mayachain/inbound_addresses") {
+                header(xClientID, xClientIDValue)
+                // Inbound status drives a fail-closed halt gate, so it must never be served from
+                // the shared HttpCache if upstream ever starts sending cache headers.
+                header(HttpHeaders.CacheControl, "no-cache, no-store")
+            }
+            .bodyOrThrow()
 
     override suspend fun getAllNodes(): List<MayaNodeInfo> =
         httpClient
