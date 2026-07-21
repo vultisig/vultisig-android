@@ -19,7 +19,7 @@ android {
     defaultConfig {
         applicationId = "com.vultisig.wallet"
         minSdk = libs.versions.minSdk.get().toInt()
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 114
         versionName = "1.0.114"
 
