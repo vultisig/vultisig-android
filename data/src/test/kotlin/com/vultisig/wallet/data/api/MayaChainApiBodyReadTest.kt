@@ -216,6 +216,28 @@ class MayaChainApiBodyReadTest {
         assertEquals(1_000_000L, result["OUTBOUNDTRANSACTIONFEE"])
     }
 
+    @Test
+    fun `getInboundAddresses returns MayaChain halt status`() = runBlocking {
+        val body =
+            """
+            [{
+              "chain": "BTC",
+              "address": "bc1qinbound",
+              "halted": false,
+              "gas_rate": "1",
+              "gas_rate_units": "satsperbyte"
+            }]
+            """
+                .trimIndent()
+
+        val result = newApi(body).getInboundAddresses()
+
+        assertEquals(1, result.size)
+        assertEquals("BTC", result.single().chain)
+        assertEquals(false, result.single().globalTradingPaused)
+        assertEquals(false, result.single().chainTradingPaused)
+    }
+
     // -------------------------------------------------------------------------
     // getSwapQuotes — body fed into ThorChainSwapQuoteResponseJsonSerializer
     // Pins: the body is read and delegated to the serializer regardless of status, so a non-2xx

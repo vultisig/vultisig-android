@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.models.swap
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
@@ -21,6 +22,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -63,6 +65,7 @@ internal class VerifySwapViewModelTest {
     private lateinit var isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase
     private lateinit var securityScannerService: SecurityScannerContract
     private lateinit var vaultRepository: VaultRepository
+    private lateinit var inboundHaltPreflight: SwapInboundHaltPreflight
 
     /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
@@ -79,6 +82,7 @@ internal class VerifySwapViewModelTest {
         isVaultHasFastSignById = mockk(relaxed = true)
         securityScannerService = mockk(relaxed = true)
         vaultRepository = mockk(relaxed = true)
+        inboundHaltPreflight = mockk(relaxed = true)
         coEvery { isVaultHasFastSignById(any()) } returns false
         coEvery { vaultRepository.get(VAULT_ID) } returns mockk<Vault>(relaxed = true)
     }
@@ -101,6 +105,7 @@ internal class VerifySwapViewModelTest {
             isVaultHasFastSignById = isVaultHasFastSignById,
             securityScannerService = securityScannerService,
             vaultRepository = vaultRepository,
+            inboundHaltPreflight = inboundHaltPreflight,
         )
 
     /**
@@ -153,6 +158,7 @@ internal class VerifySwapViewModelTest {
             vm.joinKeySign()
 
             vm.state.value.errorText.shouldBeNull()
+            vm.state.value.isSigning shouldBe false
             coVerify {
                 launchKeysign(
                     KeysignInitType.QR_CODE,
@@ -220,6 +226,46 @@ internal class VerifySwapViewModelTest {
                     VAULT_ID,
                 )
             }
+        }
+
+    /** A live inbound halt aborts paired signing and surfaces the existing trading-halted error. */
+    @Test
+    fun `joinKeySign blocks signing when the source chain becomes halted`() =
+        runTest(testDispatcher) {
+            givenSwap(approvalRequired = false)
+            coEvery { inboundHaltPreflight.assertSourceChainNotHalted(any()) } throws
+                SwapException.TradingHalted("halted")
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.consentAmount(true)
+            vm.consentReceiveAmount(true)
+            vm.joinKeySign()
+            advanceUntilIdle()
+
+            vm.state.value.errorText.shouldNotBeNull()
+            vm.state.value.isSigning shouldBe false
+            coVerify(exactly = 0) { launchKeysign(any(), any(), any(), any(), any()) }
+        }
+
+    /** The biometric path runs through the same live inbound safety gate. */
+    @Test
+    fun `authFastSign blocks signing when inbound status cannot be verified`() =
+        runTest(testDispatcher) {
+            givenSwap(approvalRequired = false)
+            coEvery { inboundHaltPreflight.assertSourceChainNotHalted(any()) } throws
+                IllegalStateException("network unavailable")
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.consentAmount(true)
+            vm.consentReceiveAmount(true)
+            vm.authFastSign()
+            advanceUntilIdle()
+
+            vm.state.value.errorText.shouldNotBeNull()
+            vm.state.value.isSigning shouldBe false
+            coVerify(exactly = 0) { launchKeysign(any(), any(), any(), any(), any()) }
         }
 
     private companion object {

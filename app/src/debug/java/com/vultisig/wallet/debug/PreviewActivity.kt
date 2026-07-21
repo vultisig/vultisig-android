@@ -154,6 +154,7 @@ import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
+import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
@@ -198,6 +199,7 @@ class PreviewActivity : ComponentActivity() {
                     "camera_button" -> CameraButton(onClick = {})
                     "banner" -> BannerPreview()
                     "send_tx_done" -> SendTxDonePreview()
+                    "deposit_mint_done" -> DepositMintDonePreview()
                     "transaction_history_empty" -> TransactionHistoryEmptyState()
                     "empty_referral" -> EmptyReferralBanner(onClickedCreateReferral = {})
                     "fast_vault_verification" -> FastVaultVerificationPreview()
@@ -1104,6 +1106,42 @@ private fun SendTxDonePreview() {
                 networkFeeFiatValue = "$6.15",
             ),
         isTransactionDetailVisible = false,
+        onTransactionDetailVisibleChange = {},
+    )
+}
+
+@Composable
+private fun DepositMintDonePreview() {
+    SendTxOverviewScreen(
+        showToolbar = true,
+        showSaveToAddressBook = false,
+        transactionHash = "EEBE3...69B9B",
+        transactionLink = "",
+        transactionStatus = TransactionStatus.Confirmed,
+        onComplete = {},
+        onBack = {},
+        onAddToAddressBook = {},
+        tx =
+            TransactionTypeUiModel.Deposit(
+                    DepositTransactionUiModel(
+                        token =
+                            ValuedToken(
+                                token = Coins.MayaChain.CACAO,
+                                value = "1 CACAO",
+                                fiatValue = "$0.12",
+                            ),
+                        srcAddress = "maya12a9rpf9u2ul4x7nde8um6z3zm",
+                        srcVaultName = "AE_QBTC_SAM",
+                        dstAddress = "",
+                        operation = "Mint",
+                        pool = "ARB.GLD-0XAFD091F140C21770F4E5D53D26B2859AE97555AA",
+                        memo = "+:ARB.GLD-0XAFD091F140C21770F4E5D53D26B2859AE97555AA",
+                        networkFeeTokenValue = "0.2 CACAO",
+                        networkFeeFiatValue = "$0.02",
+                    )
+                )
+                .toUiTransactionInfo(),
+        isTransactionDetailVisible = true,
         onTransactionDetailVisibleChange = {},
     )
 }

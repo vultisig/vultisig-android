@@ -3,7 +3,9 @@ package com.vultisig.wallet.data.models
 import com.vultisig.wallet.R
 
 internal fun getProviderLogo(providerName: String): ImageModel? {
-    return when (providerName.lowercase()) {
+    val name = providerName.lowercase()
+    if (name.startsWith("swapkit")) return R.drawable.swapkit
+    return when (name) {
         "thorchain" -> R.drawable.rune
         "maya",
         "mayachain" -> R.drawable.maya
