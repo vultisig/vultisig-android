@@ -17,6 +17,9 @@ import org.junit.jupiter.api.Test
  *   that created the spent input, not the tx we broadcast, so it must NOT be returned as success —
  *   the error is surfaced ([IllegalStateException]) and `BroadcastTxUseCase` verifies our actual
  *   hash on-chain instead (issue #5250).
+ * - **Duplicate-broadcast signals** (code 3117/UnknownOutputReference or the spent-inputs mempool
+ *   error) throw [CardanoTransactionAlreadyBroadcastException] so recovery reports OUR local hash
+ *   (issue #5337).
  */
 class CardanoApiBroadcastTest {
 
@@ -78,6 +81,31 @@ class CardanoApiBroadcastTest {
                 "code": 3997,
                 "message": "The transaction couldn't be added to the mempool...",
                 "data": { "error": "All inputs are spent. Transaction has probably already been included" }
+              }
+            }
+            """
+                .trimIndent()
+        val api = newApi(HttpStatusCode.BadRequest, body)
+
+        assertThrows(CardanoTransactionAlreadyBroadcastException::class.java) {
+            runTest { api.broadcastTransaction(chain = "cardano", signedTransaction = "00") }
+        }
+    }
+
+    @Test
+    fun `broadcastTransaction throws AlreadyBroadcast on code 3117 UnknownOutputReference`() {
+        // Post-inclusion loser: the winner's byte-identical tx is already in a block, so the ledger
+        // no longer knows our inputs and Ogmios rejects with 3117/UnknownOutputReference. iOS and
+        // the shared SDK treat this code as the duplicate-broadcast signal against this backend.
+        val body =
+            """
+            {
+              "error": {
+                "code": 3117,
+                "message": "The transaction contains unknown UTxO references as inputs.",
+                "data": {
+                  "unknownOutputReferences": [ { "transaction": { "id": "def456" }, "index": 0 } ]
+                }
               }
             }
             """
