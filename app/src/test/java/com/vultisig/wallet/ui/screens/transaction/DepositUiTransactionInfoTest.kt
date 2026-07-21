@@ -79,8 +79,8 @@ internal class DepositUiTransactionInfoTest {
 
         info.operation shouldBe "Mint"
         info.pool shouldBe "ARB.GLD-0xAFD091"
-        // No destination on an add-liquidity mint — the pool above is the target, so the done
-        // screen hides the "To" row rather than rendering an empty value (issue #5351).
+        // An add-liquidity mint has no destination, so the mapper yields an empty `to` and a
+        // null `toLabel`.
         info.to shouldBe ""
         info.toLabel shouldBe null
     }

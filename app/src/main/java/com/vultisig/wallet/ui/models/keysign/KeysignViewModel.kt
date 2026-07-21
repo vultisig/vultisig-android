@@ -353,14 +353,7 @@ constructor(
         // skip the destination-gated label block below and would show a raw address (issue #5351).
         transactionTypeUiModel?.let { model ->
             _state.update {
-                it.copy(
-                    transactionUiModel =
-                        model.withResolvedLabels(
-                            srcVaultName = vault.name,
-                            dstVaultName = null,
-                            dstAddressBookTitle = null,
-                        )
-                )
+                it.copy(transactionUiModel = model.withResolvedSrcVaultName(vault.name))
             }
         }
 
@@ -1037,6 +1030,26 @@ private fun TransactionTypeUiModel.addressBookTarget(): AddressBookTarget? {
         }
     return if (dstAddress.isBlank()) null else AddressBookTarget(chain, dstAddress)
 }
+
+/**
+ * Sets only the source vault name, leaving any destination labels the joiner already resolved
+ * intact. Used up front for destination-less deposits (e.g. a Mint LP add-liquidity) so the From
+ * row renders "VaultName (address)" without a raw-address flash on the To row.
+ */
+private fun TransactionTypeUiModel.withResolvedSrcVaultName(
+    srcVaultName: String
+): TransactionTypeUiModel =
+    when (this) {
+        is TransactionTypeUiModel.Send ->
+            TransactionTypeUiModel.Send(tx.copy(srcVaultName = srcVaultName))
+        is TransactionTypeUiModel.Deposit ->
+            TransactionTypeUiModel.Deposit(
+                depositTransactionUiModel.copy(srcVaultName = srcVaultName)
+            )
+        is TransactionTypeUiModel.Swap ->
+            TransactionTypeUiModel.Swap(swapTransactionUiModel.copy(srcVaultName = srcVaultName))
+        else -> this
+    }
 
 /** Returns a copy of this model with the resolved From/To labels applied (Send or Deposit only). */
 private fun TransactionTypeUiModel.withResolvedLabels(
