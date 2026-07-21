@@ -109,10 +109,15 @@ internal data class SendFormUiModel(
  * Continue cannot enable before the frozen balance loads — otherwise submit coerces the still-null
  * balance to zero and falsely rejects a fundable unfreeze.
  *
+ * An invalid recipient ([dstAddressError] set) also disables Continue so the flow can't proceed
+ * from an address that failed chain validation — the inline error is the visible reason, and
+ * correcting the field clears it and re-enables Continue.
+ *
  * @return true when Continue must stay disabled.
  */
 internal fun SendFormUiModel.isContinueDisabled(): Boolean =
     isLoading ||
+        dstAddressError != null ||
         (showGasFee && isGasFeeLoading) ||
         (tronResourceType != null && (!isAmountValid || isTronFrozenBalancesLoading))
 

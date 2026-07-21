@@ -193,6 +193,7 @@
     <string name="camera_permission_open_settings">Otvori postavke</string>
     <string name="verify_transaction_value">Vrijednost</string>
     <string name="send_error_no_address">Adresa je nevažeća</string>
+    <string name="send_error_invalid_recipient_address">Taj primatelj nije valjana adresa za ovu mrežu.</string>
     <string name="vault_settings_error_backup_file">dogodila se pogreška</string>
     <string name="vault_settings_error_backup_failed">Sigurnosno kopiranje nije uspjelo. Nijedna datoteka nije spremljena. Pokušajte ponovno.</string>
     <string name="vault_settings_delete_vault_name">Ime sefa:</string>

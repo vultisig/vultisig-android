@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
+import io.kotest.assertions.withClue
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -258,16 +259,141 @@ internal class AddressManagerTest {
             emissions.shouldBeEmpty()
         }
 
+    @Test
+    fun `ethereum txid pasted as recipient is flagged invalid`() =
+        runTest(mainDispatcher) {
+            // A transaction id has the shape of an address but is not a valid recipient.
+            val txid = "0x88df016429689c079f3b2f6ad39fa052532c56795b733da78a91ebe6a713944b"
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, txid) } returns false
+            coEvery { addressParserRepository.resolveName(txid, Chain.Ethereum) } returns txid
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = ethToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(txid)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            manager.invalidAddress.value.shouldBeTrue()
+            manager.resolvedDstAddress.value.shouldBeNull()
+        }
+
+    @Test
+    fun `invalid recipient across representative chains is flagged`() =
+        runTest(mainDispatcher) {
+            val cases =
+                listOf(
+                    token(Chain.GaiaChain, "ATOM") to "not-a-cosmos-address",
+                    token(Chain.Bitcoin, "BTC") to "not-a-btc-address",
+                    token(Chain.Solana, "SOL") to "not-a-solana-address",
+                    token(Chain.Ripple, "XRP") to "not-an-xrp-address",
+                )
+
+            cases.forEach { (coin, badInput) ->
+                every { chainAccountAddressRepository.isValid(coin.chain, badInput) } returns false
+                coEvery { addressParserRepository.resolveName(badInput, coin.chain) } returns
+                    badInput
+
+                val field = TextFieldState()
+                val manager = build(backgroundScope, addressField = field)
+                manager.start()
+                selectedToken.value = coin
+
+                field.setTextAndPlaceCursorAtEnd(badInput)
+                Snapshot.sendApplyNotifications()
+                advanceTimeBy(400)
+                advanceUntilIdle()
+
+                withClue("${coin.chain} should flag $badInput as invalid") {
+                    manager.invalidAddress.value.shouldBeTrue()
+                }
+            }
+        }
+
+    @Test
+    fun `valid recipient clears a prior invalid flag`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, "garbage") } returns false
+            coEvery { addressParserRepository.resolveName("garbage", Chain.Ethereum) } returns
+                "garbage"
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, "0xabc") } returns true
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = ethToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd("garbage")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            manager.invalidAddress.value.shouldBeTrue()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd("0xabc")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            manager.invalidAddress.value.shouldBeFalse()
+            manager.resolvedDstAddress.value shouldBe "0xabc"
+        }
+
+    @Test
+    fun `clearing the field clears the invalid flag`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, "garbage") } returns false
+            coEvery { addressParserRepository.resolveName("garbage", Chain.Ethereum) } returns
+                "garbage"
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = ethToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd("garbage")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            manager.invalidAddress.value.shouldBeTrue()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd("")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            manager.invalidAddress.value.shouldBeFalse()
+        }
+
+    @Test
+    fun `resolver failure flags the recipient invalid`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, "explode.eth") } returns
+                false
+            coEvery { addressParserRepository.resolveName("explode.eth", Chain.Ethereum) } throws
+                IllegalStateException("rpc down")
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = ethToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd("explode.eth")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            manager.invalidAddress.value.shouldBeTrue()
+        }
+
     private fun TestScope.collectValidations(manager: AddressManager): MutableList<Unit> {
         val emissions = mutableListOf<Unit>()
         backgroundScope.launch { manager.onAddressValidated.collect { emissions += Unit } }
         return emissions
     }
 
-    private fun build(scope: CoroutineScope) =
+    private fun build(scope: CoroutineScope, addressField: TextFieldState = addressFieldState) =
         AddressManager(
             scope = scope,
-            addressFieldState = addressFieldState,
+            addressFieldState = addressField,
             providerBondFieldState = providerBondFieldState,
             destinationTagFieldState = destinationTagFieldState,
             selectedToken = selectedToken,
@@ -278,15 +404,17 @@ internal class AddressManagerTest {
             checkIfTokenSelectionRequired = { _, _ -> },
         )
 
-    private fun ethToken(): Coin =
+    private fun ethToken(): Coin = token(Chain.Ethereum, "ETH")
+
+    private fun token(chain: Chain, ticker: String): Coin =
         Coin(
-            chain = Chain.Ethereum,
-            ticker = "ETH",
+            chain = chain,
+            ticker = ticker,
             logo = "",
-            address = "0xself",
+            address = "self",
             decimal = 18,
             hexPublicKey = "",
-            priceProviderID = "ethereum",
+            priceProviderID = ticker.lowercase(),
             contractAddress = "",
             isNativeToken = true,
         )

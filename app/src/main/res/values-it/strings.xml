@@ -193,6 +193,7 @@
     <string name="camera_permission_open_settings">Apri impostazioni</string>
     <string name="verify_transaction_value">Valore</string>
     <string name="send_error_no_address">L\'indirizzo non è valido</string>
+    <string name="send_error_invalid_recipient_address">Quel destinatario non è un indirizzo valido per questa rete.</string>
     <string name="vault_settings_error_backup_file">si è verificato un errore</string>
     <string name="vault_settings_error_backup_failed">Backup non riuscito. Nessun file è stato salvato. Riprova.</string>
     <string name="vault_settings_delete_vault_name">Nome Cassaforte:</string>

@@ -193,6 +193,7 @@
     <string name="camera_permission_open_settings">Einstellungen öffnen</string>
     <string name="verify_transaction_value">Wert</string>
     <string name="send_error_no_address">Adresse ist ungültig</string>
+    <string name="send_error_invalid_recipient_address">Dieser Empfänger ist keine gültige Adresse für dieses Netzwerk.</string>
     <string name="vault_settings_error_backup_file">ein Fehler ist aufgetreten</string>
     <string name="vault_settings_error_backup_failed">Backup fehlgeschlagen. Es wurde keine Datei gespeichert. Bitte versuchen Sie es erneut.</string>
     <string name="vault_settings_delete_vault_name">Tresorname:</string>

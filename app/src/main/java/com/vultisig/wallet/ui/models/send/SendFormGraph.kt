@@ -436,6 +436,23 @@ internal class SendFormGraph(
             }
         }
         scope.launch {
+            addressManager.invalidAddress.collect { invalid ->
+                uiState.update {
+                    it.copy(
+                        dstAddressError =
+                            if (invalid) {
+                                UiText.StringResource(
+                                    com.vultisig.wallet.R.string
+                                        .send_error_invalid_recipient_address
+                                )
+                            } else {
+                                null
+                            }
+                    )
+                }
+            }
+        }
+        scope.launch {
             amountManager.reapingError.collect { error ->
                 uiState.update { it.copy(reapingError = error) }
             }

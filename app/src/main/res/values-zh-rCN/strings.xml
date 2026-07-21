@@ -193,6 +193,7 @@
     <string name="send_error_no_token">未选择代币</string>
     <string name="send_error_no_gas_fee">无燃料费</string>
     <string name="send_error_no_address">地址无效</string>
+    <string name="send_error_invalid_recipient_address">该收款人不是此网络的有效地址。</string>
     <string name="send_error_no_amount">金额必须是正数</string>
     <string name="send_error_too_many_decimals">金额最多可保留 %1$d 位小数</string>
     <string name="send_error_invalid_operator_fee">运营商费用必须是0到10000基点之间的有效数字</string>
