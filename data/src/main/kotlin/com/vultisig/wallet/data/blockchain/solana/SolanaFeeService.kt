@@ -195,13 +195,12 @@ internal constructor(
     }
 
     private companion object {
-        // Base signature fee only: 0.000005 SOL (5000 lamports) per signature. The computed
-        // priority
-        // fee is added on top exactly once in calculateDefaultFees. Expressed in lamports (SOL has
-        // 9
-        // decimals) without CoinType so the arithmetic can be exercised in JVM unit tests, which
-        // have
-        // no WalletCore native library loaded.
+        // Base signature fee for the single-signer swap estimate: 5000 lamports (0.000005 SOL).
+        // The swap path signs one Jupiter-built tx with the vault key, so one signature is assumed;
+        // the priority fee is added on top exactly once in calculateDefaultFees.
+        // Expressed in raw lamports (SOL has 9 decimals) rather than via CoinType so the fee
+        // arithmetic can be exercised in JVM unit tests, which have no WalletCore native lib
+        // loaded.
         val BASE_SIGNATURE_FEE: BigInteger =
             "0.000005".toBigDecimal().movePointRight(9).toBigInteger()
     }
