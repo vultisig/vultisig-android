@@ -523,18 +523,24 @@ constructor(
                     Chain.Bittensor ->
                         coroutineScope {
                             val runtimeVersionDeferred = async { bittensorApi.getRuntimeVersion() }
-                            val blockHashDeferred = async { bittensorApi.getBlockHash() }
                             val nonceDeferred = async { bittensorApi.getNonce(address) }
-                            val blockHeaderDeferred = async { bittensorApi.getBlockHeader() }
                             val genesisHashDeferred = async { bittensorApi.getGenesisBlockHash() }
+
+                            // The mortal era's checkpoint block hash MUST be the hash of the block
+                            // referenced by currentBlockNumber. Fetching the head number and head
+                            // hash independently against the load-balanced RPC can resolve to
+                            // different heights, breaking that invariant and producing a "bad
+                            // signature" rejection. Pin the hash to the same block number instead.
+                            val blockNumber = bittensorApi.getBlockHeader()
+                            val blockHash = bittensorApi.getBlockHashForNumber(blockNumber)
 
                             val (specVersion, transactionVersion) = runtimeVersionDeferred.await()
 
                             BlockChainSpecificAndUtxo(
                                 BlockChainSpecific.Polkadot(
-                                    recentBlockHash = blockHashDeferred.await(),
+                                    recentBlockHash = blockHash,
                                     nonce = nonceDeferred.await(),
-                                    currentBlockNumber = blockHeaderDeferred.await(),
+                                    currentBlockNumber = blockNumber,
                                     specVersion = specVersion.toLong().toUInt(),
                                     transactionVersion = transactionVersion.toLong().toUInt(),
                                     genesisHash = genesisHashDeferred.await(),
