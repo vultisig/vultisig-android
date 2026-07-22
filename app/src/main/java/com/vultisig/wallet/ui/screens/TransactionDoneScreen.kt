@@ -249,18 +249,34 @@ private fun SwapTransactionDetail(swapTransaction: SwapTransactionUiModel) {
         )
     }
 
+    // Fee rows are all shown in fiat so Swap Fee (+ Outbound Fee) + Network Fee visibly add up to
+    // Total Fee, making the composite discoverable on screen instead of leaving Total Fee looking
+    // like an unreconcilable single fee (#5334).
     OtherField(
         title = stringResource(R.string.swap_form_estimated_fees_title),
         value = swapTransaction.providerFee.fiatValue,
     )
 
+    // Outbound fee is only reported by THORChain / MayaChain and is part of Total Fee, so it must
+    // be shown for the rows to sum — mirrors the swap form and verify screen (#5061, #5334).
+    swapTransaction.outboundFee?.let { outboundFee ->
+        OtherField(
+            title = stringResource(R.string.swap_form_outbound_fee_title),
+            value = outboundFee,
+        )
+    }
+
+    // Lead with the fiat network fee so it reconciles with the fiat Total Fee, keeping the on-chain
+    // token amount as a secondary hint rather than mixing units (#5334).
     OtherField(
         title = stringResource(R.string.verify_transaction_network_fee),
-        value = swapTransaction.networkFeeFormatted,
+        value = "${swapTransaction.networkFee.fiatValue} (${swapTransaction.networkFeeFormatted})",
     )
 
+    // Completed swap: this is the total actually paid, so the plain "Total Fee" label applies here.
+    // The pre-signing overview/verify screens intentionally keep "Max. Total Fee" for the estimate.
     OtherField(
-        title = stringResource(R.string.verify_swap_screen_total_fees),
+        title = stringResource(R.string.swap_form_total_fees_title),
         value = swapTransaction.totalFee,
     )
 }
