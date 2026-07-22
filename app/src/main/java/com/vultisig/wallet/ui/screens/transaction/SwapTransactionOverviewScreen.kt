@@ -168,11 +168,15 @@ internal fun SwapTransactionOverviewScreen(
 
                 // Fee breakdown mirrors VerifySwapScreen so the estimate the user signed and the
                 // completed-swap summary read the same: Network Fee → Swap Fee → (Outbound Fee) →
-                // Total Fee, instead of a single opaque Total Fee row (#5334).
+                // Total Fee, instead of a single opaque Total Fee row (#5334). No title override on
+                // the Network Fee row: reuse EstimatedNetworkFee's default
+                // (send_form_est_network_fee)
+                // exactly as VerifySwapScreen does, so the label is identical across locales rather
+                // than diverging (verify_transaction_network_fee adds an "(auto)" suffix in
+                // es/hr/it/nl/pt/ru).
                 EstimatedNetworkFee(
                     tokenGas = transactionTypeUiModel.networkFeeFormatted,
                     fiatGas = transactionTypeUiModel.networkFee.fiatValue,
-                    title = stringResource(R.string.verify_transaction_network_fee),
                 )
 
                 TextDetails(
