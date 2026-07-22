@@ -36,3 +36,17 @@ fun BigInteger.increaseByPercent(percent: Int): BigInteger =
 
 fun BigInteger.toValue(decimals: Int): BigDecimal =
     this.toBigDecimal().divide(BigDecimal.TEN.pow(decimals))
+
+/**
+ * Median of this list (already sorted ascending), or null when empty. Averages the two central
+ * elements for an even-length list instead of picking a single upper-middle one.
+ */
+fun List<BigInteger>.median(): BigInteger? {
+    if (isEmpty()) return null
+    val mid = size / 2
+    return if (size % 2 == 0) {
+        (this[mid - 1] + this[mid]) / BigInteger.valueOf(2)
+    } else {
+        this[mid]
+    }
+}

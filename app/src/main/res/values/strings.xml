@@ -251,6 +251,7 @@
     <string name="swap_form_from_title">From</string>
     <string name="swap_form_estimated_fees_title">Swap Fee</string>
     <string name="swap_form_estimated_fees_with_percent_title">Swap Fee (%1$s)</string>
+    <string name="swap_form_estimated_fees_included_in_rate">included in quoted rate</string>
     <string name="swap_form_outbound_fee_title">Outbound Fee</string>
     <string name="swap_form_price_impact_title">Price Impact</string>
     <string name="swap_price_impact_good">Good</string>

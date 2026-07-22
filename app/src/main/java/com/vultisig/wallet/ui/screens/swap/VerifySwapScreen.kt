@@ -48,6 +48,7 @@ import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.swapAssetName
+import com.vultisig.wallet.data.usecases.getTierType
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -67,6 +68,8 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapViewModel
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
+import com.vultisig.wallet.ui.screens.swap.components.ReferralDiscountRow
+import com.vultisig.wallet.ui.screens.swap.components.VultDiscountRow
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -290,10 +293,27 @@ private fun VerifySwapScreen(
                         fiatGas = tx.networkFee.fiatValue,
                     )
 
-                    VerifyCardDetails(
-                        title = stringResource(R.string.swap_form_estimated_fees_title),
-                        subtitle = tx.providerFee.fiatValue,
-                    )
+                    // Swap Fee row mirrors the form (#5358): percentage in the title when known,
+                    // and "included in quoted rate" instead of a fiat amount for providers (1inch)
+                    // that bake the affiliate fee into the quoted destination amount. Hidden
+                    // entirely for a SwapKit UTXO deposit, whose cost is already the Network Fee.
+                    if (!tx.swapFeeHidden) {
+                        VerifyCardDetails(
+                            title =
+                                tx.swapFeePercent?.let {
+                                    stringResource(
+                                        R.string.swap_form_estimated_fees_with_percent_title,
+                                        it,
+                                    )
+                                } ?: stringResource(R.string.swap_form_estimated_fees_title),
+                            subtitle =
+                                if (tx.swapFeeIncludedInRate)
+                                    stringResource(
+                                        R.string.swap_form_estimated_fees_included_in_rate
+                                    )
+                                else tx.providerFee.fiatValue,
+                        )
+                    }
 
                     // Shown only for THORChain / MayaChain, which report an outbound fee distinct
                     // from the affiliate swap fee. Mirrors the swap form's breakdown so the rows
@@ -304,6 +324,22 @@ private fun VerifySwapScreen(
                             subtitle = outboundFee,
                         )
                     }
+
+                    // VULT-tier and referral discount rows, matching the swap form so the user can
+                    // confirm their tier was applied at the moment of approval (#5358). Each row is
+                    // a no-op when its data is absent (co-signer / no discount).
+                    VultDiscountRow(
+                        vultBpsDiscount = tx.vultBpsDiscount,
+                        tierType = tx.vultBpsDiscount?.getTierType(),
+                        fiatValue = tx.vultBpsDiscountFiatValue,
+                        modifier = Modifier.padding(vertical = 12.dp),
+                    )
+
+                    ReferralDiscountRow(
+                        referralBpsDiscount = tx.referralBpsDiscount,
+                        fiatValue = tx.referralBpsDiscountFiatValue,
+                        modifier = Modifier.padding(vertical = 12.dp),
+                    )
 
                     VerifyCardDivider(size = 10.dp)
 

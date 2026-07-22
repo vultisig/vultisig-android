@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.models.supportsLegacyGas
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.increaseByPercent
+import com.vultisig.wallet.data.utils.median
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -387,8 +388,3 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         val DEFAULT_ARBITRUM_TRANSFER = "160000".toBigInteger()
     }
 }
-
-// Returns the mid-index element, or null for an empty list. Callers pair it with
-// a chain-specific floor via `maxOf(..., minFee)` so a missing sample degrades to
-// that floor instead of throwing.
-private fun List<BigInteger>.median(): BigInteger? = getOrNull(size / 2)

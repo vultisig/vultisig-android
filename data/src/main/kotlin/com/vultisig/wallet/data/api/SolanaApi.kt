@@ -30,6 +30,7 @@ import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
+import com.vultisig.wallet.data.utils.median
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
@@ -703,23 +704,13 @@ internal enum class SolanaBroadcastAction {
 }
 
 /**
- * Median of [sortedFees] (ascending, strictly positive), or [fallback] when empty. Averages the two
- * central elements for an even-length list instead of picking the upper-middle one, matching iOS
- * (SolanaService.fetchRecentPrioritizationFees).
+ * Median of [sortedFees] (ascending, strictly positive), or [fallback] when empty. The even-length
+ * averaging behavior matches iOS (SolanaService.fetchRecentPrioritizationFees).
  */
 internal fun solanaMedianPriorityFee(
     sortedFees: List<BigInteger>,
     fallback: BigInteger,
-): BigInteger {
-    val size = sortedFees.size
-    if (size == 0) return fallback
-    val mid = size / 2
-    return if (size % 2 == 0) {
-        (sortedFees[mid - 1] + sortedFees[mid]) / BigInteger.valueOf(2)
-    } else {
-        sortedFees[mid]
-    }
-}
+): BigInteger = sortedFees.median() ?: fallback
 
 /**
  * Classifies a Solana `sendTransaction` error message into the action to take. `-32002` is Solana's

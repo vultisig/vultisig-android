@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.mappers
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransaction
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -61,6 +62,16 @@ constructor(
 
                 SwapProvider.JUPITER -> from.srcToken
             }
+
+        // SwapKit UTXO-family sources (Bitcoin PSBT deposit, Cardano CBOR deposit) settle by
+        // broadcasting a deposit whose on-chain miner fee is the only network cost, already
+        // surfaced
+        // as the Network Fee. SwapKit reports that same deposit cost as its wire inbound fee, so
+        // showing it again as a Swap Fee here would double-count the source-chain network cost in
+        // the total — exactly what the swap form avoids by hiding the row (#5321). Mirror the form:
+        // hide the Swap Fee row and drop its contribution to the total (#5358).
+        val isSwapKitUtxoSwap =
+            provider == SwapProvider.SWAPKIT && from.srcToken.chain.standard == TokenStandard.UTXO
 
         val quotesFeesFiat = convertTokenValueToFiat(tokenValue, from.estimatedFees, currency)
 
@@ -141,13 +152,31 @@ constructor(
                 ),
             networkFeeFormatted =
                 mapTokenValueToDecimalUiString(from.gasFees) + " ${from.gasFees.unit}",
+            // The Swap Fee adds nothing to the total when it is baked into the quoted rate (1inch)
+            // or already surfaced as the Network Fee (SwapKit UTXO deposit) — otherwise an
+            // aggregator's opaque `estimatedFees` (gas for 1inch, the deposit cost for SwapKit
+            // UTXO)
+            // would be counted a second time on top of the Network Fee (#5358, #5334, #5335,
+            // #5321).
             totalFee =
-                fiatValueToStringMapper(feesFiatForTotal + from.gasFeeFiatValue, asFee = true),
+                fiatValueToStringMapper(
+                    if (from.swapFeeIncludedInRate || isSwapKitUtxoSwap) from.gasFeeFiatValue
+                    else feesFiatForTotal + from.gasFeeFiatValue,
+                    asFee = true,
+                ),
             provider = provider.getSwapProviderId(),
             providerLabel = providerLabel,
             swapId = swapId,
             expectedDstDecimal = from.expectedDstTokenValue.decimal.toPlainString(),
-            externalRecipient = (from as? SwapTransaction.RegularSwapTransaction)?.externalRecipient,
+            externalRecipient =
+                (from as? SwapTransaction.RegularSwapTransaction)?.externalRecipient,
+            swapFeePercent = from.swapFeePercent,
+            swapFeeIncludedInRate = from.swapFeeIncludedInRate,
+            swapFeeHidden = isSwapKitUtxoSwap,
+            vultBpsDiscount = from.vultBpsDiscount,
+            vultBpsDiscountFiatValue = from.vultBpsDiscountFiatValue,
+            referralBpsDiscount = from.referralBpsDiscount,
+            referralBpsDiscountFiatValue = from.referralBpsDiscountFiatValue,
         )
     }
 }

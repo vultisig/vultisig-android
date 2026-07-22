@@ -29,6 +29,10 @@ internal data class FeeBreakdown(
     val fee: String = "",
     val outboundFee: String? = null,
     val swapFeePercent: String? = null,
+    // True when the affiliate fee is baked into the quoted rate (1inch): the Swap Fee row shows
+    // "included in quoted rate" instead of a fiat amount, and the fee adds nothing to the total
+    // (#5358).
+    val swapFeeIncludedInRate: Boolean = false,
     // Signed price-impact percentage (e.g. "-1.33%") and its tier, or null when the provider does
     // not report price impact (1inch/Kyber/LiFi/Jupiter). Drives the Price Impact row (iOS parity).
     val priceImpactPercent: String? = null,

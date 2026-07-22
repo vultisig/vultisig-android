@@ -25,6 +25,21 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 
 /**
+ * Display-only fee/discount context captured from the swap form at build time, carried onto the
+ * [RegularSwapTransaction] so the verify screen renders the same Swap Fee percentage and VULT-tier
+ * / referral discount rows the form shows (#5358). Defaults reproduce the pre-#5358 verify screen
+ * (no percentage, no discount rows).
+ */
+internal data class SwapFeeDisplay(
+    val swapFeePercent: String? = null,
+    val swapFeeIncludedInRate: Boolean = false,
+    val vultBpsDiscount: Int? = null,
+    val vultBpsDiscountFiatValue: String? = null,
+    val referralBpsDiscount: Int? = null,
+    val referralBpsDiscountFiatValue: String? = null,
+)
+
+/**
  * Assembles the provider-specific [RegularSwapTransaction] for an already-validated swap.
  *
  * Extracted from `SwapFormViewModel.swap()` so the transaction-construction logic — the
@@ -53,6 +68,7 @@ constructor(
         estimatedNetworkFeeFiatValue: FiatValue?,
         gasLimitOverride: Long? = null,
         externalRecipient: String? = null,
+        feeDisplay: SwapFeeDisplay = SwapFeeDisplay(),
     ): RegularSwapTransaction {
         val dstTokenValue = quote.expectedDstValue
 
@@ -101,6 +117,12 @@ constructor(
                     memo = quote.data.memo,
                     gasFeeFiatValue = estimatedNetworkFeeFiatValue ?: gasFeeFiatValue,
                     externalRecipient = externalRecipient,
+                    swapFeePercent = feeDisplay.swapFeePercent,
+                    swapFeeIncludedInRate = feeDisplay.swapFeeIncludedInRate,
+                    vultBpsDiscount = feeDisplay.vultBpsDiscount,
+                    vultBpsDiscountFiatValue = feeDisplay.vultBpsDiscountFiatValue,
+                    referralBpsDiscount = feeDisplay.referralBpsDiscount,
+                    referralBpsDiscountFiatValue = feeDisplay.referralBpsDiscountFiatValue,
                     payload =
                         SwapPayload.ThorChain(
                             THORChainSwapPayload(
@@ -178,6 +200,12 @@ constructor(
                     isApprovalRequired = isApprovalRequired,
                     gasFeeFiatValue = estimatedNetworkFeeFiatValue ?: gasFeeFiatValue,
                     externalRecipient = externalRecipient,
+                    swapFeePercent = feeDisplay.swapFeePercent,
+                    swapFeeIncludedInRate = feeDisplay.swapFeeIncludedInRate,
+                    vultBpsDiscount = feeDisplay.vultBpsDiscount,
+                    vultBpsDiscountFiatValue = feeDisplay.vultBpsDiscountFiatValue,
+                    referralBpsDiscount = feeDisplay.referralBpsDiscount,
+                    referralBpsDiscountFiatValue = feeDisplay.referralBpsDiscountFiatValue,
                     payload =
                         SwapPayload.MayaChain(
                             THORChainSwapPayload(
@@ -237,6 +265,12 @@ constructor(
                     isApprovalRequired = false,
                     gasFeeFiatValue = estimatedNetworkFeeFiatValue ?: gasFeeFiatValue,
                     externalRecipient = externalRecipient,
+                    swapFeePercent = feeDisplay.swapFeePercent,
+                    swapFeeIncludedInRate = feeDisplay.swapFeeIncludedInRate,
+                    vultBpsDiscount = feeDisplay.vultBpsDiscount,
+                    vultBpsDiscountFiatValue = feeDisplay.vultBpsDiscountFiatValue,
+                    referralBpsDiscount = feeDisplay.referralBpsDiscount,
+                    referralBpsDiscountFiatValue = feeDisplay.referralBpsDiscountFiatValue,
                     payload = SwapPayload.SwapKit(quote.data),
                 )
             }
@@ -339,6 +373,12 @@ constructor(
                     isApprovalRequired = isApprovalRequired,
                     gasFeeFiatValue = displayGasFeeFiat,
                     externalRecipient = externalRecipient,
+                    swapFeePercent = feeDisplay.swapFeePercent,
+                    swapFeeIncludedInRate = feeDisplay.swapFeeIncludedInRate,
+                    vultBpsDiscount = feeDisplay.vultBpsDiscount,
+                    vultBpsDiscountFiatValue = feeDisplay.vultBpsDiscountFiatValue,
+                    referralBpsDiscount = feeDisplay.referralBpsDiscount,
+                    referralBpsDiscountFiatValue = feeDisplay.referralBpsDiscountFiatValue,
                     payload =
                         SwapPayload.EVM(
                             EVMSwapPayloadJson(

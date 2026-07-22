@@ -39,6 +39,7 @@ import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
+import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
@@ -162,6 +163,34 @@ internal fun SwapTransactionOverviewScreen(
                     subtitle = transactionTypeUiModel.dstVaultName ?: dstAddress,
                     bracketValue = transactionTypeUiModel.dstVaultName?.let { dstAddress },
                 )
+
+                VerifyCardDivider(size = 1.dp)
+
+                // Fee breakdown mirrors VerifySwapScreen so the estimate the user signed and the
+                // completed-swap summary read the same: Network Fee → Swap Fee → (Outbound Fee) →
+                // Total Fee, instead of a single opaque Total Fee row (#5334). No title override on
+                // the Network Fee row: reuse EstimatedNetworkFee's default
+                // (send_form_est_network_fee)
+                // exactly as VerifySwapScreen does, so the label is identical across locales rather
+                // than diverging (verify_transaction_network_fee adds an "(auto)" suffix in
+                // es/hr/it/nl/pt/ru).
+                EstimatedNetworkFee(
+                    tokenGas = transactionTypeUiModel.networkFeeFormatted,
+                    fiatGas = transactionTypeUiModel.networkFee.fiatValue,
+                )
+
+                TextDetails(
+                    title = stringResource(R.string.swap_form_estimated_fees_title),
+                    subtitle = transactionTypeUiModel.providerFee.fiatValue,
+                )
+
+                // Only THORChain / MayaChain report an outbound fee distinct from the swap fee.
+                transactionTypeUiModel.outboundFee?.let { outboundFee ->
+                    TextDetails(
+                        title = stringResource(R.string.swap_form_outbound_fee_title),
+                        subtitle = outboundFee,
+                    )
+                }
 
                 VerifyCardDivider(size = 1.dp)
 

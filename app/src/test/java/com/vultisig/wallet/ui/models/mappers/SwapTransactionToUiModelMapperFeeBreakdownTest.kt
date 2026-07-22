@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransaction.RegularSwapTransaction
 import com.vultisig.wallet.data.models.THORChainSwapPayload
@@ -136,6 +137,133 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
             uiModel.totalFee shouldBe "3.50"
         }
 
+    @Test
+    fun `1inch included-in-rate fee adds nothing to the total and carries the display context`() =
+        runTest {
+            every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+            every { mapTokenValueToDecimalUiString(any()) } returns "0"
+            coEvery { fiatValueToStringMapper(any(), any()) } answers
+                {
+                    firstArg<FiatValue>().value.toPlainString()
+                }
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+            coEvery { tokenRepository.getNativeToken(eth.chain.id) } returns eth
+            // 1inch stages gas on estimatedFees; without the guard it would count a second time.
+            coEvery { convertTokenValueToFiat(eth, oneInchGas, AppCurrency.USD) } returns
+                usd("2.00")
+
+            val uiModel = mapper().invoke(oneInchTransaction())
+
+            // Total is the Network Fee alone ($3.50), never gas ($2.00) + gas ($3.50) = $5.50.
+            uiModel.totalFee shouldBe "3.50"
+            uiModel.swapFeeIncludedInRate shouldBe true
+            uiModel.swapFeePercent shouldBe "0.50%"
+            uiModel.vultBpsDiscount shouldBe 0
+        }
+
+    @Test
+    fun `swapkit utxo hides the swap fee and keeps the total at the network fee`() = runTest {
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { fiatValueToStringMapper(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+        coEvery { tokenRepository.getNativeToken(btc.chain.id) } returns btc
+        // The SwapKit inbound fee (== the BTC deposit cost) converts to $0.53.
+        coEvery { convertTokenValueToFiat(btc, btcInboundFee, AppCurrency.USD) } returns usd("0.53")
+
+        val uiModel = mapper().invoke(swapKitUtxoTransaction())
+
+        // The deposit cost is shown once as the Network Fee ($0.51); the Swap Fee row is hidden and
+        // the total is the network fee alone — never $0.51 + $0.53 = $1.04 (#5358, #5321).
+        uiModel.swapFeeHidden shouldBe true
+        uiModel.totalFee shouldBe "0.51"
+    }
+
+    private fun swapKitUtxoTransaction(): RegularSwapTransaction =
+        RegularSwapTransaction(
+            id = "tx-swapkit-btc",
+            vaultId = "vault-1",
+            srcToken = btc,
+            srcTokenValue = TokenValue(BigInteger.valueOf(16_471), btc),
+            dstToken = usdt,
+            dstAddress = "bc1qDeposit",
+            expectedDstTokenValue = dstValue,
+            blockChainSpecific = mockk<BlockChainSpecificAndUtxo>(relaxed = true),
+            // SwapKit stages the deposit cost as the inbound fee on estimatedFees; swapFee is null.
+            estimatedFees = btcInboundFee,
+            swapFee = null,
+            outboundFee = null,
+            // Network Fee = the BTC deposit miner fee.
+            gasFees = TokenValue(BigInteger.valueOf(765), btc),
+            memo = null,
+            payload =
+                SwapPayload.SwapKit(
+                    SwapKitSwapPayloadJson(
+                        fromCoin = btc,
+                        toCoin = usdt,
+                        fromAmount = BigInteger.valueOf(16_471),
+                        toAmountDecimal = BigDecimal.ONE,
+                        txType = "PSBT",
+                        txPayload = ByteArray(0),
+                        targetAddress = "bc1qDeposit",
+                        subProvider = "GARDEN",
+                    )
+                ),
+            isApprovalRequired = false,
+            gasFeeFiatValue = usd("0.51"),
+        )
+
+    private fun oneInchTransaction(): RegularSwapTransaction =
+        RegularSwapTransaction(
+            id = "tx-1inch",
+            vaultId = "vault-1",
+            srcToken = eth,
+            srcTokenValue = srcValue,
+            dstToken = usdt,
+            dstAddress = "0xRouter",
+            expectedDstTokenValue = dstValue,
+            blockChainSpecific = mockk<BlockChainSpecificAndUtxo>(relaxed = true),
+            // 1inch stages gas (gasPrice × gas) on estimatedFees; swapFee stays null.
+            estimatedFees = oneInchGas,
+            swapFee = null,
+            outboundFee = null,
+            gasFees = TokenValue(BigInteger.valueOf(2_000_000_000_000_000L), eth),
+            memo = null,
+            payload =
+                SwapPayload.EVM(
+                    EVMSwapPayloadJson(
+                        fromCoin = eth,
+                        toCoin = usdt,
+                        fromAmount = srcValue.value,
+                        toAmountDecimal = BigDecimal.ONE,
+                        quote =
+                            EVMSwapQuoteJson(
+                                dstAmount = "400",
+                                tx =
+                                    OneInchSwapTxJson(
+                                        from = "0xsrc",
+                                        to = "0xRouter",
+                                        gas = 100_000L,
+                                        data = "0xdata",
+                                        value = "0",
+                                        gasPrice = "76833041",
+                                        swapFee = "",
+                                        swapFeeTokenContract = "",
+                                    ),
+                            ),
+                        provider = SwapProvider.ONEINCH.getSwapProviderId(),
+                    )
+                ),
+            isApprovalRequired = false,
+            gasFeeFiatValue = usd("3.50"),
+            swapFeeIncludedInRate = true,
+            swapFeePercent = "0.50%",
+            vultBpsDiscount = 0,
+        )
+
     private fun swapKitEvmTransaction(): RegularSwapTransaction =
         RegularSwapTransaction(
             id = "tx-swapkit",
@@ -257,5 +385,25 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
 
         // SwapKit's FLASHNET-style near-zero inbound placeholder: 130 wei of native ETH (#5121).
         val inboundPlaceholder = TokenValue(value = BigInteger.valueOf(130), token = eth)
+
+        // 1inch stages its gas estimate (gasPrice × gas) on estimatedFees, denominated in the
+        // source-native coin. Used to prove it is not double-counted in the total (#5358).
+        val oneInchGas = TokenValue(value = BigInteger.valueOf(1_000), token = eth)
+
+        val btc =
+            Coin(
+                chain = Chain.Bitcoin,
+                ticker = "BTC",
+                logo = "btc",
+                address = "bc1qOwner",
+                decimal = 8,
+                hexPublicKey = "hex",
+                priceProviderID = "bitcoin",
+                contractAddress = "",
+                isNativeToken = true,
+            )
+
+        // SwapKit stages the BTC deposit cost as its inbound fee on estimatedFees (#5358, #5321).
+        val btcInboundFee = TokenValue(value = BigInteger.valueOf(795), token = btc)
     }
 }

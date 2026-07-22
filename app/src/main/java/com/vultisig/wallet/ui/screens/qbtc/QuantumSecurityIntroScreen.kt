@@ -112,7 +112,7 @@ internal fun QuantumSecurityIntroScreenContent(
                 UiSpacer(16.dp)
 
                 FeatureRow(
-                    icon = R.drawable.ic_coins,
+                    icon = R.drawable.ic_coins_stack,
                     title = stringResource(R.string.qbtc_intro_claim_title),
                     description = stringResource(R.string.qbtc_intro_claim_desc),
                 )

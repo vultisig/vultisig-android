@@ -175,6 +175,7 @@
     <string name="swap_form_from_title">Из</string>
     <string name="swap_form_estimated_fees_title">Комиссия за обмен</string>
     <string name="swap_form_estimated_fees_with_percent_title">Комиссия за обмен (%1$s)</string>
+    <string name="swap_form_estimated_fees_included_in_rate">включена в предложенный курс</string>
     <string name="swap_form_outbound_fee_title">Исходящая комиссия</string>
     <string name="swap_form_price_impact_title">Влияние на цену</string>
     <string name="swap_price_impact_good">Хорошее</string>
