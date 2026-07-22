@@ -96,4 +96,30 @@ class PollingTxStatusUseCaseTest {
             "expected backoff to bound polls, but got ${repository.callCount}",
         )
     }
+
+    @Test
+    fun `invoke times out promptly without oversleeping the backoff interval`() = runBlocking {
+        // The poll interval (and thus the first backoff delay) is far larger than the timeout, so
+        // an unclamped backoff would keep the loop sleeping long past the deadline. The delay must
+        // be clamped to the remaining budget so TimedOut is emitted close to maxWaitSeconds.
+        val repository = AlwaysPendingStatusRepository()
+        val useCase =
+            PollingTxStatusUseCaseImpl(
+                txStatusConfigurationProvider =
+                    FakeTxStatusConfigurationProvider(
+                        TxStatusConfiguration(pollIntervalSeconds = 30, maxWaitSeconds = 2)
+                    ),
+                transactionStatusRepository = repository,
+            )
+
+        val start = System.currentTimeMillis()
+        val results = withTimeout(20_000) { useCase(Chain.Bittensor, "deadbeef").toList() }
+        val elapsedMillis = System.currentTimeMillis() - start
+
+        assertEquals(TransactionResult.TimedOut, results.last())
+        assertTrue(
+            elapsedMillis < 10_000,
+            "expected timeout near maxWaitSeconds, but took ${elapsedMillis}ms",
+        )
+    }
 }

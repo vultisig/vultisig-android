@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.models.Chain
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -46,7 +47,14 @@ constructor(
                 when (result) {
                     is TransactionResult.Confirmed,
                     is TransactionResult.Failed -> return@flow
-                    else -> delay(backoffDelay(config.pollIntervalSeconds, backoffAttempt++))
+                    else ->
+                        delay(
+                            backoffDelay(
+                                config.pollIntervalSeconds,
+                                backoffAttempt++,
+                                remainingMillis(startTime, timeoutMillis),
+                            )
+                        )
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -56,7 +64,13 @@ constructor(
                     emit(TransactionResult.Failed("Network error: ${e.message}"))
                     return@flow
                 }
-                delay(backoffDelay(config.pollIntervalSeconds, backoffAttempt++))
+                delay(
+                    backoffDelay(
+                        config.pollIntervalSeconds,
+                        backoffAttempt++,
+                        remainingMillis(startTime, timeoutMillis),
+                    )
+                )
             }
         }
     }
@@ -65,11 +79,22 @@ constructor(
      * Capped exponential backoff for the poll loop: `pollInterval * 2^attempt`, clamped to
      * [MAX_POLL_BACKOFF]. The first non-terminal poll keeps the configured interval, then the delay
      * doubles so sustained Pending/429 cycles stop hammering the status endpoint at a fixed rate.
+     * The delay is further clamped to [remainingMillis] so the loop never sleeps past the polling
+     * deadline before emitting [TransactionResult.TimedOut].
      */
-    private fun backoffDelay(pollIntervalSeconds: Long, attempt: Int): Duration {
+    private fun backoffDelay(
+        pollIntervalSeconds: Long,
+        attempt: Int,
+        remainingMillis: Long,
+    ): Duration {
         val multiplier = 1 shl attempt.coerceIn(0, MAX_BACKOFF_SHIFT)
-        return minOf(pollIntervalSeconds.seconds * multiplier, MAX_POLL_BACKOFF)
+        val capped = minOf(pollIntervalSeconds.seconds * multiplier, MAX_POLL_BACKOFF)
+        return minOf(capped, remainingMillis.coerceAtLeast(0).milliseconds)
     }
+
+    /** Milliseconds left before the polling deadline; may be zero or negative once elapsed. */
+    private fun remainingMillis(startTime: Long, timeoutMillis: Long): Long =
+        timeoutMillis - (System.currentTimeMillis() - startTime)
 
     private companion object {
         const val MAX_ERRORS = 5
