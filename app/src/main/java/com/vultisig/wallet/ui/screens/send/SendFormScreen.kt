@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.models.send.isContinueDisabled
+import com.vultisig.wallet.ui.models.send.isDstAddressEditable
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.tron.TronResourceTypeTab
@@ -432,7 +433,7 @@ private fun SendFormContent(
                 onAddressProviderBookClick = onProviderBookClick,
                 // Unbond draws from a specific bonded node; the amount ceiling is frozen to that
                 // node at navigation, so the address must stay locked to keep them in sync.
-                isAddressEditable = state.defiType != DeFiNavActions.UNBOND,
+                isAddressEditable = state.isDstAddressEditable,
             )
         }
 

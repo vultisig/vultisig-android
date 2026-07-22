@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.models.send.AmountFraction
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.models.send.isContinueDisabled
+import com.vultisig.wallet.ui.models.send.isDstAddressBlocking
 import com.vultisig.wallet.ui.screens.deposit.components.AutoCompoundToggle
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
@@ -101,8 +102,13 @@ internal fun FoldableAmountWidget(
     FoldableSection(
         expanded = isCircleMode || state.expandedSection == SendSections.Amount,
         onToggle = {
+            // A blocking recipient error keeps Address expanded: collapsing it would hide the only
+            // visible reason Continue is disabled.
             if (
-                !isCircleMode && state.isDstAddressComplete && addressFieldState.text.isNotEmpty()
+                !isCircleMode &&
+                    state.isDstAddressComplete &&
+                    !state.isDstAddressBlocking &&
+                    addressFieldState.text.isNotEmpty()
             ) {
                 onExpandSection(SendSections.Amount)
             }

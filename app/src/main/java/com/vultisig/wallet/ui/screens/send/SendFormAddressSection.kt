@@ -142,7 +142,8 @@ internal fun FoldableDestinationAddressWidget(
 ) {
     FoldableSection(
         expanded = state.expandedSection == SendSections.Address,
-        complete = state.isDstAddressComplete,
+        // A filled-in but invalid recipient is not complete — no checkmark while the error shows.
+        complete = state.isDstAddressComplete && state.dstAddressError == null,
         title = stringResource(R.string.add_address_address_title),
         onToggle = { onExpandSection(SendSections.Address) },
         completeTitleContent = { AddressCompleteTitleContent(addressFieldState) },
@@ -237,7 +238,8 @@ internal fun FoldableBondDestinationAddress(
 ) {
     FoldableSection(
         expanded = state.expandedSection == SendSections.Address,
-        complete = state.isDstAddressComplete,
+        // A filled-in but invalid recipient is not complete — no checkmark while the error shows.
+        complete = state.isDstAddressComplete && state.dstAddressError == null,
         title = stringResource(R.string.add_address_address_title),
         onToggle = { onExpandSection(SendSections.Address) },
         completeTitleContent = { AddressCompleteTitleContent(addressFieldState) },

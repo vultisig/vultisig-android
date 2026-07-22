@@ -190,7 +190,7 @@
     <string name="vault_settings_error_backup_file">ocurrió un error</string>
     <string name="vault_settings_error_backup_failed">La copia de seguridad falló. No se guardó ningún archivo. Inténtalo de nuevo.</string>
     <string name="send_error_no_address">La dirección no es válida</string>
-    <string name="send_error_invalid_recipient_address">Ese destinatario no es una dirección válida para esta red.</string>
+    <string name="send_error_invalid_recipient_address">Ese destinatario no es una dirección válida para esta cadena.</string>
     <string name="verify_transaction_value">Valor</string>
     <string name="camera_permission_open_settings">Abrir configuración</string>
     <string name="vault_accounts_account_assets">%1$s activos</string>

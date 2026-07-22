@@ -61,8 +61,10 @@ internal class AddressManager(
     val isDstAddressComplete: StateFlow<Boolean> = _isDstAddressComplete.asStateFlow()
 
     // True when a non-empty recipient failed chain validation and couldn't resolve to a valid
-    // address. Drives the inline "not a valid address for this chain" error; false while empty,
-    // resolving, or valid. Chain-general: every send chain validates through the same path below.
+    // address. Drives the inline "not a valid address for this chain" error; false once the input
+    // is valid or empty. While name resolution is in flight the flag holds its previous value, so a
+    // standing error stays put until the new input resolves instead of blinking off and back on.
+    // Chain-general: every send chain validates through the same path below.
     private val _invalidAddress = MutableStateFlow(false)
     val invalidAddress: StateFlow<Boolean> = _invalidAddress.asStateFlow()
 
