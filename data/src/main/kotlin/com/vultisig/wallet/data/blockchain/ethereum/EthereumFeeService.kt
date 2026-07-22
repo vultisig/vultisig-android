@@ -388,7 +388,15 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
     }
 }
 
-// Returns the mid-index element, or null for an empty list. Callers pair it with
-// a chain-specific floor via `maxOf(..., minFee)` so a missing sample degrades to
-// that floor instead of throwing.
-private fun List<BigInteger>.median(): BigInteger? = getOrNull(size / 2)
+// Averages the two central elements for an even-length list instead of picking a single
+// upper-middle one; returns null for an empty list. Callers pair it with a chain-specific floor
+// via `maxOf(..., minFee)` so a missing sample degrades to that floor instead of throwing.
+private fun List<BigInteger>.median(): BigInteger? {
+    if (isEmpty()) return null
+    val mid = size / 2
+    return if (size % 2 == 0) {
+        (this[mid - 1] + this[mid]) / BigInteger.valueOf(2)
+    } else {
+        this[mid]
+    }
+}
