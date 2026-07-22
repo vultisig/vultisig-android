@@ -224,7 +224,7 @@ internal class SolanaApiImp(
                     ?.filter { it > BigInteger.ZERO }
                     ?.sorted()
                     .orEmpty()
-            val median = if (nonZeroFees.isEmpty()) fallback else nonZeroFees[nonZeroFees.size / 2]
+            val median = solanaMedianPriorityFee(nonZeroFees, fallback)
             maxOf(median, fallback).coerceAtMost(MAX_PRIORITY_FEE_PRICE.toBigInteger())
         } catch (e: CancellationException) {
             throw e
@@ -700,6 +700,25 @@ internal enum class SolanaBroadcastAction {
     EXPIRED,
     /** Any other RPC error — not recoverable by resending. */
     FATAL,
+}
+
+/**
+ * Median of [sortedFees] (ascending, strictly positive), or [fallback] when empty. Averages the two
+ * central elements for an even-length list instead of picking the upper-middle one, matching iOS
+ * (SolanaService.fetchRecentPrioritizationFees).
+ */
+internal fun solanaMedianPriorityFee(
+    sortedFees: List<BigInteger>,
+    fallback: BigInteger,
+): BigInteger {
+    val size = sortedFees.size
+    if (size == 0) return fallback
+    val mid = size / 2
+    return if (size % 2 == 0) {
+        (sortedFees[mid - 1] + sortedFees[mid]) / BigInteger.valueOf(2)
+    } else {
+        sortedFees[mid]
+    }
 }
 
 /**
