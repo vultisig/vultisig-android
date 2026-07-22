@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.usecases.txstatus
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.utils.NetworkException
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
@@ -27,10 +28,11 @@ constructor(
         val timeoutMillis = config.maxWaitSeconds.seconds.inWholeMilliseconds
 
         var errorCount = 0
-        // Consecutive non-terminal polls (Pending/NotFound or caught errors), drives the backoff.
-        // A rate-limited (HTTP 429) status endpoint is swallowed into a Pending result upstream, so
-        // the loop never sees it as an error; without growing the interval it would re-hit the
-        // endpoint at a fixed cadence and keep it rate limited (issue #5363).
+        // Consecutive rate-limited (HTTP 429) or errored polls; drives the exponential backoff so a
+        // throttled status endpoint isn't re-hit at a fixed cadence (issue #5363). Reset on every
+        // healthy poll: a normal Pending/NotFound result keeps the configured interval, so fast
+        // chains (Solana/Ripple/Tron poll every 2s) confirm at their usual cadence instead of
+        // ballooning to the backoff cap during an ordinary multi-second confirmation.
         var backoffAttempt = 0
 
         while (currentCoroutineContext().isActive) {
@@ -42,6 +44,7 @@ constructor(
             try {
                 val result = transactionStatusRepository.checkTransactionStatus(txHash, chain)
                 errorCount = 0
+                backoffAttempt = 0
                 emit(result)
 
                 when (result) {
@@ -51,7 +54,7 @@ constructor(
                         delay(
                             backoffDelay(
                                 config.pollIntervalSeconds,
-                                backoffAttempt++,
+                                attempt = 0,
                                 remainingMillis(startTime, timeoutMillis),
                             )
                         )
@@ -59,28 +62,53 @@ constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                errorCount++
-                if (errorCount >= MAX_ERRORS) {
-                    emit(TransactionResult.Failed("Network error: ${e.message}"))
-                    return@flow
-                }
-                delay(
-                    backoffDelay(
-                        config.pollIntervalSeconds,
-                        backoffAttempt++,
-                        remainingMillis(startTime, timeoutMillis),
+                if (e.isRateLimit()) {
+                    // A rate-limited (HTTP 429) status endpoint (e.g. the TAO tx-status proxy) is
+                    // transient, not a transaction failure: keep polling with exponential backoff,
+                    // but don't spend the fatal error budget on it.
+                    delay(
+                        backoffDelay(
+                            config.pollIntervalSeconds,
+                            backoffAttempt++,
+                            remainingMillis(startTime, timeoutMillis),
+                        )
                     )
-                )
+                } else {
+                    errorCount++
+                    if (errorCount >= MAX_ERRORS) {
+                        emit(TransactionResult.Failed("Network error: ${e.message}"))
+                        return@flow
+                    }
+                    delay(
+                        backoffDelay(
+                            config.pollIntervalSeconds,
+                            backoffAttempt++,
+                            remainingMillis(startTime, timeoutMillis),
+                        )
+                    )
+                }
             }
         }
     }
 
+    /** True when [this] or a cause is a rate-limit (HTTP 429) [NetworkException]. */
+    private fun Throwable.isRateLimit(): Boolean {
+        var current: Throwable? = this
+        while (current != null) {
+            if (current is NetworkException && current.httpStatusCode == HTTP_TOO_MANY_REQUESTS) {
+                return true
+            }
+            current = current.cause
+        }
+        return false
+    }
+
     /**
      * Capped exponential backoff for the poll loop: `pollInterval * 2^attempt`, clamped to
-     * [MAX_POLL_BACKOFF]. The first non-terminal poll keeps the configured interval, then the delay
-     * doubles so sustained Pending/429 cycles stop hammering the status endpoint at a fixed rate.
-     * The delay is further clamped to [remainingMillis] so the loop never sleeps past the polling
-     * deadline before emitting [TransactionResult.TimedOut].
+     * [MAX_POLL_BACKOFF]. Healthy polls pass `attempt = 0` and keep the configured interval; only
+     * sustained rate-limit (429) / error cycles grow `attempt` so they stop hammering the status
+     * endpoint at a fixed rate. The delay is further clamped to [remainingMillis] so the loop never
+     * sleeps past the polling deadline before emitting [TransactionResult.TimedOut].
      */
     private fun backoffDelay(
         pollIntervalSeconds: Long,
@@ -99,6 +127,7 @@ constructor(
     private companion object {
         const val MAX_ERRORS = 5
         const val MAX_BACKOFF_SHIFT = 5
+        const val HTTP_TOO_MANY_REQUESTS = 429
         val MAX_POLL_BACKOFF = 30.seconds
     }
 }

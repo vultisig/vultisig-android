@@ -4,9 +4,11 @@ import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.TaostatsExtrinsicData
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
+import com.vultisig.wallet.data.utils.NetworkException
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -49,5 +51,13 @@ class BittensorStatusProviderTest {
         val result = provider.checkStatus("hash", Chain.Bittensor)
 
         assertEquals(TransactionResult.Pending, result)
+    }
+
+    @Test
+    fun `rate-limit 429 is re-thrown so the poll loop can back off`() = runTest {
+        coEvery { bittensorApi.getTxStatus(any()) } throws
+            NetworkException(429, "Too Many Requests")
+
+        assertFailsWith<NetworkException> { provider.checkStatus("hash", Chain.Bittensor) }
     }
 }

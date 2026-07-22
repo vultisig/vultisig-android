@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.usecases.txstatus
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.utils.NetworkException
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -43,6 +44,19 @@ class PollingTxStatusUseCaseTest {
         }
     }
 
+    private class AlwaysRateLimitedStatusRepository : TransactionStatusRepository {
+        var callCount = 0
+            private set
+
+        override suspend fun checkTransactionStatus(
+            txHash: String,
+            chain: Chain,
+        ): TransactionResult {
+            callCount++
+            throw NetworkException(429, "Too Many Requests")
+        }
+    }
+
     private class FakeTxStatusConfigurationProvider(private val config: TxStatusConfiguration) :
         TxStatusConfigurationProvider {
         override fun getConfigurationForChain(chain: Chain) = config
@@ -72,30 +86,58 @@ class PollingTxStatusUseCaseTest {
     }
 
     @Test
-    fun `invoke backs off instead of hammering the endpoint on sustained pending`() = runBlocking {
-        // Regression for issue #5363: a rate-limited status endpoint is swallowed into Pending, so
-        // the loop must grow its interval rather than re-hit at a fixed cadence. With a 1s base
-        // interval the delays are 1s, 2s, 4s..., so over a ~7s window at most a handful of polls
-        // fire — far fewer than the ~7 a fixed 1s interval would produce.
-        val repository = AlwaysPendingStatusRepository()
-        val useCase =
-            PollingTxStatusUseCaseImpl(
-                txStatusConfigurationProvider =
-                    FakeTxStatusConfigurationProvider(
-                        TxStatusConfiguration(pollIntervalSeconds = 1, maxWaitSeconds = 7)
-                    ),
-                transactionStatusRepository = repository,
+    fun `invoke backs off instead of hammering the endpoint on sustained rate limiting`() =
+        runBlocking {
+            // Regression for issue #5363: a rate-limited (HTTP 429) status endpoint must grow its
+            // interval rather than re-hit at a fixed cadence. With a 1s base interval the delays
+            // are 1s, 2s, 4s..., so over a ~7s window at most a handful of polls fire — far fewer
+            // than the ~7 a fixed 1s interval would produce. A 429 is transient, not a failure, so
+            // the loop keeps polling to TimedOut rather than emitting Failed.
+            val repository = AlwaysRateLimitedStatusRepository()
+            val useCase =
+                PollingTxStatusUseCaseImpl(
+                    txStatusConfigurationProvider =
+                        FakeTxStatusConfigurationProvider(
+                            TxStatusConfiguration(pollIntervalSeconds = 1, maxWaitSeconds = 7)
+                        ),
+                    transactionStatusRepository = repository,
+                )
+
+            val results = withTimeout(20_000) { useCase(Chain.Bittensor, "deadbeef").toList() }
+
+            assertEquals(TransactionResult.TimedOut, results.last())
+            assertTrue(
+                repository.callCount <= 5,
+                "expected backoff to bound polls, but got ${repository.callCount}",
             )
+        }
 
-        val results = withTimeout(20_000) { useCase(Chain.Bittensor, "deadbeef").toList() }
+    @Test
+    fun `invoke keeps the configured cadence on healthy pending polls without ballooning`() =
+        runBlocking {
+            // Regression for the review on issue #5363: exponential backoff must NOT apply to plain
+            // Pending polls, or a normal multi-second confirmation on a fast chain would balloon to
+            // the backoff cap. With a 1s interval over a ~4s window the loop should poll every
+            // second (~4 polls); a ballooning backoff (1s, 2s, 4s) would fire only ~3.
+            val repository = AlwaysPendingStatusRepository()
+            val useCase =
+                PollingTxStatusUseCaseImpl(
+                    txStatusConfigurationProvider =
+                        FakeTxStatusConfigurationProvider(
+                            TxStatusConfiguration(pollIntervalSeconds = 1, maxWaitSeconds = 4)
+                        ),
+                    transactionStatusRepository = repository,
+                )
 
-        assertEquals(TransactionResult.TimedOut, results.last())
-        assertTrue(results.dropLast(1).all { it == TransactionResult.Pending })
-        assertTrue(
-            repository.callCount <= 5,
-            "expected backoff to bound polls, but got ${repository.callCount}",
-        )
-    }
+            val results = withTimeout(20_000) { useCase(Chain.Solana, "deadbeef").toList() }
+
+            assertEquals(TransactionResult.TimedOut, results.last())
+            assertTrue(results.dropLast(1).all { it == TransactionResult.Pending })
+            assertTrue(
+                repository.callCount >= 4,
+                "expected a steady ~1s cadence, but got only ${repository.callCount} polls",
+            )
+        }
 
     @Test
     fun `invoke times out promptly without oversleeping the backoff interval`() = runBlocking {
