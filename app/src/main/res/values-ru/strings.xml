@@ -1092,6 +1092,15 @@
     <string name="raw_transaction_data">Исходные данные транзакции</string>
     <string name="sui_raw_transaction">Транзакция Sui</string>
     <string name="sui_sender">От</string>
+    <string name="sui_gas_budget">Бюджет газа: %1$s SUI</string>
+    <string name="sui_gas_price">Цена газа: %1$s MIST</string>
+    <string name="sui_commands_summary">Сводка команд транзакции</string>
+    <string name="sui_command_number">Команда %1$d</string>
+    <string name="sui_command_target">Цель: %1$s</string>
+    <string name="sui_command_details">Детали: %1$s</string>
+    <string name="sui_arguments">Аргументы: %1$s</string>
+    <string name="sui_inputs_summary">Входные данные транзакции</string>
+    <string name="sui_input_number">Вход %1$d</string>
     <string name="solana_raw_transaction">Исходные данные транзакции Соланы</string>
     <string name="solana_instructions_summary">Сводка инструкций транзакции</string>
     <string name="solana_instruction_number">Инструкция %1$d</string>

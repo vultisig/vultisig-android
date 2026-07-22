@@ -1092,6 +1092,15 @@
     <string name="raw_transaction_data">Sirovi podaci o transakciji</string>
     <string name="sui_raw_transaction">Sui transakcija</string>
     <string name="sui_sender">Od</string>
+    <string name="sui_gas_budget">Proračun za gas: %1$s SUI</string>
+    <string name="sui_gas_price">Cijena gasa: %1$s MIST</string>
+    <string name="sui_commands_summary">Sažetak naredbi transakcije</string>
+    <string name="sui_command_number">Naredba %1$d</string>
+    <string name="sui_command_target">Cilj: %1$s</string>
+    <string name="sui_command_details">Pojedinosti: %1$s</string>
+    <string name="sui_arguments">Argumenti: %1$s</string>
+    <string name="sui_inputs_summary">Ulazi transakcije</string>
+    <string name="sui_input_number">Ulaz %1$d</string>
     <string name="solana_raw_transaction">Solana Sirova transakcija</string>
     <string name="solana_instructions_summary">Sažetak uputa transakcije</string>
     <string name="solana_instruction_number">Uputa %1$d</string>

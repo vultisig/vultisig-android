@@ -1089,6 +1089,15 @@
     <string name="raw_transaction_data">Dati grezzi sulle transazioni</string>
     <string name="sui_raw_transaction">Transazione Sui</string>
     <string name="sui_sender">Da</string>
+    <string name="sui_gas_budget">Budget gas: %1$s SUI</string>
+    <string name="sui_gas_price">Prezzo del gas: %1$s MIST</string>
+    <string name="sui_commands_summary">Riepilogo comandi della transazione</string>
+    <string name="sui_command_number">Comando %1$d</string>
+    <string name="sui_command_target">Destinazione: %1$s</string>
+    <string name="sui_command_details">Dettagli: %1$s</string>
+    <string name="sui_arguments">Argomenti: %1$s</string>
+    <string name="sui_inputs_summary">Input della transazione</string>
+    <string name="sui_input_number">Input %1$d</string>
     <string name="solana_raw_transaction">Transazioni grezze Solana</string>
     <string name="solana_instructions_summary">Riepilogo istruzioni della transazione</string>
     <string name="solana_instruction_number">Istruzione %1$d</string>

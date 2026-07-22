@@ -1084,6 +1084,15 @@
     <string name="raw_transaction_data">Ruwe transactiegegevens</string>
     <string name="sui_raw_transaction">Sui-transactie</string>
     <string name="sui_sender">Van</string>
+    <string name="sui_gas_budget">Gasbudget: %1$s SUI</string>
+    <string name="sui_gas_price">Gasprijs: %1$s MIST</string>
+    <string name="sui_commands_summary">Overzicht transactieopdrachten</string>
+    <string name="sui_command_number">Opdracht %1$d</string>
+    <string name="sui_command_target">Doel: %1$s</string>
+    <string name="sui_command_details">Details: %1$s</string>
+    <string name="sui_arguments">Argumenten: %1$s</string>
+    <string name="sui_inputs_summary">Transactie-invoer</string>
+    <string name="sui_input_number">Invoer %1$d</string>
     <string name="solana_raw_transaction">Solana Ruwe transactie</string>
     <string name="solana_instructions_summary">Overzicht transactie-instructies</string>
     <string name="solana_instruction_number">Instructie %1$d</string>

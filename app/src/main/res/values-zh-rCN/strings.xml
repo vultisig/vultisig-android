@@ -1420,6 +1420,15 @@
     <string name="raw_transaction_data">原始交易数据</string>
     <string name="sui_raw_transaction">Sui 交易</string>
     <string name="sui_sender">从</string>
+    <string name="sui_gas_budget">Gas 预算：%1$s SUI</string>
+    <string name="sui_gas_price">Gas 价格：%1$s MIST</string>
+    <string name="sui_commands_summary">交易命令摘要</string>
+    <string name="sui_command_number">命令 %1$d</string>
+    <string name="sui_command_target">目标：%1$s</string>
+    <string name="sui_command_details">详情：%1$s</string>
+    <string name="sui_arguments">参数：%1$s</string>
+    <string name="sui_inputs_summary">交易输入</string>
+    <string name="sui_input_number">输入 %1$d</string>
     <string name="solana_raw_transaction">Solana 原始交易数据</string>
     <string name="solana_instructions_summary">交易指令摘要</string>
     <string name="solana_instruction_number">指令 %1$d</string>

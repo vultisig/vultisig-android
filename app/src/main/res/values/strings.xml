@@ -1145,6 +1145,15 @@
     <string name="raw_transaction_data">Raw Transaction Data</string>
     <string name="sui_raw_transaction">Sui Transaction</string>
     <string name="sui_sender">From</string>
+    <string name="sui_gas_budget">Gas Budget: %1$s SUI</string>
+    <string name="sui_gas_price">Gas Price: %1$s MIST</string>
+    <string name="sui_commands_summary">Transaction Commands Summary</string>
+    <string name="sui_command_number">Command %1$d</string>
+    <string name="sui_command_target">Target: %1$s</string>
+    <string name="sui_command_details">Details: %1$s</string>
+    <string name="sui_arguments">Arguments: %1$s</string>
+    <string name="sui_inputs_summary">Transaction Inputs</string>
+    <string name="sui_input_number">Input %1$d</string>
     <string name="solana_raw_transaction">Solana Raw Transaction</string>
     <string name="solana_instructions_summary">Transaction Instructions Summary</string>
     <string name="solana_instruction_number">Instruction %1$d</string>
