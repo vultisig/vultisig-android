@@ -21,8 +21,9 @@ internal class BittensorStatusProvider @Inject constructor(private val bittensor
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            // The TAO tx-status proxy rate limits aggressively (HTTP 429). Retrying/backing off on
-            // 429 is handled by the shared HttpRequestRetry plugin (GET is idempotent), so this
+            // The TAO tx-status proxy rate limits aggressively (HTTP 429). Retries within a single
+            // request are handled by the shared HttpRequestRetry plugin (GET is idempotent), while
+            // backoff across the poll loop's re-hits lives in PollingTxStatusUseCaseImpl. This
             // catch must not add its own delay: checkStatus is shared by BroadcastTxUseCase and
             // RefreshPendingTransactionsUseCase, and a delay here would stall all of them.
             Timber.w(e, "Bittensor status check failed for %s", txHash)

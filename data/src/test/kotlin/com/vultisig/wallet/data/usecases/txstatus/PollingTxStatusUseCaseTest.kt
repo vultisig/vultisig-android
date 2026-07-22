@@ -30,6 +30,19 @@ class PollingTxStatusUseCaseTest {
         }
     }
 
+    private class AlwaysPendingStatusRepository : TransactionStatusRepository {
+        var callCount = 0
+            private set
+
+        override suspend fun checkTransactionStatus(
+            txHash: String,
+            chain: Chain,
+        ): TransactionResult {
+            callCount++
+            return TransactionResult.Pending
+        }
+    }
+
     private class FakeTxStatusConfigurationProvider(private val config: TxStatusConfiguration) :
         TxStatusConfigurationProvider {
         override fun getConfigurationForChain(chain: Chain) = config
@@ -56,5 +69,31 @@ class PollingTxStatusUseCaseTest {
         assertEquals(TransactionResult.TimedOut, results.last())
         assertTrue(results.dropLast(1).all { it == TransactionResult.NotFound })
         assertTrue(repository.callCount >= 1)
+    }
+
+    @Test
+    fun `invoke backs off instead of hammering the endpoint on sustained pending`() = runBlocking {
+        // Regression for issue #5363: a rate-limited status endpoint is swallowed into Pending, so
+        // the loop must grow its interval rather than re-hit at a fixed cadence. With a 1s base
+        // interval the delays are 1s, 2s, 4s..., so over a ~7s window at most a handful of polls
+        // fire — far fewer than the ~7 a fixed 1s interval would produce.
+        val repository = AlwaysPendingStatusRepository()
+        val useCase =
+            PollingTxStatusUseCaseImpl(
+                txStatusConfigurationProvider =
+                    FakeTxStatusConfigurationProvider(
+                        TxStatusConfiguration(pollIntervalSeconds = 1, maxWaitSeconds = 7)
+                    ),
+                transactionStatusRepository = repository,
+            )
+
+        val results = withTimeout(20_000) { useCase(Chain.Bittensor, "deadbeef").toList() }
+
+        assertEquals(TransactionResult.TimedOut, results.last())
+        assertTrue(results.dropLast(1).all { it == TransactionResult.Pending })
+        assertTrue(
+            repository.callCount <= 5,
+            "expected backoff to bound polls, but got ${repository.callCount}",
+        )
     }
 }
