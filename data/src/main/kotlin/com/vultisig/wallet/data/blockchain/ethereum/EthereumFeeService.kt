@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.models.supportsLegacyGas
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.increaseByPercent
+import com.vultisig.wallet.data.utils.median
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -385,18 +386,5 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
             DEFAULT_TOKEN_TRANSFER_LIMIT.increaseByPercent(40)
 
         val DEFAULT_ARBITRUM_TRANSFER = "160000".toBigInteger()
-    }
-}
-
-// Averages the two central elements for an even-length list instead of picking a single
-// upper-middle one; returns null for an empty list. Callers pair it with a chain-specific floor
-// via `maxOf(..., minFee)` so a missing sample degrades to that floor instead of throwing.
-private fun List<BigInteger>.median(): BigInteger? {
-    if (isEmpty()) return null
-    val mid = size / 2
-    return if (size % 2 == 0) {
-        (this[mid - 1] + this[mid]) / BigInteger.valueOf(2)
-    } else {
-        this[mid]
     }
 }
