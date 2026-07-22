@@ -79,7 +79,7 @@ object SolanaTransactionParser {
         return knownPrograms[programId]
     }
 
-    private fun getInstructionType(programId: String, instructionData: ByteArray): String? {
+    internal fun getInstructionType(programId: String, instructionData: ByteArray): String? {
         if (instructionData.isEmpty()) return null
 
         val discriminator = instructionData[0].toInt() and 0xFF
@@ -87,10 +87,17 @@ object SolanaTransactionParser {
         if (programId == "11111111111111111111111111111111") {
             return when (discriminator) {
                 0 -> "Create Account"
+                1 -> "Assign"
                 2 -> "Transfer"
-                3 -> "Assign"
-                4 -> "Create Account With Seed"
-                9 -> "Transfer With Seed"
+                3 -> "Create Account With Seed"
+                4 -> "Advance Nonce Account"
+                5 -> "Withdraw Nonce Account"
+                6 -> "Initialize Nonce Account"
+                7 -> "Authorize Nonce Account"
+                8 -> "Allocate"
+                9 -> "Allocate With Seed"
+                10 -> "Assign With Seed"
+                11 -> "Transfer With Seed"
                 else -> "System ($discriminator)"
             }
         }
@@ -127,9 +134,10 @@ object SolanaTransactionParser {
 
         if (programId == "ComputeBudget111111111111111111111111111111") {
             return when (discriminator) {
-                0 -> "Request Heap Frame"
-                1 -> "Set Compute Unit Limit"
-                2 -> "Set Compute Unit Price"
+                0 -> "Unused"
+                1 -> "Request Heap Frame"
+                2 -> "Set Compute Unit Limit"
+                3 -> "Set Compute Unit Price"
                 else -> "Compute Budget ($discriminator)"
             }
         }
