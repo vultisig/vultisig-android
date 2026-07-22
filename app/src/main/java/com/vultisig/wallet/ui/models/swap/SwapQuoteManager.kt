@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaSwap
+import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
@@ -152,6 +153,17 @@ constructor(
     // Length of the previous source-amount text, used to distinguish a paste (multi-character jump)
     // from free typing so a paste also fetches immediately (#4712).
     private var lastSrcAmountLength = 0
+
+    init {
+        // The displayed affiliate percentage (formatAffiliatePercent) assumes every provider quotes
+        // the same BASE_AFFILIATE_FEE_BPS. The aggregator constants derive from it directly; THOR's
+        // rate lives in another module, so guard it here — a future divergence fails loudly instead
+        // of silently overstating/understating the Swap Fee row (#5358 review).
+        check(THORChainSwaps.AFFILIATE_FEE_RATE_BP == BASE_AFFILIATE_FEE_BPS) {
+            "THORChain affiliate rate ${THORChainSwaps.AFFILIATE_FEE_RATE_BP} bps diverged from " +
+                "displayed base $BASE_AFFILIATE_FEE_BPS bps; update formatAffiliatePercent"
+        }
+    }
 
     /**
      * Marks the next non-empty source-amount change to bypass the typing debounce, so an explicit
@@ -353,11 +365,8 @@ constructor(
                 is SwapQuote.MayaChain -> quote.data.fees
                 else -> null
             }
-        // Displayed affiliate percentage sourced from the net bps actually sent to the provider —
-        // base 50 bps reduced by the VULT tier discount, clamped at zero — not the client-side
-        // fiat division this used to do, which returned null whenever source fiat was unavailable
-        // and rounded oddly (#5358). 0.50% with no discount; 0.00% at the Ultimate tier (full 50
-        // bps discount). Every provider charges the same base affiliate, so this is uniform.
+        // Net-of-discount affiliate percentage for the Swap Fee row title; see
+        // [formatAffiliatePercent]. Uniform across providers, which share the same base rate.
         val swapFeePercent = formatAffiliatePercent(vultBPSDiscount)
 
         // 1inch never returns the affiliate fee as a separate field — it is taken as a percentage
@@ -1365,13 +1374,15 @@ constructor(
         UiText.FormattedText(resId, emptyList())
 
     companion object {
-        private const val KYBER_AFFILIATE_FEE_BPS = 50
-        /** Base bps before tier discount; clamped to SwapKit's documented 0..1000 range. */
-        private const val SWAPKIT_AFFILIATE_FEE_BPS = 50
-        /**
-         * Base bps before tier discount for Jupiter's `platformFeeBps` (parity with the others).
-         */
-        private const val JUPITER_AFFILIATE_FEE_BPS = 50
+        // All aggregators charge the same base affiliate as [BASE_AFFILIATE_FEE_BPS]; derive them
+        // from it so the displayed percentage ([formatAffiliatePercent]) can't silently go stale if
+        // the base changes, and a provider that genuinely needs a different rate has to break the
+        // link visibly (#5358 review).
+        private const val KYBER_AFFILIATE_FEE_BPS = BASE_AFFILIATE_FEE_BPS
+        /** Clamped to SwapKit's documented 0..1000 range at the call site. */
+        private const val SWAPKIT_AFFILIATE_FEE_BPS = BASE_AFFILIATE_FEE_BPS
+        /** Jupiter's `platformFeeBps`. */
+        private const val JUPITER_AFFILIATE_FEE_BPS = BASE_AFFILIATE_FEE_BPS
         private const val NATIVE_TOKEN_SENTINEL = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         private const val QUOTE_FETCH_TIMEOUT_MS = 15_000L
         /**
