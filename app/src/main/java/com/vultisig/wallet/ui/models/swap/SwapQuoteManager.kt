@@ -7,7 +7,6 @@ import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaSwap
-import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
@@ -153,17 +152,6 @@ constructor(
     // Length of the previous source-amount text, used to distinguish a paste (multi-character jump)
     // from free typing so a paste also fetches immediately (#4712).
     private var lastSrcAmountLength = 0
-
-    init {
-        // The displayed affiliate percentage (formatAffiliatePercent) assumes every provider quotes
-        // the same BASE_AFFILIATE_FEE_BPS. The aggregator constants derive from it directly; THOR's
-        // rate lives in another module, so guard it here — a future divergence fails loudly instead
-        // of silently overstating/understating the Swap Fee row (#5358 review).
-        check(THORChainSwaps.AFFILIATE_FEE_RATE_BP == BASE_AFFILIATE_FEE_BPS) {
-            "THORChain affiliate rate ${THORChainSwaps.AFFILIATE_FEE_RATE_BP} bps diverged from " +
-                "displayed base $BASE_AFFILIATE_FEE_BPS bps; update formatAffiliatePercent"
-        }
-    }
 
     /**
      * Marks the next non-empty source-amount change to bypass the typing debounce, so an explicit

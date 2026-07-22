@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.api.models.quotes.Fees
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
 import com.vultisig.wallet.data.chains.helpers.SolanaSwap
+import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
@@ -819,6 +820,15 @@ internal class SwapQuoteManagerTest {
         formatAffiliatePercent(20) shouldBe "0.30%"
         formatAffiliatePercent(50) shouldBe "0.00%" // Ultimate tier: full discount.
         formatAffiliatePercent(60) shouldBe "0.00%" // Over-discount never goes negative.
+    }
+
+    @Test
+    fun `every provider quotes the same base affiliate rate as the one displayed`() {
+        // formatAffiliatePercent renders a single rate for all providers, so a divergence in any
+        // provider's base bps would silently overstate/understate the Swap Fee row. THORChain's
+        // rate lives in another module and cannot derive from BASE_AFFILIATE_FEE_BPS, so assert it
+        // here — drift fails on the PR rather than on a user's device.
+        THORChainSwaps.AFFILIATE_FEE_RATE_BP shouldBe BASE_AFFILIATE_FEE_BPS
     }
 
     @Test
