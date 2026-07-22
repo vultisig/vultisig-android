@@ -2641,7 +2641,7 @@ object Coins {
                 ticker = "SEND",
                 logo = "https://coin-images.coingecko.com/coins/images/50989/large/SEND.png",
                 address = "",
-                decimal = 9,
+                decimal = 6,
                 hexPublicKey = "",
                 priceProviderID = "send-token-2",
                 contractAddress =
