@@ -3,6 +3,8 @@ package com.vultisig.wallet.data.api
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import com.vultisig.wallet.data.mediator.Message
+import com.vultisig.wallet.data.utils.NetworkErrorKind
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -120,12 +122,17 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
         sessionId: String,
         localPartyId: List<String>,
     ) {
-        val response = httpClient.post("$serverUrl/complete/$sessionId") { setBody(localPartyId) }
-        if (response.status.value >= 500) {
-            Timber.w("markLocalPartyComplete: server returned ${response.status.value}, ignoring")
-            return
+        withRelayRetry {
+            val response =
+                httpClient.post("$serverUrl/complete/$sessionId") { setBody(localPartyId) }
+            if (response.status.value >= 500) {
+                Timber.w(
+                    "markLocalPartyComplete: server returned ${response.status.value}, ignoring"
+                )
+            } else {
+                response.throwIfUnsuccessful()
+            }
         }
-        response.throwIfUnsuccessful()
     }
 
     override suspend fun getCompletedParties(serverUrl: String, sessionId: String): List<String> {
@@ -143,14 +150,16 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
     }
 
     override suspend fun sendTssMessage(serverUrl: String, messageId: String?, message: Message) {
-        httpClient
-            .post(serverUrl) {
-                if (!messageId.isNullOrEmpty()) {
-                    header(MESSAGE_ID_HEADER_TITLE, messageId)
+        withRelayRetry {
+            httpClient
+                .post(serverUrl) {
+                    if (!messageId.isNullOrEmpty()) {
+                        header(MESSAGE_ID_HEADER_TITLE, messageId)
+                    }
+                    setBody(json.encodeToString(message))
                 }
-                setBody(json.encodeToString(message))
-            }
-            .throwIfUnsuccessful()
+                .throwIfUnsuccessful()
+        }
     }
 
     override suspend fun getTssMessages(
@@ -175,11 +184,13 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
         msgHash: String,
         messageId: String?,
     ) {
-        httpClient
-            .delete("$serverUrl/message/$sessionId/$localPartyId/$msgHash") {
-                messageId?.let { header(MESSAGE_ID_HEADER_TITLE, it) }
-            }
-            .throwIfUnsuccessful()
+        withRelayRetry {
+            httpClient
+                .delete("$serverUrl/message/$sessionId/$localPartyId/$msgHash") {
+                    messageId?.let { header(MESSAGE_ID_HEADER_TITLE, it) }
+                }
+                .throwIfUnsuccessful()
+        }
     }
 
     override suspend fun markLocalPartyKeysignComplete(
@@ -187,12 +198,14 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
         messageId: String,
         sig: tss.KeysignResponse,
     ) {
-        httpClient
-            .post(serverUrl) {
-                header(MESSAGE_ID_HEADER_TITLE, messageId)
-                setBody(json.encodeToString(sig))
-            }
-            .throwIfUnsuccessful()
+        withRelayRetry {
+            httpClient
+                .post(serverUrl) {
+                    header(MESSAGE_ID_HEADER_TITLE, messageId)
+                    setBody(json.encodeToString(sig))
+                }
+                .throwIfUnsuccessful()
+        }
     }
 
     override suspend fun checkKeysignComplete(
@@ -246,14 +259,16 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
         message: String,
         messageId: String?,
     ) {
-        httpClient
-            .post("$serverUrl/setup-message/$sessionId") {
-                if (!messageId.isNullOrEmpty()) {
-                    header(MESSAGE_ID_HEADER_TITLE, messageId)
+        withRelayRetry {
+            httpClient
+                .post("$serverUrl/setup-message/$sessionId") {
+                    if (!messageId.isNullOrEmpty()) {
+                        header(MESSAGE_ID_HEADER_TITLE, messageId)
+                    }
+                    setBody(message)
                 }
-                setBody(message)
-            }
-            .throwIfUnsuccessful()
+                .throwIfUnsuccessful()
+        }
     }
 
     private suspend fun <T> withRelayRetry(block: suspend () -> T): T {
@@ -272,6 +287,15 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
             } catch (e: IOException) {
                 lastException = e
                 Timber.w(e, "Relay request IOException, retrying (attempt ${attempt + 1})")
+            } catch (e: NetworkException) {
+                if (e.kind != NetworkErrorKind.Transport && e.kind != NetworkErrorKind.Timeout) {
+                    throw e
+                }
+                lastException = e
+                Timber.w(
+                    e,
+                    "Relay request transport failure (${e.kind}), retrying (attempt ${attempt + 1})",
+                )
             }
             if (attempt < RELAY_MAX_RETRIES - 1) {
                 delay(RELAY_BACKOFF_MS * (1L shl attempt))
