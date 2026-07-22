@@ -47,6 +47,9 @@ interface PolkadotApi {
 
     suspend fun getBlockHash(isGenesis: Boolean = false): String
 
+    /** Returns the block hash pinned to [blockNumber] (not the racing head hash). */
+    suspend fun getBlockHashForNumber(blockNumber: BigInteger): String
+
     suspend fun getGenesisBlockHash(): String
 
     suspend fun getRuntimeVersion(): Pair<BigInteger, BigInteger>
@@ -126,6 +129,18 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
                 jsonrpc = "2.0",
                 method = "chain_getBlockHash",
                 params = buildJsonArray { if (isGenesis) add(0) },
+                id = 1,
+            )
+        val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }
+        return response.bodyOrThrow<PolkadotGetBlockHashJson>().result
+    }
+
+    override suspend fun getBlockHashForNumber(blockNumber: BigInteger): String {
+        val payload =
+            RpcPayload(
+                jsonrpc = "2.0",
+                method = "chain_getBlockHash",
+                params = buildJsonArray { add(blockNumber.toLong()) },
                 id = 1,
             )
         val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }

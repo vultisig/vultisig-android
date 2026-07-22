@@ -193,6 +193,7 @@
     <string name="send_error_no_token">未选择代币</string>
     <string name="send_error_no_gas_fee">无燃料费</string>
     <string name="send_error_no_address">地址无效</string>
+    <string name="send_error_invalid_recipient_address">该收款人不是此链的有效地址。</string>
     <string name="send_error_no_amount">金额必须是正数</string>
     <string name="send_error_too_many_decimals">金额最多可保留 %1$d 位小数</string>
     <string name="send_error_invalid_operator_fee">运营商费用必须是0到10000基点之间的有效数字</string>
@@ -310,6 +311,7 @@
     <string name="swap_form_from_title">从</string>
     <string name="swap_form_estimated_fees_title">交换费用</string>
     <string name="swap_form_estimated_fees_with_percent_title">交换费用 (%1$s)</string>
+    <string name="swap_form_estimated_fees_included_in_rate">已包含在报价汇率中</string>
     <string name="swap_form_outbound_fee_title">出金手续费</string>
     <string name="swap_form_price_impact_title">价格影响</string>
     <string name="swap_price_impact_good">良好</string>

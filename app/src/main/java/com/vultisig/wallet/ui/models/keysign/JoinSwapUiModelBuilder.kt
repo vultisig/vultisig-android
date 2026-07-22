@@ -245,6 +245,15 @@ constructor(
 
                 val estimatedFee = convertTokenValueToFiat(feeToken, estimatedTokenFees, currency)
 
+                // Literal 1inch bakes the affiliate fee into the quoted rate and never itemizes it,
+                // so the co-signer shows "included in quoted rate" — matching the initiator —
+                // instead of the gas placeholder the else-branch above computes for `value`
+                // (#5358, #5329).
+                val isOneInchIncludedInRate = provider == SwapProvider.ONEINCH.getSwapProviderId()
+                val swapFeeForTotal =
+                    if (isOneInchIncludedInRate) networkGasFeeFiatValue
+                    else estimatedFee + networkGasFeeFiatValue
+
                 val swapTransaction =
                     SwapTransactionUiModel(
                         src =
@@ -287,12 +296,15 @@ constructor(
                         networkFeeFormatted =
                             mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
                                 " ${estimatedNetworkGasFee.tokenValue.unit}",
-                        totalFee =
-                            fiatValueToStringMapper(
-                                estimatedFee + networkGasFeeFiatValue,
-                                asFee = true,
-                            ),
+                        totalFee = fiatValueToStringMapper(swapFeeForTotal, asFee = true),
                         provider = provider,
+                        swapFeeIncludedInRate = isOneInchIncludedInRate,
+                        // No percentage on the join path: the affiliate rate is net of the
+                        // initiator's VULT tier discount, which the signed payload doesn't carry
+                        // and can't be recovered here. Showing the base 0.50% would contradict a
+                        // discounted initiator's verify screen, so the row omits the percent
+                        // entirely — as every other provider does on this path (#5358 review).
+                        swapFeePercent = null,
                     )
 
                 JoinKeysignVerifyResult(
@@ -429,40 +441,45 @@ constructor(
             }
 
             is SwapPayload.SwapKit -> {
-                // Re-fetch only the SwapKit inbound fee at join time so the co-signer sees
-                // the same non-zero swap fee as the initiator (mirrors the Thor/Maya
-                // branches). Uses the quote-only `getSwapKitInboundFee` (`POST /v3/quote`)
-                // rather than the full `getQuote`, which would also fire `POST /v3/swap`
-                // and
-                // mint a throwaway swap route — a fresh `swapId` and deposit address — per
-                // cosigner just to read the fee. Display-only: the signing bytes come from
-                // the payload and are never touched. The quote may reprice slightly between
-                // fetches (approximate parity, the same trade-off Thor/Maya accept); a
-                // fetch
-                // failure degrades to a zero fee rather than stalling the verify screen.
-                // The
-                // initiator's `affiliateBps` / `srcAddress` are intentionally omitted — the
-                // inbound fee doesn't depend on the affiliate fee and the join device can't
-                // know the initiator's `vultBPSDiscount`, so approximate parity holds.
+                // BTC/Cardano SwapKit deposits report the deposit cost as their inbound fee,
+                // already shown as the Network Fee — hide the Swap Fee row so it isn't
+                // double-counted, matching the initiator and the form (#5358, #5321).
+                val swapFeeHidden = srcToken.chain.standard == TokenStandard.UTXO
+                // Re-fetch only the SwapKit inbound fee at join time so the co-signer sees the same
+                // non-zero swap fee as the initiator (mirrors the Thor/Maya branches). Uses the
+                // quote-only `getSwapKitInboundFee` (`POST /v3/quote`) rather than the full
+                // `getQuote`, which would also fire `POST /v3/swap` and mint a throwaway swap route
+                // — a fresh `swapId` and deposit address — per cosigner just to read the fee.
+                // Display-only: the signing bytes come from the payload and are never touched. The
+                // quote may reprice slightly between fetches (approximate parity, the same
+                // trade-off Thor/Maya accept); a fetch failure degrades to a zero fee rather than
+                // stalling the verify screen. The initiator's `affiliateBps` / `srcAddress` are
+                // intentionally omitted — the inbound fee doesn't depend on the affiliate fee and
+                // the join device can't know the initiator's `vultBPSDiscount`, so approximate
+                // parity holds. Skipped entirely when the row is hidden (UTXO): the fetched fee
+                // would be neither displayed nor added to the total, so the round-trip is waste
+                // (#5358 review).
                 val swapKitProviderFee =
-                    try {
-                        swapQuoteRepository.getSwapKitInboundFee(
-                            SwapQuoteRequest(
-                                srcToken = srcToken,
-                                dstToken = dstToken,
-                                tokenValue = srcTokenValue,
-                                dstAddress = dstToken.address,
-                            )
-                        )
-                    } catch (e: SwapKitError) {
-                        // The SwapKit API layer wraps network/timeout/decoding failures
-                        // into
-                        // SwapKitError and rethrows CancellationException un-wrapped, so
-                        // this
-                        // narrow catch degrades quote failures to a zero fee while letting
-                        // cancellation (and any genuinely unexpected exception) propagate.
-                        Timber.w(e, "SwapKit join fee re-fetch failed; showing zero fee")
+                    if (swapFeeHidden) {
                         TokenValue(value = BigInteger.ZERO, token = srcToken)
+                    } else {
+                        try {
+                            swapQuoteRepository.getSwapKitInboundFee(
+                                SwapQuoteRequest(
+                                    srcToken = srcToken,
+                                    dstToken = dstToken,
+                                    tokenValue = srcTokenValue,
+                                    dstAddress = dstToken.address,
+                                )
+                            )
+                        } catch (e: SwapKitError) {
+                            // The SwapKit API layer wraps network/timeout/decoding failures into
+                            // SwapKitError and rethrows CancellationException un-wrapped, so this
+                            // narrow catch degrades quote failures to a zero fee while letting
+                            // cancellation (and any genuinely unexpected exception) propagate.
+                            Timber.w(e, "SwapKit join fee re-fetch failed; showing zero fee")
+                            TokenValue(value = BigInteger.ZERO, token = srcToken)
+                        }
                     }
                 val swapTransactionUiModel =
                     buildSwapUiModel(
@@ -476,6 +493,7 @@ constructor(
                         providerFeeToken = srcToken,
                         currency = currency,
                         providerLabel = providerLabel,
+                        swapFeeHidden = swapFeeHidden,
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -503,6 +521,9 @@ constructor(
         externalRecipient: String? = null,
         swapFee: TokenValue? = null,
         outboundFee: TokenValue? = null,
+        // Hides the Swap Fee row and drops it from the total for a SwapKit UTXO deposit whose cost
+        // is already the Network Fee — matching the initiator's verify screen and the form (#5358).
+        swapFeeHidden: Boolean = false,
     ): SwapTransactionUiModel {
         val estimatedFee = convertTokenValueToFiat(providerFeeToken, providerFee, currency)
 
@@ -557,12 +578,14 @@ constructor(
                     " ${estimatedNetworkGasFee.tokenValue.unit}",
             totalFee =
                 fiatValueToStringMapper(
-                    feesFiatForTotal + estimatedNetworkGasFee.fiatValue,
+                    if (swapFeeHidden) estimatedNetworkGasFee.fiatValue
+                    else feesFiatForTotal + estimatedNetworkGasFee.fiatValue,
                     asFee = true,
                 ),
             provider = provider,
             providerLabel = providerLabel,
             externalRecipient = externalRecipient,
+            swapFeeHidden = swapFeeHidden,
         )
     }
 

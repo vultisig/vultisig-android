@@ -30,6 +30,7 @@ import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
+import com.vultisig.wallet.data.utils.median
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
@@ -224,7 +225,7 @@ internal class SolanaApiImp(
                     ?.filter { it > BigInteger.ZERO }
                     ?.sorted()
                     .orEmpty()
-            val median = if (nonZeroFees.isEmpty()) fallback else nonZeroFees[nonZeroFees.size / 2]
+            val median = solanaMedianPriorityFee(nonZeroFees, fallback)
             maxOf(median, fallback).coerceAtMost(MAX_PRIORITY_FEE_PRICE.toBigInteger())
         } catch (e: CancellationException) {
             throw e
@@ -701,6 +702,15 @@ internal enum class SolanaBroadcastAction {
     /** Any other RPC error — not recoverable by resending. */
     FATAL,
 }
+
+/**
+ * Median of [sortedFees] (ascending, strictly positive), or [fallback] when empty. The even-length
+ * averaging behavior matches iOS (SolanaService.fetchRecentPrioritizationFees).
+ */
+internal fun solanaMedianPriorityFee(
+    sortedFees: List<BigInteger>,
+    fallback: BigInteger,
+): BigInteger = sortedFees.median() ?: fallback
 
 /**
  * Classifies a Solana `sendTransaction` error message into the action to take. `-32002` is Solana's

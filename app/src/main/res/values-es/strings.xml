@@ -166,6 +166,7 @@
     <string name="swap_form_from_title">De</string>
     <string name="swap_form_estimated_fees_title">Tarifa de intercambio</string>
     <string name="swap_form_estimated_fees_with_percent_title">Tarifa de intercambio (%1$s)</string>
+    <string name="swap_form_estimated_fees_included_in_rate">incluida en el tipo de cambio cotizado</string>
     <string name="swap_form_outbound_fee_title">Tarifa de salida</string>
     <string name="swap_form_price_impact_title">Impacto del Precio</string>
     <string name="swap_price_impact_good">Bueno</string>
@@ -190,6 +191,7 @@
     <string name="vault_settings_error_backup_file">ocurrió un error</string>
     <string name="vault_settings_error_backup_failed">La copia de seguridad falló. No se guardó ningún archivo. Inténtalo de nuevo.</string>
     <string name="send_error_no_address">La dirección no es válida</string>
+    <string name="send_error_invalid_recipient_address">Ese destinatario no es una dirección válida para esta cadena.</string>
     <string name="verify_transaction_value">Valor</string>
     <string name="camera_permission_open_settings">Abrir configuración</string>
     <string name="vault_accounts_account_assets">%1$s activos</string>

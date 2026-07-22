@@ -173,6 +173,7 @@
     <string name="send_error_no_token">토큰이 선택되지 않았습니다</string>
     <string name="send_error_no_gas_fee">가스 수수료 없음</string>
     <string name="send_error_no_address">주소가 유효하지 않습니다</string>
+    <string name="send_error_invalid_recipient_address">해당 수신자는 이 체인에 유효한 주소가 아닙니다.</string>
     <string name="send_error_no_amount">금액은 양수여야 합니다</string>
     <string name="send_error_too_many_decimals">금액은 소수점 이하 최대 %1$d자리까지 입력할 수 있습니다</string>
     <string name="send_error_invalid_operator_fee">운영자 수수료는 0에서 10000 베이시스 포인트 사이의 유효한 숫자여야 합니다</string>
@@ -249,6 +250,7 @@
     <string name="swap_form_from_title">보내는 토큰</string>
     <string name="swap_form_estimated_fees_title">스왑 수수료</string>
     <string name="swap_form_estimated_fees_with_percent_title">스왑 수수료 (%1$s)</string>
+    <string name="swap_form_estimated_fees_included_in_rate">견적 환율에 포함됨</string>
     <string name="swap_form_outbound_fee_title">출금 수수료</string>
     <string name="swap_form_price_impact_title">가격 영향</string>
     <string name="swap_price_impact_good">양호</string>

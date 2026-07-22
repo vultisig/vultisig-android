@@ -179,6 +179,7 @@
     <string name="verify_swap_agree_receive_amount">Concordo com o valor mínimo que receberei</string>
     <string name="swap_form_estimated_fees_title">Taxa de swap</string>
     <string name="swap_form_estimated_fees_with_percent_title">Taxa de swap (%1$s)</string>
+    <string name="swap_form_estimated_fees_included_in_rate">incluída na taxa cotada</string>
     <string name="swap_form_outbound_fee_title">Taxa de saída</string>
     <string name="swap_form_price_impact_title">Impacto no Preço</string>
     <string name="swap_price_impact_good">Bom</string>
@@ -193,6 +194,7 @@
     <string name="camera_permission_open_settings">Abrir configurações</string>
     <string name="verify_transaction_value">Valor</string>
     <string name="send_error_no_address">Endereço inválido</string>
+    <string name="send_error_invalid_recipient_address">Esse destinatário não é um endereço válido para esta cadeia.</string>
     <string name="vault_settings_error_backup_file">um erro ocorreu</string>
     <string name="vault_settings_error_backup_failed">O backup falhou. Nenhum ficheiro foi guardado. Tente novamente.</string>
     <string name="vault_settings_delete_vault_name">Nome do Cofre:</string>
