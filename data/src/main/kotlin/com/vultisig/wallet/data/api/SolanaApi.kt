@@ -715,7 +715,7 @@ internal fun solanaMedianPriorityFee(
     if (size == 0) return fallback
     val mid = size / 2
     return if (size % 2 == 0) {
-        (sortedFees[mid - 1] + sortedFees[mid]) / BigInteger.TWO
+        (sortedFees[mid - 1] + sortedFees[mid]) / BigInteger.valueOf(2)
     } else {
         sortedFees[mid]
     }
