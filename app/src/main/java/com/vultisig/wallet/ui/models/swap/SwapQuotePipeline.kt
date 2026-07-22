@@ -110,6 +110,9 @@ internal sealed interface SwapQuotePipelineResult {
         val feeText: String,
         val outboundFeeText: String?,
         val swapFeePercent: String?,
+        // True when the affiliate fee is baked into the quoted rate (1inch) and the Swap Fee row
+        // should read "included in quoted rate" rather than a fiat amount (#5358).
+        val swapFeeIncludedInRate: Boolean,
         // Pre-formatted Price Impact row: signed percentage + tier, or null when unavailable.
         val priceImpactPercent: String?,
         val priceImpactLevel: PriceImpactLevel?,
@@ -395,6 +398,9 @@ internal class SwapQuotePipeline(
         // `.empty` here): the deposit cost is already surfaced as the Network Fee, so there is no
         // separate swap fee to show rather than a redundant "$0.00" row.
         val feeText = if (isSwapKitUtxoSwap) "" else quoteResult.feeText
+        // The SwapKit UTXO/Cardano deposit cost is shown once as the Network Fee and the Swap Fee
+        // row is hidden entirely, so drop its percentage too (there is no row to label).
+        val swapFeePercent = if (isSwapKitUtxoSwap) null else quoteResult.swapFeePercent
 
         val priceImpactDisplay = formatPriceImpact(quoteResult.priceImpact)
 
@@ -433,7 +439,8 @@ internal class SwapQuotePipeline(
             expiredAt = quote.expiredAt,
             feeText = feeText,
             outboundFeeText = quoteResult.outboundFeeText,
-            swapFeePercent = quoteResult.swapFeePercent,
+            swapFeePercent = swapFeePercent,
+            swapFeeIncludedInRate = quoteResult.swapFeeIncludedInRate,
             priceImpactPercent = priceImpactDisplay?.percent,
             priceImpactLevel = priceImpactDisplay?.level,
             isUtxoSwap = isUtxoSwap,

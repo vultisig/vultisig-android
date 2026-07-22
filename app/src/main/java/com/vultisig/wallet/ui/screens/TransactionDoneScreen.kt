@@ -249,10 +249,23 @@ private fun SwapTransactionDetail(swapTransaction: SwapTransactionUiModel) {
         )
     }
 
-    OtherField(
-        title = stringResource(R.string.swap_form_estimated_fees_title),
-        value = swapTransaction.providerFee.fiatValue,
-    )
+    // Mirror the verify screen (#5358): hide the Swap Fee row for a SwapKit UTXO deposit whose cost
+    // is already the Network Fee, and show "included in quoted rate" (with the percent in the title
+    // when known) for 1inch, which bakes the affiliate fee into the quoted amount. Rendering
+    // providerFee.fiatValue unconditionally would re-introduce the double-counted fee this PR
+    // removes on verify.
+    if (!swapTransaction.swapFeeHidden) {
+        OtherField(
+            title =
+                swapTransaction.swapFeePercent?.let {
+                    stringResource(R.string.swap_form_estimated_fees_with_percent_title, it)
+                } ?: stringResource(R.string.swap_form_estimated_fees_title),
+            value =
+                if (swapTransaction.swapFeeIncludedInRate)
+                    stringResource(R.string.swap_form_estimated_fees_included_in_rate)
+                else swapTransaction.providerFee.fiatValue,
+        )
+    }
 
     OtherField(
         title = stringResource(R.string.verify_transaction_network_fee),

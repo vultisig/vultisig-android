@@ -179,6 +179,7 @@
     <string name="verify_swap_agree_receive_amount">Slažem se s minimalnim iznosom koji ću dobiti</string>
     <string name="swap_form_estimated_fees_title">Naknada za zamjenu</string>
     <string name="swap_form_estimated_fees_with_percent_title">Naknada za zamjenu (%1$s)</string>
+    <string name="swap_form_estimated_fees_included_in_rate">uključeno u ponuđeni tečaj</string>
     <string name="swap_form_outbound_fee_title">Izlazna naknada</string>
     <string name="swap_form_price_impact_title">Utjecaj na cijenu</string>
     <string name="swap_price_impact_good">Dobro</string>
