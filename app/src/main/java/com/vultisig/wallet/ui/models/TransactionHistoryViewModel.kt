@@ -96,6 +96,11 @@ sealed interface TransactionHistoryItemUiModel {
         val fiatValue: String?,
         val provider: String?,
         val feeEstimate: String?,
+        /**
+         * Decoded one-line summary of a dApp-supplied tx (e.g. XRPL signRipple), shown in place of
+         * the misleading native "0" amount when present. Null for ordinary sends.
+         */
+        val dappSummary: String? = null,
     ) : TransactionHistoryItemUiModel
 
     data class Swap(
@@ -379,6 +384,7 @@ constructor(
                     fiatValue = p.fiatValue,
                     provider = null,
                     feeEstimate = p.feeEstimate,
+                    dappSummary = p.dappSummary,
                 )
 
             is SwapTransactionHistoryData ->

@@ -468,6 +468,43 @@ internal sealed class Route {
      */
     @Serializable data class TonStake(val vaultId: String, val poolAddress: String? = null)
 
+    /** Solana native-staking delegate (stake) screen: pick a validator + amount. */
+    @Serializable data class SolanaDelegate(val vaultId: String)
+
+    /**
+     * Solana "Unstake SOL" confirmation: read-only source stake account + a cooldown notice.
+     * Continue deactivates the account (~1-epoch cooldown before withdraw). [delegatedStake] is the
+     * account's delegated lamports (raw), shown as the amount on verify.
+     */
+    @Serializable
+    data class SolanaUnstake(
+        val vaultId: String,
+        val stakePubkey: String,
+        val delegatedStake: String,
+    )
+
+    /**
+     * Solana move-stake step 1 ("Move SOL"): read-only source stake account + a cross-epoch notice.
+     * Continue deactivates the account (starting the ~1-epoch cooldown); the DeFi tab then surfaces
+     * the finish-move re-delegation once it is fully inactive. Mirrors Windows `SolanaMoveStake`.
+     * [delegatedStake] is the account's delegated lamports (raw), shown as the moved amount on
+     * verify.
+     */
+    @Serializable
+    data class SolanaMoveStake(
+        val vaultId: String,
+        val stakePubkey: String,
+        val delegatedStake: String,
+    )
+
+    /**
+     * Solana move-stake step 2 ("Finish Move"): re-delegate a fully-inactive stake account to a new
+     * validator. Reached from a cooled-down account on the DeFi tab; [lamports] is the account's
+     * current balance being re-delegated. Mirrors Windows `SolanaFinishMove`.
+     */
+    @Serializable
+    data class SolanaFinishMove(val vaultId: String, val stakePubkey: String, val lamports: String)
+
     /**
      * TON nominator-pool unstake confirmation (mirrors iOS `TonUnstakeTransactionScreen`).
      * Nominator pools support full withdrawal only, so there is no amount input — the screen
@@ -622,6 +659,9 @@ sealed interface ChainDashboardRoute {
     @Serializable data class PositionTron(val vaultId: String) : ChainDashboardRoute
 
     @Serializable data class PositionTon(val vaultId: String) : ChainDashboardRoute
+
+    /** Solana native-staking positions — one row per stake account. */
+    @Serializable data class PositionSolana(val vaultId: String) : ChainDashboardRoute
 
     /**
      * LUNA / LUNC staking positions. Carries `chainId` because both Terra chains share the same

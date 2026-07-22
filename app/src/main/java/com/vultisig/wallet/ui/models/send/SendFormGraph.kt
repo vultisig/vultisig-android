@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.textAsFlow
 import java.math.BigInteger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -105,6 +106,7 @@ internal class SendFormGraph(
     private val tokenAmountFieldState: TextFieldState,
     private val fiatAmountFieldState: TextFieldState,
     private val memoFieldState: TextFieldState,
+    private val destinationTagFieldState: TextFieldState,
     private val operatorFeesBondFieldState: TextFieldState,
     private val providerBondFieldState: TextFieldState,
     private val slippageFieldState: TextFieldState,
@@ -191,6 +193,7 @@ internal class SendFormGraph(
             scope = scope,
             addressFieldState = addressFieldState,
             providerBondFieldState = providerBondFieldState,
+            destinationTagFieldState = destinationTagFieldState,
             selectedToken = selectedToken,
             chainAccountAddressRepository = chainAccountAddressRepository,
             addressParserRepository = addressParserRepository,
@@ -320,6 +323,7 @@ internal class SendFormGraph(
                 tokenAmountFieldState = tokenAmountFieldState,
                 fiatAmountFieldState = fiatAmountFieldState,
                 memoFieldState = memoFieldState,
+                destinationTagFieldState = destinationTagFieldState,
                 slippageFieldState = slippageFieldState,
                 operatorFeesBondFieldState = operatorFeesBondFieldState,
                 providerBondFieldState = providerBondFieldState,
@@ -427,8 +431,40 @@ internal class SendFormGraph(
             addressManager.onAddressValidated.collect { expandSection(SendSections.Amount) }
         }
         scope.launch {
+            addressManager.destinationTagLocked.collect { locked ->
+                uiState.update { it.copy(destinationTagLocked = locked) }
+            }
+        }
+        scope.launch {
+            addressManager.invalidAddress.collect { invalid ->
+                uiState.update {
+                    it.copy(
+                        dstAddressError =
+                            if (invalid) {
+                                UiText.StringResource(
+                                    com.vultisig.wallet.R.string
+                                        .send_error_invalid_recipient_address
+                                )
+                            } else {
+                                null
+                            }
+                    )
+                }
+            }
+        }
+        scope.launch {
             amountManager.reapingError.collect { error ->
                 uiState.update { it.copy(reapingError = error) }
+            }
+        }
+        // Only the TRON freeze/unfreeze branch of isContinueDisabled reads isAmountValid, so limit
+        // this per-keystroke validation to staking flows instead of paying it on every send screen.
+        if (tronStakingService.isStakingType()) {
+            scope.launch {
+                tokenAmountFieldState.textAsFlow().collect { amount ->
+                    val isValid = amountManager.validateTokenAmount(amount.toString()) == null
+                    uiState.update { it.copy(isAmountValid = isValid) }
+                }
             }
         }
         scope.launch {
@@ -458,6 +494,8 @@ internal class SendFormGraph(
                 if (switching) return@combine null // <-- SKIP during transitions
 
                 val address = token.address
+                // XRP shows a dedicated destination-tag field in addition to the memo field.
+                val isDestinationTag = token.chain == Chain.Ripple && token.isNativeToken
                 val hasMemo =
                     (token.isNativeToken || token.chain.standard == TokenStandard.COSMOS) &&
                         token.chain != Chain.Sui
@@ -478,7 +516,12 @@ internal class SendFormGraph(
 
                 advanceGasUiRepository.updateTokenStandard(token.chain.standard)
                 uiState.update {
-                    it.copy(srcAddress = address, selectedCoin = uiModel, hasMemo = hasMemo)
+                    it.copy(
+                        srcAddress = address,
+                        selectedCoin = uiModel,
+                        hasMemo = hasMemo,
+                        isDestinationTag = isDestinationTag,
+                    )
                 }
             }
             .collect()

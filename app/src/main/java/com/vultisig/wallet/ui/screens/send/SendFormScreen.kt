@@ -48,6 +48,8 @@ import com.vultisig.wallet.ui.models.send.SendFocusField
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
+import com.vultisig.wallet.ui.models.send.isContinueDisabled
+import com.vultisig.wallet.ui.models.send.isDstAddressEditable
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.tron.TronResourceTypeTab
@@ -83,6 +85,7 @@ internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
             tokenAmountFieldState = viewModel.tokenAmountFieldState,
             fiatAmountFieldState = viewModel.fiatAmountFieldState,
             memoFieldState = viewModel.memoFieldState,
+            destinationTagFieldState = viewModel.destinationTagFieldState,
             onDstAddressLostFocus = { /* no-op */ },
             onTokenAmountLostFocus = viewModel::validateTokenAmount,
             onDismissError = viewModel::dismissError,
@@ -142,6 +145,7 @@ private fun SendFormScreen(
     tokenAmountFieldState: TextFieldState,
     fiatAmountFieldState: TextFieldState,
     memoFieldState: TextFieldState,
+    destinationTagFieldState: TextFieldState,
     onDstAddressLostFocus: () -> Unit = {},
     onTokenAmountLostFocus: () -> Unit = {},
     onDismissError: () -> Unit = {},
@@ -220,12 +224,13 @@ private fun SendFormScreen(
             },
         onBackClick = onBackClick,
         bottomBar = {
+            val isContinueDisabled = state.isContinueDisabled()
             VsButton(
                 label = stringResource(R.string.send_continue_button),
-                state = if (state.isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
+                state = if (isContinueDisabled) VsButtonState.Disabled else VsButtonState.Enabled,
                 isLoading = state.isLoading,
                 onClick = {
-                    if (!state.isLoading) {
+                    if (!isContinueDisabled) {
                         focusManager.clearFocus()
                         onSend()
                     }
@@ -289,6 +294,7 @@ private fun SendFormScreen(
                         onChooseMaxTokenAmount = onChooseMaxTokenAmount,
                         onTokenAmountLostFocus = onTokenAmountLostFocus,
                         memoFieldState = memoFieldState,
+                        destinationTagFieldState = destinationTagFieldState,
 
                         // Bond
                         operatorFeeFieldState = operatorFeeFieldState,
@@ -341,6 +347,7 @@ private fun SendFormContent(
     onChooseMaxTokenAmount: () -> Unit,
     onTokenAmountLostFocus: () -> Unit = {},
     memoFieldState: TextFieldState,
+    destinationTagFieldState: TextFieldState,
 
     // Bond
     operatorFeeFieldState: TextFieldState,
@@ -371,6 +378,7 @@ private fun SendFormContent(
     val optionalInputs =
         OptionalInputs(
             memoFieldState = memoFieldState,
+            destinationTagFieldState = destinationTagFieldState,
             operatorFeeFieldState = operatorFeeFieldState,
             slippageFieldState = slippageFieldState,
             onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
@@ -425,7 +433,7 @@ private fun SendFormContent(
                 onAddressProviderBookClick = onProviderBookClick,
                 // Unbond draws from a specific bonded node; the amount ceiling is frozen to that
                 // node at navigation, so the address must stay locked to keep them in sync.
-                isAddressEditable = state.defiType != DeFiNavActions.UNBOND,
+                isAddressEditable = state.isDstAddressEditable,
             )
         }
 
@@ -503,6 +511,7 @@ private fun SendScreenPreview() {
         tokenAmountFieldState = TextFieldState("50"),
         fiatAmountFieldState = TextFieldState("$2,000.56"),
         memoFieldState = TextFieldState(),
+        destinationTagFieldState = TextFieldState(),
         onNetworkDragStart = {},
         onNetworkDrag = {},
         onNetworkDragEnd = {},

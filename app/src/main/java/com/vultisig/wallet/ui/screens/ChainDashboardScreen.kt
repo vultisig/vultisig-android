@@ -63,6 +63,10 @@ internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewM
                     MayachainDefiPositionsScreen(vaultId = (uiModel.route as PositionMaya).vaultId)
                 is PositionTron -> TronDeFiPositionsScreen(vaultId = route.vaultId)
                 is PositionTon -> TonDeFiPositionsScreen(vaultId = route.vaultId)
+                is ChainDashboardRoute.PositionSolana ->
+                    com.vultisig.wallet.ui.screens.v2.defi.solana.SolanaStakingPositionsScreen(
+                        vaultId = route.vaultId
+                    )
                 is ChainDashboardRoute.PositionCosmosStaking ->
                     com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingPositionsScreen(
                         vaultId = route.vaultId,

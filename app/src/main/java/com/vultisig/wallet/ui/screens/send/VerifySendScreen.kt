@@ -36,6 +36,7 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
+import com.vultisig.wallet.ui.components.SignRippleDisplayView
 import com.vultisig.wallet.ui.components.SignSolanaDisplayView
 import com.vultisig.wallet.ui.components.SignSuiDisplayView
 import com.vultisig.wallet.ui.components.SignTonDisplayView
@@ -65,7 +66,6 @@ import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
-import vultisig.keysign.v1.SignSolana
 
 @Composable
 internal fun VerifySendScreen(viewModel: VerifyTransactionViewModel = hiltViewModel()) {
@@ -106,6 +106,7 @@ internal fun VerifySendScreen(viewModel: VerifyTransactionViewModel = hiltViewMo
         confirmTitle = stringResource(R.string.keysign_sign_transaction),
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
+        onConsentDappTransaction = viewModel::checkConsentDappTransaction,
         onConfirm = viewModel::joinKeySign,
         onBackClick = viewModel::back,
         onFastSignClick = viewModel::fastSign,
@@ -125,6 +126,7 @@ internal fun VerifySendScreen(
     dappMetadata: DAppMetadata? = null,
     onConsentAddress: (Boolean) -> Unit = {},
     onConsentAmount: (Boolean) -> Unit = {},
+    onConsentDappTransaction: (Boolean) -> Unit = {},
     onBackClick: () -> Unit = {},
     onConfirmScanning: () -> Unit = {},
     onDismissScanning: () -> Unit = {},
@@ -236,13 +238,45 @@ internal fun VerifySendScreen(
                         functionName = heroTitle,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        VsOverviewToken(
-                            header = stringResource(R.string.verify_deposit_sending),
-                            valuedToken = tx.token,
-                            shape = RoundedCornerShape(0.dp),
-                            modifier = Modifier.fillMaxWidth(),
-                            withContainer = false,
-                        )
+                        val rippleDapp = tx.signRipple
+                        if (rippleDapp != null) {
+                            // A dApp XRPL transaction has no native send amount (`toAmount` is 0),
+                            // so a "You're sending 0 XRP" hero would be misleading. Show the
+                            // operation type instead; the decoded Selling / Buying / Issuer terms
+                            // render in the summary card below.
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.ripple_dapp_transaction),
+                                    style = Theme.brockmann.supplementary.captionSmall,
+                                    color = Theme.v2.colors.text.tertiary,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 1,
+                                )
+                                UiSpacer(12.dp)
+                                Text(
+                                    text =
+                                        rippleDapp.transactionType
+                                            ?: stringResource(R.string.ripple_dapp_transaction),
+                                    style = Theme.brockmann.headings.title2,
+                                    color = Theme.v2.colors.text.primary,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
+                        } else {
+                            VsOverviewToken(
+                                header =
+                                    stringResource(
+                                        tx.headerTitleRes ?: R.string.verify_deposit_sending
+                                    ),
+                                valuedToken = tx.token,
+                                shape = RoundedCornerShape(0.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                                withContainer = false,
+                            )
+                        }
                     }
 
                     UiSpacer(12.dp)
@@ -255,25 +289,45 @@ internal fun VerifySendScreen(
                         bracketValue = tx.srcVaultName?.let { tx.srcAddress },
                     )
 
-                    VerifyCardDivider(0.dp)
+                    // For a dApp XRPL tx the native `To` comes from the wire `toAddress`, which is
+                    // not the value being signed — the real recipient (if any) lives in the raw
+                    // JSON `Destination` and is rendered by SignRippleDisplayView below. Showing
+                    // the
+                    // wire address here would let a relay display a trusted label/vault while the
+                    // signed JSON sends elsewhere, so suppress the native To row for signRipple.
+                    if (tx.signRipple == null) {
+                        VerifyCardDivider(0.dp)
 
-                    val toDstLabel =
-                        tx.dstVaultName
-                            ?: tx.dstAddressBookTitle
-                            ?: tx.dstContractLabel
-                            ?: tx.dstLabel
-                    VerifyCardDetails(
-                        title = stringResource(R.string.verify_transaction_to_title),
-                        subtitle = toDstLabel ?: tx.dstAddress,
-                        bracketValue = toDstLabel?.let { tx.dstAddress },
-                    )
+                        val toDstLabel =
+                            tx.dstVaultName
+                                ?: tx.dstAddressBookTitle
+                                ?: tx.dstContractLabel
+                                ?: tx.dstLabel
+                        VerifyCardDetails(
+                            title = stringResource(R.string.verify_transaction_to_title),
+                            subtitle = toDstLabel ?: tx.dstAddress,
+                            bracketValue = toDstLabel?.let { tx.dstAddress },
+                        )
+                    }
 
-                    if (!tx.memo.isNullOrBlank()) {
+                    // A memo that merely echoes the destination tag is signed as tag-only, so it is
+                    // not shown as a separate Memo row (it appears in the Destination Tag row
+                    // below).
+                    if (!tx.memo.isNullOrBlank() && tx.memo != tx.destinationTag) {
                         VerifyCardDivider(0.dp)
 
                         VerifyCardDetails(
                             title = stringResource(R.string.verify_transaction_memo_title),
                             subtitle = tx.memo,
+                        )
+                    }
+
+                    if (!tx.destinationTag.isNullOrBlank()) {
+                        VerifyCardDivider(0.dp)
+
+                        VerifyCardDetails(
+                            title = stringResource(R.string.send_form_destination_tag),
+                            subtitle = tx.destinationTag,
                         )
                     }
                     tx.signAmino
@@ -298,12 +352,13 @@ internal fun VerifySendScreen(
                             )
                         }
                     tx.signSolana
-                        ?.takeIf { it.isNotBlank() }
+                        .takeIf { it.isNotEmpty() }
                         ?.let {
                             VerifyCardDivider(0.dp)
 
                             SignSolanaDisplayView(
-                                signSolana = SignSolana(rawTransactions = listOf(it))
+                                rawTransactions = it,
+                                initiallyExpanded = initiallyExpandedDetails,
                             )
                         }
 
@@ -318,6 +373,14 @@ internal fun VerifySendScreen(
                                 initiallyExpanded = initiallyExpandedDetails,
                             )
                         }
+
+                    tx.signRipple?.let {
+                        VerifyCardDivider(0.dp)
+
+                        // Expanded by default: the decoded terms are the primary content for a
+                        // dApp XRPL tx (the hero shows no amount), mirroring the extension summary.
+                        SignRippleDisplayView(tx = it, initiallyExpanded = true)
+                    }
 
                     tx.tonMessages
                         .takeIf { it.isNotEmpty() }
@@ -444,17 +507,32 @@ internal fun VerifySendScreen(
 
                 if (isConsentsEnabled) {
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        VsCheckField(
-                            title = stringResource(R.string.verify_transaction_consent_address),
-                            isChecked = state.consentAddress,
-                            onCheckedChange = onConsentAddress,
-                        )
+                        if (state.transaction.signRipple != null) {
+                            // A dApp XRPL tx has no native recipient/amount to attest to, so show a
+                            // single "reviewed the details" consent instead of the address/amount
+                            // pair, which would ask the co-signer to confirm values that aren't
+                            // what's being signed.
+                            VsCheckField(
+                                title =
+                                    stringResource(
+                                        R.string.verify_transaction_consent_dapp_transaction
+                                    ),
+                                isChecked = state.consentDappTransaction,
+                                onCheckedChange = onConsentDappTransaction,
+                            )
+                        } else {
+                            VsCheckField(
+                                title = stringResource(R.string.verify_transaction_consent_address),
+                                isChecked = state.consentAddress,
+                                onCheckedChange = onConsentAddress,
+                            )
 
-                        VsCheckField(
-                            title = stringResource(R.string.verify_transaction_consent_amount),
-                            isChecked = state.consentAmount,
-                            onCheckedChange = onConsentAmount,
-                        )
+                            VsCheckField(
+                                title = stringResource(R.string.verify_transaction_consent_amount),
+                                isChecked = state.consentAmount,
+                                onCheckedChange = onConsentAmount,
+                            )
+                        }
                     }
                 }
             }

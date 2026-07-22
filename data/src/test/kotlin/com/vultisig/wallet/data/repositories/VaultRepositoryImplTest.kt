@@ -91,6 +91,20 @@ internal class VaultRepositoryImplTest {
             isNativeToken = true,
         )
 
+    /** Returns a [Coin] representing a THORChain secured asset with the given denom. */
+    private fun securedCoin(ticker: String, contractAddress: String) =
+        Coin(
+            chain = Chain.ThorChain,
+            ticker = ticker,
+            logo = "",
+            address = "thor1abc",
+            decimal = 8,
+            hexPublicKey = "pub",
+            priceProviderID = "",
+            contractAddress = contractAddress,
+            isNativeToken = false,
+        )
+
     // ---- get ----------------------------------------------------------------
 
     /** Verifies [get] returns null when no vault matches the given id in the DAO. */
@@ -281,6 +295,28 @@ internal class VaultRepositoryImplTest {
         repository.addTokenToVault("vault-1", ethCoin())
 
         assertEquals("ETH-Ethereum", captured.captured[0].id)
+    }
+
+    /**
+     * Regression: two secured assets sharing a ticker on different underlying chains (e.g. ETH.USDC
+     * and AVAX.USDC) must get distinct entity ids, or Room's REPLACE-on-conflict insert would
+     * silently overwrite the first one's persisted row with the second's.
+     */
+    @Test
+    fun `addTokenToVault gives secured assets sharing a ticker distinct entity ids`() = runTest {
+        val captured = mutableListOf<List<CoinEntity>>()
+        coJustRun { vaultDao.enableCoins(capture(captured)) }
+
+        repository.addTokenToVault(
+            "vault-1",
+            securedCoin("USDC", "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"),
+        )
+        repository.addTokenToVault(
+            "vault-1",
+            securedCoin("USDC", "avax-usdc-0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e"),
+        )
+
+        assertEquals(2, captured.flatten().map { it.id }.distinct().size)
     }
 
     // ---- deleteTokenFromVault -----------------------------------------------

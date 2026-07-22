@@ -148,6 +148,9 @@ constructor(
                                 R.string.notification_banner_send_summary,
                                 listOf(mapTokenValueToStringWithUnit(summary.tokenValue)),
                             )
+                        is KeysignTransactionSummary.DappTransaction ->
+                            summary.summary?.let { UiText.DynamicString(it) }
+                                ?: UiText.StringResource(R.string.ripple_dapp_transaction)
                         null -> UiText.Empty
                     }
                 _foregroundNotification.value =

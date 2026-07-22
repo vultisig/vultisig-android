@@ -47,6 +47,9 @@ interface PolkadotApi {
 
     suspend fun getBlockHash(isGenesis: Boolean = false): String
 
+    /** Returns the block hash pinned to [blockNumber] (not the racing head hash). */
+    suspend fun getBlockHashForNumber(blockNumber: BigInteger): String
+
     suspend fun getGenesisBlockHash(): String
 
     suspend fun getRuntimeVersion(): Pair<BigInteger, BigInteger>
@@ -132,6 +135,18 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
         return response.bodyOrThrow<PolkadotGetBlockHashJson>().result
     }
 
+    override suspend fun getBlockHashForNumber(blockNumber: BigInteger): String {
+        val payload =
+            RpcPayload(
+                jsonrpc = "2.0",
+                method = "chain_getBlockHash",
+                params = buildJsonArray { add(blockNumber.toLong()) },
+                id = 1,
+            )
+        val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }
+        return response.bodyOrThrow<PolkadotGetBlockHashJson>().result
+    }
+
     override suspend fun getGenesisBlockHash(): String {
         return getBlockHash(true)
     }
@@ -178,16 +193,7 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
         // Read the RPC body regardless of HTTP status: nodes may surface the idempotent
         // "already in pool" errors (1012/1013) with a non-2xx status, and the duplicate
         // rebroadcast from a second signing device must still resolve to null rather than throw.
-        val responseContent = response.body<PolkadotBroadcastTransactionJson>()
-        if (responseContent.error != null) {
-            if (responseContent.error.code == 1012 || responseContent.error.code == 1013) {
-                return null
-            }
-            throw Exception(
-                "Error broadcasting transaction: ${responseContent.error.data ?: responseContent.error.message}"
-            )
-        }
-        return responseContent.result
+        return SubstrateBroadcast.classify(response.body<PolkadotBroadcastTransactionJson>())
     }
 
     override suspend fun getPartialFee(tx: String): BigInteger {

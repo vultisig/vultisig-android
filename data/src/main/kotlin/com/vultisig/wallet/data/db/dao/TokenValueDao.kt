@@ -11,9 +11,14 @@ interface TokenValueDao {
 
     @Query(
         "SELECT tokenValue FROM tokenValue WHERE " +
-            "chain = :chainId AND address = :address AND ticker = :ticker"
+            "chain = :chainId AND address = :address AND ticker = :ticker AND contractAddress = :contractAddress"
     )
-    suspend fun getTokenValue(chainId: String, address: String, ticker: String): String?
+    suspend fun getTokenValue(
+        chainId: String,
+        address: String,
+        ticker: String,
+        contractAddress: String,
+    ): String?
 
     @Query("SELECT * FROM tokenValue WHERE address IN (:addresses)")
     suspend fun getTokenValues(addresses: List<String>): List<TokenValueEntity>
@@ -23,7 +28,12 @@ interface TokenValueDao {
 
     @Query(
         "DELETE FROM tokenValue WHERE " +
-            "chain = :chainId AND address = :address AND ticker = :ticker"
+            "chain = :chainId AND address = :address AND ticker = :ticker AND contractAddress = :contractAddress"
     )
-    suspend fun deleteTokenValue(chainId: String, address: String, ticker: String)
+    suspend fun deleteTokenValue(
+        chainId: String,
+        address: String,
+        ticker: String,
+        contractAddress: String,
+    )
 }

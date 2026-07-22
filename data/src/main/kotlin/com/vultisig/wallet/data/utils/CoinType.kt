@@ -6,9 +6,20 @@ import java.math.BigInteger
 import wallet.core.jni.CoinType
 import wallet.core.jni.CoinTypeConfiguration
 
+/**
+ * WalletCore-internal symbol. UNSAFE for display: several [Chain]s share one WalletCore [CoinType],
+ * so this returns the wrong ticker for MayaChain (RUNE, not CACAO), Bittensor (DOT, not TAO), and
+ * Qbtc (ATOM, not QBTC). For a chain's display ticker use `Chain.nativeTokenTicker`, sourced from
+ * [com.vultisig.wallet.data.models.Coins] — the single source of truth.
+ */
 val CoinType.symbol
     get() = CoinTypeConfiguration.getSymbol(this)
 
+/**
+ * WalletCore-internal decimals. UNSAFE for amount math on shared-CoinType chains: MayaChain (8, not
+ * 10), Bittensor (10, not 9), Qbtc (6, not 8). For a chain's native amount conversion use
+ * `Chain.toValue`, which is sourced from [com.vultisig.wallet.data.models.Coins].
+ */
 val CoinType.decimals
     get() = CoinTypeConfiguration.getDecimals(this)
 
@@ -47,10 +58,12 @@ val CoinType.compatibleType: CoinType
 
 fun CoinType.compatibleChainId(chain: Chain? = null): String =
     when (this) {
-        CoinType.SEI -> "1329"
+        // SEI and Hyperliquid reuse the Ethereum coin type (see Chain.coinType), so their real EVM
+        // chainIds are applied here rather than via WalletCore's chainId().
         CoinType.ETHEREUM ->
             when (chain) {
-                Chain.Hyperliquid -> "999" // override when WC has no cointype
+                Chain.Hyperliquid -> "999"
+                Chain.Sei -> "1329"
                 else -> this.chainId()
             }
         else -> this.chainId()

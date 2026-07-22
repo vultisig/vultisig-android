@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingDeFiBalan
 import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.maya.MayaDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance
+import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.ton.TonDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.tron.TronDeFiBalanceService
@@ -161,6 +162,7 @@ constructor(
     private val tronDeFiBalanceService: TronDeFiBalanceService,
     private val tonDeFiBalanceService: TonDeFiBalanceService,
     private val cosmosStakingDeFiBalanceService: CosmosStakingDeFiBalanceService,
+    private val solanaStakingDeFiBalanceService: SolanaStakingDeFiBalanceService,
 ) : BalanceRepository {
 
     private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12 * 1000)
@@ -182,6 +184,7 @@ constructor(
             chainId = coin.chain.id,
             address = address,
             ticker = coin.ticker,
+            contractAddress = coin.contractAddress,
         )
     }
 
@@ -198,6 +201,7 @@ constructor(
             MayaChain,
             Chain.Tron,
             Chain.Ton,
+            Solana,
             Chain.Terra,
             Chain.TerraClassic,
             Chain.Qbtc -> "${chain.id}:$vaultId:$address"
@@ -248,6 +252,7 @@ constructor(
                 MayaChain -> mayaDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 Chain.Tron -> tronDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 Chain.Ton -> tonDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+                Solana -> solanaStakingDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 Chain.Terra,
                 Chain.TerraClassic,
                 Chain.Qbtc ->
@@ -422,6 +427,7 @@ constructor(
             MayaChain -> mayaDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
             Chain.Tron -> tronDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
             Chain.Ton -> tonDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
+            Solana -> solanaStakingDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
             // Each staking chain has its own LCD (Terra / TerraClassic even share an address), so
             // the chain is passed explicitly.
             Chain.Terra,
@@ -433,7 +439,12 @@ constructor(
 
     private suspend fun getCachedTokenValue(address: String, coin: Coin): TokenValue? =
         tokenValueDao
-            .getTokenValue(chainId = coin.chain.id, address = address, ticker = coin.ticker)
+            .getTokenValue(
+                chainId = coin.chain.id,
+                address = address,
+                ticker = coin.ticker,
+                contractAddress = coin.contractAddress,
+            )
             ?.let {
                 TokenValue(value = it.toBigInteger(), unit = coin.ticker, decimals = coin.decimal)
             }
@@ -580,6 +591,7 @@ constructor(
                         address = address,
                         ticker = coin.ticker,
                         tokenValue = tokenValue.value.toString(),
+                        contractAddress = coin.contractAddress,
                     )
                 )
             }
@@ -603,36 +615,45 @@ constructor(
 
         val currency = appCurrencyRepository.currency.first()
 
-        return coins.associate { coin ->
-            val rawBalance = balances[coin.contractAddress] ?: BigInteger.ZERO
+        return coins
+            .mapNotNull { coin ->
+                // A missing key means the balance read failed (getBalances omits failed tokens):
+                // skip
+                // the write and the emission so the cached row is preserved rather than overwritten
+                // with a fake 0 (#5308). A genuine on-chain zero is present in the map and still
+                // persists below.
+                val rawBalance = balances[coin.contractAddress] ?: return@mapNotNull null
 
-            tokenValueDao.insertTokenValue(
-                TokenValueEntity(
-                    chain = coin.chain.id,
-                    address = address,
-                    ticker = coin.ticker,
-                    tokenValue = rawBalance.toString(),
+                tokenValueDao.insertTokenValue(
+                    TokenValueEntity(
+                        chain = coin.chain.id,
+                        address = address,
+                        ticker = coin.ticker,
+                        tokenValue = rawBalance.toString(),
+                        contractAddress = coin.contractAddress,
+                    )
                 )
-            )
 
-            val tokenValue =
-                TokenValue(value = rawBalance, unit = coin.ticker, decimals = coin.decimal)
-            val price = tokenPriceRepository.getPrice(coin, currency).first()
+                val tokenValue =
+                    TokenValue(value = rawBalance, unit = coin.ticker, decimals = coin.decimal)
+                val price = tokenPriceRepository.getPrice(coin, currency).first()
 
-            coin.id to
-                TokenBalanceAndPrice(
-                    tokenBalance =
-                        TokenBalance(
-                            tokenValue = tokenValue,
-                            fiatValue =
-                                FiatValue(
-                                    value = tokenValue.decimal.multiply(price).scaledFor(currency),
-                                    currency = currency.ticker,
-                                ),
-                        ),
-                    price = FiatValue(value = price, currency = currency.ticker),
-                )
-        }
+                coin.id to
+                    TokenBalanceAndPrice(
+                        tokenBalance =
+                            TokenBalance(
+                                tokenValue = tokenValue,
+                                fiatValue =
+                                    FiatValue(
+                                        value =
+                                            tokenValue.decimal.multiply(price).scaledFor(currency),
+                                        currency = currency.ticker,
+                                    ),
+                            ),
+                        price = FiatValue(value = price, currency = currency.ticker),
+                    )
+            }
+            .toMap()
     }
 
     override suspend fun getMergeTokenValue(address: String, chain: Chain): List<MergeAccount> {

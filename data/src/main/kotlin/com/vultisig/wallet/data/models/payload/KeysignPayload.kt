@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import java.math.BigInteger
 import vultisig.keysign.v1.SignAmino
 import vultisig.keysign.v1.SignBitcoin
+import vultisig.keysign.v1.SignRipple
 import vultisig.keysign.v1.SignSolana
 import vultisig.keysign.v1.SignSui
 import vultisig.keysign.v1.SignTon
@@ -39,6 +40,16 @@ data class KeysignPayload(
      * gas budget and recipients are already baked into the bytes).
      */
     val signSui: SignSui? = null,
+    /**
+     * Pre-built XRPL transaction supplied by an external dApp (via the extension's GemWallet
+     * provider) — an `OfferCreate`, cross-currency `Payment`, `TrustSet`, etc. Carries the raw
+     * transaction JSON to sign verbatim; when present, [RippleHelper] builds its signing input via
+     * WalletCore's `rawJson` path instead of reconstructing an `OperationPayment` from
+     * `toAddress`/`toAmount`, so every co-signer produces byte-identical bytes (matching the
+     * extension and `@vultisig/core-mpc`). The Ripple [blockChainSpecific] slot is an empty
+     * placeholder — sequence, fee and last-ledger-sequence are already baked into the JSON.
+     */
+    val signRipple: SignRipple? = null,
     /**
      * Structured Bitcoin PSBT payload supplied by an external dApp for co-signing. When present,
      * the UTXO signing path uses these inputs/outputs directly and bypasses WalletCore tx planning;

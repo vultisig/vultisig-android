@@ -64,15 +64,13 @@ data class TronFees(
 /**
  * Ripple (XRP) transaction fees.
  *
+ * The account-reserve for activating a new destination is not a fee (it is part of the amount sent,
+ * enforced separately), so it is intentionally not represented here.
+ *
  * @param networkFee Base network fee for transaction processing.
- * @param accountActivationFee Additional fee if the recipient account is new.
- * @param amount Total fee in drops (smallest XRP unit) including activation if applicable.
+ * @param amount Total fee in drops (smallest XRP unit).
  */
-data class RippleFees(
-    val networkFee: BigInteger,
-    val accountActivationFee: BigInteger = BigInteger.ZERO,
-    override val amount: BigInteger,
-) : Fee
+data class RippleFees(val networkFee: BigInteger, override val amount: BigInteger) : Fee
 
 /** Generic fee type when no specific blockchain logic is required. */
 data class BasicFee(override val amount: BigInteger) : Fee

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.Button
@@ -52,6 +53,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
@@ -319,6 +321,16 @@ fun ActionButton(
                 style = Theme.brockmann.button.medium.medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                // Three equal-weight buttons leave each label a narrow lane, so a longer word (e.g.
+                // "Unstake", or a translated label) would ellipsize at the base 14sp. Shrink the
+                // font
+                // to fit down to 10sp before ellipsizing; labels that already fit stay at 14sp.
+                autoSize =
+                    TextAutoSize.StepBased(
+                        minFontSize = 10.sp,
+                        maxFontSize = 14.sp,
+                        stepSize = 0.5.sp,
+                    ),
                 // Reserve the icon lane symmetrically so a long (translated) label can never paint
                 // over the docked icon, while keeping the label centered on the button's true
                 // center.

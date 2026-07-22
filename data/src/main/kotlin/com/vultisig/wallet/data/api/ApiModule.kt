@@ -18,6 +18,8 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingService
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingServiceImpl
 import com.vultisig.wallet.data.blockchain.cosmos.staking.KeybaseAvatarService
 import com.vultisig.wallet.data.blockchain.cosmos.staking.KeybaseAvatarServiceImpl
+import com.vultisig.wallet.data.blockchain.solana.staking.StakewizValidatorMetadataProvider
+import com.vultisig.wallet.data.blockchain.solana.staking.ValidatorMetadataProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -107,4 +109,10 @@ internal interface ApiModule {
     @Binds
     @Singleton
     fun bindKeybaseAvatarService(impl: KeybaseAvatarServiceImpl): KeybaseAvatarService
+
+    @Binds
+    @Singleton
+    fun bindValidatorMetadataProvider(
+        impl: StakewizValidatorMetadataProvider
+    ): ValidatorMetadataProvider
 }

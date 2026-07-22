@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
+import com.vultisig.wallet.data.api.CardanoTransactionAlreadyBroadcastException
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
@@ -48,6 +49,8 @@ import com.vultisig.wallet.data.models.Chain.ThorChain
 import com.vultisig.wallet.data.models.Chain.Ton
 import com.vultisig.wallet.data.models.Chain.ZkSync
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
+import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.delay
@@ -73,13 +76,23 @@ constructor(
     private val rippleApi: RippleApi,
     private val tronApi: TronApi,
     private val cardanoApi: CardanoApi,
+    private val transactionStatusRepository: TransactionStatusRepository,
 ) : BroadcastTxUseCase {
 
     override suspend fun invoke(chain: Chain, tx: SignedTransactionResult) =
         when (chain) {
-            ThorChain -> {
-                thorChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
-            }
+            // THOR/Maya are account-sequence Cosmos chains: on a joined-device duplicate-broadcast
+            // race the loser's broadcast is rejected with a sequence mismatch. Confirm the peer's
+            // byte-identical tx actually committed on chain before reporting our local hash as
+            // success, mirroring every other chain's recover-if-already-broadcast path.
+            ThorChain ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        thorChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
+                    },
+                    verify = { hash -> isLandedOnChain(hash, chain) },
+                )
 
             Bitcoin,
             BitcoinCash,
@@ -135,12 +148,28 @@ constructor(
             Akash,
             Chain.Qbtc -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(chain)
-                cosmosApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        cosmosApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
+                    },
+                    // A code=32 sequence mismatch on a joined co-signer means the peer's
+                    // byte-identical tx already advanced the account sequence in a committed
+                    // block. The LCD returns 404 (null) until our hash is committed. A committed tx
+                    // can still have failed execution (non-zero code), so require code==0 — an
+                    // included-but-failed tx moved no funds and must not be reported as success.
+                    verify = { hash -> cosmosApi.getTxStatus(hash)?.txResponse?.code == 0 },
+                )
             }
 
-            MayaChain -> {
-                mayaChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
-            }
+            MayaChain ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        mayaChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
+                    },
+                    verify = { hash -> isLandedOnChain(hash, chain) },
+                )
 
             Polkadot ->
                 recoverIfAlreadyBroadcast(
@@ -151,9 +180,18 @@ constructor(
                     verify = { hash -> polkadotApi.isExtrinsicInChain(hash, VERIFY_SCAN_DEPTH) },
                 )
 
-            Chain.Bittensor -> {
-                bittensorApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
-            }
+            // Mirrors Polkadot: a malformed / truncated RPC body now throws instead of resolving to
+            // a fabricated success hash, so it must go through the recover path that verifies the
+            // extrinsic is actually on-chain (via the Bittensor status provider) before reporting
+            // success. A duplicate rebroadcast from a peer still resolves to the known hash.
+            Chain.Bittensor ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        bittensorApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
+                    },
+                    verify = { hash -> isLandedOnChain(hash, chain) },
+                )
 
             // Sui digest is not pre-computable from the raw transaction, so transactionHash
             // is always blank and recovery cannot work; broadcast directly.
@@ -187,11 +225,21 @@ constructor(
                 recoverIfAlreadyBroadcast(
                     tx = tx,
                     broadcast = {
-                        cardanoApi
-                            .broadcastTransaction(chain.name, tx.rawTransaction)
-                            .orKnownHash(tx)
+                        try {
+                            cardanoApi
+                                .broadcastTransaction(chain.name, tx.rawTransaction)
+                                .orKnownHash(tx)
+                        } catch (e: CardanoTransactionAlreadyBroadcastException) {
+                            // Ogmios says the inputs are already spent by the peer's byte-identical
+                            // tx, so our locally computed hash is canonical. A Cardano block takes
+                            // ~20s, far longer than the verify window, so this node signal is the
+                            // only timely proof the tx landed (issue #5337).
+                            tx.transactionHash.takeIf { it.isNotBlank() } ?: throw e
+                        }
                     },
-                    verify = { hash -> cardanoApi.getTxStatus(hash)?.txHash?.isNotBlank() == true },
+                    // Koios tx_status echoes the queried hash back even for unknown txs, so
+                    // txHash is never blank; only a positive confirmation count proves it landed.
+                    verify = { hash -> (cardanoApi.getTxStatus(hash)?.numConfirmations ?: 0) > 0 },
                 )
         }
 
@@ -240,6 +288,24 @@ constructor(
         }
         return false
     }
+
+    /**
+     * For duplicate-broadcast recovery we only need to know that the peer's byte-identical tx
+     * actually committed — not whether it succeeded. Any terminal on-chain outcome (confirmed,
+     * network-refunded, or failed execution) proves the sequence was consumed by our tx, so the
+     * locally computed hash is canonical. Only a still-pending / not-found / timed-out result means
+     * our tx isn't on chain yet, in which case the rejection must propagate rather than have the
+     * user re-send a landed transaction.
+     */
+    private suspend fun isLandedOnChain(hash: String, chain: Chain): Boolean =
+        when (transactionStatusRepository.checkTransactionStatus(hash, chain)) {
+            is TransactionResult.Confirmed,
+            is TransactionResult.Refunded,
+            is TransactionResult.Failed -> true
+            is TransactionResult.Pending,
+            is TransactionResult.NotFound,
+            is TransactionResult.TimedOut -> false
+        }
 
     private fun String?.orKnownHash(tx: SignedTransactionResult): String? =
         this ?: tx.transactionHash.takeIf { it.isNotBlank() }

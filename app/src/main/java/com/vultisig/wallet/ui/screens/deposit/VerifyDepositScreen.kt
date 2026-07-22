@@ -141,7 +141,7 @@ internal fun VerifyDepositScreen(
                             .padding(all = 24.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.verify_deposit_sending),
+                        text = stringResource(tx.titleRes),
                         style = Theme.brockmann.headings.subtitle,
                         color = Theme.v2.colors.text.secondary,
                     )
@@ -173,16 +173,26 @@ internal fun VerifyDepositScreen(
                         ?.let {
                             VerifyCardDetails(
                                 title = stringResource(R.string.verify_transaction_from_title),
-                                subtitle = tx.srcAddress,
+                                subtitle = tx.srcVaultName ?: tx.srcAddress,
+                                bracketValue = tx.srcVaultName?.let { tx.srcAddress },
                             )
 
                             VerifyCardDivider(0.dp)
                         }
 
+                    if (tx.validatorName.isNotEmpty()) {
+                        VerifyCardDetails(
+                            title = stringResource(R.string.solana_delegate_validator),
+                            subtitle = tx.validatorName,
+                        )
+                        VerifyCardDivider(0.dp)
+                    }
                     if (tx.dstAddress.isNotEmpty()) {
+                        val toDstLabel = tx.dstVaultName ?: tx.dstAddressBookTitle
                         VerifyCardDetails(
                             title = stringResource(R.string.verify_transaction_to_title),
-                            subtitle = tx.dstAddress,
+                            subtitle = toDstLabel ?: tx.dstAddress,
+                            bracketValue = toDstLabel?.let { tx.dstAddress },
                         )
                         VerifyCardDivider(0.dp)
                     }
@@ -190,7 +200,11 @@ internal fun VerifyDepositScreen(
                         VerifyCardDetails(title = stringResource(R.string.pool), subtitle = tx.pool)
                         VerifyCardDivider(0.dp)
                     }
-                    if (tx.nodeAddress.isNotEmpty()) {
+                    // Unbond sets dstAddress and nodeAddress to the same node address, so it
+                    // already
+                    // renders as the "To" row above; only show the Node address row when it adds a
+                    // distinct value (issue #5301).
+                    if (tx.nodeAddress.isNotEmpty() && tx.nodeAddress != tx.dstAddress) {
                         VerifyCardDetails(
                             title = stringResource(R.string.node_address),
                             subtitle = tx.nodeAddress,

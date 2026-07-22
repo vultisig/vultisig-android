@@ -3,8 +3,19 @@ package com.vultisig.wallet.data.api
 import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
+import io.ktor.client.plugins.DefaultRequest
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.util.appendIfNameAbsent
 import io.mockk.mockk
+import java.math.BigInteger
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -24,6 +35,9 @@ class ThorChainApiImplTest {
         ignoreUnknownKeys = true
         explicitNulls = false
     }
+
+    private val jsonHeaders =
+        headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
 
     private fun newApi(httpStatus: HttpStatusCode, body: String): ThorChainApi =
         ThorChainApiImpl(
@@ -232,6 +246,194 @@ class ThorChainApiImplTest {
             ex.message?.startsWith(CosmosBroadcastException.SEQUENCE_MISMATCH_MARKER) == true,
         )
     }
+
+    /**
+     * Builds a [ThorChainApi] whose transport routes the RUJI GraphQL stake POST and the Cosmos
+     * bank balances GET to distinct bodies, so `getRujiStakeBalance` can be exercised end-to-end.
+     */
+    private fun newRujiApi(
+        stakeBody: String,
+        balancesBody: String,
+        balancesStatus: HttpStatusCode = HttpStatusCode.OK,
+    ): ThorChainApi {
+        val client =
+            HttpClient(
+                MockEngine { request ->
+                    if (request.url.encodedPath.contains("/balances/")) {
+                        respond(balancesBody, balancesStatus, jsonHeaders)
+                    } else {
+                        respond(stakeBody, HttpStatusCode.OK, jsonHeaders)
+                    }
+                }
+            ) {
+                install(ContentNegotiation) { json(json, ContentType.Any) }
+                install(DefaultRequest) {
+                    headers.appendIfNameAbsent(
+                        HttpHeaders.ContentType,
+                        ContentType.Application.Json.toString(),
+                    )
+                }
+            }
+        return ThorChainApiImpl(
+            httpClient = client,
+            thorChainSwapQuoteResponseJsonSerializer =
+                mockk<ThorChainSwapQuoteResponseJsonSerializer>(),
+            json = json,
+        )
+    }
+
+    private fun rujiStakeBody(bondedAmount: String): String =
+        """
+        {
+          "data": {
+            "node": {
+              "merge": null,
+              "stakingV2": [
+                {
+                  "account": "thor1abc",
+                  "bonded": { "amount": "$bondedAmount", "asset": { "metadata": { "symbol": "RUJI" } } },
+                  "pendingRevenue": { "amount": "500", "asset": { "metadata": { "symbol": "USDC" } } },
+                  "pool": { "mergeAsset": null, "summary": { "apr": { "value": "0.12" } } }
+                }
+              ]
+            }
+          }
+        }
+        """
+            .trimIndent()
+
+    /**
+     * Mirrors the real Rujira response for a vault that stakes both TCY and RUJI: stakingV2 lists
+     * the TCY position first (with bonded 0), then the RUJI position. `getRujiStakeBalance` must
+     * pick the RUJI entry, not the first one.
+     */
+    private fun rujiStakeBodyWithTcyFirst(bondedRuji: String): String =
+        """
+        {
+          "data": {
+            "node": {
+              "merge": null,
+              "stakingV2": [
+                {
+                  "account": "thor1abc",
+                  "bonded": { "amount": "0", "asset": { "metadata": { "symbol": "TCY" } } },
+                  "pendingRevenue": { "amount": "999", "asset": { "metadata": { "symbol": "USDC" } } },
+                  "pool": { "mergeAsset": null, "summary": { "apr": { "value": "0.05" } } }
+                },
+                {
+                  "account": "thor1abc",
+                  "bonded": { "amount": "$bondedRuji", "asset": { "metadata": { "symbol": "RUJI" } } },
+                  "pendingRevenue": { "amount": "500", "asset": { "metadata": { "symbol": "USDC" } } },
+                  "pool": { "mergeAsset": null, "summary": { "apr": { "value": "0.12" } } }
+                }
+              ]
+            }
+          }
+        }
+        """
+            .trimIndent()
+
+    @Test
+    fun `getRujiStakeBalance prefers on-chain receipt balance over bonded when receipts are held`() =
+        runBlocking {
+            // bonded reads 0 (the reported bug), but the vault holds sRUJI receipts on-chain.
+            val api =
+                newRujiApi(
+                    stakeBody = rujiStakeBody(bondedAmount = "0"),
+                    balancesBody =
+                        """{"balances":[{"denom":"x/staking-x/ruji","amount":"12345"}]}""",
+                )
+
+            val result = api.getRujiStakeBalance("thor1abc")
+
+            assertEquals(BigInteger("12345"), result.stakeAmount)
+            assertEquals("RUJI", result.stakeTicker)
+        }
+
+    @Test
+    fun `getRujiStakeBalance keeps a successful zero receipt as zero instead of using bonded`() =
+        runBlocking {
+            // Balances read succeeds but holds no receipt (vault fully unstaked). Parity with
+            // vultisig-windows #4337: a successful zero stays zero; do NOT fall back to a stale
+            // non-zero bonded amount.
+            val api =
+                newRujiApi(
+                    stakeBody = rujiStakeBody(bondedAmount = "777"),
+                    balancesBody = """{"balances":[]}""",
+                )
+
+            val result = api.getRujiStakeBalance("thor1abc")
+
+            assertEquals(BigInteger.ZERO, result.stakeAmount)
+        }
+
+    @Test
+    fun `getRujiStakeBalance falls back to bonded only when the balances read fails`() =
+        runBlocking {
+            val api =
+                newRujiApi(
+                    stakeBody = rujiStakeBody(bondedAmount = "42"),
+                    balancesBody = "boom",
+                    balancesStatus = HttpStatusCode.InternalServerError,
+                )
+
+            val result = api.getRujiStakeBalance("thor1abc")
+
+            assertEquals(BigInteger("42"), result.stakeAmount)
+        }
+
+    @Test
+    fun `getRujiStakeBalance falls back to bonded when the receipt amount is unparseable`() =
+        runBlocking {
+            // The receipt entry exists but carries a garbage amount: this is a read failure, not a
+            // genuine zero, so we fall back to the GraphQL bonded amount rather than reporting
+            // zero.
+            val api =
+                newRujiApi(
+                    stakeBody = rujiStakeBody(bondedAmount = "42"),
+                    balancesBody =
+                        """{"balances":[{"denom":"x/staking-x/ruji","amount":"not-a-number"}]}""",
+                )
+
+            val result = api.getRujiStakeBalance("thor1abc")
+
+            assertEquals(BigInteger("42"), result.stakeAmount)
+        }
+
+    @Test
+    fun `getRujiStakeBalance falls back to the RUJI position not TCY when the balances read fails`() =
+        runBlocking {
+            // Real-world shape: TCY position (bonded 0) precedes RUJI in stakingV2. When the
+            // balance read fails and we fall back to bonded, it must read RUJI's amount, not TCY's
+            // leading 0.
+            val api =
+                newRujiApi(
+                    stakeBody = rujiStakeBodyWithTcyFirst(bondedRuji = "7875733"),
+                    balancesBody = "boom",
+                    balancesStatus = HttpStatusCode.InternalServerError,
+                )
+
+            val result = api.getRujiStakeBalance("thor1abc")
+
+            assertEquals(BigInteger("7875733"), result.stakeAmount)
+            assertEquals("RUJI", result.stakeTicker)
+        }
+
+    @Test
+    fun `getRujiStakeBalance prefers receipt over RUJI bonded even with TCY listed first`() =
+        runBlocking {
+            val api =
+                newRujiApi(
+                    stakeBody = rujiStakeBodyWithTcyFirst(bondedRuji = "7875733"),
+                    balancesBody =
+                        """{"balances":[{"denom":"x/staking-x/ruji","amount":"41952462"}]}""",
+                )
+
+            val result = api.getRujiStakeBalance("thor1abc")
+
+            assertEquals(BigInteger("41952462"), result.stakeAmount)
+            assertEquals("RUJI", result.stakeTicker)
+        }
 
     @Test
     fun `broadcastTransaction throws with code -1 and preserves rawBody when tx_response is null`() {

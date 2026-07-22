@@ -16,6 +16,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
@@ -25,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -84,9 +88,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         // Handle notification tap when app was killed — ViewModel awaits navigation readiness.
-        intent?.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA)?.let {
-            mainViewModel.onPushNotificationReceived(it)
-        }
+        // Track whether this cold start was launched by a keysign notification, so we can skip
+        // the branded AnimatedSplash replay and make the cold path match the warm onNewIntent path.
+        val launchedFromKeysignNotification =
+            intent?.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA)?.let {
+                mainViewModel.onPushNotificationReceived(it)
+                true
+            } ?: false
 
         val systemBarStyle =
             SystemBarStyle.auto(
@@ -110,29 +118,37 @@ class MainActivity : AppCompatActivity() {
                     val navController = rememberNavController()
 
                     val isLoading by mainViewModel.isLoading.collectAsStateWithLifecycle()
-                    var showSplash by remember { mutableStateOf(true) }
+                    var showSplash by remember { mutableStateOf(!launchedFromKeysignNotification) }
 
-                    if (showSplash) {
-                        AnimatedSplash(
-                            isLoading = isLoading,
-                            onSplashComplete = { showSplash = false },
-                        )
-                    } else {
-                        var isNavigationReady by remember { mutableStateOf(false) }
+                    when {
+                        showSplash ->
+                            AnimatedSplash(
+                                isLoading = isLoading,
+                                onSplashComplete = { showSplash = false },
+                            )
+                        // Keysign notification cold start: skip the branded splash. The NavHost
+                        // captures its start destination on first composition, so hold on a plain
+                        // background until it resolves rather than starting on the stale Home
+                        // default, then route straight into the keysign flow.
+                        isLoading ->
+                            Box(Modifier.fillMaxSize().background(colors.backgrounds.primary))
+                        else -> {
+                            var isNavigationReady by remember { mutableStateOf(false) }
 
-                        if (isNavigationReady) {
-                            CheckDeeplink(mainViewModel::openUri)
+                            if (isNavigationReady) {
+                                CheckDeeplink(mainViewModel::openUri)
+                            }
+
+                            CheckUpdates()
+
+                            MainActivityContent(
+                                navController = navController,
+                                mainViewModel = mainViewModel,
+                                snackbarFlow = snackbarFlow,
+                                startDestination = screen,
+                                onNavigationReady = { isNavigationReady = true },
+                            )
                         }
-
-                        CheckUpdates()
-
-                        MainActivityContent(
-                            navController = navController,
-                            mainViewModel = mainViewModel,
-                            snackbarFlow = snackbarFlow,
-                            startDestination = screen,
-                            onNavigationReady = { isNavigationReady = true },
-                        )
                     }
                 }
             }

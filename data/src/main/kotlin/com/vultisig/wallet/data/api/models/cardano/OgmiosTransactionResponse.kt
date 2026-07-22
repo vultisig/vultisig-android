@@ -25,8 +25,9 @@ data class OgmiosError(
 
 @Serializable
 data class OgmiosErrorData(
+    @SerialName("error") val error: String? = null,
     @SerialName("unknownOutputReferences")
-    val unknownOutputReferences: List<UnknownOutputReference> = emptyList()
+    val unknownOutputReferences: List<UnknownOutputReference> = emptyList(),
 )
 
 @Serializable

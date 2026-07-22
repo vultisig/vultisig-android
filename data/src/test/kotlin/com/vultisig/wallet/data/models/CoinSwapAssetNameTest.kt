@@ -66,19 +66,15 @@ class CoinSwapAssetNameTest {
     // swapAssetName — ThorChain non-native (secured assets)
 
     @Test
-    fun `ThorChain secured asset normalises chain-symbol to CHAIN dot SYMBOL`() {
-        listOf(
-                Triple("BTC", "btc-btc", "BTC.BTC"),
-                Triple("ETH", "eth-eth", "ETH.ETH"),
-                Triple("BCH", "bch-bch", "BCH.BCH"),
-                Triple("LTC", "ltc-ltc", "LTC.LTC"),
-                Triple("DOGE", "doge-doge", "DOGE.DOGE"),
-                Triple("AVAX", "avax-avax", "AVAX.AVAX"),
-                Triple("BNB", "bsc-bnb", "BSC.BNB"),
-            )
-            .forEach { (ticker, denom, expected) ->
-                val c = coin(Chain.ThorChain, ticker, denom, isNativeToken = false)
-                assertEquals(expected, c.swapAssetName())
+    fun `ThorChain secured asset returns the raw contractAddress verbatim`() {
+        // Thornode's quote endpoint expects the dash-separated denom as-is (matching iOS's
+        // Coin.swapAsset), not a dot-normalized "CHAIN.SYMBOL" form — see swapAssetComparisonName
+        // for where the dot form is still needed, for same-asset identity comparisons only.
+        listOf("btc-btc", "eth-eth", "bch-bch", "ltc-ltc", "doge-doge", "avax-avax", "bsc-bnb")
+            .forEach { denom ->
+                val c =
+                    coin(Chain.ThorChain, denom.substringAfter("-"), denom, isNativeToken = false)
+                assertEquals(denom, c.swapAssetName())
             }
     }
 
@@ -89,7 +85,7 @@ class CoinSwapAssetNameTest {
     }
 
     @Test
-    fun `ThorChain secured EVM token preserves hex tail case`() {
+    fun `ThorChain secured EVM token returns the raw contractAddress with hex tail case intact`() {
         val c =
             coin(
                 Chain.ThorChain,
@@ -97,7 +93,7 @@ class CoinSwapAssetNameTest {
                 "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
                 isNativeToken = false,
             )
-        assertEquals("ETH.USDC-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", c.swapAssetName())
+        assertEquals("eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", c.swapAssetName())
     }
 
     @Test
@@ -109,7 +105,7 @@ class CoinSwapAssetNameTest {
                 "eth-usdc-0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
                 isNativeToken = false,
             )
-        assertEquals("ETH.USDC-0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", c.swapAssetName())
+        assertEquals("eth-usdc-0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", c.swapAssetName())
     }
 
     @Test
@@ -199,5 +195,20 @@ class CoinSwapAssetNameTest {
                 isNativeToken = false,
             )
         assertEquals(thorSide.swapAssetComparisonName(), ethSide.swapAssetComparisonName())
+    }
+
+    @Test
+    fun `ThorChain secured BTC keeps canonical case, not lowercased`() {
+        // BTC's underlying chain is UTXO, not EVM — lowercasing it (as EVM secured assets are)
+        // would desync it from native BTC's uppercase comparison name below.
+        val c = coin(Chain.ThorChain, "BTC", "btc-btc", isNativeToken = false)
+        assertEquals("BTC.BTC", c.swapAssetComparisonName())
+    }
+
+    @Test
+    fun `ThorChain secured BTC and its native Bitcoin counterpart compare equal`() {
+        val thorSide = coin(Chain.ThorChain, "BTC", "btc-btc", isNativeToken = false)
+        val btcSide = coin(Chain.Bitcoin, "BTC", "", isNativeToken = true)
+        assertEquals(thorSide.swapAssetComparisonName(), btcSide.swapAssetComparisonName())
     }
 }
