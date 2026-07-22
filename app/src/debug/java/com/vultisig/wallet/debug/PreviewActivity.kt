@@ -201,6 +201,8 @@ class PreviewActivity : ComponentActivity() {
                     "ton_display_multi" -> TonDisplayPreview(messageCount = 4)
                     "verify_ton_jetton_before" -> VerifyTonJettonPreview(decoded = false)
                     "verify_ton_jetton_after" -> VerifyTonJettonPreview(decoded = true)
+                    "sui_ptb_verify_before" -> SuiPtbVerifyPreview(decoded = false)
+                    "sui_ptb_verify_after" -> SuiPtbVerifyPreview(decoded = true)
                     "swap_error_before" -> SwapErrorBeforePreview()
                     "swap_error" -> SwapErrorPreview()
                     "swap_quote_loading" -> SwapFormQuoteLoadingPreview()
@@ -922,6 +924,58 @@ private fun tonJettonSendState(decoded: Boolean): VerifyTransactionUiModel {
                         )
                     )
                 },
+        )
+    return VerifyTransactionUiModel(
+        transaction = tx,
+        consentAddress = false,
+        consentAmount = false,
+        hasFastSign = false,
+    )
+}
+
+/**
+ * Full-screen keysign verify for a dApp-supplied Sui PTB. [decoded] = true uses a real
+ * `TransactionData::V1` PTB (SplitCoins + TransferObjects) that [SuiPtbParser] decodes; false uses
+ * an opaque byte string that fails to parse, reproducing the pre-fix raw-bytes-only view.
+ */
+@Composable
+private fun SuiPtbVerifyPreview(decoded: Boolean) {
+    VerifySendScreen(
+        state = suiPtbSendState(decoded),
+        isConsentsEnabled = false,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+        initiallyExpandedDetails = true,
+    )
+}
+
+private fun suiPtbSendState(decoded: Boolean): VerifyTransactionUiModel {
+    val ptb =
+        if (decoded) {
+            "AAACAAhkAAAAAAAAAAAgW4yMD3sdSyqcPk9QYXKDlKW2x9jp8KGyw9Tl9gcYKTACAgABAQAAAQEDAAAAAAEBAFuMjA97" +
+                "HUsqnD5PUGFyg5SltsfY6fChssPU5fYHGCkwARERERERERERERERERERERERERERERERERERERERERERAQAA" +
+                "AAAAAAAgBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwdbjIwPex1LKpw+T1BhcoOUpbbH2OnwobLD1O" +
+                "X2BxgpMOgDAAAAAAAAwMYtAAAAAAAA"
+        } else {
+            "AAACAAgA4fUFAAAAAAAgWqQ5q8s0e0kq0a7s3w2QxJYwq7XmZ1pL0c1d8s2f3g4FAQEBAQABAAA" +
+                "x2QxJYwq7XmZ1pL0c1d8s2f3g4Aq7XmZ1pL0c1d8s2f3g4Fy0kq0a7s3w2QxJYwq7XmZ1AQ=="
+        }
+    val tx =
+        TransactionDetailsUiModel(
+            token = ValuedToken(token = Coins.Sui.SUI, value = "0", fiatValue = "$0.00"),
+            srcAddress = "0x9a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef",
+            srcVaultName = "Main Vault",
+            dstAddress = "",
+            signSui = ptb,
+            networkFeeFiatValue = "$0.01",
+            networkFeeTokenValue = "0.003 SUI",
         )
     return VerifyTransactionUiModel(
         transaction = tx,
