@@ -1167,6 +1167,7 @@
     <string name="sui_arguments">Argumenti: %1$s</string>
     <string name="sui_inputs_summary">Ulazi transakcije</string>
     <string name="sui_input_number">Ulaz %1$d</string>
+    <string name="sui_address_mismatch">Ne odgovara adresi trezora %1$s</string>
     <string name="solana_raw_transaction">Solana Sirova transakcija</string>
     <string name="solana_instructions_summary">Sažetak uputa transakcije</string>
     <string name="solana_instruction_number">Uputa %1$d</string>

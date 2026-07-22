@@ -1495,6 +1495,7 @@
     <string name="sui_arguments">参数：%1$s</string>
     <string name="sui_inputs_summary">交易输入</string>
     <string name="sui_input_number">输入 %1$d</string>
+    <string name="sui_address_mismatch">与保险库地址 %1$s 不匹配</string>
     <string name="solana_raw_transaction">Solana 原始交易数据</string>
     <string name="solana_instructions_summary">交易指令摘要</string>
     <string name="solana_instruction_number">指令 %1$d</string>

@@ -1167,6 +1167,7 @@
     <string name="sui_arguments">Аргументы: %1$s</string>
     <string name="sui_inputs_summary">Входные данные транзакции</string>
     <string name="sui_input_number">Вход %1$d</string>
+    <string name="sui_address_mismatch">Не совпадает с адресом хранилища %1$s</string>
     <string name="solana_raw_transaction">Исходные данные транзакции Соланы</string>
     <string name="solana_instructions_summary">Сводка инструкций транзакции</string>
     <string name="solana_instruction_number">Инструкция %1$d</string>

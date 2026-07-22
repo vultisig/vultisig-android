@@ -46,7 +46,9 @@ import timber.log.Timber
  * instead of an opaque blob. Falls back to the raw base64 bytes — mirroring [SignSolanaDisplayView]
  * — only when the PTB fails to decode.
  *
- * @param sender the vault address signing the PTB, shown only in the raw-bytes fallback.
+ * @param sender the vault's own address signing the PTB. Used to flag a mismatch against the PTB's
+ *   own (dApp-supplied, unverified) sender/gas-owner fields when decoded, and shown directly in the
+ *   raw-bytes fallback.
  * @param unsignedTxMsg base64-encoded `TransactionData` BCS bytes.
  */
 @Composable
@@ -112,7 +114,7 @@ fun SignSuiDisplayView(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (parsedTransaction != null) {
-                    DecodedPtbSections(parsedTransaction)
+                    DecodedPtbSections(sender, parsedTransaction)
                 } else {
                     RawBytesFallback(sender, unsignedTxMsg)
                 }
@@ -122,11 +124,14 @@ fun SignSuiDisplayView(
 }
 
 @Composable
-private fun DecodedPtbSections(transaction: ParsedSuiTransaction) {
+private fun DecodedPtbSections(sender: String, transaction: ParsedSuiTransaction) {
     if (transaction.sender.isNotBlank()) {
+        val senderMismatch = !transaction.sender.matchesVaultAddress(sender)
         VerifyCardJsonDetails(
             title = stringResource(R.string.sui_sender),
             subtitle = transaction.sender,
+            subtitleColor =
+                if (senderMismatch) Theme.v2.colors.alerts.warning else Theme.v2.colors.alerts.info,
             modifier =
                 Modifier.fillMaxWidth()
                     .background(
@@ -135,8 +140,11 @@ private fun DecodedPtbSections(transaction: ParsedSuiTransaction) {
                     )
                     .padding(horizontal = 12.dp),
         )
+        if (senderMismatch) {
+            MismatchWarning(sender)
+        }
     }
-    GasSummarySection(transaction)
+    GasSummarySection(sender, transaction)
     if (transaction.commands.isNotEmpty()) {
         CommandsSummarySection(transaction.commands)
     }
@@ -146,7 +154,8 @@ private fun DecodedPtbSections(transaction: ParsedSuiTransaction) {
 }
 
 @Composable
-private fun GasSummarySection(transaction: ParsedSuiTransaction) {
+private fun GasSummarySection(sender: String, transaction: ParsedSuiTransaction) {
+    val gasOwnerMismatch = !transaction.gasOwner.matchesVaultAddress(sender)
     Column(
         modifier =
             Modifier.fillMaxWidth()
@@ -169,8 +178,31 @@ private fun GasSummarySection(transaction: ParsedSuiTransaction) {
             style = Theme.brockmann.button.medium.medium,
             fontSize = 10.sp,
         )
+        if (gasOwnerMismatch) {
+            MismatchWarning(sender)
+        }
     }
 }
+
+@Composable
+private fun MismatchWarning(vaultAddress: String) {
+    Text(
+        text = stringResource(R.string.sui_address_mismatch, vaultAddress),
+        color = Theme.v2.colors.alerts.warning,
+        style = Theme.brockmann.button.medium.medium,
+        fontSize = 10.sp,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+/**
+ * True when [this] (the PTB's dApp-supplied sender or gas-owner claim) agrees with [vaultAddress] —
+ * the vault's own, locally-known address. A blank [vaultAddress] can't be compared against, so it's
+ * treated as a match rather than raising a false warning.
+ */
+private fun String.matchesVaultAddress(vaultAddress: String): Boolean =
+    vaultAddress.isBlank() || equals(vaultAddress, ignoreCase = true)
 
 @Composable
 private fun RawBytesFallback(sender: String, unsignedTxMsg: String) {

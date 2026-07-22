@@ -1164,6 +1164,7 @@
     <string name="sui_arguments">Argumente: %1$s</string>
     <string name="sui_inputs_summary">Transaktionseingaben</string>
     <string name="sui_input_number">Eingabe %1$d</string>
+    <string name="sui_address_mismatch">Stimmt nicht mit der Tresor-Adresse %1$s überein</string>
     <string name="solana_raw_transaction">Solana-Rohdaten der Transaktion</string>
     <string name="solana_instructions_summary">Transaktionsanweisungen – Übersicht</string>
     <string name="solana_instruction_number">Anweisung %1$d</string>

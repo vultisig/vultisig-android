@@ -31,10 +31,11 @@ class SuiPtbParserTest {
 
         assertEquals(2, parsed.inputs.size)
         assertEquals(2, parsed.commands.size)
-        assertEquals(1, parsed.gasPaymentCount)
         assertEquals(BigInteger.valueOf(3_000_000), parsed.gasBudget)
         assertEquals(BigInteger.valueOf(1000), parsed.gasPrice)
         assertTrue(parsed.sender.startsWith("0x"))
+        // This fixture's gas is self-sponsored: the payer is the same address as the sender.
+        assertEquals(parsed.sender, parsed.gasOwner)
 
         val input0 = parsed.inputs[0] as SuiPtbInput.Pure
         assertEquals("u64", input0.value.type)
@@ -170,12 +171,13 @@ class SuiPtbParserTest {
         val boolInput = Bcs.uleb(0) + Bcs.bytesVec(byteArrayOf(1))
         val u8Input = Bcs.uleb(0) + Bcs.bytesVec(byteArrayOf(42))
         val u64Input = Bcs.uleb(0) + Bcs.bytesVec(Bcs.u64(1234))
+        val u128Input = Bcs.uleb(0) + Bcs.bytesVec(Bcs.u64(1234) + ByteArray(8))
         val addressInput = Bcs.uleb(0) + Bcs.bytesVec(Bcs.address(0x05))
         val bytesInput = Bcs.uleb(0) + Bcs.bytesVec(byteArrayOf(1, 2, 3))
 
         val bytes =
             transactionData(
-                inputs = Bcs.vec(boolInput, u8Input, u64Input, addressInput, bytesInput),
+                inputs = Bcs.vec(boolInput, u8Input, u64Input, u128Input, addressInput, bytesInput),
                 commands = Bcs.vec(),
             )
         val parsed = SuiPtbParser.parse(Base64.getEncoder().encodeToString(bytes))
@@ -183,14 +185,33 @@ class SuiPtbParserTest {
         assertEquals(SuiPureValue("bool", "true"), (parsed.inputs[0] as SuiPtbInput.Pure).value)
         assertEquals(SuiPureValue("u8", "42"), (parsed.inputs[1] as SuiPtbInput.Pure).value)
         assertEquals(SuiPureValue("u64", "1234"), (parsed.inputs[2] as SuiPtbInput.Pure).value)
+        // Decimal, matching u64 — not hex, so a u128 amount doesn't read differently from a u64
+        // one.
+        assertEquals(SuiPureValue("u128", "1234"), (parsed.inputs[3] as SuiPtbInput.Pure).value)
         assertEquals(
             SuiPureValue("address", "0x" + "05".repeat(32)),
-            (parsed.inputs[3] as SuiPtbInput.Pure).value,
+            (parsed.inputs[4] as SuiPtbInput.Pure).value,
         )
         assertEquals(
             SuiPureValue("bytes(3)", "0x010203"),
-            (parsed.inputs[4] as SuiPtbInput.Pure).value,
+            (parsed.inputs[5] as SuiPtbInput.Pure).value,
         )
+    }
+
+    @Test
+    fun `parse surfaces a gas owner distinct from the sender for a sponsored transaction`() {
+        val bytes =
+            transactionData(
+                inputs = Bcs.vec(),
+                commands = Bcs.vec(),
+                sender = Bcs.address(0x11),
+                gasOwner = Bcs.address(0x99),
+            )
+
+        val parsed = SuiPtbParser.parse(Base64.getEncoder().encodeToString(bytes))
+
+        assertEquals("0x" + "11".repeat(32), parsed.sender)
+        assertEquals("0x" + "99".repeat(32), parsed.gasOwner)
     }
 
     @Test

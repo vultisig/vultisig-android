@@ -1163,6 +1163,7 @@
     <string name="sui_arguments">Argumentos: %1$s</string>
     <string name="sui_inputs_summary">Entradas da transação</string>
     <string name="sui_input_number">Entrada %1$d</string>
+    <string name="sui_address_mismatch">Não corresponde ao endereço do cofre %1$s</string>
     <string name="solana_raw_transaction">Transação bruta de Solana</string>
     <string name="solana_instructions_summary">Resumo das instruções da transação</string>
     <string name="solana_instruction_number">Instrução %1$d</string>

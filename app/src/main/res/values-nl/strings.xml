@@ -1159,6 +1159,7 @@
     <string name="sui_arguments">Argumenten: %1$s</string>
     <string name="sui_inputs_summary">Transactie-invoer</string>
     <string name="sui_input_number">Invoer %1$d</string>
+    <string name="sui_address_mismatch">Komt niet overeen met kluisadres %1$s</string>
     <string name="solana_raw_transaction">Solana Ruwe transactie</string>
     <string name="solana_instructions_summary">Overzicht transactie-instructies</string>
     <string name="solana_instruction_number">Instructie %1$d</string>

@@ -34,17 +34,16 @@ object SuiPtbParser {
         val commands = reader.readVector { readCommand(reader) }
         val sender = reader.readAddress()
 
-        // GasData: only the payment count is kept (each entry's id/version/digest is otherwise
-        // unused for display); the owner address is read to advance the cursor but not surfaced.
-        val gasPaymentCount =
-            reader
-                .readVector {
-                    reader.readAddress()
-                    reader.readU64()
-                    reader.readByteVector()
-                }
-                .size
-        reader.readAddress()
+        // GasData: each payment entry's id/version/digest is only read to advance the cursor.
+        // The owner IS surfaced — for a sponsored transaction it can differ from sender, and a
+        // dApp-supplied PTB naming a gas owner other than this vault is worth flagging to the
+        // co-signer just as much as a sender mismatch is.
+        reader.readVector {
+            reader.readAddress()
+            reader.readU64()
+            reader.readByteVector()
+        }
+        val gasOwner = reader.readAddress()
         val gasPrice = reader.readU64()
         val gasBudget = reader.readU64()
 
@@ -52,9 +51,9 @@ object SuiPtbParser {
         // this same wire format — trailing bytes are intentionally left unconsumed.
         return ParsedSuiTransaction(
             sender = sender,
+            gasOwner = gasOwner,
             gasPrice = gasPrice,
             gasBudget = gasBudget,
-            gasPaymentCount = gasPaymentCount,
             inputs = inputs,
             commands = commands,
         )
@@ -194,7 +193,7 @@ object SuiPtbParser {
                     SuiPureValue("u8", (bytes[0].toInt() and 0xFF).toString())
                 }
             8 -> SuiPureValue("u64", bytes.toLittleEndianBigInteger().toString())
-            16 -> SuiPureValue("u128", "0x" + bytes.toLittleEndianBigInteger().toString(16))
+            16 -> SuiPureValue("u128", bytes.toLittleEndianBigInteger().toString())
             32 -> SuiPureValue("address", "0x" + bytes.toHexString())
             else -> SuiPureValue("bytes(${bytes.size})", "0x" + bytes.toHexString())
         }
@@ -202,9 +201,9 @@ object SuiPtbParser {
 
 data class ParsedSuiTransaction(
     val sender: String,
+    val gasOwner: String,
     val gasPrice: BigInteger,
     val gasBudget: BigInteger,
-    val gasPaymentCount: Int,
     val inputs: List<SuiPtbInput>,
     val commands: List<SuiCommand>,
 )

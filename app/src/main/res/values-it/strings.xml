@@ -1164,6 +1164,7 @@
     <string name="sui_arguments">Argomenti: %1$s</string>
     <string name="sui_inputs_summary">Input della transazione</string>
     <string name="sui_input_number">Input %1$d</string>
+    <string name="sui_address_mismatch">Non corrisponde all\'indirizzo della cassaforte %1$s</string>
     <string name="solana_raw_transaction">Transazioni grezze Solana</string>
     <string name="solana_instructions_summary">Riepilogo istruzioni della transazione</string>
     <string name="solana_instruction_number">Istruzione %1$d</string>
