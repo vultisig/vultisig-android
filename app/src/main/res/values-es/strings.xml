@@ -1154,6 +1154,16 @@
     <string name="ripple_field_limit">Límite</string>
     <string name="ripple_field_limit_issuer">Emisor del límite</string>
     <string name="sui_sender">De</string>
+    <string name="sui_gas_budget">Presupuesto de gas: %1$s SUI</string>
+    <string name="sui_gas_price">Precio del gas: %1$s MIST</string>
+    <string name="sui_commands_summary">Resumen de comandos de transacción</string>
+    <string name="sui_command_number">Comando %1$d</string>
+    <string name="sui_command_target">Destino: %1$s</string>
+    <string name="sui_command_details">Detalles: %1$s</string>
+    <string name="sui_arguments">Argumentos: %1$s</string>
+    <string name="sui_inputs_summary">Entradas de la transacción</string>
+    <string name="sui_input_number">Entrada %1$d</string>
+    <string name="sui_address_mismatch">No coincide con la dirección de la bóveda %1$s</string>
     <string name="solana_raw_transaction">Transacción sin procesar de Solana</string>
     <string name="solana_instructions_summary">Resumen de instrucciones de transacción</string>
     <string name="solana_instruction_number">Instrucción %1$d</string>

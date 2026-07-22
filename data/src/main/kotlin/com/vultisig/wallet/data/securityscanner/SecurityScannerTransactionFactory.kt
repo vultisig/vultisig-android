@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import java.math.BigInteger
 import kotlinx.coroutines.coroutineScope
+import vultisig.keysign.v1.SignSui
 import wallet.core.jni.Base58
 import wallet.core.jni.CoinType
 
@@ -211,33 +212,7 @@ class SecurityScannerTransactionFactory(
     private suspend fun createSUISecurityScannerTransaction(
         transaction: Transaction
     ): SecurityScannerTransaction {
-        val suiBlockchainSpecific = transaction.blockChainSpecific
-        require(suiBlockchainSpecific is BlockChainSpecific.Sui) {
-            "Error Blockchain Specific is not SUI ${transaction.blockChainSpecific}"
-        }
-
-        val coins =
-            suiBlockchainSpecific.coins.ifEmpty { suiApi.getAllCoins(transaction.srcAddress) }
-        val updatedSuiBlockChainSpecific =
-            BlockChainSpecific.Sui(
-                referenceGasPrice = suiBlockchainSpecific.referenceGasPrice,
-                coins = coins,
-                gasBudget = SUI_DEFAULT_GAS_BUDGET,
-            )
-
-        val keySignPayload =
-            KeysignPayload(
-                coin = transaction.token,
-                toAddress = transaction.dstAddress,
-                toAmount = transaction.tokenValue.value,
-                blockChainSpecific = updatedSuiBlockChainSpecific,
-                memo = transaction.memo,
-                vaultPublicKeyECDSA = "", // no need for SUI prehash
-                vaultLocalPartyID = "", // no need for SUI prehash
-                libType = null, // no need for SUI prehash
-                wasmExecuteContractPayload = null,
-            )
-
+        val keySignPayload = buildSuiKeysignPayload(transaction)
         val serializedTransaction = SuiHelper.getZeroSignedTransaction(keySignPayload)
 
         return SecurityScannerTransaction(
@@ -247,6 +222,60 @@ class SecurityScannerTransactionFactory(
             to = transaction.dstAddress,
             amount = BigInteger.ZERO,
             data = serializedTransaction,
+        )
+    }
+
+    /**
+     * Split out from [createSUISecurityScannerTransaction] so the branch selection is testable
+     * without WalletCore's JNI signer. A dApp-supplied PTB (`signSui`) is self-contained and must
+     * be scanned verbatim — that branch is taken before touching `blockChainSpecific`/`suiApi` so
+     * the Blockaid scan reflects the real signed bytes instead of a reconstructed Pay/PaySui built
+     * from unrelated RPC coins.
+     */
+    internal suspend fun buildSuiKeysignPayload(transaction: Transaction): KeysignPayload {
+        val unsignedTxMsg = transaction.signSui
+        if (unsignedTxMsg != null) {
+            return KeysignPayload(
+                coin = transaction.token,
+                toAddress = transaction.dstAddress,
+                toAmount = transaction.tokenValue.value,
+                blockChainSpecific =
+                    BlockChainSpecific.Sui(
+                        referenceGasPrice = BigInteger.ZERO,
+                        gasBudget = BigInteger.ZERO,
+                        coins = emptyList(),
+                    ),
+                memo = transaction.memo,
+                vaultPublicKeyECDSA = "", // no need for SUI prehash
+                vaultLocalPartyID = "", // no need for SUI prehash
+                libType = null, // no need for SUI prehash
+                wasmExecuteContractPayload = null,
+                signSui = SignSui(unsignedTxMsg = unsignedTxMsg),
+            )
+        }
+
+        val suiBlockchainSpecific = transaction.blockChainSpecific
+        require(suiBlockchainSpecific is BlockChainSpecific.Sui) {
+            "Error Blockchain Specific is not SUI ${transaction.blockChainSpecific}"
+        }
+        val coins =
+            suiBlockchainSpecific.coins.ifEmpty { suiApi.getAllCoins(transaction.srcAddress) }
+
+        return KeysignPayload(
+            coin = transaction.token,
+            toAddress = transaction.dstAddress,
+            toAmount = transaction.tokenValue.value,
+            blockChainSpecific =
+                BlockChainSpecific.Sui(
+                    referenceGasPrice = suiBlockchainSpecific.referenceGasPrice,
+                    coins = coins,
+                    gasBudget = SUI_DEFAULT_GAS_BUDGET,
+                ),
+            memo = transaction.memo,
+            vaultPublicKeyECDSA = "", // no need for SUI prehash
+            vaultLocalPartyID = "", // no need for SUI prehash
+            libType = null, // no need for SUI prehash
+            wasmExecuteContractPayload = null,
         )
     }
 

@@ -1186,6 +1186,16 @@
     <string name="ripple_field_limit">한도</string>
     <string name="ripple_field_limit_issuer">한도 발행자</string>
     <string name="sui_sender">보내는 주소</string>
+    <string name="sui_gas_budget">가스 예산: %1$s SUI</string>
+    <string name="sui_gas_price">가스 가격: %1$s MIST</string>
+    <string name="sui_commands_summary">거래 명령어 요약</string>
+    <string name="sui_command_number">명령어 %1$d</string>
+    <string name="sui_command_target">대상: %1$s</string>
+    <string name="sui_command_details">세부정보: %1$s</string>
+    <string name="sui_arguments">인수: %1$s</string>
+    <string name="sui_inputs_summary">거래 입력값</string>
+    <string name="sui_input_number">입력값 %1$d</string>
+    <string name="sui_address_mismatch">볼트 주소 %1$s와(과) 일치하지 않음</string>
     <string name="solana_raw_transaction">Solana 원시 거래</string>
     <string name="solana_instructions_summary">거래 명령어 요약</string>
     <string name="solana_instruction_number">명령어 %1$d</string>
