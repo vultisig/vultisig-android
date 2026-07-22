@@ -58,26 +58,6 @@ fun SignSuiDisplayView(
 ) {
     var isExpanded by rememberSaveable { mutableStateOf(initiallyExpanded) }
 
-    // SuiPtbParser is pure Kotlin BCS decoding, not JNI, but still non-trivial work; deferring it
-    // until first expansion mirrors SignSolanaDisplayView so non-expanding users never pay the
-    // parse cost on the composition thread.
-    val parsedTransaction =
-        remember(unsignedTxMsg) {
-            try {
-                SuiPtbParser.parse(unsignedTxMsg)
-            } catch (e: Exception) {
-                when (e) {
-                    is IllegalArgumentException,
-                    is IllegalStateException,
-                    is IndexOutOfBoundsException -> {
-                        Timber.w(e, "Failed to parse Sui PTB")
-                        null
-                    }
-                    else -> throw e
-                }
-            }
-        }
-
     Column(
         verticalArrangement = Arrangement.spacedBy(14.dp),
         modifier = modifier.fillMaxWidth().padding(vertical = 10.dp),
@@ -104,6 +84,26 @@ fun SignSuiDisplayView(
         }
 
         AnimatedVisibility(visible = isExpanded) {
+            // SuiPtbParser is pure Kotlin BCS decoding, not JNI, but still non-trivial work;
+            // deferring it until first expansion mirrors SignSolanaDisplayView so non-expanding
+            // users never pay the parse cost on the composition thread.
+            val parsedTransaction =
+                remember(unsignedTxMsg) {
+                    try {
+                        SuiPtbParser.parse(unsignedTxMsg)
+                    } catch (e: Exception) {
+                        when (e) {
+                            is IllegalArgumentException,
+                            is IllegalStateException,
+                            is IndexOutOfBoundsException -> {
+                                Timber.w(e, "Failed to parse Sui PTB")
+                                null
+                            }
+                            else -> throw e
+                        }
+                    }
+                }
+
             Column(
                 modifier =
                     Modifier.fillMaxWidth()
