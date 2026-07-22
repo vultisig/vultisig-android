@@ -861,3 +861,22 @@ internal val MIGRATION_34_35 =
             db.execSQL("ALTER TABLE `tokenValue_new` RENAME TO `tokenValue`")
         }
     }
+
+// Corrects the Sui SEND token decimals from 9 to 6 (#5371). The registry fix in Coins.kt only
+// reaches newly enabled coins; coins are persisted per-vault and reconstructed straight from the
+// stored `decimals` column, so vaults that already enabled SEND keep signing amounts scaled by
+// 10^9 instead of 10^6 (1000x wrong) until the stored row itself is corrected. Only display
+// interpretation depends on decimals — cached raw balances in tokenValue are unaffected.
+internal val MIGRATION_35_36 =
+    object : Migration(35, 36) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            UPDATE coin
+            SET decimals = 6
+            WHERE chain = 'Sui' AND ticker = 'SEND'
+            """
+                    .trimIndent()
+            )
+        }
+    }
