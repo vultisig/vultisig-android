@@ -9,6 +9,7 @@ class SolanaTransactionParserTest {
     private val systemProgramId = "11111111111111111111111111111111"
     private val computeBudgetProgramId = "ComputeBudget111111111111111111111111111111"
     private val tokenProgramId = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+    private val token2022ProgramId = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
     private val associatedTokenProgramId = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
 
     private fun instructionType(programId: String, discriminator: Int): String? =
@@ -79,6 +80,8 @@ class SolanaTransactionParserTest {
     fun `other program label tables are unaffected by the System and Compute Budget fix`() {
         assertEquals("Initialize Mint", instructionType(tokenProgramId, 0))
         assertEquals("Transfer Checked", instructionType(tokenProgramId, 12))
+        assertEquals("Initialize Mint", instructionType(token2022ProgramId, 0))
+        assertEquals("Transfer Checked", instructionType(token2022ProgramId, 12))
         assertEquals(
             "Create Associated Token Account",
             instructionType(associatedTokenProgramId, 0),
