@@ -39,6 +39,7 @@ import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
+import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
@@ -140,16 +141,26 @@ internal fun SwapTransactionOverviewScreen(
                     VerifyCardDivider(size = 1.dp)
                 }
 
-                TextDetails(
+                VerifyCardDetails(
                     title = stringResource(R.string.swap_form_from_title),
-                    subtitle = transactionTypeUiModel.src.token.address,
+                    subtitle =
+                        transactionTypeUiModel.srcVaultName
+                            ?: transactionTypeUiModel.src.token.address,
+                    bracketValue =
+                        transactionTypeUiModel.srcVaultName?.let {
+                            transactionTypeUiModel.src.token.address
+                        },
                 )
 
                 VerifyCardDivider(size = 1.dp)
 
-                TextDetails(
+                val dstAddress =
+                    transactionTypeUiModel.externalRecipient?.takeIf { it.isNotBlank() }
+                        ?: transactionTypeUiModel.dst.token.address
+                VerifyCardDetails(
                     title = stringResource(R.string.swap_form_dst_token_title),
-                    subtitle = transactionTypeUiModel.dst.token.address,
+                    subtitle = transactionTypeUiModel.dstVaultName ?: dstAddress,
+                    bracketValue = transactionTypeUiModel.dstVaultName?.let { dstAddress },
                 )
 
                 VerifyCardDivider(size = 1.dp)

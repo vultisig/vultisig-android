@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SwapTransaction
@@ -18,6 +19,7 @@ import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
@@ -73,6 +75,14 @@ internal data class SwapTransactionUiModel(
     // For native THORChain/MayaChain swaps this is resolved from the signed memo's destination
     // segment rather than form state, so it reflects what's actually signed (#4972).
     val externalRecipient: String? = null,
+    // Display name of the vault the source funds leave from, or null when unresolved. Rendered on
+    // the transaction-complete screen as `VaultName (Address)` so the source account is
+    // identifiable rather than a bare address (#5333).
+    val srcVaultName: String? = null,
+    // Display name of the local vault that owns the destination address, or null when the
+    // destination is external / unresolved (falls back to the bare address). Rendered as
+    // `VaultName (Address)` on the transaction-complete screen (#5333).
+    val dstVaultName: String? = null,
 )
 
 internal data class ValuedToken(
@@ -95,6 +105,7 @@ internal data class VerifySwapUiModel(
     val txScanStatus: TransactionScanStatus = TransactionScanStatus.NotStarted,
     val showScanningWarning: Boolean = false,
     val vaultName: String = "",
+    val isSigning: Boolean = false,
 ) {
     val hasAllConsents: Boolean
         get() =
@@ -114,6 +125,7 @@ constructor(
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
+    private val inboundHaltPreflight: SwapInboundHaltPreflight,
 ) : ViewModel() {
 
     val state = MutableStateFlow(VerifySwapUiModel())
@@ -122,6 +134,7 @@ constructor(
     private val vaultId: VaultId = args.vaultId
     private val transactionId: String = args.transactionId
     private var _fastSign = false
+    private var transaction: SwapTransaction? = null
 
     private val _fastSignFlow = Channel<Boolean>()
     val fastSignFlow = _fastSignFlow.receiveAsFlow()
@@ -134,6 +147,7 @@ constructor(
                         navigator.back()
                         return@launch
                     }
+            this@VerifySwapViewModel.transaction = transaction
             val vault = vaultRepository.get(vaultId)
             val vaultName = vault?.name
             if (vaultName == null) {
@@ -196,8 +210,36 @@ constructor(
     }
 
     private fun keysign(keysignInitType: KeysignInitType) {
-        if (state.value.hasAllConsents) {
-            viewModelScope.launch {
+        if (!state.value.hasAllConsents) {
+            state.update {
+                it.copy(
+                    errorText =
+                        UiText.StringResource(R.string.verify_transaction_error_not_enough_consent)
+                )
+            }
+            return
+        }
+        if (state.value.isSigning) return
+
+        val transaction = transaction ?: return
+        state.update { it.copy(isSigning = true) }
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                // Only the preflight fails closed as a halt. A keysign/navigation failure must not
+                // masquerade as "trading halted", so it surfaces a generic error instead.
+                val errorMessage =
+                    if (e is SwapException.TradingHalted) {
+                        Timber.w(e, "Swap sign-time inbound preflight blocked signing")
+                        R.string.swap_error_trading_halted
+                    } else {
+                        Timber.e(e, "Swap keysign launch failed")
+                        R.string.error_view_default_title
+                    }
+                state.update { it.copy(errorText = UiText.StringResource(errorMessage)) }
+            }
+        ) {
+            try {
+                inboundHaltPreflight.assertSourceChainNotHalted(transaction)
                 launchKeysign(
                     keysignInitType,
                     transactionId,
@@ -205,13 +247,10 @@ constructor(
                     Route.Keysign.Keysign.TxType.Swap,
                     vaultId,
                 )
-            }
-        } else {
-            state.update {
-                it.copy(
-                    errorText =
-                        UiText.StringResource(R.string.verify_transaction_error_not_enough_consent)
-                )
+            } finally {
+                // The verify ViewModel can remain alive when navigation is cancelled or fails.
+                // Always re-enable signing so a later attempt cannot be permanently dead-ended.
+                state.update { it.copy(isSigning = false) }
             }
         }
     }

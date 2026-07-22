@@ -56,6 +56,7 @@ internal data class SendFormUiModel(
     val totalGas: UiText = UiText.Empty,
     val gasTokenBalance: UiText? = null,
     val estimatedFee: UiText = UiText.Empty,
+    val isGasFeeLoading: Boolean = true,
 
     // type
     val defiType: DeFiNavActions? = null,
@@ -69,12 +70,18 @@ internal data class SendFormUiModel(
     val reapingError: UiText? = null,
     val bondProviderError: UiText? = null,
     val hasMemo: Boolean = false,
+    // XRP: show a dedicated destination-tag field instead of the free-text memo field.
+    val isDestinationTag: Boolean = false,
+    val destinationTagLocked: Boolean = false,
     val showGasFee: Boolean = true,
     val hasGasSettings: Boolean = false,
     val showGasSettings: Boolean = false,
     val specific: BlockChainSpecificAndUtxo? = null,
     val expandedSection: SendSections = SendSections.Asset,
     val usingTokenAmountInput: Boolean = true,
+    // Whether the entered token amount is present and valid. Used to gate Continue on the TRON
+    // freeze/unfreeze screens, where the network fee is amount-independent and resolves on entry.
+    val isAmountValid: Boolean = false,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isAmountSelectionLoading: Boolean = false,
@@ -87,6 +94,49 @@ internal data class SendFormUiModel(
     val isTronFrozenBalancesLoading: Boolean = false,
     val hasTronFrozenBalancesError: Boolean = false,
 )
+
+/**
+ * Whether the recipient field is user-editable. Unbond draws from a specific bonded node and
+ * prefills a locked node address; every other flow lets the user type, paste or scan a recipient.
+ */
+internal val SendFormUiModel.isDstAddressEditable: Boolean
+    get() = defiType != DeFiNavActions.UNBOND
+
+/**
+ * Whether an invalid recipient should block the form.
+ *
+ * Only an address the user can actually correct blocks: a locked Unbond node address offers no
+ * retype, paste or scan path, so blocking there would strand the flow with no way out. The inline
+ * error still renders, and UnbondStrategy rejects an invalid node address at submit.
+ */
+internal val SendFormUiModel.isDstAddressBlocking: Boolean
+    get() = dstAddressError != null && isDstAddressEditable
+
+/**
+ * Whether the Continue action should be disabled for the current form state.
+ *
+ * The gas-fee-loading gate applies to every flow: while the network fee is (re)computing —
+ * including the recompute triggered by tapping a percentage/MAX button — Continue must stay
+ * disabled so it can't submit against a fee still shown as loading.
+ *
+ * TRON freeze/unfreeze pays a fixed, amount-independent fee that the orchestrator resolves on entry
+ * with a zero-amount placeholder (see GasFeeOrchestrator), so [isGasFeeLoading] clears before any
+ * amount is entered and can no longer stand in for "an amount is present". These flows are
+ * therefore additionally gated on [isAmountValid], and Unfreeze on [isTronFrozenBalancesLoading] so
+ * Continue cannot enable before the frozen balance loads — otherwise submit coerces the still-null
+ * balance to zero and falsely rejects a fundable unfreeze.
+ *
+ * An invalid recipient the user can correct ([isDstAddressBlocking]) also disables Continue so the
+ * flow can't proceed from an address that failed chain validation — the inline error is the visible
+ * reason, and correcting the field clears it and re-enables Continue.
+ *
+ * @return true when Continue must stay disabled.
+ */
+internal fun SendFormUiModel.isContinueDisabled(): Boolean =
+    isLoading ||
+        isDstAddressBlocking ||
+        (showGasFee && isGasFeeLoading) ||
+        (tronResourceType != null && (!isAmountValid || isTronFrozenBalancesLoading))
 
 internal data class SendSrc(val address: Address, val account: Account)
 

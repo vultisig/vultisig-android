@@ -191,6 +191,12 @@ internal interface RepositoriesModule {
     ): SwapPoolEligibilityRepository
 
     @Binds
+    @Singleton
+    fun bindThorChainSecuredAssetRepository(
+        impl: ThorChainSecuredAssetRepositoryImpl
+    ): ThorChainSecuredAssetRepository
+
+    @Binds
     @IntoMap
     @SwapProviderKey(SwapProvider.THORCHAIN)
     @Reusable

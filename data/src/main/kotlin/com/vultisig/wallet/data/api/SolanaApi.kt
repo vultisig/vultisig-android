@@ -8,17 +8,24 @@ import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.SPLTokenRequestJson
 import com.vultisig.wallet.data.api.models.SolanaAccountInfoResponseJson
 import com.vultisig.wallet.data.api.models.SolanaBalanceJson
+import com.vultisig.wallet.data.api.models.SolanaEpochInfoResponseJson
+import com.vultisig.wallet.data.api.models.SolanaEpochInfoResultJson
 import com.vultisig.wallet.data.api.models.SolanaFeeForMessageResponse
 import com.vultisig.wallet.data.api.models.SolanaFeeObjectRespJson
 import com.vultisig.wallet.data.api.models.SolanaMinimumBalanceForRentExemptionJson
+import com.vultisig.wallet.data.api.models.SolanaProgramAccountJson
+import com.vultisig.wallet.data.api.models.SolanaProgramAccountsResponseJson
 import com.vultisig.wallet.data.api.models.SolanaRpcResponseJson
 import com.vultisig.wallet.data.api.models.SolanaSignatureStatusesResult
+import com.vultisig.wallet.data.api.models.SolanaVoteAccountsResponseJson
+import com.vultisig.wallet.data.api.models.SolanaVoteAccountsResultJson
 import com.vultisig.wallet.data.api.models.SplAmountRpcResponseJson
 import com.vultisig.wallet.data.api.models.SplResponseAccountJson
 import com.vultisig.wallet.data.api.models.SplResponseJson
 import com.vultisig.wallet.data.api.models.SplTokenInfo
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.utils.postRpc
+import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingConfig
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
@@ -50,7 +57,10 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import timber.log.Timber
+import wallet.core.jni.SolanaAddress
 
 interface SolanaApi {
     suspend fun getBalance(address: String): BigInteger
@@ -88,15 +98,46 @@ interface SolanaApi {
     suspend fun getAccountOwner(account: String): String?
 
     suspend fun checkStatus(txHash: String): SolanaRpcResponseJson<SolanaSignatureStatusesResult>?
+
+    /**
+     * Minimum lamports for rent exemption of an account of the given byte length. The no-arg
+     * overload targets SPL token accounts (165 bytes); staking passes the 200-byte stake-account
+     * size. Returns [BigInteger.ZERO] on RPC failure.
+     */
+    suspend fun getMinimumBalanceForRentExemption(dataLength: Int): BigInteger
+
+    /** `getEpochInfo` — current cluster epoch progress, or null when the RPC read fails. */
+    suspend fun getEpochInfo(): SolanaEpochInfoResultJson?
+
+    /** `getVoteAccounts` — current + delinquent validator vote accounts, or null on RPC failure. */
+    suspend fun getVoteAccounts(): SolanaVoteAccountsResultJson?
+
+    /**
+     * `getProgramAccounts` against the Stake program, filtered to the stake accounts whose
+     * withdrawer authority is [ownerAddress] (`dataSize` + `memcmp`). Returns the parsed accounts,
+     * or an empty list on RPC failure. Never stale-cached — always a fresh read.
+     */
+    suspend fun getStakeAccounts(ownerAddress: String): List<SolanaProgramAccountJson>
 }
 
-internal class SolanaApiImp
-@Inject
-constructor(
+internal class SolanaApiImp(
     private val json: Json,
     private val httpClient: HttpClient,
     private val splTokenSerializer: SplTokenResponseJsonSerializer,
+    // Derives the associated-token-account address for (owner, mint) under the classic SPL or the
+    // Token-2022 program. Backed by WalletCore JNI in production; injected so the direct-derivation
+    // fallback in [getTokenAssociatedAccountByOwner] can be unit-tested without the native library,
+    // which is not loaded in JVM unit tests.
+    private val deriveAssociatedTokenAddress:
+        (owner: String, mint: String, token2022: Boolean) -> String?,
 ) : SolanaApi {
+
+    @Inject
+    constructor(
+        json: Json,
+        httpClient: HttpClient,
+        splTokenSerializer: SplTokenResponseJsonSerializer,
+    ) : this(json, httpClient, splTokenSerializer, ::deriveAssociatedTokenAddressWithWalletCore)
 
     private val rpcEndpoint = "https://api.vultisig.com/solana/"
     private val splTokensInfoEndpoint = "https://api.solana.fm/v1/tokens"
@@ -183,7 +224,7 @@ constructor(
                     ?.filter { it > BigInteger.ZERO }
                     ?.sorted()
                     .orEmpty()
-            val median = if (nonZeroFees.isEmpty()) fallback else nonZeroFees[nonZeroFees.size / 2]
+            val median = solanaMedianPriorityFee(nonZeroFees, fallback)
             maxOf(median, fallback).coerceAtMost(MAX_PRIORITY_FEE_PRICE.toBigInteger())
         } catch (e: CancellationException) {
             throw e
@@ -390,6 +431,28 @@ constructor(
         walletAddress: String,
         mintAddress: String,
     ): Pair<String?, Boolean> {
+        findAssociatedAccountViaOwner(walletAddress, mintAddress)?.let {
+            return it
+        }
+        // The primary getTokenAccountsByOwner lookup came back empty or failed. That can be a real
+        // "no account", but it can also be indexer/replica lag right after the ATA was created. If
+        // we trusted it, the sender would fail with a false "missing token account" error, and the
+        // recipient path would try to recreate an ATA that already exists — a non-idempotent op the
+        // on-chain program rejects. Derive the ATA directly and confirm with a point account-info
+        // lookup before concluding it truly does not exist. Mirrors iOS (SolanaService).
+        return findAssociatedAccountByDerivation(walletAddress, mintAddress)
+    }
+
+    /**
+     * Primary lookup: ask the indexer for the owner's associated token account for [mintAddress].
+     * Returns the (ATA address, isToken2022) pair when the index holds it, or null when the account
+     * is absent from the index or the RPC call fails — both of which route the caller to the
+     * direct-derivation fallback.
+     */
+    private suspend fun findAssociatedAccountViaOwner(
+        walletAddress: String,
+        mintAddress: String,
+    ): Pair<String, Boolean>? =
         try {
             val response =
                 httpClient.postRpc<SplAmountRpcResponseJson>(
@@ -403,27 +466,50 @@ constructor(
                         },
                 )
             if (response.error != null) {
-                Timber.d("getTokenAssociatedAccountByOwner error: ${response.error}")
-                return Pair(null, false)
+                Timber.tag("SolanaApiImp")
+                    .d("getTokenAssociatedAccountByOwner error: %s", response.error)
+                null
+            } else {
+                response.value?.value?.firstOrNull()?.let {
+                    Pair(it.pubKey, it.account.owner == TOKEN_PROGRAM_ID_2022)
+                }
             }
-            val value = response.value ?: error("getTokenAssociatedAccountByOwner error")
-            if (value.value.isEmpty()) {
-                Timber.d(
-                    "getTokenAssociatedAccountByOwner: no ATA found for %s / %s",
-                    walletAddress,
-                    mintAddress,
-                )
-                return Pair(null, false)
-            }
-            return Pair(
-                value.value[0].pubKey,
-                value.value[0].account.owner == TOKEN_PROGRAM_ID_2022,
-            )
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.e(e)
-            return Pair(null, false)
+            Timber.tag("SolanaApiImp").e(e, "getTokenAssociatedAccountByOwner failed")
+            null
         }
+
+    /**
+     * Fallback for when the index has no account or is unreachable: an ATA address is deterministic
+     * for a given (owner, mint, token program), so derive both the classic-SPL and Token-2022
+     * addresses and confirm on-chain existence with a direct account-info lookup. A given mint is
+     * owned by exactly one token program, so at most one derived address can exist. Returns
+     * (address, isToken2022) for the one that does, or (null, false) when neither exists.
+     */
+    private suspend fun findAssociatedAccountByDerivation(
+        walletAddress: String,
+        mintAddress: String,
+    ): Pair<String?, Boolean> {
+        for (isToken2022 in listOf(false, true)) {
+            val ata =
+                deriveAssociatedTokenAddress(walletAddress, mintAddress, isToken2022)?.takeIf {
+                    it.isNotEmpty()
+                } ?: continue
+            // A non-null owner means the account exists on-chain (every account has one); a missing
+            // account resolves the info value to null without an RPC error.
+            if (getAccountOwner(ata) != null) {
+                return Pair(ata, isToken2022)
+            }
+        }
+        Timber.tag("SolanaApiImp")
+            .d(
+                "getTokenAssociatedAccountByOwner: no ATA for %s / %s after direct-derivation fallback",
+                walletAddress,
+                mintAddress,
+            )
+        return Pair(null, false)
     }
 
     override suspend fun getAccountOwner(account: String): String? =
@@ -502,6 +588,89 @@ constructor(
         }
     }
 
+    override suspend fun getMinimumBalanceForRentExemption(dataLength: Int): BigInteger =
+        try {
+            httpClient
+                .postRpc<SolanaMinimumBalanceForRentExemptionJson>(
+                    rpcEndpoint,
+                    "getMinimumBalanceForRentExemption",
+                    params = buildJsonArray { add(dataLength) },
+                )
+                .result
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Error getting minimum balance for rent exemption")
+            BigInteger.ZERO
+        }
+
+    override suspend fun getEpochInfo(): SolanaEpochInfoResultJson? =
+        try {
+            val resp =
+                httpClient.postRpc<SolanaEpochInfoResponseJson>(
+                    rpcEndpoint,
+                    "getEpochInfo",
+                    params = buildJsonArray {},
+                )
+            resp.error?.let { Timber.tag("SolanaApiImp").w("getEpochInfo RPC error: %s", it) }
+            resp.result
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.tag("SolanaApiImp").e(e, "Error getting epoch info")
+            null
+        }
+
+    override suspend fun getVoteAccounts(): SolanaVoteAccountsResultJson? =
+        try {
+            val resp =
+                httpClient.postRpc<SolanaVoteAccountsResponseJson>(
+                    rpcEndpoint,
+                    "getVoteAccounts",
+                    params = buildJsonArray {},
+                )
+            resp.error?.let { Timber.tag("SolanaApiImp").w("getVoteAccounts RPC error: %s", it) }
+            resp.result
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.tag("SolanaApiImp").e(e, "Error getting vote accounts")
+            null
+        }
+
+    override suspend fun getStakeAccounts(ownerAddress: String): List<SolanaProgramAccountJson> =
+        try {
+            val resp =
+                httpClient.postRpc<SolanaProgramAccountsResponseJson>(
+                    rpcEndpoint,
+                    "getProgramAccounts",
+                    params =
+                        buildJsonArray {
+                            add(SolanaStakingConfig.STAKE_PROGRAM_ID)
+                            addJsonObject {
+                                put("encoding", "jsonParsed")
+                                putJsonArray("filters") {
+                                    addJsonObject {
+                                        put("dataSize", SolanaStakingConfig.STAKE_ACCOUNT_SPACE)
+                                    }
+                                    addJsonObject {
+                                        putJsonObject("memcmp") {
+                                            put(
+                                                "offset",
+                                                SolanaStakingConfig.WITHDRAWER_MEMCMP_OFFSET,
+                                            )
+                                            put("bytes", ownerAddress)
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                )
+            resp.error?.let { Timber.tag("SolanaApiImp").w("getProgramAccounts RPC error: %s", it) }
+            resp.result
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.tag("SolanaApiImp").e(e, "Error getting stake accounts for %s", ownerAddress)
+            emptyList()
+        }
+
     companion object {
         private const val PROGRAM_ID_SPL_REQUEST_PARAM =
             "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
@@ -534,6 +703,25 @@ internal enum class SolanaBroadcastAction {
 }
 
 /**
+ * Median of [sortedFees] (ascending, strictly positive), or [fallback] when empty. Averages the two
+ * central elements for an even-length list instead of picking the upper-middle one, matching iOS
+ * (SolanaService.fetchRecentPrioritizationFees).
+ */
+internal fun solanaMedianPriorityFee(
+    sortedFees: List<BigInteger>,
+    fallback: BigInteger,
+): BigInteger {
+    val size = sortedFees.size
+    if (size == 0) return fallback
+    val mid = size / 2
+    return if (size % 2 == 0) {
+        (sortedFees[mid - 1] + sortedFees[mid]) / BigInteger.valueOf(2)
+    } else {
+        sortedFees[mid]
+    }
+}
+
+/**
  * Classifies a Solana `sendTransaction` error message into the action to take. `-32002` is Solana's
  * generic preflight-failure code, not specific to expired blockhashes, so we match on the message
  * text (mirrors vultisig-ios#4551).
@@ -554,3 +742,19 @@ internal fun solanaBroadcastAction(
         else -> SolanaBroadcastAction.FATAL
     }
 }
+
+/**
+ * Derives the associated-token-account address for [owner] and [mint] under the classic SPL token
+ * program ([token2022] = false) or the Token-2022 program ([token2022] = true), via WalletCore.
+ * Returns null when WalletCore cannot derive it (e.g. a malformed owner address).
+ */
+private fun deriveAssociatedTokenAddressWithWalletCore(
+    owner: String,
+    mint: String,
+    token2022: Boolean,
+): String? =
+    runCatching {
+            val address = SolanaAddress(owner)
+            if (token2022) address.token2022Address(mint) else address.defaultTokenAddress(mint)
+        }
+        .getOrNull()

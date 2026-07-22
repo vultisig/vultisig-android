@@ -243,10 +243,12 @@ object CardanoHelper {
             )
 
         val output = Cardano.SigningOutput.parseFrom(compileWithSignature).checkError()
-        var transactionHash =
-            CardanoUtils.calculateCardanoTransactionHash(output.encoded.toByteArray())
+        // WalletCore emits the legacy 3-element envelope; Conway-era nodes require the 4-element
+        // form with an is_valid flag. Splicing it in doesn't touch the signed body (element 0).
+        val encoded = CardanoUtils.addIsValidFlag(output.encoded.toByteArray())
+        val transactionHash = CardanoUtils.calculateCardanoTransactionHash(encoded)
         return SignedTransactionResult(
-            rawTransaction = output.encoded.toByteArray().toHexString(),
+            rawTransaction = encoded.toHexString(),
             transactionHash = transactionHash,
         )
     }

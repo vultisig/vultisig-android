@@ -213,6 +213,73 @@ class ChainHelpersTest {
         assertEquals("", signingInput.getMessages(1).customPayload)
     }
 
+    /**
+     * Regression for the STON.fi swap that never finished co-signing: every TonConnect message must
+     * carry the wallet-level `tonSpecific.bounceable` flag, NOT a per-address value derived from
+     * the EQ/UQ friendly-address tag. The initiating device (browser extension / desktop) applies
+     * the global flag when it builds the DKLS setup message, so a co-signer that derived
+     * bounceability per-address produced a different pre-image hash — and therefore a different md5
+     * message-id — for any message sent to a UQ (non-bounceable) address, 404ing on the setup
+     * message forever.
+     */
+    @Test
+    fun tonConnectBounceableFollowsWalletFlagNotAddressPrefix() {
+        val coin =
+            Coin(
+                chain = "Ton",
+                ticker = "TON",
+                address = "UQCmBAnvlatV6yLWm391BEFTWP7jZX5mUFJ4Dc5TJAnvVgYi",
+                decimals = 9,
+                priceProviderId = "the-open-network",
+                isNativeToken = true,
+                hexPublicKey = HEX_PUBLIC_KEY_EDDSA,
+                logo = "ton",
+            )
+        val blockchainSpecific =
+            BlockchainSpecific(
+                tonSpecific =
+                    TonSpecific(
+                        sendMaxAmount = false,
+                        sequenceNumber = 0L,
+                        expireAt = 1753579977L,
+                        bounceable = true,
+                    )
+            )
+        // First goes to an EQ (bounceable) address, second to a UQ (non-bounceable) address — the
+        // per-address logic would have flagged these true/false; the wallet flag makes both true.
+        val destEq = "EQDa4VOnTYlLvDJ0gZjNYm5PXfSmmtL6Vs6A_CZEtXCNICq_"
+        val destUq = "UQCmBAnvlatV6yLWm391BEFTWP7jZX5mUFJ4Dc5TJAnvVgYi"
+
+        val payload =
+            KeysignPayload(
+                    coin = coin,
+                    toAddress = "",
+                    toAmount = "0",
+                    blockchainSpecific = blockchainSpecific,
+                    signData =
+                        SignData(
+                            signTon =
+                                SignTon(
+                                    tonMessages =
+                                        listOf(
+                                            TonMessage(to = destEq, amount = "37100000000"),
+                                            TonMessage(to = destUq, amount = "1000000"),
+                                        )
+                                )
+                        ),
+                    vaultPublicKeyEcdsa = HEX_PUBLIC_KEY,
+                    libType = "DKLS",
+                )
+                .toInternalKeySignPayload()
+
+        val inputData = TonHelper.getPreSignedInputData(payload)
+        val signingInput = TheOpenNetwork.SigningInput.parseFrom(inputData)
+
+        assertEquals(2, signingInput.messagesCount)
+        assertEquals(true, signingInput.getMessages(0).bounceable)
+        assertEquals(true, signingInput.getMessages(1).bounceable)
+    }
+
     @Test
     fun sendCosmosTest() {
         val transactions: List<TransactionData> = loadTransactionData(COSMOS_JSON_FILE)

@@ -42,6 +42,15 @@ data class SendTransactionHistoryData(
     val feeEstimate: String,
     val memo: String,
     val fiatValue: String,
+    /**
+     * One-line decoded description of a dApp-supplied transaction signed verbatim (e.g. an XRPL
+     * `signRipple` OfferCreate/TrustSet/cross-currency Payment), whose native [amount] is `0` and
+     * whose real terms live in the signed raw JSON. Persisted so the row survives an app restart as
+     * its true operation instead of downgrading to a blank/generic native row. Default `null` (and
+     * serialized into the JSON `payload` column) so legacy rows stay readable with no Room
+     * migration.
+     */
+    val dappSummary: String? = null,
 ) : TransactionHistoryData
 
 @Serializable

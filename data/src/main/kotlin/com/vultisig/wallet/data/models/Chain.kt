@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.models.TokenStandard.TON
 import com.vultisig.wallet.data.models.TokenStandard.TRC20
 import com.vultisig.wallet.data.models.TokenStandard.UTXO
 import com.vultisig.wallet.data.utils.getDustThreshold
-import com.vultisig.wallet.data.utils.toValue
 import java.math.BigDecimal
 import java.math.BigInteger
 import wallet.core.jni.CoinType
@@ -45,7 +44,7 @@ enum class Chain(val raw: ChainId, val standard: TokenStandard, val feeUnit: Str
     Dogecoin("Dogecoin", UTXO, "Doge/vbyte"),
     Dash("Dash", UTXO, "DASH/vbyte"),
     Zcash("Zcash", UTXO, "ZEC/vbyte"),
-    Cardano("Cardano", UTXO, "ADA/vbyte"),
+    Cardano("Cardano", UTXO, "Lovelace"),
     GaiaChain("Cosmos", COSMOS, "uatom"),
     Kujira("Kujira", COSMOS, "ukuji"),
     Dydx("Dydx", COSMOS, "adydx"),
@@ -122,7 +121,12 @@ val Chain.coinType: CoinType
             Chain.Zcash -> CoinType.ZCASH
             Chain.Cardano -> CoinType.CARDANO
             Chain.Mantle -> CoinType.MANTLE
-            Chain.Sei -> CoinType.SEI
+            // SEI is EVM-compatible: it reuses the Ethereum coin type (secp256k1, derivation
+            // path m/44'/60'/0'/0/0, 0x address format) exactly like Hyperliquid below. Its EVM
+            // chainId (1329) is applied via compatibleChainId. Mapping straight to ETHEREUM keeps
+            // the derivation path/address/coin type consistent with iOS and desktop, which also
+            // map SEI to the Ethereum coin type.
+            Chain.Sei -> CoinType.ETHEREUM
             Chain.Hyperliquid -> CoinType.ETHEREUM
             Chain.Qbtc -> CoinType.COSMOS
         }
@@ -298,6 +302,9 @@ val Chain.isDeFiSupported: Boolean
             Chain.Tron,
             // TON surfaces a nominator-pool staking positions view (stake / unstake).
             Chain.Ton,
+            // Solana surfaces a native-staking positions view — one row per stake account
+            // (delegate / deactivate / withdraw / move). Matches iOS DeFi-tab Solana staking.
+            Chain.Solana,
             // Terra family + QBTC surface a DeFi (staking) positions view — delegate / undelegate /
             // redelegate / claim. Matches Windows `supportedDefiChains` + iOS DeFi-tab `.stake`.
             Chain.Terra,
@@ -507,6 +514,26 @@ val Chain.cosmosNativeDenom: String?
             else -> null
         }
 
-fun Chain.toValue(value: BigInteger): BigDecimal = coinType.toValue(value)
+/**
+ * The chain's native token as declared in [Coins] — the single source of truth for the native
+ * ticker and decimals.
+ *
+ * Prefer this (and [nativeTokenTicker] / [Chain.toValue]) over deriving `symbol`/`decimals` from
+ * [coinType]: several chains share a WalletCore [CoinType], so the WalletCore-derived values are
+ * wrong for display and amount math — MayaChain (CACAO/10 vs THORCHAIN's RUNE/8), Bittensor (TAO/9
+ * vs POLKADOT's DOT/10), and Qbtc (QBTC/8 vs COSMOS's ATOM/6).
+ */
+val Chain.nativeToken: Coin
+    get() =
+        Coins.coins[this]?.firstOrNull { it.isNativeToken }
+            ?: error("No native token registered in Coins for chain $name")
 
-fun Chain.toValue(value: BigDecimal): BigDecimal = coinType.toValue(value)
+/** Native token ticker from [Coins] — safe for display, unlike WalletCore's `coinType.symbol`. */
+val Chain.nativeTokenTicker: String
+    get() = nativeToken.ticker
+
+fun Chain.toValue(value: BigInteger): BigDecimal =
+    value.toBigDecimal().divide(BigDecimal.TEN.pow(nativeToken.decimal))
+
+fun Chain.toValue(value: BigDecimal): BigDecimal =
+    value.divide(BigDecimal.TEN.pow(nativeToken.decimal))

@@ -45,7 +45,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.getProviderLogo
-import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.swapAssetName
@@ -141,6 +140,7 @@ internal fun VerifySwapScreen(
         scanStatus = state.txScanStatus,
         hasToShowWarningScanning = state.showScanningWarning,
         hasAllConsents = state.hasAllConsents,
+        isSigning = state.isSigning,
         consentAmount = state.consentAmount,
         consentReceiveAmount = state.consentReceiveAmount,
         consentAllowance = state.consentAllowance,
@@ -167,6 +167,7 @@ private fun VerifySwapScreen(
     scanStatus: TransactionScanStatus,
     hasToShowWarningScanning: Boolean,
     hasAllConsents: Boolean,
+    isSigning: Boolean,
     consentAmount: Boolean,
     consentReceiveAmount: Boolean,
     consentAllowance: Boolean,
@@ -184,6 +185,8 @@ private fun VerifySwapScreen(
     onContinueAnyway: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
+    val isSignEnabled = (!isConsentsEnabled || hasAllConsents) && !isSigning
+
     V2Scaffold(
         title = stringResource(R.string.verify_swap_swap_overview).takeIf { hasToolbar },
         onBackClick = onBackClick.takeIf { hasToolbar },
@@ -354,19 +357,20 @@ private fun VerifySwapScreen(
                         onFastSignClick = onFastSignClick,
                         onPairedSignClick = onConfirm,
                         state =
-                            if (isConsentsEnabled && !hasAllConsents) {
+                            if (!isSignEnabled) {
                                 VsButtonState.Disabled
                             } else {
                                 VsButtonState.Enabled
                             },
+                        isLoading = isSigning,
                     )
                 } else {
                     VsButton(
                         label = confirmTitle,
                         modifier = Modifier.fillMaxWidth(),
                         state =
-                            if (isConsentsEnabled && !hasAllConsents) VsButtonState.Disabled
-                            else VsButtonState.Enabled,
+                            if (!isSignEnabled) VsButtonState.Disabled else VsButtonState.Enabled,
+                        isLoading = isSigning,
                         onClick = onConfirm,
                     )
                 }
@@ -384,7 +388,9 @@ internal fun SwapToken(
 ) {
     val token = valuedToken.token
     val value = valuedToken.value
-    val shouldShowOnChainLogo = isSwap && (!token.isNativeToken || token.chain.isLayer2)
+    // Show the "on <chain>" indicator on both swap rows so the From and To sides communicate
+    // their chain consistently — including native assets on their own L1.
+    val shouldShowOnChainLogo = isSwap
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -669,6 +675,7 @@ private fun VerifySwapScreenPreview() {
         hasToolbar = true,
         onBackClick = {},
         hasAllConsents = false,
+        isSigning = false,
         hasToShowWarningScanning = false,
         scanStatus = TransactionScanStatus.NotStarted,
         consentAmount = true,

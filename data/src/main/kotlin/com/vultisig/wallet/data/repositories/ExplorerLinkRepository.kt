@@ -142,7 +142,10 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Cardano -> "https://cardanoscan.io/"
                 Chain.Mantle -> "https://mantlescan.xyz/"
                 Chain.Sei -> "https://seiscan.io/"
-                Chain.Hyperliquid -> "https://hypurrscan.io/"
+                // hypurrscan serves HyperEVM txs only under /evm/tx/; its bare /tx/ path errors
+                // (code=358). hyperevmscan is Etherscan-style, so /tx/ and /address/ resolve via
+                // the generic paths below with no special-casing.
+                Chain.Hyperliquid -> "https://hyperevmscan.io/"
                 Chain.Qbtc -> "" // no public explorer yet
             }
 }

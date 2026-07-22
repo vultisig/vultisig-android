@@ -28,11 +28,11 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import java.math.BigInteger
-import java.net.SocketTimeoutException
 import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
@@ -88,9 +88,11 @@ interface EvmApi {
      * balance (via `Multicall3.getEthBalance`); non-empty entries request `ERC20.balanceOf`.
      *
      * Returns a map keyed by each input contract address (the native "" key included) to its
-     * balance, with failed sub-calls decoded as [BigInteger.ZERO]. Falls back to per-token
+     * balance. A sub-call that fails is omitted from the map (never mapped to [BigInteger.ZERO]) so
+     * the caller keeps its cached value instead of persisting a fake 0 (#5308); a genuine on-chain
+     * zero is present with value [BigInteger.ZERO]. Falls back to per-token
      * [getERC20Balance]/[getBalance] on chains without a canonical Multicall3, for a single
-     * address, or when the multicall errors — keeping results byte-identical to the per-token path.
+     * address, or when the multicall errors.
      */
     suspend fun getBalances(
         address: String,
@@ -149,22 +151,14 @@ class EvmApiImp(
     private val chain: Chain,
 ) : EvmApi {
 
-    override suspend fun getBalance(coin: Coin): BigInteger {
-        return try {
-            if (coin.isNativeToken) getETHBalance(coin.address)
-            else getERC20Balance(coin.address, coin.contractAddress)
-        } catch (e: SocketTimeoutException) {
-            Timber.d("request time out, message: ${e.message}")
-            BigInteger.ZERO
-        } catch (e: NetworkException) {
-            Timber.d(
-                "RPC error fetching balance: status=%d message=%s",
-                e.httpStatusCode,
-                e.message,
-            )
-            BigInteger.ZERO
-        }
-    }
+    // A failed read must propagate, never collapse into ZERO: a zero is indistinguishable from a
+    // genuinely empty account and would be persisted over the last-known balance, reading as "my
+    // funds disappeared" (#5308). Letting it throw lets AccountsRepository's per-chain catch keep
+    // the cached value. A healthy node returning `0x0` for an empty account still resolves to a
+    // real zero inside the helpers below.
+    override suspend fun getBalance(coin: Coin): BigInteger =
+        if (coin.isNativeToken) getETHBalance(coin.address)
+        else getERC20Balance(coin.address, coin.contractAddress)
 
     override suspend fun getERC20Balance(address: String, contractAddress: String): BigInteger {
         val rpcResp =
@@ -182,25 +176,36 @@ class EvmApiImp(
                 },
             )
         if (rpcResp.error != null) {
-            Timber.d(
-                "get erc20 balance,contract: $contractAddress,address: $address error: ${rpcResp.error.message}"
+            // An RPC-level error (rate limiting, node error) is a failed read, not an empty
+            // balance — surface it so the balance layer keeps the cached value (#5308).
+            throw NetworkException(
+                httpStatusCode = 0,
+                message =
+                    "erc20 balance rpc error, contract=$contractAddress address=$address: " +
+                        "${rpcResp.error.message}",
             )
-            return BigInteger.ZERO
         }
-        return rpcResp.result?.let {
-            try {
-                EthereumFunction.balanceErc20Decoder(it)
-            } catch (e: Exception) {
-                Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: $e")
-                BigInteger.ZERO
-            }
-        }
-            ?: run {
-                Timber.d(
-                    "get erc20 balance,contract: $contractAddress,address: $address error: response is null"
+        // A null result or a decode failure is a malformed read, not a genuine zero (a healthy node
+        // returns a 32-byte zero word for an empty balance, which decodes cleanly). Propagate so
+        // the
+        // cached balance is kept rather than overwritten with a fake 0 (#5308).
+        val result =
+            rpcResp.result
+                ?: throw NetworkException(
+                    httpStatusCode = 0,
+                    message =
+                        "erc20 balance null result, contract=$contractAddress address=$address",
                 )
-                BigInteger.ZERO
-            }
+        return try {
+            EthereumFunction.balanceErc20Decoder(result)
+        } catch (e: Exception) {
+            throw NetworkException(
+                httpStatusCode = 0,
+                message =
+                    "erc20 balance decode failed, contract=$contractAddress address=$address: " +
+                        "${e.message}",
+            )
+        }
     }
 
     override suspend fun getBalances(
@@ -256,11 +261,16 @@ class EvmApiImp(
                 return fetchBalancesPerToken(address, contractAddresses)
             }
 
+        // A failed read for a single token — the sub-call reports `success == false`, or reports
+        // success but carries empty/malformed data that can't be decoded (a non-standard token, a
+        // proxy returning no data without reverting) — is not a zero balance. Omit it from the map
+        // (rather than mapping to ZERO) so the caller keeps its cached value and never persists a
+        // fake 0 (#5308). A genuine on-chain zero is a full zero word and decodes to ZERO.
         return contractAddresses
-            .mapIndexed { index, contract ->
+            .mapIndexedNotNull { index, contract ->
                 val r = decoded[index]
-                contract to
-                    if (r.success) Multicall3.decodeUint256Word(r.returnData) else BigInteger.ZERO
+                if (!r.success) null
+                else Multicall3.decodeUint256WordOrNull(r.returnData)?.let { contract to it }
             }
             .toMap()
     }
@@ -272,31 +282,26 @@ class EvmApiImp(
         contractAddresses
             .map { contract ->
                 async {
-                    contract to
-                        try {
+                    try {
+                        contract to
                             if (contract.isEmpty()) getETHBalance(address)
                             else getERC20Balance(address, contract)
-                        } catch (e: SocketTimeoutException) {
-                            Timber.d(
-                                "per-token balance timeout, contract=%s address=%s message=%s",
-                                contract,
-                                address,
-                                e.message,
-                            )
-                            BigInteger.ZERO
-                        } catch (e: NetworkException) {
-                            Timber.d(
-                                "per-token balance RPC error, contract=%s address=%s status=%d message=%s",
-                                contract,
-                                address,
-                                e.httpStatusCode,
-                                e.message,
-                            )
-                            BigInteger.ZERO
-                        }
+                    } catch (e: NetworkException) {
+                        // Failed read — omit the token so its cached balance is preserved rather
+                        // than overwritten with a fake 0 (#5308).
+                        Timber.d(
+                            "per-token balance failed, contract=%s address=%s status=%d message=%s",
+                            contract,
+                            address,
+                            e.httpStatusCode,
+                            e.message,
+                        )
+                        null
+                    }
                 }
             }
             .awaitAll()
+            .filterNotNull()
             .toMap()
     }
 
@@ -310,10 +315,31 @@ class EvmApiImp(
                 },
             )
         if (rpcResp.error != null) {
-            Timber.d("get balance ,address: $address error: ${rpcResp.error.message}")
-            return BigInteger.ZERO
+            // A failed read, not an empty account — propagate so the cached balance is kept
+            // (#5308).
+            throw NetworkException(
+                httpStatusCode = 0,
+                message = "eth balance rpc error, address=$address: ${rpcResp.error.message}",
+            )
         }
-        return rpcResp.result.convertToBigIntegerOrZero()
+        // A null/malformed result with no explicit error is still a failed read, not an empty
+        // account (a healthy node returns "0x0" for zero) — propagate so the cached balance is kept
+        // (#5308).
+        val cleaned = rpcResp.result?.removePrefix("0x")
+        if (cleaned.isNullOrEmpty()) {
+            throw NetworkException(
+                httpStatusCode = 0,
+                message = "eth balance null result, address=$address",
+            )
+        }
+        return try {
+            BigInteger(cleaned, 16)
+        } catch (e: NumberFormatException) {
+            throw NetworkException(
+                httpStatusCode = 0,
+                message = "eth balance malformed result, address=$address: ${rpcResp.result}",
+            )
+        }
     }
 
     override suspend fun getNonce(address: String): BigInteger {
@@ -480,28 +506,36 @@ class EvmApiImp(
         val jsonObject = response.bodyOrThrow<SendTransactionJson>()
         if (jsonObject.error != null) {
             val message = jsonObject.error.message
-            if (
-                message.contains(ERROR_KNOWN) ||
-                    message.contains(ERROR_ALREADY_KNOWN) ||
-                    message.contains(ERROR_TEMPORARILY_BANNED) ||
-                    message.contains(ERROR_NONCE_TOO_LOW_NEXT) ||
-                    message.contains(ERROR_NONCE_TOO_LOW_RANGE) ||
-                    message.contains(ERROR_TX_ALREADY_EXISTS) ||
-                    message.contains(
-                        ERROR_NONCE_TOO_LOW_ADDRESS
-                    ) || // this message happens on layer 2
-                    message.contains(ERROR_TX_IN_MEMPOOL) ||
-                    message.contains(ERROR_EXISTING_TX) ||
-                    message.contains(ERROR_TX_IN_CACHE) ||
-                    message.contains(ERROR_CODE_10055)
-            ) {
-                // even the server returns an error , but this still consider as success
-                return Numeric.hexStringToByteArray(signedTransaction).toKeccak256()
-            } else {
-                throw Exception(responseBody)
+            val localHash = Numeric.hexStringToByteArray(signedTransaction).toKeccak256()
+            return when {
+                // The node already holds our exact signed bytes, so the deterministic keccak hash
+                // is the canonical on-chain id — safe to report without re-verifying. Match the
+                // "known" concept case-insensitively ("already known", "known transaction: 0x…")
+                // while excluding the "unknown sender/block/method" collision, which is a real
+                // rejection.
+                message.contains("known", ignoreCase = true) &&
+                    !message.contains("unknown", ignoreCase = true) -> localHash
+                ALREADY_BROADCAST_ERRORS.any { message.contains(it) } -> localHash
+                // Ambiguous errors: our own tx may have mined, or a DIFFERENT tx consumed the nonce
+                // (stale spec-build nonce, another wallet), or the tx-pool banned a permanently
+                // invalid tx. Only report success if OUR hash is actually on chain; otherwise
+                // surface the error.
+                VERIFY_BEFORE_SUCCESS_ERRORS.any { message.contains(it) } ->
+                    if (isTxMined(localHash)) localHash else throw Exception(responseBody)
+                else -> throw Exception(responseBody)
             }
         }
         return jsonObject.result ?: error("send transaction failed")
+    }
+
+    // Confirms a specific tx hash landed by looking up its receipt (present only once mined, which
+    // is exactly the "nonce too low" case). Retries briefly to absorb receipt propagation lag.
+    private suspend fun isTxMined(txHash: String): Boolean {
+        repeat(TX_MINED_ATTEMPTS) { attempt ->
+            if (attempt > 0) delay(TX_MINED_BACKOFF_MS)
+            if (getTxStatus(txHash)?.result != null) return true
+        }
+        return false
     }
 
     override suspend fun findCustomToken(contractAddress: String): List<CustomTokenResponse> {
@@ -733,17 +767,27 @@ class EvmApiImp(
         private const val FETCH_ADDRESS_PREFIX = "0x3b3b57de"
         private const val ENS_REGISTRY_ADDRESS = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
 
-        private const val ERROR_KNOWN = "known"
-        private const val ERROR_ALREADY_KNOWN = "already known"
-        private const val ERROR_TEMPORARILY_BANNED = "Transaction is temporarily banned"
-        private const val ERROR_NONCE_TOO_LOW_NEXT = "nonce too low: next nonce"
-        private const val ERROR_NONCE_TOO_LOW_RANGE = "nonce too low. allowed nonce range:"
-        private const val ERROR_TX_ALREADY_EXISTS = "transaction already exists"
-        private const val ERROR_NONCE_TOO_LOW_ADDRESS = "nonce too low: address"
-        private const val ERROR_TX_IN_MEMPOOL = "tx already in mempool"
-        private const val ERROR_EXISTING_TX = "existing tx"
-        private const val ERROR_TX_IN_CACHE = "tx already exists in cache"
-        private const val ERROR_CODE_10055 = "code=10055"
+        // Node already has our exact signed tx; the keccak hash of our bytes is canonical.
+        private val ALREADY_BROADCAST_ERRORS =
+            listOf(
+                "transaction already exists",
+                "tx already in mempool",
+                "existing tx",
+                "tx already exists in cache",
+                "code=10055",
+            )
+        // Ambiguous — the nonce may be consumed by a different tx, or the tx-pool bans permanently
+        // invalid txs (Substrate), so verify our hash landed before treating as success.
+        private val VERIFY_BEFORE_SUCCESS_ERRORS =
+            listOf(
+                "nonce too low: next nonce",
+                "nonce too low. allowed nonce range:",
+                "nonce too low: address", // this message happens on layer 2
+                "Transaction is temporarily banned",
+            )
+
+        private const val TX_MINED_ATTEMPTS = 3
+        private const val TX_MINED_BACKOFF_MS = 2_000L
 
         // OP-stack GasPriceOracle predeploy, identical across all OP-stack L2s.
         private const val OP_STACK_GAS_PRICE_ORACLE = "0x420000000000000000000000000000000000000F"

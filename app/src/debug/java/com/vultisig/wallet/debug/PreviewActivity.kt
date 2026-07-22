@@ -38,12 +38,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBlockedReason
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
@@ -83,6 +86,8 @@ import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyValidatorRow
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
+import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
+import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.governance.GovernanceUiState
 import com.vultisig.wallet.ui.models.governance.ProposalStatus
 import com.vultisig.wallet.ui.models.governance.ProposalUi
@@ -116,15 +121,20 @@ import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingPositionsConten
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingVerifyContent
 import com.vultisig.wallet.ui.screens.cosmosstaking.StakingPositionSkeleton
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
+import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
+import com.vultisig.wallet.ui.screens.keysign.KeysignErrorScreen
 import com.vultisig.wallet.ui.screens.keysign.KeysignView
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimScreen
 import com.vultisig.wallet.ui.screens.qbtc.QuantumSecurityIntroScreenContent
 import com.vultisig.wallet.ui.screens.referral.ContentRow
 import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
+import com.vultisig.wallet.ui.screens.select.AssetUiModel
+import com.vultisig.wallet.ui.screens.select.SelectAssetScreen
+import com.vultisig.wallet.ui.screens.select.SelectAssetUiModel
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
@@ -144,6 +154,7 @@ import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
+import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
@@ -178,6 +189,7 @@ class PreviewActivity : ComponentActivity() {
             OnBoardingComposeTheme {
                 when (screen) {
                     "swap_confirm" -> SwapConfirmPreview()
+                    "swap_confirm_chain" -> SwapChainIndicatorPreview()
                     "swap_confirm_disabled" -> SwapConfirmPreview(allConsents = false)
                     "swap_confirm_external_recipient" ->
                         SwapConfirmPreview(
@@ -187,6 +199,7 @@ class PreviewActivity : ComponentActivity() {
                     "camera_button" -> CameraButton(onClick = {})
                     "banner" -> BannerPreview()
                     "send_tx_done" -> SendTxDonePreview()
+                    "deposit_mint_done" -> DepositMintDonePreview()
                     "transaction_history_empty" -> TransactionHistoryEmptyState()
                     "empty_referral" -> EmptyReferralBanner(onClickedCreateReferral = {})
                     "fast_vault_verification" -> FastVaultVerificationPreview()
@@ -197,6 +210,13 @@ class PreviewActivity : ComponentActivity() {
                     "choose_vault" -> SelectVaultTypeScreenPreview()
                     "content_row" -> ContentRowPreview()
                     "solana_display" -> SolanaDisplayPreview()
+                    "solana_batch_verify" -> SolanaBatchVerifySendPreview(transactionCount = 2)
+                    "solana_batch_verify_before" ->
+                        SolanaBatchVerifySendPreview(transactionCount = 1)
+                    "solana_batch_verify_expanded" ->
+                        SolanaBatchVerifySendPreview(transactionCount = 2, expanded = true)
+                    "solana_batch_verify_before_expanded" ->
+                        SolanaBatchVerifySendPreview(transactionCount = 1, expanded = true)
                     "ton_display_single" -> TonDisplayPreview(messageCount = 1)
                     "ton_display_multi" -> TonDisplayPreview(messageCount = 4)
                     "verify_ton_jetton_before" -> VerifyTonJettonPreview(decoded = false)
@@ -212,8 +232,13 @@ class PreviewActivity : ComponentActivity() {
                     "swap_advanced_slippage" -> AdvancedSlippagePreview()
                     "swap_advanced_gas_limit" -> AdvancedGasLimitPreview()
                     "swap_advanced_external_recipient" -> AdvancedExternalRecipientPreview()
+                    "select_asset_secured_before" -> SelectAssetSecuredPreview(showSecured = false)
+                    "select_asset_secured_after" -> SelectAssetSecuredPreview(showSecured = true)
                     "import_seedphrase" -> ImportSeedphrasePreview()
                     "defi_account_list" -> DeFiAccountListPreview()
+                    "solana_staking_positions" -> SolanaStakingPositionsLoadedPreview()
+                    "solana_staking_positions_empty" -> SolanaStakingPositionsEmptyPreview()
+                    "solana_delegate" -> SolanaDelegatePreview()
                     "share_qr_keysign" -> ShareQrKeysignPreview()
                     "share_qr_keysign_swap" -> ShareQrKeysignSwapPreview()
                     "share_qr_keygen" -> ShareQrKeygenPreview()
@@ -279,8 +304,12 @@ class PreviewActivity : ComponentActivity() {
                     "vault_detail_no_mldsa" -> VaultDetailPreview(withMldsa = false)
                     "vault_detail_mldsa" -> VaultDetailPreview(withMldsa = true)
                     "error_screen_after" -> ErrorScreenAfterPreview()
+                    "qbtc_unknown_address_before" -> QbtcUnknownAddressBeforePreview()
+                    "qbtc_unknown_address_after" -> QbtcUnknownAddressAfterPreview()
                     "chain_selection" -> ChainSelectionClipPreview()
                     "verify_send_empty_memo" -> VerifySendEmptyMemoPreview()
+                    "unbond_verify_before" -> UnbondVerifyPreview(after = false)
+                    "unbond_verify_after" -> UnbondVerifyPreview(after = true)
                     else -> SwapConfirmPreview()
                 }
             }
@@ -333,6 +362,42 @@ private fun ErrorScreenAfterPreview() {
             ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = {}),
         onBack = {},
     )
+}
+
+/**
+ * Reproduces the pre-#5043-fix keysign error screen for a QBTC/Cosmos `code=9` ("unknown address")
+ * broadcast rejection: the generic broadcast-rejected copy interpolates the node's raw_log
+ * verbatim, including its undecodable fee-payer address bytes.
+ */
+@Composable
+private fun QbtcUnknownAddressBeforePreview() {
+    KeysignErrorScreen(
+        errorMessage =
+            UiText.DynamicString(
+                "broadcast_failure: fee payer address: ��� does not exist: " + "unknown address"
+            ),
+        tryAgain = {},
+        onBack = {},
+    )
+}
+
+/**
+ * The fixed keysign error screen for the same `code=9` rejection: [CosmosBroadcastException.from]
+ * now tags it with [CosmosBroadcastException.UNKNOWN_ADDRESS_MARKER], so the screen shows a
+ * friendly "fund the wallet" message instead of the raw node text.
+ */
+@Composable
+private fun QbtcUnknownAddressAfterPreview() {
+    val message =
+        CosmosBroadcastException.from(
+                code = 9,
+                codespace = "sdk",
+                rawLog = "fee payer address: ��� does not exist: unknown address",
+                txHash = null,
+            )
+            .message
+            .orEmpty()
+    KeysignErrorScreen(errorMessage = UiText.DynamicString(message), tryAgain = {}, onBack = {})
 }
 
 @Composable
@@ -647,6 +712,48 @@ private fun SwapConfirmPreview(allConsents: Boolean = true, externalRecipient: S
     )
 }
 
+/**
+ * Swap overview with a native From asset (BTC) and a token To asset (USDC on Ethereum). Before the
+ * fix the From row omits the "on <chain>" indicator that the To row shows; after the fix both rows
+ * render it, so the two sides communicate their chain consistently.
+ */
+@Composable
+private fun SwapChainIndicatorPreview() {
+    val btcCoin = Coins.Bitcoin.BTC
+    val usdcCoin = Coins.Ethereum.USDC
+    val ethCoin = Coins.Ethereum.ETH
+
+    val tx =
+        SwapTransactionUiModel(
+            src = ValuedToken(token = btcCoin, value = "0.05", fiatValue = "$3,820.00"),
+            dst = ValuedToken(token = usdcCoin, value = "3,810.42", fiatValue = "$3,810.42"),
+            networkFee = ValuedToken(token = ethCoin, value = "0.0024", fiatValue = "$6.15"),
+            providerFee = ValuedToken(token = ethCoin, value = "0.0045", fiatValue = "$11.52"),
+            totalFee = "$17.67",
+            networkFeeFormatted = "0.0024 ETH ($6.15)",
+            providerFeeFormatted = "0.0045 ETH ($11.52)",
+            hasConsentAllowance = false,
+        )
+
+    VerifySwapScreen(
+        state =
+            VerifySwapUiModel(
+                tx = tx,
+                consentAmount = true,
+                consentReceiveAmount = true,
+                consentAllowance = false,
+                hasFastSign = true,
+                txScanStatus = TransactionScanStatus.NotStarted,
+                vaultName = "Main Vault",
+            ),
+        hasToolbar = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onBackClick = {},
+    )
+}
+
 @Composable
 private fun FastVaultVerificationPreview() {
     FastVaultVerificationScreen(
@@ -690,6 +797,50 @@ private fun BondFormMayaPreview() {
         operatorFeeFieldState = TextFieldState(),
         tokenAmountFieldState = TextFieldState(),
         lpUnitsFieldState = TextFieldState("0"),
+    )
+}
+
+// Two unsigned System Program transfers; valid wire format so WalletCore decodes real instructions.
+private val SOLANA_BATCH_PREVIEW_TXS =
+    listOf(
+        "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAABAAEDfowIh2C/3h3dzzLBfyCbgkLuUqrxMfrNiNDqLG0LBvIr5RSn91UOtIIAsZJK" +
+            "26JaVZJJXZnPHQdXahEOnHb/fAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAxJrndgN4" +
+            "IFTxep3s6kO0ROug7bEsbx0xxuDkqEvwUusBAgIAAQwCAAAAgLLmDgAAAAA=",
+        "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAABAAEDfowIh2C/3h3dzzLBfyCbgkLuUqrxMfrNiNDqLG0LBvJhSg5NXp2oPpX2ZykH" +
+            "RRz279NzOiYl6BcT8F6LrGfVoQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAxJrndgN4" +
+            "IFTxep3s6kO0ROug7bEsbx0xxuDkqEvwUusBAgIAAQwCAAAAAOH1BQAAAAA=",
+    )
+
+@Composable
+private fun SolanaBatchVerifySendPreview(transactionCount: Int, expanded: Boolean = false) {
+    VerifySendScreen(
+        state =
+            VerifyTransactionUiModel(
+                transaction =
+                    TransactionDetailsUiModel(
+                        token =
+                            ValuedToken(token = Coins.Solana.SOL, value = "0", fiatValue = "$0.00"),
+                        srcAddress = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+                        srcVaultName = "Main Vault",
+                        dstAddress = "3xM8c79mk7fvcz5ENZgMbChPJGWZAjFqwdDzZp4R2gHR",
+                        networkFeeFiatValue = "$0.01",
+                        networkFeeTokenValue = "0.000005 SOL",
+                        signSolana = SOLANA_BATCH_PREVIEW_TXS.take(transactionCount),
+                    )
+            ),
+        isConsentsEnabled = false,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+        initiallyExpandedDetails = expanded,
     )
 }
 
@@ -960,6 +1111,42 @@ private fun SendTxDonePreview() {
 }
 
 @Composable
+private fun DepositMintDonePreview() {
+    SendTxOverviewScreen(
+        showToolbar = true,
+        showSaveToAddressBook = false,
+        transactionHash = "EEBE3...69B9B",
+        transactionLink = "",
+        transactionStatus = TransactionStatus.Confirmed,
+        onComplete = {},
+        onBack = {},
+        onAddToAddressBook = {},
+        tx =
+            TransactionTypeUiModel.Deposit(
+                    DepositTransactionUiModel(
+                        token =
+                            ValuedToken(
+                                token = Coins.MayaChain.CACAO,
+                                value = "1 CACAO",
+                                fiatValue = "$0.12",
+                            ),
+                        srcAddress = "maya12a9rpf9u2ul4x7nde8um6z3zm",
+                        srcVaultName = "AE_QBTC_SAM",
+                        dstAddress = "",
+                        operation = "Mint",
+                        pool = "ARB.GLD-0XAFD091F140C21770F4E5D53D26B2859AE97555AA",
+                        memo = "+:ARB.GLD-0XAFD091F140C21770F4E5D53D26B2859AE97555AA",
+                        networkFeeTokenValue = "0.2 CACAO",
+                        networkFeeFiatValue = "$0.02",
+                    )
+                )
+                .toUiTransactionInfo(),
+        isTransactionDetailVisible = true,
+        onTransactionDetailVisibleChange = {},
+    )
+}
+
+@Composable
 private fun ContentRowPreview() {
     Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         ContentRow(text = "ABCD-1234") { UiIcon(drawableResId = R.drawable.ic_copy, size = 18.dp) }
@@ -1169,6 +1356,39 @@ private fun BlockaidHeroVerifySendPreview() {
         onConfirmScanning = {},
         onDismissScanning = {},
         hasToolbar = true,
+    )
+}
+
+/**
+ * THORChain Unbond "Function overview" confirmation (#5301). [after] = false reproduces the
+ * reported bug: the generic "You're sending" header and raw `thor1…` From/To. [after] = true is the
+ * fix — "Unbonding" header and From/To formatted as "VaultName (address)" (the destination is the
+ * vault's own self-operated node, so it resolves to the vault name). Data mirrors the issue
+ * screenshot.
+ */
+@Composable
+private fun UnbondVerifyPreview(after: Boolean) {
+    val nodeAddress = "thor12a9rpf9u2ulwuezxkh6uas4au7xnde8umdua5t"
+    val tx =
+        DepositTransactionUiModel(
+            token = ValuedToken(token = Coins.ThorChain.RUNE, value = "0", fiatValue = "$0.00"),
+            networkFeeTokenValue = "0.02 RUNE",
+            networkFeeFiatValue = "$0.00843",
+            srcAddress = nodeAddress,
+            dstAddress = nodeAddress,
+            srcVaultName = if (after) "Main Vault" else null,
+            dstVaultName = if (after) "Main Vault" else null,
+            memo = "UNBOND:$nodeAddress:75000000",
+            titleRes =
+                if (after) R.string.verify_deposit_unbonding else R.string.verify_deposit_sending,
+        )
+    VerifyDepositScreen(
+        state = VerifyDepositUiModel(depositTransactionUiModel = tx, isLoading = false),
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onFastSignClick = {},
+        onConfirm = {},
+        onBackClick = {},
     )
 }
 
@@ -1634,6 +1854,136 @@ private fun SelectChainPopupPreview() {
         itemContent = { item, distanceFromCenter ->
             ChainSelectorPickerItem(item = item, distanceFromCenter = distanceFromCenter)
         },
+    )
+}
+
+private fun securedAssetCoin(ticker: String, contractAddress: String): Coin =
+    Coins.ThorChain.RUNE.copy(
+        ticker = ticker,
+        logo = ticker.lowercase(),
+        contractAddress = contractAddress,
+        isNativeToken = false,
+        decimal = 8,
+    )
+
+/**
+ * Renders the swap destination picker over the swap form. `showSecured = false` reproduces the
+ * pre-fix catalog (no THORChain secured assets); `showSecured = true` adds them with their
+ * "Secured" badge (issue #5251).
+ */
+@Composable
+private fun SelectAssetSecuredPreview(showSecured: Boolean) {
+    SwapScreen(state = SwapFormUiModel(), srcAmountTextFieldState = TextFieldState())
+
+    val heldAssets =
+        listOf(
+            AssetUiModel(
+                token = Coins.ThorChain.RUNE,
+                logo = getCoinLogo(Coins.ThorChain.RUNE.logo),
+                title = "RUNE",
+                subtitle = Chain.ThorChain.raw,
+                amount = "128.42",
+                value = "$591.30",
+            ),
+            AssetUiModel(
+                token = Coins.ThorChain.TCY,
+                logo = getCoinLogo(Coins.ThorChain.TCY.logo),
+                title = "TCY",
+                subtitle = Chain.ThorChain.raw,
+                amount = "40.00",
+                value = "$12.60",
+            ),
+        )
+    val catalogAssets =
+        listOfNotNull(
+            AssetUiModel(
+                token = Coins.ThorChain.RUJI,
+                logo = getCoinLogo(Coins.ThorChain.RUJI.logo),
+                title = "RUJI",
+                subtitle = Chain.ThorChain.raw,
+                amount = "0",
+                value = "0",
+                isDisabled = true,
+            ),
+            securedAssetCoin(ticker = "BTC", contractAddress = "btc-btc")
+                .let { coin ->
+                    AssetUiModel(
+                        token = coin,
+                        logo = getCoinLogo(coin.logo),
+                        title = coin.ticker,
+                        subtitle = Chain.ThorChain.raw,
+                        amount = "0",
+                        value = "0",
+                        isDisabled = true,
+                        isSecuredAsset = true,
+                    )
+                }
+                .takeIf { showSecured },
+            securedAssetCoin(ticker = "ETH", contractAddress = "eth-eth")
+                .let { coin ->
+                    AssetUiModel(
+                        token = coin,
+                        logo = getCoinLogo(coin.logo),
+                        title = coin.ticker,
+                        subtitle = Chain.ThorChain.raw,
+                        amount = "0",
+                        value = "0",
+                        isDisabled = true,
+                        isSecuredAsset = true,
+                    )
+                }
+                .takeIf { showSecured },
+            // Two different chains' USDC both survive as distinct rows (Johnny's P1: same
+            // ticker on different underlying chains must not collide/drop one).
+            securedAssetCoin(
+                    ticker = "USDC",
+                    contractAddress = "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                )
+                .let { coin ->
+                    AssetUiModel(
+                        token = coin,
+                        logo = getCoinLogo(coin.logo),
+                        title = coin.ticker,
+                        subtitle = Chain.ThorChain.raw,
+                        amount = "0",
+                        value = "0",
+                        isDisabled = true,
+                        isSecuredAsset = true,
+                    )
+                }
+                .takeIf { showSecured },
+            securedAssetCoin(
+                    ticker = "USDC",
+                    contractAddress = "avax-usdc-0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e",
+                )
+                .let { coin ->
+                    AssetUiModel(
+                        token = coin,
+                        logo = getCoinLogo(coin.logo),
+                        title = coin.ticker,
+                        subtitle = Chain.ThorChain.raw,
+                        amount = "0",
+                        value = "0",
+                        isDisabled = true,
+                        isSecuredAsset = true,
+                    )
+                }
+                .takeIf { showSecured },
+        )
+
+    SelectAssetScreen(
+        state =
+            SelectAssetUiModel(
+                selectedChain = Chain.ThorChain,
+                chains =
+                    listOf(Chain.ThorChain, Chain.Bitcoin, Chain.Ethereum).map {
+                        it.toNetworkUiModel()
+                    },
+                assets = heldAssets + catalogAssets,
+            ),
+        searchFieldState = TextFieldState(),
+        onAssetClick = {},
+        onSelectChain = {},
     )
 }
 
@@ -2310,6 +2660,140 @@ private fun CosmosStakingPositionsEmptyPreview() {
 /**
  * Populated state — one active delegation with rewards, so the Claim button + a position card show.
  */
+private fun solanaStakingPreviewRow(
+    stakePubkey: String,
+    validatorName: String,
+    staked: String,
+    fiat: String,
+    stateLabel: String,
+    apy: String?,
+    canManage: Boolean,
+    canUnstake: Boolean,
+    canWithdraw: Boolean,
+    state: com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState =
+        com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState.Active,
+) =
+    com.vultisig.wallet.ui.models.solanastaking.SolanaStakePositionRow(
+        stakePubkey = stakePubkey,
+        validatorName = validatorName,
+        validatorAddressDisplay = "CV4X…NNFz",
+        validatorLogoUrl = null,
+        votePubkey = null,
+        stakedDisplay = "$staked SOL",
+        stakedFiatDisplay = fiat,
+        rentReserveDisplay = "0.00228288 SOL",
+        state = state,
+        stateLabel = com.vultisig.wallet.ui.utils.UiText.DynamicString(stateLabel),
+        apyDisplay = apy,
+        canManage = canManage,
+        canUnstake = canUnstake,
+        canWithdraw = canWithdraw,
+        accountLamports = java.math.BigInteger.ZERO,
+    )
+
+@Composable
+private fun SolanaStakingPositionsLoadedPreview() {
+    com.vultisig.wallet.ui.screens.v2.defi.solana.SolanaStakingPositionsContent(
+        state =
+            com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState(
+                isLoading = false,
+                totalStakedFiatDisplay = "$78.04",
+                totalStakedSolDisplay = "1 SOL",
+                positions =
+                    listOf(
+                        solanaStakingPreviewRow(
+                            stakePubkey = "6nJq...aWWM",
+                            validatorName = "Helius",
+                            staked = "1",
+                            fiat = "$78.04",
+                            stateLabel = "Active",
+                            apy = "5.55%",
+                            canManage = true,
+                            canUnstake = true,
+                            canWithdraw = false,
+                        ),
+                        // Deactivating (cooling down) shows Move/Stake but not Unstake.
+                        solanaStakingPreviewRow(
+                            stakePubkey = "CV4X...NNFz",
+                            validatorName = "Jupiter",
+                            staked = "1",
+                            fiat = "$77.97",
+                            stateLabel = "Deactivating",
+                            apy = "5.26%",
+                            canManage = true,
+                            canUnstake = false,
+                            canWithdraw = false,
+                            state =
+                                com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState
+                                    .Deactivating,
+                        ),
+                        // Fully Inactive → Withdraw + Finish Move.
+                        solanaStakingPreviewRow(
+                            stakePubkey = "D1ST...T2jy",
+                            validatorName = "Figment",
+                            staked = "1",
+                            fiat = "$77.99",
+                            stateLabel = "Inactive",
+                            apy = "5.54%",
+                            canManage = false,
+                            canUnstake = false,
+                            canWithdraw = true,
+                            state =
+                                com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState
+                                    .Inactive,
+                        ),
+                    ),
+                isBalanceVisible = true,
+            )
+    )
+}
+
+@Composable
+private fun SolanaDelegatePreview() {
+    com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold(
+        title = "Stake SOL",
+        onBackClick = {},
+    ) {
+        com.vultisig.wallet.ui.screens.v2.defi.solana.SolanaDelegateContent(
+            state =
+                com.vultisig.wallet.ui.models.solanastaking.SolanaDelegateUiState(
+                    ticker = "SOL",
+                    stakeableBalance = java.math.BigDecimal("0.094468061"),
+                    percentageSelected = 100,
+                    selectedValidator =
+                        com.vultisig.wallet.ui.models.solanastaking.SolanaValidatorOption(
+                            votePubkey = "Figment111",
+                            name = "Figment",
+                            logoUrl = null,
+                            activatedStakeDisplay = "16,179,362 SOL",
+                            commissionDisplay = "7%",
+                            apyDisplay = "5.15%",
+                        ),
+                    isLoading = false,
+                ),
+            amountFieldState =
+                androidx.compose.foundation.text.input.rememberTextFieldState("0.094468061"),
+            onPercentage = {},
+            onPickValidator = {},
+            onSubmit = {},
+        )
+    }
+}
+
+@Composable
+private fun SolanaStakingPositionsEmptyPreview() {
+    com.vultisig.wallet.ui.screens.v2.defi.solana.SolanaStakingPositionsContent(
+        state =
+            com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState(
+                isLoading = false,
+                totalStakedFiatDisplay = "$0.00",
+                totalStakedSolDisplay = "0 SOL",
+                positions = emptyList(),
+                isBalanceVisible = true,
+            )
+    )
+}
+
 @Composable
 private fun CosmosStakingPositionsWithDelegationPreview() {
     CosmosStakingPositionsPreviewHost(

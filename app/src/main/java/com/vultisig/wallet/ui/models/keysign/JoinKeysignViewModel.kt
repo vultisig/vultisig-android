@@ -479,7 +479,6 @@ constructor(
                 Timber.d(e, "Socket timeout during QR scan")
                 _currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.d(e, "Failed to parse QR code")
                 _currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
             }
@@ -617,7 +616,9 @@ constructor(
                 )
 
             isDepositPayload(payload) ->
-                applyVerifyResult(joinDepositUiModelBuilder.build(payload, vaultId))
+                // Resolve against _currentVault (post auto-switch), matching the swap/send builders
+                // and the done-screen, so a vault-switched ceremony shows one From name everywhere.
+                applyVerifyResult(joinDepositUiModelBuilder.build(payload, _currentVault.id))
 
             else -> {
                 val sendResult =

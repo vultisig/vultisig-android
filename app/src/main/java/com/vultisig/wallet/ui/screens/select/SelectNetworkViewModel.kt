@@ -9,13 +9,12 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
-import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.isSwapSupported
+import com.vultisig.wallet.data.models.nativeTokenTicker
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.models.NetworkUiModel
 import com.vultisig.wallet.ui.models.consolidateEvm
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -112,7 +111,7 @@ constructor(
                         .filter { (chain) ->
                             val matchesQuery =
                                 chain.raw.contains(query, ignoreCase = true) ||
-                                    chain.coinType.symbol.contains(query, ignoreCase = true)
+                                    chain.nativeTokenTicker.contains(query, ignoreCase = true)
                             val matchesFilter =
                                 when (args.filters) {
                                     Filters.SwapAvailable -> chain.isSwapSupported

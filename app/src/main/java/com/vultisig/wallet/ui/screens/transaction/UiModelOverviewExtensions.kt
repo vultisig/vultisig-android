@@ -27,6 +27,7 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
                 approvalSpender = this.tx.approvalSpender,
                 approvalTokenTicker = this.tx.approvalTokenTicker,
                 heroContent = this.tx.heroContent,
+                signRipple = this.tx.signRipple,
             )
         }
         is TransactionTypeUiModel.Deposit -> {
@@ -42,6 +43,8 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
                 memo = this.depositTransactionUiModel.memo,
                 networkFeeFiatValue = this.depositTransactionUiModel.networkFeeFiatValue,
                 networkFeeTokenValue = this.depositTransactionUiModel.networkFeeTokenValue,
+                operation = this.depositTransactionUiModel.operation,
+                pool = this.depositTransactionUiModel.pool,
             )
         }
         is TransactionTypeUiModel.SignMessage -> {

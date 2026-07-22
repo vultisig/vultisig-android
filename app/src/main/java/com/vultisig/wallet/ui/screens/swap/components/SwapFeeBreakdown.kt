@@ -166,21 +166,26 @@ internal fun SwapFeeBreakdown(
                                 } else null,
                         )
 
-                        val feeTitle =
-                            feeBreakdown.swapFeePercent?.let {
-                                stringResource(
-                                    R.string.swap_form_estimated_fees_with_percent_title,
-                                    it,
-                                )
-                            } ?: stringResource(R.string.swap_form_estimated_fees_title)
-                        FormDetails2(
-                            title = feeTitle,
-                            value = feeBreakdown.fee,
-                            placeholder =
-                                if (isLoading) {
-                                    { loadingPlaceholder() }
-                                } else null,
-                        )
+                        // A blank fee means the swap fee is zeroed (SwapKit UTXO/Cardano deposit
+                        // cost is already the Network Fee); hide the row entirely rather than show
+                        // a redundant "$0.00", matching iOS.
+                        if (feeBreakdown.fee.isNotBlank()) {
+                            val feeTitle =
+                                feeBreakdown.swapFeePercent?.let {
+                                    stringResource(
+                                        R.string.swap_form_estimated_fees_with_percent_title,
+                                        it,
+                                    )
+                                } ?: stringResource(R.string.swap_form_estimated_fees_title)
+                            FormDetails2(
+                                title = feeTitle,
+                                value = feeBreakdown.fee,
+                                placeholder =
+                                    if (isLoading) {
+                                        { loadingPlaceholder() }
+                                    } else null,
+                            )
+                        }
 
                         if (feeBreakdown.outboundFee != null) {
                             FormDetails2(

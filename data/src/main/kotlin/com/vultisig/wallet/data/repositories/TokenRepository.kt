@@ -95,7 +95,15 @@ constructor(
                 val metaCache = mutableMapOf<String, DenomMetadata?>()
                 balances.mapNotNull {
                     if (it.denom in DEFI_ONLY_THORCHAIN_DENOMS) return@mapNotNull null
-                    if (enabledDenoms.isNotEmpty() && it.denom !in enabledDenoms)
+                    // The enabledDenoms gate keeps the wallet from auto-adding arbitrary bank
+                    // denoms the user never enabled. Curated liquid-bonding denoms are the
+                    // exception: they must surface the first time a wallet holds one, before any
+                    // manual enable, so they bypass the gate.
+                    if (
+                        enabledDenoms.isNotEmpty() &&
+                            it.denom !in enabledDenoms &&
+                            it.denom.lowercase() !in AUTO_DISCOVER_THORCHAIN_DENOMS
+                    )
                         return@mapNotNull null
                     val metadata =
                         metaCache.getOrPut(it.denom) { thorApi.getDenomMetaFromLCD(it.denom) }
@@ -144,11 +152,29 @@ constructor(
                         symbol = denom.uppercase()
                     }
 
+                    // The generic derivation uppercases tickers ("BRUNE") and can't map a logo for
+                    // Rujira's liquid-bonding denoms. Restore their proper casing + curated logo,
+                    // and store the canonical (lowercase) denom so case-sensitive consumers
+                    // (isLpToken picker exclusion, contract-based pricing) stay on the right path.
+                    var contractAddress = it.denom
+                    when (it.denom.lowercase()) {
+                        Coins.ThorChain.bRUNE.contractAddress -> {
+                            symbol = Coins.ThorChain.bRUNE.ticker
+                            contractAddress = Coins.ThorChain.bRUNE.contractAddress
+                            decimal = Coins.ThorChain.bRUNE.decimal
+                        }
+                        Coins.ThorChain.ybRUNE.contractAddress -> {
+                            symbol = Coins.ThorChain.ybRUNE.ticker
+                            contractAddress = Coins.ThorChain.ybRUNE.contractAddress
+                            decimal = Coins.ThorChain.ybRUNE.decimal
+                        }
+                    }
+
                     if (denom == "rune") {
                         null
                     } else {
                         Coin(
-                            contractAddress = it.denom,
+                            contractAddress = contractAddress,
                             chain = chain,
                             ticker = symbol,
                             logo = symbol,
@@ -257,7 +283,17 @@ constructor(
 }
 
 // Denoms surfaced under the DeFi tab — must not be auto-discovered as wallet tokens.
-internal val DEFI_ONLY_THORCHAIN_DENOMS = setOf("x/staking-ruji")
+// The on-chain sRUJI receipt denom is "x/staking-x/ruji"; the legacy "x/staking-ruji" spelling is
+// kept defensively so the receipt stays excluded regardless of which the node reports.
+internal val DEFI_ONLY_THORCHAIN_DENOMS = setOf("x/staking-ruji", "x/staking-x/ruji")
+
+// Curated Rujira liquid-bonding denoms that must auto-surface the first time a wallet receives one,
+// before the user has manually enabled it. getRefreshTokens seeds enabledDenoms only from
+// vault.coins, so a fresh holder (who only ever seeded native RUNE) would otherwise have these
+// dropped by the enabledDenoms gate and never reach the canonicalization override. Stored lowercase
+// to match the canonical denom casing the balance response is compared against.
+internal val AUTO_DISCOVER_THORCHAIN_DENOMS =
+    setOf(Coins.ThorChain.bRUNE.contractAddress, Coins.ThorChain.ybRUNE.contractAddress)
 
 /**
  * Decodes the result of an ERC-20 `name()` / `symbol()` `eth_call` into text.

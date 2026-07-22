@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.CurrencyToPrice
 import com.vultisig.wallet.data.api.LiQuestApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.thorchain.VaultRedemptionResponseJson
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
 import com.vultisig.wallet.data.models.Chain
@@ -388,7 +389,9 @@ constructor(
                 val thorTokens =
                     Coins.coins[Chain.ThorChain]?.filter {
                         it.contractAddress.startsWith("x/nami") ||
-                            it.contractAddress == "x/staking-tcy"
+                            it.contractAddress == "x/staking-tcy" ||
+                            it.contractAddress == BRUNE_DENOM ||
+                            it.contractAddress == YBRUNE_DENOM
                     } ?: emptyList()
 
                 val matchingTokens =
@@ -398,11 +401,13 @@ constructor(
 
                 val contracts =
                     matchingTokens.map {
+                        val addr = it.contractAddress.lowercase()
                         when {
-                            it.contractAddress.startsWith("x/nami") ->
-                                it.contractAddress.substringAfter("nav-").substringBefore("-rcpt")
-                            it.contractAddress == "x/staking-tcy" ->
+                            addr.startsWith("x/nami") ->
+                                addr.substringAfter("nav-").substringBefore("-rcpt")
+                            addr == "x/staking-tcy" ->
                                 "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
+                            addr == YBRUNE_DENOM -> BRUNE_STAKING_CONTRACT
                             else -> it.contractAddress
                         }
                     }
@@ -417,6 +422,32 @@ constructor(
                         fetchTetherPrice()
                     }
 
+                // bRUNE and ybRUNE both price off RUNE-in-USD. Fetch it once up front (only when a
+                // RUNE-backed denom is present) so concurrent per-token async blocks don't each
+                // miss
+                // a cold cache and fire a duplicate live CoinGecko call for the same value.
+                val runeUsdPrice =
+                    if (
+                        matchingTokens.any {
+                            val denom = it.contractAddress.lowercase()
+                            denom == BRUNE_DENOM || denom == YBRUNE_DENOM
+                        }
+                    ) {
+                        // This runs outside the per-token async guards, so a failure here would
+                        // abort the whole batch (NAMI, sTCY, …). Contain it and fall back to 0 —
+                        // the zero-price filter below then drops bRUNE/ybRUNE for this cycle
+                        // instead of overwriting their last-known good price.
+                        try {
+                            runePriceUsd(currency)
+                        } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) throw e
+                            Timber.e(e, "Failed to fetch shared RUNE-in-USD price")
+                            BigDecimal.ZERO
+                        }
+                    } else {
+                        BigDecimal.ZERO
+                    }
+
                 val tokenIdToPrices = coroutineScope {
                     contracts
                         .zip(tokenIds)
@@ -425,35 +456,41 @@ constructor(
                                 try {
                                     val token = matchingTokens[index]
 
-                                    val vaultData =
-                                        thorApi.getThorchainTokenPriceByContract(contract)
-
                                     val priceUsd =
-                                        if (token.contractAddress == "x/staking-tcy") {
-                                            val tcyPriceUSD =
-                                                getCachedPrice("tcy", AppCurrency.USD)
-                                                    ?: getPriceByPriceProviderId("tcy")
-
-                                            val liquidBondSize =
-                                                vaultData.data.liquidBondSize.toBigDecimalOrNull()
-                                                    ?: BigDecimal.ZERO
-                                            val liquidBondShares =
-                                                vaultData.data.liquidBondShares.toBigDecimalOrNull()
-                                                    ?: BigDecimal.ZERO
-
-                                            if (liquidBondShares > BigDecimal.ZERO) {
-                                                liquidBondSize.divide(
-                                                    liquidBondShares,
-                                                    8,
-                                                    RoundingMode.DOWN,
-                                                ) * tcyPriceUSD
-                                            } else {
-                                                BigDecimal.ONE * tcyPriceUSD
+                                        when (token.contractAddress.lowercase()) {
+                                            // bRUNE is ≥1:1 RUNE-backed with no THORChain pool, so
+                                            // it tracks RUNE at parity.
+                                            BRUNE_DENOM -> runeUsdPrice
+                                            // ybRUNE is the auto-compounding bRUNE staking receipt:
+                                            // NAV (liquid_bond_size / liquid_bond_shares) × bRUNE,
+                                            // and bRUNE ≈ RUNE. Same mechanism as sTCY.
+                                            YBRUNE_DENOM -> {
+                                                val nav =
+                                                    navPerShareFromStatus(
+                                                        thorApi.getThorchainTokenPriceByContract(
+                                                            contract
+                                                        )
+                                                    )
+                                                nav * runeUsdPrice
                                             }
-                                        } else {
-                                            // For NAMI tokens, use navPerShare
-                                            vaultData.data.navPerShare.toBigDecimalOrNull()
-                                                ?: BigDecimal.ZERO
+                                            "x/staking-tcy" -> {
+                                                val tcyPriceUSD = tcyPriceUsd(currency)
+                                                val nav =
+                                                    navPerShareFromStatus(
+                                                        thorApi.getThorchainTokenPriceByContract(
+                                                            contract
+                                                        )
+                                                    )
+                                                nav * tcyPriceUSD
+                                            }
+                                            else -> {
+                                                // For NAMI tokens, use navPerShare
+                                                thorApi
+                                                    .getThorchainTokenPriceByContract(contract)
+                                                    .data
+                                                    .navPerShare
+                                                    .toBigDecimalOrNull() ?: BigDecimal.ZERO
+                                            }
                                         }
 
                                     tokenId to mapOf(currency to priceUsd * tetherPrice)
@@ -466,19 +503,90 @@ constructor(
                         }
                         .awaitAll()
                         .filterNotNull()
+                        // Drop zero prices rather than persist them. A transient failure (an
+                        // unparseable NAV, a rate-limited RUNE price) yields 0, and savePrices
+                        // only guards an empty currency map, so a $0 would overwrite the
+                        // last-known good price. signum() (not `!= ZERO`) is used so a scaled
+                        // zero like 0E-8 from a NAV division still counts as zero.
+                        .filter { (_, prices) -> prices.values.any { it.signum() != 0 } }
                         .toMap()
                 }
 
                 savePrices(tokenIdToPrices, currency)
             } catch (t: Throwable) {
                 if (t is kotlinx.coroutines.CancellationException) throw t
-                Timber.e(t, "Could not update YTCY/YRUNE/sTCY prices")
+                Timber.e(t, "Could not update YTCY/YRUNE/sTCY/ybRUNE prices")
             }
         }
+
+    // RUNE-in-USD, used to price the RUNE-backed bRUNE/ybRUNE denoms.
+    // Cache rows are keyed by Coin.id ("RUNE-THORChain"), not priceProviderID ("thorchain"), so a
+    // lookup by provider id can never hit. The cached "usd" row is also only written while the app
+    // currency is USD and is never invalidated on a currency switch, so a non-USD user who once ran
+    // USD would otherwise read a frozen stale quote — only trust the cache while we are actually in
+    // USD, else fetch live. The live fallback fetches RUNE explicitly in USD
+    // (getPriceByPriceProviderId
+    // returns the app currency), and callers multiply by tetherPrice (currency-per-USD), so a
+    // non-USD value here would double-apply FX.
+    private suspend fun runePriceUsd(currency: String): BigDecimal {
+        if (currency.equals(AppCurrency.USD.ticker, ignoreCase = true)) {
+            getCachedPrice(Coins.ThorChain.RUNE.id, AppCurrency.USD)?.let {
+                return it
+            }
+        }
+        return fetchRunePriceUsdLive()
+    }
+
+    private suspend fun fetchRunePriceUsdLive(): BigDecimal =
+        fetchCryptoPriceUsdLive(Coins.ThorChain.RUNE.priceProviderID)
+
+    // TCY-in-USD, used to price the sTCY staking receipt. Same rules as runePriceUsd: cache rows
+    // key
+    // on Coin.id ("TCY-THORChain"), not the "tcy" priceProviderID, and the cached usd row is only
+    // fresh while the app currency is USD. sTCY then multiplies this by NAV and the caller by
+    // tetherPrice, so a non-USD or provider-id-keyed value here would double-apply FX.
+    private suspend fun tcyPriceUsd(currency: String): BigDecimal {
+        if (currency.equals(AppCurrency.USD.ticker, ignoreCase = true)) {
+            getCachedPrice(Coins.ThorChain.TCY.id, AppCurrency.USD)?.let {
+                return it
+            }
+        }
+        return fetchCryptoPriceUsdLive(Coins.ThorChain.TCY.priceProviderID)
+    }
+
+    private suspend fun fetchCryptoPriceUsdLive(priceProviderId: String): BigDecimal =
+        coinGeckoApi
+            .getCryptoPrices(listOf(priceProviderId), listOf(AppCurrency.USD.ticker.lowercase()))
+            .values
+            .firstOrNull()
+            ?.values
+            ?.firstOrNull() ?: BigDecimal.ZERO
+
+    // NAV per share from a `rujira-staking` `{"status":{}}` response:
+    // liquid_bond_size / liquid_bond_shares, falling back to 1 for a genuine pre-bond state (both
+    // fields present and zero). A malformed/empty 2xx leaves the fields at their "" default;
+    // pricing
+    // off that (nav = 1 → RUNE/TCY parity) would overwrite the accrued NAV price and slip past the
+    // caller's zero-filter, so treat an unparseable size/shares as 0 (dropped) instead.
+    private fun navPerShareFromStatus(vaultData: VaultRedemptionResponseJson): BigDecimal {
+        val size = vaultData.data.liquidBondSize.toBigDecimalOrNull() ?: return BigDecimal.ZERO
+        val shares = vaultData.data.liquidBondShares.toBigDecimalOrNull() ?: return BigDecimal.ZERO
+        return if (shares > BigDecimal.ZERO) {
+            size.divide(shares, 8, RoundingMode.DOWN)
+        } else {
+            BigDecimal.ONE
+        }
+    }
 
     companion object {
         private const val TETHER_PRICE_PROVIDER_ID = "tether"
         private const val CACAO_DECIMALS = 10
+
+        // Single source of truth: the curated denoms in Coins.kt.
+        private val BRUNE_DENOM = Coins.ThorChain.bRUNE.contractAddress
+        private val YBRUNE_DENOM = Coins.ThorChain.ybRUNE.contractAddress
+        private const val BRUNE_STAKING_CONTRACT =
+            "thor179fex2rxd45caedmz4hxsnu42sw20lu0djyh4yukyh965sq8muuqptru2g"
     }
 
     private fun mapThorPoolAsset(contractAddress: String): String {

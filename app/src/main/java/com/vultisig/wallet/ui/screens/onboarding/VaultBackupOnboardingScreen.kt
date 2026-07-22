@@ -129,7 +129,8 @@ internal fun VaultBackupOnboardingScreen(
             VsButton(
                 label = stringResource(R.string.vault_setup_i_understand),
                 onClick = { onEvent(VaultBackupOnboardingEvent.Next) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth().padding(horizontal = V3Scaffold.PADDING_HORIZONTAL),
             )
         },
     )

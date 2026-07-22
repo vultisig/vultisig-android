@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.ui.navigation.BackupPasswordTypeNavType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -52,19 +53,15 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
                 3 -> R.raw.riv_backup_3devices
                 else -> R.raw.riv_backup_4devices
             }
-        when (args.vaultType) {
-            Route.VaultInfo.VaultType.Fast ->
-                state.update {
-                    VaultBackupOnboardingUiModel(tips = FastVaultBackupOnboardingTips, rive = rive)
-                }
-            Route.VaultInfo.VaultType.Secure ->
-                state.update {
-                    VaultBackupOnboardingUiModel(
-                        tips = secureVaultBackupOnboardingTips(deviceCount),
-                        rive = rive,
-                    )
-                }
-        }
+        // Reshare regenerates the shares of an existing vault, so its backup guide differs from a
+        // fresh keygen — it adds the "old backups won't work" caution regardless of vault type.
+        val tips =
+            when {
+                args.action == TssAction.ReShare -> ReshareBackupOnboardingTips
+                args.vaultType == Route.VaultInfo.VaultType.Fast -> FastVaultBackupOnboardingTips
+                else -> secureVaultBackupOnboardingTips(deviceCount)
+            }
+        state.update { VaultBackupOnboardingUiModel(tips = tips, rive = rive) }
     }
 
     fun onEvent(event: VaultBackupOnboardingEvent) {
@@ -104,6 +101,26 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
     }
 
     companion object {
+        val ReshareBackupOnboardingTips =
+            listOf(
+                VaultBackupOnboardingTip(
+                    title = UiText.StringResource(R.string.vault_setup_back_up_each_device),
+                    description = UiText.StringResource(R.string.reshare_backup_each_device_body),
+                    logo = R.drawable.arrow_cloude,
+                ),
+                VaultBackupOnboardingTip(
+                    title = UiText.StringResource(R.string.backup_store_backups_separately),
+                    description =
+                        UiText.StringResource(R.string.reshare_backup_store_separately_body),
+                    logo = R.drawable.branches,
+                ),
+                VaultBackupOnboardingTip(
+                    title = UiText.StringResource(R.string.reshare_backup_old_wont_work_title),
+                    description = UiText.StringResource(R.string.reshare_backup_old_wont_work_body),
+                    logo = R.drawable.ic_page_cross_text,
+                ),
+            )
+
         val FastVaultBackupOnboardingTips =
             listOf(
                 VaultBackupOnboardingTip(

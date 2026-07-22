@@ -5,6 +5,7 @@ package com.vultisig.wallet.data.chains.helpers
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.common.toKeccak256ByteArray
 import com.vultisig.wallet.data.common.toSha256ByteArray
+import com.vultisig.wallet.data.common.toSha512ByteArray
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -88,6 +89,38 @@ class SigningHelperCustomMessageTest {
 
         val expected = "Hello Vultisig".toByteArray().toSha256ByteArray().toHexString()
         messages shouldBe listOf(expected)
+    }
+
+    @Test
+    fun `Ripple plain-text message is SHA-512-half hashed, not keccak256`() {
+        // XRPL (GemWallet signMessage) custom messages sign SHA-512-half — the first 32 bytes of
+        // SHA-512 — of the message bytes, matching the vultisig-windows initiator
+        // (getCustomMessageHex.ts `ripple` branch). keccak256 here 404s cross-platform co-signing.
+        val payload =
+            CustomMessagePayload(method = "sign", message = "Hello Vultisig", chain = "Ripple")
+
+        val messages = SigningHelper.getKeysignMessages(payload)
+
+        val expected = "Hello Vultisig".toByteArray().toSha512ByteArray().copyOf(32).toHexString()
+        messages shouldBe listOf(expected)
+        messages shouldNotBe
+            listOf("Hello Vultisig".toByteArray().toKeccak256ByteArray().toHexString())
+    }
+
+    @Test
+    fun `Ripple digest is byte-identical to the vultisig-windows extension contract`() {
+        // Pinned reference vectors: SHA-512-half of the message bytes, computed independently of
+        // the app helpers, matching vultisig-windows getCustomMessageHex.ts (windows#4399).
+        val utf8Payload =
+            CustomMessagePayload(method = "sign", message = "Hello Vultisig", chain = "Ripple")
+        SigningHelper.getKeysignMessages(utf8Payload) shouldBe
+            listOf("3bc2707498315edae0bf63ea75bf2433a0fdee71e888461b55fe9d05662ae437")
+
+        // "0x56756c7469736967" decodes to the ASCII bytes of "Vultisig" before hashing.
+        val hexPayload =
+            CustomMessagePayload(method = "sign", message = "0x56756c7469736967", chain = "Ripple")
+        SigningHelper.getKeysignMessages(hexPayload) shouldBe
+            listOf("f969dba15308c6b017e02c91e06e577e8c69cb291bdf44a819f184ad66e627dc")
     }
 
     @Test

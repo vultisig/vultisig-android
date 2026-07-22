@@ -4,6 +4,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenStandard
@@ -118,7 +119,6 @@ constructor(
             swapDiscountChecker = swapDiscountChecker,
             swapGasCalculator = swapGasCalculator,
             swapValidator = swapValidator,
-            fiatValueToString = fiatValueToString,
         )
 
     /** Mutable swap-quote state and the quote-coupled swap fee, shared with the ViewModel. */
@@ -145,10 +145,27 @@ constructor(
     // SwapIsNotSupported only after the user typed an amount and waited out the debounce).
     private var isPairSupported = true
 
+    // A same-token pair is "supported" (no "no route" guidance while mid-pick) but has no provider
+    // and can never be quoted, so the loading gate keys off routability, not mere support (#5296).
+    private var isPairRoutable = false
+
     private val pairNotSupportedError = UiText.StringResource(R.string.swap_route_not_available)
 
     private val srcAmount: BigDecimal?
         get() = srcAmountState.text.toString().toBigDecimalOrNull()
+
+    /**
+     * True when the live field currently forms a quotable request: a routable pair (a real
+     * provider, so same-token is excluded) with a positive source amount. Shared by
+     * [startLoadingIfQuotable] and the late-result guard in [applyQuoteResult] so both agree on
+     * what "quotable" means, keeping zero/invalid amounts and unroutable pairs quiet on both the
+     * loading and result paths (#5296).
+     */
+    private val isLiveInputQuotable: Boolean
+        get() {
+            val amount = srcAmount
+            return isPairRoutable && amount != null && amount > BigDecimal.ZERO
+        }
 
     private var isLoading: Boolean
         get() = uiState.value.isLoading
@@ -301,7 +318,13 @@ constructor(
                     updatePairSupport(src, dst)
                 }
                 .combine(amountChanges) { address, immediate ->
-                    QuoteInput(address = address, amount = srcAmount, immediate = immediate)
+                    QuoteInput(
+                        address = address,
+                        amount = srcAmount,
+                        slippageBps = slippageBps.value,
+                        externalRecipient = externalRecipient.value,
+                        immediate = immediate,
+                    )
                 }
                 // Fires on real user intent (typing, paste, percentage, token change) but not on
                 // the
@@ -312,19 +335,27 @@ constructor(
                     // Unroutable pair: the "no route" guidance already showed on selection (#4710),
                     // so don't spin or fetch an indicative estimate for a pair we can't quote.
                     if (!isPairSupported) return@onEach
-                    isLoading = true
+                    startLoadingIfQuotable()
                     showIndicativeRate(input)
                 }
                 .combine(refreshQuoteState) { input, _ -> input }
                 // A slippage or external-recipient change re-fetches with a different tolerance /
-                // routing, so raise isLoading to disable the Swap button until the new quote lands
-                // —
-                // otherwise the prior, differently-routed quote could be signed (#4858, review
-                // #4969). The onEach rides each flow individually, so the silent refresh timer
-                // above
-                // doesn't flash the spinner.
-                .combine(slippageBps.onEach { isLoading = true }) { input, _ -> input }
-                .combine(externalRecipient.onEach { isLoading = true }) { input, _ -> input }
+                // routing, so — when there is actually something to quote — raise isLoading to
+                // disable the Swap button until the new quote lands, otherwise the prior,
+                // differently-routed quote could be signed (#4858, review #4969). Routed through
+                // startLoadingIfQuotable so an empty/zero amount stays quiet instead of blinking
+                // the
+                // skeletons (#5296). The onEach rides each flow individually, so the silent refresh
+                // timer above doesn't flash the spinner.
+                .combine(slippageBps.onEach { startLoadingIfQuotable() }) { input, liveSlippageBps
+                    ->
+                    input.copy(slippageBps = liveSlippageBps)
+                }
+                .combine(externalRecipient.onEach { startLoadingIfQuotable() }) {
+                    input,
+                    liveExternalRecipient ->
+                    input.copy(externalRecipient = liveExternalRecipient)
+                }
                 // Percentage / Max / paste skip the debounce (0ms); free typing still coalesces at
                 // 300ms so rapid edits fire a single quote fetch.
                 .debounce { input -> swapQuoteManager.quoteDebounceMillis(input.immediate) }
@@ -350,8 +381,8 @@ constructor(
                                 referralCode = referralCode.value,
                                 currentDiscountInfo = uiState.value.discountInfo,
                                 selectedSrcTokenTitle = uiState.value.selectedSrcToken?.title,
-                                slippageBps = slippageBps.value,
-                                externalRecipient = externalRecipient.value,
+                                slippageBps = input.slippageBps,
+                                externalRecipient = input.externalRecipient,
                             )
                     ) {
                         SwapQuotePipelineResult.Empty -> resetQuoteState()
@@ -377,6 +408,42 @@ constructor(
         input: QuoteInput,
         result: SwapQuotePipelineResult.Success,
     ) {
+        // isAmountFieldEmpty is read once when resolveQuote is called, but the live input can
+        // change
+        // while this fetch — queued on a prior debounce cycle — is still in flight, and
+        // collectLatest
+        // can't cancel it until the next input clears the debounce. Re-check the live input here so
+        // a
+        // late-landing fetch for a now non-quotable field (cleared, zeroed, or an unroutable pair)
+        // drops the stale quote instead of resurrecting it (#5296 review).
+        //
+        // isLiveInputQuotable only asks "is something quotable now"; it can't catch a fetch that
+        // resolved for an earlier, still-positive amount on the same pair (type 5, pause past the
+        // debounce, resume to 56 before 5's fetch lands). Also require the live amount to still
+        // match the amount this fetch was resolved for, so a quote priced for the old amount can't
+        // be applied — and then signed with a mismatched memo / slippage floor — over the new one
+        // (#5310). Match the source/destination quote endpoints as well: changing to another
+        // routable pair with the same amount creates the same pre-debounce landing window.
+        if (!isLiveInputQuotable) {
+            resetQuoteState()
+            return
+        }
+
+        val liveAmount = srcAmount
+        val (inputSrc, inputDst) = input.address
+        val isSuperseded =
+            input.amount == null ||
+                liveAmount == null ||
+                liveAmount.compareTo(input.amount) != 0 ||
+                !inputSrc.hasSameQuoteEndpointAs(selectedSrc.value) ||
+                !inputDst.hasSameQuoteEndpointAs(selectedDst.value) ||
+                input.slippageBps != slippageBps.value ||
+                input.externalRecipient != externalRecipient.value
+        if (isSuperseded) {
+            discardSupersededQuoteResult()
+            return
+        }
+
         val (src, _) = input.address
 
         quoteState.provider = result.provider
@@ -457,6 +524,29 @@ constructor(
                 isSwapDisabled = outcome.isSwapDisabled,
                 formError = outcome.formError,
             )
+        }
+    }
+
+    /**
+     * Reconciles quote-driven UI state with the current input on a trigger (typing, pair, slippage,
+     * or recipient change), ahead of the debounced fetch:
+     * - Routable pair (a real provider, so same-token is excluded) with a positive source amount:
+     *   raise the spinner so the destination/fee skeletons and disabled Swap button lead the fetch.
+     * - Nothing to quote (empty/zero field or an unroutable pair): leave the spinner off so the
+     *   skeletons never flash true→false (blink) on form open or a bare pair/slippage/recipient
+     *   change (#4712, #5296). If a resolved quote is still on screen, clear it now so a cleared or
+     *   zeroed amount disables Swap and drops the stale destination/fee immediately instead of
+     *   leaving them tappable until the 300ms debounce runs resetQuoteState (#5296 review).
+     */
+    private fun startLoadingIfQuotable() {
+        if (isLiveInputQuotable) {
+            isLoading = true
+        } else if (uiState.value.quoteDisplay.hasQuote || uiState.value.isLoading) {
+            // Clear a resolved quote OR a spinner we raised while a firm quote was still pending:
+            // clearing a quotable amount before its quote lands leaves hasQuote false, so gating
+            // only on hasQuote would strand isLoading = true for the rest of the debounce (#5296
+            // review).
+            resetQuoteState()
         }
     }
 
@@ -542,6 +632,18 @@ constructor(
     }
 
     /**
+     * Whether [srcToken] → [dstToken] can actually be quoted: a distinct pair with at least one
+     * eligible provider. Same-token pairs are "supported" but never routable. Shared by the pair
+     * gate here and the token-selection loading gate so both key off the same predicate as
+     * [startLoadingIfQuotable]'s [isPairRoutable] flag, rather than a looser amount-only check
+     * (#5296 review). [SwapQuoteRepository.getEligibleProviders] is a local table lookup, so this
+     * is instant and safe to call on the selection path.
+     */
+    fun isPairRoutable(srcToken: Coin, dstToken: Coin): Boolean =
+        srcToken != dstToken &&
+            swapQuoteRepository.getEligibleProviders(srcToken, dstToken).isNotEmpty()
+
+    /**
      * Resolves whether the selected source/destination pair has any eligible provider and surfaces
      * the "no route" guidance immediately on selection, instead of letting the quote pipeline throw
      * SwapIsNotSupported only after the user has typed an amount and waited for a quote (#4710).
@@ -554,9 +656,8 @@ constructor(
     private fun updatePairSupport(src: SendSrc, dst: SendSrc) {
         val srcToken = src.account.token
         val dstToken = dst.account.token
-        isPairSupported =
-            srcToken == dstToken ||
-                swapQuoteRepository.getEligibleProviders(srcToken, dstToken).isNotEmpty()
+        isPairRoutable = isPairRoutable(srcToken, dstToken)
+        isPairSupported = srcToken == dstToken || isPairRoutable
         if (!isPairSupported) {
             resetQuoteState(error = pairNotSupportedError, cause = null, tag = null)
         } else if (uiState.value.formError == pairNotSupportedError) {
@@ -569,6 +670,47 @@ constructor(
     /** Clears the quote, swap fee, and quote-derived form state without surfacing an error. */
     fun resetQuoteState() {
         resetQuoteState(error = null, cause = null, tag = null)
+    }
+
+    private fun SendSrc.hasSameQuoteEndpointAs(live: SendSrc?): Boolean =
+        live != null &&
+            account.token == live.account.token &&
+            address.chain == live.address.chain &&
+            address.address == live.address.address
+
+    /**
+     * Drops quote state owned by an older request without disturbing the newer quotable request's
+     * spinner or indicative destination estimate. The newer request has already passed through
+     * [startLoadingIfQuotable] / [showIndicativeRate] and is waiting in the debounce, so a full
+     * [resetQuoteState] here would make that active request look idle until its fetch completes.
+     */
+    private fun discardSupersededQuoteResult() {
+        refreshQuoteJob?.cancel()
+        refreshQuoteJob = null
+        quoteState.reset()
+        uiState.update {
+            it.copy(
+                srcFiatValue = "0",
+                quoteDisplay =
+                    it.quoteDisplay.copy(
+                        provider = UiText.Empty,
+                        hasQuote = false,
+                        expiredAt = null,
+                    ),
+                feeBreakdown =
+                    it.feeBreakdown.copy(
+                        fee = "0",
+                        totalFee = "0",
+                        outboundFee = null,
+                        swapFeePercent = null,
+                        priceImpactPercent = null,
+                        priceImpactLevel = null,
+                    ),
+                discountInfo = DiscountInfo(),
+                isSwapDisabled = true,
+                formError = null,
+            )
+        }
     }
 
     private fun resetQuoteState(error: UiText?, cause: Throwable?, tag: String?) {

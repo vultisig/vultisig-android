@@ -4,13 +4,18 @@ package com.vultisig.wallet.ui.models.deposit
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.data.utils.NetworkErrorKind
 import com.vultisig.wallet.data.utils.NetworkException
@@ -21,6 +26,7 @@ import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -62,6 +68,9 @@ internal class VerifyDepositViewModelTest {
     private lateinit var depositTransactionRepository: DepositTransactionRepository
     private lateinit var balanceRepository: BalanceRepository
     private lateinit var vaultPasswordRepository: VaultPasswordRepository
+    private lateinit var vaultRepository: VaultRepository
+    private lateinit var addressBookRepository: AddressBookRepository
+    private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
     private lateinit var launchKeysign: LaunchKeysignUseCase
     private lateinit var isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase
 
@@ -76,6 +85,9 @@ internal class VerifyDepositViewModelTest {
         depositTransactionRepository = mockk(relaxed = true)
         balanceRepository = mockk(relaxed = true)
         vaultPasswordRepository = mockk(relaxed = true)
+        vaultRepository = mockk(relaxed = true)
+        addressBookRepository = mockk(relaxed = true)
+        chainAccountAddressRepository = mockk(relaxed = true)
         launchKeysign = mockk(relaxed = true)
         isVaultHasFastSignById = mockk(relaxed = true)
         // A relaxed mock can't synthesize the non-null DepositTransactionUiModel for this
@@ -99,6 +111,10 @@ internal class VerifyDepositViewModelTest {
             depositTransactionRepository = depositTransactionRepository,
             balanceRepository = balanceRepository,
             vaultPasswordRepository = vaultPasswordRepository,
+            vaultRepository = vaultRepository,
+            addressBookRepository = addressBookRepository,
+            chainAccountAddressRepository = chainAccountAddressRepository,
+            ioDispatcher = testDispatcher,
             launchKeysign = launchKeysign,
             isVaultHasFastSignById = isVaultHasFastSignById,
         )
@@ -196,6 +212,92 @@ internal class VerifyDepositViewModelTest {
 
             coVerify(exactly = 0) { balanceRepository.getTokenValue(any(), any()) }
             coVerify { launchKeysign(any(), any(), any(), any(), any()) }
+        }
+
+    /**
+     * Stubs a non-QBTC (ThorChain) deposit so the balance gate is skipped and the From/To label
+     * resolution (#5301) is the only work `init` does. [destination] is the raw dstAddress; [coins]
+     * are the current vault's enabled coins used to resolve the destination-vault label.
+     */
+    private fun givenThorDepositWithVault(
+        destination: String,
+        vaultName: String,
+        coins: List<Coin> = emptyList(),
+    ) {
+        val coin = mockk<Coin>(relaxed = true).apply { every { chain } returns Chain.ThorChain }
+        val tx =
+            mockk<DepositTransaction>(relaxed = true).apply {
+                every { srcToken } returns coin
+                every { vaultId } returns VAULT_ID
+                every { dstAddress } returns destination
+                every { estimatedFees } returns TokenValue(BigInteger.ZERO, "RUNE", 8)
+                every { srcTokenValue } returns TokenValue(BigInteger.ZERO, "RUNE", 8)
+            }
+        coEvery { depositTransactionRepository.getTransaction(TX_ID) } returns tx
+        coEvery { vaultRepository.getAll() } returns
+            listOf(Vault(id = VAULT_ID, name = vaultName, coins = coins))
+    }
+
+    private fun thorCoin(address: String): Coin =
+        mockk<Coin>(relaxed = true).apply {
+            every { chain } returns Chain.ThorChain
+            every { this@apply.address } returns address
+        }
+
+    /** From resolves to the signing vault's name; with no destination there is no To label. */
+    @Test
+    fun `resolves the source vault name for the From label`() =
+        runTest(testDispatcher) {
+            givenThorDepositWithVault(destination = "", vaultName = "Main Vault")
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+            val tx = vm.state.value.depositTransactionUiModel
+
+            tx.srcVaultName shouldBe "Main Vault"
+            tx.dstVaultName.shouldBeNull()
+            tx.dstAddressBookTitle.shouldBeNull()
+        }
+
+    /**
+     * A destination owned by a local vault (a self-operated node) resolves To to that vault name.
+     */
+    @Test
+    fun `resolves a local destination vault name for the To label`() =
+        runTest(testDispatcher) {
+            val node = "thor1node0000000000000000000000000000000node"
+            givenThorDepositWithVault(
+                destination = node,
+                vaultName = "Main Vault",
+                coins = listOf(thorCoin(node)),
+            )
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+            val tx = vm.state.value.depositTransactionUiModel
+
+            tx.dstVaultName shouldBe "Main Vault"
+            tx.dstAddressBookTitle.shouldBeNull()
+        }
+
+    /** When no local vault owns the destination, To falls back to an address-book title. */
+    @Test
+    fun `falls back to the address book title when no vault owns the destination`() =
+        runTest(testDispatcher) {
+            val external = "thor1external000000000000000000000000external"
+            givenThorDepositWithVault(destination = external, vaultName = "Main Vault")
+            // The pubkey-derivation fallback in resolveDstVaultName must not match either.
+            coEvery { chainAccountAddressRepository.getAddress(any<Chain>(), any()) } returns
+                ("thor1someother" to "")
+            coEvery { addressBookRepository.getEntry(Chain.ThorChain.id, external) } returns
+                AddressBookEntry(Chain.ThorChain, external, "Savings")
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+            val tx = vm.state.value.depositTransactionUiModel
+
+            tx.dstVaultName.shouldBeNull()
+            tx.dstAddressBookTitle shouldBe "Savings"
         }
 
     private companion object {

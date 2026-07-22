@@ -8,10 +8,13 @@ import timber.log.Timber
  * Typed broadcast failure from a Cosmos SDK node (THORChain / MayaChain).
  *
  * The [message] starts with a stable English marker so UI layers can detect the failure category
- * without unpacking the raw HTTP body: [BROADCAST_FAILURE_MARKER] for any broadcast rejection, and
- * [SEQUENCE_MISMATCH_MARKER] when the node returned `codespace=sdk`/`code=32`. The remainder of the
- * message is the node-supplied [rawLog] (a short sentence), suitable as a fallback when no
- * localized copy matches the [code].
+ * without unpacking the raw HTTP body: [BROADCAST_FAILURE_MARKER] for any broadcast rejection,
+ * [SEQUENCE_MISMATCH_MARKER] when the node returned `codespace=sdk`/`code=32`, and
+ * [UNKNOWN_ADDRESS_MARKER] for `codespace=sdk`/`code=9` (the fee-payer account doesn't exist
+ * on-chain yet, e.g. a never-funded QBTC vault). The remainder of the message is the node-supplied
+ * [rawLog] (a short sentence), suitable as a fallback when no localized copy matches the [code] —
+ * that raw text can contain undecodable address bytes, so it's kept out of the primary UI
+ * description and only surfaced via the "Show exact error" disclosure.
  *
  * @param code Cosmos SDK error code returned by the node (e.g. 32 for invalid sequence).
  * @param codespace Cosmos SDK error namespace (e.g. "sdk").
@@ -36,12 +39,22 @@ class CosmosBroadcastException(
     val isSequenceMismatch: Boolean
         get() = codespace == SDK_CODESPACE && code == SDK_INVALID_SEQUENCE
 
+    /**
+     * True when the node rejected the broadcast with `codespace=sdk`/`code=9` (unknown address):
+     * the fee-payer account has no on-chain presence, most commonly because it has never received
+     * any funds.
+     */
+    val isUnknownAddress: Boolean
+        get() = codespace == SDK_CODESPACE && code == SDK_UNKNOWN_ADDRESS
+
     companion object {
         const val BROADCAST_FAILURE_MARKER = "broadcast_failure"
         const val SEQUENCE_MISMATCH_MARKER = "broadcast_failure:sequence_mismatch"
+        const val UNKNOWN_ADDRESS_MARKER = "broadcast_failure:unknown_address"
 
         private const val SDK_CODESPACE = "sdk"
         private const val SDK_INVALID_SEQUENCE = 32
+        private const val SDK_UNKNOWN_ADDRESS = 9
 
         /** Build a typed broadcast exception from a parsed Cosmos `tx_response` payload. */
         fun from(
@@ -51,8 +64,13 @@ class CosmosBroadcastException(
             txHash: String?,
         ): CosmosBroadcastException {
             val isSequenceMismatch = codespace == SDK_CODESPACE && code == SDK_INVALID_SEQUENCE
+            val isUnknownAddress = codespace == SDK_CODESPACE && code == SDK_UNKNOWN_ADDRESS
             val marker =
-                if (isSequenceMismatch) SEQUENCE_MISMATCH_MARKER else BROADCAST_FAILURE_MARKER
+                when {
+                    isSequenceMismatch -> SEQUENCE_MISMATCH_MARKER
+                    isUnknownAddress -> UNKNOWN_ADDRESS_MARKER
+                    else -> BROADCAST_FAILURE_MARKER
+                }
             val detail = rawLog?.takeIf { it.isNotBlank() }?.lineSequence()?.firstOrNull().orEmpty()
             val message = if (detail.isBlank()) marker else "$marker: $detail"
             return CosmosBroadcastException(

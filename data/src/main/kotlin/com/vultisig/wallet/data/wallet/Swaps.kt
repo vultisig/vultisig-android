@@ -19,6 +19,11 @@ internal object Swaps {
     ): List<String> {
         val preImageHashes = TransactionCompiler.preImageHashes(coinType, inputData)
 
+        // Cardano rides in TokenStandard.UTXO but signs ed25519 + CBOR, not secp256k1 + PSBT.
+        // Its pre-image is not a Bitcoin proto; it presigns via CardanoHelper and never reaches
+        // here. Guard so a future swap route can't silently parse a Cardano pre-image as Bitcoin.
+        check(chain != Chain.Cardano) { "Cardano pre-image must be built via CardanoHelper" }
+
         return when (chain.standard) {
             TokenStandard.UTXO -> {
                 val preSigningOutput =

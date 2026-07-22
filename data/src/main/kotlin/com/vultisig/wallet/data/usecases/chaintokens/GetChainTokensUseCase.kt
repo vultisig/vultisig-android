@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.SplTokenRepository
+import com.vultisig.wallet.data.repositories.ThorChainSecuredAssetRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.OneInchToCoinsUseCase
 import javax.inject.Inject
@@ -23,6 +24,7 @@ constructor(
     private val splTokenRepository: SplTokenRepository,
     private val oneInchApi: OneInchApi,
     private val oneInchToCoins: OneInchToCoinsUseCase,
+    private val securedAssetRepository: ThorChainSecuredAssetRepository,
 ) : GetChainTokensUseCase {
 
     override fun invoke(chain: Chain, vault: Vault): Flow<List<Coin>> = flow {
@@ -32,11 +34,18 @@ constructor(
         val refreshedTokens = tokenRepository.getRefreshTokens(chain, vault)
         emitUniqueTokens(builtInTokens, refreshedTokens)
 
-        when (chain.standard) {
-            TokenStandard.EVM -> {
+        when {
+            chain == Chain.ThorChain -> {
+                emitUniqueTokens(
+                    refreshedTokens,
+                    builtInTokens,
+                    securedAssetRepository.getSecuredAssetCoins(),
+                )
+            }
+            chain.standard == TokenStandard.EVM -> {
                 emitEvmTokens(chain, refreshedTokens, builtInTokens)
             }
-            TokenStandard.SOL -> {
+            chain.standard == TokenStandard.SOL -> {
                 emitSolTokens(vault, chain, refreshedTokens, builtInTokens)
             }
             else -> Unit
@@ -86,11 +95,11 @@ constructor(
                 .flatten()
                 .asSequence()
                 .distinctBy { it.contractAddress to it.chain.id }
-                // The UI keys each row on Coin.id (ticker-chainId). Collapse any remaining
-                // collisions on that key so the same ticker sourced with two different contract
-                // addresses on one chain can't produce duplicate LazyColumn keys and crash on
-                // scroll (issue #4869). Built-in/refreshed tokens are ordered first, so the
-                // canonical entry wins over a searchable/provider duplicate.
+                // The UI keys each row on Coin.id. Collapse any remaining collisions on that key
+                // so the same ticker sourced with two different contract addresses on one chain
+                // can't produce duplicate LazyColumn keys and crash on scroll (issue #4869).
+                // Built-in/refreshed tokens are ordered first, so the canonical entry wins over a
+                // searchable/provider duplicate.
                 .distinctBy { it.id }
                 .toList()
                 .modifyIfNeeded()
