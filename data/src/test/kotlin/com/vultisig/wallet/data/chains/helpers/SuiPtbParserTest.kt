@@ -208,6 +208,47 @@ class SuiPtbParserTest {
     }
 
     @Test
+    fun `parse accepts a type tag nested up to the depth guard boundary`() {
+        // 31 `vector<...>` wraps around a terminal `bool` — one level short of the guard.
+        val nestedVectorWithTerminal = ByteArray(31) { 6 } + byteArrayOf(0)
+        val moveCall =
+            Bcs.uleb(0) +
+                Bcs.address(0x01) +
+                Bcs.string("m") +
+                Bcs.string("f") +
+                Bcs.vec(nestedVectorWithTerminal) +
+                Bcs.vec()
+
+        val bytes = transactionData(inputs = Bcs.vec(), commands = Bcs.vec(moveCall))
+        val parsed = SuiPtbParser.parse(Base64.getEncoder().encodeToString(bytes))
+
+        val moveCallCommand = parsed.commands.single() as SuiCommand.MoveCall
+        val expected = "vector<".repeat(31) + "bool" + ">".repeat(31)
+        assertEquals(listOf(expected), moveCallCommand.typeArguments)
+    }
+
+    @Test
+    fun `parse rejects a type tag nested deeper than the depth guard`() {
+        // A hostile PTB with many consecutive `vector<...>` tags and no terminal must fail with a
+        // catchable IllegalStateException rather than overflow the stack (StackOverflowError is an
+        // Error, not an Exception, so SignSuiDisplayView's fallback would never catch it).
+        val deeplyNestedVector = ByteArray(40) { 6 }
+        val moveCall =
+            Bcs.uleb(0) +
+                Bcs.address(0x01) +
+                Bcs.string("m") +
+                Bcs.string("f") +
+                Bcs.vec(deeplyNestedVector) +
+                Bcs.vec()
+
+        val bytes = transactionData(inputs = Bcs.vec(), commands = Bcs.vec(moveCall))
+
+        assertThrows(IllegalStateException::class.java) {
+            SuiPtbParser.parse(Base64.getEncoder().encodeToString(bytes))
+        }
+    }
+
+    @Test
     fun `parse rejects an empty buffer`() {
         assertThrows(IllegalArgumentException::class.java) {
             SuiPtbParser.parse(Base64.getEncoder().encodeToString(ByteArray(0)))

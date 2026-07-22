@@ -7,6 +7,10 @@ import java.util.Base64
 
 private const val SUI_ADDRESS_LENGTH = 32
 
+// Real Move type tags rarely nest more than 2-3 levels (e.g. Coin<vector<u8>>); this stays well
+// above any legitimate PTB while still bounding a hostile/degenerate one.
+private const val MAX_TYPE_TAG_DEPTH = 32
+
 /**
  * Best-effort pure-Kotlin decoder for a Sui `TransactionData::V1` BCS payload — a dApp-supplied
  * Programmable Transaction Block (PTB). Used only to render a human-readable summary on the keysign
@@ -151,27 +155,32 @@ object SuiPtbParser {
             else -> error("Unsupported Option variant $tag")
         }
 
-    private fun readTypeTag(reader: SuiBcsReader): String =
-        when (val tag = reader.readULEB128()) {
+    // vector<...> and struct type-params recurse into readTypeTag; a hostile PTB with thousands
+    // of nested `vector` tags would otherwise overflow the stack with a StackOverflowError, which
+    // is an Error (not Exception) and so isn't caught by SignSuiDisplayView's fallback.
+    private fun readTypeTag(reader: SuiBcsReader, depth: Int = 0): String {
+        check(depth < MAX_TYPE_TAG_DEPTH) { "Sui type tag nested too deeply" }
+        return when (val tag = reader.readULEB128()) {
             0 -> "bool"
             1 -> "u8"
             2 -> "u64"
             3 -> "u128"
             4 -> "address"
             5 -> "signer"
-            6 -> "vector<${readTypeTag(reader)}>"
-            7 -> readStructTag(reader)
+            6 -> "vector<${readTypeTag(reader, depth + 1)}>"
+            7 -> readStructTag(reader, depth + 1)
             8 -> "u16"
             9 -> "u32"
             10 -> "u256"
             else -> error("Unsupported TypeTag variant $tag")
         }
+    }
 
-    private fun readStructTag(reader: SuiBcsReader): String {
+    private fun readStructTag(reader: SuiBcsReader, depth: Int): String {
         val address = reader.readAddress()
         val module = reader.readString()
         val name = reader.readString()
-        val typeParams = reader.readVector { readTypeTag(reader) }
+        val typeParams = reader.readVector { readTypeTag(reader, depth + 1) }
         val generics = if (typeParams.isEmpty()) "" else "<${typeParams.joinToString(", ")}>"
         return "$address::$module::$name$generics"
     }
