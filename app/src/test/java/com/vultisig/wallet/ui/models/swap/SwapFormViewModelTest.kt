@@ -2850,6 +2850,23 @@ internal class SwapFormViewModelTest {
             assertTrue(vm.uiState.value.enableMaxAmount)
         }
 
+    @Test
+    fun `collectSelectedAccounts keeps enableMaxAmount false when no source is selected`() =
+        runTest(mainDispatcher) {
+            // Nothing to max out before the source account resolves.
+            val uiState = MutableStateFlow(SwapFormUiModel())
+
+            swapTokenSelector.collectSelectedAccounts(
+                selectedSrc = MutableStateFlow(null),
+                selectedDst = MutableStateFlow(null),
+                uiState = uiState,
+                scope = backgroundScope,
+            )
+            advanceUntilIdle()
+
+            assertFalse(uiState.value.enableMaxAmount)
+        }
+
     // endregion
 
     // region validateBalanceForSwap — native token

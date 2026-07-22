@@ -102,13 +102,14 @@ constructor(
                     val dstUiModel = dst?.let { accountToTokenBalanceUiModelMapper(it) }
                     // A native source pays the gas out of the same balance being swapped, so a MAX
                     // amount is never actually spendable — hide the shortcut instead of letting it
-                    // fill an amount the fee then invalidates.
-                    val isSrcNative = src?.account?.token?.isNativeToken ?: false
+                    // fill an amount the fee then invalidates. With no source selected yet there is
+                    // nothing to max out either, so MAX stays hidden until a token source arrives.
+                    val isSrcToken = src?.account?.token?.isNativeToken == false
                     uiState.update {
                         it.copy(
                             selectedSrcToken = srcUiModel,
                             selectedDstToken = dstUiModel,
-                            enableMaxAmount = isSrcNative.not(),
+                            enableMaxAmount = isSrcToken,
                         )
                     }
                 }
