@@ -193,6 +193,7 @@
     <string name="camera_permission_open_settings">Abrir configurações</string>
     <string name="verify_transaction_value">Valor</string>
     <string name="send_error_no_address">Endereço inválido</string>
+    <string name="send_error_invalid_recipient_address">Esse destinatário não é um endereço válido para esta cadeia.</string>
     <string name="vault_settings_error_backup_file">um erro ocorreu</string>
     <string name="vault_settings_error_backup_failed">O backup falhou. Nenhum ficheiro foi guardado. Tente novamente.</string>
     <string name="vault_settings_delete_vault_name">Nome do Cofre:</string>

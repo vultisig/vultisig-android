@@ -60,6 +60,14 @@ internal class AddressManager(
     private val _isDstAddressComplete = MutableStateFlow(false)
     val isDstAddressComplete: StateFlow<Boolean> = _isDstAddressComplete.asStateFlow()
 
+    // True when a non-empty recipient failed chain validation and couldn't resolve to a valid
+    // address. Drives the inline "not a valid address for this chain" error; false once the input
+    // is valid or empty. While name resolution is in flight the flag holds its previous value, so a
+    // standing error stays put until the new input resolves instead of blinking off and back on.
+    // Chain-general: every send chain validates through the same path below.
+    private val _invalidAddress = MutableStateFlow(false)
+    val invalidAddress: StateFlow<Boolean> = _invalidAddress.asStateFlow()
+
     private val _onAddressValidated = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val onAddressValidated: SharedFlow<Unit> = _onAddressValidated.asSharedFlow()
 
@@ -144,6 +152,7 @@ internal class AddressManager(
                     _dstAddressLabel.value = null
                 }
                 _resolvedDstAddress.value = addressStr
+                _invalidAddress.value = false
                 _onAddressValidated.tryEmit(Unit)
             }
             addressStr.isNotEmpty() -> {
@@ -155,6 +164,7 @@ internal class AddressManager(
             else -> {
                 _resolvedDstAddress.value = null
                 _dstAddressLabel.value = null
+                _invalidAddress.value = false
             }
         }
     }
@@ -186,6 +196,7 @@ internal class AddressManager(
             addressFieldState.setTextAndPlaceCursorAtEnd(decoded.classicAddress)
         }
         _resolvedDstAddress.value = decoded.classicAddress
+        _invalidAddress.value = false
         // Surface the pasted X-address as the label so Verify/Done show what the user entered.
         _dstAddressLabel.value = originalInput
         _onAddressValidated.tryEmit(Unit)
@@ -200,11 +211,13 @@ internal class AddressManager(
             if (chainAccountAddressRepository.isValid(chain, resolved)) {
                 _dstAddressLabel.value = addressStr
                 _resolvedDstAddress.value = resolved
+                _invalidAddress.value = false
                 addressFieldState.setTextAndPlaceCursorAtEnd(resolved)
                 _onAddressValidated.tryEmit(Unit)
             } else {
                 _resolvedDstAddress.value = null
                 _dstAddressLabel.value = null
+                _invalidAddress.value = true
             }
         } catch (e: CancellationException) {
             throw e
@@ -214,6 +227,7 @@ internal class AddressManager(
             Timber.w(e, "Failed to resolve address %s on %s", addressStr, chain)
             _resolvedDstAddress.value = null
             _dstAddressLabel.value = null
+            _invalidAddress.value = true
         }
     }
 }

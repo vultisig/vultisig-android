@@ -101,6 +101,7 @@
     <string name="send_error_no_token">Geen token geselecteerd</string>
     <string name="send_error_no_gas_fee">Geen gasvergoeding</string>
     <string name="send_error_no_address">Adres is ongeldig</string>
+    <string name="send_error_invalid_recipient_address">Die ontvanger is geen geldig adres voor deze keten.</string>
     <string name="send_error_no_amount">Het bedrag moet een positief getal zijn</string>
     <string name="send_error_too_many_decimals">Het bedrag mag maximaal %1$d decimalen hebben</string>
     <string name="send_error_invalid_operator_fee">Operatorkosten moeten een geldig getal tussen 0 en 10000 basispunten zijn</string>
