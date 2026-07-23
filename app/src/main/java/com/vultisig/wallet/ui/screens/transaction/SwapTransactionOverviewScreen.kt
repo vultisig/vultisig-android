@@ -179,10 +179,25 @@ internal fun SwapTransactionOverviewScreen(
                     fiatGas = transactionTypeUiModel.networkFee.fiatValue,
                 )
 
-                TextDetails(
-                    title = stringResource(R.string.swap_form_estimated_fees_title),
-                    subtitle = transactionTypeUiModel.providerFee.fiatValue,
-                )
+                // Same Swap Fee rules as the verify screen (#5358): hidden for a SwapKit UTXO
+                // deposit whose cost is already the Network Fee, and "included in quoted rate" for
+                // 1inch. Rendering providerFee.fiatValue unconditionally showed a fee that is not
+                // part of totalFee, so the rows visibly failed to add up (#5335).
+                if (!transactionTypeUiModel.swapFeeHidden) {
+                    TextDetails(
+                        title =
+                            transactionTypeUiModel.swapFeePercent?.let {
+                                stringResource(
+                                    R.string.swap_form_estimated_fees_with_percent_title,
+                                    it,
+                                )
+                            } ?: stringResource(R.string.swap_form_estimated_fees_title),
+                        subtitle =
+                            if (transactionTypeUiModel.swapFeeIncludedInRate)
+                                stringResource(R.string.swap_form_estimated_fees_included_in_rate)
+                            else transactionTypeUiModel.providerFee.fiatValue,
+                    )
+                }
 
                 // Only THORChain / MayaChain report an outbound fee distinct from the swap fee.
                 transactionTypeUiModel.outboundFee?.let { outboundFee ->
