@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isBuySupported
 import com.vultisig.wallet.data.models.isDepositSupported
 import com.vultisig.wallet.data.models.isLpToken
+import com.vultisig.wallet.data.models.isReadOnlyAsset
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -38,6 +39,7 @@ internal data class TokenDetailUiModel(
     val isRefreshing: Boolean = false,
     val canDeposit: Boolean = false,
     val canSwap: Boolean = false,
+    val canSend: Boolean = true,
     val canBuy: Boolean = false,
     val isBalanceVisible: Boolean = true,
     val explorerUrl: String = "",
@@ -155,7 +157,14 @@ constructor(
                                         // LP receipt tokens (e.g. bRUNE/ybRUNE) can't be a swap
                                         // source; gate the button here too, not only in the asset
                                         // pickers, so it can't be entered from this screen.
-                                        canSwap = chain.isSwapSupported && !token.isLpToken,
+                                        canSwap =
+                                            chain.isSwapSupported &&
+                                                !token.isLpToken &&
+                                                !token.isReadOnlyAsset,
+                                        // Read-only assets (XRPL issued currencies) have no
+                                        // signing path yet, so the send entry point is closed
+                                        // here as well as in the asset pickers.
+                                        canSend = !token.isReadOnlyAsset,
                                         canBuy = chain.isBuySupported,
                                         explorerUrl = explorerUrl,
                                     )
