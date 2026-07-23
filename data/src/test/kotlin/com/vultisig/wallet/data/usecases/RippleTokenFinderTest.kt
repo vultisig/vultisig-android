@@ -4,7 +4,9 @@ import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.RippleTrustLineJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.RIPPLE_TOKEN_DECIMALS
+import com.vultisig.wallet.data.models.parseRippleTokenIdentity
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.io.IOException
@@ -85,6 +87,21 @@ class RippleTokenFinderTest {
             "534F4C4F00000000000000000000000000000000.$ISSUER",
             coins.single().contractAddress,
         )
+    }
+
+    // A discovered line that matches a catalog entry must reuse it, or the row loses the curated
+    // logo and priceProviderID that give it an icon and a fiat value.
+    @Test
+    fun `a curated currency is surfaced as its catalog entry`() = runTest {
+        val rlusd = Coins.Ripple.RLUSD
+        val identity = checkNotNull(parseRippleTokenIdentity(rlusd.contractAddress))
+
+        val coin = find(line(identity.currency, identity.issuer, balance = "42")).single()
+
+        assertEquals(rlusd, coin)
+        assertEquals("RLUSD", coin.ticker)
+        assertEquals("rlusd", coin.logo)
+        assertEquals("ripple-usd", coin.priceProviderID)
     }
 
     // A transient RPC failure must not wipe tokens the vault already holds; the refresh retries.
