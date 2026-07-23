@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
+import com.vultisig.wallet.ui.models.swap.PriceImpactLevel
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
@@ -182,6 +183,54 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
         uiModel.totalFee shouldBe "0.51"
     }
 
+    /**
+     * #5335: on a thin route the liquidity cost the user actually gave up dwarfs the fee total, but
+     * it is baked into the received amount and so contributes nothing to Total Fee. It must reach
+     * the screens as its own Price Impact row — without moving into the total, which stays exactly
+     * what it was.
+     */
+    @Test
+    fun `surfaces the quote's price impact without changing the fee total`() = runTest {
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { fiatValueToStringMapper(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+        coEvery { convertTokenValueToFiat(eth, srcValue, AppCurrency.USD) } returns usd("100")
+        coEvery { convertTokenValueToFiat(usdt, dstValue, AppCurrency.USD) } returns usd("99")
+        coEvery { convertTokenValueToFiat(usdt, totalFees, AppCurrency.USD) } returns usd("1.40")
+        coEvery { convertTokenValueToFiat(usdt, affiliateFee, AppCurrency.USD) } returns usd("0.00")
+        coEvery { convertTokenValueToFiat(usdt, outboundFee, AppCurrency.USD) } returns usd("1.18")
+
+        // 1.58% impact — the node reports it positive, the row shows what the user loses.
+        val uiModel = mapper().invoke(transaction(priceImpact = BigDecimal("0.0158")))
+
+        uiModel.priceImpactPercent shouldBe "-1.58%"
+        uiModel.priceImpactLevel shouldBe PriceImpactLevel.AVERAGE
+        // Unchanged from `splits affiliate and outbound…`: impact never enters the total.
+        uiModel.totalFee shouldBe "1.20"
+    }
+
+    @Test
+    fun `hides the price impact row when the provider reports none`() = runTest {
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { fiatValueToStringMapper(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+        coEvery { tokenRepository.getNativeToken(eth.chain.id) } returns eth
+        coEvery { convertTokenValueToFiat(eth, oneInchGas, AppCurrency.USD) } returns usd("2.00")
+
+        val uiModel = mapper().invoke(oneInchTransaction())
+
+        uiModel.priceImpactPercent shouldBe null
+        uiModel.priceImpactLevel shouldBe null
+    }
+
     private fun swapKitUtxoTransaction(): RegularSwapTransaction =
         RegularSwapTransaction(
             id = "tx-swapkit-btc",
@@ -314,6 +363,7 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
     private fun transaction(
         swapFee: TokenValue? = affiliateFee,
         outboundFee: TokenValue? = SwapTransactionToUiModelMapperFeeBreakdownTest.outboundFee,
+        priceImpact: BigDecimal? = null,
     ): RegularSwapTransaction =
         RegularSwapTransaction(
             id = "tx-1",
@@ -348,6 +398,7 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
                 ),
             isApprovalRequired = false,
             gasFeeFiatValue = usd("0.02"),
+            priceImpact = priceImpact,
         )
 
     private companion object {
