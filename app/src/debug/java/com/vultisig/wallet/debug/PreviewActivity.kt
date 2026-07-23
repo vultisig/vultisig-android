@@ -55,6 +55,7 @@ import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
 import com.vultisig.wallet.data.usecases.QrShareField
 import com.vultisig.wallet.data.usecases.QrShareInfo
+import com.vultisig.wallet.data.usecases.VaultAndBalance
 import com.vultisig.wallet.ui.components.SignMessageCard
 import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.UiIcon
@@ -88,6 +89,7 @@ import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyValidatorR
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
+import com.vultisig.wallet.ui.models.folder.CreateFolderUiModel
 import com.vultisig.wallet.ui.models.governance.GovernanceUiState
 import com.vultisig.wallet.ui.models.governance.ProposalStatus
 import com.vultisig.wallet.ui.models.governance.ProposalUi
@@ -122,6 +124,8 @@ import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingVerifyContent
 import com.vultisig.wallet.ui.screens.cosmosstaking.StakingPositionSkeleton
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
+import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
+import com.vultisig.wallet.ui.screens.folder.generateFakeVault
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
@@ -310,6 +314,7 @@ class PreviewActivity : ComponentActivity() {
                     "verify_send_empty_memo" -> VerifySendEmptyMemoPreview()
                     "unbond_verify_before" -> UnbondVerifyPreview(after = false)
                     "unbond_verify_after" -> UnbondVerifyPreview(after = true)
+                    "edit_folder" -> EditFolderPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -412,6 +417,53 @@ private fun SwapAdvancedLockedPreview() {
                 ),
             onGetVult = {},
             onDismiss = {},
+        )
+    }
+}
+
+/**
+ * Edit Folder bottom sheet (#folder-row-centering). The active-vault rows are built without a
+ * balance, which is exactly the case that exposed the vertical-centering bug in [VaultCeil]: the
+ * empty subtitle line pushed the vault name above the row's center. The "Available" row keeps its
+ * balance ("US$3.14") so both the fixed and unfixed states are visible in one screen.
+ */
+@Composable
+private fun EditFolderPreview() {
+    val secureSigners = listOf("iPhone-A1B", "iPhone-C2D")
+    val fastSigners = listOf("Server-206", "iPhone-C2D")
+
+    fun vaultAndBalance(name: String, signers: List<String>, balance: String?) =
+        VaultAndBalance(
+            vault = generateFakeVault().copy(name = name, signers = signers),
+            balance = balance,
+            balanceFiatValue = null,
+        )
+
+    val activeVaults =
+        listOf(
+            vaultAndBalance("Secure Vault #1", secureSigners, balance = null),
+            vaultAndBalance("Ahmad-Ehsan", secureSigners, balance = null),
+            vaultAndBalance("sss", secureSigners, balance = null),
+            vaultAndBalance("Fast-DKLS", fastSigners, balance = null),
+        )
+    val availableVaults =
+        listOf(vaultAndBalance("Fast-QBTC-Claim", fastSigners, balance = "US$3.14"))
+
+    Box(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
+        CreateFolderScreen(
+            state =
+                CreateFolderUiModel(
+                    currentName = "test",
+                    vaults = activeVaults,
+                    availableVaults = availableVaults,
+                ),
+            textFieldState = remember { TextFieldState("test") },
+            onAddVaultClick = {},
+            onCheckVault = { _, _ -> },
+            isEditMode = true,
+            onMoveVaults = { _, _ -> },
+            tryCheck = { checked, _ -> checked },
+            onDeleteFolderClick = {},
         )
     }
 }

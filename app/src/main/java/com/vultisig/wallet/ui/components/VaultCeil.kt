@@ -108,6 +108,9 @@ internal fun VaultCeil(
 
                 UiSpacer(size = 12.dp)
 
+                val hasSubtitle =
+                    activeVaultName != null || model.isFolder || !model.balance.isNullOrEmpty()
+
                 Column {
                     Text(
                         text = model.name,
@@ -117,54 +120,57 @@ internal fun VaultCeil(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.widthIn(max = 140.dp),
                     )
-                    UiSpacer(size = 2.dp)
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        if (model.isFolder && isSelected && activeVaultName != null) {
-                            UiIcon(
-                                drawableResId = R.drawable.ic_check,
-                                tint = Theme.v2.colors.alerts.info,
-                                size = 16.dp,
-                            )
-                            UiSpacer(size = 4.dp)
-                        }
-
-                        if (activeVaultName != null) {
-                            Row {
-                                ActiveVaultName(
-                                    isSelected = isSelected,
-                                    isFolder = model.isFolder,
-                                    content = "'",
+                    if (hasSubtitle) {
+                        UiSpacer(size = 2.dp)
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            if (model.isFolder && isSelected && activeVaultName != null) {
+                                UiIcon(
+                                    drawableResId = R.drawable.ic_check,
+                                    tint = Theme.v2.colors.alerts.info,
+                                    size = 16.dp,
                                 )
-                                ActiveVaultName(
-                                    isSelected = isSelected,
-                                    isFolder = model.isFolder,
-                                    content = activeVaultName,
-                                )
-                                ActiveVaultName(
-                                    isSelected = isSelected,
-                                    isFolder = model.isFolder,
-                                    content = "'",
-                                )
-
                                 UiSpacer(size = 4.dp)
+                            }
 
-                                ActiveVaultName(
-                                    isSelected = isSelected,
-                                    isFolder = model.isFolder,
-                                    content = stringResource(R.string.vault_ceil_active),
+                            if (activeVaultName != null) {
+                                Row {
+                                    ActiveVaultName(
+                                        isSelected = isSelected,
+                                        isFolder = model.isFolder,
+                                        content = "'",
+                                    )
+                                    ActiveVaultName(
+                                        isSelected = isSelected,
+                                        isFolder = model.isFolder,
+                                        content = activeVaultName,
+                                    )
+                                    ActiveVaultName(
+                                        isSelected = isSelected,
+                                        isFolder = model.isFolder,
+                                        content = "'",
+                                    )
+
+                                    UiSpacer(size = 4.dp)
+
+                                    ActiveVaultName(
+                                        isSelected = isSelected,
+                                        isFolder = model.isFolder,
+                                        content = stringResource(R.string.vault_ceil_active),
+                                    )
+                                }
+                            } else {
+                                Text(
+                                    text =
+                                        if (model.isFolder)
+                                            "$vaultCounts Vault${if (vaultCounts != 1) "s" else ""}"
+                                        else model.balance ?: "",
+                                    style = Theme.brockmann.supplementary.footnote,
+                                    color =
+                                        if (model.isFolder && isSelected)
+                                            Theme.v2.colors.alerts.info
+                                        else Theme.v2.colors.text.tertiary,
                                 )
                             }
-                        } else {
-                            Text(
-                                text =
-                                    if (model.isFolder)
-                                        "$vaultCounts Vault${if (vaultCounts != 1) "s" else ""}"
-                                    else model.balance ?: "",
-                                style = Theme.brockmann.supplementary.footnote,
-                                color =
-                                    if (model.isFolder && isSelected) Theme.v2.colors.alerts.info
-                                    else Theme.v2.colors.text.tertiary,
-                            )
                         }
                     }
                 }
