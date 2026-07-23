@@ -185,7 +185,12 @@ internal class SwapFormViewModelTest {
             {
                 val src = firstArg<SendSrc>()
                 mockk<com.vultisig.wallet.ui.models.send.TokenBalanceUiModel>(relaxed = true)
-                    .apply { every { model } returns src }
+                    .apply {
+                        every { model } returns src
+                        // The real mapper copies this off the account's token; relaxed mocks would
+                        // report every token as non-native and silently flip the MAX gate on.
+                        every { isNativeToken } returns src.account.token.isNativeToken
+                    }
             }
         requestResultRepository = mockk(relaxed = true)
 
@@ -2817,6 +2822,54 @@ internal class SwapFormViewModelTest {
 
             // When both tokens are native, enableMaxAmount should be false
             assertFalse(vm.uiState.value.enableMaxAmount)
+        }
+
+    @Test
+    fun `collectSelectedAccounts sets enableMaxAmount false when only the source is native`() =
+        runTest(mainDispatcher) {
+            // #5317: a native source pays gas out of the balance being swapped, so MAX must stay
+            // hidden even when the destination is a token (ETH → USDC).
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddress()),
+                    srcTokenId = ETH_COIN.id,
+                    dstTokenId = USDC_COIN.id,
+                )
+            advanceUntilIdle()
+
+            assertFalse(vm.uiState.value.enableMaxAmount)
+        }
+
+    @Test
+    fun `collectSelectedAccounts sets enableMaxAmount true when the source is a token`() =
+        runTest(mainDispatcher) {
+            // A token source pays gas in the native coin, so the whole token balance is spendable.
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddress()),
+                    srcTokenId = USDC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            assertTrue(vm.uiState.value.enableMaxAmount)
+        }
+
+    @Test
+    fun `collectSelectedAccounts keeps enableMaxAmount false when no source is selected`() =
+        runTest(mainDispatcher) {
+            // Nothing to max out before the source account resolves.
+            val uiState = MutableStateFlow(SwapFormUiModel())
+
+            swapTokenSelector.collectSelectedAccounts(
+                selectedSrc = MutableStateFlow(null),
+                selectedDst = MutableStateFlow(null),
+                uiState = uiState,
+                scope = backgroundScope,
+            )
+            advanceUntilIdle()
+
+            assertFalse(uiState.value.enableMaxAmount)
         }
 
     // endregion
