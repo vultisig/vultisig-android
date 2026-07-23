@@ -8,6 +8,7 @@ import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -59,6 +60,40 @@ class RippleAccountLinesTest {
         val api = RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body))
 
         assertTrue(api.fetchAccountLines(ACCOUNT).isEmpty())
+    }
+
+    // Any other RPC error is a failed read, not an empty account: returning empty would drop the
+    // vault's tokens from the asset list and cache that emptiness for the whole TTL.
+    @Test
+    fun `fetchAccountLines throws on an RPC error other than actNotFound`() = runBlocking {
+        val body = """{"result": {"error": "slowDown", "status": "error"}}"""
+        val api = RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body))
+
+        val error =
+            assertThrows(RippleRpcException::class.java) {
+                runBlocking { api.fetchAccountLines(ACCOUNT) }
+            }
+
+        assertEquals("slowDown", error.error)
+    }
+
+    // A thrown read must not populate the cache, or one bad response would keep every token at
+    // zero until the TTL expires.
+    @Test
+    fun `a failed read is not cached`() = runBlocking {
+        val api =
+            RippleApiImp(
+                MockHttpClient.respondingWithSequence(
+                    HttpStatusCode.OK to """{"result": {"error": "slowDown"}}""",
+                    HttpStatusCode.OK to linesBody(line("USD", issuer, "7")),
+                )
+            )
+
+        assertThrows(RippleRpcException::class.java) {
+            runBlocking { api.fetchAccountLines(ACCOUNT) }
+        }
+
+        assertEquals(listOf("USD"), api.fetchAccountLines(ACCOUNT).map { it.currency })
     }
 
     @Test

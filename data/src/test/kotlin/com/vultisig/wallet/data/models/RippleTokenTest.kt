@@ -44,6 +44,13 @@ class RippleTokenTest {
         assertNull(parseRippleTokenIdentity(""))
     }
 
+    // Neither a currency code nor a base58 issuer can contain the separator, so a second one marks
+    // an address this app never wrote; splitting on the first would yield an unmatchable issuer.
+    @Test
+    fun `a contract address with more than one separator is not a valid identity`() {
+        assertNull(parseRippleTokenIdentity("USD.$ISSUER.extra"))
+    }
+
     // Two issuers each minting "USD" would collide on the plain ticker-chain id and overwrite each
     // other's persisted row, so the id has to carry the issuer.
     @Test

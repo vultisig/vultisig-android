@@ -39,7 +39,11 @@ internal data class TokenDetailUiModel(
     val isRefreshing: Boolean = false,
     val canDeposit: Boolean = false,
     val canSwap: Boolean = false,
-    val canSend: Boolean = true,
+    // Closed until the token is loaded, like every other action flag here: the read-only check
+    // runs only once a matching account resolves, and AssetActionButton has no disabled state, so
+    // a default of true would leave SEND tappable for a read-only asset while that load is in
+    // flight or after it finds nothing.
+    val canSend: Boolean = false,
     val canBuy: Boolean = false,
     val isBalanceVisible: Boolean = true,
     val explorerUrl: String = "",

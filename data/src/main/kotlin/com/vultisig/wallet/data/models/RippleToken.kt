@@ -58,6 +58,10 @@ fun Coin.rippleTokenIdentity(): RippleTokenIdentity? {
 fun parseRippleTokenIdentity(contractAddress: String): RippleTokenIdentity? {
     val separator = contractAddress.indexOf(RIPPLE_TOKEN_SEPARATOR)
     if (separator <= 0 || separator == contractAddress.lastIndex) return null
+    // Neither half may contain the separator, so a second one means the address was not built by
+    // rippleTokenContractAddress; splitting on the first would hand back an issuer that can never
+    // match a trust line.
+    if (contractAddress.lastIndexOf(RIPPLE_TOKEN_SEPARATOR) != separator) return null
     return RippleTokenIdentity(
         currency = contractAddress.substring(0, separator),
         issuer = contractAddress.substring(separator + 1),

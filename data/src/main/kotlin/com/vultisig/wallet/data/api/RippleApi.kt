@@ -211,7 +211,15 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
                     .result
 
             // An unfunded account answers with `actNotFound` and no `lines` — a legitimately empty
-            // holding, not a failure, so it falls through to an empty list.
+            // holding, not a failure, so it falls through to an empty list. Every other RPC error
+            // (a rate-limited or unsynced node, a rejected marker) arrives as an HTTP 200 that
+            // `bodyOrThrow` cannot catch; treating it as "no trust lines" would drop the vault's
+            // tokens and cache that emptiness for the whole TTL, so it throws instead.
+            val error = result?.error
+            if (error != null && error != ACCOUNT_NOT_FOUND_ERROR) {
+                throw RippleRpcException("account_lines", error)
+            }
+
             result?.lines?.let(lines::addAll)
 
             val next = result?.marker ?: return lines
@@ -263,8 +271,17 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
         const val RIPPLE_TXN_NOT_FOUND_CODE: Int = 29
         const val ACCOUNT_LINES_PAGE_SIZE: Int = 400
         const val MAX_ACCOUNT_LINES_PAGES: Int = 25
+        const val ACCOUNT_NOT_FOUND_ERROR: String = "actNotFound"
     }
 }
+
+/**
+ * An XRPL JSON-RPC call that answered HTTP 200 with a `result.error` instead of a payload.
+ *
+ * The node reached us, so nothing in the transport layer failed; only the ledger read did.
+ */
+internal class RippleRpcException(method: String, val error: String) :
+    Exception("XRPL $method failed: $error")
 
 private const val RIPPLE_ENGINE_RESULT_SUCCESS = "tesSUCCESS"
 
