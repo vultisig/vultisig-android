@@ -32,6 +32,7 @@ import com.vultisig.wallet.data.chains.helpers.CardanoHelper
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
+import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
@@ -603,7 +604,17 @@ constructor(
                         BlockChainSpecific.Sui(
                             referenceGasPrice = suiFees.price,
                             gasBudget = suiFees.limit,
-                            coins = coinsDeferred.await(),
+                            // Embed only the coin objects the send needs, not every owned object —
+                            // an unbounded set bloats the pairing QR / TSS relay payload and fails
+                            // to relay on wallets whose balance is scattered across many objects.
+                            coins =
+                                SuiHelper.selectPayloadCoins(
+                                    coinsDeferred.await(),
+                                    isNativeToken = token.isNativeToken,
+                                    contractAddress = token.contractAddress,
+                                    amount = tokenAmountValue ?: BigInteger.ZERO,
+                                    gasBudget = suiFees.limit,
+                                ),
                         ),
                         utxos = emptyList(),
                     )

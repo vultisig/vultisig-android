@@ -105,7 +105,17 @@ class SuiFeeService @Inject constructor(private val suiApi: SuiApi) : FeeService
             blockChainSpecific =
                 BlockChainSpecific.Sui(
                     referenceGasPrice = referenceGasPriceDeferred.await(),
-                    coins = allCoinsDeferred.await(),
+                    // Simulate over a covering subset (default budget) so the dry-run transaction
+                    // is
+                    // itself small enough to build on wallets with a scattered balance.
+                    coins =
+                        SuiHelper.selectPayloadCoins(
+                            allCoinsDeferred.await(),
+                            isNativeToken = coin.isNativeToken,
+                            contractAddress = coin.contractAddress,
+                            amount = toAmount,
+                            gasBudget = SUI_DEFAULT_GAS_BUDGET,
+                        ),
                     gasBudget = SUI_DEFAULT_GAS_BUDGET,
                 ),
             vaultPublicKeyECDSA = "",
