@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
+import java.math.BigDecimal
 import java.math.BigInteger
 
 sealed interface SwapTransaction {
@@ -55,6 +56,15 @@ sealed interface SwapTransaction {
     val referralBpsDiscount: Int?
     val referralBpsDiscountFiatValue: String?
 
+    /**
+     * Fractional price impact of the quote the user signed (e.g. `0.0133` == 1.33%), or null when
+     * the provider reports none (EVM aggregators). This is the liquidity/slippage cost that is
+     * baked into [expectedDstTokenValue] and therefore deliberately excluded from the fee total —
+     * carrying it here lets the verify and completion screens show it as its own row so the value
+     * the user gave up is accounted for instead of unexplained (#5335).
+     */
+    val priceImpact: BigDecimal?
+
     data class RegularSwapTransaction(
         override val id: TransactionId,
         override val vaultId: String,
@@ -79,6 +89,7 @@ sealed interface SwapTransaction {
         override val vultBpsDiscountFiatValue: String? = null,
         override val referralBpsDiscount: Int? = null,
         override val referralBpsDiscountFiatValue: String? = null,
+        override val priceImpact: BigDecimal? = null,
         // User-chosen external recipient the output was routed to, or null when it goes to the
         // vault's own address. Surfaced on the verify screen so the destination is never a silent
         // default (#4858).

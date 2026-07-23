@@ -101,6 +101,11 @@ internal data class SwapTransactionUiModel(
     // when there's no referral (non-THORChain, or unavailable to a co-signer) (#5358).
     val referralBpsDiscount: Int? = null,
     val referralBpsDiscountFiatValue: String? = null,
+    // Price impact of the signed quote, formatted like the swap form's row (e.g. "-1.58%") with its
+    // quality tier. Null when the provider reports none (EVM aggregators) or on a co-signer that
+    // rebuilds the tx from the payload without a quote — the row is then hidden (#5335).
+    val priceImpactPercent: String? = null,
+    val priceImpactLevel: PriceImpactLevel? = null,
 )
 
 internal data class ValuedToken(
