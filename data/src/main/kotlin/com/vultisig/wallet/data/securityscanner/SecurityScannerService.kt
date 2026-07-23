@@ -42,6 +42,12 @@ class SecurityScannerService(
         return factory.createSecurityScannerTransaction(transaction)
     }
 
+    override fun createRecipientSecurityScannerTransaction(
+        transaction: SwapTransaction
+    ): SecurityScannerTransaction {
+        return factory.createRecipientSecurityScannerTransaction(transaction)
+    }
+
     override fun getDisabledProviders(): List<String> {
         return disabledProvidersNames.toList()
     }

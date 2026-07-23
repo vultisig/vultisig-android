@@ -13,7 +13,12 @@ import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SecurityScannerFeaturesType
+import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
+import com.vultisig.wallet.data.securityscanner.SecurityScannerSupport
+import com.vultisig.wallet.data.securityscanner.SecurityScannerTransaction
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
+import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -106,6 +111,7 @@ internal class VerifySwapViewModelTest {
             securityScannerService = securityScannerService,
             vaultRepository = vaultRepository,
             inboundHaltPreflight = inboundHaltPreflight,
+            ioDispatcher = testDispatcher,
         )
 
     /**
@@ -268,8 +274,91 @@ internal class VerifySwapViewModelTest {
             coVerify(exactly = 0) { launchKeysign(any(), any(), any(), any(), any()) }
         }
 
+    /**
+     * Solana-source swaps can't be scanned as a full transaction, so before #5348 they were skipped
+     * entirely — the external recipient the funds land on was never screened. The fallback screens
+     * that address on its own on the destination chain and publishes the verdict through the same
+     * scan status the EVM path uses.
+     */
+    @Test
+    fun `a non-scannable source swap still screens its external recipient`() =
+        runTest(testDispatcher) {
+            val result = mockk<SecurityScannerResult>(relaxed = true)
+            val recipientScan = mockk<SecurityScannerTransaction>(relaxed = true)
+            givenNonEvmSourceSwap(dstChain = Chain.Ethereum, externalRecipient = RECIPIENT)
+            every {
+                securityScannerService.createRecipientSecurityScannerTransaction(any())
+            } returns recipientScan
+            coEvery { securityScannerService.scanTransaction(recipientScan) } returns result
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.state.value.txScanStatus shouldBe TransactionScanStatus.Scanned(result)
+        }
+
+    /** A swap that lands back in the vault's own address has no external address to screen. */
+    @Test
+    fun `a non-scannable source swap without an external recipient stays unscanned`() =
+        runTest(testDispatcher) {
+            givenNonEvmSourceSwap(dstChain = Chain.Ethereum, externalRecipient = null)
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.state.value.txScanStatus shouldBe TransactionScanStatus.NotStarted
+            coVerify(exactly = 0) { securityScannerService.scanTransaction(any()) }
+        }
+
+    /** Non-EVM destinations have no address-shaped scan, so the fallback skips them silently. */
+    @Test
+    fun `a non-scannable source swap to a non-EVM destination stays unscanned`() =
+        runTest(testDispatcher) {
+            givenNonEvmSourceSwap(dstChain = Chain.Solana, externalRecipient = RECIPIENT)
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.state.value.txScanStatus shouldBe TransactionScanStatus.NotStarted
+            coVerify(exactly = 0) { securityScannerService.scanTransaction(any()) }
+        }
+
+    /**
+     * Drives `init` with a Solana-source swap: the source chain is Blockaid-supported but isn't
+     * EVM, so the full-transaction path is skipped and only the recipient fallback can run.
+     */
+    private fun givenNonEvmSourceSwap(dstChain: Chain, externalRecipient: String?) {
+        val tx =
+            mockk<SwapTransaction.RegularSwapTransaction>(relaxed = true) {
+                every { isApprovalRequired } returns false
+                every { memo } returns null
+                every { srcToken } returns
+                    mockk<Coin>(relaxed = true).apply { every { chain } returns Chain.Solana }
+                every { dstToken } returns
+                    mockk<Coin>(relaxed = true).apply { every { chain } returns dstChain }
+                every { this@mockk.externalRecipient } returns externalRecipient
+            }
+        coEvery { swapTransactionRepository.getTransaction(TX_ID) } returns tx
+        coEvery { mapTransactionToUiModel(tx) } returns SwapTransactionUiModel()
+        coEvery { securityScannerService.isSecurityServiceEnabled() } returns true
+        every { securityScannerService.getSupportedChainsByFeature() } returns
+            listOf(
+                SecurityScannerSupport(
+                    provider = "blockaid",
+                    feature =
+                        listOf(
+                            SecurityScannerSupport.Feature(
+                                chains = listOf(Chain.Solana, Chain.Ethereum),
+                                featureType = SecurityScannerFeaturesType.SCAN_TRANSACTION,
+                            )
+                        ),
+                )
+            )
+    }
+
     private companion object {
         const val VAULT_ID = "vault-1"
         const val TX_ID = "tx-1"
+        const val RECIPIENT = "0x9876543210FeDcBa9876543210FeDcBa98765432"
     }
 }

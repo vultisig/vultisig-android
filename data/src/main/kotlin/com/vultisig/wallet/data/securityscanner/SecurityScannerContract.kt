@@ -16,6 +16,14 @@ interface SecurityScannerContract {
         transaction: SwapTransaction
     ): SecurityScannerTransaction
 
+    /**
+     * Screens a swap's external recipient on the destination chain, independently of whether the
+     * source-chain swap transaction itself can be scanned.
+     */
+    fun createRecipientSecurityScannerTransaction(
+        transaction: SwapTransaction
+    ): SecurityScannerTransaction
+
     fun getDisabledProviders(): List<String>
 
     fun getEnabledProviders(): List<String>

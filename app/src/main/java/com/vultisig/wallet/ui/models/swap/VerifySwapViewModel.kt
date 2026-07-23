@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
@@ -17,6 +18,7 @@ import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SecurityScannerSupport
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -32,7 +34,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -149,6 +151,7 @@ constructor(
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
     private val inboundHaltPreflight: SwapInboundHaltPreflight,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     val state = MutableStateFlow(VerifySwapUiModel())
@@ -297,15 +300,18 @@ constructor(
                     transaction.payload is SwapPayload.ThorChain ||
                         transaction.payload is SwapPayload.MayaChain
 
+                if (!securityScannerService.isSecurityServiceEnabled()) return@launch
+
+                val supportedChains = securityScannerService.getSupportedChainsByFeature()
                 val isSupported =
                     !isThorchainOrMaya &&
                         chain.standard == TokenStandard.EVM &&
-                        securityScannerService
-                            .getSupportedChainsByFeature()
-                            .isChainSupported(chain) &&
-                        securityScannerService.isSecurityServiceEnabled()
+                        supportedChains.isChainSupported(chain)
 
-                if (!isSupported) return@launch
+                if (!isSupported) {
+                    scanExternalRecipient(transaction, supportedChains)
+                    return@launch
+                }
 
                 state.update { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
 
@@ -313,7 +319,7 @@ constructor(
                     securityScannerService.createSecurityScannerTransaction(transaction)
 
                 val result =
-                    withContext(Dispatchers.IO) {
+                    withContext(ioDispatcher) {
                         securityScannerService.scanTransaction(securityScannerTransaction)
                     }
 
@@ -335,6 +341,44 @@ constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Fallback screening for swaps whose source chain can't be scanned as a full transaction (e.g.
+     * a Solana-source swap): the funds still leave the vault to an external recipient, so that
+     * address is screened on its own on the destination chain (#5348).
+     *
+     * Silently skipped when there is no external recipient — a swap back into the vault's own
+     * address needs no address screening — or when the destination chain isn't an EVM chain the
+     * provider covers, which is the only address-shaped scan Blockaid offers. Provider-side AML
+     * screening remains the backstop there.
+     */
+    private suspend fun scanExternalRecipient(
+        transaction: SwapTransaction,
+        supportedChains: List<SecurityScannerSupport>,
+    ) {
+        val hasExternalRecipient =
+            (transaction as? SwapTransaction.RegularSwapTransaction)
+                ?.externalRecipient
+                ?.isNotBlank() == true
+        if (!hasExternalRecipient) return
+
+        val dstChain = transaction.dstToken.chain
+        if (dstChain.standard != TokenStandard.EVM || !supportedChains.isChainSupported(dstChain)) {
+            return
+        }
+
+        state.update { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
+
+        val recipientScannerTransaction =
+            securityScannerService.createRecipientSecurityScannerTransaction(transaction)
+
+        val result =
+            withContext(ioDispatcher) {
+                securityScannerService.scanTransaction(recipientScannerTransaction)
+            }
+
+        state.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(result)) }
     }
 
     fun onDismissSecurityScanner() {
