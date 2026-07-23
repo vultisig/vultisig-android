@@ -31,8 +31,12 @@ object SuiHelper {
      * would classify the same coin differently on two devices — a native object read as a token
      * object silently turns a `Pay` into a `PaySui`. Only the address is normalized (leading zeros
      * stripped, lowercased); Move module and struct identifiers stay case-sensitive because
-     * `::coin::USDC` and `::coin::usdc` are genuinely different types. Mirrors iOS
-     * `SuiCoinType.normalize` and SDK `normalizeSuiCoinType` (vultisig-sdk#1275).
+     * `::coin::USDC` and `::coin::usdc` are genuinely distinct Move types.
+     *
+     * Mirrors the SDK `normalizeSuiCoinType` (vultisig-sdk#1275), which is likewise case-sensitive
+     * on the module/struct segments. This deliberately diverges from iOS `SuiCoinType.normalize`,
+     * which lowercases the entire coin type and so compares module/struct case-insensitively —
+     * matching iOS here would collapse those distinct Move types, which we do not want.
      */
     internal fun normalizeSuiCoinType(coinType: String): String {
         val addressEnd = coinType.indexOf("::")
@@ -97,24 +101,34 @@ object SuiHelper {
             }
 
         val input =
-            if (tokenObjects.isNotEmpty()) {
-                    // Token send (Pay): reference only the largest token objects covering the
-                    // amount, and pay gas from a single native SUI object that covers the budget.
+            if (!keysignPayload.coin.isNativeToken) {
+                    // Token send (Pay): branch on the coin's own native flag — the authoritative
+                    // signal the payload coins were selected with — not on whether token objects
+                    // happen to be present. A token send whose token objects are absent (e.g. a
+                    // truncated coin page) must fail loudly here, never fall through and silently
+                    // sign a native PaySui transfer of the raw amount as a different asset.
+                    check(tokenObjects.isNotEmpty()) {
+                        "No ${keysignPayload.coin.ticker} coin objects available for this SUI token send"
+                    }
+                    // Reference only the largest token objects covering the amount, and pay gas
+                    // from a single native SUI object that covers the budget.
                     val gasCoin = selectSuiGasCoin(coins, gasBudget)
                     val gasObjectRef =
                         selectSuiGasObjectRef(
                             suiObjects.map { it.toObjectRef() },
                             gasCoin?.coinObjectId,
                         )
-                    val tokenInputCoins =
-                        selectInputCoins(tokenObjects, keysignPayload.toAmount).map {
-                            it.toObjectRef()
-                        }
+                    val tokenInputCoins = selectInputCoins(tokenObjects, keysignPayload.toAmount)
+                    checkCoinsCover(
+                        tokenInputCoins,
+                        keysignPayload.toAmount,
+                        keysignPayload.coin.ticker,
+                    )
                     Sui.SigningInput.newBuilder()
                         .setPay(
                             Sui.Pay.newBuilder()
                                 .setGas(gasObjectRef)
-                                .addAllInputCoins(tokenInputCoins)
+                                .addAllInputCoins(tokenInputCoins.map { it.toObjectRef() })
                                 .addAllRecipients(listOf(toAddress.description()))
                                 .addAllAmounts(listOf(keysignPayload.toAmount.toLong()))
                                 .build()
@@ -123,12 +137,12 @@ object SuiHelper {
                     // Native send (PaySui): the input set also pays gas (Sui gas-smashes it into
                     // one coin), so cover amount + gas with the fewest largest objects.
                     val target = keysignPayload.toAmount + gasBudget
-                    val nativeInputCoins =
-                        selectInputCoins(suiObjects, target).map { it.toObjectRef() }
+                    val nativeInputCoins = selectInputCoins(suiObjects, target)
+                    checkCoinsCover(nativeInputCoins, target, keysignPayload.coin.ticker)
                     Sui.SigningInput.newBuilder()
                         .setPaySui(
                             Sui.PaySui.newBuilder()
-                                .addAllInputCoins(nativeInputCoins)
+                                .addAllInputCoins(nativeInputCoins.map { it.toObjectRef() })
                                 .addAllRecipients(listOf(toAddress.description()))
                                 .addAllAmounts(listOf(keysignPayload.toAmount.toLong()))
                                 .build()
@@ -213,8 +227,10 @@ object SuiHelper {
      * (Sui gas-smashes a native input set into one spendable coin).
      *
      * At least one object is always returned. If even [maxObjects] largest objects do not reach
-     * [target] they are still returned (best effort) — the caller decides how to handle an
-     * under-funded selection. Mirrors iOS `SuiCoinType.selectInputCoins` (vultisig-ios#4734).
+     * [target] they are still returned (best effort) so payload embedding can carry what the wallet
+     * has; the signing path then rejects a genuinely under-funded set via [checkCoinsCover] rather
+     * than emitting a transaction that would only fail at broadcast. Mirrors iOS
+     * `SuiCoinType.selectInputCoins` (vultisig-ios#4734).
      */
     internal fun selectInputCoins(
         coins: List<SuiCoin>,
@@ -278,6 +294,21 @@ object SuiHelper {
 
     private fun SuiCoin.balanceOrZero(): BigInteger =
         balance.toBigIntegerOrNull() ?: BigInteger.ZERO
+
+    /**
+     * Fails fast when the [selected] objects cannot cover [target] — the same fail-fast contract as
+     * [selectSuiGasObjectRef]. [selectInputCoins] returns a best-effort (possibly short) set so
+     * payload embedding stays lossless, so the signing path must guard here; otherwise an
+     * under-funded set would run the full multi-device keysign ceremony only to be rejected by the
+     * network at broadcast.
+     */
+    private fun checkCoinsCover(selected: List<SuiCoin>, target: BigInteger, ticker: String) {
+        val available = selected.fold(BigInteger.ZERO) { acc, coin -> acc + coin.balanceOrZero() }
+        check(available >= target) {
+            "Insufficient $ticker balance for this send: selected coin objects total $available " +
+                "but the transaction needs $target"
+        }
+    }
 
     private fun SuiCoin.toObjectRef(): Sui.ObjectRef =
         Sui.ObjectRef.newBuilder()

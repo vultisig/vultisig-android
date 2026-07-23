@@ -15,6 +15,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
@@ -78,32 +79,49 @@ constructor(private val http: HttpClient, private val json: Json) : SuiApi {
     }
 
     override suspend fun getAllCoins(address: String): List<SuiCoin> {
-        return http
-            .postRpc<RpcResponseJson>(
-                url = rpcUrl,
-                method = "suix_getAllCoins",
-                params = buildJsonArray { add(address) },
-            )
-            .result
-            ?.jsonObject
-            ?.get("data")
-            ?.jsonArray
-            ?.mapNotNull {
-                val coinType = it.jsonObject["coinType"]?.jsonPrimitive?.content
-                if (coinType != null) {
+        val allCoins = mutableListOf<SuiCoin>()
+        var cursor: String? = null
+
+        // suix_getAllCoins is paginated (default page ~50 objects). Follow nextCursor/hasNextPage
+        // so a wallet whose objects span multiple pages doesn't return a truncated set — otherwise
+        // a token whose objects all land on a later page is invisible here and a token send gets
+        // silently misclassified as a native SUI transfer. Mirrors iOS SuiService.getAllCoins.
+        do {
+            val result =
+                http
+                    .postRpc<RpcResponseJson>(
+                        url = rpcUrl,
+                        method = "suix_getAllCoins",
+                        params =
+                            buildJsonArray {
+                                add(address)
+                                cursor?.let { add(it) }
+                            },
+                    )
+                    .result
+                    ?.jsonObject ?: error("Failed to fetch all coins for sui")
+
+            result["data"]?.jsonArray?.forEach { element ->
+                val obj = element.jsonObject
+                val coinType = obj["coinType"]?.jsonPrimitive?.content ?: return@forEach
+                allCoins.add(
                     SuiCoin(
-                        coinObjectId = it.jsonObject["coinObjectId"]?.jsonPrimitive?.content ?: "",
-                        version = it.jsonObject["version"]?.jsonPrimitive?.content ?: "",
-                        digest = it.jsonObject["digest"]?.jsonPrimitive?.content ?: "",
-                        balance = it.jsonObject["balance"]?.jsonPrimitive?.content ?: "",
+                        coinObjectId = obj["coinObjectId"]?.jsonPrimitive?.content ?: "",
+                        version = obj["version"]?.jsonPrimitive?.content ?: "",
+                        digest = obj["digest"]?.jsonPrimitive?.content ?: "",
+                        balance = obj["balance"]?.jsonPrimitive?.content ?: "",
                         previousTransaction =
-                            it.jsonObject["previousTransaction"]?.jsonPrimitive?.content ?: "",
+                            obj["previousTransaction"]?.jsonPrimitive?.content ?: "",
                         coinType = coinType,
                     )
-                } else {
-                    null
-                }
-            } ?: error("Failed to fetch all coins for sui")
+                )
+            }
+
+            val hasNextPage = result["hasNextPage"]?.jsonPrimitive?.booleanOrNull ?: false
+            cursor = if (hasNextPage) result["nextCursor"]?.jsonPrimitive?.content else null
+        } while (cursor != null)
+
+        return allCoins
     }
 
     override suspend fun executeTransactionBlock(

@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import java.math.BigInteger
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import vultisig.keysign.v1.SuiCoin
@@ -239,6 +240,73 @@ class SuiHelperInputDataTest {
             input.pay.inputCoinsList.map { it.objectId }.toSet(),
         )
         assertEquals("0xgas", input.pay.gas.objectId)
+    }
+
+    // A token send whose token objects are missing (e.g. a truncated coin page) must fail loudly,
+    // never fall through to a native PaySui transfer of the raw amount as a different asset.
+
+    @Test
+    fun tokenSendWithoutTokenObjectsFailsLoudly() {
+        val coins =
+            listOf(
+                coinObject("0xgas1", nativeType, "5000000"),
+                coinObject("0xgas2", nativeType, "9000000"),
+            )
+
+        assertThrows(IllegalStateException::class.java) {
+            signingInput(
+                payload(
+                    suiCoin(false),
+                    coins,
+                    BigInteger.valueOf(250),
+                    BigInteger.valueOf(3_000_000L),
+                )
+            )
+        }
+    }
+
+    // An under-funded selection is rejected at signing rather than emitting a transaction that only
+    // fails at broadcast after the full multi-device ceremony.
+
+    @Test
+    fun nativeSendRejectsUnderfundedSelection() {
+        val coins =
+            listOf(
+                coinObject("0xa", nativeType, "1000000000"),
+                coinObject("0xb", nativeType, "2000000000"),
+            )
+
+        assertThrows(IllegalStateException::class.java) {
+            signingInput(
+                payload(
+                    suiCoin(true),
+                    coins,
+                    BigInteger.valueOf(4_000_000_000L),
+                    BigInteger.valueOf(3_000_000L),
+                )
+            )
+        }
+    }
+
+    @Test
+    fun tokenSendRejectsUnderfundedTokenSelection() {
+        val coins =
+            listOf(
+                coinObject("0xgas", nativeType, "9000000"),
+                coinObject("0xt1", tokenType, "100"),
+                coinObject("0xt2", tokenType, "200"),
+            )
+
+        assertThrows(IllegalStateException::class.java) {
+            signingInput(
+                payload(
+                    suiCoin(false),
+                    coins,
+                    BigInteger.valueOf(1000),
+                    BigInteger.valueOf(3_000_000L),
+                )
+            )
+        }
     }
 
     @Test

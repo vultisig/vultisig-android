@@ -607,13 +607,20 @@ constructor(
                             // Embed only the coin objects the send needs, not every owned object —
                             // an unbounded set bloats the pairing QR / TSS relay payload and fails
                             // to relay on wallets whose balance is scattered across many objects.
+                            //
+                            // Select against SUI_DEFAULT_GAS_BUDGET — the budget the fee dry-run
+                            // priced against — rather than the refined suiFees.limit. This keeps
+                            // the embedded object set identical to the one that was simulated, so
+                            // the broadcast transaction never carries an unpriced, larger input set
+                            // than the dry-run measured. The refined limit still becomes the tx's
+                            // gas ceiling above.
                             coins =
                                 SuiHelper.selectPayloadCoins(
                                     coinsDeferred.await(),
                                     isNativeToken = token.isNativeToken,
                                     contractAddress = token.contractAddress,
                                     amount = tokenAmountValue ?: BigInteger.ZERO,
-                                    gasBudget = suiFees.limit,
+                                    gasBudget = SUI_DEFAULT_GAS_BUDGET,
                                 ),
                         ),
                         utxos = emptyList(),
