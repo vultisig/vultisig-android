@@ -57,6 +57,45 @@ class SecurityScannerTransactionFactory(
         }
     }
 
+    /**
+     * Builds a recipient-only scan for a swap: a native transfer to the swap's external recipient
+     * on the DESTINATION chain, so Blockaid screens the address the funds land on even when the
+     * source-chain swap transaction can't be scanned (e.g. a Solana-source swap, #5348).
+     *
+     * Only EVM destinations are modelled — they are the one address-shaped scan the provider takes;
+     * the Bitcoin/Solana/Sui endpoints need a serialized transaction, which doesn't exist for an
+     * outbound leg the vault never signs. Throws for anything else so the caller can skip silently.
+     */
+    override fun createRecipientSecurityScannerTransaction(
+        transaction: SwapTransaction
+    ): SecurityScannerTransaction {
+        val recipient =
+            (transaction as? SwapTransaction.RegularSwapTransaction)?.externalRecipient?.takeIf {
+                it.isNotBlank()
+            } ?: throw SecurityScannerException("Security Scanner: Swap has no external recipient")
+
+        val dstToken = transaction.dstToken
+        val chain = dstToken.chain
+        if (chain.standard != TokenStandard.EVM) {
+            throw SecurityScannerException(
+                "Security Scanner: Recipient scan not supported on ${chain.name}",
+                chain = chain,
+            )
+        }
+        require(dstToken.address.isNotBlank()) {
+            "Security Scanner: Missing vault address on ${chain.name}"
+        }
+
+        return SecurityScannerTransaction(
+            chain = chain,
+            type = SecurityTransactionType.COIN_TRANSFER,
+            from = dstToken.address,
+            to = recipient,
+            amount = BigInteger.ZERO,
+            data = "0x",
+        )
+    }
+
     private fun createEVMSecurityScannerTransaction(
         transaction: SwapTransaction
     ): SecurityScannerTransaction {
