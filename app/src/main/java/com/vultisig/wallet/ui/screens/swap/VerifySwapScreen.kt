@@ -68,6 +68,7 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapViewModel
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
+import com.vultisig.wallet.ui.screens.swap.components.PriceImpactRow
 import com.vultisig.wallet.ui.screens.swap.components.ReferralDiscountRow
 import com.vultisig.wallet.ui.screens.swap.components.VultDiscountRow
 import com.vultisig.wallet.ui.theme.Theme
@@ -338,6 +339,15 @@ private fun VerifySwapScreen(
                     ReferralDiscountRow(
                         referralBpsDiscount = tx.referralBpsDiscount,
                         fiatValue = tx.referralBpsDiscountFiatValue,
+                        modifier = Modifier.padding(vertical = 12.dp),
+                    )
+
+                    // The liquidity cost is baked into the quoted destination amount and so is
+                    // absent from Total Fee by design; showing it here keeps the signed estimate
+                    // honest about what the swap actually costs (#5335).
+                    PriceImpactRow(
+                        priceImpactPercent = tx.priceImpactPercent,
+                        priceImpactLevel = tx.priceImpactLevel,
                         modifier = Modifier.padding(vertical = 12.dp),
                     )
 

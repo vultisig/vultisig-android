@@ -42,6 +42,7 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
+import com.vultisig.wallet.ui.screens.swap.components.PriceImpactRow
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
 
@@ -206,6 +207,16 @@ internal fun SwapTransactionOverviewScreen(
                         subtitle = outboundFee,
                     )
                 }
+
+                // Total Fee covers the fees charged on top of the swap; the liquidity cost is
+                // already reflected in the received amount, so it is reported separately here
+                // rather than folded in — otherwise the value the user gave up has no row at all
+                // and Total Fee reads as if it were the whole cost (#5335).
+                PriceImpactRow(
+                    priceImpactPercent = transactionTypeUiModel.priceImpactPercent,
+                    priceImpactLevel = transactionTypeUiModel.priceImpactLevel,
+                    modifier = Modifier.padding(vertical = 12.dp),
+                )
 
                 VerifyCardDivider(size = 1.dp)
 
