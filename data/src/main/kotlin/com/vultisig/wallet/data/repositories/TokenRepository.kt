@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.usecases.CosmosBankCoinFinder
 import com.vultisig.wallet.data.usecases.EvmCoinFinder
+import com.vultisig.wallet.data.usecases.RippleTokenFinder
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -47,6 +48,7 @@ constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val evmCoinFinder: EvmCoinFinder,
     private val cosmosBankCoinFinder: CosmosBankCoinFinder,
+    private val rippleTokenFinder: RippleTokenFinder,
 ) : TokenRepository {
 
     override suspend fun getToken(tokenId: String): Coin? =
@@ -189,6 +191,7 @@ constructor(
             }
             Chain.Terra,
             Chain.TerraClassic -> cosmosBankCoinFinder.find(chain, address)
+            Chain.Ripple -> rippleTokenFinder.find(address)
             else -> {
                 if (chain.standard != TokenStandard.EVM) emptyList()
                 else evmCoinFinder.find(chain, address)

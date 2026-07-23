@@ -2260,7 +2260,30 @@ object Coins {
                 isNativeToken = true,
             )
 
-        val all = listOf(XRP)
+        /**
+         * Ripple USD, an XRPL issued currency. Its ledger currency code is the 40-hex form of
+         * `RLUSD` (non-standard codes are longer than three characters), and the pair is stored in
+         * the `"<currency>.<issuer>"` notation [rippleTokenContractAddress] builds, so
+         * `account_lines` discovery matches this curated entry and keeps its logo and price id.
+         */
+        val RLUSD =
+            Coin(
+                chain = Chain.Ripple,
+                ticker = "RLUSD",
+                logo = "rlusd",
+                address = "",
+                decimal = RIPPLE_TOKEN_DECIMALS,
+                hexPublicKey = "",
+                priceProviderID = "ripple-usd",
+                contractAddress =
+                    rippleTokenContractAddress(
+                        currency = "524C555344000000000000000000000000000000",
+                        issuer = "rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De",
+                    ),
+                isNativeToken = false,
+            )
+
+        val all = listOf(XRP, RLUSD)
     }
 
     object Solana {

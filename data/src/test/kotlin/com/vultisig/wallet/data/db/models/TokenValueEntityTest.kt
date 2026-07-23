@@ -72,4 +72,51 @@ internal class TokenValueEntityTest {
 
         assertEquals("RUNE-THORChain", entity.tokenId)
     }
+
+    @Test
+    fun `an XRPL issued currency is contract-qualified, mirroring Coin id`() {
+        val entity =
+            TokenValueEntity(
+                chain = "Ripple",
+                address = "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+                ticker = "USD",
+                tokenValue = "100",
+                contractAddress = "USD.rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+            )
+
+        assertEquals("USD-Ripple-USD.rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B", entity.tokenId)
+    }
+
+    // The same currency code from two issuers must not collapse onto one balance row.
+    @Test
+    fun `same XRPL currency from two issuers has distinct tokenIds`() {
+        fun usdFrom(issuer: String) =
+            TokenValueEntity(
+                chain = "Ripple",
+                address = "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+                ticker = "USD",
+                tokenValue = "1",
+                contractAddress = "USD.$issuer",
+            )
+
+        assertNotEquals(
+            usdFrom("rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B").tokenId,
+            usdFrom("rcoef87SYMJ58NAFx7fNM5frVknmvHsvJ").tokenId,
+        )
+    }
+
+    // Native XRP has no issuer pair, so it keeps the plain form like any native coin.
+    @Test
+    fun `native XRP keeps the plain ticker-chain tokenId`() {
+        val entity =
+            TokenValueEntity(
+                chain = "Ripple",
+                address = "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+                ticker = "XRP",
+                tokenValue = "100",
+                contractAddress = "",
+            )
+
+        assertEquals("XRP-Ripple", entity.tokenId)
+    }
 }
