@@ -123,6 +123,7 @@ constructor(
                     vultBpsDiscountFiatValue = feeDisplay.vultBpsDiscountFiatValue,
                     referralBpsDiscount = feeDisplay.referralBpsDiscount,
                     referralBpsDiscountFiatValue = feeDisplay.referralBpsDiscountFiatValue,
+                    priceImpact = quote.priceImpact,
                     payload =
                         SwapPayload.ThorChain(
                             THORChainSwapPayload(
@@ -206,6 +207,7 @@ constructor(
                     vultBpsDiscountFiatValue = feeDisplay.vultBpsDiscountFiatValue,
                     referralBpsDiscount = feeDisplay.referralBpsDiscount,
                     referralBpsDiscountFiatValue = feeDisplay.referralBpsDiscountFiatValue,
+                    priceImpact = quote.priceImpact,
                     payload =
                         SwapPayload.MayaChain(
                             THORChainSwapPayload(
@@ -271,6 +273,7 @@ constructor(
                     vultBpsDiscountFiatValue = feeDisplay.vultBpsDiscountFiatValue,
                     referralBpsDiscount = feeDisplay.referralBpsDiscount,
                     referralBpsDiscountFiatValue = feeDisplay.referralBpsDiscountFiatValue,
+                    priceImpact = quote.priceImpact,
                     payload = SwapPayload.SwapKit(quote.data),
                 )
             }
@@ -379,6 +382,7 @@ constructor(
                     vultBpsDiscountFiatValue = feeDisplay.vultBpsDiscountFiatValue,
                     referralBpsDiscount = feeDisplay.referralBpsDiscount,
                     referralBpsDiscountFiatValue = feeDisplay.referralBpsDiscountFiatValue,
+                    priceImpact = quote.priceImpact,
                     payload =
                         SwapPayload.EVM(
                             EVMSwapPayloadJson(

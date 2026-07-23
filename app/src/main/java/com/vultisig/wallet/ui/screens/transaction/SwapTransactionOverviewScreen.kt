@@ -42,6 +42,7 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
+import com.vultisig.wallet.ui.screens.swap.components.PriceImpactRow
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
 
@@ -179,10 +180,25 @@ internal fun SwapTransactionOverviewScreen(
                     fiatGas = transactionTypeUiModel.networkFee.fiatValue,
                 )
 
-                TextDetails(
-                    title = stringResource(R.string.swap_form_estimated_fees_title),
-                    subtitle = transactionTypeUiModel.providerFee.fiatValue,
-                )
+                // Same Swap Fee rules as the verify screen (#5358): hidden for a SwapKit UTXO
+                // deposit whose cost is already the Network Fee, and "included in quoted rate" for
+                // 1inch. Rendering providerFee.fiatValue unconditionally showed a fee that is not
+                // part of totalFee, so the rows visibly failed to add up (#5335).
+                if (!transactionTypeUiModel.swapFeeHidden) {
+                    TextDetails(
+                        title =
+                            transactionTypeUiModel.swapFeePercent?.let {
+                                stringResource(
+                                    R.string.swap_form_estimated_fees_with_percent_title,
+                                    it,
+                                )
+                            } ?: stringResource(R.string.swap_form_estimated_fees_title),
+                        subtitle =
+                            if (transactionTypeUiModel.swapFeeIncludedInRate)
+                                stringResource(R.string.swap_form_estimated_fees_included_in_rate)
+                            else transactionTypeUiModel.providerFee.fiatValue,
+                    )
+                }
 
                 // Only THORChain / MayaChain report an outbound fee distinct from the swap fee.
                 transactionTypeUiModel.outboundFee?.let { outboundFee ->
@@ -191,6 +207,16 @@ internal fun SwapTransactionOverviewScreen(
                         subtitle = outboundFee,
                     )
                 }
+
+                // Total Fee covers the fees charged on top of the swap; the liquidity cost is
+                // already reflected in the received amount, so it is reported separately here
+                // rather than folded in — otherwise the value the user gave up has no row at all
+                // and Total Fee reads as if it were the whole cost (#5335).
+                PriceImpactRow(
+                    priceImpactPercent = transactionTypeUiModel.priceImpactPercent,
+                    priceImpactLevel = transactionTypeUiModel.priceImpactLevel,
+                    modifier = Modifier.padding(vertical = 12.dp),
+                )
 
                 VerifyCardDivider(size = 1.dp)
 

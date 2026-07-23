@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.clampDstFiatToSrcFiat
+import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
@@ -93,6 +94,12 @@ constructor(
             } else {
                 quotesFeesFiat
             }
+
+        // The liquidity component stays out of the fee total (it is already reflected in the
+        // destination amount), which on a thin route leaves most of what the user gave up
+        // unexplained. Surface it as its own Price Impact row, formatted as the swap form does
+        // (#5335).
+        val priceImpactDisplay = formatPriceImpact(from.priceImpact)
 
         // SwapTransaction carries no destination fiat, so it is recomputed here for the verify and
         // keysign screens. Apply the same value-preserving clamp the swap form uses (#4878) so an
@@ -177,6 +184,8 @@ constructor(
             vultBpsDiscountFiatValue = from.vultBpsDiscountFiatValue,
             referralBpsDiscount = from.referralBpsDiscount,
             referralBpsDiscountFiatValue = from.referralBpsDiscountFiatValue,
+            priceImpactPercent = priceImpactDisplay?.percent,
+            priceImpactLevel = priceImpactDisplay?.level,
         )
     }
 }
