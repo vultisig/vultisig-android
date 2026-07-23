@@ -104,7 +104,7 @@ constructor(
                     // amount is never actually spendable — hide the shortcut instead of letting it
                     // fill an amount the fee then invalidates. With no source selected yet there is
                     // nothing to max out either, so MAX stays hidden until a token source arrives.
-                    val isSrcToken = src?.account?.token?.isNativeToken == false
+                    val isSrcToken = srcUiModel?.isNativeToken == false
                     uiState.update {
                         it.copy(
                             selectedSrcToken = srcUiModel,

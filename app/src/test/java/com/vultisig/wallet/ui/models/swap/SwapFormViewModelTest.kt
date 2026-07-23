@@ -185,7 +185,12 @@ internal class SwapFormViewModelTest {
             {
                 val src = firstArg<SendSrc>()
                 mockk<com.vultisig.wallet.ui.models.send.TokenBalanceUiModel>(relaxed = true)
-                    .apply { every { model } returns src }
+                    .apply {
+                        every { model } returns src
+                        // The real mapper copies this off the account's token; relaxed mocks would
+                        // report every token as non-native and silently flip the MAX gate on.
+                        every { isNativeToken } returns src.account.token.isNativeToken
+                    }
             }
         requestResultRepository = mockk(relaxed = true)
 

@@ -498,7 +498,9 @@ constructor(
 
         // The 25/50/75 chips take a plain fraction of the full balance, matching iOS and the
         // desktop app. Only MAX reserves the source-chain network fee, and only for a native source
-        // on its own gas chain. The provider swap fee is taken from the destination amount (for
+        // on its own gas chain — a combination the UI no longer offers, since MAX is hidden
+        // whenever the source is native (#5317), so this branch is now a guard for direct callers
+        // rather than a live path. The provider swap fee is taken from the destination amount (for
         // LI.FI it is denominated in the destination token's units), so it is never deducted from
         // the source balance here — that would mix decimals and could wrongly drive the usable
         // amount negative for a low-decimal source into a high-decimal destination.
