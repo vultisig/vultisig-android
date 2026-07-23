@@ -184,6 +184,8 @@ internal interface DataUsecasesModule {
     @Singleton
     fun bindCosmosBankCoinFinder(impl: CosmosBankCoinFinderImpl): CosmosBankCoinFinder
 
+    @Binds @Singleton fun bindRippleTokenFinder(impl: RippleTokenFinderImpl): RippleTokenFinder
+
     @Binds
     @Singleton
     fun bindGetChainTokenUseCase(impl: GetChainTokensUseCaseImpl): GetChainTokensUseCase

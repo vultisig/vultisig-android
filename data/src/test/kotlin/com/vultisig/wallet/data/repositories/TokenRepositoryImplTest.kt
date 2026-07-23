@@ -7,9 +7,11 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.DenomMetadata
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.usecases.CosmosBankCoinFinder
 import com.vultisig.wallet.data.usecases.EvmCoinFinder
+import com.vultisig.wallet.data.usecases.RippleTokenFinder
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -239,6 +241,26 @@ internal class TokenRepositoryImplTest {
         }
 
     @Test
+    fun `getTokensWithBalance for Ripple delegates to the trust-line finder`() = runTest {
+        val rippleTokenFinder: RippleTokenFinder = mockk()
+        val expected =
+            listOf(
+                Coin.EMPTY.copy(
+                    chain = Chain.Ripple,
+                    ticker = "USD",
+                    contractAddress = "USD.rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+                )
+            )
+        coEvery { rippleTokenFinder.find(RIPPLE_ADDRESS) } returns expected
+
+        val coins =
+            newRepository(rippleTokenFinder = rippleTokenFinder)
+                .getTokensWithBalance(Chain.Ripple, RIPPLE_ADDRESS)
+
+        assertEquals(expected, coins)
+    }
+
+    @Test
     fun `getTokensWithBalance leaves other Cosmos chains untouched and returns empty`() = runTest {
         // Defensive: the dispatch must scope the new finder to Terra / TerraClassic only — the
         // ticket explicitly limits this discovery to those two chains.
@@ -256,6 +278,7 @@ internal class TokenRepositoryImplTest {
         thorApi: ThorChainApi = mockk(relaxed = true),
         evmCoinFinder: EvmCoinFinder = mockk(relaxed = true),
         cosmosBankCoinFinder: CosmosBankCoinFinder = mockk(relaxed = true),
+        rippleTokenFinder: RippleTokenFinder = mockk(relaxed = true),
     ): TokenRepositoryImpl =
         TokenRepositoryImpl(
             evmApiFactory = mockk<EvmApiFactory>(relaxed = true),
@@ -263,6 +286,7 @@ internal class TokenRepositoryImplTest {
             chainAccountAddressRepository = mockk<ChainAccountAddressRepository>(relaxed = true),
             evmCoinFinder = evmCoinFinder,
             cosmosBankCoinFinder = cosmosBankCoinFinder,
+            rippleTokenFinder = rippleTokenFinder,
         )
 
     private companion object {
@@ -270,5 +294,6 @@ internal class TokenRepositoryImplTest {
         const val TERRA_ADDRESS = "terra1abc"
         const val TERRA_CLASSIC_ADDRESS = "terra1classic"
         const val COSMOS_ADDRESS = "cosmos1abc"
+        const val RIPPLE_ADDRESS = "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh"
     }
 }
