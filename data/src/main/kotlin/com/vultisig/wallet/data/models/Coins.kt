@@ -2465,7 +2465,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "AAOI",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x521cf887e6531c6f667b5bc4d896e5d9bfe8eb2e.png",
+                logo = "https://financialmodelingprep.com/image-stock/AAOI.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2476,7 +2476,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "AAPL",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xaf3d76f1834a1d425780943c99ea8a608f8a93f9.png",
+                logo = "https://financialmodelingprep.com/image-stock/AAPL.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2487,7 +2487,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "AMAT",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x36046893810a7e7fce501229d57dc3fc8c8716d0.png",
+                logo = "https://financialmodelingprep.com/image-stock/AMAT.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2498,7 +2498,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "AMD",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x86923f96303d656e4aa86d9d42d1e57ad2023fdc.png",
+                logo = "https://financialmodelingprep.com/image-stock/AMD.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2509,7 +2509,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "AMZN",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x12f190a9f9d7d37a250758b26824b97ce941bf54.png",
+                logo = "https://financialmodelingprep.com/image-stock/AMZN.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2520,7 +2520,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "APLD",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xb8dbf92f9741c9ac1c32115e78581f23509916fd.png",
+                logo = "https://financialmodelingprep.com/image-stock/APLD.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2531,7 +2531,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "ASML",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x47f93d52cbec7c6d2cfc080e154002370a60daea.png",
+                logo = "https://financialmodelingprep.com/image-stock/ASML.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2542,7 +2542,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "ASTS",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x1af6446f07eb1d97c546afc8c9544cbdf3ad5137.png",
+                logo = "https://financialmodelingprep.com/image-stock/ASTS.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2553,7 +2553,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "AVGO",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x156e175dd063a8ce274c50654ef40e0032b3fbcf.png",
+                logo = "https://financialmodelingprep.com/image-stock/AVGO.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2564,7 +2564,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "BA",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x4d21483a44bf67a86b77e3da301411880797d452.png",
+                logo = "https://financialmodelingprep.com/image-stock/BA.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2575,7 +2575,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "BABA",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xad25ac6c84d497db898fa1e8387bf6af3532a1c4.png",
+                logo = "https://financialmodelingprep.com/image-stock/BABA.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2586,7 +2586,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "BE",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x822cc93ffd030293e9842c30bbd678f530701867.png",
+                logo = "https://financialmodelingprep.com/image-stock/BE.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2597,7 +2597,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "CBRS",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x5c90450bbb4273d7b2f17cf6917aeb237a569679.png",
+                logo = "https://financialmodelingprep.com/image-stock/CBRS.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2608,7 +2608,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "CCL",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x9651342cea770ae9a2969ba2a52611523146aef9.png",
+                logo = "https://financialmodelingprep.com/image-stock/CCL.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2619,7 +2619,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "CELH",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x8cf07c5a878945185d327aaa6e33faa95f95e7bf.png",
+                logo = "https://financialmodelingprep.com/image-stock/CELH.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2630,7 +2630,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "CLSK",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xcbb95bbf36099d34da091dc6fa6f49efa257cee3.png",
+                logo = "https://financialmodelingprep.com/image-stock/CLSK.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2641,7 +2641,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "COIN",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x6330d8c3178a418788df01a47479c0ce7ccf450b.png",
+                logo = "https://financialmodelingprep.com/image-stock/COIN.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2652,7 +2652,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "COST",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x4ea005168d7f09a7a0ba9d1def21a479950e44c2.png",
+                logo = "https://financialmodelingprep.com/image-stock/COST.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2663,7 +2663,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "CRCL",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xdf0992e440dd0be65bd8439b609d6d4366bf1cb5.png",
+                logo = "https://financialmodelingprep.com/image-stock/CRCL.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2674,7 +2674,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "CRWD",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xea72ecca2d0f6bfa1394dbbcff85b52cd4233931.png",
+                logo = "https://financialmodelingprep.com/image-stock/CRWD.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2685,7 +2685,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "CRWV",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x5f10a1c971b69e47e059e1dc91901b59b3fb49c3.png",
+                logo = "https://financialmodelingprep.com/image-stock/CRWV.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2696,7 +2696,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "DDOG",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x27c99fbde9d0d2aa4f4bfb4943f237843ddf6958.png",
+                logo = "https://financialmodelingprep.com/image-stock/DDOG.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2707,7 +2707,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "DELL",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x941ae714ec6d8130c7b75d67160ca08f1e7d11dd.png",
+                logo = "https://financialmodelingprep.com/image-stock/DELL.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2718,7 +2718,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "ELF",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x39ec44bee4f6a116c6f9b8de566848a985c53c60.png",
+                logo = "https://financialmodelingprep.com/image-stock/ELF.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2729,7 +2729,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "EWY",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x7f0abef0c07280f82c6a08ead09ded6bae2c13fc.png",
+                logo = "https://financialmodelingprep.com/image-stock/EWY.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2740,7 +2740,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "F",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x25c288e6d899b9bc30160965ad9644c67e73be0c.png",
+                logo = "https://financialmodelingprep.com/image-stock/F.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2751,7 +2751,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "FLNC",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x282e87451e10fa6679bc7d76c69be44cd3fc777c.png",
+                logo = "https://financialmodelingprep.com/image-stock/FLNC.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2762,7 +2762,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "FUTU",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xeb30663bdff0622ef4e4e5cbb4e975f19f33f51d.png",
+                logo = "https://financialmodelingprep.com/image-stock/FUTU.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2773,7 +2773,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "GLW",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x7c04e6a3368f2a1de3874f0e80d2e0a1a9915da6.png",
+                logo = "https://financialmodelingprep.com/image-stock/GLW.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2784,7 +2784,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "GME",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x1b0e319c6a659f002271b69db8a7df2f911c153e.png",
+                logo = "https://financialmodelingprep.com/image-stock/GME.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2795,7 +2795,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "GOOGL",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3.png",
+                logo = "https://financialmodelingprep.com/image-stock/GOOGL.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2806,7 +2806,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "INOD",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xf1953dab6fad537488d5a022361ffaa8b4c95ec6.png",
+                logo = "https://financialmodelingprep.com/image-stock/INOD.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2817,7 +2817,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "INTC",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xc72b96e0e48ecd4dc75e1e45396e26300bc39681.png",
+                logo = "https://financialmodelingprep.com/image-stock/INTC.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2828,7 +2828,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "INTU",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x56d23bee5f41a7120170b0c603dae30128e460e9.png",
+                logo = "https://financialmodelingprep.com/image-stock/INTU.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2839,7 +2839,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "IONQ",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x558378e000d634a36593e338ebacdd6207640efe.png",
+                logo = "https://financialmodelingprep.com/image-stock/IONQ.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2850,7 +2850,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "IREN",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xf0ab0c93be6f41369d302e55db1a96b3c430212d.png",
+                logo = "https://financialmodelingprep.com/image-stock/IREN.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2861,7 +2861,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "LITE",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x8ef20885f94e3d9bc7eb3080279188bd5ed7c08c.png",
+                logo = "https://financialmodelingprep.com/image-stock/LITE.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2872,7 +2872,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "LLY",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x8005d266423c7ea827372c9c864491e5786600ea.png",
+                logo = "https://financialmodelingprep.com/image-stock/LLY.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2883,7 +2883,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "LULU",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x4e62068525ab11fe768e29dfd00ef909b9803016.png",
+                logo = "https://financialmodelingprep.com/image-stock/LULU.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2894,7 +2894,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "LUNR",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xa5d4968421ba94814be3b136b15cf422101ac1a3.png",
+                logo = "https://financialmodelingprep.com/image-stock/LUNR.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2905,7 +2905,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "MDB",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xddf2266b79abf0b48898959b0ed6e6adf512be74.png",
+                logo = "https://financialmodelingprep.com/image-stock/MDB.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2916,7 +2916,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "META",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xc0d6457c16cc70d6790dd43521c899c87ce02f35.png",
+                logo = "https://financialmodelingprep.com/image-stock/META.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2927,7 +2927,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "MRVL",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x62fd0668e10d8b72339be2dcf7643001688ff13b.png",
+                logo = "https://financialmodelingprep.com/image-stock/MRVL.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2938,7 +2938,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "MSFT",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xe93237c50d904957cf27e7b1133b510c669c2e74.png",
+                logo = "https://financialmodelingprep.com/image-stock/MSFT.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2949,7 +2949,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "MSTR",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xec262a75e413fafd0df80480274532c79d42da09.png",
+                logo = "https://financialmodelingprep.com/image-stock/MSTR.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2960,7 +2960,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "MU",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xff080c8ce2e5feadaca0da81314ae59d232d4afd.png",
+                logo = "https://financialmodelingprep.com/image-stock/MU.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2971,7 +2971,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "MXL",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x48961813349333209994750ffa89b3c5c22ec969.png",
+                logo = "https://financialmodelingprep.com/image-stock/MXL.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2982,7 +2982,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "NBIS",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x9d9c6684f596f66a64c030b93a886d51fd4d7931.png",
+                logo = "https://financialmodelingprep.com/image-stock/NBIS.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -2993,7 +2993,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "NFLX",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xe0444ef8bf4ed74f74fd73686e2ddf4c1c5591e8.png",
+                logo = "https://financialmodelingprep.com/image-stock/NFLX.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3004,7 +3004,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "NNE",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xbef75684c43c4ea7bd18dd532a2244674ee8b926.png",
+                logo = "https://financialmodelingprep.com/image-stock/NNE.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3015,7 +3015,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "NOW",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x0c3260af4b8f13a69c4c2dfb84fd667890cdfa14.png",
+                logo = "https://financialmodelingprep.com/image-stock/NOW.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3026,7 +3026,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "NU",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x408c14038a04f7bd235329e26d2bf569ee20e250.png",
+                logo = "https://financialmodelingprep.com/image-stock/NU.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3037,7 +3037,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "NVDA",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec.png",
+                logo = "https://financialmodelingprep.com/image-stock/NVDA.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3048,7 +3048,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "NVTS",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xbe6702d7b70315376dc48a3293f24f0982f86386.png",
+                logo = "https://financialmodelingprep.com/image-stock/NVTS.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3059,7 +3059,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "ORCL",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xb0992820e760d836549ba69bc7598b4af75dee03.png",
+                logo = "https://financialmodelingprep.com/image-stock/ORCL.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3081,7 +3081,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "PENG",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x9b23573b156b52565012f5ce02cdf60afbaa70be.png",
+                logo = "https://financialmodelingprep.com/image-stock/PENG.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3092,7 +3092,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "PLTR",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x894e1ec2d74ffe5aef8dc8a9e84686accb964f2a.png",
+                logo = "https://financialmodelingprep.com/image-stock/PLTR.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3103,7 +3103,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "POET",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xcf6b2d875361be807eafa57458c80f28521f9333.png",
+                logo = "https://financialmodelingprep.com/image-stock/POET.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3114,7 +3114,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "PR",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x4189f0c66ebbb0bfef1c31f763131361ef32f77c.png",
+                logo = "https://financialmodelingprep.com/image-stock/PR.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3125,7 +3125,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "QBTS",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xc583c60aef9dc401da72cec1b404743a93cea1cc.png",
+                logo = "https://financialmodelingprep.com/image-stock/QBTS.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3136,7 +3136,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "QCOM",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x0f17206447090e464c277571124dd2688e48aea9.png",
+                logo = "https://financialmodelingprep.com/image-stock/QCOM.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3147,7 +3147,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "QQQ",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xd5f3879160bc7c32ebb4dc785f8a4f505888de68.png",
+                logo = "https://financialmodelingprep.com/image-stock/QQQ.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3158,7 +3158,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "QUBT",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x59818904ab4ce163b3ce4ffb64f2d6ca02c434b4.png",
+                logo = "https://financialmodelingprep.com/image-stock/QUBT.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3169,7 +3169,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "RBLX",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xf0c4bf4c582cb3836e98394b1d4e7b7281101be8.png",
+                logo = "https://financialmodelingprep.com/image-stock/RBLX.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3180,7 +3180,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "RDDT",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x05b37fb53a299a1b874a619e1c4c404d52c36f4c.png",
+                logo = "https://financialmodelingprep.com/image-stock/RDDT.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3191,7 +3191,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "RDW",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x92ef19e82bd8ff36661de838d5eae7e5cef0effe.png",
+                logo = "https://financialmodelingprep.com/image-stock/RDW.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3202,7 +3202,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "RGTI",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x284358abc07f9359f19f4b5b4ac91901be2597ba.png",
+                logo = "https://financialmodelingprep.com/image-stock/RGTI.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3213,7 +3213,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "RIVN",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xb1bf26c1d20ff267a4f93550d1e0d06ac40a114b.png",
+                logo = "https://financialmodelingprep.com/image-stock/RIVN.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3224,7 +3224,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "RKLB",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x3b14c39e89d60d627b42a1a4ca45b5bb45fc12e2.png",
+                logo = "https://financialmodelingprep.com/image-stock/RKLB.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3235,7 +3235,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "SATS",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x95052ddcd5dc25641657424a8cf04834997e1730.png",
+                logo = "https://financialmodelingprep.com/image-stock/SATS.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3246,7 +3246,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "SGOV",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x92fd66527192e3e61d4ddd13322aa222de86f9b5.png",
+                logo = "https://financialmodelingprep.com/image-stock/SGOV.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3257,7 +3257,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "SHOP",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xf53f66751b1eff985311b693531e3290f600c410.png",
+                logo = "https://financialmodelingprep.com/image-stock/SHOP.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3279,7 +3279,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "SLV",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x411efb0e7f985935daec3d4c3ebaea0d0ad7d89f.png",
+                logo = "https://financialmodelingprep.com/image-stock/SLV.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3290,7 +3290,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "SMCI",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xc01aa1fecec0605b13bc84874ff7256c0f5f562a.png",
+                logo = "https://financialmodelingprep.com/image-stock/SMCI.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3301,7 +3301,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "SNDK",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xb90a19ff0af67f7779aff50a882a9cff42446400.png",
+                logo = "https://financialmodelingprep.com/image-stock/SNDK.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3312,7 +3312,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "SOFI",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x98e75885157c80992a8d41b696d8c9c6fb30a926.png",
+                logo = "https://financialmodelingprep.com/image-stock/SOFI.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3323,7 +3323,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "SOXX",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x75742c18bc1f1c5c5f448f4c9d9c6f66dafaaa38.png",
+                logo = "https://financialmodelingprep.com/image-stock/SOXX.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3334,7 +3334,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "SPCX",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x4a0e65a3eccec6dbe60ae065f2e7bb85fae35eea.png",
+                logo = "https://financialmodelingprep.com/image-stock/SPCX.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3345,7 +3345,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "SPMO",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xad622320e520de39e72d41ef07438c3fd3354875.png",
+                logo = "https://financialmodelingprep.com/image-stock/SPMO.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3356,7 +3356,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "SPY",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x117cc2133c37b721f49de2a7a74833232b3b4c0c.png",
+                logo = "https://financialmodelingprep.com/image-stock/SPY.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3378,7 +3378,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "TSLA",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x322f0929c4625ed5bad873c95208d54e1c003b2d.png",
+                logo = "https://financialmodelingprep.com/image-stock/TSLA.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3389,7 +3389,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "TSM",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x58ffe4a942d3885baa22d7520691f611ef09e7aa.png",
+                logo = "https://financialmodelingprep.com/image-stock/TSM.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3400,7 +3400,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "TTWO",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x5e81213613b6b86eab4c6c50d718d34359459786.png",
+                logo = "https://financialmodelingprep.com/image-stock/TTWO.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3411,7 +3411,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "UMC",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x0e6e67ba88e7b5d9b67636a215c76779b948de79.png",
+                logo = "https://financialmodelingprep.com/image-stock/UMC.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3422,7 +3422,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "UPS",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xf23250dac154d05bb671cb0d0ebef3c635c79ce2.png",
+                logo = "https://financialmodelingprep.com/image-stock/UPS.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3433,7 +3433,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "USAR",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xd917b029c761d264c6a312bbbcda868658ef86a6.png",
+                logo = "https://financialmodelingprep.com/image-stock/USAR.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3455,7 +3455,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "WDAY",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x82da4646242e1d962e96e932269dc644c94a9caa.png",
+                logo = "https://financialmodelingprep.com/image-stock/WDAY.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3466,7 +3466,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "XLK",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x15cd20759ce7f3285c29a319de2d1a2e098c6f43.png",
+                logo = "https://financialmodelingprep.com/image-stock/XLK.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3488,7 +3488,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "XOM",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0xf9b46d3d1b22199d4d1025a9cedb540a33f1a2d5.png",
+                logo = "https://financialmodelingprep.com/image-stock/XOM.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3499,7 +3499,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "ZM",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x44c4f142009036cf477ed2d09932051843137cf1.png",
+                logo = "https://financialmodelingprep.com/image-stock/ZM.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
@@ -3510,7 +3510,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "ZS",
-                logo = "https://cdn.robinhood.com/ncw_assets/logos/0x7dc013eb55e436f30d7ed1afe4e36d6e45e3c3f7.png",
+                logo = "https://financialmodelingprep.com/image-stock/ZS.png",
                 address = "",
                 decimal = 18,
                 hexPublicKey = "",
