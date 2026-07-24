@@ -116,6 +116,8 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
 
             Chain.Mantle -> setOf(SwapProvider.LIFI, SwapProvider.KYBER)
 
+            Chain.Robinhood -> setOf(SwapProvider.LIFI, SwapProvider.KYBER)
+
             Chain.ThorChain -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA)
             Chain.Bitcoin -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA, SwapProvider.SWAPKIT)
 

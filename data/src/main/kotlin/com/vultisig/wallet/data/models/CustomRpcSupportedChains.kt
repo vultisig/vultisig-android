@@ -30,6 +30,7 @@ object CustomRpcSupportedChains {
             Chain.Mantle,
             Chain.Sei,
             Chain.Hyperliquid,
+            Chain.Robinhood,
         )
 
     /**

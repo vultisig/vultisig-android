@@ -50,6 +50,7 @@ import com.vultisig.wallet.data.models.Chain.Optimism
 import com.vultisig.wallet.data.models.Chain.Osmosis
 import com.vultisig.wallet.data.models.Chain.Polkadot
 import com.vultisig.wallet.data.models.Chain.Polygon
+import com.vultisig.wallet.data.models.Chain.Robinhood
 import com.vultisig.wallet.data.models.Chain.Sei
 import com.vultisig.wallet.data.models.Chain.Solana
 import com.vultisig.wallet.data.models.Chain.Sui
@@ -488,6 +489,7 @@ constructor(
                             CronosChain,
                             ZkSync,
                             Sei,
+                            Robinhood,
                             Hyperliquid -> {
                                 evmApiFactory
                                     .createEvmApi(coin.chain)

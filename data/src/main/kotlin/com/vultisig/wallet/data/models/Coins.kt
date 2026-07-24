@@ -2400,6 +2400,22 @@ object Coins {
         val all = listOf(Sei)
     }
 
+    object Robinhood {
+        val ETH =
+            Coin(
+                chain = Chain.Robinhood,
+                ticker = "ETH",
+                logo = "eth",
+                address = "",
+                decimal = 18,
+                hexPublicKey = "",
+                priceProviderID = "ethereum",
+                contractAddress = "",
+                isNativeToken = true,
+            )
+        val all = listOf(ETH)
+    }
+
     object Hyperliquid {
         val HYPE =
             Coin(
@@ -3215,6 +3231,7 @@ object Coins {
             Chain.Zcash to Zcash.all,
             Chain.Cardano to Cardano.all,
             Chain.Sei to Sei.all,
+            Chain.Robinhood to Robinhood.all,
             Chain.Qbtc to Qbtc.all,
         )
 

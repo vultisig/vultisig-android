@@ -33,6 +33,7 @@ object CustomRpcDefaultEndpoint {
             Chain.ZkSync to "https://api.vultisig.com/zksync/",
             Chain.Mantle to "https://api.vultisig.com/mantle/",
             Chain.Sei to "https://evm-rpc.sei-apis.com/",
+            Chain.Robinhood to "https://rpc.mainnet.chain.robinhood.com/",
             Chain.Hyperliquid to "https://api.vultisig.com/hyperevm/",
         )
 

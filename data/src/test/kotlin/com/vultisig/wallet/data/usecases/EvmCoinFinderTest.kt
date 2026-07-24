@@ -55,6 +55,7 @@ internal class EvmCoinFinderTest {
                 Chain.Mantle,
                 Chain.Sei,
                 Chain.Hyperliquid,
+                Chain.Robinhood,
             )
             .forEach { chain ->
                 assertTrue(
