@@ -13,10 +13,13 @@ import org.junit.jupiter.api.Test
  * pin the behavior that must be preserved across the body-read changes:
  * - **200 OK**: parsed via `body<OgmiosTransactionResponse>()` → `bodyOrThrow<...>()` — returns the
  *   transaction id.
- * - **400 BadRequest**: the error body is parsed (must not throw) to recover an already-known
- *   output reference — switches from `body<...>()` to a non-throwing
- *   `json.decodeFromString(bodyAsText())`.
- * - **400 BadRequest without recoverable reference**: surfaces an [IllegalStateException].
+ * - **400 BadRequest**: a genuine rejection. The txid in `unknownOutputReferences` is the PARENT tx
+ *   that created the spent input, not the tx we broadcast, so it must NOT be returned as success —
+ *   the error is surfaced ([IllegalStateException]) and `BroadcastTxUseCase` verifies our actual
+ *   hash on-chain instead (issue #5250).
+ * - **Duplicate-broadcast signals** (code 3117/UnknownOutputReference or the spent-inputs mempool
+ *   error) throw [CardanoTransactionAlreadyBroadcastException] so recovery reports OUR local hash
+ *   (issue #5337).
  */
 class CardanoApiBroadcastTest {
 
@@ -45,7 +48,9 @@ class CardanoApiBroadcastTest {
     }
 
     @Test
-    fun `broadcastTransaction recovers id from unknownOutputReferences on BadRequest`() = runTest {
+    fun `broadcastTransaction throws on BadRequest with unknownOutputReferences`() {
+        // The txid inside unknownOutputReferences is the parent tx, not ours — returning it would
+        // report success under an unrelated hash, so this must surface as a rejection.
         val body =
             """
             {
@@ -59,9 +64,57 @@ class CardanoApiBroadcastTest {
                 .trimIndent()
         val api = newApi(HttpStatusCode.BadRequest, body)
 
-        val result = api.broadcastTransaction(chain = "cardano", signedTransaction = "00")
+        assertThrows(IllegalStateException::class.java) {
+            runTest { api.broadcastTransaction(chain = "cardano", signedTransaction = "00") }
+        }
+    }
 
-        assertEquals("def456", result)
+    @Test
+    fun `broadcastTransaction throws AlreadyBroadcast on spent-inputs rejection`() {
+        // Loser of a multi-device keysign race: Ogmios says the inputs are spent because the peer's
+        // byte-identical tx already landed. This must be distinguishable so recovery reports the
+        // local hash as success instead of a hard failure (issue #5337).
+        val body =
+            """
+            {
+              "error": {
+                "code": 3997,
+                "message": "The transaction couldn't be added to the mempool...",
+                "data": { "error": "All inputs are spent. Transaction has probably already been included" }
+              }
+            }
+            """
+                .trimIndent()
+        val api = newApi(HttpStatusCode.BadRequest, body)
+
+        assertThrows(CardanoTransactionAlreadyBroadcastException::class.java) {
+            runTest { api.broadcastTransaction(chain = "cardano", signedTransaction = "00") }
+        }
+    }
+
+    @Test
+    fun `broadcastTransaction throws AlreadyBroadcast on code 3117 UnknownOutputReference`() {
+        // Post-inclusion loser: the winner's byte-identical tx is already in a block, so the ledger
+        // no longer knows our inputs and Ogmios rejects with 3117/UnknownOutputReference. iOS and
+        // the shared SDK treat this code as the duplicate-broadcast signal against this backend.
+        val body =
+            """
+            {
+              "error": {
+                "code": 3117,
+                "message": "The transaction contains unknown UTxO references as inputs.",
+                "data": {
+                  "unknownOutputReferences": [ { "transaction": { "id": "def456" }, "index": 0 } ]
+                }
+              }
+            }
+            """
+                .trimIndent()
+        val api = newApi(HttpStatusCode.BadRequest, body)
+
+        assertThrows(CardanoTransactionAlreadyBroadcastException::class.java) {
+            runTest { api.broadcastTransaction(chain = "cardano", signedTransaction = "00") }
+        }
     }
 
     @Test

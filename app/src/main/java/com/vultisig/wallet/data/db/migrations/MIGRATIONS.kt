@@ -824,3 +824,59 @@ internal val MIGRATION_33_34 =
             )
         }
     }
+
+// Adds contractAddress to tokenValue's primary key (#5251). Coin.id is contract-qualified for
+// THORChain secured assets (MIGRATION for coin id already handled in-app, not a schema change),
+// but tokenValue's key stayed chain+address+ticker only, so two secured assets sharing a ticker
+// on different underlying chains (e.g. ETH.USDC and AVAX.USDC) collided on one cached-balance row.
+// Existing rows get contractAddress='' — this only affects the balance CACHE (BalanceRepository
+// re-fetches and re-keys correctly on next live read), so no user data is lost, just a one-time
+// cache miss for previously-cached secured-asset balances.
+internal val MIGRATION_34_35 =
+    object : Migration(34, 35) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            CREATE TABLE IF NOT EXISTS `tokenValue_new` (
+                `chain` TEXT NOT NULL,
+                `address` TEXT NOT NULL,
+                `ticker` TEXT NOT NULL,
+                `tokenValue` TEXT NOT NULL,
+                `contractAddress` TEXT NOT NULL DEFAULT '',
+                PRIMARY KEY(`chain`, `address`, `ticker`, `contractAddress`)
+            )
+            """
+                    .trimIndent()
+            )
+
+            db.execSQL(
+                """
+            INSERT INTO `tokenValue_new` (`chain`, `address`, `ticker`, `tokenValue`, `contractAddress`)
+            SELECT `chain`, `address`, `ticker`, `tokenValue`, '' FROM `tokenValue`
+            """
+                    .trimIndent()
+            )
+
+            db.execSQL("DROP TABLE `tokenValue`")
+            db.execSQL("ALTER TABLE `tokenValue_new` RENAME TO `tokenValue`")
+        }
+    }
+
+// Corrects the Sui SEND token decimals from 9 to 6 (#5371). The registry fix in Coins.kt only
+// reaches newly enabled coins; coins are persisted per-vault and reconstructed straight from the
+// stored `decimals` column, so vaults that already enabled SEND keep signing amounts scaled by
+// 10^9 instead of 10^6 (1000x wrong) until the stored row itself is corrected. Only display
+// interpretation depends on decimals — cached raw balances in tokenValue are unaffected.
+internal val MIGRATION_35_36 =
+    object : Migration(35, 36) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            UPDATE coin
+            SET decimals = 6
+            WHERE chain = 'Sui' AND ticker = 'SEND'
+            """
+                    .trimIndent()
+            )
+        }
+    }

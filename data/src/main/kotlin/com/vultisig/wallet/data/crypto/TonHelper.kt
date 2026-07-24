@@ -3,6 +3,7 @@
 package com.vultisig.wallet.data.crypto
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.blockchain.ton.TonNominatorPool
 import com.vultisig.wallet.data.common.toHexByteArray
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -83,15 +84,14 @@ object TonHelper {
         val toAddress = AnyAddress(msg.to, CoinType.TON)
         val amount = msg.amount.toLongOrNull() ?: 0L
         val mode = calculateSendMode(sendMaxAmount = false)
-        // TonConnect addresses encode bounceability in the user-friendly prefix:
-        // EQ = bounceable, UQ = non-bounceable. Raw "workchain:hex" form has no flag,
-        // so fall back to the wallet's default.
-        val bounceable =
-            when {
-                msg.to.startsWith("EQ") -> true
-                msg.to.startsWith("UQ") -> false
-                else -> tonSpecific.bounceable
-            }
+        // Apply the wallet-level bounceable flag from tonSpecific to every TonConnect message,
+        // matching the initiating device (browser extension / desktop) which builds the setup
+        // message that all co-signers must reproduce. It does NOT derive bounceability per-address
+        // from the EQ/UQ friendly-address tag. Deriving it per-address here diverged the pre-image
+        // hash from the initiator whenever a message targeted a UQ (non-bounceable) address — e.g.
+        // STON.fi's self/peer message in a swap — so the md5 message-id differed, the joiner 404'd
+        // on the setup message, and co-signing never completed.
+        val bounceable = tonSpecific.bounceable
 
         return TheOpenNetwork.Transfer.newBuilder()
             .setDest(toAddress.description())
@@ -114,11 +114,18 @@ object TonHelper {
 
         val mode = calculateSendMode(tonSpecific.sendMaxAmount)
 
+        // Nominator-pool deposits/withdrawals MUST be sent bounceable so a message the pool
+        // rejects (e.g. an uninitialized or mis-funded pool) bounces back instead of being
+        // absorbed (lost). tonSpecific.bounceable resolves to false for an uninitialized
+        // destination, so force the flag for pool comments — matching the initiating device
+        // which does the same — otherwise the pre-image hash diverges and the joiner 404s.
+        val bounceable = tonSpecific.bounceable || TonNominatorPool.isTransferComment(payload.memo)
+
         return TheOpenNetwork.Transfer.newBuilder()
             .setDest(toAddress.description())
             .setAmount(ByteString.copyFrom(amount.toHexString().toHexByteArray()))
             .setMode(mode)
-            .setBounceable(tonSpecific.bounceable)
+            .setBounceable(bounceable)
             .apply { payload.memo?.let { setComment(it) } }
             .build()
     }
@@ -216,7 +223,7 @@ object TonHelper {
         signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
         val pubKeyData = vaultHexPublicKey.hexToByteArray()
-        PublicKey(pubKeyData, PublicKeyType.ED25519)
+        val publicKey = PublicKey(pubKeyData, PublicKeyType.ED25519)
         val inputData = getPreSignedInputData(payload)
         val hashes = TransactionCompiler.preImageHashes(CoinType.TON, inputData)
         val preSigningOutput =
@@ -229,6 +236,13 @@ object TonHelper {
         val signature =
             signatures[Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())]
                 ?.getSignature() ?: throw Exception("Signature not found")
+
+        // Verify against the vault key before broadcast, matching every sibling EdDSA helper. The
+        // signature can arrive from the relay (DKLS-family recovery), so gate it cryptographically
+        // rather than trusting the source.
+        if (!publicKey.verify(signature, preSigningOutput.data.toByteArray())) {
+            throw Exception("Invalid signature")
+        }
 
         allSignatures.add(signature)
         publicKeys.add(pubKeyData)

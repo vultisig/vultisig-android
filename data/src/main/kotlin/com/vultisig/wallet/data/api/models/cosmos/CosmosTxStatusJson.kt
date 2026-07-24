@@ -14,7 +14,9 @@ data class CosmosTxStatusJson(
 data class TxResponse(
     @SerialName("height") val height: String,
     @SerialName("txhash") val txHash: String,
-    @SerialName("code") val code: Int,
+    // Cosmos LCD (gRPC-gateway) omits zero-value fields, so a successfully executed tx has no
+    // `code` in the JSON. Default to 0 (success) so deserialization of a landed tx doesn't throw.
+    @SerialName("code") val code: Int = 0,
     @SerialName("rawLog") val rawLog: String? = null,
     @SerialName("gasUsed") val gasUsed: String? = null,
     @SerialName("gasWanted") val gasWanted: String? = null,

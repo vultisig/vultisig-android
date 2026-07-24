@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
+import java.math.BigDecimal
 import java.math.BigInteger
 
 sealed interface SwapTransaction {
@@ -40,6 +41,30 @@ sealed interface SwapTransaction {
     val isApprovalRequired: Boolean
     val gasFeeFiatValue: FiatValue
 
+    /**
+     * Display-only fee/discount context carried from the swap form so the verify screen renders the
+     * same Swap Fee percentage and VULT-tier / referral discount rows the form shows, instead of a
+     * bare total (#5358). All fields are in-memory only (this model is never serialized) and
+     * default to "unavailable", so a co-signer rebuilding the tx from the signed payload — which
+     * cannot know the initiator's tier — degrades gracefully to no discount rows.
+     */
+    val swapFeePercent: String?
+    /** True when the affiliate fee is baked into the quoted rate (1inch) — see [swapFeePercent]. */
+    val swapFeeIncludedInRate: Boolean
+    val vultBpsDiscount: Int?
+    val vultBpsDiscountFiatValue: String?
+    val referralBpsDiscount: Int?
+    val referralBpsDiscountFiatValue: String?
+
+    /**
+     * Fractional price impact of the quote the user signed (e.g. `0.0133` == 1.33%), or null when
+     * the provider reports none (EVM aggregators). This is the liquidity/slippage cost that is
+     * baked into [expectedDstTokenValue] and therefore deliberately excluded from the fee total —
+     * carrying it here lets the verify and completion screens show it as its own row so the value
+     * the user gave up is accounted for instead of unexplained (#5335).
+     */
+    val priceImpact: BigDecimal?
+
     data class RegularSwapTransaction(
         override val id: TransactionId,
         override val vaultId: String,
@@ -58,6 +83,13 @@ sealed interface SwapTransaction {
         override val payload: SwapPayload,
         override val isApprovalRequired: Boolean,
         override val gasFeeFiatValue: FiatValue,
+        override val swapFeePercent: String? = null,
+        override val swapFeeIncludedInRate: Boolean = false,
+        override val vultBpsDiscount: Int? = null,
+        override val vultBpsDiscountFiatValue: String? = null,
+        override val referralBpsDiscount: Int? = null,
+        override val referralBpsDiscountFiatValue: String? = null,
+        override val priceImpact: BigDecimal? = null,
         // User-chosen external recipient the output was routed to, or null when it goes to the
         // vault's own address. Surfaced on the verify screen so the destination is never a silent
         // default (#4858).

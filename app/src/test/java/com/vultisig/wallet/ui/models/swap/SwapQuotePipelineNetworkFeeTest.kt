@@ -49,7 +49,6 @@ internal class SwapQuotePipelineNetworkFeeTest {
             swapDiscountChecker = mockk(relaxed = true),
             swapGasCalculator = swapGasCalculator,
             swapValidator = swapValidator,
-            fiatValueToString = mockk(relaxed = true),
         )
 
     @Test
@@ -227,6 +226,7 @@ internal class SwapQuotePipelineNetworkFeeTest {
             feeText = "0",
             outboundFeeText = null,
             swapFeePercent = null,
+            swapFeeIncludedInRate = false,
             priceImpactPercent = null,
             priceImpactLevel = null,
             isUtxoSwap = false,

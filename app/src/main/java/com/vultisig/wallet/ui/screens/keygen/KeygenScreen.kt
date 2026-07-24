@@ -83,7 +83,7 @@ internal fun KeygenScreen(model: KeygenViewModel = hiltViewModel()) {
     }
 
     if (state.isSuccess) {
-        Success()
+        Success(action = state.action)
     } else {
         when (state.action) {
             TssAction.KEYGEN,
@@ -232,7 +232,7 @@ private fun LoadingStageItem(text: String, isLoading: Boolean, modifier: Modifie
 }
 
 @Composable
-private fun Success() {
+private fun Success(action: TssAction) {
     OnboardingResponsiveContainer(
         modifier = Modifier.background(Theme.v2.colors.backgrounds.primary)
     ) {
@@ -255,11 +255,27 @@ private fun Success() {
                             scaleIn(tween(SUCCESS_ENTER_DURATION_MS)),
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        val isReshare = action == TssAction.ReShare
+                        val titlePart1 =
+                            if (isReshare) {
+                                stringResource(R.string.reshare_success_title)
+                            } else {
+                                stringResource(R.string.keygen_vault_created_success_part_1)
+                            }
+                        // Reshare keeps its own highlighted part: some locales (e.g. Korean) bake
+                        // the "created" verb into vault_created_success_part_2, so it can't be
+                        // reused for the "reshared" title.
+                        val titleHighlight =
+                            if (isReshare) {
+                                stringResource(R.string.reshare_success_title_highlight)
+                            } else {
+                                stringResource(R.string.vault_created_success_part_2)
+                            }
                         val successText = buildAnnotatedString {
-                            append(stringResource(R.string.keygen_vault_created_success_part_1))
+                            append(titlePart1)
                             appendLine(" ")
                             withStyle(SpanStyle(brush = Theme.v2.colors.gradients.primary)) {
-                                append(stringResource(R.string.vault_created_success_part_2))
+                                append(titleHighlight)
                             }
                         }
 

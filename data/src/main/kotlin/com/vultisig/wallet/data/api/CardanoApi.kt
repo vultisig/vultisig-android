@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.models.cardano.CardanoSlotResponseJson
 import com.vultisig.wallet.data.api.models.cardano.CardanoTxStatusResponseJson
 import com.vultisig.wallet.data.api.models.cardano.CardanoUtxoRequestJson
 import com.vultisig.wallet.data.api.models.cardano.CardanoUtxoResponseJson
+import com.vultisig.wallet.data.api.models.cardano.OgmiosError
 import com.vultisig.wallet.data.api.models.cardano.OgmiosTransactionResponse
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.UtxoInfo
@@ -24,6 +25,14 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import timber.log.Timber
 
+/**
+ * The Ogmios node rejected our broadcast because the inputs are already spent — its own message
+ * ("Transaction has probably already been included") is the duplicate-broadcast signal on the
+ * losing device of a multi-device keysign. Since the peer's byte-identical tx spent those exact
+ * inputs, our locally computed hash is canonical (issue #5337).
+ */
+class CardanoTransactionAlreadyBroadcastException(message: String) : Exception(message)
+
 interface CardanoApi {
     suspend fun getBalance(coin: Coin): BigInteger
 
@@ -42,6 +51,11 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
     private val url: String = "https://api.koios.rest"
     private val apiV1Path: String = "api/v1"
     private val ogmiosUrl = "https://api.vultisig.com/ada/"
+
+    private companion object {
+        // Ogmios "UnknownOutputReference": the tx spends inputs the ledger no longer knows.
+        const val OGMIOS_UNKNOWN_OUTPUT_REFERENCE_CODE = 3117
+    }
 
     override suspend fun getBalance(coin: Coin): BigInteger {
 
@@ -109,21 +123,37 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
 
                     ogmiosResponse.result?.transaction?.id
                         ?: run {
-                            val errorMessage = ogmiosResponse.error?.message ?: "Unknown error"
+                            // Ogmios can convey a submission error under HTTP 200. Mirror the 400
+                            // handling so a duplicate-broadcast rejection recovers regardless of
+                            // the
+                            // status Ogmios uses to report it.
+                            val submitError = ogmiosResponse.error
+                            val errorMessage =
+                                submitError?.data?.error ?: submitError?.message ?: "Unknown error"
                             Timber.e("Cardano transaction submission failed: $errorMessage")
+                            if (submitError?.isAlreadyBroadcast() == true) {
+                                throw CardanoTransactionAlreadyBroadcastException(errorMessage)
+                            }
                             error("Failed to broadcast transaction: $errorMessage")
                         }
                 }
 
                 HttpStatusCode.BadRequest -> {
+                    // Never report success from the error payload itself: the txid inside
+                    // unknownOutputReferences is the PARENT tx that created the spent input, not
+                    // the tx we broadcast. Duplicate rejections throw the typed exception so
+                    // BroadcastTxUseCase recovers to OUR locally computed hash; everything else
+                    // throws generically and falls through to on-chain verification.
                     val ogmiosError =
                         json.decodeFromString<OgmiosTransactionResponse>(response.bodyAsText())
-                    ogmiosError.error?.data?.unknownOutputReferences?.firstOrNull()?.transaction?.id
-                        ?: run {
-                            val errorMessage = ogmiosError.error?.message ?: "Unknown error"
-                            Timber.e("Cardano transaction submission failed: $errorMessage")
-                            error("Failed to broadcast transaction: $errorMessage")
-                        }
+                    val submitError = ogmiosError.error
+                    val errorMessage =
+                        submitError?.data?.error ?: submitError?.message ?: "Unknown error"
+                    Timber.e("Cardano transaction submission failed: $errorMessage")
+                    if (submitError?.isAlreadyBroadcast() == true) {
+                        throw CardanoTransactionAlreadyBroadcastException(errorMessage)
+                    }
+                    error("Failed to broadcast transaction: $errorMessage")
                 }
 
                 else -> {
@@ -133,10 +163,27 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
             }
         } catch (t: Throwable) {
             if (t is CancellationException) throw t
+            if (t is CardanoTransactionAlreadyBroadcastException) throw t
+            // Let fatal errors (OOM, StackOverflow) propagate rather than masking them as a
+            // broadcast rejection.
+            if (t is Error) throw t
             Timber.e(t, "Failed to broadcast Cardano transaction")
             error("Failed to broadcast transaction : ${t.message}")
         }
     }
+
+    // Ogmios reports the loser of a duplicate-broadcast race in two stages, depending on how far
+    // the winner's byte-identical tx has progressed:
+    //  - mempool stage: 3997/UnexpectedMempoolError with "All inputs are spent. Transaction has
+    //    probably already been included"
+    //  - post-inclusion: 3117/UnknownOutputReference — the inputs no longer exist on the ledger
+    //    because the winner's tx consumed them.
+    // iOS (CardanoService.swift) and the shared SDK (broadcast/resolvers/cardano.ts) both treat
+    // 3117 as the duplicate signal against this same backend.
+    private fun OgmiosError.isAlreadyBroadcast(): Boolean =
+        code == OGMIOS_UNKNOWN_OUTPUT_REFERENCE_CODE ||
+            data?.error?.contains("already been included", ignoreCase = true) == true ||
+            data?.error?.contains("inputs are spent", ignoreCase = true) == true
 
     private suspend fun getCurrentSlot(): ULong {
         val response = httpClient.get(url) { url { path(apiV1Path, "tip") } }

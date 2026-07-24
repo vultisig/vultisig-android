@@ -8,21 +8,29 @@ import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.SPLTokenRequestJson
 import com.vultisig.wallet.data.api.models.SolanaAccountInfoResponseJson
 import com.vultisig.wallet.data.api.models.SolanaBalanceJson
+import com.vultisig.wallet.data.api.models.SolanaEpochInfoResponseJson
+import com.vultisig.wallet.data.api.models.SolanaEpochInfoResultJson
 import com.vultisig.wallet.data.api.models.SolanaFeeForMessageResponse
 import com.vultisig.wallet.data.api.models.SolanaFeeObjectRespJson
 import com.vultisig.wallet.data.api.models.SolanaMinimumBalanceForRentExemptionJson
+import com.vultisig.wallet.data.api.models.SolanaProgramAccountJson
+import com.vultisig.wallet.data.api.models.SolanaProgramAccountsResponseJson
 import com.vultisig.wallet.data.api.models.SolanaRpcResponseJson
 import com.vultisig.wallet.data.api.models.SolanaSignatureStatusesResult
+import com.vultisig.wallet.data.api.models.SolanaVoteAccountsResponseJson
+import com.vultisig.wallet.data.api.models.SolanaVoteAccountsResultJson
 import com.vultisig.wallet.data.api.models.SplAmountRpcResponseJson
 import com.vultisig.wallet.data.api.models.SplResponseAccountJson
 import com.vultisig.wallet.data.api.models.SplResponseJson
 import com.vultisig.wallet.data.api.models.SplTokenInfo
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.utils.postRpc
+import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingConfig
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
+import com.vultisig.wallet.data.utils.median
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
@@ -50,6 +58,8 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import timber.log.Timber
 import wallet.core.jni.SolanaAddress
 
@@ -89,6 +99,26 @@ interface SolanaApi {
     suspend fun getAccountOwner(account: String): String?
 
     suspend fun checkStatus(txHash: String): SolanaRpcResponseJson<SolanaSignatureStatusesResult>?
+
+    /**
+     * Minimum lamports for rent exemption of an account of the given byte length. The no-arg
+     * overload targets SPL token accounts (165 bytes); staking passes the 200-byte stake-account
+     * size. Returns [BigInteger.ZERO] on RPC failure.
+     */
+    suspend fun getMinimumBalanceForRentExemption(dataLength: Int): BigInteger
+
+    /** `getEpochInfo` — current cluster epoch progress, or null when the RPC read fails. */
+    suspend fun getEpochInfo(): SolanaEpochInfoResultJson?
+
+    /** `getVoteAccounts` — current + delinquent validator vote accounts, or null on RPC failure. */
+    suspend fun getVoteAccounts(): SolanaVoteAccountsResultJson?
+
+    /**
+     * `getProgramAccounts` against the Stake program, filtered to the stake accounts whose
+     * withdrawer authority is [ownerAddress] (`dataSize` + `memcmp`). Returns the parsed accounts,
+     * or an empty list on RPC failure. Never stale-cached — always a fresh read.
+     */
+    suspend fun getStakeAccounts(ownerAddress: String): List<SolanaProgramAccountJson>
 }
 
 internal class SolanaApiImp(
@@ -195,7 +225,7 @@ internal class SolanaApiImp(
                     ?.filter { it > BigInteger.ZERO }
                     ?.sorted()
                     .orEmpty()
-            val median = if (nonZeroFees.isEmpty()) fallback else nonZeroFees[nonZeroFees.size / 2]
+            val median = solanaMedianPriorityFee(nonZeroFees, fallback)
             maxOf(median, fallback).coerceAtMost(MAX_PRIORITY_FEE_PRICE.toBigInteger())
         } catch (e: CancellationException) {
             throw e
@@ -559,6 +589,89 @@ internal class SolanaApiImp(
         }
     }
 
+    override suspend fun getMinimumBalanceForRentExemption(dataLength: Int): BigInteger =
+        try {
+            httpClient
+                .postRpc<SolanaMinimumBalanceForRentExemptionJson>(
+                    rpcEndpoint,
+                    "getMinimumBalanceForRentExemption",
+                    params = buildJsonArray { add(dataLength) },
+                )
+                .result
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Error getting minimum balance for rent exemption")
+            BigInteger.ZERO
+        }
+
+    override suspend fun getEpochInfo(): SolanaEpochInfoResultJson? =
+        try {
+            val resp =
+                httpClient.postRpc<SolanaEpochInfoResponseJson>(
+                    rpcEndpoint,
+                    "getEpochInfo",
+                    params = buildJsonArray {},
+                )
+            resp.error?.let { Timber.tag("SolanaApiImp").w("getEpochInfo RPC error: %s", it) }
+            resp.result
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.tag("SolanaApiImp").e(e, "Error getting epoch info")
+            null
+        }
+
+    override suspend fun getVoteAccounts(): SolanaVoteAccountsResultJson? =
+        try {
+            val resp =
+                httpClient.postRpc<SolanaVoteAccountsResponseJson>(
+                    rpcEndpoint,
+                    "getVoteAccounts",
+                    params = buildJsonArray {},
+                )
+            resp.error?.let { Timber.tag("SolanaApiImp").w("getVoteAccounts RPC error: %s", it) }
+            resp.result
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.tag("SolanaApiImp").e(e, "Error getting vote accounts")
+            null
+        }
+
+    override suspend fun getStakeAccounts(ownerAddress: String): List<SolanaProgramAccountJson> =
+        try {
+            val resp =
+                httpClient.postRpc<SolanaProgramAccountsResponseJson>(
+                    rpcEndpoint,
+                    "getProgramAccounts",
+                    params =
+                        buildJsonArray {
+                            add(SolanaStakingConfig.STAKE_PROGRAM_ID)
+                            addJsonObject {
+                                put("encoding", "jsonParsed")
+                                putJsonArray("filters") {
+                                    addJsonObject {
+                                        put("dataSize", SolanaStakingConfig.STAKE_ACCOUNT_SPACE)
+                                    }
+                                    addJsonObject {
+                                        putJsonObject("memcmp") {
+                                            put(
+                                                "offset",
+                                                SolanaStakingConfig.WITHDRAWER_MEMCMP_OFFSET,
+                                            )
+                                            put("bytes", ownerAddress)
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                )
+            resp.error?.let { Timber.tag("SolanaApiImp").w("getProgramAccounts RPC error: %s", it) }
+            resp.result
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.tag("SolanaApiImp").e(e, "Error getting stake accounts for %s", ownerAddress)
+            emptyList()
+        }
+
     companion object {
         private const val PROGRAM_ID_SPL_REQUEST_PARAM =
             "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
@@ -589,6 +702,15 @@ internal enum class SolanaBroadcastAction {
     /** Any other RPC error — not recoverable by resending. */
     FATAL,
 }
+
+/**
+ * Median of [sortedFees] (ascending, strictly positive), or [fallback] when empty. The even-length
+ * averaging behavior matches iOS (SolanaService.fetchRecentPrioritizationFees).
+ */
+internal fun solanaMedianPriorityFee(
+    sortedFees: List<BigInteger>,
+    fallback: BigInteger,
+): BigInteger = sortedFees.median() ?: fallback
 
 /**
  * Classifies a Solana `sendTransaction` error message into the action to take. `-32002` is Solana's

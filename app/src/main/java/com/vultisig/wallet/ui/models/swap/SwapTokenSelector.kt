@@ -3,11 +3,17 @@
 package com.vultisig.wallet.ui.models.swap
 
 import androidx.compose.ui.geometry.Offset
+import com.vultisig.wallet.data.crypto.getChainName
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.isSecuredAsset
+import com.vultisig.wallet.data.models.isSecuredAssetEligible
 import com.vultisig.wallet.data.models.isSwapSupported
+import com.vultisig.wallet.data.models.securedAssetChain
+import com.vultisig.wallet.data.models.securedAssetSymbol
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.ui.models.firstSendSrc
@@ -94,13 +100,16 @@ constructor(
             combine(selectedSrc, selectedDst) { src, dst ->
                     val srcUiModel = src?.let { accountToTokenBalanceUiModelMapper(it) }
                     val dstUiModel = dst?.let { accountToTokenBalanceUiModelMapper(it) }
-                    val isSrcNative = src?.account?.token?.isNativeToken ?: false
-                    val isDstNative = dst?.account?.token?.isNativeToken ?: false
+                    // A native source pays the gas out of the same balance being swapped, so a MAX
+                    // amount is never actually spendable — hide the shortcut instead of letting it
+                    // fill an amount the fee then invalidates. With no source selected yet there is
+                    // nothing to max out either, so MAX stays hidden until a token source arrives.
+                    val isSrcToken = srcUiModel?.isNativeToken == false
                     uiState.update {
                         it.copy(
                             selectedSrcToken = srcUiModel,
                             selectedDstToken = dstUiModel,
-                            enableMaxAmount = (isSrcNative && isDstNative).not(),
+                            enableMaxAmount = isSrcToken,
                         )
                     }
                 }
@@ -158,11 +167,17 @@ constructor(
         selectedDstId: MutableStateFlow<String?>,
         addresses: MutableStateFlow<List<Address>>,
         uiState: MutableStateFlow<SwapFormUiModel>,
+        isSelectionQuotable: (Coin) -> Boolean,
     ) {
+        // A fresh id per visit (matching selectNetwork/selectNetworkPopup) — targetArg is a fixed
+        // constant shared by every source/destination pick, so using it directly as the requestId
+        // let a response buffered by RequestResultRepository (e.g. from a stale/racing selection)
+        // leak into a later, unrelated visit and silently resolve it.
+        val requestId = Uuid.random().toString()
         navigator.route(
             Route.SelectAsset(
                 vaultId = vaultId,
-                requestId = targetArg,
+                requestId = requestId,
                 preselectedNetworkId =
                     (when (targetArg) {
                             ARG_SELECTED_SRC_TOKEN_ID -> selectedSrc?.address?.chain
@@ -174,35 +189,63 @@ constructor(
             )
         )
         checkTokenSelectionResponse(
+            requestId,
             targetArg,
             vaultId,
+            selectedSrc,
             selectedSrcId,
             selectedDstId,
             addresses,
             uiState,
+            isSelectionQuotable,
         )
     }
 
     private suspend fun checkTokenSelectionResponse(
+        requestId: String,
         targetArg: String,
         vaultId: String,
+        selectedSrc: SendSrc?,
         selectedSrcId: MutableStateFlow<String?>,
         selectedDstId: MutableStateFlow<String?>,
         addresses: MutableStateFlow<List<Address>>,
         uiState: MutableStateFlow<SwapFormUiModel>,
+        isSelectionQuotable: (Coin) -> Boolean,
     ) {
-        val result = requestResultRepository.request<AssetSelected>(targetArg) ?: return
+        val result = requestResultRepository.request<AssetSelected>(requestId) ?: return
+
+        if (targetArg == ARG_SELECTED_DST_TOKEN_ID) {
+            val srcToken = selectedSrc?.account?.token
+            if (srcToken != null && srcToken.isUnderlyingOfSecuredAsset(result.token)) {
+                // Same-underlying-asset swap: route to the SECURE+ mint deposit flow instead of a
+                // wasteful 1:1 pool swap.
+                navigator.route(Route.Deposit(vaultId = vaultId, chainId = srcToken.chain.id))
+                return
+            }
+        }
 
         if (result.isDisabled) {
-            uiState.update { it.copy(isLoading = true) }
+            // Only raise the shared loading flag when the pair the pick forms is actually quotable
+            // —
+            // a positive amount AND a routable (distinct, provider-backed) pair. Otherwise loading
+            // a
+            // not-yet-held token's account would flash the destination/fee skeletons true→false
+            // over
+            // a field that will never quote — the same blink the pipeline gate removes, and
+            // matching
+            // its isPairRoutable && amount>0 condition rather than a looser amount-only check
+            // (#5296
+            // review).
+            val showLoading = isSelectionQuotable(result.token)
+            if (showLoading) uiState.update { it.copy(isLoading = true) }
             try {
                 val account = accountsRepository.loadAccount(vaultId, result.token)
                 updateAccountInAddresses(account, addresses)
-                uiState.update { it.copy(isLoading = false) }
+                if (showLoading) uiState.update { it.copy(isLoading = false) }
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
                 Timber.e(e, "Failed to load account for token")
-                uiState.update { it.copy(isLoading = false) }
+                if (showLoading) uiState.update { it.copy(isLoading = false) }
                 return
             }
         }
@@ -237,3 +280,10 @@ constructor(
         const val ARG_SELECTED_DST_TOKEN_ID = "ARG_SELECTED_DST_TOKEN_ID"
     }
 }
+
+/** True when [securedAsset] is the THORChain secured form of this coin's own native asset. */
+internal fun Coin.isUnderlyingOfSecuredAsset(securedAsset: Coin): Boolean =
+    isSecuredAssetEligible() &&
+        securedAsset.isSecuredAsset() &&
+        getChainName().equals(securedAsset.securedAssetChain(), ignoreCase = true) &&
+        ticker.equals(securedAsset.securedAssetSymbol(), ignoreCase = true)

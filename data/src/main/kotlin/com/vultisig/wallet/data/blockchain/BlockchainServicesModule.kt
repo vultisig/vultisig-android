@@ -10,6 +10,9 @@ import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.maya.MayaCacaoStakingService
 import com.vultisig.wallet.data.blockchain.maya.MayaDeFiBalanceService
+import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingDeFiBalanceService
+import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingService
+import com.vultisig.wallet.data.blockchain.solana.staking.ValidatorMetadataProvider
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
@@ -141,6 +144,19 @@ internal interface BlockchainServicesModule {
         ): CosmosStakingDeFiBalanceService =
             CosmosStakingDeFiBalanceService(
                 cosmosStakingService = cosmosStakingService,
+                stakingDetailsRepository = stakingDetailsRepository,
+            )
+
+        @Provides
+        @Singleton
+        fun provideSolanaStakingDeFiBalanceService(
+            solanaStakingService: SolanaStakingService,
+            validatorMetadataProvider: ValidatorMetadataProvider,
+            stakingDetailsRepository: StakingDetailsRepository,
+        ): SolanaStakingDeFiBalanceService =
+            SolanaStakingDeFiBalanceService(
+                solanaStakingService = solanaStakingService,
+                validatorMetadataProvider = validatorMetadataProvider,
                 stakingDetailsRepository = stakingDetailsRepository,
             )
     }

@@ -39,7 +39,10 @@ import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
+import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
+import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
+import com.vultisig.wallet.ui.screens.swap.components.PriceImpactRow
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
 
@@ -140,16 +143,79 @@ internal fun SwapTransactionOverviewScreen(
                     VerifyCardDivider(size = 1.dp)
                 }
 
-                TextDetails(
+                VerifyCardDetails(
                     title = stringResource(R.string.swap_form_from_title),
-                    subtitle = transactionTypeUiModel.src.token.address,
+                    subtitle =
+                        transactionTypeUiModel.srcVaultName
+                            ?: transactionTypeUiModel.src.token.address,
+                    bracketValue =
+                        transactionTypeUiModel.srcVaultName?.let {
+                            transactionTypeUiModel.src.token.address
+                        },
                 )
 
                 VerifyCardDivider(size = 1.dp)
 
-                TextDetails(
+                val dstAddress =
+                    transactionTypeUiModel.externalRecipient?.takeIf { it.isNotBlank() }
+                        ?: transactionTypeUiModel.dst.token.address
+                VerifyCardDetails(
                     title = stringResource(R.string.swap_form_dst_token_title),
-                    subtitle = transactionTypeUiModel.dst.token.address,
+                    subtitle = transactionTypeUiModel.dstVaultName ?: dstAddress,
+                    bracketValue = transactionTypeUiModel.dstVaultName?.let { dstAddress },
+                )
+
+                VerifyCardDivider(size = 1.dp)
+
+                // Fee breakdown mirrors VerifySwapScreen so the estimate the user signed and the
+                // completed-swap summary read the same: Network Fee → Swap Fee → (Outbound Fee) →
+                // Total Fee, instead of a single opaque Total Fee row (#5334). No title override on
+                // the Network Fee row: reuse EstimatedNetworkFee's default
+                // (send_form_est_network_fee)
+                // exactly as VerifySwapScreen does, so the label is identical across locales rather
+                // than diverging (verify_transaction_network_fee adds an "(auto)" suffix in
+                // es/hr/it/nl/pt/ru).
+                EstimatedNetworkFee(
+                    tokenGas = transactionTypeUiModel.networkFeeFormatted,
+                    fiatGas = transactionTypeUiModel.networkFee.fiatValue,
+                )
+
+                // Same Swap Fee rules as the verify screen (#5358): hidden for a SwapKit UTXO
+                // deposit whose cost is already the Network Fee, and "included in quoted rate" for
+                // 1inch. Rendering providerFee.fiatValue unconditionally showed a fee that is not
+                // part of totalFee, so the rows visibly failed to add up (#5335).
+                if (!transactionTypeUiModel.swapFeeHidden) {
+                    TextDetails(
+                        title =
+                            transactionTypeUiModel.swapFeePercent?.let {
+                                stringResource(
+                                    R.string.swap_form_estimated_fees_with_percent_title,
+                                    it,
+                                )
+                            } ?: stringResource(R.string.swap_form_estimated_fees_title),
+                        subtitle =
+                            if (transactionTypeUiModel.swapFeeIncludedInRate)
+                                stringResource(R.string.swap_form_estimated_fees_included_in_rate)
+                            else transactionTypeUiModel.providerFee.fiatValue,
+                    )
+                }
+
+                // Only THORChain / MayaChain report an outbound fee distinct from the swap fee.
+                transactionTypeUiModel.outboundFee?.let { outboundFee ->
+                    TextDetails(
+                        title = stringResource(R.string.swap_form_outbound_fee_title),
+                        subtitle = outboundFee,
+                    )
+                }
+
+                // Total Fee covers the fees charged on top of the swap; the liquidity cost is
+                // already reflected in the received amount, so it is reported separately here
+                // rather than folded in — otherwise the value the user gave up has no row at all
+                // and Total Fee reads as if it were the whole cost (#5335).
+                PriceImpactRow(
+                    priceImpactPercent = transactionTypeUiModel.priceImpactPercent,
+                    priceImpactLevel = transactionTypeUiModel.priceImpactLevel,
+                    modifier = Modifier.padding(vertical = 12.dp),
                 )
 
                 VerifyCardDivider(size = 1.dp)

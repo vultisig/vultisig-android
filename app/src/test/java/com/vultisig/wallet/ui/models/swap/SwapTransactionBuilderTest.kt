@@ -400,15 +400,125 @@ internal class SwapTransactionBuilderTest {
             // The ERC20 approve spender is the dedicated allowance target, not the swap `to`.
             assertEquals("0xproxy", tx.approveSpender)
             assertTrue(tx.isApprovalRequired)
-            // OneInch always uses the passed gasFeeFiatValue (no estimated-fee fallback).
-            assertEquals(FiatValue(BigDecimal("2.00"), "USD"), tx.gasFeeFiatValue)
-            // gasFees still falls back to gasFee when no estimated network fee is available.
-            assertEquals(TokenValue(BigInteger.valueOf(8), srcToken), tx.gasFees)
+            // Without an override the displayed EVM network fee comes from the payload's signed gas
+            // params (maxFeePerGasWei 99 × the 600k display limit), the same value the joined
+            // device
+            // derives, re-priced from the gas-pass pair: 2.00 × 59_400_000 / 8 = 14_850_000
+            // (#5329).
+            assertEquals(BigInteger.valueOf(59_400_000), tx.gasFees.value)
+            assertEquals("USD", tx.gasFeeFiatValue.currency)
+            assertEquals(0, tx.gasFeeFiatValue.value.compareTo(BigDecimal("14850000")))
             val payload = assertIs<SwapPayload.EVM>(tx.payload)
             // On an Ethereum plan the tx gas price is patched with the plan's maxFeePerGas.
             assertEquals("99", payload.data.quote.tx.gasPrice)
             // Non-Mantle chains keep the quote's original gas limit.
             assertEquals(21_000L, payload.data.quote.tx.gas)
+        }
+
+    @Test
+    fun `values the OP-stack swap network fee at the joiner-aligned limit for cross-device parity`() =
+        runTest {
+            val srcToken = coin(Chain.Base, "ETH", "0xsrc", 18, isNative = true)
+            val dstToken =
+                coin(Chain.Base, "USDC", "0xdst", 6, isNative = false, contract = "0xtoken")
+            coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+                ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(100))
+            val tx0 =
+                OneInchSwapTxJson(
+                    from = "0xsrc",
+                    to = "0xrouter",
+                    allowanceTarget = "0xproxy",
+                    gas = 21_000,
+                    data = "0xdata",
+                    value = "0",
+                    gasPrice = "1",
+                )
+            val quote =
+                SwapQuote.OneInch(
+                    expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
+                    fees = TokenValue(BigInteger.valueOf(9), dstToken),
+                    expiredAt = Clock.System.now(),
+                    data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
+                    provider = "1inch",
+                )
+
+            val tx =
+                builder.build(
+                    vaultId = "vault-op",
+                    srcToken = srcToken,
+                    dstToken = dstToken,
+                    srcAddress = "0xsrc",
+                    srcTokenValue = TokenValue(BigInteger.valueOf(1_000), srcToken),
+                    quote = quote,
+                    gasFee = TokenValue(BigInteger.valueOf(1_000_000), srcToken),
+                    gasFeeFiatValue = FiatValue(BigDecimal("1.00"), "USD"),
+                    // An OP-stack estimate folds in an L1 data fee the joiner has no term for, so
+                    // keeping it here would diverge from the joined device (#5329).
+                    estimatedNetworkFeeTokenValue =
+                        TokenValue(BigInteger.valueOf(5_000_000), srcToken),
+                    estimatedNetworkFeeFiatValue = FiatValue(BigDecimal("5.00"), "USD"),
+                )
+
+            // evmSwapDisplayGasLimit returns null for OP-stack L2s → DEFAULT_SWAP_LIMIT (600k), the
+            // same limit computeJoinKeysignSwapNetworkFee uses, so both devices show 100 × 600_000
+            // =
+            // 60_000_000 wei (not the L1-inclusive 5_000_000 estimate). Fiat re-prices off the
+            // estimate pair: 5.00 × 60_000_000 / 5_000_000 = 60.00.
+            assertEquals(BigInteger.valueOf(60_000_000), tx.gasFees.value)
+            assertEquals(0, tx.gasFeeFiatValue.value.compareTo(BigDecimal("60.00")))
+        }
+
+    @Test
+    fun `values the OneInch swap fee off the stamped gas params for cross-device parity`() =
+        runTest {
+            val srcToken =
+                coin(Chain.Ethereum, "USDC", "0xsrc", 6, isNative = false, contract = "0xtoken")
+            val dstToken = coin(Chain.Ethereum, "ETH", "0xdst", 18, isNative = true)
+            coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+                ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(100))
+            val tx0 =
+                OneInchSwapTxJson(
+                    from = "0xsrc",
+                    to = "0xrouter",
+                    allowanceTarget = "0xproxy",
+                    gas = 21_000,
+                    data = "0xdata",
+                    value = "0",
+                    gasPrice = "1",
+                )
+            val quote =
+                SwapQuote.OneInch(
+                    // 1inch's original quoted gasPrice × gas, stamped by the manager as the
+                    // "Swap Fee" placeholder; the initiator overwrites tx.gasPrice/gas below.
+                    expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
+                    fees = TokenValue(BigInteger.valueOf(21_000), srcToken),
+                    expiredAt = Clock.System.now(),
+                    data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
+                    provider = "1inch",
+                )
+
+            val tx =
+                builder.build(
+                    vaultId = "vault-swap-fee-parity",
+                    srcToken = srcToken,
+                    dstToken = dstToken,
+                    srcAddress = "0xsrc",
+                    srcTokenValue = TokenValue(BigInteger.valueOf(1_000), srcToken),
+                    quote = quote,
+                    gasFee = TokenValue(BigInteger.valueOf(1_000_000), srcToken),
+                    gasFeeFiatValue = FiatValue(BigDecimal("1.00"), "USD"),
+                    estimatedNetworkFeeTokenValue = null,
+                    estimatedNetworkFeeFiatValue = null,
+                )
+
+            // The joiner re-derives the Swap Fee from the signed tx's gasPrice × gas
+            // (maxFeePerGasWei 100 × the stamped 21_000 gas limit = 2_100_000), so the initiator
+            // must value its Swap Fee off the same stamped params rather than 1inch's original
+            // 21_000 placeholder (#5329).
+            val payload = assertIs<SwapPayload.EVM>(tx.payload)
+            assertEquals("100", payload.data.quote.tx.gasPrice)
+            assertEquals(21_000L, payload.data.quote.tx.gas)
+            assertEquals(BigInteger.valueOf(2_100_000), tx.estimatedFees.value)
         }
 
     @Test
@@ -596,11 +706,12 @@ internal class SwapTransactionBuilderTest {
                 gasLimitOverride = 300_000L,
             )
 
-        // Max-fee = override × maxFeePerGas = 300_000 × 10 = 3_000_000 wei, re-valued via the
-        // native price implied by the baseline (gasFeeFiatValue 3.00 ÷ gasFee 1_000_000) → 9.00.
-        assertEquals(BigInteger.valueOf(3_000_000), tx.gasFees.value)
+        // A sub-floor override is floored to the 600k ERC-20 display limit — the same value the
+        // joiner derives from the stamped tx.gas — so both devices agree: 600_000 × 10 = 6_000_000
+        // wei, re-valued via the baseline (gasFeeFiatValue 3.00 ÷ gasFee 1_000_000) → 18.00.
+        assertEquals(BigInteger.valueOf(6_000_000), tx.gasFees.value)
         assertEquals("USD", tx.gasFeeFiatValue.currency)
-        assertEquals(0, tx.gasFeeFiatValue.value.compareTo(BigDecimal("9.00")))
+        assertEquals(0, tx.gasFeeFiatValue.value.compareTo(BigDecimal("18.00")))
     }
 
     @Test
@@ -649,11 +760,12 @@ internal class SwapTransactionBuilderTest {
                     gasLimitOverride = 300_000L,
                 )
 
-            // Max-fee = 300_000 × 10 = 3_000_000 wei, re-valued via the matched route-gas pair
-            // (4.00 ÷ 2_000_000): 4.00 × 3_000_000 / 2_000_000 = 6.00. The unmatched 600k baseline
-            // would wrongly give 4.00 × 3_000_000 / 6_000_000 = 2.00.
-            assertEquals(BigInteger.valueOf(3_000_000), tx.gasFees.value)
-            assertEquals(0, tx.gasFeeFiatValue.value.compareTo(BigDecimal("6.00")))
+            // The sub-floor override floors to the 600k display limit (joiner-aligned): 600_000 ×
+            // 10 = 6_000_000 wei, re-valued via the matched route-gas pair (4.00 ÷ 2_000_000):
+            // 4.00 × 6_000_000 / 2_000_000 = 12.00. The unmatched 6M baseline would wrongly give
+            // 4.00 × 6_000_000 / 6_000_000 = 4.00.
+            assertEquals(BigInteger.valueOf(6_000_000), tx.gasFees.value)
+            assertEquals(0, tx.gasFeeFiatValue.value.compareTo(BigDecimal("12.00")))
         }
 
     @Test
@@ -699,11 +811,65 @@ internal class SwapTransactionBuilderTest {
                 gasLimitOverride = 300_000L,
             )
 
-        // Override re-values via the positive gasFee pair: 300_000 × 10 = 3_000_000 wei;
-        // 3.00 × 3_000_000 / 1_000_000 = 9.00 — not the zero estimate.
-        assertEquals(BigInteger.valueOf(3_000_000), tx.gasFees.value)
-        assertEquals(0, tx.gasFeeFiatValue.value.compareTo(BigDecimal("9.00")))
+        // The floored override (600k) re-values via the positive gasFee pair, not the zero
+        // estimate: 600_000 × 10 = 6_000_000 wei; 3.00 × 6_000_000 / 1_000_000 = 18.00.
+        assertEquals(BigInteger.valueOf(6_000_000), tx.gasFees.value)
+        assertEquals(0, tx.gasFeeFiatValue.value.compareTo(BigDecimal("18.00")))
     }
+
+    @Test
+    fun `falls back to the gas-pass pair when the estimate token is positive but its fiat is null`() =
+        runTest {
+            val srcToken =
+                coin(Chain.Ethereum, "USDC", "0xsrc", 6, isNative = false, contract = "0xtoken")
+            val dstToken = coin(Chain.Ethereum, "ETH", "0xdst", 18, isNative = true)
+            val nativeEth = coin(Chain.Ethereum, "ETH", "0xsrc", 18, isNative = true)
+            coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+                ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(10))
+            val tx0 =
+                OneInchSwapTxJson(
+                    from = "0xsrc",
+                    to = "0xrouter",
+                    allowanceTarget = "0xproxy",
+                    gas = 21_000,
+                    data = "0xdata",
+                    value = "0",
+                    gasPrice = "1",
+                )
+            val quote =
+                SwapQuote.OneInch(
+                    expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
+                    fees = TokenValue(BigInteger.valueOf(9), dstToken),
+                    expiredAt = Clock.System.now(),
+                    data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
+                    provider = "1inch",
+                )
+
+            val tx =
+                builder.build(
+                    vaultId = "vault-null-fiat-estimate",
+                    srcToken = srcToken,
+                    dstToken = dstToken,
+                    srcAddress = "0xsrc",
+                    srcTokenValue = TokenValue(BigInteger.valueOf(1_000), srcToken),
+                    quote = quote,
+                    gasFee = TokenValue(BigInteger.valueOf(1_000_000), nativeEth),
+                    gasFeeFiatValue = FiatValue(BigDecimal("3.00"), "USD"),
+                    // Token estimate is positive but its fiat estimate is null: the two must be
+                    // used as an atomic pair, so the re-price falls back to the gas-pass pair
+                    // instead of dividing gas-pass fiat by the unrelated estimate token fee.
+                    estimatedNetworkFeeTokenValue =
+                        TokenValue(BigInteger.valueOf(2_000_000), nativeEth),
+                    estimatedNetworkFeeFiatValue = null,
+                    gasLimitOverride = null,
+                )
+
+            // Display limit floors to 600k: 600_000 × 10 = 6_000_000 wei; re-valued via the
+            // gas-pass pair (3.00 ÷ 1_000_000): 3.00 × 6_000_000 / 1_000_000 = 18.00. The unmatched
+            // estimate pair would wrongly give 3.00 × 6_000_000 / 2_000_000 = 9.00.
+            assertEquals(BigInteger.valueOf(6_000_000), tx.gasFees.value)
+            assertEquals(0, tx.gasFeeFiatValue.value.compareTo(BigDecimal("18.00")))
+        }
 
     @Test
     fun `stamps the external recipient on the built transaction for verify-screen surfacing`() =

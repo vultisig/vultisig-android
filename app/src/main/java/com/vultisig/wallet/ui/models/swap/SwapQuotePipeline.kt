@@ -16,7 +16,6 @@ import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.getTierType
-import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigDecimal
@@ -32,6 +31,8 @@ import kotlinx.datetime.Instant
 internal data class QuoteInput(
     val address: Pair<SendSrc, SendSrc>,
     val amount: BigDecimal?,
+    val slippageBps: Int?,
+    val externalRecipient: String?,
     // True when the change should bypass the typing debounce (percentage / Max / paste).
     val immediate: Boolean,
 )
@@ -109,6 +110,9 @@ internal sealed interface SwapQuotePipelineResult {
         val feeText: String,
         val outboundFeeText: String?,
         val swapFeePercent: String?,
+        // True when the affiliate fee is baked into the quoted rate (1inch) and the Swap Fee row
+        // should read "included in quoted rate" rather than a fiat amount (#5358).
+        val swapFeeIncludedInRate: Boolean,
         // Pre-formatted Price Impact row: signed percentage + tier, or null when unavailable.
         val priceImpactPercent: String?,
         val priceImpactLevel: PriceImpactLevel?,
@@ -136,7 +140,6 @@ internal class SwapQuotePipeline(
     private val swapDiscountChecker: SwapDiscountChecker,
     private val swapGasCalculator: SwapGasCalculator,
     private val swapValidator: SwapValidator,
-    private val fiatValueToString: FiatValueToStringMapper,
 ) {
 
     /**
@@ -329,7 +332,7 @@ internal class SwapQuotePipeline(
     }
 
     /** Builds the display-ready [SwapQuotePipelineResult.Success] from the winning quote. */
-    private suspend fun buildSuccess(
+    internal suspend fun buildSuccess(
         bestQuote: BestQuote,
         src: SendSrc,
         srcTokenValue: BigInteger,
@@ -376,12 +379,14 @@ internal class SwapQuotePipeline(
                 tierType = vultResult.tierType,
             )
 
-        // SwapKit BTC settles by broadcasting the provider's PSBT, whose miner fee is the only
-        // network cost — and it is already surfaced as the UTXO plan network fee below. SwapKit
-        // reports that same deposit cost as its inbound fee, so counting it again as a swap fee
-        // would
-        // double-count the BTC network cost in the headline total (iOS shows it once). Zero the
-        // swap-fee contribution and the breakdown row so Total reconciles to Network Fee alone; the
+        // SwapKit UTXO-family sources (Bitcoin PSBT deposit, Cardano CBOR deposit) settle by
+        // broadcasting a deposit whose on-chain miner fee is the only network cost, already
+        // surfaced on the Network Fee row (BTC via the UTXO plan below; Cardano via the flat
+        // send-style plan fee — Cardano is excluded from the plan path in `isUtxoSwap`). SwapKit
+        // reports that same deposit cost as its wire inbound fee, so counting it again as a swap
+        // fee would double-count the source-chain network cost in the headline total. iOS discards
+        // the wire inbound fee for both families and shows the cost once as Network Fee
+        // (`SwapCryptoLogic.fee`), so zero the swap-fee contribution and its breakdown row; the
         // affiliate fee is already baked into expectedDstValue.
         val quote = quoteResult.quote
         val isSwapKitUtxoSwap =
@@ -389,9 +394,13 @@ internal class SwapQuotePipeline(
         val effectiveSwapFeeFiat =
             if (isSwapKitUtxoSwap) FiatValue(BigDecimal.ZERO, quoteResult.swapFeeFiat.currency)
             else quoteResult.swapFeeFiat
-        val feeText =
-            if (isSwapKitUtxoSwap) fiatValueToString(effectiveSwapFeeFiat, asFee = true)
-            else quoteResult.feeText
+        // Empty text hides the swap-fee breakdown row entirely (iOS `swapFeeString` returns
+        // `.empty` here): the deposit cost is already surfaced as the Network Fee, so there is no
+        // separate swap fee to show rather than a redundant "$0.00" row.
+        val feeText = if (isSwapKitUtxoSwap) "" else quoteResult.feeText
+        // The SwapKit UTXO/Cardano deposit cost is shown once as the Network Fee and the Swap Fee
+        // row is hidden entirely, so drop its percentage too (there is no row to label).
+        val swapFeePercent = if (isSwapKitUtxoSwap) null else quoteResult.swapFeePercent
 
         val priceImpactDisplay = formatPriceImpact(quoteResult.priceImpact)
 
@@ -430,7 +439,8 @@ internal class SwapQuotePipeline(
             expiredAt = quote.expiredAt,
             feeText = feeText,
             outboundFeeText = quoteResult.outboundFeeText,
-            swapFeePercent = quoteResult.swapFeePercent,
+            swapFeePercent = swapFeePercent,
+            swapFeeIncludedInRate = quoteResult.swapFeeIncludedInRate,
             priceImpactPercent = priceImpactDisplay?.percent,
             priceImpactLevel = priceImpactDisplay?.level,
             isUtxoSwap = isUtxoSwap,

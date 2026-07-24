@@ -3763,7 +3763,7 @@ object Coins {
                 ticker = "SEND",
                 logo = "https://coin-images.coingecko.com/coins/images/50989/large/SEND.png",
                 address = "",
-                decimal = 9,
+                decimal = 6,
                 hexPublicKey = "",
                 priceProviderID = "send-token-2",
                 contractAddress =
@@ -4077,7 +4077,49 @@ object Coins {
                 isNativeToken = false,
             )
 
-        val all = listOf(RUNE, TCY, RUJI, KUJI, FUZN, NSTK, WINK, LVN, RKUJI, sTCY, yRUNE, yTCY)
+        val bRUNE =
+            Coin(
+                chain = Chain.ThorChain,
+                ticker = "bRUNE",
+                logo = "brune",
+                address = "",
+                decimal = 8,
+                hexPublicKey = "",
+                priceProviderID = "",
+                contractAddress = "x/brune",
+                isNativeToken = false,
+            )
+
+        val ybRUNE =
+            Coin(
+                chain = Chain.ThorChain,
+                ticker = "ybRUNE",
+                logo = "ybrune",
+                address = "",
+                decimal = 8,
+                hexPublicKey = "",
+                priceProviderID = "",
+                contractAddress = "x/staking-x/brune",
+                isNativeToken = false,
+            )
+
+        val all =
+            listOf(
+                RUNE,
+                TCY,
+                RUJI,
+                KUJI,
+                FUZN,
+                NSTK,
+                WINK,
+                LVN,
+                RKUJI,
+                sTCY,
+                yRUNE,
+                yTCY,
+                bRUNE,
+                ybRUNE,
+            )
     }
 
     object Ton {
@@ -4228,7 +4270,46 @@ object Coins {
                 isNativeToken = false,
             )
 
-        val all = listOf(TRX, USDT)
+        val USDC =
+            Coin(
+                chain = Chain.Tron,
+                ticker = "USDC",
+                logo = "usdc",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "usd-coin",
+                contractAddress = "TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8",
+                isNativeToken = false,
+            )
+
+        val USDD =
+            Coin(
+                chain = Chain.Tron,
+                ticker = "USDD",
+                logo = "usdd",
+                address = "",
+                decimal = 18,
+                hexPublicKey = "",
+                priceProviderID = "usdd",
+                contractAddress = "TXDk8mbtRbXeYuMNS83CfKPaYYT8XWv9Hz",
+                isNativeToken = false,
+            )
+
+        val stUSDT =
+            Coin(
+                chain = Chain.Tron,
+                ticker = "stUSDT",
+                logo = "stusdt",
+                address = "",
+                decimal = 18,
+                hexPublicKey = "",
+                priceProviderID = "staked-usdt",
+                contractAddress = "TThzxNRLrW2Brp9DcTQU8i4Wd9udCWEdZ3",
+                isNativeToken = false,
+            )
+
+        val all = listOf(TRX, USDT, USDC, USDD, stUSDT)
     }
 
     object ZkSync {

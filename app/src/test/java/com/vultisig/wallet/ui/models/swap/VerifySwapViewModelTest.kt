@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.models.swap
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
@@ -12,7 +13,12 @@ import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SecurityScannerFeaturesType
+import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
+import com.vultisig.wallet.data.securityscanner.SecurityScannerSupport
+import com.vultisig.wallet.data.securityscanner.SecurityScannerTransaction
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
+import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -21,6 +27,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -63,6 +70,7 @@ internal class VerifySwapViewModelTest {
     private lateinit var isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase
     private lateinit var securityScannerService: SecurityScannerContract
     private lateinit var vaultRepository: VaultRepository
+    private lateinit var inboundHaltPreflight: SwapInboundHaltPreflight
 
     /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
@@ -79,6 +87,7 @@ internal class VerifySwapViewModelTest {
         isVaultHasFastSignById = mockk(relaxed = true)
         securityScannerService = mockk(relaxed = true)
         vaultRepository = mockk(relaxed = true)
+        inboundHaltPreflight = mockk(relaxed = true)
         coEvery { isVaultHasFastSignById(any()) } returns false
         coEvery { vaultRepository.get(VAULT_ID) } returns mockk<Vault>(relaxed = true)
     }
@@ -101,6 +110,8 @@ internal class VerifySwapViewModelTest {
             isVaultHasFastSignById = isVaultHasFastSignById,
             securityScannerService = securityScannerService,
             vaultRepository = vaultRepository,
+            inboundHaltPreflight = inboundHaltPreflight,
+            ioDispatcher = testDispatcher,
         )
 
     /**
@@ -153,6 +164,7 @@ internal class VerifySwapViewModelTest {
             vm.joinKeySign()
 
             vm.state.value.errorText.shouldBeNull()
+            vm.state.value.isSigning shouldBe false
             coVerify {
                 launchKeysign(
                     KeysignInitType.QR_CODE,
@@ -222,8 +234,131 @@ internal class VerifySwapViewModelTest {
             }
         }
 
+    /** A live inbound halt aborts paired signing and surfaces the existing trading-halted error. */
+    @Test
+    fun `joinKeySign blocks signing when the source chain becomes halted`() =
+        runTest(testDispatcher) {
+            givenSwap(approvalRequired = false)
+            coEvery { inboundHaltPreflight.assertSourceChainNotHalted(any()) } throws
+                SwapException.TradingHalted("halted")
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.consentAmount(true)
+            vm.consentReceiveAmount(true)
+            vm.joinKeySign()
+            advanceUntilIdle()
+
+            vm.state.value.errorText.shouldNotBeNull()
+            vm.state.value.isSigning shouldBe false
+            coVerify(exactly = 0) { launchKeysign(any(), any(), any(), any(), any()) }
+        }
+
+    /** The biometric path runs through the same live inbound safety gate. */
+    @Test
+    fun `authFastSign blocks signing when inbound status cannot be verified`() =
+        runTest(testDispatcher) {
+            givenSwap(approvalRequired = false)
+            coEvery { inboundHaltPreflight.assertSourceChainNotHalted(any()) } throws
+                IllegalStateException("network unavailable")
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.consentAmount(true)
+            vm.consentReceiveAmount(true)
+            vm.authFastSign()
+            advanceUntilIdle()
+
+            vm.state.value.errorText.shouldNotBeNull()
+            vm.state.value.isSigning shouldBe false
+            coVerify(exactly = 0) { launchKeysign(any(), any(), any(), any(), any()) }
+        }
+
+    /**
+     * Solana-source swaps can't be scanned as a full transaction, so before #5348 they were skipped
+     * entirely — the external recipient the funds land on was never screened. The fallback screens
+     * that address on its own on the destination chain and publishes the verdict through the same
+     * scan status the EVM path uses.
+     */
+    @Test
+    fun `a non-scannable source swap still screens its external recipient`() =
+        runTest(testDispatcher) {
+            val result = mockk<SecurityScannerResult>(relaxed = true)
+            val recipientScan = mockk<SecurityScannerTransaction>(relaxed = true)
+            givenNonEvmSourceSwap(dstChain = Chain.Ethereum, externalRecipient = RECIPIENT)
+            every {
+                securityScannerService.createRecipientSecurityScannerTransaction(any())
+            } returns recipientScan
+            coEvery { securityScannerService.scanTransaction(recipientScan) } returns result
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.state.value.txScanStatus shouldBe TransactionScanStatus.Scanned(result)
+        }
+
+    /** A swap that lands back in the vault's own address has no external address to screen. */
+    @Test
+    fun `a non-scannable source swap without an external recipient stays unscanned`() =
+        runTest(testDispatcher) {
+            givenNonEvmSourceSwap(dstChain = Chain.Ethereum, externalRecipient = null)
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.state.value.txScanStatus shouldBe TransactionScanStatus.NotStarted
+            coVerify(exactly = 0) { securityScannerService.scanTransaction(any()) }
+        }
+
+    /** Non-EVM destinations have no address-shaped scan, so the fallback skips them silently. */
+    @Test
+    fun `a non-scannable source swap to a non-EVM destination stays unscanned`() =
+        runTest(testDispatcher) {
+            givenNonEvmSourceSwap(dstChain = Chain.Solana, externalRecipient = RECIPIENT)
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.state.value.txScanStatus shouldBe TransactionScanStatus.NotStarted
+            coVerify(exactly = 0) { securityScannerService.scanTransaction(any()) }
+        }
+
+    /**
+     * Drives `init` with a Solana-source swap: the source chain is Blockaid-supported but isn't
+     * EVM, so the full-transaction path is skipped and only the recipient fallback can run.
+     */
+    private fun givenNonEvmSourceSwap(dstChain: Chain, externalRecipient: String?) {
+        val tx =
+            mockk<SwapTransaction.RegularSwapTransaction>(relaxed = true) {
+                every { isApprovalRequired } returns false
+                every { memo } returns null
+                every { srcToken } returns
+                    mockk<Coin>(relaxed = true).apply { every { chain } returns Chain.Solana }
+                every { dstToken } returns
+                    mockk<Coin>(relaxed = true).apply { every { chain } returns dstChain }
+                every { this@mockk.externalRecipient } returns externalRecipient
+            }
+        coEvery { swapTransactionRepository.getTransaction(TX_ID) } returns tx
+        coEvery { mapTransactionToUiModel(tx) } returns SwapTransactionUiModel()
+        coEvery { securityScannerService.isSecurityServiceEnabled() } returns true
+        every { securityScannerService.getSupportedChainsByFeature() } returns
+            listOf(
+                SecurityScannerSupport(
+                    provider = "blockaid",
+                    feature =
+                        listOf(
+                            SecurityScannerSupport.Feature(
+                                chains = listOf(Chain.Solana, Chain.Ethereum),
+                                featureType = SecurityScannerFeaturesType.SCAN_TRANSACTION,
+                            )
+                        ),
+                )
+            )
+    }
+
     private companion object {
         const val VAULT_ID = "vault-1"
         const val TX_ID = "tx-1"
+        const val RECIPIENT = "0x9876543210FeDcBa9876543210FeDcBa98765432"
     }
 }

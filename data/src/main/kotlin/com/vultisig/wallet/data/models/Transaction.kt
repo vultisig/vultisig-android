@@ -20,11 +20,14 @@ data class Transaction(
     val memo: String?,
     val signAmino: String? = null,
     val signDirect: String? = null,
-    val signSolana: String? = null,
+    /** Base64 raw txs of a dApp signSolana batch (issue #5238); one entry per transaction. */
+    val signSolana: List<String> = emptyList(),
     /**
      * Base64 `TransactionData` BCS bytes of a dApp-supplied Sui PTB, surfaced for verify display.
      */
     val signSui: String? = null,
+    /** Raw XRPL transaction JSON of a dApp-supplied `SignRipple`, surfaced for verify display. */
+    val signRipple: String? = null,
     val estimatedFee: String,
     val blockChainSpecific: BlockChainSpecific,
     val utxos: List<UtxoInfo> = emptyList(),

@@ -11,4 +11,12 @@ interface SecurityScannerTransactionFactoryContract {
     suspend fun createSecurityScannerTransaction(
         transaction: SwapTransaction
     ): SecurityScannerTransaction
+
+    /**
+     * Screens a swap's external recipient on the destination chain, independently of whether the
+     * source-chain swap transaction itself can be scanned.
+     */
+    fun createRecipientSecurityScannerTransaction(
+        transaction: SwapTransaction
+    ): SecurityScannerTransaction
 }

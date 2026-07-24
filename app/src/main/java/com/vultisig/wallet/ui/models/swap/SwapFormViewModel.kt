@@ -10,6 +10,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -260,6 +261,21 @@ constructor(
                 return
             }
 
+        // Snapshot the fee/discount display alongside `inputs`, before launching. Reading
+        // _uiState.value inside the coroutine could attach a later quote's fee label or discounts
+        // to this transaction if polling lands a new quote in the meantime (#5358).
+        val feeDisplay =
+            _uiState.value.let { state ->
+                SwapFeeDisplay(
+                    swapFeePercent = state.feeBreakdown.swapFeePercent,
+                    swapFeeIncludedInRate = state.feeBreakdown.swapFeeIncludedInRate,
+                    vultBpsDiscount = state.discountInfo.vultBpsDiscount,
+                    vultBpsDiscountFiatValue = state.discountInfo.vultBpsDiscountFiatValue,
+                    referralBpsDiscount = state.discountInfo.referralBpsDiscount,
+                    referralBpsDiscountFiatValue = state.discountInfo.referralBpsDiscountFiatValue,
+                )
+            }
+
         viewModelScope.safeLaunch(
             onError = { e ->
                 isLoadingNextScreen = false
@@ -285,6 +301,7 @@ constructor(
                     estimatedNetworkFeeFiatValue = inputs.estimatedNetworkFeeFiatValue,
                     gasLimitOverride = gasLimitOverride.value,
                     externalRecipient = externalRecipient.value,
+                    feeDisplay = feeDisplay,
                 )
 
             swapTransactionRepository.addTransaction(transaction)
@@ -365,8 +382,27 @@ constructor(
                 selectedDstId = selectedDstId,
                 addresses = addresses,
                 uiState = _uiState,
+                // Raise the quote skeletons while loading a not-yet-held token's account only when
+                // the pair the pick forms could actually be quoted — a positive amount AND a
+                // routable (distinct, provider-backed) pair, mirroring the pipeline's own
+                // isPairRoutable && amount>0 gate. A bare amount>0 check would still blink over an
+                // unroutable or same-token pair before updatePairSupport catches it (#5296 review).
+                isSelectionQuotable = { selectedToken ->
+                    isSelectionQuotable(targetArg, selectedToken)
+                },
             )
         }
+    }
+
+    private fun isSelectionQuotable(targetArg: String, selectedToken: Coin): Boolean {
+        val amount = srcAmount ?: return false
+        if (amount <= BigDecimal.ZERO) return false
+        val (src, dst) =
+            when (targetArg) {
+                ARG_SELECTED_SRC_TOKEN_ID -> selectedToken to selectedDst.value?.account?.token
+                else -> selectedSrc.value?.account?.token to selectedToken
+            }
+        return src != null && dst != null && quotePipeline.isPairRoutable(src, dst)
     }
 
     fun flipSelectedTokens() {
@@ -462,7 +498,9 @@ constructor(
 
         // The 25/50/75 chips take a plain fraction of the full balance, matching iOS and the
         // desktop app. Only MAX reserves the source-chain network fee, and only for a native source
-        // on its own gas chain. The provider swap fee is taken from the destination amount (for
+        // on its own gas chain — a combination the UI no longer offers, since MAX is hidden
+        // whenever the source is native (#5317), so this branch is now a guard for direct callers
+        // rather than a live path. The provider swap fee is taken from the destination amount (for
         // LI.FI it is denominated in the destination token's units), so it is never deducted from
         // the source balance here — that would mix decimals and could wrongly drive the usable
         // amount negative for a low-decimal source into a high-decimal destination.

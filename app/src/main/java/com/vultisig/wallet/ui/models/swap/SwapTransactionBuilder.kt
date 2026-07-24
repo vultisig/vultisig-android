@@ -1,10 +1,12 @@
 package com.vultisig.wallet.ui.models.swap
 
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapTransaction.RegularSwapTransaction
 import com.vultisig.wallet.data.models.THORChainSwapPayload
@@ -12,6 +14,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.models.swapProviderFromWireId
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import java.math.BigInteger
@@ -20,6 +23,21 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+
+/**
+ * Display-only fee/discount context captured from the swap form at build time, carried onto the
+ * [RegularSwapTransaction] so the verify screen renders the same Swap Fee percentage and VULT-tier
+ * / referral discount rows the form shows (#5358). Defaults reproduce the pre-#5358 verify screen
+ * (no percentage, no discount rows).
+ */
+internal data class SwapFeeDisplay(
+    val swapFeePercent: String? = null,
+    val swapFeeIncludedInRate: Boolean = false,
+    val vultBpsDiscount: Int? = null,
+    val vultBpsDiscountFiatValue: String? = null,
+    val referralBpsDiscount: Int? = null,
+    val referralBpsDiscountFiatValue: String? = null,
+)
 
 /**
  * Assembles the provider-specific [RegularSwapTransaction] for an already-validated swap.
@@ -50,6 +68,7 @@ constructor(
         estimatedNetworkFeeFiatValue: FiatValue?,
         gasLimitOverride: Long? = null,
         externalRecipient: String? = null,
+        feeDisplay: SwapFeeDisplay = SwapFeeDisplay(),
     ): RegularSwapTransaction {
         val dstTokenValue = quote.expectedDstValue
 
@@ -98,6 +117,13 @@ constructor(
                     memo = quote.data.memo,
                     gasFeeFiatValue = estimatedNetworkFeeFiatValue ?: gasFeeFiatValue,
                     externalRecipient = externalRecipient,
+                    swapFeePercent = feeDisplay.swapFeePercent,
+                    swapFeeIncludedInRate = feeDisplay.swapFeeIncludedInRate,
+                    vultBpsDiscount = feeDisplay.vultBpsDiscount,
+                    vultBpsDiscountFiatValue = feeDisplay.vultBpsDiscountFiatValue,
+                    referralBpsDiscount = feeDisplay.referralBpsDiscount,
+                    referralBpsDiscountFiatValue = feeDisplay.referralBpsDiscountFiatValue,
+                    priceImpact = quote.priceImpact,
                     payload =
                         SwapPayload.ThorChain(
                             THORChainSwapPayload(
@@ -175,6 +201,13 @@ constructor(
                     isApprovalRequired = isApprovalRequired,
                     gasFeeFiatValue = estimatedNetworkFeeFiatValue ?: gasFeeFiatValue,
                     externalRecipient = externalRecipient,
+                    swapFeePercent = feeDisplay.swapFeePercent,
+                    swapFeeIncludedInRate = feeDisplay.swapFeeIncludedInRate,
+                    vultBpsDiscount = feeDisplay.vultBpsDiscount,
+                    vultBpsDiscountFiatValue = feeDisplay.vultBpsDiscountFiatValue,
+                    referralBpsDiscount = feeDisplay.referralBpsDiscount,
+                    referralBpsDiscountFiatValue = feeDisplay.referralBpsDiscountFiatValue,
+                    priceImpact = quote.priceImpact,
                     payload =
                         SwapPayload.MayaChain(
                             THORChainSwapPayload(
@@ -234,6 +267,13 @@ constructor(
                     isApprovalRequired = false,
                     gasFeeFiatValue = estimatedNetworkFeeFiatValue ?: gasFeeFiatValue,
                     externalRecipient = externalRecipient,
+                    swapFeePercent = feeDisplay.swapFeePercent,
+                    swapFeeIncludedInRate = feeDisplay.swapFeeIncludedInRate,
+                    vultBpsDiscount = feeDisplay.vultBpsDiscount,
+                    vultBpsDiscountFiatValue = feeDisplay.vultBpsDiscountFiatValue,
+                    referralBpsDiscount = feeDisplay.referralBpsDiscount,
+                    referralBpsDiscountFiatValue = feeDisplay.referralBpsDiscountFiatValue,
+                    priceImpact = quote.priceImpact,
                     payload = SwapPayload.SwapKit(quote.data),
                 )
             }
@@ -258,9 +298,9 @@ constructor(
                 val isApprovalRequired = allowance != null && allowance < srcTokenValue.value
 
                 val specific = specificAndUtxo.blockChainSpecific
-                // Aggregators can return tx.gas == 0; fall back to the standard EVM swap unit
-                // so the signed payload never carries a zero gas limit (matches
-                // SwapQuoteManager's fee path).
+                // Aggregators can return a non-positive tx.gas; fall back to the standard EVM swap
+                // unit so a malformed (zero or negative) gas limit never reaches the shared signed
+                // payload (matches SwapQuoteManager's fee path).
                 //
                 // A user gas-limit override (#4858) replaces the aggregator estimate. OneInchSwap
                 // signs with maxOf(tx.gas, ethSpecific.gasLimit), so set BOTH to the override —
@@ -268,7 +308,7 @@ constructor(
                 // limit. Auto (null/non-positive) keeps the estimate and the current behavior.
                 val gasLimit =
                     gasLimitOverride?.takeIf { it > 0L }
-                        ?: (quote.data.tx.gas.takeIf { it != 0L }
+                        ?: (quote.data.tx.gas.takeIf { it > 0L }
                             ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT)
                 val hasGasOverride = gasLimitOverride != null && gasLimitOverride > 0L
                 val effectiveSpecificAndUtxo =
@@ -283,7 +323,8 @@ constructor(
                 val (displayGasFees, displayGasFeeFiat) =
                     displayedSwapGasFee(
                         specific = specific,
-                        overrideGasLimit = gasLimitOverride?.takeIf { it > 0L },
+                        srcToken = srcToken,
+                        gasLimit = gasLimit,
                         gasFee = gasFee,
                         gasFeeFiatValue = gasFeeFiatValue,
                         estimatedNetworkFeeTokenValue = estimatedNetworkFeeTokenValue,
@@ -301,6 +342,23 @@ constructor(
                     } else {
                         quote.data
                     }
+                // A literal 1inch quote carries no affiliate fee, so `quote.fees` is 1inch's own
+                // quoted `gasPrice × gas` shown as the "Swap Fee". The joiner re-derives that same
+                // placeholder from the signed tx's `gasPrice × gas` (JoinSwapUiModelBuilder's
+                // `else`
+                // branch), which is the `maxFeePerGasWei`/`gasLimit` stamped just above — not the
+                // original quote values. Value the initiator's Swap Fee off the same stamped params
+                // so both co-signers show the same figure instead of diverging (#5329). Other
+                // providers routed through this branch (LI.FI / Kyber / SwapKit) carry a real fee
+                // the joiner reads via its own branches, so their `quote.fees` is left untouched.
+                val isLiteralOneInch =
+                    swapProviderFromWireId(quote.provider) == SwapProvider.ONEINCH
+                val estimatedFees =
+                    if (isLiteralOneInch && specific is BlockChainSpecific.Ethereum) {
+                        quote.fees.copy(value = specific.maxFeePerGasWei * gasLimit.toBigInteger())
+                    } else {
+                        quote.fees
+                    }
 
                 RegularSwapTransaction(
                     id = UUID.randomUUID().toString(),
@@ -312,12 +370,19 @@ constructor(
                     approveSpender = approveSpender,
                     expectedDstTokenValue = dstTokenValue,
                     blockChainSpecific = effectiveSpecificAndUtxo,
-                    estimatedFees = quote.fees,
+                    estimatedFees = estimatedFees,
                     gasFees = displayGasFees,
                     memo = null,
                     isApprovalRequired = isApprovalRequired,
                     gasFeeFiatValue = displayGasFeeFiat,
                     externalRecipient = externalRecipient,
+                    swapFeePercent = feeDisplay.swapFeePercent,
+                    swapFeeIncludedInRate = feeDisplay.swapFeeIncludedInRate,
+                    vultBpsDiscount = feeDisplay.vultBpsDiscount,
+                    vultBpsDiscountFiatValue = feeDisplay.vultBpsDiscountFiatValue,
+                    referralBpsDiscount = feeDisplay.referralBpsDiscount,
+                    referralBpsDiscountFiatValue = feeDisplay.referralBpsDiscountFiatValue,
+                    priceImpact = quote.priceImpact,
                     payload =
                         SwapPayload.EVM(
                             EVMSwapPayloadJson(
@@ -337,37 +402,45 @@ constructor(
     }
 
     /**
-     * Displayed/staged EVM swap network fee (never the signed tx): the route-gas estimate when
-     * present, else the gas-pass baseline, re-priced to a user gas-limit override (#4858) at the
-     * native price that estimate implies. Token and fiat stay a matched pair (#5056).
+     * Displayed/staged EVM swap network fee (never the signed tx): valued at the exact gas
+     * parameters stamped into the payload — [BlockChainSpecific.Ethereum.maxFeePerGasWei] times the
+     * co-signer-aligned display gas limit ([evmSwapDisplayGasLimit], falling back to
+     * [EthereumFeeService.DEFAULT_SWAP_LIMIT]). This is the identical formula the joiner applies in
+     * `computeJoinKeysignSwapNetworkFee` off the same stamped `tx.gas` (which already folds in a
+     * user gas-limit override, #4858), so every device — including OP-stack L2s and sub-floor
+     * overrides that [evmSwapDisplayGasLimit] floors — shows the same crypto network fee instead of
+     * a separately-fetched estimate that runs lower than what is signed (#5329, #5056). Fiat is
+     * re-priced from the matched estimate/gas-pass reference pair so token and fiat stay
+     * consistent; non-Ethereum plans keep the estimate/gas-pass baseline.
      */
     private fun displayedSwapGasFee(
         specific: BlockChainSpecific,
-        overrideGasLimit: Long?,
+        srcToken: Coin,
+        gasLimit: Long,
         gasFee: TokenValue,
         gasFeeFiatValue: FiatValue,
         estimatedNetworkFeeTokenValue: TokenValue?,
         estimatedNetworkFeeFiatValue: FiatValue?,
     ): Pair<TokenValue, FiatValue> {
         // Use the route-gas estimate when it is a real positive value, else fall back to the
-        // gas-pass baseline — a non-null zero estimate must not suppress the override (it would
-        // also
-        // make repriceFee divide by zero).
-        val estimate = estimatedNetworkFeeTokenValue?.takeIf { it.value.signum() > 0 }
-        val referenceFee = estimate ?: gasFee
-        val referenceFiat =
-            if (estimate != null) estimatedNetworkFeeFiatValue ?: gasFeeFiatValue
-            else gasFeeFiatValue
-        if (
-            specific !is BlockChainSpecific.Ethereum ||
-                overrideGasLimit == null ||
-                referenceFee.value.signum() <= 0
-        ) {
+        // gas-pass baseline — a non-null zero estimate must not suppress the re-price (it would
+        // also make repriceFee divide by zero). Take token and fiat as an atomic pair: a positive
+        // token estimate with a null fiat estimate must NOT reprice gas-pass fiat against the
+        // unrelated estimate token fee, so require both estimate values before using them.
+        val estimatePair =
+            estimatedNetworkFeeTokenValue
+                ?.takeIf { it.value.signum() > 0 }
+                ?.let { fee -> estimatedNetworkFeeFiatValue?.let { fiat -> fee to fiat } }
+        val (referenceFee, referenceFiat) = estimatePair ?: (gasFee to gasFeeFiatValue)
+        if (specific !is BlockChainSpecific.Ethereum || referenceFee.value.signum() <= 0) {
             return referenceFee to referenceFiat
         }
-        val overriddenFeeWei = overrideGasLimit.toBigInteger() * specific.maxFeePerGasWei
-        return gasFee.copy(value = overriddenFeeWei) to
-            repriceFee(overriddenFeeWei, referenceFee, referenceFiat)
+        // Floor an override / route gas exactly as the joiner does so both devices agree, even for
+        // OP-stack L2s (null → DEFAULT_SWAP_LIMIT) and sub-floor overrides.
+        val displayLimit =
+            evmSwapDisplayGasLimit(srcToken, gasLimit) ?: EthereumFeeService.DEFAULT_SWAP_LIMIT
+        val feeWei = specific.maxFeePerGasWei * displayLimit
+        return gasFee.copy(value = feeWei) to repriceFee(feeWei, referenceFee, referenceFiat)
     }
 
     /** Re-values [feeWei] at the native price implied by the matched [refFee]/[refFiat] pair. */

@@ -357,10 +357,26 @@ constructor(
             address.copy(
                 accounts =
                     address.accounts.map {
+                        // Isolate per-token failures: one token's failed balance read (e.g. an EVM
+                        // getBalance that now throws instead of returning a fake 0, #5308) must not
+                        // drop the whole emission and leave every sibling on this chain
+                        // unrefreshed.
+                        // On failure fall back to the cached value for just that token, matching
+                        // the
+                        // batch path's per-token isolation.
                         val balance =
-                            balanceRepository
-                                .getTokenBalanceAndPrice(tokenAddress, it.token)
-                                .first()
+                            try {
+                                balanceRepository
+                                    .getTokenBalanceAndPrice(tokenAddress, it.token)
+                                    .first()
+                            } catch (e: Exception) {
+                                if (e is kotlinx.coroutines.CancellationException) throw e
+                                Timber.e(e)
+                                balanceRepository.getCachedTokenBalanceAndPrice(
+                                    tokenAddress,
+                                    it.token,
+                                )
+                            }
 
                         it.applyBalance(balance.tokenBalance, balance.price)
                     }
@@ -429,6 +445,7 @@ constructor(
                     Chain.TerraClassic to Coins.TerraClassic.LUNC,
                     Chain.Qbtc to Coins.Qbtc.QBTC,
                     Chain.Ton to Coins.Ton.TON,
+                    Chain.Solana to Coins.Solana.SOL,
                 )
 
             val addressesByChain = addresses.associateBy { it.chain }
@@ -571,8 +588,20 @@ constructor(
             finalAccount.accounts.firstOrNull { it.token.id == updatedToken.id }
                 ?: error("Account for token ${updatedToken.id} not found in mapped address")
 
+        // A live read now propagates a failed RPC read instead of a fake 0 (#5308). Isolate it here
+        // so loadAccount doesn't throw on a transient failure — fall back to the cached value, same
+        // as the batch/emitRefreshAddress paths. Otherwise the single-token callers (e.g. the swap
+        // token selector) would swallow the throw and silently drop the user's selection.
         val balance =
-            balanceRepository.getTokenBalanceAndPrice(finalAccount.address, updatedToken).first()
+            try {
+                balanceRepository
+                    .getTokenBalanceAndPrice(finalAccount.address, updatedToken)
+                    .first()
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Timber.e(e, "Failed to fetch balance for token %s, using cached", updatedToken.id)
+                balanceRepository.getCachedTokenBalanceAndPrice(finalAccount.address, updatedToken)
+            }
 
         loadPrices.await()
 
@@ -614,6 +643,10 @@ constructor(
             // TON surfaces a nominator-pool staking position; without this its coin is dropped from
             // the DeFi candidate set and staked TON never appears in the aggregate Portfolio total.
             Chain.Ton -> true
+            // Solana surfaces a native-staking position (one row per stake account). Without this
+            // its coin is dropped from the candidate set, so it passes isDeFiSupported (selectable
+            // in the "Select DeFi chains" sheet) yet never appears in the Portfolio DeFi list.
+            Chain.Solana -> true
             else -> false
         }
     }

@@ -13,11 +13,20 @@ class RippleStatusProvider @Inject constructor(private val rippleApi: RippleApi)
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult =
         try {
-            val tx = rippleApi.getTsStatus(txHash)
+            val result = rippleApi.getTsStatus(txHash)?.result
+            val engineResult = result?.meta?.transactionResult
             when {
-                tx == null -> TransactionResult.Pending
-                tx.result.status == "success" -> TransactionResult.Confirmed
-                else -> TransactionResult.Failed(tx.result.status)
+                // Not found yet, or found only in a not-yet-validated ledger: keep polling. A tx in
+                // an unvalidated ledger can still be dropped (LastLedgerSequence expiry, failed
+                // consensus), so it must not be reported terminally.
+                result == null || result.validated != true -> TransactionResult.Pending
+                // Validated but outcome unknown (meta absent): don't claim success, keep polling.
+                engineResult == null -> TransactionResult.Pending
+                // Only tesSUCCESS delivered funds. A validated tec* result (tecUNFUNDED_PAYMENT,
+                // tecDST_TAG_NEEDED, …) burned the fee and delivered nothing — it is a real
+                // failure.
+                engineResult == "tesSUCCESS" -> TransactionResult.Confirmed
+                else -> TransactionResult.Failed(engineResult)
             }
         } catch (e: CancellationException) {
             throw e

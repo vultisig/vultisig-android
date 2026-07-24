@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isBuySupported
 import com.vultisig.wallet.data.models.isDepositSupported
+import com.vultisig.wallet.data.models.isLpToken
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -151,7 +152,10 @@ constructor(
                                     it.copy(
                                         token = tokenUiModel,
                                         canDeposit = chain.isDepositSupported,
-                                        canSwap = chain.isSwapSupported,
+                                        // LP receipt tokens (e.g. bRUNE/ybRUNE) can't be a swap
+                                        // source; gate the button here too, not only in the asset
+                                        // pickers, so it can't be entered from this screen.
+                                        canSwap = chain.isSwapSupported && !token.isLpToken,
                                         canBuy = chain.isBuySupported,
                                         explorerUrl = explorerUrl,
                                     )

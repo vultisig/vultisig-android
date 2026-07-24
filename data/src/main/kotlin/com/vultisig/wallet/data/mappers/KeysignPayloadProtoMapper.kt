@@ -53,6 +53,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             signSolana = from.signSolana,
             signTon = from.signTon,
             signSui = from.signSui,
+            signRipple = from.signRipple,
             signBitcoin = from.signBitcoin,
             swapPayload =
                 when {
@@ -145,6 +146,22 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                             referenceGasPrice = BigInteger.ZERO,
                             gasBudget = BigInteger.ZERO,
                             coins = emptyList(),
+                        )
+
+                    // A dApp-supplied XRPL transaction (`signRipple`) is signed verbatim from its
+                    // raw JSON via WalletCore's `rawJson` path — Fee / Sequence /
+                    // LastLedgerSequence are already encoded in the JSON. The Windows/extension
+                    // initiator still populates `rippleSpecific` (it runs `getChainSpecific` for
+                    // every chain), so honour it when present via the `rippleSpecific` branch below
+                    // rather than discarding the live sequence/fee the wire carries. Only stand in
+                    // an empty placeholder when it is genuinely absent, so [RippleHelper] — which
+                    // casts `blockChainSpecific` to `Ripple` — always has a value to read.
+                    from.signRipple != null && from.rippleSpecific == null ->
+                        BlockChainSpecific.Ripple(
+                            sequence = 0uL,
+                            gas = 0uL,
+                            lastLedgerSequence = 0uL,
+                            destinationTag = null,
                         )
 
                     from.ethereumSpecific != null ->
@@ -252,6 +269,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                                 sequence = it.sequence,
                                 lastLedgerSequence = it.lastLedgerSequence,
                                 gas = it.gas,
+                                destinationTag = it.destinationTag,
                             )
                         }
 

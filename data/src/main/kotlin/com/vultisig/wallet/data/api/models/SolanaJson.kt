@@ -91,3 +91,99 @@ data class SolanaAccountInfoResultJson(
 )
 
 @Serializable data class SolanaAccountInfoValueJson(@SerialName("owner") val owner: String? = null)
+
+// Solana native-staking read-layer wire DTOs (getEpochInfo / getVoteAccounts / getProgramAccounts).
+
+@Serializable
+data class SolanaEpochInfoResponseJson(
+    @SerialName("error") val error: JsonObject? = null,
+    @SerialName("result") val result: SolanaEpochInfoResultJson? = null,
+)
+
+@Serializable
+data class SolanaEpochInfoResultJson(
+    @SerialName("epoch") val epoch: Long,
+    @SerialName("slotIndex") val slotIndex: Long,
+    @SerialName("slotsInEpoch") val slotsInEpoch: Long,
+    @SerialName("absoluteSlot") val absoluteSlot: Long,
+)
+
+@Serializable
+data class SolanaVoteAccountsResponseJson(
+    @SerialName("error") val error: JsonObject? = null,
+    @SerialName("result") val result: SolanaVoteAccountsResultJson? = null,
+)
+
+@Serializable
+data class SolanaVoteAccountsResultJson(
+    @SerialName("current") val current: List<SolanaVoteAccountJson> = emptyList(),
+    @SerialName("delinquent") val delinquent: List<SolanaVoteAccountJson> = emptyList(),
+)
+
+@Serializable
+data class SolanaVoteAccountJson(
+    @SerialName("votePubkey") val votePubkey: String,
+    @SerialName("nodePubkey") val nodePubkey: String,
+    @SerialName("commission") val commission: Int,
+    @SerialName("activatedStake") @Contextual val activatedStake: BigInteger,
+)
+
+@Serializable
+data class SolanaProgramAccountsResponseJson(
+    @SerialName("error") val error: JsonObject? = null,
+    @SerialName("result") val result: List<SolanaProgramAccountJson> = emptyList(),
+)
+
+@Serializable
+data class SolanaProgramAccountJson(
+    @SerialName("pubkey") val pubkey: String,
+    @SerialName("account") val account: SolanaStakeAccountDataJson,
+)
+
+@Serializable
+data class SolanaStakeAccountDataJson(
+    @SerialName("lamports") @Contextual val lamports: BigInteger,
+    @SerialName("data") val data: SolanaStakeParsedDataJson? = null,
+)
+
+@Serializable
+data class SolanaStakeParsedDataJson(
+    @SerialName("parsed") val parsed: SolanaParsedStakeJson? = null
+)
+
+@Serializable
+data class SolanaParsedStakeJson(
+    @SerialName("type") val type: String? = null,
+    @SerialName("info") val info: SolanaStakeInfoJson? = null,
+)
+
+@Serializable
+data class SolanaStakeInfoJson(
+    @SerialName("meta") val meta: SolanaStakeMetaJson? = null,
+    @SerialName("stake") val stake: SolanaStakeJson? = null,
+)
+
+@Serializable
+data class SolanaStakeMetaJson(
+    @SerialName("rentExemptReserve") val rentExemptReserve: String? = null,
+    @SerialName("authorized") val authorized: SolanaStakeAuthorizedJson? = null,
+)
+
+@Serializable
+data class SolanaStakeAuthorizedJson(
+    @SerialName("staker") val staker: String? = null,
+    @SerialName("withdrawer") val withdrawer: String? = null,
+)
+
+@Serializable
+data class SolanaStakeJson(
+    @SerialName("delegation") val delegation: SolanaStakeDelegationJson? = null
+)
+
+@Serializable
+data class SolanaStakeDelegationJson(
+    @SerialName("voter") val voter: String? = null,
+    @SerialName("stake") val stake: String? = null,
+    @SerialName("activationEpoch") val activationEpoch: String? = null,
+    @SerialName("deactivationEpoch") val deactivationEpoch: String? = null,
+)

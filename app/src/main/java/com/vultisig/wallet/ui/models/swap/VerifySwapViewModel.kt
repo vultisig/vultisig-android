@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.IoDispatcher
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SwapTransaction
@@ -16,8 +18,10 @@ import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SecurityScannerSupport
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
@@ -30,7 +34,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -73,6 +77,37 @@ internal data class SwapTransactionUiModel(
     // For native THORChain/MayaChain swaps this is resolved from the signed memo's destination
     // segment rather than form state, so it reflects what's actually signed (#4972).
     val externalRecipient: String? = null,
+    // Display name of the vault the source funds leave from, or null when unresolved. Rendered on
+    // the transaction-complete screen as `VaultName (Address)` so the source account is
+    // identifiable rather than a bare address (#5333).
+    val srcVaultName: String? = null,
+    // Display name of the local vault that owns the destination address, or null when the
+    // destination is external / unresolved (falls back to the bare address). Rendered as
+    // `VaultName (Address)` on the transaction-complete screen (#5333).
+    val dstVaultName: String? = null,
+    // Affiliate fee percentage for the Swap Fee row title (e.g. "0.50%"), or null to show the plain
+    // "Swap Fee" title. Sourced from the form so the verify screen matches it (#5358).
+    val swapFeePercent: String? = null,
+    // True when the affiliate fee is baked into the quoted rate (1inch): the Swap Fee row shows
+    // "included in quoted rate" instead of the fiat amount, matching the form (#5358).
+    val swapFeeIncludedInRate: Boolean = false,
+    // True when the Swap Fee row must be hidden entirely — a SwapKit UTXO deposit whose cost is
+    // already the Network Fee, so showing it again would double-count. Matches the form, which
+    // hides the row for these swaps (#5358, #5321).
+    val swapFeeHidden: Boolean = false,
+    // VULT-tier discount (bps) and its pre-formatted fiat value, rendered as the tier row on the
+    // verify screen; null when no discount applies or it's unavailable (co-signer) (#5358).
+    val vultBpsDiscount: Int? = null,
+    val vultBpsDiscountFiatValue: String? = null,
+    // Referral discount (bps) and its pre-formatted fiat value, rendered as the referral row; null
+    // when there's no referral (non-THORChain, or unavailable to a co-signer) (#5358).
+    val referralBpsDiscount: Int? = null,
+    val referralBpsDiscountFiatValue: String? = null,
+    // Price impact of the signed quote, formatted like the swap form's row (e.g. "-1.58%") with its
+    // quality tier. Null when the provider reports none (EVM aggregators) or on a co-signer that
+    // rebuilds the tx from the payload without a quote — the row is then hidden (#5335).
+    val priceImpactPercent: String? = null,
+    val priceImpactLevel: PriceImpactLevel? = null,
 )
 
 internal data class ValuedToken(
@@ -95,6 +130,7 @@ internal data class VerifySwapUiModel(
     val txScanStatus: TransactionScanStatus = TransactionScanStatus.NotStarted,
     val showScanningWarning: Boolean = false,
     val vaultName: String = "",
+    val isSigning: Boolean = false,
 ) {
     val hasAllConsents: Boolean
         get() =
@@ -114,6 +150,8 @@ constructor(
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
+    private val inboundHaltPreflight: SwapInboundHaltPreflight,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     val state = MutableStateFlow(VerifySwapUiModel())
@@ -122,6 +160,7 @@ constructor(
     private val vaultId: VaultId = args.vaultId
     private val transactionId: String = args.transactionId
     private var _fastSign = false
+    private var transaction: SwapTransaction? = null
 
     private val _fastSignFlow = Channel<Boolean>()
     val fastSignFlow = _fastSignFlow.receiveAsFlow()
@@ -134,6 +173,7 @@ constructor(
                         navigator.back()
                         return@launch
                     }
+            this@VerifySwapViewModel.transaction = transaction
             val vault = vaultRepository.get(vaultId)
             val vaultName = vault?.name
             if (vaultName == null) {
@@ -196,8 +236,36 @@ constructor(
     }
 
     private fun keysign(keysignInitType: KeysignInitType) {
-        if (state.value.hasAllConsents) {
-            viewModelScope.launch {
+        if (!state.value.hasAllConsents) {
+            state.update {
+                it.copy(
+                    errorText =
+                        UiText.StringResource(R.string.verify_transaction_error_not_enough_consent)
+                )
+            }
+            return
+        }
+        if (state.value.isSigning) return
+
+        val transaction = transaction ?: return
+        state.update { it.copy(isSigning = true) }
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                // Only the preflight fails closed as a halt. A keysign/navigation failure must not
+                // masquerade as "trading halted", so it surfaces a generic error instead.
+                val errorMessage =
+                    if (e is SwapException.TradingHalted) {
+                        Timber.w(e, "Swap sign-time inbound preflight blocked signing")
+                        R.string.swap_error_trading_halted
+                    } else {
+                        Timber.e(e, "Swap keysign launch failed")
+                        R.string.error_view_default_title
+                    }
+                state.update { it.copy(errorText = UiText.StringResource(errorMessage)) }
+            }
+        ) {
+            try {
+                inboundHaltPreflight.assertSourceChainNotHalted(transaction)
                 launchKeysign(
                     keysignInitType,
                     transactionId,
@@ -205,13 +273,10 @@ constructor(
                     Route.Keysign.Keysign.TxType.Swap,
                     vaultId,
                 )
-            }
-        } else {
-            state.update {
-                it.copy(
-                    errorText =
-                        UiText.StringResource(R.string.verify_transaction_error_not_enough_consent)
-                )
+            } finally {
+                // The verify ViewModel can remain alive when navigation is cancelled or fails.
+                // Always re-enable signing so a later attempt cannot be permanently dead-ended.
+                state.update { it.copy(isSigning = false) }
             }
         }
     }
@@ -235,15 +300,18 @@ constructor(
                     transaction.payload is SwapPayload.ThorChain ||
                         transaction.payload is SwapPayload.MayaChain
 
+                if (!securityScannerService.isSecurityServiceEnabled()) return@launch
+
+                val supportedChains = securityScannerService.getSupportedChainsByFeature()
                 val isSupported =
                     !isThorchainOrMaya &&
                         chain.standard == TokenStandard.EVM &&
-                        securityScannerService
-                            .getSupportedChainsByFeature()
-                            .isChainSupported(chain) &&
-                        securityScannerService.isSecurityServiceEnabled()
+                        supportedChains.isChainSupported(chain)
 
-                if (!isSupported) return@launch
+                if (!isSupported) {
+                    scanExternalRecipient(transaction, supportedChains)
+                    return@launch
+                }
 
                 state.update { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
 
@@ -251,7 +319,7 @@ constructor(
                     securityScannerService.createSecurityScannerTransaction(transaction)
 
                 val result =
-                    withContext(Dispatchers.IO) {
+                    withContext(ioDispatcher) {
                         securityScannerService.scanTransaction(securityScannerTransaction)
                     }
 
@@ -273,6 +341,44 @@ constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Fallback screening for swaps whose source chain can't be scanned as a full transaction (e.g.
+     * a Solana-source swap): the funds still leave the vault to an external recipient, so that
+     * address is screened on its own on the destination chain (#5348).
+     *
+     * Silently skipped when there is no external recipient — a swap back into the vault's own
+     * address needs no address screening — or when the destination chain isn't an EVM chain the
+     * provider covers, which is the only address-shaped scan Blockaid offers. Provider-side AML
+     * screening remains the backstop there.
+     */
+    private suspend fun scanExternalRecipient(
+        transaction: SwapTransaction,
+        supportedChains: List<SecurityScannerSupport>,
+    ) {
+        val hasExternalRecipient =
+            (transaction as? SwapTransaction.RegularSwapTransaction)
+                ?.externalRecipient
+                ?.isNotBlank() == true
+        if (!hasExternalRecipient) return
+
+        val dstChain = transaction.dstToken.chain
+        if (dstChain.standard != TokenStandard.EVM || !supportedChains.isChainSupported(dstChain)) {
+            return
+        }
+
+        state.update { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
+
+        val recipientScannerTransaction =
+            securityScannerService.createRecipientSecurityScannerTransaction(transaction)
+
+        val result =
+            withContext(ioDispatcher) {
+                securityScannerService.scanTransaction(recipientScannerTransaction)
+            }
+
+        state.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(result)) }
     }
 
     fun onDismissSecurityScanner() {

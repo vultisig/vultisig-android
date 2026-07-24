@@ -1,14 +1,8 @@
 package com.vultisig.wallet.ui.screens.swap.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,10 +23,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -45,9 +37,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormDetails2
 import com.vultisig.wallet.ui.models.swap.DiscountInfo
 import com.vultisig.wallet.ui.models.swap.FeeBreakdown
-import com.vultisig.wallet.ui.models.swap.PriceImpactLevel
 import com.vultisig.wallet.ui.models.swap.QuoteDisplay
-import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -166,21 +156,33 @@ internal fun SwapFeeBreakdown(
                                 } else null,
                         )
 
-                        val feeTitle =
-                            feeBreakdown.swapFeePercent?.let {
-                                stringResource(
-                                    R.string.swap_form_estimated_fees_with_percent_title,
-                                    it,
-                                )
-                            } ?: stringResource(R.string.swap_form_estimated_fees_title)
-                        FormDetails2(
-                            title = feeTitle,
-                            value = feeBreakdown.fee,
-                            placeholder =
-                                if (isLoading) {
-                                    { loadingPlaceholder() }
-                                } else null,
-                        )
+                        // A blank fee means the swap fee is zeroed (SwapKit UTXO/Cardano deposit
+                        // cost is already the Network Fee); hide the row entirely rather than show
+                        // a redundant "$0.00", matching iOS. When the fee is baked into the quoted
+                        // rate (1inch), the row stays visible with a "included in quoted rate"
+                        // value instead of a fiat amount (#5358).
+                        if (feeBreakdown.fee.isNotBlank() || feeBreakdown.swapFeeIncludedInRate) {
+                            val feeTitle =
+                                feeBreakdown.swapFeePercent?.let {
+                                    stringResource(
+                                        R.string.swap_form_estimated_fees_with_percent_title,
+                                        it,
+                                    )
+                                } ?: stringResource(R.string.swap_form_estimated_fees_title)
+                            FormDetails2(
+                                title = feeTitle,
+                                value =
+                                    if (feeBreakdown.swapFeeIncludedInRate)
+                                        stringResource(
+                                            R.string.swap_form_estimated_fees_included_in_rate
+                                        )
+                                    else feeBreakdown.fee,
+                                placeholder =
+                                    if (isLoading) {
+                                        { loadingPlaceholder() }
+                                    } else null,
+                            )
+                        }
 
                         if (feeBreakdown.outboundFee != null) {
                             FormDetails2(
@@ -189,154 +191,24 @@ internal fun SwapFeeBreakdown(
                             )
                         }
 
-                        if (
-                            discountInfo.vultBpsDiscount != null &&
-                                discountInfo.vultBpsDiscountFiatValue != null
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                            ) {
-                                VultDiscountTier(
-                                    vultBpsDiscount = discountInfo.vultBpsDiscount,
-                                    tierType = discountInfo.tierType,
-                                )
+                        VultDiscountRow(
+                            vultBpsDiscount = discountInfo.vultBpsDiscount,
+                            tierType = discountInfo.tierType,
+                            fiatValue = discountInfo.vultBpsDiscountFiatValue,
+                        )
 
-                                Text(
-                                    text = "-${discountInfo.vultBpsDiscountFiatValue}",
-                                    color = Theme.v2.colors.text.secondary,
-                                    style = Theme.brockmann.supplementary.caption,
-                                )
-                            }
-                        }
+                        ReferralDiscountRow(
+                            referralBpsDiscount = discountInfo.referralBpsDiscount,
+                            fiatValue = discountInfo.referralBpsDiscountFiatValue,
+                        )
 
-                        if (
-                            discountInfo.referralBpsDiscount != null &&
-                                discountInfo.referralBpsDiscountFiatValue != null
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                UiIcon(
-                                    drawableResId = R.drawable.referral_code,
-                                    size = 16.dp,
-                                    tint = Theme.v2.colors.border.primaryAccent4,
-                                )
-                                UiSpacer(size = 4.dp)
-
-                                Text(
-                                    text =
-                                        stringResource(
-                                            R.string.swap_form_referral_discount_bps,
-                                            discountInfo.referralBpsDiscount,
-                                        ),
-                                    color = Theme.v2.colors.text.tertiary,
-                                    style = Theme.brockmann.supplementary.caption,
-                                )
-
-                                UiSpacer(weight = 1f)
-
-                                Text(
-                                    text = "-${discountInfo.referralBpsDiscountFiatValue}",
-                                    color = Theme.v2.colors.text.secondary,
-                                    style = Theme.brockmann.supplementary.caption,
-                                )
-                            }
-                        }
-
-                        if (
-                            feeBreakdown.priceImpactPercent != null &&
-                                feeBreakdown.priceImpactLevel != null
-                        ) {
-                            val levelLabel =
-                                when (feeBreakdown.priceImpactLevel) {
-                                    PriceImpactLevel.GOOD -> R.string.swap_price_impact_good
-                                    PriceImpactLevel.AVERAGE -> R.string.swap_price_impact_average
-                                    PriceImpactLevel.HIGH -> R.string.swap_price_impact_high
-                                }
-                            val levelColor =
-                                when (feeBreakdown.priceImpactLevel) {
-                                    PriceImpactLevel.GOOD -> Theme.v2.colors.alerts.success
-                                    PriceImpactLevel.AVERAGE -> Theme.v2.colors.alerts.warning
-                                    PriceImpactLevel.HIGH -> Theme.v2.colors.alerts.error
-                                }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.swap_form_price_impact_title),
-                                    color = Theme.v2.colors.text.tertiary,
-                                    style = Theme.brockmann.supplementary.caption,
-                                )
-
-                                Text(
-                                    text =
-                                        "${feeBreakdown.priceImpactPercent} " +
-                                            "(${stringResource(levelLabel)})",
-                                    color = levelColor,
-                                    style = Theme.brockmann.supplementary.caption,
-                                )
-                            }
-                        }
+                        PriceImpactRow(
+                            priceImpactPercent = feeBreakdown.priceImpactPercent,
+                            priceImpactLevel = feeBreakdown.priceImpactLevel,
+                        )
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun VultDiscountTier(vultBpsDiscount: Int, tierType: TierType?) {
-    val (title, logo) =
-        when (tierType) {
-            TierType.BRONZE -> R.string.vault_tier_bronze to R.drawable.type_bronze_tier__size_small
-            TierType.SILVER -> R.string.vault_tier_silver to R.drawable.type_silver_tier__size_small
-            TierType.GOLD -> R.string.vault_tier_gold to R.drawable.type_gold_tier__size_small
-            TierType.PLATINUM ->
-                R.string.vault_tier_platinum to R.drawable.type_platinum_tier__size_small
-
-            TierType.DIAMOND -> R.string.vault_tier_diamond to R.drawable.type_diamond__size_small
-            TierType.ULTIMATE -> R.string.vault_tier_ultimate to R.drawable.tier_ultimate
-            else -> null to null
-        }
-
-    if (title == null || logo == null) return
-
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        val infiniteTransition = rememberInfiniteTransition(label = "rotation")
-
-        val rotation by
-            infiniteTransition.animateFloat(
-                initialValue = 0f,
-                targetValue = 360f,
-                animationSpec =
-                    infiniteRepeatable(
-                        animation = tween(durationMillis = 10000, easing = LinearEasing),
-                        repeatMode = RepeatMode.Restart,
-                    ),
-                label = "rotation",
-            )
-
-        Image(
-            painterResource(logo),
-            contentDescription = null,
-            modifier = Modifier.size(16.dp).rotate(rotation),
-        )
-
-        Text(
-            text =
-                stringResource(
-                    R.string.swap_form_vult_discount_bps,
-                    stringResource(title),
-                    vultBpsDiscount,
-                ),
-            color = Theme.v2.colors.text.tertiary,
-            style = Theme.brockmann.supplementary.caption,
-        )
     }
 }

@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
+import io.kotest.assertions.withClue
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -49,6 +50,7 @@ internal class AddressManagerTest {
 
     private val addressFieldState = TextFieldState()
     private val providerBondFieldState = TextFieldState()
+    private val destinationTagFieldState = TextFieldState()
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
     @BeforeEach
@@ -257,17 +259,143 @@ internal class AddressManagerTest {
             emissions.shouldBeEmpty()
         }
 
+    @Test
+    fun `ethereum txid pasted as recipient is flagged invalid`() =
+        runTest(mainDispatcher) {
+            // A transaction id has the shape of an address but is not a valid recipient.
+            val txid = "0x88df016429689c079f3b2f6ad39fa052532c56795b733da78a91ebe6a713944b"
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, txid) } returns false
+            coEvery { addressParserRepository.resolveName(txid, Chain.Ethereum) } returns txid
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = ethToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(txid)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            manager.invalidAddress.value.shouldBeTrue()
+            manager.resolvedDstAddress.value.shouldBeNull()
+        }
+
+    @Test
+    fun `invalid recipient across representative chains is flagged`() =
+        runTest(mainDispatcher) {
+            val cases =
+                listOf(
+                    token(Chain.GaiaChain, "ATOM") to "not-a-cosmos-address",
+                    token(Chain.Bitcoin, "BTC") to "not-a-btc-address",
+                    token(Chain.Solana, "SOL") to "not-a-solana-address",
+                    token(Chain.Ripple, "XRP") to "not-an-xrp-address",
+                )
+
+            cases.forEach { (coin, badInput) ->
+                every { chainAccountAddressRepository.isValid(coin.chain, badInput) } returns false
+                coEvery { addressParserRepository.resolveName(badInput, coin.chain) } returns
+                    badInput
+
+                val field = TextFieldState()
+                val manager = build(backgroundScope, addressField = field)
+                manager.start()
+                selectedToken.value = coin
+
+                field.setTextAndPlaceCursorAtEnd(badInput)
+                Snapshot.sendApplyNotifications()
+                advanceTimeBy(400)
+                advanceUntilIdle()
+
+                withClue("${coin.chain} should flag $badInput as invalid") {
+                    manager.invalidAddress.value.shouldBeTrue()
+                }
+            }
+        }
+
+    @Test
+    fun `valid recipient clears a prior invalid flag`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, "garbage") } returns false
+            coEvery { addressParserRepository.resolveName("garbage", Chain.Ethereum) } returns
+                "garbage"
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, "0xabc") } returns true
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = ethToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd("garbage")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            manager.invalidAddress.value.shouldBeTrue()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd("0xabc")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            manager.invalidAddress.value.shouldBeFalse()
+            manager.resolvedDstAddress.value shouldBe "0xabc"
+        }
+
+    @Test
+    fun `clearing the field clears the invalid flag`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, "garbage") } returns false
+            coEvery { addressParserRepository.resolveName("garbage", Chain.Ethereum) } returns
+                "garbage"
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = ethToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd("garbage")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            manager.invalidAddress.value.shouldBeTrue()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd("")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            manager.invalidAddress.value.shouldBeFalse()
+        }
+
+    @Test
+    fun `resolver failure flags the recipient invalid`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, "explode.eth") } returns
+                false
+            coEvery { addressParserRepository.resolveName("explode.eth", Chain.Ethereum) } throws
+                IllegalStateException("rpc down")
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = ethToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd("explode.eth")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            manager.invalidAddress.value.shouldBeTrue()
+        }
+
     private fun TestScope.collectValidations(manager: AddressManager): MutableList<Unit> {
         val emissions = mutableListOf<Unit>()
         backgroundScope.launch { manager.onAddressValidated.collect { emissions += Unit } }
         return emissions
     }
 
-    private fun build(scope: CoroutineScope) =
+    private fun build(scope: CoroutineScope, addressField: TextFieldState = addressFieldState) =
         AddressManager(
             scope = scope,
-            addressFieldState = addressFieldState,
+            addressFieldState = addressField,
             providerBondFieldState = providerBondFieldState,
+            destinationTagFieldState = destinationTagFieldState,
             selectedToken = selectedToken,
             chainAccountAddressRepository = chainAccountAddressRepository,
             addressParserRepository = addressParserRepository,
@@ -276,16 +404,133 @@ internal class AddressManagerTest {
             checkIfTokenSelectionRequired = { _, _ -> },
         )
 
-    private fun ethToken(): Coin =
+    private fun ethToken(): Coin = token(Chain.Ethereum, "ETH")
+
+    private fun token(chain: Chain, ticker: String): Coin =
         Coin(
-            chain = Chain.Ethereum,
-            ticker = "ETH",
+            chain = chain,
+            ticker = ticker,
             logo = "",
-            address = "0xself",
+            address = "self",
             decimal = 18,
             hexPublicKey = "",
-            priceProviderID = "ethereum",
+            priceProviderID = ticker.lowercase(),
             contractAddress = "",
             isNativeToken = true,
         )
+
+    private fun xrpToken(): Coin =
+        Coin(
+            chain = Chain.Ripple,
+            ticker = "XRP",
+            logo = "",
+            address = "rSelf",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "ripple",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
+    @Test
+    fun `pasting a tagged X-address normalizes the address and locks the tag`() =
+        runTest(mainDispatcher) {
+            val xAddress = "X7AcgcsBL6XDcUb289X4mJ8djcdyKaGZMhc9YTE92ehJ2Fu"
+            val classic = "r9cZA1mLK5R5Am25ArfXFmqgNwjZgnfk59"
+            every { chainAccountAddressRepository.isValid(Chain.Ripple, classic) } returns true
+            every { chainAccountAddressRepository.isValid(Chain.Ripple, xAddress) } returns false
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = xrpToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(xAddress)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            addressFieldState.text.toString() shouldBe classic
+            destinationTagFieldState.text.toString() shouldBe "1"
+            manager.destinationTagLocked.value.shouldBeTrue()
+            manager.resolvedDstAddress.value shouldBe classic
+            manager.dstAddressLabel.value shouldBe xAddress
+        }
+
+    @Test
+    fun `pasting a no-tag X-address normalizes but leaves the tag editable`() =
+        runTest(mainDispatcher) {
+            val xAddress = "X7AcgcsBL6XDcUb289X4mJ8djcdyKaB5hJDWMArnXr61cqZ"
+            val classic = "r9cZA1mLK5R5Am25ArfXFmqgNwjZgnfk59"
+            every { chainAccountAddressRepository.isValid(Chain.Ripple, classic) } returns true
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = xrpToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(xAddress)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            addressFieldState.text.toString() shouldBe classic
+            destinationTagFieldState.text.toString() shouldBe ""
+            manager.destinationTagLocked.value.shouldBeFalse()
+        }
+
+    @Test
+    fun `replacing a normalized X-address releases the lock and drops the derived tag`() =
+        runTest(mainDispatcher) {
+            val xAddress = "X7AcgcsBL6XDcUb289X4mJ8djcdyKaGZMhc9YTE92ehJ2Fu"
+            val classic = "r9cZA1mLK5R5Am25ArfXFmqgNwjZgnfk59"
+            val other = "rOtherClassicAddress"
+            every { chainAccountAddressRepository.isValid(Chain.Ripple, classic) } returns true
+            every { chainAccountAddressRepository.isValid(Chain.Ripple, other) } returns true
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = xrpToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(xAddress)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            manager.destinationTagLocked.value.shouldBeTrue()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(other)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            manager.destinationTagLocked.value.shouldBeFalse()
+            destinationTagFieldState.text.toString() shouldBe ""
+        }
+
+    @Test
+    fun `replacing a tagged X-address with an untagged one drops the derived tag`() =
+        runTest(mainDispatcher) {
+            val tagged = "X7AcgcsBL6XDcUb289X4mJ8djcdyKaGZMhc9YTE92ehJ2Fu"
+            val untagged = "X7AcgcsBL6XDcUb289X4mJ8djcdyKaB5hJDWMArnXr61cqZ"
+            val classic = "r9cZA1mLK5R5Am25ArfXFmqgNwjZgnfk59"
+            every { chainAccountAddressRepository.isValid(Chain.Ripple, classic) } returns true
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = xrpToken()
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(tagged)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            destinationTagFieldState.text.toString() shouldBe "1"
+            manager.destinationTagLocked.value.shouldBeTrue()
+
+            // Paste an untagged X-address: the tag the previous X-address derived must not persist.
+            addressFieldState.setTextAndPlaceCursorAtEnd(untagged)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            destinationTagFieldState.text.toString() shouldBe ""
+            manager.destinationTagLocked.value.shouldBeFalse()
+        }
 }

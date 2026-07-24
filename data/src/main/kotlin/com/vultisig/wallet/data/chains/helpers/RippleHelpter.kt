@@ -10,6 +10,11 @@ import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
 import java.security.MessageDigest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
@@ -23,12 +28,49 @@ object RippleHelper {
 
     const val DEFAULT_EXISTENTIAL_DEPOSIT = 1000000
 
+    private val rawJsonParser = Json { ignoreUnknownKeys = true }
+
+    /**
+     * XRPL transaction types this wallet will co-sign for a dApp. A swap is an `OfferCreate`
+     * (optionally paired with `OfferCancel`); `Payment` and `TrustSet` round out the common
+     * surface. Anything outside this set — `AccountSet`, `SetRegularKey`, `SignerListSet`,
+     * `EscrowCreate`, hooks — is refused so a dApp (or a tampering relay) cannot slip a
+     * key-rotation or account-takeover past a co-signer who thinks they are approving a trade. This
+     * mirrors the Windows/extension `sanitizeRippleDappTx` allowlist; extend deliberately.
+     */
+    private val ALLOWED_DAPP_TRANSACTION_TYPES =
+        setOf("Payment", "OfferCreate", "OfferCancel", "TrustSet")
+
+    /**
+     * Signing-mechanics fields a dApp/relay has no business setting on an unsigned request:
+     * `SigningPubKey` is filled from the vault key at signing time, `TxnSignature` is the signature
+     * we are about to produce, and `Signers` is a multi-sign envelope irrelevant to single-sig MPC.
+     * Their presence means the raw JSON was tampered with, so we refuse rather than sign around
+     * them.
+     */
+    private val FORBIDDEN_DAPP_FIELDS = setOf("TxnSignature", "Signers", "SigningPubKey")
+
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Ripple) { "Coin is not XRP" }
 
-        val (sequence, gas, lastLedgerSequence) =
+        // dApp-supplied XRPL transaction (via the extension's GemWallet provider): the raw JSON is
+        // already a complete transaction — Account, Fee, Sequence, LastLedgerSequence and amounts
+        // are baked in — so sign it verbatim through WalletCore's rawJson path. Every co-signer
+        // rebuilds identical signing bytes from the same JSON, matching the extension and
+        // @vultisig/core-mpc byte-for-byte. Reconstructing an OperationPayment from
+        // toAddress/toAmount would diverge and produce a non-matching MPC signature.
+        keysignPayload.signRipple?.let { signRipple ->
+            return buildDappRawJsonInputData(
+                rawJson = signRipple.rawJson,
+                expectedAccount = keysignPayload.coin.address,
+                hexPublicKey = keysignPayload.coin.hexPublicKey,
+            )
+        }
+
+        val rippleSpecific =
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Ripple
                 ?: error("getPreSignedInputData: fail to get account number and sequence")
+        val (sequence, gas, lastLedgerSequence) = rippleSpecific
 
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
@@ -48,50 +90,198 @@ object RippleHelper {
                 .setDestination(keysignPayload.toAddress)
                 .setAmount(keysignPayload.toAmount.toLong())
 
-        if (!memoValue.isNullOrBlank()) {
-            val memoAsLong = memoValue.toLongOrNull()
-            if (memoAsLong != null) {
-                operation.setDestinationTag(memoAsLong).build()
-                input.setOpPayment(operation)
-            } else {
-                val txJson: MutableMap<String, Any> =
-                    mutableMapOf(
-                        "TransactionType" to "Payment",
-                        "Account" to keysignPayload.coin.address,
-                        "Destination" to keysignPayload.toAddress,
-                        "Amount" to keysignPayload.toAmount.toString(),
-                        "Fee" to gas.toString(),
-                        "Sequence" to sequence,
-                        "LastLedgerSequence" to lastLedgerSequence,
-                        "Memos" to
-                            listOf(
-                                mapOf(
-                                    "Memo" to
-                                        mapOf(
-                                            "MemoData" to
-                                                memoValue.toByteArray(Charsets.UTF_8).joinToString(
-                                                    ""
-                                                ) {
-                                                    "%02x".format(it)
-                                                }
-                                        )
-                                )
-                            ),
+        // The destination tag comes from its own send-form field, carried in the first-class
+        // RippleSpecific field. The memo field is an independent free-text memo.
+        val destinationTag = rippleSpecific.destinationTag
+        val memo = memoValue?.takeIf { it.isNotBlank() }
+
+        // When the memo merely echoes the tag (memo == the tag's canonical decimal), it is not a
+        // distinct memo — drop it and sign tag-only. This keeps a co-signer that predates the
+        // destination_tag field byte-identical: it reads the numeric memo and builds the same
+        // DestinationTag, so the pre-image matches instead of diverging on a Memos blob.
+        val memoEchoesTag = memo != null && memo == destinationTag?.toString()
+
+        when {
+            // Tag + a distinct free-text memo: WalletCore's OperationPayment can't carry both, so
+            // hand-build a Payment that sets DestinationTag and a Memos blob.
+            destinationTag != null && memo != null && !memoEchoesTag ->
+                input.setRawJson(
+                    buildPaymentRawJson(
+                        keysignPayload = keysignPayload,
+                        gas = gas,
+                        sequence = sequence,
+                        lastLedgerSequence = lastLedgerSequence,
+                        destinationTag = destinationTag.toLong(),
+                        memo = memo,
                     )
-                val jsonData =
-                    try {
-                        org.json.JSONObject(txJson).toString()
-                    } catch (e: Exception) {
-                        Timber.e("Failed to create JSON string ${e.message}")
-                        error("Failed to create JSON string ${e.message}")
-                    }
-                input.setRawJson(jsonData)
+                )
+
+            destinationTag != null -> {
+                operation.setDestinationTag(destinationTag.toLong())
+                input.setOpPayment(operation)
             }
-        } else {
-            input.setOpPayment(operation)
+
+            memo != null -> {
+                // No first-class tag: a canonical uint32 memo is the legacy destination-tag carrier
+                // (older payloads and swap contracts); any other memo is an on-chain Memos blob.
+                // Use the same canonical parser as the dedicated field, so "0", leading zeros and
+                // out-of-uint32 values are kept as a plain memo instead of being silently
+                // reinterpreted — or overflowed — into a DestinationTag. (iOS rejects a bare "0"
+                // memo outright; we intentionally preserve it as free text rather than reject.)
+                val memoAsTag = RippleDestinationTag.parseCanonicalDestinationTag(memo)
+                if (memoAsTag != null) {
+                    operation.setDestinationTag(memoAsTag.toLong())
+                    input.setOpPayment(operation)
+                } else {
+                    input.setRawJson(
+                        buildPaymentRawJson(
+                            keysignPayload = keysignPayload,
+                            gas = gas,
+                            sequence = sequence,
+                            lastLedgerSequence = lastLedgerSequence,
+                            destinationTag = null,
+                            memo = memo,
+                        )
+                    )
+                }
+            }
+
+            else -> input.setOpPayment(operation)
         }
         return input.build().toByteArray()
     }
+
+    /**
+     * Hand-builds a Payment rawJSON carrying an on-chain Memos blob (and optionally a
+     * [destinationTag]) for cases WalletCore's typed [Ripple.OperationPayment] can't express.
+     */
+    private fun buildPaymentRawJson(
+        keysignPayload: KeysignPayload,
+        gas: ULong,
+        sequence: ULong,
+        lastLedgerSequence: ULong,
+        destinationTag: Long?,
+        memo: String,
+    ): String {
+        val txJson: MutableMap<String, Any> =
+            mutableMapOf(
+                "TransactionType" to "Payment",
+                "Account" to keysignPayload.coin.address,
+                "Destination" to keysignPayload.toAddress,
+                "Amount" to keysignPayload.toAmount.toString(),
+                "Fee" to gas.toString(),
+                // org.json can't wrap a Kotlin ULong (a value class), so these would be dropped
+                // from the JSON — pass Long so Sequence/LastLedgerSequence serialize as numbers.
+                "Sequence" to sequence.toLong(),
+                "LastLedgerSequence" to lastLedgerSequence.toLong(),
+                "Memos" to
+                    listOf(
+                        mapOf(
+                            "Memo" to
+                                mapOf(
+                                    "MemoData" to
+                                        memo.toByteArray(Charsets.UTF_8).joinToString("") {
+                                            "%02x".format(it)
+                                        }
+                                )
+                        )
+                    ),
+            )
+        if (destinationTag != null) {
+            txJson["DestinationTag"] = destinationTag
+        }
+        return try {
+            org.json.JSONObject(txJson).toString()
+        } catch (e: Exception) {
+            Timber.e("Failed to create JSON string ${e.message}")
+            error("Failed to create JSON string ${e.message}")
+        }
+    }
+
+    /**
+     * Builds the WalletCore [Ripple.SigningInput] for a dApp-supplied transaction ([SignRipple]),
+     * signing the raw JSON verbatim. Fails closed first: rejects any transaction whose `Account`
+     * differs from this vault's derived XRP address, so a co-signer can never sign a spend from an
+     * account other than its own — the same defense as `@vultisig/core-mpc` 1.11.0.
+     *
+     * Only [setRawJson] and [setPublicKey] are set: the JSON is the source of truth for every tx
+     * field, and the vault ECDSA public key (identical across all co-signers) is what WalletCore
+     * embeds as `SigningPubKey` and hashes into the pre-image — so every device produces the same
+     * signing bytes.
+     */
+    private fun buildDappRawJsonInputData(
+        rawJson: String,
+        expectedAccount: String,
+        hexPublicKey: String,
+    ): ByteArray {
+        verifyDappTransaction(rawJson, expectedAccount)
+
+        val publicKey = PublicKey(hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+
+        return Ripple.SigningInput.newBuilder()
+            .setRawJson(rawJson)
+            .setPublicKey(ByteString.copyFrom(publicKey.data()))
+            .build()
+            .toByteArray()
+    }
+
+    /**
+     * Fail-closed guard for a dApp-supplied [SignRipple] transaction, verbatim-signed so this is
+     * the only gate between the wire and the signer. Throws unless:
+     * - the `TransactionType` is on the [ALLOWED_DAPP_TRANSACTION_TYPES] allowlist — a
+     *   `SetRegularKey`/`SignerListSet`/`EscrowCreate`/etc. is refused even when its `Account` is
+     *   our own vault (public info), so a tampering relay can't get an account-takeover co-signed
+     *   under the guise of a trade;
+     * - the JSON's `Account` equals this vault's derived XRP [expectedAccount], so a co-signer
+     *   never signs a spend from an account other than its own;
+     * - no signing-mechanics field ([FORBIDDEN_DAPP_FIELDS]) is present, which would mean the JSON
+     *   was tampered with after the initiator sanitized it.
+     *
+     * Pure (no JNI), so it is unit-testable independently of WalletCore. Mirrors the Windows
+     * `sanitizeRippleDappTx` defense.
+     */
+    internal fun verifyDappTransaction(rawJson: String, expectedAccount: String) {
+        require(rawJson.isNotBlank()) { "SignRipple rawJson is empty" }
+        val obj =
+            try {
+                rawJsonParser.parseToJsonElement(rawJson).jsonObject
+            } catch (e: Exception) {
+                Timber.e("Failed to parse SignRipple rawJson: %s", e.message)
+                error("SignRipple rawJson is not a valid JSON object")
+            }
+
+        val transactionType =
+            (obj["TransactionType"] as? JsonPrimitive)?.contentOrNull
+                ?: error("SignRipple rawJson has no readable TransactionType field")
+        require(transactionType in ALLOWED_DAPP_TRANSACTION_TYPES) {
+            "SignRipple TransactionType $transactionType is not supported"
+        }
+
+        val account =
+            (obj["Account"] as? JsonPrimitive)?.contentOrNull
+                ?: error("SignRipple rawJson has no readable Account field")
+        require(account == expectedAccount) {
+            "SignRipple Account $account does not match this vault's XRP address $expectedAccount"
+        }
+
+        val tamperedField = FORBIDDEN_DAPP_FIELDS.firstOrNull { obj.containsKey(it) }
+        require(tamperedField == null) {
+            "SignRipple rawJson carries a signing-mechanics field ($tamperedField); refusing to sign"
+        }
+    }
+
+    /** Extracts the XRPL `Account` from a raw transaction JSON, or null if absent/unparseable. */
+    internal fun parseRawJsonAccount(rawJson: String): String? =
+        try {
+            rawJsonParser
+                .parseToJsonElement(rawJson)
+                .jsonObject["Account"]
+                ?.jsonPrimitive
+                ?.contentOrNull
+        } catch (e: Exception) {
+            Timber.e("Failed to parse SignRipple rawJson: %s", e.message)
+            null
+        }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val inputData = getPreSignedInputData(keysignPayload)

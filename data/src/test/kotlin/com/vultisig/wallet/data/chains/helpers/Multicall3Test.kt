@@ -52,9 +52,15 @@ class Multicall3Test {
 
         assertEquals(2, results.size)
         assertTrue(results[0].success)
-        assertEquals(BigInteger.valueOf(5), Multicall3.decodeUint256Word(results[0].returnData))
+        assertEquals(
+            BigInteger.valueOf(5),
+            Multicall3.decodeUint256WordOrNull(results[0].returnData),
+        )
         assertTrue(results[1].success)
-        assertEquals(BigInteger.valueOf(10), Multicall3.decodeUint256Word(results[1].returnData))
+        assertEquals(
+            BigInteger.valueOf(10),
+            Multicall3.decodeUint256WordOrNull(results[1].returnData),
+        )
     }
 
     @Test
@@ -72,15 +78,24 @@ class Multicall3Test {
 
         assertEquals(2, results.size)
         assertFalse(results[0].success)
-        assertEquals(BigInteger.ZERO, Multicall3.decodeUint256Word(results[0].returnData))
         assertTrue(results[1].success)
-        assertEquals(BigInteger.valueOf(10), Multicall3.decodeUint256Word(results[1].returnData))
+        assertEquals(
+            BigInteger.valueOf(10),
+            Multicall3.decodeUint256WordOrNull(results[1].returnData),
+        )
     }
 
     @Test
-    fun `decodeUint256Word treats blank data as zero`() {
-        assertEquals(BigInteger.ZERO, Multicall3.decodeUint256Word("0x"))
-        assertEquals(BigInteger.valueOf(255), Multicall3.decodeUint256Word("0x" + word(255)))
+    fun `decodeUint256WordOrNull treats blank data as a failed read, not zero`() {
+        // Empty/malformed data is an undecodable success word: null so the caller omits it and
+        // keeps the cached balance, rather than persisting a fake 0 (#5308).
+        assertNull(Multicall3.decodeUint256WordOrNull("0x"))
+        // A short/truncated word is malformed too — omit it rather than decode a bogus balance,
+        // matching the per-token decoder (which rejects the same bytes).
+        assertNull(Multicall3.decodeUint256WordOrNull("0x0000000a"))
+        // A genuine zero balance is a full 32-byte zero word and still decodes to ZERO.
+        assertEquals(BigInteger.ZERO, Multicall3.decodeUint256WordOrNull("0x" + word(0)))
+        assertEquals(BigInteger.valueOf(255), Multicall3.decodeUint256WordOrNull("0x" + word(255)))
     }
 
     private companion object {

@@ -98,7 +98,7 @@ internal fun CreateFolderScreen(
 }
 
 @Composable
-private fun CreateFolderScreen(
+internal fun CreateFolderScreen(
     state: CreateFolderUiModel,
     textFieldState: TextFieldState,
     onAddVaultClick: () -> Unit,

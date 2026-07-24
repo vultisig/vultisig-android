@@ -53,17 +53,51 @@ object CardanoUtils {
         return Bech32.encode("addr", addressData)
     }
 
+    /**
+     * Upgrades a legacy 3-element Cardano transaction envelope `[body, witness_set,
+     * auxiliary_data]` (emitted by WalletCore) to the Conway-era 4-element form `[body,
+     * witness_set, is_valid, auxiliary_data]` by splicing `is_valid = true` (0xf5) before the
+     * auxiliary_data. Safe post-signing: the vkey signature and tx_id cover only the body (element
+     * 0), which is left byte-for-byte untouched. Already-4-element envelopes are returned
+     * unchanged.
+     */
+    fun addIsValidFlag(encoded: ByteArray): ByteArray {
+        require(encoded.isNotEmpty()) { "empty Cardano transaction" }
+        when (encoded[0].toInt() and 0xFF) {
+            0x84 -> return encoded // already Conway-era 4-element array
+            0x83 -> {} // legacy 3-element array — needs is_valid
+            else -> error("unexpected Cardano tx array header: 0x%02x".format(encoded[0]))
+        }
+
+        val afterBody = findEndOfCBORItem(encoded, 1)
+        val afterWitness = findEndOfCBORItem(encoded, afterBody)
+
+        return ByteArray(encoded.size + 1).also { out ->
+            out[0] = 0x84.toByte()
+            System.arraycopy(encoded, 1, out, 1, afterWitness - 1) // body + witness_set
+            out[afterWitness] = 0xF5.toByte() // is_valid = true
+            System.arraycopy(
+                encoded,
+                afterWitness,
+                out,
+                afterWitness + 1,
+                encoded.size - afterWitness,
+            )
+        }
+    }
+
     fun calculateCardanoTransactionHash(transactionData: ByteArray): String {
         return try {
             val transactionBodyData = extractCardanoTransactionBody(transactionData)
             val txidHash = Utils.blake2bHash(transactionBodyData)
             txidHash.joinToString("") { "%02x".format(it) }
         } catch (e: Exception) {
-            Timber.e("Error parsing Cardano CBOR: ${e.message}")
-            val txidHash = Utils.blake2bHash(transactionData)
-            val fallbackHash = txidHash.joinToString("") { "%02x".format(it) }
-            Timber.w("Using fallback TX ID from COMPLETE transaction: $fallbackHash")
-            fallbackHash
+            // Fail closed: blake2b over the whole envelope is a txid that can never exist
+            // on-chain, and duplicate-broadcast recovery would report it as a success nothing can
+            // track. A blank hash makes every recovery path rethrow instead, while a normal
+            // broadcast still succeeds with the node-returned id.
+            Timber.e("Error parsing Cardano CBOR, no local txid available: ${e.message}")
+            ""
         }
     }
 
@@ -140,6 +174,19 @@ object CardanoUtils {
                     readCBORLength(bytes, index, additionalInfo).also { index += it.second }
                 repeat(length.first * 2) { index = findEndOfCBORItem(bytes, index) }
                 index
+            }
+
+            6 -> { // Tag (e.g. Conway-era set tag 258): tag number, then one tagged data item
+                index +=
+                    when (additionalInfo) {
+                        in 0..23 -> 0
+                        24 -> 1
+                        25 -> 2
+                        26 -> 4
+                        27 -> 8
+                        else -> error("Unsupported additional info for tag")
+                    }
+                findEndOfCBORItem(bytes, index)
             }
 
             7 -> { // Simple value or float

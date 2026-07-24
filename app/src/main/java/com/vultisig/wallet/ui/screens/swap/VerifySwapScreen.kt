@@ -45,10 +45,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.getProviderLogo
-import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.swapAssetName
+import com.vultisig.wallet.data.usecases.getTierType
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -68,6 +68,9 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapViewModel
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
+import com.vultisig.wallet.ui.screens.swap.components.PriceImpactRow
+import com.vultisig.wallet.ui.screens.swap.components.ReferralDiscountRow
+import com.vultisig.wallet.ui.screens.swap.components.VultDiscountRow
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -141,6 +144,7 @@ internal fun VerifySwapScreen(
         scanStatus = state.txScanStatus,
         hasToShowWarningScanning = state.showScanningWarning,
         hasAllConsents = state.hasAllConsents,
+        isSigning = state.isSigning,
         consentAmount = state.consentAmount,
         consentReceiveAmount = state.consentReceiveAmount,
         consentAllowance = state.consentAllowance,
@@ -167,6 +171,7 @@ private fun VerifySwapScreen(
     scanStatus: TransactionScanStatus,
     hasToShowWarningScanning: Boolean,
     hasAllConsents: Boolean,
+    isSigning: Boolean,
     consentAmount: Boolean,
     consentReceiveAmount: Boolean,
     consentAllowance: Boolean,
@@ -184,6 +189,8 @@ private fun VerifySwapScreen(
     onContinueAnyway: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
+    val isSignEnabled = (!isConsentsEnabled || hasAllConsents) && !isSigning
+
     V2Scaffold(
         title = stringResource(R.string.verify_swap_swap_overview).takeIf { hasToolbar },
         onBackClick = onBackClick.takeIf { hasToolbar },
@@ -287,10 +294,27 @@ private fun VerifySwapScreen(
                         fiatGas = tx.networkFee.fiatValue,
                     )
 
-                    VerifyCardDetails(
-                        title = stringResource(R.string.swap_form_estimated_fees_title),
-                        subtitle = tx.providerFee.fiatValue,
-                    )
+                    // Swap Fee row mirrors the form (#5358): percentage in the title when known,
+                    // and "included in quoted rate" instead of a fiat amount for providers (1inch)
+                    // that bake the affiliate fee into the quoted destination amount. Hidden
+                    // entirely for a SwapKit UTXO deposit, whose cost is already the Network Fee.
+                    if (!tx.swapFeeHidden) {
+                        VerifyCardDetails(
+                            title =
+                                tx.swapFeePercent?.let {
+                                    stringResource(
+                                        R.string.swap_form_estimated_fees_with_percent_title,
+                                        it,
+                                    )
+                                } ?: stringResource(R.string.swap_form_estimated_fees_title),
+                            subtitle =
+                                if (tx.swapFeeIncludedInRate)
+                                    stringResource(
+                                        R.string.swap_form_estimated_fees_included_in_rate
+                                    )
+                                else tx.providerFee.fiatValue,
+                        )
+                    }
 
                     // Shown only for THORChain / MayaChain, which report an outbound fee distinct
                     // from the affiliate swap fee. Mirrors the swap form's breakdown so the rows
@@ -301,6 +325,31 @@ private fun VerifySwapScreen(
                             subtitle = outboundFee,
                         )
                     }
+
+                    // VULT-tier and referral discount rows, matching the swap form so the user can
+                    // confirm their tier was applied at the moment of approval (#5358). Each row is
+                    // a no-op when its data is absent (co-signer / no discount).
+                    VultDiscountRow(
+                        vultBpsDiscount = tx.vultBpsDiscount,
+                        tierType = tx.vultBpsDiscount?.getTierType(),
+                        fiatValue = tx.vultBpsDiscountFiatValue,
+                        modifier = Modifier.padding(vertical = 12.dp),
+                    )
+
+                    ReferralDiscountRow(
+                        referralBpsDiscount = tx.referralBpsDiscount,
+                        fiatValue = tx.referralBpsDiscountFiatValue,
+                        modifier = Modifier.padding(vertical = 12.dp),
+                    )
+
+                    // The liquidity cost is baked into the quoted destination amount and so is
+                    // absent from Total Fee by design; showing it here keeps the signed estimate
+                    // honest about what the swap actually costs (#5335).
+                    PriceImpactRow(
+                        priceImpactPercent = tx.priceImpactPercent,
+                        priceImpactLevel = tx.priceImpactLevel,
+                        modifier = Modifier.padding(vertical = 12.dp),
+                    )
 
                     VerifyCardDivider(size = 10.dp)
 
@@ -354,19 +403,20 @@ private fun VerifySwapScreen(
                         onFastSignClick = onFastSignClick,
                         onPairedSignClick = onConfirm,
                         state =
-                            if (isConsentsEnabled && !hasAllConsents) {
+                            if (!isSignEnabled) {
                                 VsButtonState.Disabled
                             } else {
                                 VsButtonState.Enabled
                             },
+                        isLoading = isSigning,
                     )
                 } else {
                     VsButton(
                         label = confirmTitle,
                         modifier = Modifier.fillMaxWidth(),
                         state =
-                            if (isConsentsEnabled && !hasAllConsents) VsButtonState.Disabled
-                            else VsButtonState.Enabled,
+                            if (!isSignEnabled) VsButtonState.Disabled else VsButtonState.Enabled,
+                        isLoading = isSigning,
                         onClick = onConfirm,
                     )
                 }
@@ -384,7 +434,9 @@ internal fun SwapToken(
 ) {
     val token = valuedToken.token
     val value = valuedToken.value
-    val shouldShowOnChainLogo = isSwap && (!token.isNativeToken || token.chain.isLayer2)
+    // Show the "on <chain>" indicator on both swap rows so the From and To sides communicate
+    // their chain consistently — including native assets on their own L1.
+    val shouldShowOnChainLogo = isSwap
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -669,6 +721,7 @@ private fun VerifySwapScreenPreview() {
         hasToolbar = true,
         onBackClick = {},
         hasAllConsents = false,
+        isSigning = false,
         hasToShowWarningScanning = false,
         scanStatus = TransactionScanStatus.NotStarted,
         consentAmount = true,

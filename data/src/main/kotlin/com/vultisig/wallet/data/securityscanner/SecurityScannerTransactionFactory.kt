@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.crypto.SuiHelper
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenStandard
@@ -17,6 +18,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import java.math.BigInteger
 import kotlinx.coroutines.coroutineScope
+import vultisig.keysign.v1.SignSui
 import wallet.core.jni.Base58
 import wallet.core.jni.CoinType
 
@@ -32,7 +34,15 @@ class SecurityScannerTransactionFactory(
             TokenStandard.EVM -> createEVMSecurityScannerTransaction(transaction)
             TokenStandard.SOL -> createSOLSecurityScannerTransaction(transaction)
             TokenStandard.SUI -> createSUISecurityScannerTransaction(transaction)
-            TokenStandard.UTXO -> createBTCSecurityScannerTransaction(transaction)
+            // Cardano rides in TokenStandard.UTXO but is ed25519 + CBOR, not a Bitcoin proto; the
+            // BTC path would build a Bitcoin tx for it. Unreachable today (Cardano isn't a Blockaid
+            // supported chain) — guard so it can't slip through if that list ever widens.
+            TokenStandard.UTXO ->
+                if (chain == Chain.Cardano) {
+                    throw SecurityScannerException("Security Scanner: Not supported ${chain.name}")
+                } else {
+                    createBTCSecurityScannerTransaction(transaction)
+                }
             else -> throw SecurityScannerException("Security Scanner: Not supported ${chain.name}")
         }
     }
@@ -45,6 +55,45 @@ class SecurityScannerTransactionFactory(
             TokenStandard.EVM -> createEVMSecurityScannerTransaction(transaction)
             else -> throw SecurityScannerException("Security Scanner: Not supported ${chain.name}")
         }
+    }
+
+    /**
+     * Builds a recipient-only scan for a swap: a native transfer to the swap's external recipient
+     * on the DESTINATION chain, so Blockaid screens the address the funds land on even when the
+     * source-chain swap transaction can't be scanned (e.g. a Solana-source swap, #5348).
+     *
+     * Only EVM destinations are modelled — they are the one address-shaped scan the provider takes;
+     * the Bitcoin/Solana/Sui endpoints need a serialized transaction, which doesn't exist for an
+     * outbound leg the vault never signs. Throws for anything else so the caller can skip silently.
+     */
+    override fun createRecipientSecurityScannerTransaction(
+        transaction: SwapTransaction
+    ): SecurityScannerTransaction {
+        val recipient =
+            (transaction as? SwapTransaction.RegularSwapTransaction)?.externalRecipient?.takeIf {
+                it.isNotBlank()
+            } ?: throw SecurityScannerException("Security Scanner: Swap has no external recipient")
+
+        val dstToken = transaction.dstToken
+        val chain = dstToken.chain
+        if (chain.standard != TokenStandard.EVM) {
+            throw SecurityScannerException(
+                "Security Scanner: Recipient scan not supported on ${chain.name}",
+                chain = chain,
+            )
+        }
+        require(dstToken.address.isNotBlank()) {
+            "Security Scanner: Missing vault address on ${chain.name}"
+        }
+
+        return SecurityScannerTransaction(
+            chain = chain,
+            type = SecurityTransactionType.COIN_TRANSFER,
+            from = dstToken.address,
+            to = recipient,
+            amount = BigInteger.ZERO,
+            data = "0x",
+        )
     }
 
     private fun createEVMSecurityScannerTransaction(
@@ -202,33 +251,7 @@ class SecurityScannerTransactionFactory(
     private suspend fun createSUISecurityScannerTransaction(
         transaction: Transaction
     ): SecurityScannerTransaction {
-        val suiBlockchainSpecific = transaction.blockChainSpecific
-        require(suiBlockchainSpecific is BlockChainSpecific.Sui) {
-            "Error Blockchain Specific is not SUI ${transaction.blockChainSpecific}"
-        }
-
-        val coins =
-            suiBlockchainSpecific.coins.ifEmpty { suiApi.getAllCoins(transaction.srcAddress) }
-        val updatedSuiBlockChainSpecific =
-            BlockChainSpecific.Sui(
-                referenceGasPrice = suiBlockchainSpecific.referenceGasPrice,
-                coins = coins,
-                gasBudget = SUI_DEFAULT_GAS_BUDGET,
-            )
-
-        val keySignPayload =
-            KeysignPayload(
-                coin = transaction.token,
-                toAddress = transaction.dstAddress,
-                toAmount = transaction.tokenValue.value,
-                blockChainSpecific = updatedSuiBlockChainSpecific,
-                memo = transaction.memo,
-                vaultPublicKeyECDSA = "", // no need for SUI prehash
-                vaultLocalPartyID = "", // no need for SUI prehash
-                libType = null, // no need for SUI prehash
-                wasmExecuteContractPayload = null,
-            )
-
+        val keySignPayload = buildSuiKeysignPayload(transaction)
         val serializedTransaction = SuiHelper.getZeroSignedTransaction(keySignPayload)
 
         return SecurityScannerTransaction(
@@ -238,6 +261,60 @@ class SecurityScannerTransactionFactory(
             to = transaction.dstAddress,
             amount = BigInteger.ZERO,
             data = serializedTransaction,
+        )
+    }
+
+    /**
+     * Split out from [createSUISecurityScannerTransaction] so the branch selection is testable
+     * without WalletCore's JNI signer. A dApp-supplied PTB (`signSui`) is self-contained and must
+     * be scanned verbatim — that branch is taken before touching `blockChainSpecific`/`suiApi` so
+     * the Blockaid scan reflects the real signed bytes instead of a reconstructed Pay/PaySui built
+     * from unrelated RPC coins.
+     */
+    internal suspend fun buildSuiKeysignPayload(transaction: Transaction): KeysignPayload {
+        val unsignedTxMsg = transaction.signSui
+        if (unsignedTxMsg != null) {
+            return KeysignPayload(
+                coin = transaction.token,
+                toAddress = transaction.dstAddress,
+                toAmount = transaction.tokenValue.value,
+                blockChainSpecific =
+                    BlockChainSpecific.Sui(
+                        referenceGasPrice = BigInteger.ZERO,
+                        gasBudget = BigInteger.ZERO,
+                        coins = emptyList(),
+                    ),
+                memo = transaction.memo,
+                vaultPublicKeyECDSA = "", // no need for SUI prehash
+                vaultLocalPartyID = "", // no need for SUI prehash
+                libType = null, // no need for SUI prehash
+                wasmExecuteContractPayload = null,
+                signSui = SignSui(unsignedTxMsg = unsignedTxMsg),
+            )
+        }
+
+        val suiBlockchainSpecific = transaction.blockChainSpecific
+        require(suiBlockchainSpecific is BlockChainSpecific.Sui) {
+            "Error Blockchain Specific is not SUI ${transaction.blockChainSpecific}"
+        }
+        val coins =
+            suiBlockchainSpecific.coins.ifEmpty { suiApi.getAllCoins(transaction.srcAddress) }
+
+        return KeysignPayload(
+            coin = transaction.token,
+            toAddress = transaction.dstAddress,
+            toAmount = transaction.tokenValue.value,
+            blockChainSpecific =
+                BlockChainSpecific.Sui(
+                    referenceGasPrice = suiBlockchainSpecific.referenceGasPrice,
+                    coins = coins,
+                    gasBudget = SUI_DEFAULT_GAS_BUDGET,
+                ),
+            memo = transaction.memo,
+            vaultPublicKeyECDSA = "", // no need for SUI prehash
+            vaultLocalPartyID = "", // no need for SUI prehash
+            libType = null, // no need for SUI prehash
+            wasmExecuteContractPayload = null,
         )
     }
 

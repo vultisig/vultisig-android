@@ -205,13 +205,41 @@ internal class EthereumFeeServiceTest {
     }
 
     @Test
-    fun `two-element fee history picks the upper midpoint`() = runTest {
-        // size/2 = 1 → second element
-        stubFeeHistory(listOf(gwei(2), gwei(8)))
+    fun `two-element fee history averages both elements instead of picking the upper midpoint`() =
+        runTest {
+            stubFeeHistory(listOf(gwei(2), gwei(8)))
+
+            val fee = service.calculateDefaultFees(transfer(Chain.Ethereum)) as Eip1559
+
+            assertEquals(gwei(5), fee.maxPriorityFeePerGas) // (2+8)/2 = 5, not the upper-midpoint 8
+        }
+
+    @Test
+    fun `ten-element fee history, matching the real getFeeHistory window, averages the two central elements`() =
+        runTest {
+            // getFeeHistory() always requests a fixed 10-block window, so the median must average
+            // indices 4 and 5 (mid-1, mid) rather than only index 5.
+            stubFeeHistory(
+                listOf(10, 20, 30, 40, 50, 60, 70, 80, 90, 100).map { gwei(it.toLong()) }
+            )
+
+            val fee = service.calculateDefaultFees(transfer(Chain.Ethereum)) as Eip1559
+
+            assertEquals(
+                gwei(55),
+                fee.maxPriorityFeePerGas,
+            ) // avg(50, 60) = 55, not the upper-midpoint 60
+        }
+
+    @Test
+    fun `even-length fee history with an odd sum truncates down instead of rounding`() = runTest {
+        // Both values clear the 1 GWEI floor so the averaged median (not the floor) is asserted.
+        stubFeeHistory(listOf(BigInteger("5000000000"), BigInteger("5000000001")))
 
         val fee = service.calculateDefaultFees(transfer(Chain.Ethereum)) as Eip1559
 
-        assertEquals(gwei(8), fee.maxPriorityFeePerGas)
+        // (5000000000 + 5000000001) / 2 = 5000000000 (BigInteger division truncates toward zero).
+        assertEquals(BigInteger("5000000000"), fee.maxPriorityFeePerGas)
     }
 
     // ---------- EIP-1559 fee assembly ----------

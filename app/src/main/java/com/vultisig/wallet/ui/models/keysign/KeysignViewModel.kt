@@ -34,6 +34,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.tokenLogoRes
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -65,8 +66,8 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
-import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import com.vultisig.wallet.ui.utils.or
+import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -179,6 +180,14 @@ sealed interface TransactionStatus {
     /** Transaction is in the mempool but not yet included in a block. */
     data object Pending : TransactionStatus
 
+    /**
+     * Polling reached its time budget without a terminal on-chain result. The transaction may still
+     * confirm later (or, for XRP, may have expired past its LastLedgerSequence without moving
+     * funds). This is a neutral terminal state — never a hard failure — so the user isn't told the
+     * send failed when funds were untouched.
+     */
+    data object StillConfirming : TransactionStatus
+
     /** Transaction has been confirmed on-chain. */
     data object Confirmed : TransactionStatus
 
@@ -264,6 +273,7 @@ constructor(
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val txStatusPoller: KeysignTxStatusPoller,
     private val vaultRepository: VaultRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
@@ -338,6 +348,15 @@ constructor(
         )
 
     init {
+        // Resolve the signing vault's name up front so the From row renders "VaultName (address)"
+        // even for deposits with no destination — e.g. a Mint LP add-liquidity — which otherwise
+        // skip the destination-gated label block below and would show a raw address (issue #5351).
+        transactionTypeUiModel?.let { model ->
+            _state.update {
+                it.copy(transactionUiModel = model.withResolvedSrcVaultName(vault.name))
+            }
+        }
+
         // Both Send and Deposit done-screens resolve the same destination labels + "Add to Address
         // Book" affordance, so a Cosmos staking deposit renders identically on the initiator and a
         // joining device (issue #4939).
@@ -372,16 +391,13 @@ constructor(
         dstAddress: String,
     ): DestinationLabels {
         val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
-        val normalizedDstAddress = normalizeAddressForLookup(dstAddress)
         val dstVaultName =
-            allVaults
-                .firstOrNull { v ->
-                    v.coins.any {
-                        it.chain == chain &&
-                            normalizeAddressForLookup(it.address) == normalizedDstAddress
-                    }
-                }
-                ?.name
+            resolveDstVaultName(
+                allVaults = allVaults,
+                chain = chain,
+                dstAddress = dstAddress,
+                chainAccountAddressRepository = chainAccountAddressRepository,
+            )
 
         val isSavedBefore =
             addressBookRepository.entryExists(address = dstAddress, chainId = chain.id)
@@ -834,21 +850,20 @@ constructor(
                         )
                     }
                     saveTransactionHistory(txHash, result.chain)
-                    if (txStatusConfigurationProvider.supportTxStatus(result.chain)) {
-                        startForegroundPolling(txHash, result.chain)
-                    } else {
-                        _state.update {
-                            it.copy(
-                                signingState =
-                                    KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
-                            )
-                        }
-                    }
+                }
+                // Outside the txHash-null gate: batch extras were broadcast in their own right.
+                result.additionalTxHashes.forEach { hash ->
+                    saveTransactionHistory(
+                        txHash = hash,
+                        chain = result.chain,
+                        explorerUrl = explorerLinkRepository.getTransactionLink(result.chain, hash),
+                    )
+                }
+                if (txHash != null && txStatusConfigurationProvider.supportTxStatus(result.chain)) {
+                    startForegroundPolling(txHash, result.chain)
                 } else {
-                    // The broadcast succeeded but produced no hash. Land on the terminal
-                    // "broadcasted" state instead of leaving signingState at the last signing
-                    // state forever (infinite spinner → the user may force-retry and double-send).
-                    // Without a hash we cannot save history or poll status.
+                    // Land on "broadcasted" instead of leaving signingState stuck (infinite
+                    // spinner → user may double-send by retrying).
                     _state.update {
                         it.copy(
                             signingState =
@@ -860,12 +875,17 @@ constructor(
         }
     }
 
-    internal suspend fun saveTransactionHistory(txHash: String, chain: Chain) {
+    /** [explorerUrl] overrides the state-derived link, needed for a batch's non-primary hashes. */
+    internal suspend fun saveTransactionHistory(
+        txHash: String,
+        chain: Chain,
+        explorerUrl: String? = null,
+    ) {
         saveKeysignTransactionHistory(
             vaultId = vault.id,
             txHash = txHash,
             chain = chain,
-            explorerUrl = _state.value.let { it.swapProgressLink ?: it.txLink },
+            explorerUrl = explorerUrl ?: _state.value.let { it.swapProgressLink ?: it.txLink },
             transactionHistoryData = transactionHistoryData,
             // Polkadot extrinsics are mortal: persist the head block at broadcast so the status
             // poller can scan the absolute inclusion window instead of a head-relative one that
@@ -975,8 +995,7 @@ constructor(
             TransactionResult.Confirmed -> TransactionStatus.Confirmed
             is TransactionResult.Failed -> TransactionStatus.Failed(this.reason.asUiText())
             is TransactionResult.Refunded -> TransactionStatus.Refunded(this.reason.asUiText())
-            TransactionResult.TimedOut ->
-                TransactionStatus.Failed("Confirmation taking longer than expected".asUiText())
+            TransactionResult.TimedOut -> TransactionStatus.StillConfirming
             TransactionResult.NotFound,
             TransactionResult.Pending -> TransactionStatus.Pending
         }
@@ -1003,10 +1022,34 @@ private fun TransactionTypeUiModel.addressBookTarget(): AddressBookTarget? {
             is TransactionTypeUiModel.Send -> tx.token.token.chain to tx.dstAddress
             is TransactionTypeUiModel.Deposit ->
                 depositTransactionUiModel.token.token.chain to depositTransactionUiModel.dstAddress
+            is TransactionTypeUiModel.Swap ->
+                swapTransactionUiModel.dst.token.chain to
+                    (swapTransactionUiModel.externalRecipient?.takeIf { it.isNotBlank() }
+                        ?: swapTransactionUiModel.dst.token.address)
             else -> return null
         }
     return if (dstAddress.isBlank()) null else AddressBookTarget(chain, dstAddress)
 }
+
+/**
+ * Sets only the source vault name, leaving any destination labels the joiner already resolved
+ * intact. Used up front for destination-less deposits (e.g. a Mint LP add-liquidity) so the From
+ * row renders "VaultName (address)" without a raw-address flash on the To row.
+ */
+private fun TransactionTypeUiModel.withResolvedSrcVaultName(
+    srcVaultName: String
+): TransactionTypeUiModel =
+    when (this) {
+        is TransactionTypeUiModel.Send ->
+            TransactionTypeUiModel.Send(tx.copy(srcVaultName = srcVaultName))
+        is TransactionTypeUiModel.Deposit ->
+            TransactionTypeUiModel.Deposit(
+                depositTransactionUiModel.copy(srcVaultName = srcVaultName)
+            )
+        is TransactionTypeUiModel.Swap ->
+            TransactionTypeUiModel.Swap(swapTransactionUiModel.copy(srcVaultName = srcVaultName))
+        else -> this
+    }
 
 /** Returns a copy of this model with the resolved From/To labels applied (Send or Deposit only). */
 private fun TransactionTypeUiModel.withResolvedLabels(
@@ -1029,6 +1072,13 @@ private fun TransactionTypeUiModel.withResolvedLabels(
                     srcVaultName = srcVaultName,
                     dstVaultName = dstVaultName,
                     dstAddressBookTitle = dstAddressBookTitle,
+                )
+            )
+        is TransactionTypeUiModel.Swap ->
+            TransactionTypeUiModel.Swap(
+                swapTransactionUiModel.copy(
+                    srcVaultName = srcVaultName,
+                    dstVaultName = dstVaultName,
                 )
             )
         else -> this
