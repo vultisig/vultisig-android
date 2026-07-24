@@ -275,9 +275,10 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
             maxOf(capped, ETHEREUM_SWAP_PRIORITY_FEE_FLOOR)
         } else {
             when (chain) {
-                // Arb and Mantle requires no miner tip
+                // Arb, Mantle and Robinhood (Arbitrum Orbit) require no miner tip
                 Chain.Arbitrum,
-                Chain.Mantle -> BigInteger.ZERO
+                Chain.Mantle,
+                Chain.Robinhood -> BigInteger.ZERO
 
                 // Blast is a dead chain, with empty blocks with 0 miner tips
                 Chain.Blast ->
