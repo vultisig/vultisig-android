@@ -13,9 +13,6 @@ import com.vultisig.wallet.data.utils.NetworkException
 import java.math.BigInteger
 import java.net.SocketTimeoutException
 import javax.inject.Inject
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
 
 /**
@@ -92,18 +89,8 @@ constructor(private val oneInchApi: OneInchApi, private val evmApiFactory: EvmAp
         if (curated.isEmpty()) return emptyList()
 
         val evmApi = evmApiFactory.createEvmApi(chain)
-        return coroutineScope {
-            curated
-                .map { coin ->
-                    async {
-                        coin.takeIf {
-                            balanceOrZero(evmApi, address, coin.contractAddress) > BigInteger.ZERO
-                        }
-                    }
-                }
-                .awaitAll()
-                .filterNotNull()
-        }
+        val balances = evmApi.getBalances(address, curated.map { it.contractAddress })
+        return curated.filter { (balances[it.contractAddress] ?: BigInteger.ZERO) > BigInteger.ZERO }
     }
 
     private suspend fun vultTopUpOnEthereum(

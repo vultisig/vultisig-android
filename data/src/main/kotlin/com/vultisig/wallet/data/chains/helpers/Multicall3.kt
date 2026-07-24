@@ -47,7 +47,8 @@ object Multicall3 {
             Chain.Mantle,
             Chain.Blast,
             Chain.CronosChain,
-            Chain.Sei -> CANONICAL_ADDRESS
+            Chain.Sei,
+            Chain.Robinhood -> CANONICAL_ADDRESS
             else -> null
         }
 

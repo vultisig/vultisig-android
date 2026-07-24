@@ -28,6 +28,7 @@ internal class TxStatusConfigurationProviderImpl @Inject constructor() :
             Chain.ZkSync to TxStatusConfiguration(5, 5 * 60),
             Chain.Mantle to TxStatusConfiguration(5, 5 * 60),
             Chain.Sei to TxStatusConfiguration(5, 5 * 60),
+            Chain.Robinhood to TxStatusConfiguration(5, 5 * 60),
             Chain.Hyperliquid to TxStatusConfiguration(5, 5 * 60),
             Chain.Bitcoin to TxStatusConfiguration(30, 120 * 60),
             Chain.BitcoinCash to TxStatusConfiguration(30, 120 * 60),

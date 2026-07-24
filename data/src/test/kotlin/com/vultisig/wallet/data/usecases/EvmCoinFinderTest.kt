@@ -55,6 +55,7 @@ internal class EvmCoinFinderTest {
                 Chain.Mantle,
                 Chain.Sei,
                 Chain.Hyperliquid,
+                Chain.Robinhood,
             )
             .forEach { chain ->
                 assertTrue(
@@ -242,9 +243,8 @@ internal class EvmCoinFinderTest {
                 !it.isNativeToken && it.contractAddress.isNotEmpty()
             }
         every { evmApiFactory.createEvmApi(Chain.Blast) } returns evmApi
-        coEvery { evmApi.getERC20Balance(ADDRESS, any()) } returns BigInteger.ZERO
-        coEvery { evmApi.getERC20Balance(ADDRESS, curated.contractAddress) } returns
-            BigInteger.valueOf(7)
+        coEvery { evmApi.getBalances(ADDRESS, any()) } returns
+            mapOf(curated.contractAddress to BigInteger.valueOf(7))
 
         val coins = finder.find(Chain.Blast, ADDRESS)
 

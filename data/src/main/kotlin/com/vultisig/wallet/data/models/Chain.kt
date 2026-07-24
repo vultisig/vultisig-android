@@ -36,6 +36,7 @@ enum class Chain(val raw: ChainId, val standard: TokenStandard, val feeUnit: Str
     Mantle("Mantle", EVM, "Gwei"),
     Sei("Sei", EVM, "Gwei"),
     Hyperliquid("Hyperliquid", EVM, "Gwei"),
+    Robinhood("Robinhood", EVM, "Gwei"),
 
     // BITCOIN
     Bitcoin("Bitcoin", UTXO, "BTC/vbyte"),
@@ -128,6 +129,7 @@ val Chain.coinType: CoinType
             // map SEI to the Ethereum coin type.
             Chain.Sei -> CoinType.ETHEREUM
             Chain.Hyperliquid -> CoinType.ETHEREUM
+            Chain.Robinhood -> CoinType.ROBINHOODCHAIN
             Chain.Qbtc -> CoinType.COSMOS
         }
 
@@ -206,6 +208,7 @@ val Chain.isSwapSupported: Boolean
                 Chain.Cardano,
                 Chain.Ton,
                 Chain.Hyperliquid,
+                Chain.Robinhood,
             )
 
 val Chain.isDepositSupported: Boolean
@@ -401,6 +404,7 @@ fun Chain.swapAssetName(): String {
         Chain.Mantle -> "MANTLE"
         Chain.Sei -> "SEI"
         Chain.Hyperliquid -> "HYPE"
+        Chain.Robinhood -> "ROBINHOOD"
         Chain.Qbtc -> "QBTC"
     }
 }
@@ -444,6 +448,7 @@ fun Chain.ticker(): String {
         Chain.Mantle -> "MNT"
         Chain.Sei -> "SEI"
         Chain.Hyperliquid -> "HYPE"
+        Chain.Robinhood -> "ETH"
         Chain.Qbtc -> "QBTC"
     }
 }

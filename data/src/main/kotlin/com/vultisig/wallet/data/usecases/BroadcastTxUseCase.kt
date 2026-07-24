@@ -124,6 +124,7 @@ constructor(
             Arbitrum,
             ZkSync,
             Sei,
+            Chain.Robinhood,
             Chain.Hyperliquid -> {
                 val evmApi = evmApiFactory.createEvmApi(chain)
                 evmApi.sendTransaction(tx.rawTransaction)
