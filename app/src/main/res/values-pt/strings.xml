@@ -1014,6 +1014,8 @@
     <string name="limit_swap_place_order">Colocar ordem limite</string>
     <string name="limit_swap_warning_below_market">Preço já disponível, considere uma troca de mercado</string>
     <string name="limit_swap_warning_far_above_market">Pode não ser executada antes da validade</string>
+    <string name="verify_limit_order_title">Você está colocando uma ordem limite</string>
+    <string name="verify_limit_order_target_price">Preço-alvo: %1$s</string>
     <string name="swap_advanced_sheet_title">Troca avançada</string>
     <string name="swap_advanced_slippage_title">Tolerância de derrapagem</string>
     <string name="swap_advanced_slippage_page_title">Derrapagem</string>

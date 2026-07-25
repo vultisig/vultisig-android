@@ -1017,6 +1017,8 @@
     <string name="limit_swap_place_order">Limit-Order platzieren</string>
     <string name="limit_swap_warning_below_market">Preis bereits verfügbar, erwäge einen Markt-Swap</string>
     <string name="limit_swap_warning_far_above_market">Wird möglicherweise nicht vor Ablauf ausgeführt</string>
+    <string name="verify_limit_order_title">Du platzierst eine Limit-Order</string>
+    <string name="verify_limit_order_target_price">Zielpreis: %1$s</string>
     <string name="swap_advanced_sheet_title">Erweiterter Swap</string>
     <string name="swap_advanced_slippage_title">Slippage-Toleranz</string>
     <string name="swap_advanced_slippage_page_title">Slippage</string>

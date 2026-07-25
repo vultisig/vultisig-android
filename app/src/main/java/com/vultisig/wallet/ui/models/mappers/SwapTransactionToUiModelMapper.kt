@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.swap.limit.LimitSwapMemo
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -186,6 +187,11 @@ constructor(
             referralBpsDiscountFiatValue = from.referralBpsDiscountFiatValue,
             priceImpactPercent = priceImpactDisplay?.percent,
             priceImpactLevel = priceImpactDisplay?.level,
+            isLimitOrder = from.memo?.startsWith(LimitSwapMemo.PREFIX) == true,
+            limitTargetPriceLabel =
+                (from as? SwapTransaction.RegularSwapTransaction)?.limitOrderTargetPriceLabel,
+            limitExpiryLabel =
+                (from as? SwapTransaction.RegularSwapTransaction)?.limitOrderExpiryLabel,
         )
     }
 }

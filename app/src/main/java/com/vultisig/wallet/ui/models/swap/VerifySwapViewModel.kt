@@ -108,6 +108,11 @@ internal data class SwapTransactionUiModel(
     // rebuilds the tx from the payload without a quote — the row is then hidden (#5335).
     val priceImpactPercent: String? = null,
     val priceImpactLevel: PriceImpactLevel? = null,
+    // THORChain limit order (#4154): drives the "You're placing a limit order" title and the Target
+    // Price / expiry row on the confirmation screen. False (and null labels) for market swaps.
+    val isLimitOrder: Boolean = false,
+    val limitTargetPriceLabel: String? = null,
+    val limitExpiryLabel: String? = null,
 )
 
 internal data class ValuedToken(

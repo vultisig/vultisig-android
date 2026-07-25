@@ -214,7 +214,14 @@ private fun VerifySwapScreen(
                             .padding(all = 24.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.verify_swap_youre_swapping_title),
+                        text =
+                            stringResource(
+                                if (tx.isLimitOrder) {
+                                    R.string.verify_limit_order_title
+                                } else {
+                                    R.string.verify_swap_youre_swapping_title
+                                }
+                            ),
                         style = Theme.brockmann.headings.subtitle,
                         color = Theme.v2.colors.text.secondary,
                     )
@@ -264,6 +271,32 @@ private fun VerifySwapScreen(
                     }
 
                     SwapToken(valuedToken = tx.dst, isSwap = true, isDestinationToken = true)
+
+                    if (tx.isLimitOrder && tx.limitTargetPriceLabel != null) {
+                        UiSpacer(16.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text =
+                                    stringResource(
+                                        R.string.verify_limit_order_target_price,
+                                        tx.limitTargetPriceLabel,
+                                    ),
+                                style = Theme.brockmann.supplementary.caption,
+                                color = Theme.v2.colors.text.secondary,
+                            )
+                            tx.limitExpiryLabel?.let { expiry ->
+                                Text(
+                                    text = expiry,
+                                    style = Theme.brockmann.supplementary.caption,
+                                    color = Theme.v2.colors.text.secondary,
+                                )
+                            }
+                        }
+                    }
 
                     VerifyCardDivider(size = 20.dp)
 

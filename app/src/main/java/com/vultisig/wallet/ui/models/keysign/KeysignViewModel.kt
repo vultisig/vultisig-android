@@ -36,9 +36,11 @@ import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.PendingLimitOrderRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.services.KeysignTxStatusPoller
+import com.vultisig.wallet.data.swap.limit.LimitSwapMemo
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.tss.getSignature
@@ -277,6 +279,7 @@ constructor(
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
+    private val pendingLimitOrderRepository: PendingLimitOrderRepository,
 ) : ViewModel() {
 
     /** Creates [KeysignViewModel] with runtime-provided assisted parameters. */
@@ -850,6 +853,7 @@ constructor(
                         )
                     }
                     saveTransactionHistory(txHash, result.chain)
+                    recordPendingLimitOrderIfNeeded(txHash)
                 }
                 // Outside the txHash-null gate: batch extras were broadcast in their own right.
                 result.additionalTxHashes.forEach { hash ->
@@ -873,6 +877,27 @@ constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Records a placed THORChain limit order once its inbound deposit has broadcast (#4154). Keyed
+     * off the signed `=<` memo, so it fires only for limit orders and never for market swaps or
+     * other transactions. Best-effort: a storage failure must never break the keysign success path.
+     */
+    private suspend fun recordPendingLimitOrderIfNeeded(txHash: String) {
+        val payload = keysignPayload ?: return
+        val memo = payload.memo ?: return
+        if (!memo.startsWith(LimitSwapMemo.PREFIX)) return
+        runCatching {
+                pendingLimitOrderRepository.record(
+                    vaultId = vault.id,
+                    inboundTxHash = txHash,
+                    sourceCoin = payload.coin,
+                    sourceAmount = payload.toAmount,
+                    memo = memo,
+                )
+            }
+            .onFailure { Timber.w(it, "Failed to record pending limit order") }
     }
 
     /** [explorerUrl] overrides the state-derived link, needed for a batch's non-primary hashes. */

@@ -257,6 +257,23 @@ class LimitSwapMemoTest {
     }
 
     @Test
+    fun `parse recovers target asset, destination, LIM and expiry blocks`() {
+        val parsed =
+            LimitSwapMemo.parse(
+                "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:4000000/14400/0:va:50"
+            )!!
+        assertEquals("BTC.BTC", parsed.targetAsset)
+        assertEquals("bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", parsed.destAddr)
+        assertEquals(BigInteger.valueOf(4_000_000L), parsed.limit)
+        assertEquals(14_400, parsed.expiryBlocks)
+    }
+
+    @Test
+    fun `parse returns null for a non-limit memo`() {
+        assertEquals(null, LimitSwapMemo.parse("=:BTC.BTC:dest:4000000"))
+    }
+
+    @Test
     fun `buildLimitSwapMemoForCoins rescales an 18-decimal source to match the SDK fixture`() {
         val memo =
             buildLimitSwapMemoForCoins(

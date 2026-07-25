@@ -159,6 +159,32 @@ object LimitSwapMemo {
         }
     }
 
+    /** The fields recoverable from a built `=<` memo, for recording a placed order. */
+    data class Parsed(
+        val targetAsset: String,
+        val destAddr: String,
+        val limit: BigInteger,
+        val expiryBlocks: Int,
+    )
+
+    /** Parse a `=<` memo back into its fields, or null when it is not a well-formed limit memo. */
+    fun parse(memo: String): Parsed? {
+        if (!memo.startsWith(PREFIX)) return null
+        val segments = memo.removePrefix(PREFIX).split(":")
+        if (segments.size != 3 && segments.size != 5) return null
+        val tradeTarget = segments[2].split("/")
+        if (tradeTarget.size != 3) return null
+        val limit = tradeTarget[0].toBigIntegerOrNull() ?: return null
+        val expiryBlocks = tradeTarget[1].toIntOrNull() ?: return null
+        if (segments[0].isEmpty() || segments[1].isEmpty()) return null
+        return Parsed(
+            targetAsset = segments[0],
+            destAddr = segments[1],
+            limit = limit,
+            expiryBlocks = expiryBlocks,
+        )
+    }
+
     fun assertMemoByteLength(memo: String, limit: Int, kindLabel: String) {
         val byteLength = byteLength(memo)
         require(byteLength <= limit) {

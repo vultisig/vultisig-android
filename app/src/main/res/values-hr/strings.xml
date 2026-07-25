@@ -1020,6 +1020,8 @@
     <string name="limit_swap_place_order">Postavi limit nalog</string>
     <string name="limit_swap_warning_below_market">Cijena je već dostupna, razmisli o tržišnoj zamjeni</string>
     <string name="limit_swap_warning_far_above_market">Možda se neće izvršiti prije isteka</string>
+    <string name="verify_limit_order_title">Postavljate limit nalog</string>
+    <string name="verify_limit_order_target_price">Ciljna cijena: %1$s</string>
     <string name="swap_advanced_sheet_title">Napredna zamjena</string>
     <string name="swap_advanced_slippage_title">Tolerancija proklizavanja</string>
     <string name="swap_advanced_slippage_page_title">Proklizavanje</string>

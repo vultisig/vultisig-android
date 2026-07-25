@@ -1012,6 +1012,8 @@
     <string name="limit_swap_place_order">Limietorder plaatsen</string>
     <string name="limit_swap_warning_below_market">Prijs al beschikbaar, overweeg een marktswap</string>
     <string name="limit_swap_warning_far_above_market">Wordt mogelijk niet vóór vervaltijd uitgevoerd</string>
+    <string name="verify_limit_order_title">Je plaatst een limietorder</string>
+    <string name="verify_limit_order_target_price">Doelprijs: %1$s</string>
     <string name="swap_advanced_sheet_title">Geavanceerde swap</string>
     <string name="swap_advanced_slippage_title">Slippage-tolerantie</string>
     <string name="swap_advanced_slippage_page_title">Slippage</string>

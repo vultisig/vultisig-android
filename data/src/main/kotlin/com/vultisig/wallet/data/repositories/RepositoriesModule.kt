@@ -164,6 +164,12 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindPendingLimitOrderRepository(
+        impl: PendingLimitOrderRepositoryImpl
+    ): PendingLimitOrderRepository
+
+    @Binds
+    @Singleton
     fun bindExplorerLinkRepository(impl: ExplorerLinkRepositoryImpl): ExplorerLinkRepository
 
     @Binds

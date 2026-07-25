@@ -198,6 +198,7 @@ class PreviewActivity : ComponentActivity() {
             OnBoardingComposeTheme {
                 when (screen) {
                     "limit_swap_form" -> LimitSwapFormPreview()
+                    "limit_order_confirm" -> LimitOrderConfirmPreview()
                     "swap_confirm" -> SwapConfirmPreview()
                     "swap_confirm_chain" -> SwapChainIndicatorPreview()
                     "swap_confirm_disabled" -> SwapConfirmPreview(allConsents = false)
@@ -753,6 +754,55 @@ private fun SwapConfirmPreview(allConsents: Boolean = true, externalRecipient: S
                     TransactionScanStatus.Scanned(
                         SecurityScannerResult(
                             provider = "1Inch",
+                            isSecure = true,
+                            riskLevel = SecurityRiskLevel.NONE,
+                            warnings = emptyList(),
+                            description = "Transaction is safe",
+                            recommendations = "",
+                        )
+                    ),
+                vaultName = "Main Vault",
+            ),
+        hasToolbar = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onBackClick = {},
+    )
+}
+
+@Composable
+private fun LimitOrderConfirmPreview() {
+    val ethCoin = Coins.Ethereum.ETH
+    val btcCoin = Coins.Bitcoin.BTC
+
+    val tx =
+        SwapTransactionUiModel(
+            src = ValuedToken(token = ethCoin, value = "1.5", fiatValue = "$3,847.50"),
+            dst = ValuedToken(token = btcCoin, value = "0.0589", fiatValue = "$3,820.00"),
+            networkFee = ValuedToken(token = ethCoin, value = "0.0024", fiatValue = "$6.15"),
+            providerFee = ValuedToken(token = ethCoin, value = "0.0045", fiatValue = "$11.52"),
+            totalFee = "$17.67",
+            networkFeeFormatted = "0.0024 ETH ($6.15)",
+            providerFeeFormatted = "0.0045 ETH ($11.52)",
+            hasConsentAllowance = false,
+            isLimitOrder = true,
+            limitTargetPriceLabel = "1 BTC = $65,800.13",
+            limitExpiryLabel = "24h",
+        )
+
+    VerifySwapScreen(
+        state =
+            VerifySwapUiModel(
+                tx = tx,
+                consentAmount = true,
+                consentReceiveAmount = true,
+                consentAllowance = false,
+                hasFastSign = true,
+                txScanStatus =
+                    TransactionScanStatus.Scanned(
+                        SecurityScannerResult(
+                            provider = "Blockaid",
                             isSecure = true,
                             riskLevel = SecurityRiskLevel.NONE,
                             warnings = emptyList(),

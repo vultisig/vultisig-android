@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.db.dao.AddressBookEntryDao
 import com.vultisig.wallet.data.db.dao.AddressBookOrderDao
 import com.vultisig.wallet.data.db.dao.FolderDao
 import com.vultisig.wallet.data.db.dao.FolderOrderDao
+import com.vultisig.wallet.data.db.dao.PendingLimitOrderDao
 import com.vultisig.wallet.data.db.dao.StakingDetailsDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
@@ -43,6 +44,7 @@ import com.vultisig.wallet.data.db.migrations.MIGRATION_32_33
 import com.vultisig.wallet.data.db.migrations.MIGRATION_33_34
 import com.vultisig.wallet.data.db.migrations.MIGRATION_34_35
 import com.vultisig.wallet.data.db.migrations.MIGRATION_35_36
+import com.vultisig.wallet.data.db.migrations.MIGRATION_36_37
 import com.vultisig.wallet.data.db.migrations.MIGRATION_3_4
 import com.vultisig.wallet.data.db.migrations.MIGRATION_4_5
 import com.vultisig.wallet.data.db.migrations.MIGRATION_5_6
@@ -108,6 +110,7 @@ internal interface DatabaseModule {
                     MIGRATION_33_34,
                     MIGRATION_34_35,
                     MIGRATION_35_36,
+                    MIGRATION_36_37,
                 )
                 .build()
 
@@ -176,5 +179,10 @@ internal interface DatabaseModule {
         @Singleton
         fun provideTransactionHistoryDao(appDatabase: AppDatabase): TransactionHistoryDao =
             appDatabase.transactionHistoryDao()
+
+        @Provides
+        @Singleton
+        fun providePendingLimitOrderDao(appDatabase: AppDatabase): PendingLimitOrderDao =
+            appDatabase.pendingLimitOrderDao()
     }
 }
