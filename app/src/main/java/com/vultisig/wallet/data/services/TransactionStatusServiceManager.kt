@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.services
 
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -83,6 +84,9 @@ constructor(@param:ApplicationContext private val context: Context) {
      * notification left behind by `STOP_FOREGROUND_DETACH`), with [Context.stopService] as the
      * fallback when the binding never connected. Never throws.
      */
+    // False positive: stopService matches the Intent by component, not by object identity, so a
+    // fresh Intent is the documented way to stop a service.
+    @SuppressLint("ImplicitSamInstance")
     fun stopPolling() {
         runCatching { serviceBinder?.cancelPollingAndRemoveNotification() }
             .onFailure { Timber.w(it, "Failed to cancel transaction status polling") }
