@@ -212,6 +212,30 @@ class RippleAccountLinesTest {
         )
     }
 
+    // Once the first page resolves `validated` to a concrete ledger, later pages must pin that
+    // exact index instead of re-sending the shorthand — a marker resumed against a shifted ledger
+    // can drop lines. The request also filters default (zero-balance) lines server-side.
+    @Test
+    fun `later pages pin the first page ledger and ignore default lines`() = runBlocking {
+        val capture = MockHttpClient.RequestCapture()
+        val firstPage =
+            """{"result": {"lines": [${line("USD", issuer, "1")}], "ledger_index": 90000000, "marker": "page-2"}}"""
+        val api =
+            RippleApiImp(MockHttpClient.capturingRequest(HttpStatusCode.OK, firstPage, capture))
+
+        api.fetchAccountLines(ACCOUNT)
+
+        val lastBody = capture.lastBody.orEmpty()
+        assertTrue(
+            lastBody.contains("90000000"),
+            "later page must pin the resolved ledger index: $lastBody",
+        )
+        assertTrue(
+            lastBody.contains("ignore_default"),
+            "request must filter default trust lines server-side: $lastBody",
+        )
+    }
+
     private companion object {
         const val ACCOUNT = "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh"
         const val OTHER_ISSUER = "rcoef87SYMJ58NAFx7fNM5frVknmvHsvJ"

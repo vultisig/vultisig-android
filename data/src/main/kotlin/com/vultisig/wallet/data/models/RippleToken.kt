@@ -26,9 +26,6 @@ private const val RIPPLE_TOKEN_SEPARATOR = '.'
 /** Currency code reserved for the native asset; it can never name a trust line. */
 private const val RIPPLE_NATIVE_CURRENCY = "XRP"
 
-/** Length of the hex form of a 160-bit non-standard currency code. */
-private const val RIPPLE_HEX_CURRENCY_LENGTH = 40
-
 /** An XRPL issued currency, identified by its raw on-chain currency code and issuing account. */
 data class RippleTokenIdentity(val currency: String, val issuer: String)
 
@@ -36,8 +33,7 @@ data class RippleTokenIdentity(val currency: String, val issuer: String)
  * Wire identity of an issued currency as stored in [Coin.contractAddress] —
  * `"<currency>.<issuer>"`, the notation XRPL tooling uses (e.g.
  * `USD.rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B`). The currency code is kept exactly as the ledger reports
- * it (3-char ASCII or 40-char hex) so it round-trips into `account_lines` comparisons unchanged;
- * [rippleCurrencyTicker] derives the display form.
+ * it (3-char ASCII or 40-char hex) so it round-trips into `account_lines` comparisons unchanged.
  */
 fun rippleTokenContractAddress(currency: String, issuer: String): String =
     "$currency$RIPPLE_TOKEN_SEPARATOR$issuer"
@@ -68,48 +64,23 @@ fun parseRippleTokenIdentity(contractAddress: String): RippleTokenIdentity? {
     )
 }
 
-/**
- * Human-readable ticker for a raw XRPL currency code.
- *
- * Standard codes are three ASCII characters and are used verbatim. Longer names are carried as the
- * hex of a 160-bit code whose first byte is `0x00`, followed by the zero-padded ASCII name — decode
- * those back to text. Anything else (demurrage or XLS-14 codes, unprintable payloads) has no
- * meaningful text form, so a short hex prefix keeps the row distinguishable.
- */
-fun rippleCurrencyTicker(currency: String): String {
-    if (currency.length != RIPPLE_HEX_CURRENCY_LENGTH || !currency.all { it.isHexDigit() }) {
-        return currency
-    }
-    val decoded =
-        currency
-            .chunked(2)
-            .map { it.toInt(16).toByte() }
-            .dropWhile { it.toInt() == 0 }
-            .takeWhile { it.toInt() != 0 }
-            .toByteArray()
-    val text = String(decoded, Charsets.US_ASCII)
-    return if (text.isNotEmpty() && text.all { it.code in 0x20..0x7E }) {
-        text
-    } else {
-        currency.take(RIPPLE_HEX_CURRENCY_PREVIEW_LENGTH).uppercase()
-    }
-}
-
 /** True when [currency] names the native asset, which is never a valid trust-line currency. */
 fun isRippleNativeCurrency(currency: String): Boolean =
     currency.equals(RIPPLE_NATIVE_CURRENCY, ignoreCase = true)
 
 /**
- * Converts an `account_lines` balance string into fixed-point units at [RIPPLE_TOKEN_DECIMALS].
+ * Converts an `account_lines` balance string into fixed-point units at [decimals], which defaults
+ * to [RIPPLE_TOKEN_DECIMALS] but should be the owning coin's own scale so the parsed value matches
+ * how the balance is later rendered.
  *
  * A negative balance means the account is the issuing side of the line and owes the counterparty
  * rather than holding anything, so it clamps to zero. Excess precision is truncated down so a
  * displayed balance never rounds up past what the ledger actually holds.
  */
-fun String.toRippleTokenUnits(): BigInteger {
+fun String.toRippleTokenUnits(decimals: Int = RIPPLE_TOKEN_DECIMALS): BigInteger {
     val amount = toBigDecimalOrNull() ?: return BigInteger.ZERO
     if (amount.signum() <= 0) return BigInteger.ZERO
-    return amount.setScale(RIPPLE_TOKEN_DECIMALS, RoundingMode.DOWN).unscaledValue()
+    return amount.setScale(decimals, RoundingMode.DOWN).unscaledValue()
 }
 
 private fun String.toBigDecimalOrNull(): BigDecimal? =
@@ -118,7 +89,3 @@ private fun String.toBigDecimalOrNull(): BigDecimal? =
     } catch (_: NumberFormatException) {
         null
     }
-
-private fun Char.isHexDigit(): Boolean = this in '0'..'9' || this in 'a'..'f' || this in 'A'..'F'
-
-private const val RIPPLE_HEX_CURRENCY_PREVIEW_LENGTH = 8

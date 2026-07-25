@@ -33,8 +33,8 @@ interface RippleApi {
     suspend fun getBalance(coin: Coin): BigInteger
 
     /**
-     * Balance of a single issued-currency trust line, scaled to [RIPPLE_TOKEN_DECIMALS]. Returns
-     * zero when the account holds no line for [coin]'s currency/issuer pair.
+     * Balance of a single issued-currency trust line, scaled to [coin]'s own decimals. Returns zero
+     * when the account holds no line for [coin]'s currency/issuer pair.
      */
     suspend fun getTokenBalance(coin: Coin): BigInteger
 
@@ -176,7 +176,9 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
         val line =
             fetchAccountLines(coin.address).firstOrNull { it.matches(identity) }
                 ?: return BigInteger.ZERO
-        return line.balance.toRippleTokenUnits()
+        // Scale to the coin's own decimals so the parsed units line up with the scale the balance
+        // is rendered at; nothing else pins the two together.
+        return line.balance.toRippleTokenUnits(coin.decimal)
     }
 
     override suspend fun fetchAccountLines(walletAddress: String): List<RippleTrustLineJson> =
@@ -185,6 +187,12 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
     private suspend fun fetchAllAccountLinePages(walletAddress: String): List<RippleTrustLineJson> {
         val lines = mutableListOf<RippleTrustLineJson>()
         var marker: JsonElement? = null
+        // The ledger the first page resolved `validated` to. Every later page pins this exact index
+        // instead of re-sending the `validated` shorthand: the cluster load-balances across nodes
+        // that can each be on a different validated ledger, and XRPL documents that resuming a
+        // marker against a shifted ledger returns incomplete results, so a line straddling a page
+        // boundary would silently drop and read as a zero balance.
+        var pinnedLedgerIndex: Long? = null
 
         // XRPL caps a single account_lines response at `limit` entries and hands back an opaque
         // marker to resume from. The page cap bounds the walk so a node that keeps echoing the
@@ -197,8 +205,18 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
                         buildJsonArray {
                             addJsonObject {
                                 put("account", walletAddress)
-                                put("ledger_index", "validated")
+                                val pinned = pinnedLedgerIndex
+                                if (pinned != null) {
+                                    put("ledger_index", pinned)
+                                } else {
+                                    put("ledger_index", "validated")
+                                }
                                 put("limit", ACCOUNT_LINES_PAGE_SIZE)
+                                // Trust lines still in their default state hold nothing and are
+                                // dropped downstream anyway; filtering them server-side keeps the
+                                // walk short when anyone spams zero-balance lines against the
+                                // account.
+                                put("ignore_default", true)
                                 marker?.let { put("marker", it) }
                             }
                         },
@@ -221,6 +239,10 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
             }
 
             result?.lines?.let(lines::addAll)
+
+            if (pinnedLedgerIndex == null) {
+                pinnedLedgerIndex = result?.ledgerIndex
+            }
 
             val next = result?.marker ?: return lines
             if (next == marker) return lines
@@ -387,6 +409,9 @@ data class RippleAccountLinesResultJson(
     @SerialName("lines") val lines: List<RippleTrustLineJson>? = null,
     @SerialName("marker") val marker: JsonElement? = null,
     @SerialName("error") val error: String? = null,
+    // The concrete ledger `ledger_index: "validated"` resolved to on the first page, echoed so the
+    // rest of the paged walk can pin it.
+    @SerialName("ledger_index") val ledgerIndex: Long? = null,
 )
 
 /**
@@ -395,7 +420,7 @@ data class RippleAccountLinesResultJson(
  *
  * [balance] is a decimal string from the queried account's perspective, so it is negative when the
  * account is the issuing side of the line. [currency] is either a 3-character ASCII code or the
- * 40-character hex form of a 160-bit code; see [rippleCurrencyTicker] for the display form.
+ * 40-character hex form of a 160-bit code, matched against the curated catalog verbatim.
  */
 @Serializable
 data class RippleTrustLineJson(

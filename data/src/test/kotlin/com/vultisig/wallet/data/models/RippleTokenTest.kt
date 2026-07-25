@@ -14,7 +14,7 @@ class RippleTokenTest {
     private fun token(currency: String, issuerAddress: String = ISSUER) =
         Coin.EMPTY.copy(
             chain = Chain.Ripple,
-            ticker = rippleCurrencyTicker(currency),
+            ticker = currency,
             decimal = RIPPLE_TOKEN_DECIMALS,
             contractAddress = rippleTokenContractAddress(currency, issuerAddress),
             isNativeToken = false,
@@ -71,40 +71,16 @@ class RippleTokenTest {
     }
 
     @Test
-    fun `standard three character currency codes are used verbatim`() {
-        assertEquals("USD", rippleCurrencyTicker("USD"))
-        assertEquals("EUR", rippleCurrencyTicker("EUR"))
-    }
-
-    // Names longer than three characters travel as the hex of a 160-bit code: a 0x00 lead byte,
-    // the ASCII name, then zero padding.
-    @Test
-    fun `hex currency codes decode to their ascii name`() {
-        val solo = "534F4C4F00000000000000000000000000000000"
-
-        assertEquals("SOLO", rippleCurrencyTicker(solo))
-    }
-
-    // The other hex shape: a standard 3-character code widened to 160 bits, which pads the name
-    // into bytes 12-14 behind a zero prefix.
-    @Test
-    fun `a standard code widened to hex decodes past its zero prefix`() {
-        val usd = "0000000000000000000000005553440000000000"
-
-        assertEquals("USD", rippleCurrencyTicker(usd))
-    }
-
-    @Test
-    fun `non-ascii hex currency codes fall back to a hex preview`() {
-        val demurrage = "01" + "FF".repeat(19)
-
-        assertEquals("01FFFFFF", rippleCurrencyTicker(demurrage))
-    }
-
-    @Test
     fun `balances scale to fifteen decimals`() {
         assertEquals(BigInteger("125500000000000000"), "125.5".toRippleTokenUnits())
         assertEquals(BigInteger("1000000000000000"), "1".toRippleTokenUnits())
+    }
+
+    // getTokenBalance scales by the coin's own decimals so the parsed units match the render scale.
+    @Test
+    fun `balances scale to the requested decimals`() {
+        assertEquals(BigInteger("1255000"), "125.5".toRippleTokenUnits(decimals = 4))
+        assertEquals(BigInteger("125"), "125.5".toRippleTokenUnits(decimals = 0))
     }
 
     // XRPL carries 16 significant digits; anything below the pinned scale truncates down so a
