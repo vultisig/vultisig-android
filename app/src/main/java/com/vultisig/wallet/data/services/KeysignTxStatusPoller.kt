@@ -171,11 +171,6 @@ constructor(
         transactionStatusServiceManager.stopPolling()
     }
 
-    /** Releases the foreground status service resources. */
-    fun cleanup() {
-        transactionStatusServiceManager.cleanup()
-    }
-
     /**
      * Whether this status is settled and polling can stop (confirmed, failed, refunded, timed out).
      */

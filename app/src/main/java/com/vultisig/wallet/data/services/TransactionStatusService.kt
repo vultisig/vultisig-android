@@ -81,12 +81,6 @@ class TransactionStatusService : Service() {
                 }
             }
 
-            ACTION_STOP_POLLING -> {
-                stopPolling()
-                stopForegroundAndService(detachNotification = false)
-                START_NOT_STICKY
-            }
-
             else -> {
                 stopSelf()
                 START_NOT_STICKY
@@ -103,21 +97,26 @@ class TransactionStatusService : Service() {
                 _statusFlow.emit(TransactionResult.Pending)
 
                 pollingTxStatus(chain, txHash).collect { result ->
-                    _statusFlow.emit(result)
                     when (result) {
                         is TransactionResult.Confirmed,
                         is TransactionResult.Failed,
                         is TransactionResult.Refunded,
                         TransactionResult.TimedOut -> {
+                            // Post the final notification before publishing the terminal status:
+                            // observers cancel notification 1001 through the binder as soon as they
+                            // see a terminal status, and a notify() landing after that cancel would
+                            // strand the notification once this service detaches it below.
                             updateNotification(
                                 contentText = result.toNotificationMessage(),
                                 ongoing = false,
                             )
+                            _statusFlow.emit(result)
                             stopPolling()
-                            stopForegroundAndService(detachNotification = true)
+                            stopForegroundAndService()
                         }
                         TransactionResult.Pending,
                         TransactionResult.NotFound -> {
+                            _statusFlow.emit(result)
                             updateNotification(
                                 contentText = result.toNotificationMessage(),
                                 ongoing = true,
@@ -133,13 +132,8 @@ class TransactionStatusService : Service() {
         pollingJob = null
     }
 
-    private fun stopForegroundAndService(detachNotification: Boolean = false) {
-        if (detachNotification) {
-            stopForeground(STOP_FOREGROUND_DETACH)
-        } else {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            notificationManager.cancel(NOTIFICATION_ID)
-        }
+    private fun stopForegroundAndService() {
+        stopForeground(STOP_FOREGROUND_DETACH)
         stopSelf()
     }
 
@@ -206,7 +200,6 @@ class TransactionStatusService : Service() {
         private const val CHANNEL_ID = "transaction_status_channel"
         private const val NOTIFICATION_ID = 1001
         const val ACTION_START_POLLING = "com.vultisig.wallet.START_POLLING"
-        const val ACTION_STOP_POLLING = "com.vultisig.wallet.STOP_POLLING"
         const val EXTRA_TX_HASH = "tx_hash"
         const val EXTRA_CHAIN = "chain"
     }

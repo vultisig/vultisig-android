@@ -109,11 +109,6 @@ constructor(@param:ApplicationContext private val context: Context) {
         return serviceBinder?.statusFlow
     }
 
-    fun cleanup() {
-        unbindIfBound()
-        _serviceReady.value = false
-    }
-
     /**
      * Releases the binding if one is held. [isBound] is cleared up front so a failed unbind can't
      * strand the manager as permanently bound and block later [startPolling] calls. Never throws.
