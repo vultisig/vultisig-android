@@ -28,6 +28,7 @@ import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
+import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
@@ -43,6 +44,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import vultisig.keysign.v1.SuiCoin
 
 internal class BlockChainSpecificRepositoryImplTest {
 
@@ -350,6 +352,108 @@ internal class BlockChainSpecificRepositoryImplTest {
     }
 
     @Test
+    fun `SUI embedded coins cover the amount plus the refined gas budget they are signed with`() =
+        runTest {
+            // Refined budget above SUI_DEFAULT_GAS_BUDGET: selecting against the default alone
+            // would stop at amount + 3_000_000 and leave the signing-time coverage check —
+            // amount + gasBudget, the balance Sui requires a PaySui input set to hold — short on a
+            // fragmented but fully funded wallet.
+            val refinedBudget = BigInteger("4200000")
+            val amount = BigInteger("1000000")
+            val walletCoins = fragmentedNativeCoins(count = 12, balance = "1000000")
+            val result =
+                repository(
+                        suiApi = suiApi(referenceGasPrice = BigInteger("1"), coins = walletCoins),
+                        suiFeeService = suiFeeService(limit = refinedBudget),
+                    )
+                    .getSpecific(
+                        chain = Chain.Sui,
+                        address = SOURCE_ADDRESS,
+                        token = suiCoin(),
+                        gasFee = TokenValue(BigInteger.ONE, suiCoin()),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                        tokenAmountValue = amount,
+                    )
+
+            val specific = result.blockChainSpecific as BlockChainSpecific.Sui
+            assertEquals(refinedBudget, specific.gasBudget)
+            assertTrue(specific.coins.totalBalance() >= amount + refinedBudget)
+            // Still bounded — only the objects the send needs, not every owned object.
+            assertTrue(specific.coins.size < walletCoins.size)
+        }
+
+    @Test
+    fun `SUI embedded coins cover the padded default budget used when fee estimation fails`() =
+        runTest {
+            // The fallback budget is SUI_DEFAULT_GAS_BUDGET + 15%, so it too exceeds the budget the
+            // dry-run priced against and must drive the embedded selection.
+            val paddedDefault = SUI_DEFAULT_GAS_BUDGET.increaseByPercent(15)
+            val amount = BigInteger("1000000")
+            val result =
+                repository(
+                        suiApi =
+                            suiApi(
+                                referenceGasPrice = BigInteger("500"),
+                                coins = fragmentedNativeCoins(count = 12, balance = "1000000"),
+                            ),
+                        suiFeeService = failingFeeService(),
+                    )
+                    .getSpecific(
+                        chain = Chain.Sui,
+                        address = SOURCE_ADDRESS,
+                        token = suiCoin(),
+                        gasFee = TokenValue(BigInteger.ONE, suiCoin()),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                        tokenAmountValue = amount,
+                    )
+
+            val specific = result.blockChainSpecific as BlockChainSpecific.Sui
+            assertEquals(paddedDefault, specific.gasBudget)
+            assertTrue(specific.coins.totalBalance() >= amount + paddedDefault)
+        }
+
+    @Test
+    fun `SUI embedded coins stay the dry-run priced set when the refined budget is under default`() =
+        runTest {
+            // Refined budget below SUI_DEFAULT_GAS_BUDGET: the selection must stay at the default,
+            // the budget SuiFeeService dry-run priced, so the broadcast transaction carries no
+            // input objects the simulation never measured.
+            val refinedBudget = BigInteger("2000000")
+            val amount = BigInteger("1000000")
+            val walletCoins = fragmentedNativeCoins(count = 12, balance = "1000000")
+            val result =
+                repository(
+                        suiApi = suiApi(referenceGasPrice = BigInteger("1"), coins = walletCoins),
+                        suiFeeService = suiFeeService(limit = refinedBudget),
+                    )
+                    .getSpecific(
+                        chain = Chain.Sui,
+                        address = SOURCE_ADDRESS,
+                        token = suiCoin(),
+                        gasFee = TokenValue(BigInteger.ONE, suiCoin()),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                        tokenAmountValue = amount,
+                    )
+
+            val specific = result.blockChainSpecific as BlockChainSpecific.Sui
+            val pricedSet =
+                SuiHelper.selectPayloadCoins(
+                    walletCoins,
+                    isNativeToken = true,
+                    contractAddress = "",
+                    amount = amount,
+                    gasBudget = SUI_DEFAULT_GAS_BUDGET,
+                )
+            assertEquals(pricedSet.map { it.coinObjectId }, specific.coins.map { it.coinObjectId })
+        }
+
+    @Test
     fun `SUI specific falls back to padded default budget when fee service throws`() = runTest {
         val fallbackPrice = BigInteger("500")
         val result =
@@ -445,10 +549,27 @@ internal class BlockChainSpecificRepositoryImplTest {
         }
     }
 
-    private fun suiApi(referenceGasPrice: BigInteger): SuiApi = mockk {
-        coEvery { getReferenceGasPrice() } returns referenceGasPrice
-        coEvery { getAllCoins(any()) } returns emptyList()
-    }
+    private fun suiApi(referenceGasPrice: BigInteger, coins: List<SuiCoin> = emptyList()): SuiApi =
+        mockk {
+            coEvery { getReferenceGasPrice() } returns referenceGasPrice
+            coEvery { getAllCoins(any()) } returns coins
+        }
+
+    /** Native SUI objects of [balance] MIST each, so a send has to accumulate several of them. */
+    private fun fragmentedNativeCoins(count: Int, balance: String): List<SuiCoin> =
+        (1..count).map { index ->
+            SuiCoin(
+                coinType = "0x2::sui::SUI",
+                coinObjectId = "0x%064x".format(index),
+                version = index.toString(),
+                digest = "digest-$index",
+                balance = balance,
+                previousTransaction = "",
+            )
+        }
+
+    private fun List<SuiCoin>.totalBalance(): BigInteger =
+        fold(BigInteger.ZERO) { acc, coin -> acc + coin.balance.toBigInteger() }
 
     private fun suiFeeService(
         limit: BigInteger,
