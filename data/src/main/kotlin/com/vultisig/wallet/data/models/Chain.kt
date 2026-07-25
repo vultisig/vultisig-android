@@ -324,6 +324,7 @@ val Chain.isLayer2: Boolean
             Chain.Blast,
             Chain.Mantle,
             Chain.Optimism,
+            Chain.Robinhood,
             Chain.ZkSync -> true
             else -> false
         }
@@ -361,6 +362,8 @@ fun Chain.oneInchChainId(): Long =
         Chain.ZkSync -> 324
         Chain.Mantle -> 5000
         Chain.Hyperliquid -> 999
+        // LI.FI-only: 1inch never quotes 4663, but LiFiQuoteSource needs the id resolved.
+        Chain.Robinhood -> 4663
         else ->
             throw SwapException.SwapRouteNotAvailable("Chain $this is not supported by 1inch API")
     }
@@ -493,7 +496,8 @@ val Chain.blockTimeMs: Long
             Chain.Arbitrum,
             Chain.ZkSync,
             Chain.Sei,
-            Chain.Hyperliquid -> 1_000L
+            Chain.Hyperliquid,
+            Chain.Robinhood -> 1_000L
             else -> 4_000L
         }
 

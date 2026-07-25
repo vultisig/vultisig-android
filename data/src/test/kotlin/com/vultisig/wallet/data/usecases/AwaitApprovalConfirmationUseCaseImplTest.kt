@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.models.EvmRpcResponseJson
 import com.vultisig.wallet.data.api.models.EvmTxStatusJson
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.blockTimeMs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -144,6 +145,7 @@ internal class AwaitApprovalConfirmationUseCaseImplTest {
                     "Mantle",
                     "Sei",
                     "Hyperliquid",
+                    "Robinhood",
                 ],
         )
         fun `creates api for the given chain`(chain: Chain) = runTest {
@@ -183,6 +185,22 @@ internal class AwaitApprovalConfirmationUseCaseImplTest {
             assertEquals(1_000L, Chain.Arbitrum.blockTimeMs)
         }
 
+        @Test
+        fun `Robinhood block time is 1s`() {
+            assertEquals(1_000L, Chain.Robinhood.blockTimeMs)
+        }
+
+        @Test
+        fun `every EVM chain has an explicit block time arm`() {
+            // 4s is the fallback, not a real cadence — hitting it means a new EVM chain has no arm.
+            val onFallback =
+                Chain.entries.filter {
+                    it.standard == TokenStandard.EVM && it.blockTimeMs == 4_000L
+                }
+
+            assertTrue(onFallback.isEmpty(), "EVM chains missing a blockTimeMs arm: $onFallback")
+        }
+
         @ParameterizedTest
         @EnumSource(
             value = Chain::class,
@@ -201,6 +219,7 @@ internal class AwaitApprovalConfirmationUseCaseImplTest {
                     "Mantle",
                     "Sei",
                     "Hyperliquid",
+                    "Robinhood",
                 ],
         )
         fun `all EVM chains have a positive block time`(chain: Chain) {

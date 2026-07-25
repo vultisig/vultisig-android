@@ -23,8 +23,8 @@ import timber.log.Timber
  * `/balance/v1.2/{chain}/balances/{address}` (no Alchemy 100-token cap) and metadata from
  * `/token/v1.2/{chain}/custom`. Legitimacy is gated by the CoinGecko-provider allowlist, replacing
  * the empty-logo heuristic that was dropping legit small-caps (see #4555). For EVM chains outside
- * 1inch's surface — Blast / Cronos / Hyperliquid / Mantle / Sei / zkSync — discovery falls back to
- * `balanceOf`-iterating the curated [Coins] catalog.
+ * 1inch's surface — Blast / Cronos / Hyperliquid / Mantle / Robinhood / Sei / zkSync — discovery
+ * falls back to `balanceOf`-iterating the curated [Coins] catalog.
  */
 interface EvmCoinFinder {
     suspend fun find(chain: Chain, address: String): List<Coin>
