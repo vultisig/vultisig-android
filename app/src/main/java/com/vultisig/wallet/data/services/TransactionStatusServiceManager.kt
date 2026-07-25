@@ -45,7 +45,13 @@ constructor(@param:ApplicationContext private val context: Context) {
             }
         }
 
-    fun startPolling(txHash: String, chain: Chain) {
+    /**
+     * Starts the foreground status service for [txHash] on [chain] and binds to it.
+     *
+     * @return `false` when the system rejected the binding: `onServiceConnected()` never fires in
+     *   that case, so [serviceReady] stays `false` and callers must not wait on it.
+     */
+    fun startPolling(txHash: String, chain: Chain): Boolean {
         val intent =
             Intent(context, TransactionStatusService::class.java).apply {
                 action = TransactionStatusService.ACTION_START_POLLING
@@ -53,12 +59,21 @@ constructor(@param:ApplicationContext private val context: Context) {
                 putExtra(TransactionStatusService.EXTRA_CHAIN, chain.raw)
             }
         context.startForegroundService(intent)
-        if (!isBound) {
-            // Marked bound on request, not on connect: a binding that has not connected yet still
-            // holds the service alive and must be released by stopPolling().
-            context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-            isBound = true
+        if (isBound) return true
+
+        // Marked bound on request, not on connect: a binding that has not connected yet still
+        // holds the service alive and must be released by stopPolling().
+        isBound = true
+        val bound =
+            runCatching { context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE) }
+                .onFailure { Timber.w(it, "Failed to bind transaction status service") }
+                .getOrDefault(false)
+        if (!bound) {
+            // A rejected bindService still registers the connection, so release it and drop back to
+            // unbound; otherwise the guard above would suppress every later bind attempt.
+            unbindIfBound()
         }
+        return bound
     }
 
     /**
@@ -72,14 +87,7 @@ constructor(@param:ApplicationContext private val context: Context) {
         runCatching { serviceBinder?.cancelPollingAndRemoveNotification() }
             .onFailure { Timber.w(it, "Failed to cancel transaction status polling") }
 
-        if (isBound) {
-            try {
-                context.unbindService(serviceConnection)
-                isBound = false
-            } catch (_: IllegalArgumentException) {
-                // Service already unbound
-            }
-        }
+        unbindIfBound()
         serviceBinder = null
         _serviceReady.value = false
 
@@ -89,14 +97,7 @@ constructor(@param:ApplicationContext private val context: Context) {
 
     fun cancelPollingAndRemoveNotification() {
         serviceBinder?.cancelPollingAndRemoveNotification()
-        if (isBound) {
-            try {
-                context.unbindService(serviceConnection)
-                isBound = false
-            } catch (_: IllegalArgumentException) {
-                // Service already unbound
-            }
-        }
+        unbindIfBound()
         _serviceReady.value = false
     }
 
@@ -105,14 +106,18 @@ constructor(@param:ApplicationContext private val context: Context) {
     }
 
     fun cleanup() {
-        if (isBound) {
-            try {
-                context.unbindService(serviceConnection)
-                isBound = false
-            } catch (_: IllegalArgumentException) {
-                // Service already unbound
-            }
-        }
+        unbindIfBound()
         _serviceReady.value = false
+    }
+
+    /**
+     * Releases the binding if one is held. [isBound] is cleared up front so a failed unbind can't
+     * strand the manager as permanently bound and block later [startPolling] calls. Never throws.
+     */
+    private fun unbindIfBound() {
+        if (!isBound) return
+        isBound = false
+        runCatching { context.unbindService(serviceConnection) }
+            .onFailure { Timber.w(it, "Failed to unbind transaction status service") }
     }
 }
