@@ -66,6 +66,7 @@ constructor(
     private val getDiscountBpsUseCase: GetDiscountBpsUseCase,
     private val featureFlagRepository: FeatureFlagRepository,
     private val limitMarketPriceRepository: LimitSwapMarketPriceRepository,
+    private val buildLimitSwapTransactionUseCase: BuildLimitSwapTransactionUseCase,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -281,6 +282,83 @@ constructor(
 
     fun onLimitPriceUnitSelected(unit: LimitPriceUnit) {
         limitPriceUnit.value = unit
+    }
+
+    /**
+     * Stages a THORChain limit order and routes to the confirmation screen. Reuses the market
+     * swap's input validation ([SwapInputCollector]) for the resolved coins/amount/gas — the pair
+     * is THORChain-routable so a market quote exists — then hands off to
+     * [BuildLimitSwapTransactionUseCase], which builds the `=<` deposit and re-checks the advanced
+     * swap queue. Placement flows through the same verify → keysign path as a market swap.
+     */
+    fun placeLimitOrder() {
+        val targetPrice = limitTargetPrice.value
+        if (targetPrice == null) {
+            showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
+            return
+        }
+
+        val inputs =
+            try {
+                isLoadingNextScreen = true
+                swapInputCollector.collect(
+                    vaultId = vaultId,
+                    selectedSrc = selectedSrc.value,
+                    selectedDst = selectedDst.value,
+                    srcAmount = srcAmountState.text.toString(),
+                    quote = quoteState.quote,
+                    gasFee = quotePipeline.gasFee.value,
+                    estimatedNetworkFeeTokenValue =
+                        quotePipeline.estimatedNetworkFeeTokenValue.value,
+                    estimatedNetworkFeeFiatValue = quotePipeline.estimatedNetworkFeeFiatValue.value,
+                )
+            } catch (e: InvalidTransactionDataException) {
+                isLoadingNextScreen = false
+                showError(e.text)
+                return
+            } catch (e: Exception) {
+                isLoadingNextScreen = false
+                Timber.e(e)
+                showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
+                return
+            }
+
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                isLoadingNextScreen = false
+                if (e is InvalidTransactionDataException) {
+                    showError(e.text)
+                } else {
+                    Timber.e(e)
+                    showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
+                }
+            }
+        ) {
+            val transaction =
+                buildLimitSwapTransactionUseCase.build(
+                    BuildLimitSwapTransactionUseCase.Params(
+                        vaultId = inputs.vaultId,
+                        srcToken = inputs.srcToken,
+                        dstToken = inputs.dstToken,
+                        srcAddress = inputs.srcAddress,
+                        srcTokenValue = inputs.srcTokenValue,
+                        targetPrice = targetPrice,
+                        expiryHours = limitExpiry.value.hours,
+                        destinationAddress = externalRecipient.value ?: inputs.dstToken.address,
+                        gasFee = inputs.gasFee,
+                        gasFeeFiatValue = inputs.gasFeeFiatValue,
+                        estimatedNetworkFeeTokenValue = inputs.estimatedNetworkFeeTokenValue,
+                        estimatedNetworkFeeFiatValue = inputs.estimatedNetworkFeeFiatValue,
+                    )
+                )
+
+            swapTransactionRepository.addTransaction(transaction)
+
+            navigator.route(
+                Route.VerifySwap(transactionId = transaction.id, vaultId = inputs.vaultId)
+            )
+            isLoadingNextScreen = false
+        }
     }
 
     /**

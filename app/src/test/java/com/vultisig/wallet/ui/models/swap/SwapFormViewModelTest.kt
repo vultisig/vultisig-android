@@ -252,6 +252,7 @@ internal class SwapFormViewModelTest {
                 getDiscountBpsUseCase = getDiscountBpsUseCase,
                 featureFlagRepository = mockk(relaxed = true),
                 limitMarketPriceRepository = mockk(relaxed = true),
+                buildLimitSwapTransactionUseCase = mockk(relaxed = true),
             )
             .also { createdViewModels += it }
 

@@ -126,6 +126,7 @@ internal fun NavGraphBuilder.swapScreen(navController: NavHostController) {
             onLimitExpirySelected = model::onLimitExpirySelected,
             onLimitUnitSelected = model::onLimitPriceUnitSelected,
             onEditLimitAssets = model::selectSrcToken,
+            onPlaceLimitOrder = model::placeLimitOrder,
         )
     }
 }
@@ -162,6 +163,7 @@ internal fun SwapScreen(
     onLimitExpirySelected: (LimitExpiryOption) -> Unit = {},
     onLimitUnitSelected: (LimitPriceUnit) -> Unit = {},
     onEditLimitAssets: () -> Unit = {},
+    onPlaceLimitOrder: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -452,9 +454,17 @@ internal fun SwapScreen(
                     VsButton(
                         label = stringResource(R.string.limit_swap_place_order),
                         variant = VsButtonVariant.CTA,
-                        // Placement (confirmation sheet + =< keysign) is wired in the next phase.
-                        state = VsButtonState.Disabled,
-                        onClick = {},
+                        state =
+                            if (state.isLoadingNextScreen) {
+                                VsButtonState.Disabled
+                            } else {
+                                VsButtonState.Enabled
+                            },
+                        isLoading = state.isLoadingNextScreen,
+                        onClick = {
+                            focusManager.clearFocus(true)
+                            onPlaceLimitOrder()
+                        },
                         modifier =
                             Modifier.fillMaxWidth()
                                 .padding(vertical = 12.dp)

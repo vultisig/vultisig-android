@@ -16,4 +16,8 @@ data class THORChainInboundAddress(
     @SerialName("chain_lp_actions_paused") val chainLPActionsPaused: Boolean = false,
     @SerialName("gas_rate") val gasRate: String = "",
     @SerialName("gas_rate_units") val gasRateUnits: String = "",
+    // The chain's router contract (EVM chains only), used to build ERC20 limit-order deposits. The
+    // market swap path reads the router off the swap quote instead; a locally-built limit order has
+    // no quote, so it comes from here. Absent for non-EVM inbounds.
+    @SerialName("router") val router: String? = null,
 )

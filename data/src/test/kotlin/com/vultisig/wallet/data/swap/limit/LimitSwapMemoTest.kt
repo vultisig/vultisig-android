@@ -216,6 +216,47 @@ class LimitSwapMemoTest {
     }
 
     @Test
+    fun `assertLimitSwapMemo accepts memos with and without an affiliate`() {
+        LimitSwapMemo.assertLimitSwapMemo(
+            "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:4000000/7200/0:va:50"
+        )
+        LimitSwapMemo.assertLimitSwapMemo(
+            "=<:THOR.RUNE:thor1x2whgc2nt665y0kc44uywhynazvp0l8tp0vtu6:1000000000/14400/0"
+        )
+    }
+
+    @Test
+    fun `assertLimitSwapMemo rejects a market swap memo`() {
+        // A `=>` (or `=:`) memo would sign a value-bearing deposit with no price protection.
+        assertThrows(IllegalArgumentException::class.java) {
+            LimitSwapMemo.assertLimitSwapMemo(
+                "=:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+            )
+        }
+    }
+
+    @Test
+    fun `assertLimitSwapMemo rejects a zero LIM`() {
+        val error =
+            assertThrows(IllegalArgumentException::class.java) {
+                LimitSwapMemo.assertLimitSwapMemo(
+                    "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:0/7200/0:va:50"
+                )
+            }
+        assertTrue(error.message!!.contains("zero minimum-received"))
+    }
+
+    @Test
+    fun `assertLimitSwapMemo rejects a malformed trade target and bad segment count`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            LimitSwapMemo.assertLimitSwapMemo("=<:BTC.BTC:dest:notatarget:va:50")
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            LimitSwapMemo.assertLimitSwapMemo("=<:BTC.BTC:dest")
+        }
+    }
+
+    @Test
     fun `buildLimitSwapMemoForCoins rescales an 18-decimal source to match the SDK fixture`() {
         val memo =
             buildLimitSwapMemoForCoins(

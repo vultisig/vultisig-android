@@ -113,6 +113,52 @@ object LimitSwapMemo {
         return withAffiliate
     }
 
+    private val tradeTargetPattern = Regex("^\\d+/\\d+/\\d+$")
+    private val affiliateBpsPattern = Regex("^\\d+$")
+
+    /**
+     * Fail closed on anything that is not a well-formed THORChain limit-swap memo.
+     *
+     * Guards the signing path: the limit deposit accepts a pre-built memo string, so a market
+     * (`=>`) memo, an unrelated action, or a truncated/corrupted limit memo would otherwise sign a
+     * value-bearing deposit that executes with completely different semantics — or with no price
+     * protection at all. Validates the full shape `=<:TARGET:DEST:LIM/INTERVAL/QUANTITY[:AFFILIATE:
+     * BPS]`, because it is the trade-target segment that carries the order's price floor: a memo
+     * whose LIM is missing, non-numeric, or zero is exactly the case that must never reach a
+     * signer.
+     */
+    fun assertLimitSwapMemo(memo: String) {
+        require(memo.startsWith(PREFIX)) {
+            "memo is not a THORChain limit-swap memo (expected a \"$PREFIX\" prefix): $memo"
+        }
+        val segments = memo.removePrefix(PREFIX).split(":")
+        require(segments.size == 3 || segments.size == 5) {
+            "limit-swap memo must have 3 segments (or 5 with an affiliate) after the prefix, " +
+                "got ${segments.size}: $memo"
+        }
+        val (targetAsset, destAddress, tradeTarget) = segments
+        require(targetAsset.isNotEmpty()) { "limit-swap memo is missing its target asset: $memo" }
+        require(destAddress.isNotEmpty()) {
+            "limit-swap memo is missing its destination address: $memo"
+        }
+        require(tradeTargetPattern.matches(tradeTarget)) {
+            "limit-swap memo trade target must be \"<limit>/<interval>/<quantity>\", " +
+                "got \"$tradeTarget\""
+        }
+        require(BigInteger(tradeTarget.substringBefore('/')) > BigInteger.ZERO) {
+            "limit-swap memo has a zero minimum-received (LIM), which THORChain treats as a market " +
+                "order"
+        }
+        if (segments.size == 5) {
+            require(segments[3].isNotEmpty()) {
+                "limit-swap memo has an empty affiliate segment: $memo"
+            }
+            require(affiliateBpsPattern.matches(segments[4])) {
+                "limit-swap memo affiliate bps must be an integer, got \"${segments[4]}\""
+            }
+        }
+    }
+
     fun assertMemoByteLength(memo: String, limit: Int, kindLabel: String) {
         val byteLength = byteLength(memo)
         require(byteLength <= limit) {

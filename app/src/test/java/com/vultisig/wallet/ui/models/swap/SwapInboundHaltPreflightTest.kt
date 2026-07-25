@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.repositories.ThorMimirRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -20,7 +21,9 @@ internal class SwapInboundHaltPreflightTest {
 
     private val thorChainApi = mockk<ThorChainApi>()
     private val mayaChainApi = mockk<MayaChainApi>()
-    private val preflight = SwapInboundHaltPreflight(thorChainApi, mayaChainApi)
+    private val thorMimirRepository = mockk<ThorMimirRepository>(relaxed = true)
+    private val preflight =
+        SwapInboundHaltPreflight(thorChainApi, mayaChainApi, thorMimirRepository)
 
     @Test
     fun `THORChain route is blocked when its source chain inbound is halted`() = runTest {
