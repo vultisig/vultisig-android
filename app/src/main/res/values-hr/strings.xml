@@ -1022,6 +1022,9 @@
     <string name="limit_swap_warning_far_above_market">Možda se neće izvršiti prije isteka</string>
     <string name="verify_limit_order_title">Postavljate limit nalog</string>
     <string name="verify_limit_order_target_price">Ciljna cijena: %1$s</string>
+    <string name="limit_swap_percent_from_market">%1$s od tržišta</string>
+    <string name="limit_swap_toggle_price_unit">Promijeni jedinicu cijene</string>
+    <string name="limit_swap_edit_assets">Uredi sredstva</string>
     <string name="swap_advanced_sheet_title">Napredna zamjena</string>
     <string name="swap_advanced_slippage_title">Tolerancija proklizavanja</string>
     <string name="swap_advanced_slippage_page_title">Proklizavanje</string>

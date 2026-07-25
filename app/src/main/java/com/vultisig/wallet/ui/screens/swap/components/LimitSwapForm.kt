@@ -168,7 +168,7 @@ private fun PriceEntryBlock(state: LimitOrderUiModel, onPresetClick: (LimitPrice
             )
             state.percentFromMarketLabel?.let { percent ->
                 Text(
-                    text = percent,
+                    text = stringResource(R.string.limit_swap_percent_from_market, percent),
                     style = Theme.brockmann.supplementary.caption,
                     color = colors.text.tertiary,
                 )
@@ -264,21 +264,29 @@ private fun PriceUnitToggle(
                 .padding(3.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
+        val toggleDescription = stringResource(R.string.limit_swap_toggle_price_unit)
         UnitToggleButton(
             icon = R.drawable.ic_coins,
             selected = unit == LimitPriceUnit.Asset,
+            contentDescription = toggleDescription,
             onClick = { onToggleUnit(LimitPriceUnit.Asset) },
         )
         UnitToggleButton(
             icon = R.drawable.ic_dollar_sign,
             selected = unit == LimitPriceUnit.Fiat,
+            contentDescription = toggleDescription,
             onClick = { onToggleUnit(LimitPriceUnit.Fiat) },
         )
     }
 }
 
 @Composable
-private fun UnitToggleButton(icon: Int, selected: Boolean, onClick: () -> Unit) {
+private fun UnitToggleButton(
+    icon: Int,
+    selected: Boolean,
+    contentDescription: String,
+    onClick: () -> Unit,
+) {
     val colors = Theme.v2.colors
     Box(
         modifier =
@@ -290,7 +298,7 @@ private fun UnitToggleButton(icon: Int, selected: Boolean, onClick: () -> Unit) 
     ) {
         Icon(
             painter = painterResource(icon),
-            contentDescription = null,
+            contentDescription = contentDescription,
             tint = if (selected) colors.text.primary else colors.text.secondary,
             modifier = Modifier.size(16.dp),
         )
@@ -333,12 +341,20 @@ private fun AssetSummaryRow(state: LimitOrderUiModel, onEditAssets: () -> Unit) 
             tint = colors.alerts.success,
             modifier = Modifier.size(16.dp),
         )
-        Icon(
-            painter = painterResource(R.drawable.pen_v2),
-            contentDescription = null,
-            tint = colors.text.primary,
-            modifier = Modifier.size(16.dp).clickable(onClick = onEditAssets),
-        )
+        Box(
+            modifier =
+                Modifier.size(40.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .clickable(onClick = onEditAssets),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.pen_v2),
+                contentDescription = stringResource(R.string.limit_swap_edit_assets),
+                tint = colors.text.primary,
+                modifier = Modifier.size(16.dp),
+            )
+        }
     }
 }
 

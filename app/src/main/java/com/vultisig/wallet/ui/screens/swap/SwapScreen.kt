@@ -405,7 +405,8 @@ internal fun SwapScreen(
             }
         },
         bottomBar = {
-            // No Swap CTA in Limit mode (placeholder until limit orders ship, #4858).
+            // Market shows the live Swap CTA; Limit shows the "Place Limit Order" CTA below
+            // (#4154).
             if (selectedMode == SwapMode.Market) {
                 AnimatedContent(
                     targetState = isSrcAmountFocused && isShowingKeyboard,

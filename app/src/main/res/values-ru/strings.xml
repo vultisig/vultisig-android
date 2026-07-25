@@ -1022,6 +1022,9 @@
     <string name="limit_swap_warning_far_above_market">Может не исполниться до истечения срока</string>
     <string name="verify_limit_order_title">Вы размещаете лимитный ордер</string>
     <string name="verify_limit_order_target_price">Целевая цена: %1$s</string>
+    <string name="limit_swap_percent_from_market">%1$s от рынка</string>
+    <string name="limit_swap_toggle_price_unit">Переключить единицу цены</string>
+    <string name="limit_swap_edit_assets">Изменить активы</string>
     <string name="swap_advanced_sheet_title">Расширенный обмен</string>
     <string name="swap_advanced_slippage_title">Допустимое проскальзывание</string>
     <string name="swap_advanced_slippage_page_title">Проскальзывание</string>

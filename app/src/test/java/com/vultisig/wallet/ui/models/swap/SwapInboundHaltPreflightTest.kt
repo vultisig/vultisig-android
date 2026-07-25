@@ -88,9 +88,48 @@ internal class SwapInboundHaltPreflightTest {
         coVerify(exactly = 0) { mayaChainApi.getInboundAddresses() }
     }
 
-    private fun transaction(swapPayload: SwapPayload, sourceChain: Chain): SwapTransaction =
+    @Test
+    fun `limit order is blocked when the advanced swap queue is disabled`() = runTest {
+        val transaction =
+            transaction(
+                SwapPayload.ThorChain(mockk(relaxed = true)),
+                Chain.Bitcoin,
+                memoValue = "=<:ETH.ETH:0xabc:1600000000/14400/0:va:50",
+            )
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns false
+
+        assertFailsWith<SwapException.TradingHalted> {
+            preflight.assertSourceChainNotHalted(transaction)
+        }
+        // Fails closed before even fetching inbound status.
+        coVerify(exactly = 0) { thorChainApi.getTHORChainInboundAddresses() }
+    }
+
+    @Test
+    fun `limit order proceeds to inbound validation when the queue is enabled`() = runTest {
+        val transaction =
+            transaction(
+                SwapPayload.ThorChain(mockk(relaxed = true)),
+                Chain.Bitcoin,
+                memoValue = "=<:ETH.ETH:0xabc:1600000000/14400/0:va:50",
+            )
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns true
+        coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
+            listOf(inbound(chain = "BTC"))
+
+        preflight.assertSourceChainNotHalted(transaction)
+
+        coVerify(exactly = 1) { thorChainApi.getTHORChainInboundAddresses() }
+    }
+
+    private fun transaction(
+        swapPayload: SwapPayload,
+        sourceChain: Chain,
+        memoValue: String? = null,
+    ): SwapTransaction =
         mockk(relaxed = true) {
             every { payload } returns swapPayload
+            every { memo } returns memoValue
             every { srcToken } returns
                 mockk<Coin>(relaxed = true) { every { chain } returns sourceChain }
         }

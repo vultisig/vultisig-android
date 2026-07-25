@@ -1016,6 +1016,9 @@
     <string name="limit_swap_warning_far_above_market">Pode não ser executada antes da validade</string>
     <string name="verify_limit_order_title">Você está colocando uma ordem limite</string>
     <string name="verify_limit_order_target_price">Preço-alvo: %1$s</string>
+    <string name="limit_swap_percent_from_market">%1$s do mercado</string>
+    <string name="limit_swap_toggle_price_unit">Alternar unidade de preço</string>
+    <string name="limit_swap_edit_assets">Editar ativos</string>
     <string name="swap_advanced_sheet_title">Troca avançada</string>
     <string name="swap_advanced_slippage_title">Tolerância de derrapagem</string>
     <string name="swap_advanced_slippage_page_title">Derrapagem</string>

@@ -253,6 +253,9 @@ internal class SwapFormViewModelTest {
                 featureFlagRepository = mockk(relaxed = true),
                 limitMarketPriceRepository = mockk(relaxed = true),
                 buildLimitSwapTransactionUseCase = mockk(relaxed = true),
+                appCurrencyRepository = mockk(relaxed = true),
+                convertTokenValueToFiat = mockk(relaxed = true),
+                fiatValueToString = mockk(relaxed = true),
             )
             .also { createdViewModels += it }
 

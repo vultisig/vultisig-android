@@ -167,16 +167,28 @@ object LimitSwapMemo {
         val expiryBlocks: Int,
     )
 
-    /** Parse a `=<` memo back into its fields, or null when it is not a well-formed limit memo. */
+    /**
+     * Parse a `=<` memo back into its fields, or null when it is not a well-formed limit memo.
+     *
+     * Enforces the same grammar as [assertLimitSwapMemo] (segment count, trade-target shape,
+     * positive LIM, affiliate bps) so a malformed memo can never be recorded as a placed order
+     * with, e.g., a zero target price.
+     */
     fun parse(memo: String): Parsed? {
         if (!memo.startsWith(PREFIX)) return null
         val segments = memo.removePrefix(PREFIX).split(":")
         if (segments.size != 3 && segments.size != 5) return null
-        val tradeTarget = segments[2].split("/")
-        if (tradeTarget.size != 3) return null
-        val limit = tradeTarget[0].toBigIntegerOrNull() ?: return null
-        val expiryBlocks = tradeTarget[1].toIntOrNull() ?: return null
         if (segments[0].isEmpty() || segments[1].isEmpty()) return null
+        if (!tradeTargetPattern.matches(segments[2])) return null
+        if (
+            segments.size == 5 &&
+                (segments[3].isEmpty() || !affiliateBpsPattern.matches(segments[4]))
+        ) {
+            return null
+        }
+        val parts = segments[2].split("/")
+        val limit = parts[0].toBigIntegerOrNull()?.takeIf { it > BigInteger.ZERO } ?: return null
+        val expiryBlocks = parts[1].toIntOrNull() ?: return null
         return Parsed(
             targetAsset = segments[0],
             destAddr = segments[1],

@@ -38,8 +38,9 @@ class LimitSwapMemoTest {
 
     private val fixtures: List<Fixture> by lazy {
         val text =
-            javaClass
-                .getResourceAsStream("/limit-swap/limit-swap-memos.json")!!
+            requireNotNull(javaClass.getResourceAsStream("/limit-swap/limit-swap-memos.json")) {
+                    "Missing limit-swap memo fixture resource"
+                }
                 .bufferedReader()
                 .use { it.readText() }
         Json.decodeFromString(text)
@@ -271,6 +272,15 @@ class LimitSwapMemoTest {
     @Test
     fun `parse returns null for a non-limit memo`() {
         assertEquals(null, LimitSwapMemo.parse("=:BTC.BTC:dest:4000000"))
+    }
+
+    @Test
+    fun `parse rejects a zero LIM or malformed trade target`() {
+        // Must enforce the same grammar as assertLimitSwapMemo so an invalid memo is never
+        // recorded.
+        assertEquals(null, LimitSwapMemo.parse("=<:BTC.BTC:dest:0/14400/0:va:50"))
+        assertEquals(null, LimitSwapMemo.parse("=<:BTC.BTC:dest:4000000/14400/notaquantity"))
+        assertEquals(null, LimitSwapMemo.parse("=<:BTC.BTC:dest:4000000/14400/0:va:notbps"))
     }
 
     @Test

@@ -4,13 +4,13 @@ import com.vultisig.wallet.data.db.dao.PendingLimitOrderDao
 import com.vultisig.wallet.data.db.models.PendingLimitOrderEntity
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import java.math.BigInteger
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class PendingLimitOrderRepositoryTest {
@@ -46,16 +46,16 @@ internal class PendingLimitOrderRepositoryTest {
         )
 
         with(entity.captured) {
-            assertEquals("0xdeadbeef", inboundTxHash)
-            assertEquals("vault", vaultId)
-            assertEquals("ETH.ETH", sourceAsset)
-            assertEquals(BigInteger.TEN.pow(18).toString(), sourceAmount)
-            assertEquals("BTC.BTC", targetAsset)
-            assertEquals("bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", destAddr)
+            inboundTxHash shouldBe "0xdeadbeef"
+            vaultId shouldBe "vault"
+            sourceAsset shouldBe "ETH.ETH"
+            sourceAmount shouldBe BigInteger.TEN.pow(18).toString()
+            targetAsset shouldBe "BTC.BTC"
+            destAddr shouldBe "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
             // LIM 4_000_000 / source 1e8 = 0.04 BTC per ETH.
-            assertEquals("0.04", targetPrice)
-            assertEquals(14_400, expiryBlocks)
-            assertEquals("pending", status)
+            targetPrice shouldBe "0.04"
+            expiryBlocks shouldBe 14_400
+            status shouldBe "pending"
         }
     }
 

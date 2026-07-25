@@ -108,18 +108,32 @@ constructor(
                 val prefix =
                     thorchainMemoAssetChainPrefix[srcToken.chain]
                         ?: error("${srcToken.chain} is not routable through THORChain")
+                // Reject halted or trading-paused inbounds here, matching the sign-time preflight,
+                // so a placement can't reach keysign for a route that is already unavailable.
                 thorChainApi.getTHORChainInboundAddresses().firstOrNull {
-                    it.chain.trim().uppercase() == prefix && !it.halted
+                    it.chain.trim().uppercase() == prefix &&
+                        !it.halted &&
+                        !it.globalTradingPaused &&
+                        !it.chainTradingPaused
                 } ?: error("No live THORChain inbound for ${srcToken.chain}")
             }
 
-        val router = inbound?.router?.takeIf { it.isNotEmpty() }
+        val router = inbound?.router?.takeIf { it.isNotBlank() }
+        // An EVM ERC20 must deposit through the router's depositWithExpiry (which carries the
+        // memo).
+        // With no router it would fall back to a plain transfer that drops the memo and strands the
+        // tokens on the inbound vault — never a protected limit order — so fail closed instead.
+        if (isEvmToken && router == null) {
+            error(
+                "THORChain has no router for ${srcToken.chain}; cannot place an ERC20 limit order"
+            )
+        }
         val vaultAddress = inbound?.address ?: params.srcAddress
-        val isRouterDeposit = isEvmToken && router != null
+        val isRouterDeposit = isEvmToken
         val dstAddress =
             when {
                 isRuneDeposit -> params.srcAddress
-                isRouterDeposit -> router!!
+                isRouterDeposit -> checkNotNull(router)
                 else -> vaultAddress
             }
 

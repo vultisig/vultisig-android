@@ -13,16 +13,20 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
 import com.vultisig.wallet.data.swap.limit.isThorchainRoutable
+import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.swap.SwapTokenSelector.Companion.ARG_SELECTED_DST_TOKEN_ID
@@ -39,6 +43,7 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -67,6 +72,9 @@ constructor(
     private val featureFlagRepository: FeatureFlagRepository,
     private val limitMarketPriceRepository: LimitSwapMarketPriceRepository,
     private val buildLimitSwapTransactionUseCase: BuildLimitSwapTransactionUseCase,
+    private val appCurrencyRepository: AppCurrencyRepository,
+    private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
+    private val fiatValueToString: FiatValueToStringMapper,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -91,8 +99,11 @@ constructor(
     private val referralCode = MutableStateFlow<String?>(null)
 
     // THORChain limit-order ("Execute when") form state. Additive to the Market path — none of it
-    // touches the quote pipeline; the whole tab is gated behind the remote limit-swap flag.
-    private var isLimitFlagEnabled = false
+    // touches the quote pipeline; the whole tab is gated behind the remote limit-swap flag. The
+    // flag
+    // is a flow (not a plain var) so a late-resolving remote value re-triggers the market-price
+    // fetch instead of leaving the tab enabled with no price.
+    private val isLimitFlagEnabled = MutableStateFlow(false)
     private val swapMode = MutableStateFlow(SwapMode.Market)
     private val limitPriceUnit = MutableStateFlow(LimitPriceUnit.Fiat)
     private val limitPreset = MutableStateFlow<LimitPricePreset?>(LimitPricePreset.Market)
@@ -100,8 +111,10 @@ constructor(
     // Both prices are canonical: buy-asset units per 1 sell-asset unit (what the memo LIM needs).
     private val marketTargetPrice = MutableStateFlow<BigDecimal?>(null)
     private val limitTargetPrice = MutableStateFlow<BigDecimal?>(null)
+    // App-currency price of one whole sell-asset unit, so the limit form's fiat display honors the
+    // user's selected currency instead of hardcoding USD.
+    private val sellUnitFiat = MutableStateFlow<FiatValue?>(null)
     private var marketPriceJob: Job? = null
-    private val fiatFormat = DecimalFormat("#,##0.00")
     private val assetFormat = DecimalFormat("#,##0.########")
 
     // User-chosen slippage tolerance in basis points, or null for "Auto" (each provider keeps its
@@ -226,18 +239,25 @@ constructor(
      */
     private fun observeLimitForm() {
         viewModelScope.safeLaunch {
-            isLimitFlagEnabled = featureFlagRepository.getFeatureFlags().isLimitSwapEnabled
-            updateLimitOrderState()
+            isLimitFlagEnabled.value = featureFlagRepository.getFeatureFlags().isLimitSwapEnabled
         }
+        // Fetch a fresh reference price whenever the Limit tab is shown with a routable pair. The
+        // flag is part of the source set so a late-resolving remote flag re-fires the fetch.
         viewModelScope.launch {
-            combine(swapMode, selectedSrc, selectedDst) { mode, src, dst -> Triple(mode, src, dst) }
+            combine(isLimitFlagEnabled, swapMode, selectedSrc, selectedDst) {
+                    flagEnabled,
+                    mode,
+                    src,
+                    dst ->
+                    LimitFetchTrigger(flagEnabled, mode, src, dst)
+                }
                 .distinctUntilChanged()
-                .collectLatest { (mode, src, dst) ->
+                .collectLatest { (flagEnabled, mode, src, dst) ->
                     val srcCoin = src?.account?.token
                     val dstCoin = dst?.account?.token
                     if (
                         mode == SwapMode.Limit &&
-                            isLimitFlagEnabled &&
+                            flagEnabled &&
                             srcCoin != null &&
                             dstCoin != null &&
                             isThorchainRoutable(srcCoin.chain) &&
@@ -245,6 +265,37 @@ constructor(
                     ) {
                         fetchMarketPrice(srcCoin, dstCoin)
                     }
+                    updateLimitOrderState()
+                }
+        }
+        // Keep the sell asset's app-currency unit price current so fiat display honors the
+        // currency.
+        viewModelScope.launch {
+            combine(selectedSrc, appCurrencyRepository.currency) { src, currency ->
+                    src?.account?.token to currency
+                }
+                .collectLatest { (srcCoin, currency) ->
+                    sellUnitFiat.value =
+                        if (srcCoin == null) {
+                            null
+                        } else {
+                            try {
+                                convertTokenValueToFiat(
+                                    srcCoin,
+                                    TokenValue(
+                                        BigInteger.TEN.pow(srcCoin.decimal),
+                                        srcCoin.ticker,
+                                        srcCoin.decimal,
+                                    ),
+                                    currency,
+                                )
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                Timber.w(e, "Failed to price sell asset for limit form")
+                                null
+                            }
+                        }
                     updateLimitOrderState()
                 }
         }
@@ -262,10 +313,17 @@ constructor(
         }
     }
 
+    private data class LimitFetchTrigger(
+        val flagEnabled: Boolean,
+        val mode: SwapMode,
+        val src: SendSrc?,
+        val dst: SendSrc?,
+    )
+
     fun onSelectSwapMode(mode: SwapMode) {
         swapMode.value = mode
+        // The Limit form recomputes via the swapMode collector in observeLimitForm().
         _uiState.update { it.copy(swapMode = mode) }
-        updateLimitOrderState()
     }
 
     fun onLimitPresetSelected(preset: LimitPricePreset) {
@@ -395,11 +453,11 @@ constructor(
             }
     }
 
-    private fun updateLimitOrderState() {
+    private suspend fun updateLimitOrderState() {
         val srcCoin = selectedSrc.value?.account?.token
         val dstCoin = selectedDst.value?.account?.token
         val enabled =
-            isLimitFlagEnabled &&
+            isLimitFlagEnabled.value &&
                 srcCoin != null &&
                 dstCoin != null &&
                 isThorchainRoutable(srcCoin.chain) &&
@@ -413,17 +471,22 @@ constructor(
         val target = limitTargetPrice.value
         val market = marketTargetPrice.value
         val sellAmount = srcAmountState.text.toString().toBigDecimalOrNull()
-        val fiatPerBuy = target?.let { LimitOrderPricing.fiatPricePerBuyUnit(it, srcCoin.usdPrice) }
+        // Fiat display uses the sell asset's app-currency unit price (not raw USD), matching the
+        // Market swap flow so non-USD users see the correct symbol and value.
+        val sellFiat = sellUnitFiat.value
+        val fiatPerBuy = target?.let { LimitOrderPricing.fiatPricePerBuyUnit(it, sellFiat?.value) }
         val marketFiatPerBuy =
-            market?.let { LimitOrderPricing.fiatPricePerBuyUnit(it, srcCoin.usdPrice) }
+            market?.let { LimitOrderPricing.fiatPricePerBuyUnit(it, sellFiat?.value) }
         val buyAmount = target?.let { LimitOrderPricing.expectedBuyAmount(sellAmount, it) }
 
-        val fiatText = fiatPerBuy?.let { formatFiat(it) } ?: EMPTY_PRICE
+        val fiatText = formatFiat(fiatPerBuy, sellFiat?.currency)
         val amountText =
             buyAmount?.let { "${formatAssetAmount(it)} ${dstCoin.ticker}" } ?: EMPTY_PRICE
         val unit = limitPriceUnit.value
         val priceText = if (unit == LimitPriceUnit.Fiat) fiatText else amountText
         val secondaryText = if (unit == LimitPriceUnit.Fiat) amountText else fiatText
+        val marketPriceLabel =
+            formatFiat(marketFiatPerBuy, sellFiat?.currency).takeIf { it != EMPTY_PRICE } ?: ""
 
         val percent =
             if (target != null && market != null) {
@@ -448,7 +511,7 @@ constructor(
                         priceText = priceText,
                         referenceAmountLabel = "1 ${dstCoin.ticker}",
                         referenceLogo = dstCoin.logo,
-                        marketPriceLabel = marketFiatPerBuy?.let { m -> formatFiat(m) } ?: "",
+                        marketPriceLabel = marketPriceLabel,
                         secondaryPriceLabel = secondaryText,
                         priceUnit = unit,
                         percentFromMarketLabel = percent?.let { p -> formatPercentFromMarket(p) },
@@ -464,15 +527,22 @@ constructor(
         }
     }
 
-    private fun formatFiat(value: BigDecimal): String = "$" + fiatFormat.format(value)
+    /** Formats a fiat amount in the app currency, or [EMPTY_PRICE] when the price is unknown. */
+    private suspend fun formatFiat(value: BigDecimal?, currency: String?): String =
+        if (value != null && currency != null) {
+            fiatValueToString(FiatValue(value, currency), asPrice = true)
+        } else {
+            EMPTY_PRICE
+        }
 
     private fun formatAssetAmount(value: BigDecimal): String =
         assetFormat.format(value.stripTrailingZeros())
 
+    /** Signed percentage only (e.g. "+2.1%"); the composable wraps it with the localized suffix. */
     private fun formatPercentFromMarket(percent: BigDecimal): String {
         val rounded = percent.setScale(1, RoundingMode.HALF_UP)
         val sign = if (rounded.signum() > 0) "+" else ""
-        return "$sign$rounded% from market"
+        return "$sign$rounded%"
     }
 
     /**

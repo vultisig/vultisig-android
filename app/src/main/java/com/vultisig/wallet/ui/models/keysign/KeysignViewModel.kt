@@ -888,16 +888,19 @@ constructor(
         val payload = keysignPayload ?: return
         val memo = payload.memo ?: return
         if (!memo.startsWith(LimitSwapMemo.PREFIX)) return
-        runCatching {
-                pendingLimitOrderRepository.record(
-                    vaultId = vault.id,
-                    inboundTxHash = txHash,
-                    sourceCoin = payload.coin,
-                    sourceAmount = payload.toAmount,
-                    memo = memo,
-                )
-            }
-            .onFailure { Timber.w(it, "Failed to record pending limit order") }
+        try {
+            pendingLimitOrderRepository.record(
+                vaultId = vault.id,
+                inboundTxHash = txHash,
+                sourceCoin = payload.coin,
+                sourceAmount = payload.toAmount,
+                memo = memo,
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to record pending limit order")
+        }
     }
 
     /** [explorerUrl] overrides the state-derived link, needed for a batch's non-primary hashes. */

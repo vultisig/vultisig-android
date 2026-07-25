@@ -82,10 +82,9 @@ val staticLimitSwapSupportedChains: List<Chain> = thorchainMemoAssetChainPrefix.
  */
 fun Coin.thorchainMemoAsset(): String {
     val prefix =
-        thorchainMemoAssetChainPrefix[chain]
-            ?: throw IllegalArgumentException(
-                "thorchainMemoAsset: $chain is not routable through THORChain"
-            )
+        requireNotNull(thorchainMemoAssetChainPrefix[chain]) {
+            "thorchainMemoAsset: $chain is not routable through THORChain"
+        }
 
     val normalizedTicker = ticker.trim()
     require(normalizedTicker.isNotEmpty()) {

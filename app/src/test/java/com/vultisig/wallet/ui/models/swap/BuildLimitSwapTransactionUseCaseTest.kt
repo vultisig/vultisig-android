@@ -117,6 +117,46 @@ internal class BuildLimitSwapTransactionUseCaseTest {
         assertTrue(tx.memo!!.startsWith("=<:ETH.ETH:$ethAddress:"))
     }
 
+    @Test
+    fun `fails closed when an ERC20 source has no THORChain router`() = runTest {
+        val usdc =
+            Coin(
+                chain = Chain.Ethereum,
+                ticker = "USDC",
+                logo = "",
+                address = ethAddress,
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "",
+                contractAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                isNativeToken = false,
+            )
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns true
+        // Inbound present but with no router — a plain transfer would drop the memo and strand the
+        // tokens instead of placing a protected order, so build() must reject the route.
+        coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
+            listOf(inbound("ETH", "0xInboundVault", router = null))
+        coEvery {
+            swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
+        } returns mockk(relaxed = true)
+        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+
+        val error =
+            runCatching {
+                    useCase.build(
+                        params()
+                            .copy(
+                                srcToken = usdc,
+                                srcAddress = usdc.address,
+                                srcTokenValue = TokenValue(BigInteger("1000000"), token = usdc),
+                            )
+                    )
+                }
+                .exceptionOrNull()
+        assertTrue(error is IllegalStateException)
+        assertTrue(error!!.message!!.contains("router"))
+    }
+
     private fun inbound(chain: String, address: String, router: String?) =
         THORChainInboundAddress(chain = chain, address = address, halted = false, router = router)
 

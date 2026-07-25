@@ -702,6 +702,9 @@
     <string name="limit_swap_warning_far_above_market">May not fill within expiry</string>
     <string name="verify_limit_order_title">You\'re placing a limit order</string>
     <string name="verify_limit_order_target_price">Target Price: %1$s</string>
+    <string name="limit_swap_percent_from_market">%1$s from market</string>
+    <string name="limit_swap_toggle_price_unit">Toggle price unit</string>
+    <string name="limit_swap_edit_assets">Edit assets</string>
     <string name="swap_advanced_sheet_title">Advanced swap</string>
     <string name="swap_advanced_slippage_title">Slippage Tolerance</string>
     <string name="swap_advanced_slippage_page_title">Slippage</string>

@@ -4,6 +4,8 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
 import com.vultisig.wallet.data.models.Chain
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
+import timber.log.Timber
 
 /**
  * Reduce a live THORChain inbound list to the chains a limit order can currently be placed from or
@@ -42,7 +44,16 @@ constructor(private val thorChainApi: ThorChainApi) : LimitSwapSupportedChainsRe
 
     override suspend fun getSupportedChains(): List<Chain> {
         val inbounds =
-            runCatching { thorChainApi.getTHORChainInboundAddresses() }.getOrDefault(emptyList())
+            try {
+                thorChainApi.getTHORChainInboundAddresses()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // A failed inbound fetch falls back to the static routable set (an empty picker
+                // reads as "unsupported pair"); a cancelled caller must propagate, not fall back.
+                Timber.w(e, "Failed to fetch THORChain inbounds for limit-swap supported chains")
+                emptyList()
+            }
         return getLimitSwapSupportedChains(inbounds)
     }
 }

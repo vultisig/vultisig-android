@@ -131,6 +131,12 @@ constructor(
                 provider.getSwapProviderId()
             }
 
+        // Limit-order confirmation labels, present only for a `=<` order built with them.
+        val isLimitMemo = from.memo?.startsWith(LimitSwapMemo.PREFIX) == true
+        val regular = from as? SwapTransaction.RegularSwapTransaction
+        val limitTargetPriceLabel = regular?.limitOrderTargetPriceLabel?.takeIf { isLimitMemo }
+        val limitExpiryLabel = regular?.limitOrderExpiryLabel?.takeIf { isLimitMemo }
+
         return SwapTransactionUiModel(
             src =
                 ValuedToken(
@@ -187,11 +193,12 @@ constructor(
             referralBpsDiscountFiatValue = from.referralBpsDiscountFiatValue,
             priceImpactPercent = priceImpactDisplay?.percent,
             priceImpactLevel = priceImpactDisplay?.level,
-            isLimitOrder = from.memo?.startsWith(LimitSwapMemo.PREFIX) == true,
-            limitTargetPriceLabel =
-                (from as? SwapTransaction.RegularSwapTransaction)?.limitOrderTargetPriceLabel,
-            limitExpiryLabel =
-                (from as? SwapTransaction.RegularSwapTransaction)?.limitOrderExpiryLabel,
+            // Classify as a limit order only when BOTH the `=<` memo and the confirmation labels
+            // are
+            // present, so the limit title can never render without its Target Price / expiry row.
+            isLimitOrder = limitTargetPriceLabel != null && limitExpiryLabel != null,
+            limitTargetPriceLabel = limitTargetPriceLabel,
+            limitExpiryLabel = limitExpiryLabel,
         )
     }
 }
