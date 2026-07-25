@@ -25,7 +25,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,12 +59,16 @@ import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.components.v2.utils.toPx
+import com.vultisig.wallet.ui.models.swap.LimitExpiryOption
+import com.vultisig.wallet.ui.models.swap.LimitPricePreset
+import com.vultisig.wallet.ui.models.swap.LimitPriceUnit
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.swap.components.AdvancedSwapSettingsSheet
 import com.vultisig.wallet.ui.screens.swap.components.DstTokenInput
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
+import com.vultisig.wallet.ui.screens.swap.components.LimitSwapForm
 import com.vultisig.wallet.ui.screens.swap.components.PercentagePicker
 import com.vultisig.wallet.ui.screens.swap.components.QuoteTimer
 import com.vultisig.wallet.ui.screens.swap.components.SrcTokenInput
@@ -118,6 +121,11 @@ internal fun NavGraphBuilder.swapScreen(navController: NavHostController) {
             onDismissAdvancedSettings = model::dismissAdvancedSettings,
             onDismissAdvancedSettingsGate = model::dismissAdvancedSettingsGate,
             onGetVult = model::onGetVult,
+            onSelectSwapMode = model::onSelectSwapMode,
+            onLimitPresetSelected = model::onLimitPresetSelected,
+            onLimitExpirySelected = model::onLimitExpirySelected,
+            onLimitUnitSelected = model::onLimitPriceUnitSelected,
+            onEditLimitAssets = model::selectSrcToken,
         )
     }
 }
@@ -149,13 +157,17 @@ internal fun SwapScreen(
     onDismissAdvancedSettings: () -> Unit = {},
     onDismissAdvancedSettingsGate: () -> Unit = {},
     onGetVult: () -> Unit = {},
+    onSelectSwapMode: (SwapMode) -> Unit = {},
+    onLimitPresetSelected: (LimitPricePreset) -> Unit = {},
+    onLimitExpirySelected: (LimitExpiryOption) -> Unit = {},
+    onLimitUnitSelected: (LimitPriceUnit) -> Unit = {},
+    onEditLimitAssets: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
-    // Market/Limit mode is local UI state: Limit-order execution is out of scope (#4858), so the
-    // ViewModel has no stake in it yet. Market hosts the existing swap form; Limit is a
-    // placeholder.
-    var selectedMode by rememberSaveable { mutableStateOf(SwapMode.Market) }
+    // Market/Limit mode is owned by the ViewModel (#4154): the limit form and its feature-flag +
+    // routable-pair gating react to it. Market hosts the existing swap form.
+    val selectedMode = state.swapMode
 
     val interactionSource = remember { MutableInteractionSource() }
     val isSrcAmountFocused by interactionSource.collectIsFocusedAsState()
@@ -212,17 +224,29 @@ internal fun SwapScreen(
                 ) {
                     SwapModeTabs(
                         selectedMode = selectedMode,
-                        onSelectMode = { selectedMode = it },
+                        onSelectMode = onSelectSwapMode,
                         modifier = Modifier.fillMaxWidth(),
                     )
 
                     if (selectedMode == SwapMode.Limit) {
-                        Text(
-                            text = stringResource(R.string.swap_limit_coming_soon),
-                            style = Theme.brockmann.body.m.medium,
-                            color = Theme.v2.colors.text.tertiary,
-                            modifier = Modifier.padding(vertical = 48.dp),
-                        )
+                        val limitOrder = state.limitOrder
+                        if (limitOrder != null) {
+                            LimitSwapForm(
+                                state = limitOrder,
+                                onPresetClick = onLimitPresetSelected,
+                                onExpiryClick = onLimitExpirySelected,
+                                onToggleUnit = onLimitUnitSelected,
+                                onEditAssets = onEditLimitAssets,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.swap_limit_coming_soon),
+                                style = Theme.brockmann.body.m.medium,
+                                color = Theme.v2.colors.text.tertiary,
+                                modifier = Modifier.padding(vertical = 48.dp),
+                            )
+                        }
                     } else {
                         Box(
                             modifier =
@@ -423,14 +447,29 @@ internal fun SwapScreen(
                         }
                     }
                 }
+            } else if (selectedMode == SwapMode.Limit && state.limitOrder != null) {
+                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
+                    VsButton(
+                        label = stringResource(R.string.limit_swap_place_order),
+                        variant = VsButtonVariant.CTA,
+                        // Placement (confirmation sheet + =< keysign) is wired in the next phase.
+                        state = VsButtonState.Disabled,
+                        onClick = {},
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .padding(vertical = 12.dp)
+                                .testTag("SwapFormScreen.placeLimitOrderButton"),
+                    )
+                }
             }
         },
     )
 }
 
 /**
- * Swap mode tabs (#4858). Only [Market] is functional; [Limit] is a visible placeholder until
- * limit-order execution ships. `NFTs – Soon` from the design stays hidden.
+ * Swap mode tabs. [Market] hosts the existing swap form; [Limit] shows the THORChain limit-order
+ * form when the feature flag is on and the pair is routable, otherwise a coming-soon placeholder
+ * (#4154). `NFTs – Soon` from the design stays hidden.
  */
 internal enum class SwapMode {
     Market,

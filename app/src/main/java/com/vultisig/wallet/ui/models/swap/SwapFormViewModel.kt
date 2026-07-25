@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.swap
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -15,7 +16,10 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
+import com.vultisig.wallet.data.swap.limit.isThorchainRoutable
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -27,6 +31,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.swap.SwapMode
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
@@ -37,6 +42,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
@@ -58,6 +64,8 @@ constructor(
     private val swapQuotePipelineControllerFactory: SwapQuotePipelineController.Factory,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val getDiscountBpsUseCase: GetDiscountBpsUseCase,
+    private val featureFlagRepository: FeatureFlagRepository,
+    private val limitMarketPriceRepository: LimitSwapMarketPriceRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -80,6 +88,20 @@ constructor(
     private val selectedSrcId = MutableStateFlow<String?>(null)
     private val selectedDstId = MutableStateFlow<String?>(null)
     private val referralCode = MutableStateFlow<String?>(null)
+
+    // THORChain limit-order ("Execute when") form state. Additive to the Market path — none of it
+    // touches the quote pipeline; the whole tab is gated behind the remote limit-swap flag.
+    private var isLimitFlagEnabled = false
+    private val swapMode = MutableStateFlow(SwapMode.Market)
+    private val limitPriceUnit = MutableStateFlow(LimitPriceUnit.Fiat)
+    private val limitPreset = MutableStateFlow<LimitPricePreset?>(LimitPricePreset.Market)
+    private val limitExpiry = MutableStateFlow(LimitExpiryOption.TwentyFourHours)
+    // Both prices are canonical: buy-asset units per 1 sell-asset unit (what the memo LIM needs).
+    private val marketTargetPrice = MutableStateFlow<BigDecimal?>(null)
+    private val limitTargetPrice = MutableStateFlow<BigDecimal?>(null)
+    private var marketPriceJob: Job? = null
+    private val fiatFormat = DecimalFormat("#,##0.00")
+    private val assetFormat = DecimalFormat("#,##0.########")
 
     // User-chosen slippage tolerance in basis points, or null for "Auto" (each provider keeps its
     // own default). Owned here and passed to the pipeline controller so a change re-fetches the
@@ -150,6 +172,7 @@ constructor(
         collectSelectedTokens()
         observeGasLimitApplicability()
         observeExternalRecipientValidity()
+        observeLimitForm()
 
         quotePipeline.start()
     }
@@ -192,6 +215,186 @@ constructor(
             // which must add/remove it from the quote pipeline, not just the inline error.
             selectedDst.collect { syncExternalRecipientRouting() }
         }
+    }
+
+    /**
+     * Wires up the limit-order form. Entirely additive to the Market path: it reads the remote flag
+     * once, fetches a reference price when the Limit tab is shown with a routable pair, and
+     * recomputes the displayed values on any limit input change. Nothing here feeds the quote
+     * pipeline or the Market swap.
+     */
+    private fun observeLimitForm() {
+        viewModelScope.safeLaunch {
+            isLimitFlagEnabled = featureFlagRepository.getFeatureFlags().isLimitSwapEnabled
+            updateLimitOrderState()
+        }
+        viewModelScope.launch {
+            combine(swapMode, selectedSrc, selectedDst) { mode, src, dst -> Triple(mode, src, dst) }
+                .distinctUntilChanged()
+                .collectLatest { (mode, src, dst) ->
+                    val srcCoin = src?.account?.token
+                    val dstCoin = dst?.account?.token
+                    if (
+                        mode == SwapMode.Limit &&
+                            isLimitFlagEnabled &&
+                            srcCoin != null &&
+                            dstCoin != null &&
+                            isThorchainRoutable(srcCoin.chain) &&
+                            isThorchainRoutable(dstCoin.chain)
+                    ) {
+                        fetchMarketPrice(srcCoin, dstCoin)
+                    }
+                    updateLimitOrderState()
+                }
+        }
+        viewModelScope.launch {
+            combine(
+                    limitTargetPrice,
+                    limitPriceUnit,
+                    limitPreset,
+                    limitExpiry,
+                    snapshotFlow { srcAmountState.text.toString() },
+                ) { _, _, _, _, _ ->
+                    Unit
+                }
+                .collect { updateLimitOrderState() }
+        }
+    }
+
+    fun onSelectSwapMode(mode: SwapMode) {
+        swapMode.value = mode
+        _uiState.update { it.copy(swapMode = mode) }
+        updateLimitOrderState()
+    }
+
+    fun onLimitPresetSelected(preset: LimitPricePreset) {
+        limitPreset.value = preset
+        marketTargetPrice.value?.let { market ->
+            limitTargetPrice.value =
+                LimitOrderPricing.applyPreset(market, preset.percentAboveMarket)
+        }
+    }
+
+    fun onLimitExpirySelected(option: LimitExpiryOption) {
+        limitExpiry.value = option
+    }
+
+    fun onLimitPriceUnitSelected(unit: LimitPriceUnit) {
+        limitPriceUnit.value = unit
+    }
+
+    /**
+     * Fetches the affiliate-free reference price (buy units per sell unit) and seeds the preset.
+     */
+    private fun fetchMarketPrice(src: Coin, dst: Coin) {
+        marketPriceJob?.cancel()
+        marketPriceJob =
+            viewModelScope.launch {
+                val price =
+                    runCatching {
+                            limitMarketPriceRepository.getMarketPrice(
+                                fromCoin = src,
+                                toCoin = dst,
+                                sourcePrice = src.usdPrice ?: BigDecimal.ZERO,
+                            )
+                        }
+                        .getOrElse {
+                            Timber.w(it, "Failed to fetch limit-swap market price")
+                            null
+                        }
+                if (price != null && price.signum() > 0) {
+                    marketTargetPrice.value = price
+                    val preset = limitPreset.value
+                    if (preset != null || limitTargetPrice.value == null) {
+                        limitTargetPrice.value =
+                            LimitOrderPricing.applyPreset(
+                                price,
+                                (preset ?: LimitPricePreset.Market).percentAboveMarket,
+                            )
+                    }
+                    updateLimitOrderState()
+                }
+            }
+    }
+
+    private fun updateLimitOrderState() {
+        val srcCoin = selectedSrc.value?.account?.token
+        val dstCoin = selectedDst.value?.account?.token
+        val enabled =
+            isLimitFlagEnabled &&
+                srcCoin != null &&
+                dstCoin != null &&
+                isThorchainRoutable(srcCoin.chain) &&
+                isThorchainRoutable(dstCoin.chain)
+
+        if (!enabled || srcCoin == null || dstCoin == null) {
+            _uiState.update { it.copy(isLimitTabEnabled = enabled, limitOrder = null) }
+            return
+        }
+
+        val target = limitTargetPrice.value
+        val market = marketTargetPrice.value
+        val sellAmount = srcAmountState.text.toString().toBigDecimalOrNull()
+        val fiatPerBuy = target?.let { LimitOrderPricing.fiatPricePerBuyUnit(it, srcCoin.usdPrice) }
+        val marketFiatPerBuy =
+            market?.let { LimitOrderPricing.fiatPricePerBuyUnit(it, srcCoin.usdPrice) }
+        val buyAmount = target?.let { LimitOrderPricing.expectedBuyAmount(sellAmount, it) }
+
+        val fiatText = fiatPerBuy?.let { formatFiat(it) } ?: EMPTY_PRICE
+        val amountText =
+            buyAmount?.let { "${formatAssetAmount(it)} ${dstCoin.ticker}" } ?: EMPTY_PRICE
+        val unit = limitPriceUnit.value
+        val priceText = if (unit == LimitPriceUnit.Fiat) fiatText else amountText
+        val secondaryText = if (unit == LimitPriceUnit.Fiat) amountText else fiatText
+
+        val percent =
+            if (target != null && market != null) {
+                LimitOrderPricing.percentFromMarket(target, market)
+            } else null
+        val warningRes =
+            if (target != null && market != null) {
+                when (LimitOrderPricing.warningFor(target, market)) {
+                    LimitOrderPricing.LimitWarning.BelowMarket ->
+                        R.string.limit_swap_warning_below_market
+                    LimitOrderPricing.LimitWarning.FarAboveMarket ->
+                        R.string.limit_swap_warning_far_above_market
+                    null -> null
+                }
+            } else null
+
+        _uiState.update {
+            it.copy(
+                isLimitTabEnabled = true,
+                limitOrder =
+                    LimitOrderUiModel(
+                        priceText = priceText,
+                        referenceAmountLabel = "1 ${dstCoin.ticker}",
+                        referenceLogo = dstCoin.logo,
+                        marketPriceLabel = marketFiatPerBuy?.let { m -> formatFiat(m) } ?: "",
+                        secondaryPriceLabel = secondaryText,
+                        priceUnit = unit,
+                        percentFromMarketLabel = percent?.let { p -> formatPercentFromMarket(p) },
+                        selectedPreset = limitPreset.value,
+                        selectedExpiry = limitExpiry.value,
+                        sellTicker = srcCoin.ticker,
+                        sellLogo = srcCoin.logo,
+                        buyTicker = dstCoin.ticker,
+                        buyLogo = dstCoin.logo,
+                        warningRes = warningRes,
+                    ),
+            )
+        }
+    }
+
+    private fun formatFiat(value: BigDecimal): String = "$" + fiatFormat.format(value)
+
+    private fun formatAssetAmount(value: BigDecimal): String =
+        assetFormat.format(value.stripTrailingZeros())
+
+    private fun formatPercentFromMarket(percent: BigDecimal): String {
+        val rounded = percent.setScale(1, RoundingMode.HALF_UP)
+        val sign = if (rounded.signum() > 0) "+" else ""
+        return "$sign$rounded% from market"
     }
 
     /**
@@ -709,6 +912,9 @@ constructor(
 
         // Upper bound for slippage tolerance: 10_000 bps = 100%.
         private const val MAX_SLIPPAGE_BPS = 10_000
+
+        // Placeholder shown in the limit form's price fields before a market price resolves.
+        private const val EMPTY_PRICE = "—"
 
         // Rent-exempt minimum for an SPL token account (~0.00203928 SOL, in lamports). Held back on
         // native-SOL MAX swaps to cover a first-use Jupiter fee-ATA creation the fee estimate

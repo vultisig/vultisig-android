@@ -250,6 +250,8 @@ internal class SwapFormViewModelTest {
                     swapQuotePipelineControllerFactory(ioDispatcher),
                 chainAccountAddressRepository = chainAccountAddressRepository,
                 getDiscountBpsUseCase = getDiscountBpsUseCase,
+                featureFlagRepository = mockk(relaxed = true),
+                limitMarketPriceRepository = mockk(relaxed = true),
             )
             .also { createdViewModels += it }
 

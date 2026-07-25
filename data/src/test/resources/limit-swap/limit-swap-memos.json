@@ -1,0 +1,170 @@
+[
+  {
+    "name": "eth-to-btc-12h",
+    "source_chain_kind": "other",
+    "affiliate_included": true,
+    "inputs": {
+      "source_asset": "ETH.ETH",
+      "source_amount": 100000000,
+      "target_asset": "BTC.BTC",
+      "dest_addr": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+      "target_price": 0.04,
+      "expiry_hours": 12
+    },
+    "expected_memo": "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:4000000/7200/0:va:50"
+  },
+  {
+    "name": "eth-to-btc-24h",
+    "source_chain_kind": "other",
+    "affiliate_included": true,
+    "inputs": {
+      "source_asset": "ETH.ETH",
+      "source_amount": 100000000,
+      "target_asset": "BTC.BTC",
+      "dest_addr": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+      "target_price": 0.04,
+      "expiry_hours": 24
+    },
+    "expected_memo": "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:4000000/14400/0:va:50"
+  },
+  {
+    "name": "eth-to-btc-3d",
+    "source_chain_kind": "other",
+    "affiliate_included": true,
+    "inputs": {
+      "source_asset": "ETH.ETH",
+      "source_amount": 100000000,
+      "target_asset": "BTC.BTC",
+      "dest_addr": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+      "target_price": 0.04,
+      "expiry_hours": 72
+    },
+    "expected_memo": "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:4000000/43200/0:va:50"
+  },
+  {
+    "name": "btc-to-eth-12h",
+    "source_chain_kind": "utxo",
+    "affiliate_included": true,
+    "inputs": {
+      "source_asset": "BTC.BTC",
+      "source_amount": 100000000,
+      "target_asset": "ETH.ETH",
+      "dest_addr": "0x742d35Cc6634C0532925a3b844Bc9e7595f12345",
+      "target_price": 16,
+      "expiry_hours": 12
+    },
+    "expected_memo": "=<:ETH.ETH:0x742d35Cc6634C0532925a3b844Bc9e7595f12345:1600000000/7200/0:va:50"
+  },
+  {
+    "name": "btc-to-eth-24h",
+    "source_chain_kind": "utxo",
+    "affiliate_included": true,
+    "inputs": {
+      "source_asset": "BTC.BTC",
+      "source_amount": 100000000,
+      "target_asset": "ETH.ETH",
+      "dest_addr": "0x742d35Cc6634C0532925a3b844Bc9e7595f12345",
+      "target_price": 16,
+      "expiry_hours": 24
+    },
+    "expected_memo": "=<:ETH.ETH:0x742d35Cc6634C0532925a3b844Bc9e7595f12345:1600000000/14400/0:va:50"
+  },
+  {
+    "name": "btc-to-eth-3d",
+    "source_chain_kind": "utxo",
+    "affiliate_included": true,
+    "inputs": {
+      "source_asset": "BTC.BTC",
+      "source_amount": 100000000,
+      "target_asset": "ETH.ETH",
+      "dest_addr": "0x742d35Cc6634C0532925a3b844Bc9e7595f12345",
+      "target_price": 16,
+      "expiry_hours": 72
+    },
+    "expected_memo": "=<:ETH.ETH:0x742d35Cc6634C0532925a3b844Bc9e7595f12345:1600000000/43200/0:va:50"
+  },
+  {
+    "name": "usdt-to-btc-12h",
+    "source_chain_kind": "other",
+    "affiliate_included": true,
+    "inputs": {
+      "source_asset": "ETH.USDT-0XDAC17F958D2EE523A2206206994597C13D831EC7",
+      "source_amount": 100000000,
+      "target_asset": "BTC.BTC",
+      "dest_addr": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+      "target_price": 0.00001,
+      "expiry_hours": 12
+    },
+    "expected_memo": "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:1000/7200/0:va:50"
+  },
+  {
+    "name": "usdt-to-btc-24h",
+    "source_chain_kind": "other",
+    "affiliate_included": true,
+    "inputs": {
+      "source_asset": "ETH.USDT-0XDAC17F958D2EE523A2206206994597C13D831EC7",
+      "source_amount": 100000000,
+      "target_asset": "BTC.BTC",
+      "dest_addr": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+      "target_price": 0.00001,
+      "expiry_hours": 24
+    },
+    "expected_memo": "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:1000/14400/0:va:50"
+  },
+  {
+    "name": "usdt-to-btc-3d",
+    "source_chain_kind": "other",
+    "affiliate_included": true,
+    "inputs": {
+      "source_asset": "ETH.USDT-0XDAC17F958D2EE523A2206206994597C13D831EC7",
+      "source_amount": 100000000,
+      "target_asset": "BTC.BTC",
+      "dest_addr": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+      "target_price": 0.00001,
+      "expiry_hours": 72
+    },
+    "expected_memo": "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:1000/43200/0:va:50"
+  },
+  {
+    "name": "btc-to-rune-12h",
+    "source_chain_kind": "utxo",
+    "affiliate_included": true,
+    "inputs": {
+      "source_asset": "BTC.BTC",
+      "source_amount": 100000000,
+      "target_asset": "THOR.RUNE",
+      "dest_addr": "thor1x2whgc2nt665y0kc44uywhynazvp0l8tp0vtu6",
+      "target_price": 10,
+      "expiry_hours": 12
+    },
+    "expected_memo": "=<:THOR.RUNE:thor1x2whgc2nt665y0kc44uywhynazvp0l8tp0vtu6:1000000000/7200/0:va:50"
+  },
+  {
+    "name": "btc-to-rune-24h",
+    "source_chain_kind": "utxo",
+    "affiliate_included": false,
+    "inputs": {
+      "source_asset": "BTC.BTC",
+      "source_amount": 100000000,
+      "target_asset": "THOR.RUNE",
+      "dest_addr": "thor1x2whgc2nt665y0kc44uywhynazvp0l8tp0vtu6",
+      "target_price": 10,
+      "expiry_hours": 24
+    },
+    "expected_memo": "=<:THOR.RUNE:thor1x2whgc2nt665y0kc44uywhynazvp0l8tp0vtu6:1000000000/14400/0"
+  },
+  {
+    "name": "btc-to-rune-3d",
+    "source_chain_kind": "utxo",
+    "affiliate_included": false,
+    "inputs": {
+      "source_asset": "BTC.BTC",
+      "source_amount": 100000000,
+      "target_asset": "THOR.RUNE",
+      "dest_addr": "thor1x2whgc2nt665y0kc44uywhynazvp0l8tp0vtu6",
+      "target_price": 10,
+      "expiry_hours": 72
+    },
+    "expected_memo": "=<:THOR.RUNE:thor1x2whgc2nt665y0kc44uywhynazvp0l8tp0vtu6:1000000000/43200/0"
+  }
+]

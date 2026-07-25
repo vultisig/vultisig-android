@@ -31,6 +31,10 @@ import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
 import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepositoryImpl
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepoImpl
+import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
+import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepositoryImpl
+import com.vultisig.wallet.data.swap.limit.LimitSwapSupportedChainsRepository
+import com.vultisig.wallet.data.swap.limit.LimitSwapSupportedChainsRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Reusable
@@ -145,6 +149,18 @@ internal interface RepositoriesModule {
     @Binds
     @Singleton
     fun bindThorMimirRepository(impl: ThorMimirRepositoryImpl): ThorMimirRepository
+
+    @Binds
+    @Singleton
+    fun bindLimitSwapSupportedChainsRepository(
+        impl: LimitSwapSupportedChainsRepositoryImpl
+    ): LimitSwapSupportedChainsRepository
+
+    @Binds
+    @Singleton
+    fun bindLimitSwapMarketPriceRepository(
+        impl: LimitSwapMarketPriceRepositoryImpl
+    ): LimitSwapMarketPriceRepository
 
     @Binds
     @Singleton

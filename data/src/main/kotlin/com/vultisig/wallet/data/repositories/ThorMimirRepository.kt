@@ -27,6 +27,14 @@ interface ThorMimirRepository {
      * `BTC`, `BSC`) is halted via either `HALT<CHAIN>LP` or `HALT<CHAIN>CHAIN`.
      */
     suspend fun isLpHalted(chainPrefix: String): Boolean
+
+    /**
+     * Whether THORChain currently accepts resting limit orders, gated on the `EnableAdvSwapQueue`
+     * mimir. Fails closed — any network or parse failure, and any value other than exactly `1`,
+     * returns `false`: a `=<` order placed while the queue is disabled can execute as an
+     * unprotected market swap, so the only value that unblocks placement is a live, confirmed `1`.
+     */
+    suspend fun isAdvancedSwapQueueEnabled(): Boolean
 }
 
 internal class ThorMimirRepositoryImpl @Inject constructor(private val thorChainApi: ThorChainApi) :
@@ -42,6 +50,9 @@ internal class ThorMimirRepositoryImpl @Inject constructor(private val thorChain
         val key = "$KEY_PER_POOL_LP_DEPOSIT_PAUSE-${pool.toMimirAssetSuffix()}"
         return mimir.isOn(key)
     }
+
+    override suspend fun isAdvancedSwapQueueEnabled(): Boolean =
+        runCatching { mimir()[KEY_ADVANCED_SWAP_QUEUE.uppercase()] == 1L }.getOrDefault(false)
 
     override suspend fun isLpHalted(chainPrefix: String): Boolean {
         val mimir = mimir()
@@ -78,5 +89,6 @@ internal class ThorMimirRepositoryImpl @Inject constructor(private val thorChain
         const val TTL_MILLIS = 30_000L
         const val KEY_GLOBAL_LP_PAUSE = "PAUSELP"
         const val KEY_PER_POOL_LP_DEPOSIT_PAUSE = "PAUSELPDEPOSIT"
+        const val KEY_ADVANCED_SWAP_QUEUE = "EnableAdvSwapQueue"
     }
 }

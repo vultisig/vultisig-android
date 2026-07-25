@@ -109,6 +109,10 @@ import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimMaturingUtxoUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
+import com.vultisig.wallet.ui.models.swap.LimitExpiryOption
+import com.vultisig.wallet.ui.models.swap.LimitOrderUiModel
+import com.vultisig.wallet.ui.models.swap.LimitPricePreset
+import com.vultisig.wallet.ui.models.swap.LimitPriceUnit
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -146,6 +150,7 @@ import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateBottomShe
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheetContent
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
+import com.vultisig.wallet.ui.screens.swap.components.LimitSwapForm
 import com.vultisig.wallet.ui.screens.swap.components.SwapAdvancedSettingsLockedSheet
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedExternalRecipientPreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedGasLimitPreview
@@ -192,6 +197,7 @@ class PreviewActivity : ComponentActivity() {
         setContent {
             OnBoardingComposeTheme {
                 when (screen) {
+                    "limit_swap_form" -> LimitSwapFormPreview()
                     "swap_confirm" -> SwapConfirmPreview()
                     "swap_confirm_chain" -> SwapChainIndicatorPreview()
                     "swap_confirm_disabled" -> SwapConfirmPreview(allConsents = false)
@@ -3005,5 +3011,68 @@ private fun StakingPositionSkeletonPreview() {
     ) {
         StakingPositionSkeleton()
         StakingPositionSkeleton()
+    }
+}
+
+@Composable
+private fun LimitSwapFormPreview() {
+    val usdc = Coins.Ethereum.USDC
+    val btc = Coins.Bitcoin.BTC
+    val state =
+        LimitOrderUiModel(
+            priceText = "$65,800.13",
+            referenceAmountLabel = "1 BTC",
+            referenceLogo = btc.logo,
+            marketPriceLabel = "$67,240.00",
+            secondaryPriceLabel = "0.07902 BTC",
+            priceUnit = LimitPriceUnit.Fiat,
+            percentFromMarketLabel = "-2.1% from market",
+            selectedPreset = LimitPricePreset.Market,
+            selectedExpiry = LimitExpiryOption.TwentyFourHours,
+            sellTicker = "USDC",
+            sellLogo = usdc.logo,
+            buyTicker = "BTC",
+            buyLogo = btc.logo,
+        )
+    Column(
+        modifier =
+            Modifier.background(Theme.v2.colors.backgrounds.background)
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Spacer(Modifier.padding(top = 24.dp))
+        Text(
+            text = stringResource(R.string.chain_account_view_swap),
+            style = Theme.brockmann.headings.title2,
+            color = Theme.v2.colors.text.primary,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(
+                text = stringResource(R.string.swap_mode_market),
+                style = Theme.brockmann.body.m.medium,
+                color = Theme.v2.colors.text.tertiary,
+            )
+            Text(
+                text = stringResource(R.string.swap_mode_limit),
+                style = Theme.brockmann.body.m.medium,
+                color = Theme.v2.colors.text.primary,
+            )
+        }
+        LimitSwapForm(
+            state = state,
+            onPresetClick = {},
+            onExpiryClick = {},
+            onToggleUnit = {},
+            onEditAssets = {},
+        )
+        Spacer(Modifier.weight(1f))
+        VsButton(
+            label = stringResource(R.string.limit_swap_place_order),
+            variant = VsButtonVariant.CTA,
+            onClick = {},
+            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+        )
     }
 }
