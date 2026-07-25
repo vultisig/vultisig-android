@@ -54,7 +54,10 @@ constructor(@param:ApplicationContext private val context: Context) {
             }
         context.startForegroundService(intent)
         if (!isBound) {
+            // Marked bound on request, not on connect: a binding that has not connected yet still
+            // holds the service alive and must be released by stopPolling().
             context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+            isBound = true
         }
     }
 
