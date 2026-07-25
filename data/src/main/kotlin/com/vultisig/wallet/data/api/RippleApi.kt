@@ -213,9 +213,10 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
                                 }
                                 put("limit", ACCOUNT_LINES_PAGE_SIZE)
                                 // Trust lines still in their default state hold nothing and are
-                                // dropped downstream anyway; filtering them server-side keeps the
-                                // walk short when anyone spams zero-balance lines against the
-                                // account.
+                                // dropped downstream anyway; filtering them server-side shrinks
+                                // each response body. It does not shorten the walk: rippled counts
+                                // every ledger object toward `limit` and pins the marker before
+                                // this filter runs, so the page count is the same either way.
                                 put("ignore_default", true)
                                 marker?.let { put("marker", it) }
                             }
