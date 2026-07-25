@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import timber.log.Timber
 
 /**
  * Bound to the running foreground [TransactionStatusService], so it must be a singleton: every
@@ -57,7 +58,17 @@ constructor(@param:ApplicationContext private val context: Context) {
         }
     }
 
+    /**
+     * Tears the status service down without starting it: [Context.startService] is background
+     * restricted since Android 8 and this runs from `onCleared()`, which may fire while the process
+     * has no foreground state. The bound service is stopped through its binder (which also clears a
+     * notification left behind by `STOP_FOREGROUND_DETACH`), with [Context.stopService] as the
+     * fallback when the binding never connected. Never throws.
+     */
     fun stopPolling() {
+        runCatching { serviceBinder?.cancelPollingAndRemoveNotification() }
+            .onFailure { Timber.w(it, "Failed to cancel transaction status polling") }
+
         if (isBound) {
             try {
                 context.unbindService(serviceConnection)
@@ -66,13 +77,11 @@ constructor(@param:ApplicationContext private val context: Context) {
                 // Service already unbound
             }
         }
+        serviceBinder = null
         _serviceReady.value = false
 
-        val intent =
-            Intent(context, TransactionStatusService::class.java).apply {
-                action = TransactionStatusService.ACTION_STOP_POLLING
-            }
-        context.startService(intent)
+        runCatching { context.stopService(Intent(context, TransactionStatusService::class.java)) }
+            .onFailure { Timber.w(it, "Failed to stop transaction status service") }
     }
 
     fun cancelPollingAndRemoveNotification() {
