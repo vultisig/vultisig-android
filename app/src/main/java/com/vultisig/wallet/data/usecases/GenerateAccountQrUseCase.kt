@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Path
 import android.util.TypedValue
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -53,7 +54,7 @@ constructor(
                         Path.Direction.CCW,
                     )
                     canvas.clipPath(path)
-                    canvas.drawColor(V2.colors.neutrals.n50.toArgb())
+                    canvas.drawColor(V2.colors.backgrounds.secondary.toArgb())
                     drawable.setBounds(0, 0, canvas.width, canvas.height)
                     drawable.draw(canvas)
                     bitmap
@@ -64,11 +65,8 @@ constructor(
 
     private suspend fun generateQr(address: String, logo: Bitmap?): QrBitmapData {
         val qrBitmap =
-            // Dark modules on a light, opaque background — not just app-internal contrast.
-            // Third-party scanners (notably iOS's Camera/Vision QR reader) frequently fail to
-            // decode color-inverted (light-on-dark) QR codes that our own in-app scanner tolerates.
             withContext(Dispatchers.IO) {
-                generateQrBitmap(address, colors.neutrals.n900, colors.neutrals.n50, logo)
+                generateQrBitmap(address, colors.neutrals.n50, Color.Transparent, logo)
             }
 
         val bitmapPainter =
