@@ -902,3 +902,61 @@ internal val MIGRATION_36_37 =
             )
         }
     }
+
+// Canonicalizes legacy EVM address-book rows to Chain.Ethereum's id (#5403). Before the network
+// picker consolidated every EVM chain into one "EVM" tile, a contact saved on e.g. Arbitrum or BSC
+// was persisted under that chain's own id; the app now always reads/writes EVM entries under
+// "Ethereum", so those older rows would otherwise become permanently unreachable. Rows sharing an
+// address (case-insensitively, matching the app's own EVM address matching) across the EVM family
+// are collapsed to the earliest one first, so the chainId rewrite below can never collide with an
+// existing primary key. addressBookOrder keys embed the old chainId too ("$chainId-$address"), so
+// its now-stale legacy-chain rows are dropped; the list screen already re-creates a default order
+// entry for any address-book row it doesn't find one for.
+private val LEGACY_EVM_CHAIN_IDS =
+    listOf(
+        "Arbitrum",
+        "Avalanche",
+        "Base",
+        "CronosChain",
+        "BSC",
+        "Blast",
+        "Optimism",
+        "Polygon",
+        "Zksync",
+        "Mantle",
+        "Sei",
+        "Hyperliquid",
+    )
+private val EVM_CHAIN_IDS = LEGACY_EVM_CHAIN_IDS + "Ethereum"
+
+internal val MIGRATION_37_38 =
+    object : Migration(37, 38) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            val evmChainIdsSql = EVM_CHAIN_IDS.joinToString(",") { "'$it'" }
+            val legacyEvmChainIdsSql = LEGACY_EVM_CHAIN_IDS.joinToString(",") { "'$it'" }
+
+            db.execSQL(
+                """
+            DELETE FROM address_book_entry
+            WHERE chainId IN ($evmChainIdsSql)
+            AND rowid NOT IN (
+                SELECT MIN(rowid) FROM address_book_entry
+                WHERE chainId IN ($evmChainIdsSql)
+                GROUP BY LOWER(address)
+            )
+            """
+                    .trimIndent()
+            )
+            db.execSQL(
+                """
+            UPDATE address_book_entry
+            SET chainId = 'Ethereum'
+            WHERE chainId IN ($legacyEvmChainIdsSql)
+            """
+                    .trimIndent()
+            )
+            LEGACY_EVM_CHAIN_IDS.forEach { legacyChainId ->
+                db.execSQL("DELETE FROM addressBookOrder WHERE `value` LIKE '$legacyChainId-%'")
+            }
+        }
+    }

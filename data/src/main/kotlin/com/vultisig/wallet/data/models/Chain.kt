@@ -83,6 +83,13 @@ val Chain.toDefi: DefiChain
             else -> DefiChain(raw = raw, chain = this)
         }
 
+/**
+ * Chain-id used for address-book storage and lookups. EVM chains share one address space, so every
+ * EVM chain canonicalizes to [Chain.Ethereum]'s id here, matching iOS/Windows.
+ */
+val Chain.addressBookChainId: ChainId
+    get() = if (standard == EVM) Chain.Ethereum.id else id
+
 val Chain.coinType: CoinType
     get() =
         when (this) {
