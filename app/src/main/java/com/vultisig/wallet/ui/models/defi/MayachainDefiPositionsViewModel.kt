@@ -21,7 +21,6 @@ import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
-import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.MayachainBondUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -130,7 +129,6 @@ constructor(
     private val mayachainBondRepository: MayachainBondRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val mayaCacaoStakingService: MayaCacaoStakingService,
-    private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val defiPositionsRepository: DefiPositionsRepository,

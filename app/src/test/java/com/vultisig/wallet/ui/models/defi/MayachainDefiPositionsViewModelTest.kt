@@ -435,7 +435,6 @@ internal class MayachainDefiPositionsViewModelTest {
             mayachainBondRepository = mayachainBondRepository,
             chainAccountAddressRepository = chainAccountAddressRepository,
             mayaCacaoStakingService = mayaCacaoStakingService,
-            tokenPriceRepository = tokenPriceRepository,
             appCurrencyRepository = appCurrencyRepository,
             balanceVisibilityRepository = balanceVisibilityRepository,
             defiPositionsRepository = defiPositionsRepository,
