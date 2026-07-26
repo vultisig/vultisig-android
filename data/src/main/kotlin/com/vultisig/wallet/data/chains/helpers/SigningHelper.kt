@@ -3,6 +3,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.api.swapAggregators.OneInchSwap
+import com.vultisig.wallet.data.common.isHexPrefixed
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.common.toKeccak256ByteArray
 import com.vultisig.wallet.data.common.toSha256ByteArray
@@ -50,8 +51,9 @@ object SigningHelper {
         // hex decoding on the `0x` prefix, so a plain-text message made only of hex characters
         // (e.g. "Vultisig") must be hashed as UTF-8 — otherwise the digest, and the md5 message-ID
         // derived from it, diverges and cross-platform co-signing can't locate the setup message.
+        // isHexPrefixed() is shared with normalizeMessageFormat (#5402) so display can't diverge.
         val processedBytes =
-            if (messagePayload.message.startsWith("0x")) {
+            if (messagePayload.message.isHexPrefixed()) {
                 messagePayload.message.toHexBytes()
             } else {
                 messagePayload.message.toByteArray()

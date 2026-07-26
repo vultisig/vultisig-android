@@ -31,6 +31,10 @@ fun String.toHexBytesInByteString(): ByteString {
     return ByteString.copyFrom(this.toHexBytes())
 }
 
+/**
+ * Lenient hex check (`0x` optional) for memo/calldata encoding in [toByteStringOrHex] only — do not
+ * use for personal_sign/message hex-vs-text gating, see [isHexPrefixed].
+ */
 fun String.isHex(): Boolean {
     return this.matches(Regex("^(0x)?[0-9A-Fa-f]+$"))
 }
@@ -43,11 +47,21 @@ fun String.toByteStringOrHex(): ByteString {
     }
 }
 
+/**
+ * True only for an explicit `0x` prefix — mirrors SigningHelper's signing-path check and iOS/
+ * Windows, so a personal_sign message can't display differently from what gets signed (#5402).
+ */
+fun String.isHexPrefixed(): Boolean = startsWith("0x")
+
 fun String.normalizeMessageFormat(): String {
     return try {
-        if (this.isHex()) {
+        if (this.isHexPrefixed()) {
             val hex = this.remove0x()
-            if (hex.length % 2 != 0) {
+            // A malformed remainder (odd length, or a non-hex character) must fall back to the
+            // raw string rather than decode: SigningHelper's hex-decode silently maps invalid
+            // digits to garbage bytes, so decoding here too could display a clean-looking (but
+            // wrong) string for content that doesn't actually represent well-formed hex.
+            if (hex.length % 2 != 0 || !hex.all { it.digitToIntOrNull(16) != null }) {
                 return this
             }
             val decoder =

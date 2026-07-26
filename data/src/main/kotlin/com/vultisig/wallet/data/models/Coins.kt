@@ -1214,7 +1214,7 @@ object Coins {
                 decimal = 18,
                 hexPublicKey = "",
                 priceProviderID = "polygon-ecosystem-token",
-                contractAddress = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
+                contractAddress = "0x455e53CBB86018Ac2B8092FdCd39d8444aFFC3F6",
                 isNativeToken = false,
             )
 
