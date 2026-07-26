@@ -135,6 +135,10 @@ internal fun GasSettingsScreen(
         VsButton(
             label = stringResource(R.string.add_vault_save),
             onClick = onSaveClick,
+            // Blocks saving while the eth_gasPrice/base fee fetch is in flight, and keeps
+            // blocking on failure too — the fields stay blank either way, and blank would
+            // otherwise save as a zero fee (issue #5397).
+            isLoading = state.isLoadingEthFee,
             modifier = Modifier.fillMaxWidth(),
         )
     }

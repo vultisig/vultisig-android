@@ -24,6 +24,10 @@ import timber.log.Timber
 internal data class GasSettingsUiModel(
     val chainSpecific: BlockChainSpecific? = null,
     val byteFeeError: UiText? = null,
+    // True while loadEthData's fetch is in flight, and left true if it fails: Save must not be
+    // pressable while baseFee/priorityFee are blanked, or a slow/failed fetch would let the
+    // user save a zero fee (issue #5397).
+    val isLoadingEthFee: Boolean = false,
 )
 
 internal enum class PriorityFee {
@@ -76,6 +80,7 @@ constructor(
         // can never sign a fee carried over from a previous chain's session.
         baseFeeState.setTextAndPlaceCursorAtEnd("")
         priorityFeeState.setTextAndPlaceCursorAtEnd("")
+        state.update { it.copy(isLoadingEthFee = true) }
 
         viewModelScope.launch {
             val evmApi = evmApiFactory.createEvmApi(chain)
@@ -96,9 +101,12 @@ constructor(
                         convertWeiToGwei(spec.priorityFeeWei).toPlainString()
                     )
                 }
+                state.update { it.copy(isLoadingEthFee = false) }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e)
+                // isLoadingEthFee stays true: the fields are still blank, so Save must stay
+                // disabled rather than let this failure save a zero fee.
             }
         }
     }

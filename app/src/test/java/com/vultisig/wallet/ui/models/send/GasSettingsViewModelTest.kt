@@ -28,6 +28,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 internal class GasSettingsViewModelTest {
 
@@ -223,5 +224,50 @@ internal class GasSettingsViewModelTest {
             }
 
         vm.loadData(Chain.BscChain, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+    }
+
+    @Test
+    fun `isLoadingEthFee clears once the fetch resolves`() = runTest {
+        val vm = viewModel()
+
+        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        advanceUntilIdle()
+
+        assertEquals(false, vm.state.value.isLoadingEthFee)
+    }
+
+    /**
+     * CodeRabbit finding on this PR: blanking the fields on chain switch (above) closed the
+     * stale-value leak, but a slow or failed fetch left the fields blank with Save still pressable
+     * — save() would then read "" as zero, reproducing the original zero-fee bug via a different
+     * trigger. isLoadingEthFee must stay true (Save disabled) until a fetch actually succeeds.
+     */
+    @Test
+    fun `isLoadingEthFee stays true when the fetch fails, keeping Save disabled`() = runTest {
+        coEvery { evmApi.getBaseFee() } throws RuntimeException("network error")
+        val vm = viewModel()
+
+        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        advanceUntilIdle()
+
+        assertEquals(true, vm.state.value.isLoadingEthFee)
+    }
+
+    @Test
+    fun `GasSettings Eth rejects a negative baseFee or priorityFee`() {
+        assertThrows<IllegalArgumentException> {
+            GasSettings.Eth(
+                baseFee = BigInteger.valueOf(-1),
+                priorityFee = BigInteger.ZERO,
+                gasLimit = BigInteger("21000"),
+            )
+        }
+        assertThrows<IllegalArgumentException> {
+            GasSettings.Eth(
+                baseFee = BigInteger.ZERO,
+                priorityFee = BigInteger.valueOf(-1),
+                gasLimit = BigInteger("21000"),
+            )
+        }
     }
 }
