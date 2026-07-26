@@ -18,7 +18,8 @@ import javax.inject.Inject
 interface PendingLimitOrderRepository {
     /**
      * Records a placed order, deriving the target price and expiry from the signed `=<` [memo]. A
-     * no-op when [memo] is not a limit memo. Never throws into the keysign flow.
+     * no-op when [memo] is not a limit memo. Persistence/mapping failures propagate to the caller,
+     * which records this best-effort (a failure never breaks the keysign flow).
      *
      * @param sourceAmount the deposited amount in the source coin's native smallest units.
      */
@@ -62,7 +63,9 @@ constructor(private val dao: PendingLimitOrderDao) : PendingLimitOrderRepository
             PendingLimitOrderEntity(
                 inboundTxHash = inboundTxHash,
                 vaultId = vaultId,
-                sourceAsset = runCatching { sourceCoin.thorchainMemoAsset() }.getOrDefault(""),
+                // Let a mapping failure propagate rather than store an unusable empty source_asset;
+                // the caller (KeysignViewModel) already records this best-effort.
+                sourceAsset = sourceCoin.thorchainMemoAsset(),
                 sourceAmount = sourceAmount.toString(),
                 targetAsset = parsed.targetAsset,
                 destAddr = parsed.destAddr,

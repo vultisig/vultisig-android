@@ -157,8 +157,37 @@ internal class BuildLimitSwapTransactionUseCaseTest {
         assertTrue(error?.message.orEmpty().contains("router"))
     }
 
-    private fun inbound(chain: String, address: String, router: String?) =
-        THORChainInboundAddress(chain = chain, address = address, halted = false, router = router)
+    @Test
+    fun `rejects a trading-paused inbound at placement`() = runTest {
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns true
+        coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
+            listOf(inbound("BTC", btcInbound, router = null, chainTradingPaused = true))
+        coEvery {
+            swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
+        } returns mockk(relaxed = true)
+        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+
+        val error = runCatching { useCase.build(params()) }.exceptionOrNull()
+        assertTrue(error is IllegalStateException)
+        assertTrue(error?.message.orEmpty().contains("No live THORChain inbound"))
+    }
+
+    private fun inbound(
+        chain: String,
+        address: String,
+        router: String?,
+        halted: Boolean = false,
+        globalTradingPaused: Boolean = false,
+        chainTradingPaused: Boolean = false,
+    ) =
+        THORChainInboundAddress(
+            chain = chain,
+            address = address,
+            halted = halted,
+            globalTradingPaused = globalTradingPaused,
+            chainTradingPaused = chainTradingPaused,
+            router = router,
+        )
 
     private fun coin(
         chain: Chain,

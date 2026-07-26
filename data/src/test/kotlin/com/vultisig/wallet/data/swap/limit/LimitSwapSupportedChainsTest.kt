@@ -37,10 +37,12 @@ class LimitSwapSupportedChainsTest {
     }
 
     @Test
-    fun `falls back to the static routable set when no usable inbound is found`() {
-        assertEquals(staticLimitSwapSupportedChains, getLimitSwapSupportedChains(emptyList()))
+    fun `returns only THORChain when a successful response has no usable external inbound`() {
+        // Static fallback is the repository's concern (fetch failure); a live all-halted response
+        // must not re-offer the halted chains.
+        assertEquals(listOf(Chain.ThorChain), getLimitSwapSupportedChains(emptyList()))
         assertEquals(
-            staticLimitSwapSupportedChains,
+            listOf(Chain.ThorChain),
             getLimitSwapSupportedChains(listOf(inbound("ETH", halted = true))),
         )
     }

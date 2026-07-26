@@ -287,6 +287,9 @@ private fun VerifySwapScreen(
                                     ),
                                 style = Theme.brockmann.supplementary.caption,
                                 color = Theme.v2.colors.text.secondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false),
                             )
                             tx.limitExpiryLabel?.let { expiry ->
                                 Text(

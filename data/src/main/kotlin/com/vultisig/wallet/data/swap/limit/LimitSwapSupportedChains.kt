@@ -15,10 +15,10 @@ import timber.log.Timber
  * to advertise. Everything else must have a live inbound that is neither halted nor trading-paused,
  * mirroring the market swap's halt gate; absent pause flags read as "not paused".
  *
- * When the inbound list yields nothing usable we fall back to the static routable set rather than
- * returning just THORChain: an empty picker reads as "this pair is unsupported" when the real
- * problem is a failed fetch. The placement path re-checks halts at sign time, so a stale entry here
- * cannot get a halted-chain order signed.
+ * This reflects the live state faithfully: a successful response where every external inbound is
+ * halted returns only THORChain, so paused chains aren't re-offered. The static-routable fallback
+ * (for a *failed* fetch, where an empty picker would wrongly read as "unsupported") lives in the
+ * repository, which is the only layer that can tell a failure from a genuinely empty result.
  */
 fun getLimitSwapSupportedChains(inbounds: List<THORChainInboundAddress>): List<Chain> {
     val chains = linkedSetOf(Chain.ThorChain)
@@ -30,7 +30,7 @@ fun getLimitSwapSupportedChains(inbounds: List<THORChainInboundAddress>): List<C
         thorchainAssetPrefixToChain[inbound.chain.trim().uppercase()]?.let(chains::add)
     }
 
-    return if (chains.size > 1) chains.toList() else staticLimitSwapSupportedChains
+    return chains.toList()
 }
 
 /** Chains a limit order can currently be placed from or to, given live network state. */
@@ -42,18 +42,16 @@ internal class LimitSwapSupportedChainsRepositoryImpl
 @Inject
 constructor(private val thorChainApi: ThorChainApi) : LimitSwapSupportedChainsRepository {
 
-    override suspend fun getSupportedChains(): List<Chain> {
-        val inbounds =
-            try {
-                thorChainApi.getTHORChainInboundAddresses()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                // A failed inbound fetch falls back to the static routable set (an empty picker
-                // reads as "unsupported pair"); a cancelled caller must propagate, not fall back.
-                Timber.w(e, "Failed to fetch THORChain inbounds for limit-swap supported chains")
-                emptyList()
-            }
-        return getLimitSwapSupportedChains(inbounds)
-    }
+    override suspend fun getSupportedChains(): List<Chain> =
+        try {
+            getLimitSwapSupportedChains(thorChainApi.getTHORChainInboundAddresses())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // Only a *failed* fetch falls back to the static routable set — an empty picker would
+            // otherwise read as "this pair is unsupported". A successful all-halted response is
+            // handled above (returns just THORChain). A cancelled caller must propagate.
+            Timber.w(e, "Failed to fetch THORChain inbounds for limit-swap supported chains")
+            staticLimitSwapSupportedChains
+        }
 }

@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.ThorChainApi
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -52,7 +53,15 @@ internal class ThorMimirRepositoryImpl @Inject constructor(private val thorChain
     }
 
     override suspend fun isAdvancedSwapQueueEnabled(): Boolean =
-        runCatching { mimir()[KEY_ADVANCED_SWAP_QUEUE.uppercase()] == 1L }.getOrDefault(false)
+        try {
+            mimir()[KEY_ADVANCED_SWAP_QUEUE.uppercase()] == 1L
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Fail closed: no confirmed `1` (network/parse failure included) keeps placement
+            // blocked.
+            false
+        }
 
     override suspend fun isLpHalted(chainPrefix: String): Boolean {
         val mimir = mimir()

@@ -78,10 +78,9 @@ private val limitSwapDestinationValidators: Map<Chain, (String) -> Boolean> =
  */
 internal fun assertValidLimitSwapDestinationAddress(targetChain: Chain, address: String) {
     val validator =
-        limitSwapDestinationValidators[targetChain]
-            ?: throw IllegalArgumentException(
-                "target_asset chain $targetChain is not supported for limit swap destinations"
-            )
+        requireNotNull(limitSwapDestinationValidators[targetChain]) {
+            "target_asset chain $targetChain is not supported for limit swap destinations"
+        }
     require(validator(address)) { "dest_addr is not a valid $targetChain address" }
 }
 

@@ -241,6 +241,17 @@ internal fun SwapScreen(
                                 onEditAssets = onEditLimitAssets,
                                 modifier = Modifier.fillMaxWidth(),
                             )
+                            // The Market error box is absolutely positioned off the market form, so
+                            // limit placement/validation failures get their own inline surface here
+                            // rather than failing silently.
+                            error?.let {
+                                Text(
+                                    text = it.asString(),
+                                    style = Theme.brockmann.supplementary.caption,
+                                    color = Theme.v2.colors.alerts.error,
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                                )
+                            }
                         } else {
                             Text(
                                 text = stringResource(R.string.swap_limit_coming_soon),

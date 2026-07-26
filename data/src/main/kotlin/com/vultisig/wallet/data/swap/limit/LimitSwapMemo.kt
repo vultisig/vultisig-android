@@ -45,11 +45,9 @@ object LimitSwapMemo {
      * an hours-based lifetime maps directly onto a block count.
      */
     fun intervalBlocks(expiryHours: Int): Int =
-        expiryHoursToIntervalBlocks[expiryHours]
-            ?: throw IllegalArgumentException(
-                "expiry_hours must be one of ${limitSwapExpiryHours.joinToString(", ")}, " +
-                    "got $expiryHours"
-            )
+        requireNotNull(expiryHoursToIntervalBlocks[expiryHours]) {
+            "expiry_hours must be one of ${limitSwapExpiryHours.joinToString(", ")}, got $expiryHours"
+        }
 
     /**
      * The order's guaranteed minimum output (LIM), in the target's 1e8 fixed point.
