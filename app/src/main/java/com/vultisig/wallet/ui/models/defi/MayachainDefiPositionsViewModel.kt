@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.api.MayaMemberDetails
 import com.vultisig.wallet.data.api.MayaNodePool
 import com.vultisig.wallet.data.blockchain.maya.MayaCacaoStakingService
@@ -15,7 +16,6 @@ import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.lpAssetLogoRes
 import com.vultisig.wallet.data.models.monoToneLogo
-import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -47,7 +47,7 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -134,6 +134,8 @@ constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val defiPositionsRepository: DefiPositionsRepository,
+    private val fiatValueCalculator: DefiFiatValueCalculator,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private lateinit var vaultId: String
@@ -188,7 +190,7 @@ constructor(
     private fun loadBalanceVisibility() {
         viewModelScope.safeLaunch {
             val isVisible =
-                withContext(Dispatchers.IO) { balanceVisibilityRepository.getVisibility(vaultId) }
+                withContext(ioDispatcher) { balanceVisibilityRepository.getVisibility(vaultId) }
             updateModel { it.copy(isBalanceVisible = isVisible) }
         }
     }
@@ -219,8 +221,7 @@ constructor(
     private fun loadLpPositionsForDialog(): Job =
         viewModelScope.launch {
             try {
-                val pools =
-                    withContext(Dispatchers.IO) { mayachainBondRepository.getMayaNodePools() }
+                val pools = withContext(ioDispatcher) { mayachainBondRepository.getMayaNodePools() }
                 val lpPositions = pools.map { pool -> pool.toPositionDialogModel() }
                 updateModel { it.copy(lpPositionsDialog = lpPositions) }
                 reloadLpTab()
@@ -235,7 +236,7 @@ constructor(
         updateModel { it.copy(bonded = it.bonded.copy(isLoading = true)) }
 
         try {
-            val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+            val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
             val cacaoCoin =
                 vault?.coins?.find {
                     it.ticker == Coins.MayaChain.CACAO.ticker && it.chain == Chain.MayaChain
@@ -323,7 +324,7 @@ constructor(
         updateModel { it.copy(staking = StakingTabUiModel(positions = listOf(loadingPosition))) }
 
         try {
-            val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+            val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
             val cacaoCoin =
                 vault?.coins?.find {
                     it.ticker == Coins.MayaChain.CACAO.ticker && it.chain == Chain.MayaChain
@@ -394,9 +395,14 @@ constructor(
             try {
                 val currency = appCurrencyRepository.currency.first()
                 val totalInCacao = totalRaw.toValue(10)
-                val fiatValue = createFiatValue(totalInCacao, Coins.MayaChain.CACAO, currency)
+                val fiatValue =
+                    fiatValueCalculator.createFiatValue(
+                        totalInCacao,
+                        Coins.MayaChain.CACAO,
+                        currency,
+                    )
                 val currencyFormat =
-                    withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+                    withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
                 updateModel {
                     it.copy(
                         totalAmountPrice = currencyFormat.format(fiatValue.value),
@@ -414,9 +420,10 @@ constructor(
     private suspend fun calculateStakingFiatPrice(amount: BigDecimal): String {
         return try {
             val currency = appCurrencyRepository.currency.first()
-            val fiatValue = createFiatValue(amount, Coins.MayaChain.CACAO, currency)
+            val fiatValue =
+                fiatValueCalculator.createFiatValue(amount, Coins.MayaChain.CACAO, currency)
             val currencyFormat =
-                withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+                withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
             currencyFormat.format(fiatValue.value)
         } catch (e: Exception) {
             if (e is CancellationException) throw e
@@ -429,63 +436,15 @@ constructor(
         return try {
             val totalInCacao = totalBondedRaw.toValue(10)
             val currency = appCurrencyRepository.currency.first()
-            val fiatValue = createFiatValue(totalInCacao, Coins.MayaChain.CACAO, currency)
+            val fiatValue =
+                fiatValueCalculator.createFiatValue(totalInCacao, Coins.MayaChain.CACAO, currency)
             val currencyFormat =
-                withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+                withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
             currencyFormat.format(fiatValue.value)
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Timber.e(e, "Failed to calculate Maya bonded fiat price")
             ""
-        }
-    }
-
-    private suspend fun createFiatValue(
-        amount: BigDecimal,
-        coin: com.vultisig.wallet.data.models.Coin,
-        currency: AppCurrency,
-    ): FiatValue {
-        return try {
-            if (amount == BigDecimal.ZERO) return FiatValue(BigDecimal.ZERO, currency.ticker)
-            val price =
-                tokenPriceRepository.getCachedPrice(tokenId = coin.id, appCurrency = currency)
-                    ?: tokenPriceRepository.getPriceByContactAddress(
-                        coin.chain.id,
-                        coin.contractAddress,
-                    )
-            FiatValue(
-                value = amount.multiply(price).setScale(2, RoundingMode.DOWN),
-                currency = currency.ticker,
-            )
-        } catch (t: Throwable) {
-            if (t is CancellationException) throw t
-            Timber.e(t)
-            FiatValue(value = BigDecimal.ZERO, currency = currency.ticker)
-        }
-    }
-
-    private suspend fun createFiatValueFromPoolAsset(
-        amount: BigDecimal,
-        chain: Chain,
-        ticker: String,
-        contractAddress: String,
-        currency: AppCurrency,
-    ): FiatValue {
-        return try {
-            if (amount == BigDecimal.ZERO) return FiatValue(BigDecimal.ZERO, currency.ticker)
-            val price =
-                tokenPriceRepository.getCachedPrice(
-                    tokenId = "$ticker-${chain.id}",
-                    appCurrency = currency,
-                ) ?: tokenPriceRepository.getPriceByContactAddress(chain.id, contractAddress)
-            FiatValue(
-                value = amount.multiply(price).setScale(2, RoundingMode.DOWN),
-                currency = currency.ticker,
-            )
-        } catch (t: Throwable) {
-            if (t is CancellationException) throw t
-            Timber.e(t)
-            FiatValue(value = BigDecimal.ZERO, currency = currency.ticker)
         }
     }
 
@@ -534,7 +493,7 @@ constructor(
         loadLpJob?.cancel()
         loadLpJob =
             viewModelScope.safeLaunch {
-                val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+                val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
                 val cacaoCoin =
                     vault?.coins?.find {
                         it.ticker == Coins.MayaChain.CACAO.ticker && it.chain == Chain.MayaChain
@@ -561,7 +520,7 @@ constructor(
                 }
 
                 val (memberDetails, poolStats) =
-                    withContext(Dispatchers.IO) {
+                    withContext(ioDispatcher) {
                         coroutineScope {
                             val memberDeferred = async {
                                 try {
@@ -589,7 +548,7 @@ constructor(
                 val poolStatsMap = poolStats.associateBy { it.asset }
                 val currency = appCurrencyRepository.currency.first()
                 val currencyFormat =
-                    withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+                    withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
 
                 val lpPositions =
                     selectedPools.map { pool ->
@@ -644,9 +603,13 @@ constructor(
 
                         val assetFiatValue =
                             if (assetCoin != null) {
-                                createFiatValue(assetAmount, assetCoin, currency)
+                                fiatValueCalculator.createFiatValue(
+                                    assetAmount,
+                                    assetCoin,
+                                    currency,
+                                )
                             } else if (assetChain != null) {
-                                createFiatValueFromPoolAsset(
+                                fiatValueCalculator.createFiatValueFromPoolAsset(
                                     assetAmount,
                                     assetChain,
                                     assetCoinTicker,
@@ -657,7 +620,11 @@ constructor(
                                 FiatValue(BigDecimal.ZERO, currency.ticker)
                             }
                         val cacaoFiatValue =
-                            createFiatValue(cacaoAmount, Coins.MayaChain.CACAO, currency)
+                            fiatValueCalculator.createFiatValue(
+                                cacaoAmount,
+                                Coins.MayaChain.CACAO,
+                                currency,
+                            )
                         val totalFiatValue =
                             FiatValue(
                                 value = assetFiatValue.value.add(cacaoFiatValue.value),
