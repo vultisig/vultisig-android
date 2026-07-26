@@ -880,3 +880,42 @@ internal val MIGRATION_35_36 =
             )
         }
     }
+
+// Canonicalizes legacy EVM address-book rows to Chain.Ethereum's id (#5403). Before the network
+// picker consolidated every EVM chain into one "EVM" tile, a contact saved on e.g. Arbitrum or BSC
+// was persisted under that chain's own id; the app now always reads/writes EVM entries under
+// "Ethereum", so those older rows would otherwise become permanently unreachable. Rows sharing an
+// address across the EVM family are collapsed to the earliest one first, so the chainId rewrite
+// below can never collide with an existing primary key.
+private const val EVM_CHAIN_IDS =
+    "'Arbitrum','Avalanche','Base','CronosChain','BSC','Blast','Ethereum','Optimism','Polygon'," +
+        "'Zksync','Mantle','Sei','Hyperliquid'"
+
+internal val MIGRATION_36_37 =
+    object : Migration(36, 37) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            DELETE FROM address_book_entry
+            WHERE chainId IN ($EVM_CHAIN_IDS)
+            AND rowid NOT IN (
+                SELECT MIN(rowid) FROM address_book_entry
+                WHERE chainId IN ($EVM_CHAIN_IDS)
+                GROUP BY address
+            )
+            """
+                    .trimIndent()
+            )
+            db.execSQL(
+                """
+            UPDATE address_book_entry
+            SET chainId = 'Ethereum'
+            WHERE chainId IN (
+                'Arbitrum','Avalanche','Base','CronosChain','BSC','Blast','Optimism','Polygon',
+                'Zksync','Mantle','Sei','Hyperliquid'
+            )
+            """
+                    .trimIndent()
+            )
+        }
+    }
