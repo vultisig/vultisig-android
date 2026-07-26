@@ -880,3 +880,25 @@ internal val MIGRATION_35_36 =
             )
         }
     }
+
+// Corrects the Ethereum POL contract address from the legacy MATIC contract it was mistakenly
+// sharing (#5404). The registry fix in Coins.kt only reaches newly enabled coins; coins are
+// persisted per-vault and reconstructed straight from the stored `contractAddress` column, so
+// vaults that already enabled POL keep resolving balances/transfers against the legacy MATIC
+// contract until the stored row itself is corrected. The cached balance in `tokenValue` is keyed
+// by contractAddress too, so it simply misses once and is re-fetched under the new address on the
+// next live read — no separate migration needed there.
+internal val MIGRATION_36_37 =
+    object : Migration(36, 37) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            UPDATE coin
+            SET contractAddress = '0x455e53CBB86018Ac2B8092FdCd39d8444aFFC3F6'
+            WHERE chain = 'Ethereum' AND ticker = 'POL'
+              AND contractAddress = '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0'
+            """
+                    .trimIndent()
+            )
+        }
+    }
