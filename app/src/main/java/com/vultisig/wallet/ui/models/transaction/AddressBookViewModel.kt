@@ -10,11 +10,14 @@ import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
 import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.addressBookChainId
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.evmNetworkUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -80,7 +83,9 @@ constructor(
                     val entries =
                         addressBookRepository.getEntries().let { entries ->
                             if (chain != null) {
-                                entries.filter { it.chain == chain }
+                                entries.filter {
+                                    it.chain.addressBookChainId == chain.addressBookChainId
+                                }
                             } else {
                                 entries
                             }
@@ -107,7 +112,12 @@ constructor(
                             model = it,
                             image = it.chain.logo,
                             name = it.title,
-                            network = it.chain.name.capitalize(Locale.current),
+                            network =
+                                if (it.chain.standard == TokenStandard.EVM) {
+                                    evmNetworkUiModel.title
+                                } else {
+                                    it.chain.name.capitalize(Locale.current)
+                                },
                             address = it.address,
                         )
                     }
