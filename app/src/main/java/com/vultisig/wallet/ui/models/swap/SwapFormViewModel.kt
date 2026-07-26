@@ -504,6 +504,13 @@ constructor(
                 }
             } else null
 
+        // Use the resolved token logos the Market form uses (drawable/URL ImageModel), not the raw
+        // Coin.logo name, which SubcomposeAsyncImage can't load — that is why the reference/asset
+        // logos rendered as first-letter placeholders (#4154 UI).
+        val current = _uiState.value
+        val sellLogo = current.selectedSrcToken?.tokenLogo ?: srcCoin.logo
+        val buyLogo = current.selectedDstToken?.tokenLogo ?: dstCoin.logo
+
         _uiState.update {
             it.copy(
                 isLimitTabEnabled = true,
@@ -511,7 +518,7 @@ constructor(
                     LimitOrderUiModel(
                         priceText = priceText,
                         referenceAmountLabel = "1 ${dstCoin.ticker}",
-                        referenceLogo = dstCoin.logo,
+                        referenceLogo = buyLogo,
                         marketPriceLabel = marketPriceLabel,
                         secondaryPriceLabel = secondaryText,
                         priceUnit = unit,
@@ -519,9 +526,9 @@ constructor(
                         selectedPreset = limitPreset.value,
                         selectedExpiry = limitExpiry.value,
                         sellTicker = srcCoin.ticker,
-                        sellLogo = srcCoin.logo,
+                        sellLogo = sellLogo,
                         buyTicker = dstCoin.ticker,
-                        buyLogo = dstCoin.logo,
+                        buyLogo = buyLogo,
                         warningRes = warningRes,
                         // Ready only when there is a resolved target price and a positive sell
                         // amount, so the CTA can't be tapped before the order can actually be

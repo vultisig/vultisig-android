@@ -3072,17 +3072,17 @@ private fun LimitSwapFormPreview() {
         LimitOrderUiModel(
             priceText = "$65,800.13",
             referenceAmountLabel = "1 BTC",
-            referenceLogo = btc.logo,
+            referenceLogo = getCoinLogo(btc.logo),
             marketPriceLabel = "$67,240.00",
             secondaryPriceLabel = "0.07902 BTC",
             priceUnit = LimitPriceUnit.Fiat,
-            percentFromMarketLabel = "-2.1% from market",
+            percentFromMarketLabel = "-2.1%",
             selectedPreset = LimitPricePreset.Market,
             selectedExpiry = LimitExpiryOption.TwentyFourHours,
             sellTicker = "USDC",
-            sellLogo = usdc.logo,
+            sellLogo = getCoinLogo(usdc.logo),
             buyTicker = "BTC",
-            buyLogo = btc.logo,
+            buyLogo = getCoinLogo(btc.logo),
         )
     Column(
         modifier =
