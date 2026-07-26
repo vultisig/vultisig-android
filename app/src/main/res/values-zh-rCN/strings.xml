@@ -937,6 +937,7 @@
 
     <!-- Gas Settings -->
     <string name="gas_settings_advanced_gas_fee">高级燃料费</string>
+    <string name="gas_settings_gas_price_gwei">Gas 价格（GWEI）</string>
     <string name="gas_settings_max_base_fee_gwei">最大基础费用（GWEI）</string>
     <string name="gas_settings_priority_fee_gwei">优先费用（GWEI）</string>
 

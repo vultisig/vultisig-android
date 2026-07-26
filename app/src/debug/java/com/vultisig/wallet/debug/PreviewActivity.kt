@@ -48,6 +48,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
@@ -109,6 +110,7 @@ import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimMaturingUtxoUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
+import com.vultisig.wallet.ui.models.send.GasSettingsUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -139,6 +141,7 @@ import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
 import com.vultisig.wallet.ui.screens.select.AssetUiModel
 import com.vultisig.wallet.ui.screens.select.SelectAssetScreen
 import com.vultisig.wallet.ui.screens.select.SelectAssetUiModel
+import com.vultisig.wallet.ui.screens.send.GasSettingsScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
@@ -315,6 +318,8 @@ class PreviewActivity : ComponentActivity() {
                     "unbond_verify_before" -> UnbondVerifyPreview(after = false)
                     "unbond_verify_after" -> UnbondVerifyPreview(after = true)
                     "edit_folder" -> EditFolderPreview()
+                    "gas_settings_bsc_before" -> GasSettingsBscPreview(isLegacyGas = false)
+                    "gas_settings_bsc_after" -> GasSettingsBscPreview(isLegacyGas = true)
                     else -> SwapConfirmPreview()
                 }
             }
@@ -464,6 +469,37 @@ private fun EditFolderPreview() {
             onMoveVaults = { _, _ -> },
             tryCheck = { checked, _ -> checked },
             onDeleteFolderClick = {},
+        )
+    }
+}
+
+/**
+ * Advanced Gas Settings for BSC (issue #5397). Before the fix, BSC rendered the same Base
+ * fee/Priority fee split as any EIP-1559 chain, with the base fee sourced from BSC's meaningless
+ * near-zero EIP-1559 base fee (BEP-226) — saving without editing signed a gasPrice of 0. After, BSC
+ * gets a single "Gas price" field sourced from eth_gasPrice and no priority-fee input.
+ */
+@Composable
+private fun GasSettingsBscPreview(isLegacyGas: Boolean) {
+    Box(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
+        GasSettingsScreen(
+            isLegacyGas = isLegacyGas,
+            state =
+                GasSettingsUiModel(
+                    chainSpecific =
+                        BlockChainSpecific.Ethereum(
+                            maxFeePerGasWei = java.math.BigInteger.ZERO,
+                            priorityFeeWei = java.math.BigInteger.ZERO,
+                            nonce = java.math.BigInteger.ZERO,
+                            gasLimit = java.math.BigInteger.valueOf(21_000L),
+                        )
+                ),
+            gasLimitState = remember { TextFieldState("21000") },
+            baseFeeState = remember { TextFieldState(if (isLegacyGas) "3" else "0") },
+            priorityFeeState = remember { TextFieldState("1") },
+            byteFeeState = remember { TextFieldState() },
+            onCloseClick = {},
+            onSaveClick = {},
         )
     }
 }

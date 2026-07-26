@@ -27,6 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.supportsLegacyGas
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -37,6 +38,7 @@ import com.vultisig.wallet.ui.models.send.GasSettings
 import com.vultisig.wallet.ui.models.send.GasSettingsUiModel
 import com.vultisig.wallet.ui.models.send.GasSettingsViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import java.math.BigInteger
 
 @Composable
 internal fun GasSettingsScreen(
@@ -52,6 +54,7 @@ internal fun GasSettingsScreen(
 
     BasicAlertDialog(onDismissRequest = onDismissGasSettings) {
         GasSettingsScreen(
+            isLegacyGas = chain.supportsLegacyGas,
             state = state,
             gasLimitState = model.gasLimitState,
             baseFeeState = model.baseFeeState,
@@ -67,7 +70,8 @@ internal fun GasSettingsScreen(
 }
 
 @Composable
-private fun GasSettingsScreen(
+internal fun GasSettingsScreen(
+    isLegacyGas: Boolean,
     state: GasSettingsUiModel,
     gasLimitState: TextFieldState,
     baseFeeState: TextFieldState,
@@ -111,6 +115,7 @@ private fun GasSettingsScreen(
         when (state.chainSpecific) {
             is BlockChainSpecific.Ethereum -> {
                 EthGasSettings(
+                    isLegacyGas = isLegacyGas,
                     state = state,
                     gasLimitState = gasLimitState,
                     baseFeeState = baseFeeState,
@@ -130,6 +135,10 @@ private fun GasSettingsScreen(
         VsButton(
             label = stringResource(R.string.add_vault_save),
             onClick = onSaveClick,
+            // Blocks saving while the eth_gasPrice/base fee fetch is in flight, and keeps
+            // blocking on failure too — the fields stay blank either way, and blank would
+            // otherwise save as a zero fee (issue #5397).
+            isLoading = state.isLoadingEthFee,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -148,13 +157,18 @@ private fun UTXOSettings(state: GasSettingsUiModel, byteFeeState: TextFieldState
 
 @Composable
 private fun EthGasSettings(
+    isLegacyGas: Boolean,
     state: GasSettingsUiModel,
     gasLimitState: TextFieldState,
     baseFeeState: TextFieldState,
     priorityFeeState: TextFieldState,
 ) {
     Text(
-        text = stringResource(R.string.gas_settings_max_base_fee_gwei),
+        text =
+            stringResource(
+                if (isLegacyGas) R.string.gas_settings_gas_price_gwei
+                else R.string.gas_settings_max_base_fee_gwei
+            ),
         style = Theme.brockmann.body.s.medium,
         color = Theme.v2.colors.text.primary,
     )
@@ -165,17 +179,20 @@ private fun EthGasSettings(
 
     UiSpacer(14.dp)
 
-    Text(
-        text = stringResource(R.string.gas_settings_priority_fee_gwei),
-        style = Theme.brockmann.body.s.medium,
-        color = Theme.v2.colors.text.primary,
-    )
+    // Legacy-gas chains (BSC) have no priority fee: their gasPrice is the single field above.
+    if (!isLegacyGas) {
+        Text(
+            text = stringResource(R.string.gas_settings_priority_fee_gwei),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.primary,
+        )
 
-    UiSpacer(8.dp)
+        UiSpacer(8.dp)
 
-    VsTextInputField(textFieldState = priorityFeeState, keyboardType = KeyboardType.Number)
+        VsTextInputField(textFieldState = priorityFeeState, keyboardType = KeyboardType.Number)
 
-    UiSpacer(14.dp)
+        UiSpacer(14.dp)
+    }
 
     Text(
         text = stringResource(R.string.eth_gas_settings_gas_limit_title),
@@ -188,15 +205,39 @@ private fun EthGasSettings(
     VsTextInputField(textFieldState = gasLimitState, keyboardType = KeyboardType.Number)
 }
 
+private val previewEthSpec =
+    BlockChainSpecific.Ethereum(
+        maxFeePerGasWei = BigInteger.valueOf(3_000_000_000L),
+        priorityFeeWei = BigInteger.valueOf(1_000_000_000L),
+        nonce = BigInteger.ZERO,
+        gasLimit = BigInteger.valueOf(21_000L),
+    )
+
 @Preview
 @Composable
 private fun EthGasSettingsScreenPreview() {
     GasSettingsScreen(
-        state = GasSettingsUiModel(),
-        gasLimitState = TextFieldState(),
+        isLegacyGas = false,
+        state = GasSettingsUiModel(chainSpecific = previewEthSpec),
+        gasLimitState = TextFieldState("21000"),
         byteFeeState = TextFieldState(),
-        baseFeeState = TextFieldState(),
-        priorityFeeState = TextFieldState(),
+        baseFeeState = TextFieldState("3"),
+        priorityFeeState = TextFieldState("1"),
+        onSaveClick = {},
+        onCloseClick = {},
+    )
+}
+
+@Preview
+@Composable
+private fun LegacyGasSettingsScreenPreview() {
+    GasSettingsScreen(
+        isLegacyGas = true,
+        state = GasSettingsUiModel(chainSpecific = previewEthSpec),
+        gasLimitState = TextFieldState("21000"),
+        byteFeeState = TextFieldState(),
+        baseFeeState = TextFieldState("3"),
+        priorityFeeState = TextFieldState("0"),
         onSaveClick = {},
         onCloseClick = {},
     )
