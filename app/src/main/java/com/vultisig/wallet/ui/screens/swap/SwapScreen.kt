@@ -456,7 +456,10 @@ internal fun SwapScreen(
                         label = stringResource(R.string.limit_swap_place_order),
                         variant = VsButtonVariant.CTA,
                         state =
-                            if (state.isLoadingNextScreen) {
+                            if (
+                                state.isLoadingNextScreen ||
+                                    state.limitOrder?.isPlaceOrderEnabled != true
+                            ) {
                                 VsButtonState.Disabled
                             } else {
                                 VsButtonState.Enabled

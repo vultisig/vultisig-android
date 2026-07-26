@@ -62,7 +62,7 @@ internal class BuildLimitSwapTransactionUseCaseTest {
         coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns false
         val error = runCatching { useCase.build(params()) }.exceptionOrNull()
         assertTrue(error is IllegalStateException)
-        assertTrue(error!!.message!!.contains("advanced swap queue is disabled"))
+        assertTrue(error?.message.orEmpty().contains("advanced swap queue is disabled"))
     }
 
     @Test
@@ -154,7 +154,7 @@ internal class BuildLimitSwapTransactionUseCaseTest {
                 }
                 .exceptionOrNull()
         assertTrue(error is IllegalStateException)
-        assertTrue(error!!.message!!.contains("router"))
+        assertTrue(error?.message.orEmpty().contains("router"))
     }
 
     private fun inbound(chain: String, address: String, router: String?) =

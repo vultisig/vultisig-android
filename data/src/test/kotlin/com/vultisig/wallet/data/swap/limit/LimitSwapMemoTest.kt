@@ -90,7 +90,7 @@ class LimitSwapMemoTest {
             assertThrows(IllegalArgumentException::class.java) {
                 LimitSwapMemo.getLimitAmount(BigInteger.valueOf(1_000_000L), "0.00000001")
             }
-        assertTrue(error.message!!.contains("floors to 0"))
+        assertTrue(error.message.orEmpty().contains("floors to 0"))
     }
 
     @Test
@@ -99,7 +99,7 @@ class LimitSwapMemoTest {
             assertThrows(IllegalArgumentException::class.java) {
                 LimitSwapMemo.getLimitAmount(BigInteger.valueOf(100_000_000L), "1.123456789")
             }
-        assertTrue(error.message!!.contains("at most 8 fractional digits"))
+        assertTrue(error.message.orEmpty().contains("at most 8 fractional digits"))
     }
 
     @Test
@@ -108,7 +108,7 @@ class LimitSwapMemoTest {
             assertThrows(IllegalArgumentException::class.java) {
                 LimitSwapMemo.getLimitAmount(BigInteger.valueOf(100_000_000L), "0")
             }
-        assertTrue(error.message!!.contains("greater than 0"))
+        assertTrue(error.message.orEmpty().contains("greater than 0"))
     }
 
     @Test
@@ -148,7 +148,7 @@ class LimitSwapMemoTest {
                     expiryHours = 6,
                 )
             }
-        assertTrue(error.message!!.contains("expiry_hours"))
+        assertTrue(error.message.orEmpty().contains("expiry_hours"))
     }
 
     @Test
@@ -165,7 +165,7 @@ class LimitSwapMemoTest {
                     expiryHours = 24,
                 )
             }
-        assertTrue(error.message!!.contains("not a valid"))
+        assertTrue(error.message.orEmpty().contains("not a valid"))
     }
 
     @Test
@@ -212,8 +212,8 @@ class LimitSwapMemoTest {
                     "utxo",
                 )
             }
-        assertTrue(error.message!!.contains("81 bytes"))
-        assertTrue(error.message!!.contains("exceeding utxo limit 80"))
+        assertTrue(error.message.orEmpty().contains("81 bytes"))
+        assertTrue(error.message.orEmpty().contains("exceeding utxo limit 80"))
     }
 
     @Test
@@ -244,7 +244,7 @@ class LimitSwapMemoTest {
                     "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:0/7200/0:va:50"
                 )
             }
-        assertTrue(error.message!!.contains("zero minimum-received"))
+        assertTrue(error.message.orEmpty().contains("zero minimum-received"))
     }
 
     @Test

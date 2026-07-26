@@ -350,6 +350,11 @@ constructor(
      * swap queue. Placement flows through the same verify → keysign path as a market swap.
      */
     fun placeLimitOrder() {
+        // Re-entry guard: the CTA disables off isLoadingNextScreen, but that flips inside this
+        // method, so a fast second tap could otherwise start a second placement (a duplicate
+        // on-chain deposit) before the UI updates.
+        if (isLoadingNextScreen) return
+
         val targetPrice = limitTargetPrice.value
         if (targetPrice == null) {
             showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
@@ -425,20 +430,16 @@ constructor(
     private fun fetchMarketPrice(src: Coin, dst: Coin) {
         marketPriceJob?.cancel()
         marketPriceJob =
-            viewModelScope.launch {
+            viewModelScope.safeLaunch(
+                onError = { Timber.w(it, "Failed to fetch limit-swap market price") }
+            ) {
                 val price =
-                    runCatching {
-                            limitMarketPriceRepository.getMarketPrice(
-                                fromCoin = src,
-                                toCoin = dst,
-                                sourcePrice = src.usdPrice ?: BigDecimal.ZERO,
-                            )
-                        }
-                        .getOrElse {
-                            Timber.w(it, "Failed to fetch limit-swap market price")
-                            null
-                        }
-                if (price != null && price.signum() > 0) {
+                    limitMarketPriceRepository.getMarketPrice(
+                        fromCoin = src,
+                        toCoin = dst,
+                        sourcePrice = src.usdPrice ?: BigDecimal.ZERO,
+                    )
+                if (price.signum() > 0) {
                     marketTargetPrice.value = price
                     val preset = limitPreset.value
                     if (preset != null || limitTargetPrice.value == null) {
@@ -522,6 +523,11 @@ constructor(
                         buyTicker = dstCoin.ticker,
                         buyLogo = dstCoin.logo,
                         warningRes = warningRes,
+                        // Ready only when there is a resolved target price and a positive sell
+                        // amount, so the CTA can't be tapped before the order can actually be
+                        // built.
+                        isPlaceOrderEnabled =
+                            target != null && sellAmount != null && sellAmount.signum() > 0,
                     ),
             )
         }

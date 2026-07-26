@@ -54,4 +54,8 @@ internal data class LimitOrderUiModel(
      * String resource of the price warning to render (below-market / far-above-market), or null.
      */
     @StringRes val warningRes: Int? = null,
+    /**
+     * Whether the order has everything it needs to be placed (a target price and a sell amount).
+     */
+    val isPlaceOrderEnabled: Boolean = false,
 )
