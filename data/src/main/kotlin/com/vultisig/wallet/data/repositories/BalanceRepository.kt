@@ -575,7 +575,12 @@ constructor(
                                 } else {
                                     tonApi.getJettonBalance(address, coin.contractAddress)
                                 }
-                            Chain.Ripple -> rippleApi.getBalance(coin)
+                            Chain.Ripple ->
+                                if (coin.isNativeToken) {
+                                    rippleApi.getBalance(coin)
+                                } else {
+                                    rippleApi.getTokenBalance(coin)
+                                }
                             Chain.Tron -> tronApi.getBalance(coin)
                             Chain.Cardano -> cardanoApi.getBalance(coin)
                         },
