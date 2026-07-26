@@ -462,7 +462,7 @@ internal class DefaultSendStrategy(
                 it.copy(
                     blockChainSpecific =
                         spec.copy(
-                            maxFeePerGasWei = gs.baseFee,
+                            maxFeePerGasWei = gs.maxFeePerGasWei,
                             priorityFeeWei = gs.priorityFee,
                             gasLimit = gs.gasLimit,
                         )
