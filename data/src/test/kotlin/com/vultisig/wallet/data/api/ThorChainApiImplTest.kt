@@ -282,7 +282,11 @@ class ThorChainApiImplTest {
         )
     }
 
-    private fun rujiStakeBody(bondedAmount: String): String =
+    private fun rujiStakeBody(
+        bondedAmount: String,
+        liquidSize: String? = "0",
+        liquidShares: String? = "0",
+    ): String =
         """
         {
           "data": {
@@ -292,6 +296,8 @@ class ThorChainApiImplTest {
                 {
                   "account": "thor1abc",
                   "bonded": { "amount": "$bondedAmount", "asset": { "metadata": { "symbol": "RUJI" } } },
+                  ${liquidSize?.let { """"liquidSize": { "amount": "$it" },""" } ?: ""}
+                  ${liquidShares?.let { """"liquidShares": { "amount": "$it" },""" } ?: ""}
                   "pendingRevenue": { "amount": "500", "asset": { "metadata": { "symbol": "USDC" } } },
                   "pool": { "mergeAsset": null, "summary": { "apr": { "value": "0.12" } } }
                 }
@@ -334,104 +340,152 @@ class ThorChainApiImplTest {
             .trimIndent()
 
     @Test
-    fun `getRujiStakeBalance prefers on-chain receipt balance over bonded when receipts are held`() =
+    fun `getRujiStakeBalance reports a bonded-only position instead of the receipt's zero`() =
         runBlocking {
-            // bonded reads 0 (the reported bug), but the vault holds sRUJI receipts on-chain.
+            // The "Standard" pool holds no receipt token at all, so an sRUJI balance of zero is the
+            // normal state for a bonded staker — it must not erase the bonded amount (#5419).
             val api =
                 newRujiApi(
-                    stakeBody = rujiStakeBody(bondedAmount = "0"),
-                    balancesBody =
-                        """{"balances":[{"denom":"x/staking-x/ruji","amount":"12345"}]}""",
+                    stakeBody = rujiStakeBody(bondedAmount = "7875733"),
+                    balancesBody = """{"balances":[]}""",
                 )
 
             val result = api.getRujiStakeBalance("thor1abc")
 
-            assertEquals(BigInteger("12345"), result.stakeAmount)
+            assertEquals(BigInteger("7875733"), result.stakeAmount)
+            assertEquals(BigInteger.ZERO, result.autoCompoundAmount)
             assertEquals("RUJI", result.stakeTicker)
         }
 
     @Test
-    fun `getRujiStakeBalance keeps a successful zero receipt as zero instead of using bonded`() =
+    fun `getRujiStakeBalance values the auto-compounding position in RUJI not in receipt shares`() =
         runBlocking {
-            // Balances read succeeds but holds no receipt (vault fully unstaked). Parity with
-            // vultisig-windows #4337: a successful zero stays zero; do NOT fall back to a stale
-            // non-zero bonded amount.
+            // liquidSize is the receipt priced at the pool's share price, which sits above 1 and
+            // rises: rendering the raw share count understates the position by the accrued yield.
             val api =
                 newRujiApi(
-                    stakeBody = rujiStakeBody(bondedAmount = "777"),
+                    stakeBody =
+                        rujiStakeBody(
+                            bondedAmount = "0",
+                            liquidSize = "1406486651509",
+                            liquidShares = "1385594365632",
+                        ),
                     balancesBody = """{"balances":[]}""",
                 )
 
             val result = api.getRujiStakeBalance("thor1abc")
 
             assertEquals(BigInteger.ZERO, result.stakeAmount)
+            assertEquals(BigInteger("1406486651509"), result.autoCompoundAmount)
+            assertEquals(BigInteger("1385594365632"), result.autoCompoundShares)
         }
 
     @Test
-    fun `getRujiStakeBalance falls back to bonded only when the balances read fails`() =
-        runBlocking {
-            val api =
-                newRujiApi(
-                    stakeBody = rujiStakeBody(bondedAmount = "42"),
-                    balancesBody = "boom",
-                    balancesStatus = HttpStatusCode.InternalServerError,
-                )
+    fun `getRujiStakeBalance reports both positions when an account holds each`() = runBlocking {
+        // Live shape of thor1qvmeavyusxyet7szr2azjzut7tamw4ycfg08ss: bonded and auto-compounding at
+        // the same time. Neither may substitute for or suppress the other.
+        val api =
+            newRujiApi(
+                stakeBody =
+                    rujiStakeBody(
+                        bondedAmount = "1638238990000",
+                        liquidSize = "1406486651509",
+                        liquidShares = "1385594365632",
+                    ),
+                balancesBody = """{"balances":[]}""",
+            )
 
-            val result = api.getRujiStakeBalance("thor1abc")
+        val result = api.getRujiStakeBalance("thor1abc")
 
-            assertEquals(BigInteger("42"), result.stakeAmount)
-        }
+        assertEquals(BigInteger("1638238990000"), result.stakeAmount)
+        assertEquals(BigInteger("1406486651509"), result.autoCompoundAmount)
+    }
 
     @Test
-    fun `getRujiStakeBalance falls back to bonded when the receipt amount is unparseable`() =
+    fun `getRujiStakeBalance falls back to the on-chain receipt for shares when liquidShares is absent`() =
         runBlocking {
-            // The receipt entry exists but carries a garbage amount: this is a read failure, not a
-            // genuine zero, so we fall back to the GraphQL bonded amount rather than reporting
-            // zero.
+            // liquidShares equals the on-chain receipt by construction, so the bank balance is a
+            // safe stand-in when a partial response omits the field — without it the unbond, which
+            // is funded in shares, would be silently unavailable.
             val api =
                 newRujiApi(
-                    stakeBody = rujiStakeBody(bondedAmount = "42"),
+                    stakeBody =
+                        rujiStakeBody(
+                            bondedAmount = "0",
+                            liquidSize = "1406486651509",
+                            liquidShares = null,
+                        ),
                     balancesBody =
-                        """{"balances":[{"denom":"x/staking-x/ruji","amount":"not-a-number"}]}""",
+                        """{"balances":[{"denom":"x/staking-x/ruji","amount":"1385594365632"}]}""",
                 )
 
             val result = api.getRujiStakeBalance("thor1abc")
 
-            assertEquals(BigInteger("42"), result.stakeAmount)
+            assertEquals(BigInteger("1385594365632"), result.autoCompoundShares)
         }
 
     @Test
-    fun `getRujiStakeBalance falls back to the RUJI position not TCY when the balances read fails`() =
+    fun `getRujiStakeBalance throws rather than reporting an unparseable bonded amount as zero`() =
         runBlocking {
-            // Real-world shape: TCY position (bonded 0) precedes RUJI in stakingV2. When the
-            // balance read fails and we fall back to bonded, it must read RUJI's amount, not TCY's
-            // leading 0.
+            // Coercing a malformed amount to zero is exactly the failure this issue is about: it
+            // renders a funded account as empty. Failing closed lets the caller keep its cache.
+            val api =
+                newRujiApi(
+                    stakeBody = rujiStakeBody(bondedAmount = "not-a-number"),
+                    balancesBody = """{"balances":[]}""",
+                )
+
+            assertThrows(IllegalStateException::class.java) {
+                runBlocking { api.getRujiStakeBalance("thor1abc") }
+            }
+            Unit
+        }
+
+    @Test
+    fun `getRujiStakeBalance throws rather than reporting an unparseable liquidSize as zero`() =
+        runBlocking {
+            val api =
+                newRujiApi(
+                    stakeBody = rujiStakeBody(bondedAmount = "0", liquidSize = "garbage"),
+                    balancesBody = """{"balances":[]}""",
+                )
+
+            assertThrows(IllegalStateException::class.java) {
+                runBlocking { api.getRujiStakeBalance("thor1abc") }
+            }
+            Unit
+        }
+
+    @Test
+    fun `getRujiStakeBalance reports zeros when the account holds no RUJI position at all`() =
+        runBlocking {
+            // An absent position is a genuine zero, not a partial response — it must not throw.
+            val api =
+                newRujiApi(
+                    stakeBody = """{"data":{"node":{"merge":null,"stakingV2":[]}}}""",
+                    balancesBody = """{"balances":[]}""",
+                )
+
+            val result = api.getRujiStakeBalance("thor1abc")
+
+            assertEquals(BigInteger.ZERO, result.stakeAmount)
+            assertEquals(BigInteger.ZERO, result.autoCompoundAmount)
+        }
+
+    @Test
+    fun `getRujiStakeBalance reads the RUJI position not TCY when TCY is listed first`() =
+        runBlocking {
+            // Real-world shape: the TCY position (bonded 0) precedes RUJI in stakingV2, so taking
+            // the first entry would report RUJI's amount, APR and rewards from an unrelated pool.
             val api =
                 newRujiApi(
                     stakeBody = rujiStakeBodyWithTcyFirst(bondedRuji = "7875733"),
-                    balancesBody = "boom",
-                    balancesStatus = HttpStatusCode.InternalServerError,
+                    balancesBody = """{"balances":[]}""",
                 )
 
             val result = api.getRujiStakeBalance("thor1abc")
 
             assertEquals(BigInteger("7875733"), result.stakeAmount)
-            assertEquals("RUJI", result.stakeTicker)
-        }
-
-    @Test
-    fun `getRujiStakeBalance prefers receipt over RUJI bonded even with TCY listed first`() =
-        runBlocking {
-            val api =
-                newRujiApi(
-                    stakeBody = rujiStakeBodyWithTcyFirst(bondedRuji = "7875733"),
-                    balancesBody =
-                        """{"balances":[{"denom":"x/staking-x/ruji","amount":"41952462"}]}""",
-                )
-
-            val result = api.getRujiStakeBalance("thor1abc")
-
-            assertEquals(BigInteger("41952462"), result.stakeAmount)
             assertEquals("RUJI", result.stakeTicker)
         }
 

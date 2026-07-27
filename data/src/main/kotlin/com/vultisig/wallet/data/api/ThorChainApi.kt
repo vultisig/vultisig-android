@@ -446,15 +446,24 @@ constructor(
         // the first, or the amount/rewards get read from an unrelated position.
         val stake =
             response.data?.node?.stakingV2?.firstOrNull {
-                it.bonded.asset.metadata?.symbol.equals(RUJI_STAKE_SYMBOL, ignoreCase = true)
+                it.bonded.asset?.metadata?.symbol.equals(RUJI_STAKE_SYMBOL, ignoreCase = true)
             }
 
-        val bondedAmount = stake?.bonded?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
-        // The on-chain x/staking-x/ruji receipt is the source of truth for what the vault holds;
-        // the GraphQL `bonded` field can report 0 even when receipts are held. Prefer the receipt
-        // (a successful zero stays zero), falling back to `bonded` only when the balance read
-        // failed. Mirrors vultisig-windows #4337.
-        val stakeAmount = readRujiReceiptBalance(address) ?: bondedAmount
+        // The bonded and auto-compounding positions are independent and are reported side by side:
+        // neither may substitute for the other. Preferring one (as this used to, reading the
+        // on-chain receipt over `bonded`) reports a funded account as empty whenever it holds only
+        // the other kind. `liquidSize` — not the raw receipt balance — is the auto-compounding
+        // amount, because the receipt is denominated in shares whose price rises as revenue
+        // compounds.
+        val bondedAmount = stake?.bonded?.amount.toStakeAmountOrThrow(BONDED_FIELD)
+        val autoCompoundAmount = stake?.liquidSize?.amount.toStakeAmountOrThrow(LIQUID_SIZE_FIELD)
+        // Shares come from the same response as the size they back, so their ratio is consistent;
+        // the on-chain receipt (identical by construction) only covers a response missing the
+        // field.
+        val autoCompoundShares =
+            stake?.liquidShares?.amount?.toBigIntegerOrNull()
+                ?: readRujiReceiptBalance(address)
+                ?: BigInteger.ZERO
 
         val stakeTicker = stake?.bonded?.asset?.metadata?.symbol ?: RUJI_STAKE_SYMBOL
         val rewardsAmount = stake?.pendingRevenue?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
@@ -463,8 +472,10 @@ constructor(
             runCatching { (stake?.pool?.summary?.apr?.value ?: "0.0").toDouble() }.getOrDefault(0.0)
 
         return RujiStakeBalances(
-            stakeAmount = stakeAmount,
+            stakeAmount = bondedAmount,
             stakeTicker = stakeTicker,
+            autoCompoundAmount = autoCompoundAmount,
+            autoCompoundShares = autoCompoundShares,
             rewardsAmount = rewardsAmount,
             rewardsTicker = rewardsTicker,
             apr = apr,
@@ -472,11 +483,24 @@ constructor(
     }
 
     /**
+     * Parses a staking position amount, failing closed on a malformed value.
+     *
+     * An absent amount means the account holds no such position, which is a genuine zero. A
+     * *present* but unparseable one is a partial response: coercing it to zero would erase a live
+     * position from the UI, so it throws and lets the caller keep its cached position instead.
+     */
+    private fun String?.toStakeAmountOrThrow(field: String): BigInteger {
+        if (this == null) return BigInteger.ZERO
+        return toBigIntegerOrNull()
+            ?: error("RUJI staking `$field` amount '$this' is not a valid number")
+    }
+
+    /**
      * Reads the on-chain sRUJI staking-receipt balance (denom [STAKING_RUJI_DENOM]) for the given
-     * THORChain address. Mirrors how sTCY derives its amount from the receipt denom. Returns
-     * [BigInteger.ZERO] when the balance read succeeds but no receipt is held (a genuine zero), and
-     * `null` only when the read fails — so the caller can distinguish a real zero from an unknown
-     * balance and fall back to the GraphQL `bonded` amount only in the latter case.
+     * THORChain address. The receipt is denominated in shares, so this is not a display value — it
+     * is a stand-in for the GraphQL `liquidShares` field when a response omits it, used to size the
+     * `liquid.unbond` redemption. Returns [BigInteger.ZERO] when the read succeeds but no receipt
+     * is held (a genuine zero), and `null` only when the read fails.
      */
     private suspend fun readRujiReceiptBalance(address: String): BigInteger? =
         try {
@@ -484,23 +508,19 @@ constructor(
             when {
                 // No receipt held: a genuine zero balance.
                 receipt == null -> BigInteger.ZERO
-                // Receipt held but its amount is unparseable: treat as a read failure so the
-                // caller falls back to the GraphQL `bonded` amount rather than reporting a false
-                // zero.
+                // Receipt held but its amount is unparseable: report it as unknown rather than as a
+                // false zero, which would silently disable the unbond.
                 else ->
                     receipt.amount.toBigIntegerOrNull()
                         ?: run {
-                            Timber.w(
-                                "RUJI receipt amount '%s' is unparseable; falling back to bonded",
-                                receipt.amount,
-                            )
+                            Timber.w("RUJI receipt amount '%s' is unparseable", receipt.amount)
                             null
                         }
             }
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.w(e, "Failed to read on-chain RUJI receipt balance; falling back to bonded")
+            Timber.w(e, "Failed to read on-chain RUJI receipt balance")
             null
         }
 
@@ -754,6 +774,12 @@ constructor(
                     }
                   }
                 }
+                liquidSize {
+                  amount
+                }
+                liquidShares {
+                  amount
+                }
                 pendingRevenue {
                   amount
                   asset {
@@ -777,6 +803,8 @@ constructor(
         private const val STAKING_TCY_DENOM = "x/staking-tcy"
         private const val STAKING_RUJI_DENOM = "x/staking-x/ruji"
         private const val RUJI_STAKE_SYMBOL = "RUJI"
+        private const val BONDED_FIELD = "bonded"
+        private const val LIQUID_SIZE_FIELD = "liquidSize"
         private const val DEFAULT_REWARDS_TICKER = "USDC"
         private const val THOR_CHAIN_NAME = "THOR"
         private const val TCY_STAKER_NOT_FOUND_ERROR = "TCYStaker doesn't exist"

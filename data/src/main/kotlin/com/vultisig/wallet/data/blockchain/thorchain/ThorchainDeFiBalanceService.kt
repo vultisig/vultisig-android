@@ -98,6 +98,12 @@ class ThorchainDeFiBalanceService(
                     Coins.ThorChain.RUJI.id,
                 )
             }
+            val sRujiDetailsDeferred = async {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    vaultId,
+                    Coins.ThorChain.sRUJI.id,
+                )
+            }
             val tcyDetailsDeferred = async {
                 stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.TCY.id)
             }
@@ -108,6 +114,7 @@ class ThorchainDeFiBalanceService(
             val bonDetailsDeferred = async { activeBondedNodeRepository.getBondedNodes(vaultId) }
 
             val rujiDetails = rujiDetailsDeferred.await()
+            val sRujiDetails = sRujiDetailsDeferred.await()
             val tcyDetails = tcyDetailsDeferred.await()
             val defaultDetails = defaultDetailsDeferred.await()
             val bonDetails = bonDetailsDeferred.await()
@@ -135,6 +142,23 @@ class ThorchainDeFiBalanceService(
                 )
 
                 defiBalances.add(DeFiBalance(chain = Chain.ThorChain, balances = balances))
+            }
+
+            // Add the auto-compounding RUJI position if exists. It is independent of the bonded one
+            // above and carries no separately-claimable revenue.
+            sRujiDetails?.let { details ->
+                defiBalances.add(
+                    DeFiBalance(
+                        chain = Chain.ThorChain,
+                        balances =
+                            listOf(
+                                DeFiBalance.Balance(
+                                    coin = details.coin,
+                                    amount = details.stakeAmount,
+                                )
+                            ),
+                    )
+                )
             }
 
             // Add TCY balance if exists
@@ -193,20 +217,21 @@ class ThorchainDeFiBalanceService(
         address: String,
         vaultId: String,
     ): DeFiBalance {
-        val amount =
-            runCatching {
-                    rujiStakingService.getStakingDetails(address, vaultId).last().stakeAmount
-                }
+        val positions =
+            runCatching { rujiStakingService.getStakingDetails(address, vaultId).last() }
                 .getOrElse { exception ->
                     Timber.e(exception, "ThorchainDeFiBalanceService: Failed to fetch RUJI balance")
                     throw exception
                 }
 
-        Timber.d("ThorchainDeFiBalanceService: RUJI staking amount for $address: $amount")
+        Timber.d("ThorchainDeFiBalanceService: RUJI staking positions for $address: $positions")
 
         return DeFiBalance(
             chain = Chain.ThorChain,
-            balances = listOf(DeFiBalance.Balance(coin = Coins.ThorChain.RUJI, amount = amount)),
+            balances =
+                positions.map { position ->
+                    DeFiBalance.Balance(coin = position.coin, amount = position.stakeAmount)
+                },
         )
     }
 

@@ -2937,6 +2937,21 @@ object Coins {
                 isNativeToken = false,
             )
 
+        // The auto-compounding RUJI staking position. Its DeFi card is denominated in RUJI (the
+        // pool's `liquidSize`), not in receipt shares, so it prices off RUJI.
+        val sRUJI =
+            Coin(
+                chain = Chain.ThorChain,
+                ticker = "sRUJI",
+                logo = "ruji",
+                address = "",
+                decimal = 8,
+                hexPublicKey = "",
+                priceProviderID = "ruji",
+                contractAddress = "x/staking-x/ruji",
+                isNativeToken = false,
+            )
+
         val sTCY =
             Coin(
                 chain = Chain.ThorChain,
