@@ -7,7 +7,8 @@ import kotlinx.serialization.Serializable
 data class FeatureFlagJson(
     @SerialName("encrypt-gcm") val isEncryptGcmEnabled: Boolean = false,
     @SerialName("tss-batch") val isTssBatchEnabled: Boolean = false,
-    // Gates the whole THORChain limit-swap (Place) flow. Defaults off so the Limit tab stays a
-    // placeholder until the flow ships and the remote flag is flipped on.
-    @SerialName("limit-swap") val isLimitSwapEnabled: Boolean = false,
+    // Gates the whole THORChain limit-swap (Place) flow. Defaults on now that the flow ships: the
+    // remote payload doesn't carry the key yet, so the default is what users get, and publishing
+    // `"limit-swap": false` remains the kill switch.
+    @SerialName("limit-swap") val isLimitSwapEnabled: Boolean = true,
 )
