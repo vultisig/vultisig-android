@@ -144,6 +144,31 @@ internal class SwapProviderTableTest {
     }
 
     @Test
+    fun `Robinhood offers exactly 1inch, LiFi and Kyber`() {
+        // All three live-confirmed on 4663 (#5390 review); 1inch and Kyber are sameChainOnly, so a
+        // cross-chain pair must fall back to LiFi alone. No SwapKit, no 1inch-set drift.
+        val expected = setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
+        listOf(
+                coin(Chain.Robinhood, "ETH", isNative = true),
+                coin(Chain.Robinhood, "AAPL", isNative = false),
+            )
+            .forEach { c ->
+                assertEquals(expected, table.providersFor(c), "Provider set for ${c.ticker}")
+            }
+
+        val crossChain =
+            table.eligibleProvidersFor(
+                srcToken = coin(Chain.Robinhood, "ETH", isNative = true),
+                dstToken = coin(Chain.Ethereum, "ETH", isNative = true),
+            )
+        assertEquals(
+            setOf(SwapProvider.LIFI),
+            crossChain.toSet(),
+            "Cross-chain from Robinhood must drop the same-chain-only aggregators",
+        )
+    }
+
+    @Test
     fun `SwapKit-wired chains are marked swap-supported so the Swap action button shows`() {
         // ChainTokensViewModel.canSwap reads Chain.isSwapSupported to show the Swap button on the
         // account screen. A chain can offer SWAPKIT in the provider table yet stay invisible to the
