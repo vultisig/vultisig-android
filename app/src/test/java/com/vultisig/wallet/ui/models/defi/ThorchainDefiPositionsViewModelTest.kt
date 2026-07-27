@@ -205,12 +205,14 @@ internal class ThorchainDefiPositionsViewModelTest {
         selectPositions("RUJI")
         coEvery { rujiStakingService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
             flowOf(
-                stakingDetails(
-                    coin = Coins.ThorChain.RUJI,
-                    stakeAmount = BigInteger("500000000"),
-                    apr = 0.2,
-                    rewards = BigDecimal("1000000"),
-                    rewardsCoin = Coins.ThorChain.RUNE,
+                listOf(
+                    stakingDetails(
+                        coin = Coins.ThorChain.RUJI,
+                        stakeAmount = BigInteger("500000000"),
+                        apr = 0.2,
+                        rewards = BigDecimal("1000000"),
+                        rewardsCoin = Coins.ThorChain.RUNE,
+                    )
                 )
             )
 
@@ -226,14 +228,82 @@ internal class ThorchainDefiPositionsViewModelTest {
     }
 
     @Test
+    fun `both RUJI positions render as independent cards`() = runTest {
+        // A holder of one, the other, or both must see exactly what they hold: the bonded position
+        // carries the APR and the claimable USDC, the auto-compounding one is stat-free (#5419).
+        selectPositions("RUJI")
+        coEvery { rujiStakingService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(
+                listOf(
+                    stakingDetails(
+                        coin = Coins.ThorChain.RUJI,
+                        stakeAmount = BigInteger("500000000"),
+                        apr = 0.2,
+                        rewards = BigDecimal("1000000"),
+                        rewardsCoin = Coins.ThorChain.RUNE,
+                    ),
+                    stakingDetails(
+                        coin = Coins.ThorChain.sRUJI,
+                        stakeAmount = BigInteger("300000000"),
+                    ),
+                )
+            )
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val bonded = vm.state.value.staking.positions.single { it.coin.id == RUJI_ID }
+        val compounded =
+            vm.state.value.staking.positions.single { it.coin.id == Coins.ThorChain.sRUJI.id }
+        assertEquals("5 RUJI", bonded.stakedAmountDisplay)
+        assertTrue(bonded.canWithdraw)
+        // Valued in RUJI, not shown as a raw sRUJI share count.
+        assertEquals("3 RUJI", compounded.stakedAmountDisplay)
+        assertTrue(compounded.canUnstake)
+        assertFalse(compounded.canWithdraw)
+        assertEquals(null, compounded.apy)
+        // Both are RUJI-denominated, so the tab's RUJI total is their sum.
+        assertEquals(BigInteger("800000000"), vm.totalValueRujiStake.value)
+    }
+
+    @Test
+    fun `a bonded-only holder still sees the bonded amount`() = runTest {
+        // The regression this issue was filed for: the "Standard" pool holds no receipt, so the
+        // auto-compounding zero must not suppress the bonded card.
+        selectPositions("RUJI")
+        coEvery { rujiStakingService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(
+                listOf(
+                    stakingDetails(
+                        coin = Coins.ThorChain.RUJI,
+                        stakeAmount = BigInteger("500000000"),
+                    ),
+                    stakingDetails(coin = Coins.ThorChain.sRUJI, stakeAmount = BigInteger.ZERO),
+                )
+            )
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val bonded = vm.state.value.staking.positions.single { it.coin.id == RUJI_ID }
+        assertEquals("5 RUJI", bonded.stakedAmountDisplay)
+        assertTrue(bonded.canUnstake)
+        assertFalse(
+            vm.state.value.staking.positions
+                .single { it.coin.id == Coins.ThorChain.sRUJI.id }
+                .canUnstake
+        )
+    }
+
+    @Test
     fun `a RUJI position with no rewards cannot withdraw`() = runTest {
         selectPositions("RUJI")
         coEvery { rujiStakingService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
             flowOf(
-                stakingDetails(
-                    coin = Coins.ThorChain.RUJI,
-                    stakeAmount = BigInteger("500000000"),
-                    rewards = BigDecimal.ZERO,
+                listOf(
+                    stakingDetails(
+                        coin = Coins.ThorChain.RUJI,
+                        stakeAmount = BigInteger("500000000"),
+                        rewards = BigDecimal.ZERO,
+                    )
                 )
             )
 
