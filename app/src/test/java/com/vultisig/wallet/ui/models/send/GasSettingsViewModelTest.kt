@@ -253,6 +253,20 @@ internal class GasSettingsViewModelTest {
         assertEquals(true, vm.state.value.isLoadingEthFee)
     }
 
+    // Legacy-gas sibling of the test above (issue #5399): eth_gasPrice failing must hit the same
+    // isLoadingEthFee gate, not silently populate the BSC price field with a fake zero.
+    @Test
+    fun `legacy gas chain keeps isLoadingEthFee true when eth_gasPrice fails`() = runTest {
+        coEvery { evmApi.getGasPrice() } throws RuntimeException("network error")
+        val vm = viewModel()
+
+        vm.loadData(Chain.BscChain, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        advanceUntilIdle()
+
+        assertEquals(true, vm.state.value.isLoadingEthFee)
+        assertEquals("", vm.baseFeeState.text.toString())
+    }
+
     @Test
     fun `GasSettings Eth rejects a negative baseFee or priorityFee`() {
         assertThrows<IllegalArgumentException> {
