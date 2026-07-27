@@ -470,8 +470,13 @@ class EvmApiImp(
     override suspend fun getMaxPriorityFeePerGas(): BigInteger {
         val rpcResp = fetch<RpcResponse>("eth_maxPriorityFeePerGas", buildJsonArray {})
         if (rpcResp.error != null) {
-            Timber.d("get max priority fee per gas , error: ${rpcResp.error.message}")
-            return BigInteger.ZERO
+            // A failed read must propagate, never collapse into ZERO: a zero priority fee can
+            // combine with a zeroed base fee (below) to sign an EIP-1559 tx priced under the real
+            // network fee, which broadcast then rejects as underpriced (#5400).
+            throw NetworkException(
+                httpStatusCode = 0,
+                message = "max priority fee per gas rpc error: ${rpcResp.error.message}",
+            )
         }
 
         return rpcResp.result.convertToBigIntegerOrZero()
@@ -596,8 +601,11 @@ class EvmApiImp(
                     },
             )
         if (response.error != null) {
-            Timber.d("get base fee error: ${response.error.message}")
-            return BigInteger.ZERO
+            // Same rationale as getMaxPriorityFeePerGas above (#5400).
+            throw NetworkException(
+                httpStatusCode = 0,
+                message = "base fee rpc error: ${response.error.message}",
+            )
         }
         return response.result?.baseFeePerGas.convertToBigIntegerOrZero()
     }
