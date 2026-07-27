@@ -66,6 +66,89 @@ internal class EvmCoinFinderTest {
     }
 
     @Test
+    fun `hybrid discovery covers exactly the chains 1inch half-indexes`() {
+        // Robinhood: 1inch `/balance` works but `/token` 404s the stock tokens — pure 1inch
+        // routing would drop them, pure curated routing loses CG-verified extras (#5390 review).
+        assertEquals(setOf(Chain.Robinhood), EvmCoinFinderImpl.HYBRID_DISCOVERY_CHAINS)
+    }
+
+    @Test
+    fun `find on Robinhood unions 1inch discoveries with curated stock holdings`() = runTest {
+        // AAPL is curated but absent from 1inch `/token` metadata; PEPE-like extra is
+        // 1inch-only. The union must surface both.
+        coEvery { oneInchApi.getContractsWithBalance(Chain.Robinhood, ADDRESS) } returns
+            listOf(robinhoodAapl.contractAddress.lowercase(), GOOD_CONTRACT)
+        coEvery {
+            oneInchApi.getTokensByContracts(
+                Chain.Robinhood,
+                listOf(robinhoodAapl.contractAddress.lowercase(), GOOD_CONTRACT),
+            )
+        } returns
+            mapOf(
+                GOOD_CONTRACT to
+                    oneInchToken(
+                        address = GOOD_CONTRACT,
+                        symbol = "PEPE",
+                        logoURI = "https://tokens.example.com/pepe.png",
+                        providers = listOf("1inch", "CoinGecko"),
+                    )
+            )
+        every { evmApiFactory.createEvmApi(Chain.Robinhood) } returns evmApi
+        coEvery { evmApi.getBalances(ADDRESS, robinhoodCuratedContracts()) } returns
+            mapOf(robinhoodAapl.contractAddress to BigInteger.valueOf(3))
+
+        val coins = finder.find(Chain.Robinhood, ADDRESS)
+
+        assertEquals(setOf("AAPL", "PEPE"), coins.map { it.ticker }.toSet())
+        coVerify(exactly = 1) { evmApi.getBalances(ADDRESS, robinhoodCuratedContracts()) }
+    }
+
+    @Test
+    fun `find on Robinhood dedupes contracts both paths surface, curated entry wins`() = runTest {
+        val usdg =
+            requireNotNull(Coins.coins[Chain.Robinhood]).first {
+                it.ticker == "USDG" && !it.isNativeToken
+            }
+        coEvery { oneInchApi.getContractsWithBalance(Chain.Robinhood, ADDRESS) } returns
+            listOf(usdg.contractAddress.lowercase())
+        coEvery {
+            oneInchApi.getTokensByContracts(
+                Chain.Robinhood,
+                listOf(usdg.contractAddress.lowercase()),
+            )
+        } returns
+            mapOf(
+                usdg.contractAddress.lowercase() to
+                    oneInchToken(
+                        address = usdg.contractAddress.lowercase(),
+                        symbol = "USDG",
+                        logoURI = "https://tokens.1inch.io/usdg.png",
+                        providers = listOf("CoinGecko"),
+                    )
+            )
+        every { evmApiFactory.createEvmApi(Chain.Robinhood) } returns evmApi
+        coEvery { evmApi.getBalances(ADDRESS, robinhoodCuratedContracts()) } returns
+            mapOf(usdg.contractAddress to BigInteger.ONE)
+
+        val coins = finder.find(Chain.Robinhood, ADDRESS)
+
+        assertEquals(listOf(usdg), coins, "One entry, and it is the curated USDG")
+    }
+
+    @Test
+    fun `find on Robinhood still surfaces curated holdings when 1inch is down`() = runTest {
+        coEvery { oneInchApi.getContractsWithBalance(Chain.Robinhood, ADDRESS) } throws
+            NetworkException(500, "boom")
+        every { evmApiFactory.createEvmApi(Chain.Robinhood) } returns evmApi
+        coEvery { evmApi.getBalances(ADDRESS, robinhoodCuratedContracts()) } returns
+            mapOf(robinhoodAapl.contractAddress to BigInteger.TEN)
+
+        val coins = finder.find(Chain.Robinhood, ADDRESS)
+
+        assertEquals(listOf("AAPL"), coins.map { it.ticker })
+    }
+
+    @Test
     fun `find drops native sentinel and tokens that fail the allowlist`() = runTest {
         coEvery { oneInchApi.getContractsWithBalance(Chain.BscChain, ADDRESS) } returns
             listOf(NATIVE_SENTINEL, GOOD_CONTRACT, EMPTY_LOGO_CONTRACT, NON_COINGECKO_CONTRACT)
@@ -238,20 +321,33 @@ internal class EvmCoinFinderTest {
     fun `find on an unsupported EVM chain iterates curated balances and skips 1inch`() = runTest {
         // Pick whichever curated coin Blast happens to have first — keeps the test stable as
         // tokens are added or removed.
+        val blastContracts =
+            requireNotNull(Coins.coins[Chain.Blast])
+                .filter { !it.isNativeToken && it.contractAddress.isNotEmpty() }
+                .map { it.contractAddress }
         val curated =
             requireNotNull(Coins.coins[Chain.Blast]).first {
                 !it.isNativeToken && it.contractAddress.isNotEmpty()
             }
         every { evmApiFactory.createEvmApi(Chain.Blast) } returns evmApi
-        coEvery { evmApi.getBalances(ADDRESS, any()) } returns
+        coEvery { evmApi.getBalances(ADDRESS, blastContracts) } returns
             mapOf(curated.contractAddress to BigInteger.valueOf(7))
 
         val coins = finder.find(Chain.Blast, ADDRESS)
 
         assertEquals(listOf(curated), coins)
+        coVerify(exactly = 1) { evmApi.getBalances(ADDRESS, blastContracts) }
         coVerify(exactly = 0) { oneInchApi.getContractsWithBalance(any(), any()) }
         coVerify(exactly = 0) { oneInchApi.getTokensByContracts(any(), any()) }
     }
+
+    private val robinhoodAapl =
+        requireNotNull(Coins.coins[Chain.Robinhood]).first { it.ticker == "AAPL" }
+
+    private fun robinhoodCuratedContracts(): List<String> =
+        requireNotNull(Coins.coins[Chain.Robinhood])
+            .filter { !it.isNativeToken && it.contractAddress.isNotEmpty() }
+            .map { it.contractAddress }
 
     private fun oneInchToken(
         address: String,

@@ -13,6 +13,8 @@ import com.vultisig.wallet.data.utils.NetworkException
 import java.math.BigInteger
 import java.net.SocketTimeoutException
 import javax.inject.Inject
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
 
 /**
@@ -23,8 +25,10 @@ import timber.log.Timber
  * `/balance/v1.2/{chain}/balances/{address}` (no Alchemy 100-token cap) and metadata from
  * `/token/v1.2/{chain}/custom`. Legitimacy is gated by the CoinGecko-provider allowlist, replacing
  * the empty-logo heuristic that was dropping legit small-caps (see #4555). For EVM chains outside
- * 1inch's surface — Blast / Cronos / Hyperliquid / Mantle / Robinhood / Sei / zkSync — discovery
- * falls back to `balanceOf`-iterating the curated [Coins] catalog.
+ * 1inch's surface — Blast / Cronos / Hyperliquid / Mantle / Sei / zkSync — discovery falls back to
+ * `balanceOf`-iterating the curated [Coins] catalog. Robinhood unions both paths: 1inch `/balance`
+ * indexes the chain, but `/token` has no metadata for its 96 stock tokens, so either path alone
+ * drops holdings.
  */
 interface EvmCoinFinder {
     suspend fun find(chain: Chain, address: String): List<Coin>
@@ -36,14 +40,26 @@ constructor(private val oneInchApi: OneInchApi, private val evmApiFactory: EvmAp
     EvmCoinFinder {
 
     override suspend fun find(chain: Chain, address: String): List<Coin> {
-        if (chain !in ONE_INCH_SUPPORTED_CHAINS) return findFallback(chain, address)
-
-        val heldContracts = fetchHeldContracts(chain, address)
         val discovered =
-            if (heldContracts.isEmpty()) emptyList()
-            else fetchMetadataAndFilter(chain, heldContracts)
-
+            when (chain) {
+                in HYBRID_DISCOVERY_CHAINS -> findHybrid(chain, address)
+                in ONE_INCH_SUPPORTED_CHAINS -> findOneInch(chain, address)
+                else -> findFallback(chain, address)
+            }
         return vultTopUpOnEthereum(chain, address, discovered)
+    }
+
+    private suspend fun findOneInch(chain: Chain, address: String): List<Coin> {
+        val heldContracts = fetchHeldContracts(chain, address)
+        if (heldContracts.isEmpty()) return emptyList()
+        return fetchMetadataAndFilter(chain, heldContracts)
+    }
+
+    private suspend fun findHybrid(chain: Chain, address: String): List<Coin> = coroutineScope {
+        val oneInch = async { findOneInch(chain, address) }
+        val curated = async { findFallback(chain, address) }
+        // Curated first so its hand-verified entries win the dedupe on contracts both paths find.
+        (curated.await() + oneInch.await()).distinctBy { it.contractAddress.lowercase() }
     }
 
     private suspend fun fetchHeldContracts(chain: Chain, address: String): List<String> =
@@ -167,6 +183,12 @@ constructor(private val oneInchApi: OneInchApi, private val evmApiFactory: EvmAp
                 Chain.BscChain,
                 Chain.Avalanche,
             )
+
+        /**
+         * 1inch `/balance` indexes these chains but `/token` metadata is incomplete (Robinhood
+         * stock tokens 404) — discovery unions the 1inch path with the curated-catalog scan.
+         */
+        val HYBRID_DISCOVERY_CHAINS: Set<Chain> = setOf(Chain.Robinhood)
 
         /** Placeholder 1inch uses for the chain's native gas token; already covered separately. */
         private const val NATIVE_COIN_SENTINEL = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
