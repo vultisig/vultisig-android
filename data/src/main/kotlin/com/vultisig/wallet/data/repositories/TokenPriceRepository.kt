@@ -271,7 +271,7 @@ constructor(
             BigDecimal(liQuestApi.getLifiContractPriceUsd(chain, contract).priceUsd)
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.e(e, "Failed to fetch Lifi price for $chain contract: $contract")
+            Timber.e(e, "Failed to fetch Lifi price for %s contract: %s", chain, contract)
             null
         }
 
