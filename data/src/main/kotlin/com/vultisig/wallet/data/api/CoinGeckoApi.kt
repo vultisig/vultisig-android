@@ -94,6 +94,7 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
                 Chain.BscChain -> "binance-smart-chain"
                 Chain.ZkSync -> "zksync"
                 Chain.Solana -> "solana"
+                Chain.Mantle -> "mantle"
 
                 else -> error("No CoinGecko asset id for chain $this")
             }

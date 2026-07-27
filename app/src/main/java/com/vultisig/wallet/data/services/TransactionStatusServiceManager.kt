@@ -49,8 +49,10 @@ constructor(@param:ApplicationContext private val context: Context) {
     /**
      * Starts the foreground status service for [txHash] on [chain] and binds to it.
      *
-     * @return `false` when the system rejected the binding: `onServiceConnected()` never fires in
-     *   that case, so [serviceReady] stays `false` and callers must not wait on it.
+     * @return `false` when the system rejected the start (e.g.
+     *   `ForegroundServiceStartNotAllowedException` on API 31+ with no foreground state) or the
+     *   binding: `onServiceConnected()` never fires in that case, so [serviceReady] stays `false`
+     *   and callers must not wait on it.
      */
     fun startPolling(txHash: String, chain: Chain): Boolean {
         val intent =
@@ -59,7 +61,11 @@ constructor(@param:ApplicationContext private val context: Context) {
                 putExtra(TransactionStatusService.EXTRA_TX_HASH, txHash)
                 putExtra(TransactionStatusService.EXTRA_CHAIN, chain.raw)
             }
-        context.startForegroundService(intent)
+        val started =
+            runCatching { context.startForegroundService(intent) }
+                .onFailure { Timber.w(it, "Failed to start transaction status service") }
+                .isSuccess
+        if (!started) return false
         if (isBound) return true
 
         // Marked bound on request, not on connect: a binding that has not connected yet still
