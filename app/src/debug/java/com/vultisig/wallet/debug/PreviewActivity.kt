@@ -165,6 +165,7 @@ import com.vultisig.wallet.ui.screens.swap.preview.AdvancedSlippagePreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapFormQuoteLoadingPreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapToolbarPreview
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
+import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
@@ -206,6 +207,7 @@ class PreviewActivity : ComponentActivity() {
                     "limit_swap_form_assets" ->
                         LimitSwapFormPreview(expandedSection = LimitFormSection.Asset)
                     "limit_order_confirm" -> LimitOrderConfirmPreview()
+                    "limit_order_done" -> LimitOrderDonePreview()
                     "swap_confirm" -> SwapConfirmPreview()
                     "swap_confirm_chain" -> SwapChainIndicatorPreview()
                     "swap_confirm_disabled" -> SwapConfirmPreview(allConsents = false)
@@ -824,6 +826,44 @@ private fun LimitOrderConfirmPreview() {
         onFastSignClick = {},
         onConfirm = {},
         onBackClick = {},
+    )
+}
+
+/**
+ * Transaction-complete screen for a placed limit order: same swap overview as a market swap, plus
+ * the "Limit Orders" notice pointing at the Transaction History tab that tracks resting orders.
+ */
+@Composable
+private fun LimitOrderDonePreview() {
+    val btcCoin = Coins.Bitcoin.BTC
+    val ethCoin = Coins.Ethereum.ETH
+
+    SwapTransactionOverviewScreen(
+        transactionHash = "2d154c8a1f0b47c9e6d3a29f5b7c8e1d4a6f9b2c3e5d7a8f9b1c2d3e4f5a99c7c",
+        approveTransactionHash = "",
+        transactionLink = "",
+        approveTransactionLink = "",
+        transactionStatus = TransactionStatus.Broadcasted,
+        onComplete = {},
+        progressLink = "https://track.ninerealms.com",
+        transactionTypeUiModel =
+            SwapTransactionUiModel(
+                src = ValuedToken(token = btcCoin, value = "0.000062", fiatValue = "$4.05"),
+                dst = ValuedToken(token = ethCoin, value = "0.00205334", fiatValue = "$4.03"),
+                networkFee =
+                    ValuedToken(token = btcCoin, value = "0.00000765", fiatValue = "$0.50"),
+                providerFee =
+                    ValuedToken(token = btcCoin, value = "0.0000003", fiatValue = "$0.02"),
+                networkFeeFormatted = "0.00000765 BTC",
+                totalFee = "$0.51",
+                srcVaultName = "Fast-DKLS",
+                dstVaultName = "Fast-DKLS",
+                isLimitOrder = true,
+                limitTargetPriceLabel = "1 ETH = $1,952.78",
+                limitExpiryLabel = "24h",
+            ),
+        isTransactionDetailVisible = true,
+        onTransactionDetailVisibleChange = {},
     )
 }
 

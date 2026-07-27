@@ -696,6 +696,8 @@
     <string name="limit_swap_toggle_price_unit">가격 단위 전환</string>
     <string name="limit_swap_edit_assets">자산 편집</string>
     <string name="limit_swap_edit_price">목표 가격 편집</string>
+    <string name="limit_swap_done_notice_title">지정가 주문</string>
+    <string name="limit_swap_done_notice_message">거래 내역의 지정가 주문 탭에서 추적하세요.</string>
     <string name="swap_advanced_sheet_title">고급 스왑</string>
     <string name="swap_advanced_slippage_title">슬리피지 허용 범위</string>
     <string name="swap_advanced_slippage_page_title">슬리피지</string>

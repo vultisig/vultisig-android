@@ -704,6 +704,8 @@
     <string name="limit_swap_toggle_price_unit">Toggle price unit</string>
     <string name="limit_swap_edit_assets">Edit assets</string>
     <string name="limit_swap_edit_price">Edit target price</string>
+    <string name="limit_swap_done_notice_title">Limit Orders</string>
+    <string name="limit_swap_done_notice_message">Track them in Transaction History under the Limit Orders tab.</string>
     <string name="swap_advanced_sheet_title">Advanced swap</string>
     <string name="swap_advanced_slippage_title">Slippage Tolerance</string>
     <string name="swap_advanced_slippage_page_title">Slippage</string>

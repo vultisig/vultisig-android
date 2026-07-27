@@ -1019,6 +1019,8 @@
     <string name="limit_swap_toggle_price_unit">Cambia unità di prezzo</string>
     <string name="limit_swap_edit_assets">Modifica risorse</string>
     <string name="limit_swap_edit_price">Modifica prezzo target</string>
+    <string name="limit_swap_done_notice_title">Ordini limite</string>
+    <string name="limit_swap_done_notice_message">Monitorali nella cronologia transazioni nella scheda Ordini limite.</string>
     <string name="swap_advanced_sheet_title">Swap avanzato</string>
     <string name="swap_advanced_slippage_title">Tolleranza di slippage</string>
     <string name="swap_advanced_slippage_page_title">Slippage</string>

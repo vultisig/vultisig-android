@@ -1024,6 +1024,8 @@
     <string name="limit_swap_toggle_price_unit">Promijeni jedinicu cijene</string>
     <string name="limit_swap_edit_assets">Uredi sredstva</string>
     <string name="limit_swap_edit_price">Uredi ciljnu cijenu</string>
+    <string name="limit_swap_done_notice_title">Limitirani nalozi</string>
+    <string name="limit_swap_done_notice_message">Prati ih u povijesti transakcija pod karticom Limitirani nalozi.</string>
     <string name="swap_advanced_sheet_title">Napredna zamjena</string>
     <string name="swap_advanced_slippage_title">Tolerancija proklizavanja</string>
     <string name="swap_advanced_slippage_page_title">Proklizavanje</string>
