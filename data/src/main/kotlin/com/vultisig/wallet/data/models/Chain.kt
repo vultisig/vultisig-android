@@ -83,6 +83,13 @@ val Chain.toDefi: DefiChain
             else -> DefiChain(raw = raw, chain = this)
         }
 
+/**
+ * Chain-id used for address-book storage and lookups. EVM chains share one address space, so every
+ * EVM chain canonicalizes to [Chain.Ethereum]'s id here, matching iOS/Windows.
+ */
+val Chain.addressBookChainId: ChainId
+    get() = if (standard == EVM) Chain.Ethereum.id else id
+
 val Chain.coinType: CoinType
     get() =
         when (this) {
@@ -360,6 +367,21 @@ fun Chain.oneInchChainId(): Long =
         Chain.Hyperliquid -> 999
         else ->
             throw SwapException.SwapRouteNotAvailable("Chain $this is not supported by 1inch API")
+    }
+
+/**
+ * The chain's real numeric EVM chain id, string-encoded, for external services keyed by the
+ * standard chain id rather than 1inch's routing-restricted [oneInchChainId] (which also carries a
+ * non-EVM pseudo-id for [Chain.Solana], so non-EVM standard is checked first rather than trusting
+ * [oneInchChainId] to fail for every non-EVM chain). [Chain.Sei] is the one EVM chain those
+ * services index that 1inch doesn't route (adding it to [oneInchChainId] would wrongly signal swap
+ * support), so it stays the sole documented exception; every other EVM chain tracks the shared map.
+ */
+fun Chain.evmChainId(): String? =
+    when {
+        standard != EVM -> null
+        this == Chain.Sei -> "1329"
+        else -> runCatching { oneInchChainId().toString() }.getOrNull()
     }
 
 fun Chain.swapAssetName(): String {

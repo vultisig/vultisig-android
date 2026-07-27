@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.api.RippleAccountInfoResponseJson
 import com.vultisig.wallet.data.api.RippleAccountInfoResponseResultJson
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.RippleServerStateResponseJson
+import com.vultisig.wallet.data.api.RippleTrustLineJson
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -31,6 +32,11 @@ private class FakeRippleApi(
     override suspend fun broadcastTransaction(tx: String): String? = null
 
     override suspend fun getBalance(coin: Coin): BigInteger = BigInteger.ZERO
+
+    override suspend fun getTokenBalance(coin: Coin): BigInteger = BigInteger.ZERO
+
+    override suspend fun fetchAccountLines(walletAddress: String): List<RippleTrustLineJson> =
+        emptyList()
 
     override suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountInfoResponseJson? {
         fetchAccountsInfoError?.let { throw it }

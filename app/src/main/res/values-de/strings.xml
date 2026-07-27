@@ -814,6 +814,7 @@
     <string name="join_key_gen_your_vault_will_start_generating">Ihr Tresor wird generiert, sobald Sie die Einrichtung auf Ihrem Hauptgerät abgeschlossen haben.</string>
     <string name="join_key_sign_wrong_signing_library_type">Falscher Signaturbibliothekstyp</string>
     <string name="gas_settings_advanced_gas_fee">Gasvorschuss</string>
+    <string name="gas_settings_gas_price_gwei">Gas-Preis (GWEI)</string>
     <string name="gas_settings_max_base_fee_gwei">Maximale Grundgebühr (GWEI)</string>
     <string name="gas_settings_priority_fee_gwei">Prioritätsgebühr (GWEI)</string>
     <string name="import_file_import_your_vault_share">Importieren Sie Ihre Vault-Freigabe</string>

@@ -1091,6 +1091,7 @@
     <string name="fast_vault_invalid_password">Invalid password</string>
     <string name="folder">folder</string>
     <string name="gas_settings_advanced_gas_fee">Advanced gas fee</string>
+    <string name="gas_settings_gas_price_gwei">Gas price (GWEI)</string>
     <string name="gas_settings_max_base_fee_gwei">Max base fee (GWEI)</string>
     <string name="gas_settings_priority_fee_gwei">Priority fee (GWEI)</string>
     <string name="import_file_import_your_vault_share">Import your vault share</string>

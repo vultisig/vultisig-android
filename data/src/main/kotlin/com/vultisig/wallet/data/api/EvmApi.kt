@@ -360,11 +360,15 @@ class EvmApiImp(
     }
 
     override suspend fun getGasPrice(): BigInteger {
-
         val rpcResp = fetch<RpcResponse>("eth_gasPrice", buildJsonArray {})
         if (rpcResp.error != null) {
-            Timber.d("get gas price error: ${rpcResp.error.message}")
-            return BigInteger.ZERO
+            // A failed read must propagate, never collapse into ZERO: BSC (the only
+            // supportsLegacyGas chain) would otherwise sign a legacy transaction with
+            // gasPrice = 0 (#5399) instead of surfacing a retryable error.
+            throw NetworkException(
+                httpStatusCode = 0,
+                message = "get gas price rpc error: ${rpcResp.error.message}",
+            )
         }
         return rpcResp.result.convertToBigIntegerOrZero()
     }
@@ -408,7 +412,14 @@ class EvmApiImp(
         callData: String,
     ): BigInteger {
         val nonce = getNonce(senderAddress)
-        val gasPrice = getGasPrice()
+        // Only sizes this eth_estimateGas call, never a signed price (iOS's equivalent doesn't
+        // send gasPrice at all) — a gas-price RPC failure must not block gas-limit estimation.
+        val gasPrice =
+            try {
+                getGasPrice()
+            } catch (_: NetworkException) {
+                BigInteger.ZERO
+            }
         val rpcResp =
             fetch<RpcResponse>(
                 "eth_estimateGas",
@@ -459,8 +470,13 @@ class EvmApiImp(
     override suspend fun getMaxPriorityFeePerGas(): BigInteger {
         val rpcResp = fetch<RpcResponse>("eth_maxPriorityFeePerGas", buildJsonArray {})
         if (rpcResp.error != null) {
-            Timber.d("get max priority fee per gas , error: ${rpcResp.error.message}")
-            return BigInteger.ZERO
+            // A failed read must propagate, never collapse into ZERO: a zero priority fee can
+            // combine with a zeroed base fee (below) to sign an EIP-1559 tx priced under the real
+            // network fee, which broadcast then rejects as underpriced (#5400).
+            throw NetworkException(
+                httpStatusCode = 0,
+                message = "max priority fee per gas rpc error: ${rpcResp.error.message}",
+            )
         }
 
         return rpcResp.result.convertToBigIntegerOrZero()
@@ -585,8 +601,11 @@ class EvmApiImp(
                     },
             )
         if (response.error != null) {
-            Timber.d("get base fee error: ${response.error.message}")
-            return BigInteger.ZERO
+            // Same rationale as getMaxPriorityFeePerGas above (#5400).
+            throw NetworkException(
+                httpStatusCode = 0,
+                message = "base fee rpc error: ${response.error.message}",
+            )
         }
         return response.result?.baseFeePerGas.convertToBigIntegerOrZero()
     }

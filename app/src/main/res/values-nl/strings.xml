@@ -809,6 +809,7 @@
     <string name="join_key_gen_your_vault_will_start_generating">Je kluis wordt gegenereerd vanaf het moment dat je de kluis op je hoofdapparaat hebt ingesteld</string>
     <string name="join_key_sign_wrong_signing_library_type">Verkeerd type ondertekeningsbibliotheek</string>
     <string name="gas_settings_advanced_gas_fee">Geavanceerde gasvergoeding</string>
+    <string name="gas_settings_gas_price_gwei">Gasprijs (GWEI)</string>
     <string name="gas_settings_max_base_fee_gwei">Maximale basisvergoeding (GWEI)</string>
     <string name="gas_settings_priority_fee_gwei">Prioriteitsvergoeding (GWEI)</string>
     <string name="import_file_import_your_vault_share">Importeer uw gedeelde kluis</string>

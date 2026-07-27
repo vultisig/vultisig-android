@@ -24,12 +24,18 @@ data class Coin(
      * `ETH.USDC` and `AVAX.USDC` have ticker `USDC`) — without it, two such assets would collide on
      * this id, so enabling the second would silently overwrite the first's persisted row (Room's
      * coin insert is REPLACE-on-conflict) and picker/account lookups keyed on id would resolve to
-     * whichever one happens to come first. Every other coin type keeps the plain `ticker-chainId`
-     * form unchanged.
+     * whichever one happens to come first. XRPL issued currencies are qualified for the same
+     * reason: a currency code is only unique per issuer, so several independent issuers each mint
+     * their own `USD` trust line. Every other coin type keeps the plain `ticker-chainId` form
+     * unchanged.
      */
     val id: TokenId
         get() =
-            if (isSecuredAsset()) "$ticker-${chain.id}-$contractAddress" else "$ticker-${chain.id}"
+            if (isSecuredAsset() || isRippleIssuedToken) {
+                "$ticker-${chain.id}-$contractAddress"
+            } else {
+                "$ticker-${chain.id}"
+            }
 
     val coinType: CoinType
         get() = chain.coinType
@@ -70,6 +76,18 @@ val Coin.isLpToken: Boolean
                     contractAddress.startsWith("x/nami-index-")
             else -> false
         }
+
+/**
+ * True when the wallet can read this coin's balance but cannot yet move it.
+ *
+ * XRPL issued currencies are the only such coins today: `account_lines` gives their balances, but
+ * transferring one needs a `Payment` carrying a `CurrencyAmount` (currency + issuer + value), while
+ * [com.vultisig.wallet.data.chains.helpers.RippleHelper] only builds drop-denominated XRP payments.
+ * Routing one into send or swap would sign an XRP transfer of the token's numeric balance, so both
+ * actions stay closed until issued-currency signing lands.
+ */
+val Coin.isReadOnlyAsset: Boolean
+    get() = isRippleIssuedToken
 
 /** Returns true if this coin's chain allows zero-gas transactions. */
 fun Coin.allowZeroGas(): Boolean {

@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenId
+import com.vultisig.wallet.data.models.isReadOnlyAsset
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -82,6 +83,12 @@ internal class TokenPreselectionService(
 
         for (account in accounts) {
             val accountToken = account.token
+            // Read-only assets (XRPL issued currencies) can be balance-read but not sent. The
+            // token id here comes straight from unvalidated deep-link params, so a crafted
+            // vultisig://send link could otherwise pin one as the send source until keysign throws.
+            if (accountToken.isReadOnlyAsset) {
+                continue
+            }
             if (accountToken.id.equals(preSelectedTokenId, ignoreCase = true)) {
                 // if we find token by id, return it asap
                 return accountToken
@@ -97,7 +104,7 @@ internal class TokenPreselectionService(
         }
 
         // if user selected none, or nothing was found, select the first token
-        return searchByChainResult ?: accounts.firstOrNull()?.token
+        return searchByChainResult ?: accounts.firstOrNull { !it.token.isReadOnlyAsset }?.token
     }
 
     private fun findDeFiPreselectedToken(

@@ -64,8 +64,9 @@ constructor(
     /**
      * Default status poll for the done screen — drives the foreground
      * [TransactionStatusServiceManager] for [txHash] on [chain], emitting each observed status via
-     * [onStatus] and persisting it. Returns the first terminal status, or `null` if no status flow
-     * is available. Tears down the foreground service on every exit path.
+     * [onStatus] and persisting it. Returns the first terminal status, or `null` if the service
+     * binding was rejected or no status flow is available. Tears down the foreground service on
+     * every exit path.
      */
     private suspend fun pollStatusService(
         txHash: String,
@@ -73,8 +74,10 @@ constructor(
         onStatus: suspend (TransactionResult) -> Unit,
     ): TransactionResult? {
         try {
-            transactionStatusServiceManager.startPolling(txHash, chain)
+            val bound = transactionStatusServiceManager.startPolling(txHash, chain)
             onStatus(TransactionResult.Pending)
+            // A rejected binding never connects, so serviceReady would suspend forever.
+            if (!bound) return null
             transactionStatusServiceManager.serviceReady
                 .filter { it } // Wait until service is ready
                 .first()
@@ -166,11 +169,6 @@ constructor(
     /** Stops the foreground status service. */
     fun stopPolling() {
         transactionStatusServiceManager.stopPolling()
-    }
-
-    /** Releases the foreground status service resources. */
-    fun cleanup() {
-        transactionStatusServiceManager.cleanup()
     }
 
     /**

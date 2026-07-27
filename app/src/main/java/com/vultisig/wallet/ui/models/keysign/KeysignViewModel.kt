@@ -1031,7 +1031,6 @@ constructor(
     /** Stops polling and cleans up resources when the ViewModel is destroyed. */
     override fun onCleared() {
         stopPolling()
-        txStatusPoller.cleanup()
         super.onCleared()
     }
 }

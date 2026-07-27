@@ -5,16 +5,23 @@ import RippleBroadcastResponseResponseResultJson
 import RippleBroadcastSuccessResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.RippleTokenIdentity
+import com.vultisig.wallet.data.models.rippleTokenIdentity
+import com.vultisig.wallet.data.models.toRippleTokenUnits
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import java.math.BigInteger
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.put
@@ -25,6 +32,19 @@ interface RippleApi {
 
     suspend fun getBalance(coin: Coin): BigInteger
 
+    /**
+     * Balance of a single issued-currency trust line, scaled to [coin]'s own decimals. Returns zero
+     * when the account holds no line for [coin]'s currency/issuer pair.
+     */
+    suspend fun getTokenBalance(coin: Coin): BigInteger
+
+    /**
+     * Every trust line the account holds, following `account_lines` pagination markers. Callers get
+     * both sides' view: a negative [RippleTrustLineJson.balance] means the account owes the
+     * counterparty, so only positive lines represent spendable holdings.
+     */
+    suspend fun fetchAccountLines(walletAddress: String): List<RippleTrustLineJson>
+
     suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountInfoResponseJson?
 
     suspend fun fetchServerState(): RippleServerStateResponseJson
@@ -32,7 +52,46 @@ interface RippleApi {
     suspend fun getTsStatus(txHash: String): RippleBroadcastSuccessResponseJson?
 }
 
+/**
+ * Coalesces `account_lines` reads. One response carries every trust line for an address, yet the
+ * balance layer asks per token — each call picking one line and discarding the rest — so a vault
+ * holding N issued currencies would fire N identical (and possibly multi-page) request chains at
+ * the public XRPL cluster. A per-address [Mutex] shares concurrent in-flight reads and a short TTL
+ * lets a sequential fan-out reuse the first response, while a refresh past the window still hits
+ * the network. Mirrors [CosmosBalanceCache], which solves the same fan-out on the Cosmos bank
+ * endpoint.
+ */
+internal class RippleAccountLinesCache(private val ttlMs: Long = DEFAULT_TTL_MS) {
+
+    private class Entry(val value: List<RippleTrustLineJson>, val expiresAt: Long)
+
+    private val entries = ConcurrentHashMap<String, Entry>()
+    private val locks = ConcurrentHashMap<String, Mutex>()
+
+    suspend fun getOrFetch(
+        address: String,
+        fetch: suspend () -> List<RippleTrustLineJson>,
+    ): List<RippleTrustLineJson> =
+        locks
+            .computeIfAbsent(address) { Mutex() }
+            .withLock {
+                val now = System.currentTimeMillis()
+                entries[address]?.takeIf { now < it.expiresAt }?.value
+                    ?: fetch().also { entries[address] = Entry(it, now + ttlMs) }
+            }
+
+    companion object {
+        // Long enough to absorb the per-token fan-out for one address, short enough that a later
+        // manual refresh still fetches fresh balances.
+        private const val DEFAULT_TTL_MS = 10_000L
+    }
+}
+
 internal class RippleApiImp @Inject constructor(private val http: HttpClient) : RippleApi {
+
+    // Safe to hold per instance: RippleApi is bound as a @Singleton, so every caller shares one
+    // cache. See RippleAccountLinesCache.
+    private val accountLinesCache = RippleAccountLinesCache()
 
     override suspend fun broadcastTransaction(tx: String): String {
         val result =
@@ -112,6 +171,89 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
         maxOf(balance - accountReservedBalance, BigInteger.ZERO)
     }
 
+    override suspend fun getTokenBalance(coin: Coin): BigInteger {
+        val identity = coin.rippleTokenIdentity() ?: return BigInteger.ZERO
+        val line =
+            fetchAccountLines(coin.address).firstOrNull { it.matches(identity) }
+                ?: return BigInteger.ZERO
+        // Scale to the coin's own decimals so the parsed units line up with the scale the balance
+        // is rendered at; nothing else pins the two together.
+        return line.balance.toRippleTokenUnits(coin.decimal)
+    }
+
+    override suspend fun fetchAccountLines(walletAddress: String): List<RippleTrustLineJson> =
+        accountLinesCache.getOrFetch(walletAddress) { fetchAllAccountLinePages(walletAddress) }
+
+    private suspend fun fetchAllAccountLinePages(walletAddress: String): List<RippleTrustLineJson> {
+        val lines = mutableListOf<RippleTrustLineJson>()
+        var marker: JsonElement? = null
+        // The ledger the first page resolved `validated` to. Every later page pins this exact index
+        // instead of re-sending the `validated` shorthand: the cluster load-balances across nodes
+        // that can each be on a different validated ledger, and XRPL documents that resuming a
+        // marker against a shifted ledger returns incomplete results, so a line straddling a page
+        // boundary would silently drop and read as a zero balance.
+        var pinnedLedgerIndex: Long? = null
+
+        // XRPL caps a single account_lines response at `limit` entries and hands back an opaque
+        // marker to resume from. The page cap bounds the walk so a node that keeps echoing the
+        // same marker can't spin here forever.
+        repeat(MAX_ACCOUNT_LINES_PAGES) {
+            val payload =
+                RpcPayload(
+                    method = "account_lines",
+                    params =
+                        buildJsonArray {
+                            addJsonObject {
+                                put("account", walletAddress)
+                                val pinned = pinnedLedgerIndex
+                                if (pinned != null) {
+                                    put("ledger_index", pinned)
+                                } else {
+                                    put("ledger_index", "validated")
+                                }
+                                put("limit", ACCOUNT_LINES_PAGE_SIZE)
+                                // Trust lines still in their default state hold nothing and are
+                                // dropped downstream anyway; filtering them server-side shrinks
+                                // each response body. It does not shorten the walk: rippled counts
+                                // every ledger object toward `limit` and pins the marker before
+                                // this filter runs, so the page count is the same either way.
+                                put("ignore_default", true)
+                                marker?.let { put("marker", it) }
+                            }
+                        },
+                )
+
+            val result =
+                http
+                    .post(BASE_XRP_CLUSTER) { setBody(payload) }
+                    .bodyOrThrow<RippleAccountLinesResponseJson>()
+                    .result
+
+            // An unfunded account answers with `actNotFound` and no `lines` — a legitimately empty
+            // holding, not a failure, so it falls through to an empty list. Every other RPC error
+            // (a rate-limited or unsynced node, a rejected marker) arrives as an HTTP 200 that
+            // `bodyOrThrow` cannot catch; treating it as "no trust lines" would drop the vault's
+            // tokens and cache that emptiness for the whole TTL, so it throws instead.
+            val error = result?.error
+            if (error != null && error != ACCOUNT_NOT_FOUND_ERROR) {
+                throw RippleRpcException("account_lines", error)
+            }
+
+            result?.lines?.let(lines::addAll)
+
+            if (pinnedLedgerIndex == null) {
+                pinnedLedgerIndex = result?.ledgerIndex
+            }
+
+            val next = result?.marker ?: return lines
+            if (next == marker) return lines
+            marker = next
+        }
+
+        Timber.w("account_lines paging cap reached for %s", walletAddress)
+        return lines
+    }
+
     override suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountInfoResponseJson? {
         return try {
             val payload =
@@ -150,8 +292,19 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
         const val BASE_XRP_CLUSTER: String = "https://xrplcluster.com"
         const val RIPPLE_TXN_NOT_FOUND: String = "txnNotFound"
         const val RIPPLE_TXN_NOT_FOUND_CODE: Int = 29
+        const val ACCOUNT_LINES_PAGE_SIZE: Int = 400
+        const val MAX_ACCOUNT_LINES_PAGES: Int = 25
+        const val ACCOUNT_NOT_FOUND_ERROR: String = "actNotFound"
     }
 }
+
+/**
+ * An XRPL JSON-RPC call that answered HTTP 200 with a `result.error` instead of a payload.
+ *
+ * The node reached us, so nothing in the transport layer failed; only the ledger read did.
+ */
+internal class RippleRpcException(method: String, val error: String) :
+    Exception("XRPL $method failed: $error")
 
 private const val RIPPLE_ENGINE_RESULT_SUCCESS = "tesSUCCESS"
 
@@ -246,6 +399,46 @@ private const val LSF_REQUIRE_DEST_TAG = 0x00020000L
 /** True when the destination account has the RequireDestinationTag flag set. */
 fun RippleAccountInfoResponseJson.requiresDestinationTag(): Boolean =
     ((this.result?.accountData?.flags ?: 0L) and LSF_REQUIRE_DEST_TAG) != 0L
+
+@Serializable
+data class RippleAccountLinesResponseJson(
+    @SerialName("result") val result: RippleAccountLinesResultJson? = null
+)
+
+@Serializable
+data class RippleAccountLinesResultJson(
+    @SerialName("lines") val lines: List<RippleTrustLineJson>? = null,
+    @SerialName("marker") val marker: JsonElement? = null,
+    @SerialName("error") val error: String? = null,
+    // The concrete ledger `ledger_index: "validated"` resolved to on the first page, echoed so the
+    // rest of the paged walk can pin it.
+    @SerialName("ledger_index") val ledgerIndex: Long? = null,
+)
+
+/**
+ * One entry of an `account_lines` response — a trust line between the queried account and
+ * [account], the counterparty that issues [currency].
+ *
+ * [balance] is a decimal string from the queried account's perspective, so it is negative when the
+ * account is the issuing side of the line. [currency] is either a 3-character ASCII code or the
+ * 40-character hex form of a 160-bit code, matched against the curated catalog verbatim.
+ */
+@Serializable
+data class RippleTrustLineJson(
+    @SerialName("account") val account: String,
+    @SerialName("currency") val currency: String,
+    @SerialName("balance") val balance: String,
+    @SerialName("limit") val limit: String? = null,
+    @SerialName("no_ripple") val noRipple: Boolean? = null,
+    @SerialName("freeze") val freeze: Boolean? = null,
+)
+
+/**
+ * Exact-match on the trust line's currency/issuer pair. Both halves are case-sensitive on XRPL —
+ * `USD` and `usd` are distinct currencies, and issuer addresses are base58 — so neither is folded.
+ */
+internal fun RippleTrustLineJson.matches(identity: RippleTokenIdentity): Boolean =
+    currency == identity.currency && account == identity.issuer
 
 @Serializable
 data class RippleServerStateResponseJson(

@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.defi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolStatsJson
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
@@ -29,7 +30,6 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
-import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -47,7 +47,6 @@ import com.vultisig.wallet.ui.screens.v2.defi.formatToString
 import com.vultisig.wallet.ui.screens.v2.defi.getContractByDeFiAction
 import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
 import com.vultisig.wallet.ui.screens.v2.defi.hasStakingPositions
-import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.defi.thorchainSupportStakingDeFi
@@ -59,7 +58,7 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -97,66 +96,6 @@ internal data class ThorchainDefiPositionsUiModel(
     val tempSelectedPositions: List<String> = defaultSelectedPositionsDialog(),
 )
 
-internal data class BondedTabUiModel(
-    val isLoading: Boolean = false,
-    val totalBondedAmount: String = "0 ${Chain.ThorChain.coinType.symbol}",
-    val totalBondedPrice: String = "",
-    val nodes: List<BondedNodeUiModel> = emptyList(),
-)
-
-internal data class StakingTabUiModel(val positions: List<StakePositionUiModel> = emptyList())
-
-internal data class LpTabUiModel(
-    val isLoading: Boolean = false,
-    val positions: List<LpPositionUiModel> = emptyList(),
-)
-
-internal data class LpPositionUiModel(
-    val titleLp: String,
-    val totalPriceLp: String,
-    val icon: ImageModel,
-    val assetTicker: String,
-    val apr: String?,
-    val position: String,
-    val positionKey: String = "",
-    val canRemove: Boolean = true,
-    val chainLogo: Int? = null,
-)
-
-internal data class StakePositionUiModel(
-    val coin: Coin,
-    val stakeAssetHeader: UiText,
-    val stakeAmount: BigDecimal = BigDecimal.ZERO,
-    val stakedAmountDisplay: String,
-    val stakedFiatDisplay: String = "",
-    val apy: String?,
-    val isLoading: Boolean = false,
-    val supportsMint: Boolean = false,
-    val canWithdraw: Boolean = false,
-    val canTransfer: Boolean = false,
-    val canStake: Boolean = true,
-    val canUnstake: Boolean = false,
-    val rewards: String? = null,
-    val nextReward: String? = null,
-    val nextPayout: String? = null,
-    // Maya CACAO pool only: remaining time until the position becomes unstake-eligible.
-    // Drives the "Unlocks in N days, H hours" hint next to the disabled Unstake button.
-    val unstakeUnlocksInSeconds: Long? = null,
-    // Maya CACAO pool only: true when the maturity RPC returned UNKNOWN so the staking tab can
-    // surface "Couldn't verify position" instead of an unexplained disabled Unstake button.
-    val isUnstakeMaturityUnknown: Boolean = false,
-)
-
-internal data class BondedNodeUiModel(
-    val address: String,
-    val fullAddress: String,
-    val status: BondNodeState,
-    val apy: String,
-    val bondedAmount: String,
-    val nextAward: String,
-    val nextChurn: String,
-)
-
 data class TotalDefiValue(
     val bondAmount: BigInteger = BigInteger.ZERO,
     val defaultStakeValues: StakeDefaultValues = StakeDefaultValues(),
@@ -173,6 +112,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val bondUseCase: ThorchainBondUseCase,
     private val tokenPriceRepository: TokenPriceRepository,
+    private val fiatValueCalculator: DefiFiatValueCalculator,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val rujiStakingService: RujiStakingService,
     private val tcyStakingService: TCYStakingService,
@@ -180,6 +120,7 @@ constructor(
     private val defaultStakingPositionService: DefaultStakingPositionService,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val getThorChainLpPositionsUseCase: GetThorChainLpPositionsUseCase,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private lateinit var vaultId: String
@@ -229,7 +170,7 @@ constructor(
         viewModelScope.launch {
             try {
                 val pools =
-                    withContext(Dispatchers.IO) {
+                    withContext(ioDispatcher) {
                         getThorChainLpPositionsUseCase.fetchAvailablePools()
                     }
                 availablePools.value = pools
@@ -259,7 +200,7 @@ constructor(
     private fun loadBalanceVisibility() {
         viewModelScope.launch {
             val isVisible =
-                withContext(Dispatchers.IO) { balanceVisibilityRepository.getVisibility(vaultId) }
+                withContext(ioDispatcher) { balanceVisibilityRepository.getVisibility(vaultId) }
             state.update { it.copy(isBalanceVisible = isVisible) }
         }
     }
@@ -298,14 +239,17 @@ constructor(
             try {
                 val currency = appCurrencyRepository.currency.first()
 
-                val runeFiatValue = createFiatValue(totalInRune, Coins.ThorChain.RUNE, currency)
-                val rujiFiatValue = createFiatValue(totalInRuji, Coins.ThorChain.RUJI, currency)
-                val tcyFiatValue = createFiatValue(totalInTCY, Coins.ThorChain.TCY, currency)
+                val runeFiatValue =
+                    fiatValueCalculator.createFiatValue(totalInRune, Coins.ThorChain.RUNE, currency)
+                val rujiFiatValue =
+                    fiatValueCalculator.createFiatValue(totalInRuji, Coins.ThorChain.RUJI, currency)
+                val tcyFiatValue =
+                    fiatValueCalculator.createFiatValue(totalInTCY, Coins.ThorChain.TCY, currency)
 
                 val defaultStakingFiatValues =
                     totalValue.defaultStakeValues.stakeElements.map { position ->
                         val decimalAmount = CoinType.THORCHAIN.toValue(position.amount)
-                        createFiatValue(decimalAmount, position.coin, currency)
+                        fiatValueCalculator.createFiatValue(decimalAmount, position.coin, currency)
                     }
 
                 val totalFiatValue =
@@ -316,7 +260,7 @@ constructor(
                         }
 
                 val currencyFormat =
-                    withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+                    withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
 
                 state.update {
                     it.copy(
@@ -333,40 +277,11 @@ constructor(
         }
     }
 
-    private suspend fun createFiatValue(
-        amount: BigDecimal,
-        coin: Coin,
-        currency: AppCurrency,
-    ): FiatValue {
-        try {
-            if (amount == BigDecimal.ZERO) {
-                return FiatValue(BigDecimal.ZERO, currency.ticker)
-            }
-
-            val price =
-                tokenPriceRepository.getCachedPrice(tokenId = coin.id, appCurrency = currency)
-                    ?: tokenPriceRepository.getPriceByContactAddress(
-                        coin.chain.id,
-                        coin.contractAddress,
-                    )
-
-            return FiatValue(
-                value = amount.multiply(price).setScale(2, RoundingMode.DOWN),
-                currency = currency.ticker,
-            )
-        } catch (t: Throwable) {
-            if (t is kotlinx.coroutines.CancellationException) throw t
-            Timber.e(t)
-
-            return FiatValue(value = BigDecimal.ZERO, currency = currency.ticker)
-        }
-    }
-
     private suspend fun calculateStakingFiatPrice(amount: BigDecimal, coin: Coin): String {
         return try {
             val currency = appCurrencyRepository.currency.first()
             val currencyFormat =
-                withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+                withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
             formatFiatString(amount, coin, currency, currencyFormat)
         } catch (e: java.io.IOException) {
             Timber.e(e, "Failed to calculate THORChain staking fiat price")
@@ -380,7 +295,7 @@ constructor(
         currency: AppCurrency,
         currencyFormat: java.text.NumberFormat,
     ): String {
-        val fiatValue = createFiatValue(amount, coin, currency)
+        val fiatValue = fiatValueCalculator.createFiatValue(amount, coin, currency)
         return currencyFormat.format(fiatValue.value)
     }
 
@@ -423,7 +338,7 @@ constructor(
 
                 // Load selected positions, if disabled then show nothing
                 try {
-                    val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+                    val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
                     // THORChain vaults hold several coins (RUNE, RUJI, TCY, …); match RUNE
                     // explicitly so we bond against the RUNE address, not the first THORChain coin.
                     val runeCoin =
@@ -496,9 +411,10 @@ constructor(
         return try {
             val totalInRune = CoinType.THORCHAIN.toValue(totalBondedRaw)
             val currency = appCurrencyRepository.currency.first()
-            val fiatValue = createFiatValue(totalInRune, Coins.ThorChain.RUNE, currency)
+            val fiatValue =
+                fiatValueCalculator.createFiatValue(totalInRune, Coins.ThorChain.RUNE, currency)
             val currencyFormat =
-                withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+                withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
             currencyFormat.format(fiatValue.value)
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
@@ -532,7 +448,7 @@ constructor(
             }
 
             try {
-                val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+                val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
 
                 // THORChain hosts several coins (RUNE, RUJI, TCY…); staking is held against the
                 // RUNE account, so match the ticker explicitly rather than the first chain coin.
@@ -736,7 +652,7 @@ constructor(
                     // suspend functions, so fiat strings are pre-computed here.
                     val currency = appCurrencyRepository.currency.first()
                     val currencyFormat =
-                        withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+                        withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
                     val stakedFiatByCoinId = mutableMapOf<String, String>()
                     for (defaultPosition in loadedPositions) {
                         val amount = Chain.ThorChain.coinType.toValue(defaultPosition.stakeAmount)
@@ -872,7 +788,7 @@ constructor(
         loadLpJob =
             viewModelScope.launch {
                 try {
-                    val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+                    val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
                     // THORChain hosts several coins (RUNE, RUJI, TCY…); LP positions are held
                     // against the RUNE account, so match the ticker explicitly rather than the
                     // first chain coin.
@@ -902,7 +818,7 @@ constructor(
                             .toMap()
 
                     val allPositions =
-                        withContext(Dispatchers.IO) {
+                        withContext(ioDispatcher) {
                             getThorChainLpPositionsUseCase(
                                 runeAddress = runeCoin.address,
                                 assetAddressesByPool = assetAddressesByPool,
@@ -913,7 +829,7 @@ constructor(
 
                     val currency = appCurrencyRepository.currency.first()
                     val currencyFormat =
-                        withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+                        withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
                     val runePrice = priceFor(Coins.ThorChain.RUNE, currency)
 
                     val merged =
@@ -1108,7 +1024,7 @@ constructor(
             val selectedPositions = state.value.tempSelectedPositions
 
             launch {
-                withContext(Dispatchers.IO) {
+                withContext(ioDispatcher) {
                     defiPositionsRepository.saveSelectedPositions(vaultId, selectedPositions)
                 }
             }

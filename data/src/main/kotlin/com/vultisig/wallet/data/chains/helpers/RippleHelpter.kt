@@ -85,6 +85,13 @@ object RippleHelper {
                 .setPublicKey(ByteString.copyFrom(publicKey.data()))
                 .setLastLedgerSequence(lastLedgerSequence.toInt())
 
+        // OperationPayment.amount is denominated in drops, so this path can only move native XRP.
+        // An issued-currency coin reaching here would sign away `toAmount` drops of XRP instead of
+        // the token the user picked — refuse until the CurrencyAmount path exists (issue #5210).
+        require(keysignPayload.coin.isNativeToken) {
+            "Ripple issued-currency transfers are not supported"
+        }
+
         val operation =
             Ripple.OperationPayment.newBuilder()
                 .setDestination(keysignPayload.toAddress)
