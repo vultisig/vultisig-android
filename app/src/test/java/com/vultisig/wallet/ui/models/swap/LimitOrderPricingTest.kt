@@ -29,6 +29,41 @@ class LimitOrderPricingTest {
     }
 
     @Test
+    fun `presets stay within the 8 fractional digits the memo accepts`() {
+        // The market-price probe divides at scale 18; a preset applied to it must not carry that
+        // scale into the memo, which rejects anything longer outright.
+        val market = BigDecimal("0.000023456789123456")
+        listOf(0, 1, 5, 10).forEach { pct ->
+            assertEquals(8, LimitOrderPricing.applyPreset(market, pct).scale())
+        }
+    }
+
+    @Test
+    fun `memo scaling rounds up so the signed price is never worse than shown`() {
+        assertEquals(
+            BigDecimal("0.00002346"),
+            LimitOrderPricing.toMemoScale(BigDecimal("0.000023451")),
+        )
+    }
+
+    @Test
+    fun `memo scaling never floors a positive price to zero`() {
+        assertEquals(
+            BigDecimal("0.00000001"),
+            LimitOrderPricing.toMemoScale(BigDecimal("0.000000000001")),
+        )
+    }
+
+    @Test
+    fun `Market preset still reads as at-market after scaling`() {
+        val market = LimitOrderPricing.toMemoScale(BigDecimal("0.000023456789123456"))
+        assertEquals(
+            LimitOrderPricing.LimitWarning.BelowMarket,
+            LimitOrderPricing.warningFor(LimitOrderPricing.applyPreset(market, 0), market),
+        )
+    }
+
+    @Test
     fun `fiat price of one buy unit inverts the target price and applies the sell USD price`() {
         // target 0.0000152 BTC per USDC -> 1 BTC costs ~65789 USDC -> ~$65789 at $1 USDC.
         val fiat =

@@ -405,7 +405,9 @@ constructor(
                         dstToken = inputs.dstToken,
                         srcAddress = inputs.srcAddress,
                         srcTokenValue = inputs.srcTokenValue,
-                        targetPrice = targetPrice,
+                        // Fail-safe: the memo only accepts 8 fractional digits, and rejects
+                        // anything longer with an exception rather than rounding it itself.
+                        targetPrice = LimitOrderPricing.toMemoScale(targetPrice),
                         expiryHours = limitExpiry.value.hours,
                         destinationAddress = externalRecipient.value ?: inputs.dstToken.address,
                         gasFee = inputs.gasFee,
@@ -440,12 +442,17 @@ constructor(
                         sourcePrice = src.usdPrice ?: BigDecimal.ZERO,
                     )
                 if (price.signum() > 0) {
-                    marketTargetPrice.value = price
+                    // The probe divides at scale 18; normalize here so the market price and every
+                    // preset derived from it sit on the same 8-decimal grid the memo can express —
+                    // otherwise the Market preset would read as *above* market and lose its
+                    // "already available" warning.
+                    val marketPrice = LimitOrderPricing.toMemoScale(price)
+                    marketTargetPrice.value = marketPrice
                     val preset = limitPreset.value
                     if (preset != null || limitTargetPrice.value == null) {
                         limitTargetPrice.value =
                             LimitOrderPricing.applyPreset(
-                                price,
+                                marketPrice,
                                 (preset ?: LimitPricePreset.Market).percentAboveMarket,
                             )
                     }

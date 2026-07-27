@@ -18,12 +18,31 @@ internal object LimitOrderPricing {
 
     private val PRICE_SCALE = 12
 
+    /**
+     * Fractional digits the THORChain memo can express for a target price. `LimitSwapMemo` rejects
+     * anything longer outright, and the market-price probe divides at scale 18, so every price that
+     * can reach [applyPreset] or the signing path is normalized to this grid first.
+     */
+    private const val MEMO_PRICE_SCALE = 8
+
+    /**
+     * Snaps [price] onto the memo's 8-decimal grid.
+     *
+     * Rounds up, never down: the target price is the user's *minimum* acceptable rate, so rounding
+     * down would sign an order fractionally worse than the one displayed, and a price below 1e-8
+     * would floor to zero — which THORChain reads as an unprotected market order.
+     */
+    fun toMemoScale(price: BigDecimal): BigDecimal =
+        price.setScale(MEMO_PRICE_SCALE, RoundingMode.CEILING)
+
     /** Target price for a preset: market price bumped [pctAboveMarket] percent (0 == Market). */
     fun applyPreset(marketTargetPrice: BigDecimal, pctAboveMarket: Int): BigDecimal =
-        marketTargetPrice *
-            (BigDecimal.ONE +
-                BigDecimal(pctAboveMarket)
-                    .divide(BigDecimal(100), PRICE_SCALE, RoundingMode.HALF_UP))
+        toMemoScale(
+            marketTargetPrice *
+                (BigDecimal.ONE +
+                    BigDecimal(pctAboveMarket)
+                        .divide(BigDecimal(100), PRICE_SCALE, RoundingMode.HALF_UP))
+        )
 
     /** Fiat value of one buy unit at [targetPrice], given the sell asset's USD price. */
     fun fiatPricePerBuyUnit(targetPrice: BigDecimal, sellUsdPrice: BigDecimal?): BigDecimal? {
