@@ -58,8 +58,12 @@ constructor(private val oneInchApi: OneInchApi, private val evmApiFactory: EvmAp
     private suspend fun findHybrid(chain: Chain, address: String): List<Coin> = coroutineScope {
         val oneInch = async { findOneInch(chain, address) }
         val curated = async { findFallback(chain, address) }
-        // Curated first so its hand-verified entries win the dedupe on contracts both paths find.
-        (curated.await() + oneInch.await()).distinctBy { it.contractAddress.lowercase() }
+        // Dedupe on [Coin.id] — the Room PK (REPLACE-on-conflict) — not the contract:
+        // two contracts sharing a ticker collapse into one persisted row, so the second
+        // would silently overwrite the first. Curated first, so its hand-verified entry
+        // is the one that survives. Same-contract duplicates already share an id because
+        // the 1inch path resolves known contracts through the curated catalog.
+        (curated.await() + oneInch.await()).distinctBy { it.id.lowercase() }
     }
 
     private suspend fun fetchHeldContracts(chain: Chain, address: String): List<String> =
@@ -117,8 +121,9 @@ constructor(private val oneInchApi: OneInchApi, private val evmApiFactory: EvmAp
         discovered: List<Coin>,
     ): List<Coin> {
         if (chain != Chain.Ethereum) return discovered
-        val alreadyHasVult =
-            discovered.any { it.contractAddress.equals(VULT_ETHEREUM_CONTRACT, ignoreCase = true) }
+        val alreadyHasVult = discovered.any {
+            it.contractAddress.equals(VULT_ETHEREUM_CONTRACT, ignoreCase = true)
+        }
         if (alreadyHasVult) return discovered
 
         val vult =

@@ -55,7 +55,6 @@ internal class EvmCoinFinderTest {
                 Chain.Mantle,
                 Chain.Sei,
                 Chain.Hyperliquid,
-                Chain.Robinhood,
             )
             .forEach { chain ->
                 assertTrue(
@@ -70,6 +69,12 @@ internal class EvmCoinFinderTest {
         // Robinhood: 1inch `/balance` works but `/token` 404s the stock tokens — pure 1inch
         // routing would drop them, pure curated routing loses CG-verified extras (#5390 review).
         assertEquals(setOf(Chain.Robinhood), EvmCoinFinderImpl.HYBRID_DISCOVERY_CHAINS)
+        // Hybrid chains route through findHybrid, never the pure-1inch path.
+        assertTrue(
+            EvmCoinFinderImpl.HYBRID_DISCOVERY_CHAINS.none {
+                it in EvmCoinFinderImpl.ONE_INCH_SUPPORTED_CHAINS
+            }
+        )
     }
 
     @Test
@@ -134,6 +139,40 @@ internal class EvmCoinFinderTest {
 
         assertEquals(listOf(usdg), coins, "One entry, and it is the curated USDG")
     }
+
+    @Test
+    fun `find on Robinhood drops a 1inch contract whose ticker collides with a curated one`() =
+        runTest {
+            // Two GME contracts exist on 4663. `Coin.id` is `ticker-chainId`, the Room PK
+            // (REPLACE-on-conflict), so both surviving discovery means the 1inch row would
+            // silently overwrite the curated row in the vault (#5390 review). The curated
+            // entry must be the only GME that survives.
+            val gme =
+                requireNotNull(Coins.coins[Chain.Robinhood]).first {
+                    it.ticker == "GME" && !it.isNativeToken
+                }
+            coEvery { oneInchApi.getContractsWithBalance(Chain.Robinhood, ADDRESS) } returns
+                listOf(GME_IMPOSTER_CONTRACT)
+            coEvery {
+                oneInchApi.getTokensByContracts(Chain.Robinhood, listOf(GME_IMPOSTER_CONTRACT))
+            } returns
+                mapOf(
+                    GME_IMPOSTER_CONTRACT to
+                        oneInchToken(
+                            address = GME_IMPOSTER_CONTRACT,
+                            symbol = "GME",
+                            logoURI = "https://tokens.1inch.io/gme.png",
+                            providers = listOf("CoinGecko"),
+                        )
+                )
+            every { evmApiFactory.createEvmApi(Chain.Robinhood) } returns evmApi
+            coEvery { evmApi.getBalances(ADDRESS, robinhoodCuratedContracts()) } returns
+                mapOf(gme.contractAddress to BigInteger.ONE)
+
+            val coins = finder.find(Chain.Robinhood, ADDRESS)
+
+            assertEquals(listOf(gme), coins, "Exactly one GME, and it is the curated contract")
+        }
 
     @Test
     fun `find on Robinhood still surfaces curated holdings when 1inch is down`() = runTest {
@@ -371,6 +410,7 @@ internal class EvmCoinFinderTest {
         // Synthetic non-curated contracts so the finder exercises the build-from-1inch path
         // rather than swapping in a curated entry from `Coins.coins`.
         const val GOOD_CONTRACT = "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+        const val GME_IMPOSTER_CONTRACT = "0x7e86380000000000000000000000000000000abc"
         const val EMPTY_LOGO_CONTRACT = "0x1111111111111111111111111111111111111111"
         const val NON_COINGECKO_CONTRACT = "0x2222222222222222222222222222222222222222"
 
