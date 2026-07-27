@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -88,14 +89,11 @@ private fun ExecuteWhenCard(
         HorizontalDivider(thickness = 1.dp, color = colors.border.light)
 
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                PriceEntryBlock(state = state, onPresetClick = onPresetClick)
-                PriceUnitToggle(
-                    unit = state.priceUnit,
-                    onToggleUnit = onToggleUnit,
-                    modifier = Modifier.align(Alignment.TopEnd).padding(top = 4.dp, end = 4.dp),
-                )
-            }
+            PriceEntryBlock(
+                state = state,
+                onPresetClick = onPresetClick,
+                onToggleUnit = onToggleUnit,
+            )
             ExpiryRow(selected = state.selectedExpiry, onExpiryClick = onExpiryClick)
         }
 
@@ -110,7 +108,11 @@ private fun ExecuteWhenCard(
 }
 
 @Composable
-private fun PriceEntryBlock(state: LimitOrderUiModel, onPresetClick: (LimitPricePreset) -> Unit) {
+private fun PriceEntryBlock(
+    state: LimitOrderUiModel,
+    onPresetClick: (LimitPricePreset) -> Unit,
+    onToggleUnit: (LimitPriceUnit) -> Unit,
+) {
     val colors = Theme.v2.colors
     Column(
         modifier =
@@ -120,44 +122,53 @@ private fun PriceEntryBlock(state: LimitOrderUiModel, onPresetClick: (LimitPrice
     ) {
         // Fixed-height, vertically centered stack: Figma gives this block a 211dp frame so the
         // reference/price/secondary trio floats in the middle of the card with breathing room
-        // above and below, rather than hugging the divider.
-        Column(
-            modifier = Modifier.fillMaxWidth().height(PRICE_BLOCK_HEIGHT),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically),
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 6.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
+        // above and below, rather than hugging the divider. The unit toggle rides the same frame's
+        // centre so it stays level with the price instead of drifting up to the divider.
+        Box(modifier = Modifier.fillMaxWidth().height(PRICE_BLOCK_HEIGHT)) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically),
             ) {
-                state.referenceLogo?.let { logo ->
-                    TokenLogo(
-                        logo = logo,
-                        title = state.buyTicker,
-                        modifier = Modifier.size(24.dp),
-                        errorLogoModifier = Modifier.size(24.dp),
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier =
+                        Modifier.padding(start = 6.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
+                ) {
+                    state.referenceLogo?.let { logo ->
+                        TokenLogo(
+                            logo = logo,
+                            title = state.buyTicker,
+                            modifier = Modifier.size(24.dp),
+                            errorLogoModifier = Modifier.size(24.dp),
+                        )
+                    }
+                    Text(
+                        text = state.referenceAmountLabel,
+                        style = Theme.brockmann.supplementary.caption,
+                        color = colors.text.secondary,
                     )
                 }
+
                 Text(
-                    text = state.referenceAmountLabel,
-                    style = Theme.brockmann.supplementary.caption,
-                    color = colors.text.secondary,
+                    text = state.priceText,
+                    style = Theme.brockmann.headings.largeTitle,
+                    color = colors.text.primary,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = state.secondaryPriceLabel,
+                    style = Theme.brockmann.body.m.medium,
+                    color = colors.text.tertiary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
-
-            Text(
-                text = state.priceText,
-                style = Theme.brockmann.headings.largeTitle,
-                color = colors.text.primary,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                text = state.secondaryPriceLabel,
-                style = Theme.brockmann.body.m.medium,
-                color = colors.text.tertiary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
+            PriceUnitToggle(
+                unit = state.priceUnit,
+                onToggleUnit = onToggleUnit,
+                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 4.dp),
             )
         }
 
