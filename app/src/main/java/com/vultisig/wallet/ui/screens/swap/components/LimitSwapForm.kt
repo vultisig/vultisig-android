@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,6 +32,9 @@ import com.vultisig.wallet.ui.models.swap.LimitOrderUiModel
 import com.vultisig.wallet.ui.models.swap.LimitPricePreset
 import com.vultisig.wallet.ui.models.swap.LimitPriceUnit
 import com.vultisig.wallet.ui.theme.Theme
+
+/** Height of the target-price frame in Figma; the reference/price/secondary trio centers in it. */
+private val PRICE_BLOCK_HEIGHT = 211.dp
 
 /**
  * The THORChain limit-order ("Execute when") form body — the content shown under the Limit tab.
@@ -109,34 +113,23 @@ private fun ExecuteWhenCard(
 private fun PriceEntryBlock(state: LimitOrderUiModel, onPresetClick: (LimitPricePreset) -> Unit) {
     val colors = Theme.v2.colors
     Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 12.dp),
+        modifier =
+            Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
+        // Fixed-height, vertically centered stack: Figma gives this block a 211dp frame so the
+        // reference/price/secondary trio floats in the middle of the card with breathing room
+        // above and below, rather than hugging the divider.
         Column(
+            modifier = Modifier.fillMaxWidth().height(PRICE_BLOCK_HEIGHT),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(5.dp),
+            verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically),
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(R.string.limit_swap_market_label),
-                    style = Theme.brockmann.supplementary.caption,
-                    color = colors.text.secondary,
-                )
-                Text(
-                    text = state.marketPriceLabel,
-                    style = Theme.brockmann.supplementary.caption,
-                    color = colors.text.secondary,
-                )
-            }
-
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(vertical = 6.dp),
+                modifier = Modifier.padding(start = 6.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
             ) {
                 state.referenceLogo?.let { logo ->
                     TokenLogo(
@@ -166,13 +159,6 @@ private fun PriceEntryBlock(state: LimitOrderUiModel, onPresetClick: (LimitPrice
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
-            state.percentFromMarketLabel?.let { percent ->
-                Text(
-                    text = stringResource(R.string.limit_swap_percent_from_market, percent),
-                    style = Theme.brockmann.supplementary.caption,
-                    color = colors.text.tertiary,
-                )
-            }
         }
 
         Row(

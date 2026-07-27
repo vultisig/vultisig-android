@@ -1335,7 +1335,6 @@
     <string name="limit_swap_asset_label">资产</string>
     <string name="limit_swap_sell">出售</string>
     <string name="limit_swap_buy">购买</string>
-    <string name="limit_swap_market_label">市价</string>
     <string name="limit_swap_preset_market">市价</string>
     <string name="limit_swap_preset_plus_1">+1%</string>
     <string name="limit_swap_preset_plus_5">+5%</string>
@@ -1348,7 +1347,6 @@
     <string name="limit_swap_warning_far_above_market">可能在有效期内无法成交</string>
     <string name="verify_limit_order_title">您正在下达限价订单</string>
     <string name="verify_limit_order_target_price">目标价格：%1$s</string>
-    <string name="limit_swap_percent_from_market">与市价相差 %1$s</string>
     <string name="limit_swap_toggle_price_unit">切换价格单位</string>
     <string name="limit_swap_edit_assets">编辑资产</string>
     <string name="swap_advanced_sheet_title">高级兑换</string>

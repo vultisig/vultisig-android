@@ -56,17 +56,6 @@ class LimitOrderPricingTest {
     }
 
     @Test
-    fun `percent from market is negative when the target demands a better rate than market`() {
-        // target above market (buy per sell) shows as a cheaper displayed price, i.e. negative.
-        val pct =
-            LimitOrderPricing.percentFromMarket(
-                targetPrice = BigDecimal("1.05"),
-                marketTargetPrice = BigDecimal("1.0"),
-            )!!
-        assert(pct.signum() < 0) { "expected negative percent, got $pct" }
-    }
-
-    @Test
     fun `warns when the target price is at or below market`() {
         assertEquals(
             LimitOrderPricing.LimitWarning.BelowMarket,

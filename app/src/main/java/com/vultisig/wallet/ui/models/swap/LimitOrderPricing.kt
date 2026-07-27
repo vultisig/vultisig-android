@@ -40,19 +40,6 @@ internal object LimitOrderPricing {
         return sellAmount * targetPrice
     }
 
-    /**
-     * Signed distance of the target price from market, as a percentage of the displayed (fiat)
-     * price. A target that demands a better rate than market (higher canonical [targetPrice]) shows
-     * as a cheaper per-buy price, i.e. a negative percentage — matching how the form reads to a
-     * user placing a buy order below market.
-     */
-    fun percentFromMarket(targetPrice: BigDecimal, marketTargetPrice: BigDecimal): BigDecimal? {
-        if (targetPrice.signum() <= 0 || marketTargetPrice.signum() <= 0) return null
-        val marketOverTarget =
-            marketTargetPrice.divide(targetPrice, PRICE_SCALE, RoundingMode.HALF_UP)
-        return (marketOverTarget - BigDecimal.ONE) * BigDecimal(100)
-    }
-
     enum class LimitWarning {
         /** targetPrice ≤ market: the order would fill immediately — suggest a market swap. */
         BelowMarket,

@@ -1004,7 +1004,6 @@
     <string name="limit_swap_asset_label">Activo</string>
     <string name="limit_swap_sell">Vender</string>
     <string name="limit_swap_buy">Comprar</string>
-    <string name="limit_swap_market_label">Mercado</string>
     <string name="limit_swap_preset_market">Mercado</string>
     <string name="limit_swap_preset_plus_1">+1%</string>
     <string name="limit_swap_preset_plus_5">+5%</string>
@@ -1017,7 +1016,6 @@
     <string name="limit_swap_warning_far_above_market">Puede no ejecutarse antes del vencimiento</string>
     <string name="verify_limit_order_title">Estás colocando una orden límite</string>
     <string name="verify_limit_order_target_price">Precio objetivo: %1$s</string>
-    <string name="limit_swap_percent_from_market">%1$s del mercado</string>
     <string name="limit_swap_toggle_price_unit">Cambiar unidad de precio</string>
     <string name="limit_swap_edit_assets">Editar activos</string>
     <string name="swap_advanced_sheet_title">Intercambio avanzado</string>

@@ -1009,7 +1009,6 @@
     <string name="limit_swap_asset_label">Sredstvo</string>
     <string name="limit_swap_sell">Prodaj</string>
     <string name="limit_swap_buy">Kupi</string>
-    <string name="limit_swap_market_label">Tržište</string>
     <string name="limit_swap_preset_market">Tržište</string>
     <string name="limit_swap_preset_plus_1">+1%</string>
     <string name="limit_swap_preset_plus_5">+5%</string>
@@ -1022,7 +1021,6 @@
     <string name="limit_swap_warning_far_above_market">Možda se neće izvršiti prije isteka</string>
     <string name="verify_limit_order_title">Postavljate limit nalog</string>
     <string name="verify_limit_order_target_price">Ciljna cijena: %1$s</string>
-    <string name="limit_swap_percent_from_market">%1$s od tržišta</string>
     <string name="limit_swap_toggle_price_unit">Promijeni jedinicu cijene</string>
     <string name="limit_swap_edit_assets">Uredi sredstva</string>
     <string name="swap_advanced_sheet_title">Napredna zamjena</string>

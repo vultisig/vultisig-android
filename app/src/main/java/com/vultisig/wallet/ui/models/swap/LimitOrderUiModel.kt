@@ -37,13 +37,9 @@ internal data class LimitOrderUiModel(
     /** e.g. "1 BTC" — the buy asset the target price is quoted per. */
     val referenceAmountLabel: String = "",
     val referenceLogo: ImageModel? = null,
-    /** Live market price for the reference amount, e.g. "$67,240.00". */
-    val marketPriceLabel: String = "",
     /** The computed equivalent of the entered price in the opposite unit, e.g. "0.07902 BTC". */
     val secondaryPriceLabel: String = "",
     val priceUnit: LimitPriceUnit = LimitPriceUnit.Fiat,
-    /** Signed distance of the target price from market, e.g. "+2.3%" (null while unknown). */
-    val percentFromMarketLabel: String? = null,
     val selectedPreset: LimitPricePreset? = LimitPricePreset.Market,
     val selectedExpiry: LimitExpiryOption = LimitExpiryOption.TwentyFourHours,
     val sellTicker: String = "",

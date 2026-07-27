@@ -476,8 +476,6 @@ constructor(
         // Market swap flow so non-USD users see the correct symbol and value.
         val sellFiat = sellUnitFiat.value
         val fiatPerBuy = target?.let { LimitOrderPricing.fiatPricePerBuyUnit(it, sellFiat?.value) }
-        val marketFiatPerBuy =
-            market?.let { LimitOrderPricing.fiatPricePerBuyUnit(it, sellFiat?.value) }
         val buyAmount = target?.let { LimitOrderPricing.expectedBuyAmount(sellAmount, it) }
 
         val fiatText = formatFiat(fiatPerBuy, sellFiat?.currency)
@@ -486,13 +484,6 @@ constructor(
         val unit = limitPriceUnit.value
         val priceText = if (unit == LimitPriceUnit.Fiat) fiatText else amountText
         val secondaryText = if (unit == LimitPriceUnit.Fiat) amountText else fiatText
-        val marketPriceLabel =
-            formatFiat(marketFiatPerBuy, sellFiat?.currency).takeIf { it != EMPTY_PRICE } ?: ""
-
-        val percent =
-            if (target != null && market != null) {
-                LimitOrderPricing.percentFromMarket(target, market)
-            } else null
         val warningRes =
             if (target != null && market != null) {
                 when (LimitOrderPricing.warningFor(target, market)) {
@@ -519,10 +510,8 @@ constructor(
                         priceText = priceText,
                         referenceAmountLabel = "1 ${dstCoin.ticker}",
                         referenceLogo = buyLogo,
-                        marketPriceLabel = marketPriceLabel,
                         secondaryPriceLabel = secondaryText,
                         priceUnit = unit,
-                        percentFromMarketLabel = percent?.let { p -> formatPercentFromMarket(p) },
                         selectedPreset = limitPreset.value,
                         selectedExpiry = limitExpiry.value,
                         sellTicker = srcCoin.ticker,
@@ -550,13 +539,6 @@ constructor(
 
     private fun formatAssetAmount(value: BigDecimal): String =
         assetFormat.format(value.stripTrailingZeros())
-
-    /** Signed percentage only (e.g. "+2.1%"); the composable wraps it with the localized suffix. */
-    private fun formatPercentFromMarket(percent: BigDecimal): String {
-        val rounded = percent.setScale(1, RoundingMode.HALF_UP)
-        val sign = if (rounded.signum() > 0) "+" else ""
-        return "$sign$rounded%"
-    }
 
     /**
      * The address-format error for the current external recipient, or `null` when the recipient is
