@@ -106,7 +106,9 @@ constructor(private val oneInchApi: OneInchApi, private val evmApiFactory: EvmAp
 
         val evmApi = evmApiFactory.createEvmApi(chain)
         val balances = evmApi.getBalances(address, curated.map { it.contractAddress })
-        return curated.filter { (balances[it.contractAddress] ?: BigInteger.ZERO) > BigInteger.ZERO }
+        return curated.filter {
+            (balances[it.contractAddress] ?: BigInteger.ZERO) > BigInteger.ZERO
+        }
     }
 
     private suspend fun vultTopUpOnEthereum(
