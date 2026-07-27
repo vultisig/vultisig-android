@@ -168,6 +168,56 @@ class LimitSwapMemoTest {
         assertTrue(error.message.orEmpty().contains("not a valid"))
     }
 
+    // A shape-only regex would pass all four of these too; the point is that the checksum path
+    // does not reject the ones that are genuinely valid. bc1p/ltc1p carry a bech32m checksum
+    // (BIP-350), so validating every segwit form against the plain bech32 constant would strand
+    // taproot payouts.
+    @TestFactory
+    fun `accepts checksum-valid segwit destinations`(): List<DynamicTest> =
+        listOf(
+                "BTC.BTC" to "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+                "BTC.BTC" to "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0",
+                "LTC.LTC" to "ltc1qqqqsyqcyq5rqwzqfpg9scrgwpugpzysn3s44dy",
+                "LTC.LTC" to "ltc1pqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs23v9ccrydpk8qarc0sts9tf8",
+            )
+            .map { (targetAsset, destAddr) ->
+                DynamicTest.dynamicTest(destAddr) {
+                    val memo = buildEthSourcedMemo(targetAsset, destAddr)
+                    assertTrue(memo.contains(destAddr), "memo dropped the destination: $memo")
+                }
+            }
+
+    @TestFactory
+    fun `rejects bech32 destinations a shape-only check would let through`(): List<DynamicTest> =
+        listOf(
+                // Final checksum character flipped.
+                "corrupted checksum" to "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlq",
+                // Mixed case is invalid per BIP-173 even when the checksum itself is sound.
+                "mixed case" to "BC1Qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+                // Checksum-valid, but a 21-byte v0 program is neither P2WPKH nor P2WSH.
+                "bad v0 program length" to "bc1qqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzsf6edgu",
+                // Taproot payload carrying a plain-bech32 checksum instead of bech32m.
+                "v1 with bech32 checksum" to
+                    "bc1pqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs23v9ccrydpk8qarc0sagmhkq",
+            )
+            .map { (name, destAddr) ->
+                DynamicTest.dynamicTest(name) {
+                    assertThrows(IllegalArgumentException::class.java) {
+                        buildEthSourcedMemo("BTC.BTC", destAddr)
+                    }
+                }
+            }
+
+    private fun buildEthSourcedMemo(targetAsset: String, destAddr: String): String =
+        LimitSwapMemo.build(
+            sourceAsset = "ETH.ETH",
+            sourceAmount = BigInteger.valueOf(100_000_000L),
+            targetAsset = targetAsset,
+            destAddr = destAddr,
+            targetPrice = "0.04",
+            expiryHours = 24,
+        )
+
     @Test
     fun `rejects a destination address containing a memo separator`() {
         assertThrows(IllegalArgumentException::class.java) {
@@ -259,10 +309,8 @@ class LimitSwapMemoTest {
 
     @Test
     fun `parse recovers target asset, destination, LIM and expiry blocks`() {
-        val parsed =
-            LimitSwapMemo.parse(
-                "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:4000000/14400/0:va:50"
-            )!!
+        val memo = "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:4000000/14400/0:va:50"
+        val parsed = checkNotNull(LimitSwapMemo.parse(memo)) { "failed to parse limit memo: $memo" }
         assertEquals("BTC.BTC", parsed.targetAsset)
         assertEquals("bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", parsed.destAddr)
         assertEquals(BigInteger.valueOf(4_000_000L), parsed.limit)

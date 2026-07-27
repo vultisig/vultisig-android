@@ -40,11 +40,8 @@ private val limitSwapDestinationValidators: Map<Chain, (String) -> Boolean> =
         Chain.Ethereum to ::isEvmAddress,
         Chain.Bitcoin to
             { a ->
-                Regex(
-                        "^(bc1[ac-hj-np-z02-9]{11,71}|[13][$BASE58_CHARS]{25,34})$",
-                        RegexOption.IGNORE_CASE,
-                    )
-                    .matches(a)
+                isSegwitAddress(a, "bc") ||
+                    Regex("^[13][$BASE58_CHARS]{25,34}$", RegexOption.IGNORE_CASE).matches(a)
             },
         Chain.BitcoinCash to
             { a ->
@@ -55,11 +52,8 @@ private val limitSwapDestinationValidators: Map<Chain, (String) -> Boolean> =
         Chain.Dogecoin to { a -> Regex("^D[5-9A-HJ-NP-U][$BASE58_CHARS]{32}$").matches(a) },
         Chain.Litecoin to
             { a ->
-                Regex(
-                        "^(ltc1[ac-hj-np-z02-9]{11,71}|[LM3][$BASE58_CHARS]{25,34})$",
-                        RegexOption.IGNORE_CASE,
-                    )
-                    .matches(a)
+                isSegwitAddress(a, "ltc") ||
+                    Regex("^[LM3][$BASE58_CHARS]{25,34}$", RegexOption.IGNORE_CASE).matches(a)
             },
         Chain.Zcash to { a -> Regex("^t[13][$BASE58_CHARS]{33}$").matches(a) },
         Chain.Solana to ::isSolanaAddress,
@@ -116,16 +110,23 @@ private fun base58Decode(input: String): ByteArray? {
 
 private const val BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 
+/** Checksum constants: bech32 per BIP-173, bech32m per BIP-350. */
+private const val BECH32_CONST = 1
+private const val BECH32M_CONST = 0x2bc830a3
+
+private const val CHECKSUM_LENGTH = 6
+
 /**
- * Decode a bech32 string and return its human-readable prefix, or null if the string is not a
- * checksum-valid bech32 (constant 1). Only the HRP is needed here; the data payload is discarded.
+ * Parse a bech32 string into its human-readable prefix and 5-bit data payload, enforcing the
+ * encoding's structural rules (length bounds, case uniformity, charset). The checksum is *not*
+ * verified here: segwit picks its constant from the witness version, so that is left to callers.
  */
-private fun bech32DecodeHrp(input: String): String? {
+private fun bech32Split(input: String): Pair<String, IntArray>? {
     if (input.length < 8 || input.length > 90) return null
     if (input != input.lowercase() && input != input.uppercase()) return null
     val lower = input.lowercase()
     val separator = lower.lastIndexOf('1')
-    if (separator < 1 || separator + 7 > lower.length) return null
+    if (separator < 1 || separator + 1 + CHECKSUM_LENGTH > lower.length) return null
 
     val hrp = lower.substring(0, separator)
     val dataPart = lower.substring(separator + 1)
@@ -135,8 +136,58 @@ private fun bech32DecodeHrp(input: String): String? {
         if (idx < 0) return null
         data[i] = idx
     }
-    if (!bech32VerifyChecksum(hrp, data)) return null
+    return hrp to data
+}
+
+/**
+ * Decode a bech32 string and return its human-readable prefix, or null if the string is not a
+ * checksum-valid bech32 (constant 1). Only the HRP is needed here; the data payload is discarded.
+ */
+private fun bech32DecodeHrp(input: String): String? {
+    val (hrp, data) = bech32Split(input) ?: return null
+    if (!bech32VerifyChecksum(hrp, data, BECH32_CONST)) return null
     return hrp
+}
+
+/**
+ * Validate a segwit payout address under [expectedHrp] per BIP-173/BIP-350. Witness v0 carries a
+ * bech32 checksum while v1+ (taproot and anything later) carries a bech32m one, so a single
+ * constant would silently reject every `bc1p…` destination. The witness program itself is decoded
+ * too, which rejects the truncated, over-padded and non-zero-padding forms a shape-only regex lets
+ * through.
+ */
+private fun isSegwitAddress(address: String, expectedHrp: String): Boolean {
+    val (hrp, data) = bech32Split(address) ?: return false
+    if (hrp != expectedHrp) return false
+    if (data.size < 1 + CHECKSUM_LENGTH) return false
+
+    val witnessVersion = data[0]
+    if (witnessVersion > 16) return false
+    val checksumConst = if (witnessVersion == 0) BECH32_CONST else BECH32M_CONST
+    if (!bech32VerifyChecksum(hrp, data, checksumConst)) return false
+
+    val program = convertBits(data.copyOfRange(1, data.size - CHECKSUM_LENGTH)) ?: return false
+    if (program.size < 2 || program.size > 40) return false
+    // v0 is defined only for P2WPKH (20 bytes) and P2WSH (32 bytes).
+    if (witnessVersion == 0 && program.size != 20 && program.size != 32) return false
+    return true
+}
+
+/** Regroup 5-bit bech32 data into bytes, rejecting non-zero or over-wide trailing padding. */
+private fun convertBits(data: IntArray): ByteArray? {
+    var accumulator = 0
+    var bits = 0
+    val out = ArrayList<Byte>(data.size * 5 / 8)
+    for (value in data) {
+        accumulator = (accumulator shl 5) or value
+        bits += 5
+        while (bits >= 8) {
+            bits -= 8
+            out.add(((accumulator shr bits) and 0xff).toByte())
+        }
+    }
+    if (bits >= 5 || (accumulator shl (8 - bits)) and 0xff != 0) return null
+    return out.toByteArray()
 }
 
 private fun bech32HrpExpand(hrp: String): IntArray {
@@ -162,7 +213,7 @@ private fun bech32Polymod(values: IntArray): Int {
     return chk
 }
 
-private fun bech32VerifyChecksum(hrp: String, data: IntArray): Boolean {
+private fun bech32VerifyChecksum(hrp: String, data: IntArray, checksumConst: Int): Boolean {
     val values = bech32HrpExpand(hrp) + data
-    return bech32Polymod(values) == 1
+    return bech32Polymod(values) == checksumConst
 }
