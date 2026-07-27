@@ -107,8 +107,14 @@ object MockHttpClient {
      * Builds a client that steps through [responses] in order, pinning the last entry once the
      * sequence is exhausted. Each entry is a [Pair] of (status, body). The MockEngine block runs
      * sequentially within a single coroutine, so a plain mutable [Int] is sufficient.
+     *
+     * Pass a custom [jsonFormat] when a response model contains `@Contextual` fields, same as
+     * [respondingWith].
      */
-    fun respondingWithSequence(vararg responses: Pair<HttpStatusCode, String>): HttpClient {
+    fun respondingWithSequence(
+        vararg responses: Pair<HttpStatusCode, String>,
+        jsonFormat: Json = json,
+    ): HttpClient {
         require(responses.isNotEmpty()) { "respondingWithSequence requires at least one response" }
         var index = 0
         return HttpClient(
@@ -118,7 +124,7 @@ object MockHttpClient {
                 respond(content = body, status = status, headers = JSON_HEADERS)
             }
         ) {
-            installDefaults()
+            installDefaults(jsonFormat)
         }
     }
 

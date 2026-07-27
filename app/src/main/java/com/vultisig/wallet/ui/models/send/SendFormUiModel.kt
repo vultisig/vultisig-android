@@ -158,7 +158,19 @@ enum class AddressBookType {
 
 internal sealed class GasSettings {
     data class Eth(val baseFee: BigInteger, val priorityFee: BigInteger, val gasLimit: BigInteger) :
-        GasSettings()
+        GasSettings() {
+        init {
+            require(baseFee >= BigInteger.ZERO) { "baseFee must be non-negative" }
+            require(priorityFee >= BigInteger.ZERO) { "priorityFee must be non-negative" }
+        }
+
+        // Single source of truth for the EIP-1559 fee cap: both the signed transaction
+        // (DefaultSendStrategy.applyGasSettings) and the displayed estimate
+        // (selectGasFeeForFeeEstimation) must derive maxFeePerGas from this, or the two can
+        // silently disagree (issue #5397).
+        val maxFeePerGasWei: BigInteger
+            get() = baseFee + priorityFee
+    }
 
     data class UTXO(val byteFee: BigInteger) : GasSettings()
 }

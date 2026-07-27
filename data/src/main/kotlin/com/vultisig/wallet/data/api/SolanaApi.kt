@@ -66,6 +66,13 @@ import wallet.core.jni.SolanaAddress
 interface SolanaApi {
     suspend fun getBalance(address: String): BigInteger
 
+    /**
+     * Live rent-exempt reserve for a new 165-byte SPL Associated Token Account. The last
+     * successfully-fetched value is cached and reused as the fallback when the underlying RPC read
+     * fails, so a transient error never silently drops the fee to zero. Before any call has
+     * succeeded this session, falls back to the standard 165-byte rent-exempt minimum (2,039,280
+     * lamports).
+     */
     suspend fun getMinimumBalanceForRentExemption(): BigInteger
 
     suspend fun getRecentBlockHash(): String
@@ -101,9 +108,10 @@ interface SolanaApi {
     suspend fun checkStatus(txHash: String): SolanaRpcResponseJson<SolanaSignatureStatusesResult>?
 
     /**
-     * Minimum lamports for rent exemption of an account of the given byte length. The no-arg
-     * overload targets SPL token accounts (165 bytes); staking passes the 200-byte stake-account
-     * size. Returns [BigInteger.ZERO] on RPC failure.
+     * Minimum lamports for rent exemption of an account of [dataLength] bytes (e.g. the 200-byte
+     * stake-account size used by staking). Returns [BigInteger.ZERO] on RPC failure; callers that
+     * need a non-zero fallback supply their own (see the no-arg [getMinimumBalanceForRentExemption]
+     * for the SPL-account overload that caches one internally).
      */
     suspend fun getMinimumBalanceForRentExemption(dataLength: Int): BigInteger
 
@@ -145,6 +153,14 @@ internal class SolanaApiImp(
     private val splTokensInfoEndpoint2 = "$JUPITER_URL/tokens/v2/search"
     private val jupiterTokensUrl = "$JUPITER_URL/tokens/v2/tag"
 
+    // Last successfully-fetched 165-byte SPL Associated Token Account rent-exempt reserve, reused
+    // as the fallback on a subsequent RPC failure instead of a hardcoded literal so it tracks the
+    // live network value once a fetch has succeeded this session. A single @Volatile reference
+    // makes the read/publish atomic; concurrent refreshes are harmless (idempotent fetch).
+    @Volatile
+    private var cachedSplAtaRentExemptionLamports: BigInteger =
+        SPL_TOKEN_ACCOUNT_RENT_EXEMPT_LAMPORTS_BOOTSTRAP.toBigInteger()
+
     override suspend fun getBalance(address: String): BigInteger {
         return try {
             val payload =
@@ -171,19 +187,9 @@ internal class SolanaApiImp(
     }
 
     override suspend fun getMinimumBalanceForRentExemption(): BigInteger =
-        try {
-            httpClient
-                .postRpc<SolanaMinimumBalanceForRentExemptionJson>(
-                    rpcEndpoint,
-                    "getMinimumBalanceForRentExemption",
-                    params = buildJsonArray { add(DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION) },
-                )
-                .result
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.e("Error getting minimum balance for rent exemption: ${e.message}")
-            BigInteger.ZERO
-        }
+        getMinimumBalanceForRentExemption(DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION)
+            .takeIf { it.signum() > 0 }
+            ?.also { cachedSplAtaRentExemptionLamports = it } ?: cachedSplAtaRentExemptionLamports
 
     override suspend fun getRecentBlockHash(): String {
         val payload =
@@ -678,6 +684,11 @@ internal class SolanaApiImp(
         private const val TOKEN_PROGRAM_ID_2022 = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
         private const val ENCODING_SPL_REQUEST_PARAM = "jsonParsed"
         private const val DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION = 165
+        // Rent formula for a 165-byte SPL Token Account: (128-byte account overhead + 165-byte
+        // token data) x 3,480 lamports/byte-year x 2-year exemption threshold. Matches iOS's
+        // SolanaHelper.ataRentLamports, which uses this value as its only source (no live RPC
+        // call).
+        private const val SPL_TOKEN_ACCOUNT_RENT_EXEMPT_LAMPORTS_BOOTSTRAP = 2_039_280L
         // 100x the floor — caps priority fee at ~0.01 SOL per tx to prevent overpayment
         // during congestion spikes or compromised RPC proxy
         private const val MAX_PRIORITY_FEE_PRICE = 100_000_000L

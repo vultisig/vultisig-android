@@ -73,8 +73,9 @@ internal class SelectGasFeeForFeeEstimationTest {
     }
 
     @Test
-    fun `ethereum uses the base fee from evm gas settings`() {
+    fun `ethereum uses the base fee plus priority fee from evm gas settings`() {
         val baseFee = BigInteger.valueOf(42L)
+        val priorityFee = BigInteger.valueOf(2L)
         val result =
             selectGasFeeForFeeEstimation(
                 chain = Chain.Ethereum,
@@ -83,12 +84,12 @@ internal class SelectGasFeeForFeeEstimationTest {
                 evmGasSettings =
                     GasSettings.Eth(
                         baseFee = baseFee,
-                        priorityFee = BigInteger.valueOf(2L),
+                        priorityFee = priorityFee,
                         gasLimit = BigInteger.valueOf(21_000L),
                     ),
             )
 
-        assertEquals(baseFee, result.value)
+        assertEquals(BigInteger.valueOf(44L), result.value)
     }
 
     @Test
@@ -124,7 +125,7 @@ internal class SelectGasFeeForFeeEstimationTest {
     }
 
     @Test
-    fun `ethereum with zero base fee returns fee value of zero not the original gas fee`() {
+    fun `ethereum with zero base fee still returns the priority fee, not the original gas fee`() {
         val result =
             selectGasFeeForFeeEstimation(
                 chain = Chain.Ethereum,
@@ -138,7 +139,30 @@ internal class SelectGasFeeForFeeEstimationTest {
                     ),
             )
 
-        assertEquals(BigInteger.ZERO, result.value)
+        assertEquals(BigInteger.valueOf(2L), result.value)
         assertEquals(ethFee.unit, result.unit)
+    }
+
+    @Test
+    fun `ethereum estimate matches the same GasSettings' maxFeePerGasWei used at signing`() {
+        // The estimate shown on the Send form/confirmation and the value actually signed into
+        // BlockChainSpecific.Ethereum.maxFeePerGasWei (DefaultSendStrategy.applyGasSettings) must
+        // never diverge for the same GasSettings.Eth (issue #5397).
+        val gasSettings =
+            GasSettings.Eth(
+                baseFee = BigInteger.valueOf(30L),
+                priorityFee = BigInteger.valueOf(5L),
+                gasLimit = BigInteger.valueOf(21_000L),
+            )
+
+        val result =
+            selectGasFeeForFeeEstimation(
+                chain = Chain.Ethereum,
+                gasFee = ethFee,
+                planFee = null,
+                evmGasSettings = gasSettings,
+            )
+
+        assertEquals(gasSettings.maxFeePerGasWei, result.value)
     }
 }

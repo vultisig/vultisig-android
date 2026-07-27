@@ -101,6 +101,57 @@ internal class AddressBookRepositoryImplTest {
         assertTrue(repository.entryExists(Chain.Bitcoin.id, BTC_ADDRESS))
     }
 
+    @Test
+    fun `EVM entry saved from one chain is recognized on every other EVM chain`() = runTest {
+        repository.add(
+            AddressBookEntry(chain = Chain.Arbitrum, address = CHECKSUMMED, title = "Alice")
+        )
+
+        assertTrue(repository.entryExists(Chain.Base.id, CHECKSUMMED))
+        assertTrue(repository.entryExists(Chain.Optimism.id, CHECKSUMMED))
+        assertEquals("Alice", repository.getEntry(Chain.Ethereum.id, CHECKSUMMED)?.title)
+    }
+
+    @Test
+    fun `EVM entry is always stored under the canonical Ethereum chain id`() = runTest {
+        repository.add(
+            AddressBookEntry(chain = Chain.Arbitrum, address = CHECKSUMMED, title = "Alice")
+        )
+
+        val entry = repository.getEntries().single()
+        assertEquals(Chain.Ethereum, entry.chain)
+    }
+
+    @Test
+    fun `cross-chain EVM match is still case-insensitive on the address`() = runTest {
+        repository.add(
+            AddressBookEntry(chain = Chain.Arbitrum, address = CHECKSUMMED, title = "Alice")
+        )
+
+        assertTrue(repository.entryExists(Chain.Base.id, LOWERCASED))
+        assertEquals("Alice", repository.getEntry(Chain.Optimism.id, LOWERCASED)?.title)
+    }
+
+    @Test
+    fun `deleting from a different EVM chain removes the canonical entry`() = runTest {
+        repository.add(
+            AddressBookEntry(chain = Chain.Arbitrum, address = CHECKSUMMED, title = "Alice")
+        )
+
+        repository.delete(Chain.Base.id, CHECKSUMMED)
+
+        assertFalse(repository.entryExists(Chain.Arbitrum.id, CHECKSUMMED))
+    }
+
+    @Test
+    fun `EVM and non-EVM chains never share an entry`() = runTest {
+        repository.add(
+            AddressBookEntry(chain = Chain.Bitcoin, address = BTC_ADDRESS, title = "Cold storage")
+        )
+
+        assertFalse(repository.entryExists(Chain.Ethereum.id, BTC_ADDRESS))
+    }
+
     private companion object {
         // EIP-55 checksummed reference address and its all-lowercase canonical form.
         const val CHECKSUMMED = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed"

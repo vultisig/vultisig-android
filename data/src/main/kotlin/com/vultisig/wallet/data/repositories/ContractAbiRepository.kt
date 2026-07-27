@@ -5,7 +5,7 @@ import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.api.SourcifyApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
-import com.vultisig.wallet.data.models.oneInchChainId
+import com.vultisig.wallet.data.models.evmChainId
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration
@@ -94,7 +94,7 @@ constructor(
         signature: String,
     ): List<AbiParam>? {
         if (chain.standard != TokenStandard.EVM) return null
-        val chainId = evmChainId(chain) ?: return null
+        val chainId = chain.evmChainId() ?: return null
         val address = contractAddress.trim().takeIf { it.isNotEmpty() } ?: return null
         val canonical = canonicalSignature(signature) ?: return null
 
@@ -187,20 +187,6 @@ constructor(
         val components = (obj["components"] as? JsonArray)?.mapNotNull(::toAbiParam)
         return AbiParam(name = name, type = type, components = components)
     }
-
-    /**
-     * Maps an EVM [Chain] to its decimal chain id for Sourcify's path by reusing the shared
-     * [oneInchChainId] source, so this can no longer drift from it. [Chain.Sei] is the one EVM
-     * chain Sourcify indexes that 1inch doesn't route (adding it to [oneInchChainId] would wrongly
-     * signal swap support), so it stays the sole documented exception; every other chain tracks the
-     * shared map. Unsupported chains return null (not queried) and an id Sourcify doesn't index
-     * just yields a graceful 404.
-     */
-    private fun evmChainId(chain: Chain): String? =
-        when (chain) {
-            Chain.Sei -> "1329"
-            else -> runCatching { chain.oneInchChainId().toString() }.getOrNull()
-        }
 
     private data class CacheEntry(val abi: Map<String, List<AbiParam>>, val fetchedAt: Long)
 

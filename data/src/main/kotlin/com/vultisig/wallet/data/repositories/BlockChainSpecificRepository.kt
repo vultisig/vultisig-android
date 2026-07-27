@@ -32,6 +32,7 @@ import com.vultisig.wallet.data.chains.helpers.CardanoHelper
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
+import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
@@ -599,11 +600,32 @@ constructor(
                     }
 
                     val suiFees = suiFeesDeferred.await()
+                    // Embed only the coin objects the send needs, not every owned object — an
+                    // unbounded set bloats the pairing QR / TSS relay payload and fails to relay on
+                    // wallets whose balance is scattered across many objects.
+                    //
+                    // Select against whichever budget is larger: the refined suiFees.limit that
+                    // becomes the transaction's gas ceiling, or SUI_DEFAULT_GAS_BUDGET that the fee
+                    // dry-run priced against. A native PaySui pays gas out of its own input set, so
+                    // Sui requires those objects to cover amount + gasBudget — selecting against a
+                    // smaller budget than the one signed with would reject a fully funded send.
+                    // Taking the max keeps the embedded set identical to the simulated one whenever
+                    // the refined budget lands under the default (the common case, so the broadcast
+                    // transaction carries no unpriced inputs), and only widens it by the objects
+                    // the higher ceiling genuinely needs.
+                    val payloadSelectionBudget = maxOf(SUI_DEFAULT_GAS_BUDGET, suiFees.limit)
                     BlockChainSpecificAndUtxo(
                         BlockChainSpecific.Sui(
                             referenceGasPrice = suiFees.price,
                             gasBudget = suiFees.limit,
-                            coins = coinsDeferred.await(),
+                            coins =
+                                SuiHelper.selectPayloadCoins(
+                                    coinsDeferred.await(),
+                                    isNativeToken = token.isNativeToken,
+                                    contractAddress = token.contractAddress,
+                                    amount = tokenAmountValue ?: BigInteger.ZERO,
+                                    gasBudget = payloadSelectionBudget,
+                                ),
                         ),
                         utxos = emptyList(),
                     )

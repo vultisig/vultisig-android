@@ -815,6 +815,7 @@
     <string name="join_key_gen_your_vault_will_start_generating">Генерация вашего хранилища начнётся с момента завершения настройки хранилища на основном устройстве</string>
     <string name="join_key_sign_wrong_signing_library_type">Неверный тип библиотеки подписи</string>
     <string name="gas_settings_advanced_gas_fee">Расширенная комиссия за газ</string>
+    <string name="gas_settings_gas_price_gwei">Цена газа (GWEI)</string>
     <string name="gas_settings_max_base_fee_gwei">Максимальная базовая комиссия (GWEI)</string>
     <string name="gas_settings_priority_fee_gwei">Приоритетная комиссия (GWEI)</string>
     <string name="import_file_import_your_vault_share">Импортируйте общий доступ к хранилищу</string>

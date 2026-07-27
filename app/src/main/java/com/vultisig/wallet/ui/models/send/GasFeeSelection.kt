@@ -30,6 +30,6 @@ internal fun selectGasFeeForFeeEstimation(
                     )
             if (plan > 0) gasFee.copy(value = BigInteger.valueOf(plan)) else gasFee
         }
-        evmGasSettings != null -> gasFee.copy(value = evmGasSettings.baseFee)
+        evmGasSettings != null -> gasFee.copy(value = evmGasSettings.maxFeePerGasWei)
         else -> gasFee
     }

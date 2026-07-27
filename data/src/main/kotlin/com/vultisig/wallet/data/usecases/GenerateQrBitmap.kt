@@ -7,6 +7,7 @@ import androidx.core.graphics.scale
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import javax.inject.Inject
 
 private const val QR_CODE_SCALE_FACTOR = 8
@@ -27,7 +28,16 @@ internal class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
         backgroundColor: Color,
         logo: Bitmap?,
     ): Bitmap {
-        val hintMap = mapOf(EncodeHintType.MARGIN to QR_CODE_QUIET_ZONE)
+        // Logos overwrite modules in the center, so bump error correction well past the ZXing
+        // default (L, ~7%) to leave enough recovery budget for the overwritten area — otherwise
+        // stricter third-party decoders (e.g. iOS's AVFoundation/Vision scanner) fail to decode.
+        val hintMap =
+            mapOf(EncodeHintType.MARGIN to QR_CODE_QUIET_ZONE) +
+                if (logo != null) {
+                    mapOf(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H)
+                } else {
+                    emptyMap()
+                }
 
         val qrCodeWriter = QRCodeWriter()
         val bitmapMatrix = qrCodeWriter.encode(qrCodeContent, BarcodeFormat.QR_CODE, 0, 0, hintMap)

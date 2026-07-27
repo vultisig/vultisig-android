@@ -24,6 +24,7 @@ import kotlin.test.assertSame
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -190,6 +191,65 @@ internal class AddressBookViewModelTest {
             assertEquals(null, vm.state.value.pendingDeletion)
         }
 
+    @Test
+    fun `EVM entries show EVM as the network label`() =
+        runTest(testDispatcher) {
+            coEvery { addressBookRepository.getEntries() } returns
+                listOf(
+                    AddressBookEntry(
+                        chain = Chain.Ethereum,
+                        address = ALICE_ADDRESS,
+                        title = "Alice",
+                    )
+                )
+            every { orderRepository.loadOrders(null) } returns flowOf(emptyList())
+            val vm = createViewModel()
+
+            vm.loadData()
+            advanceUntilIdle()
+
+            assertEquals("EVM", vm.state.value.entries.single().network)
+        }
+
+    @Test
+    fun `non-EVM entries keep their chain name as the network label`() =
+        runTest(testDispatcher) {
+            coEvery { addressBookRepository.getEntries() } returns
+                listOf(
+                    AddressBookEntry(chain = Chain.Bitcoin, address = BTC_ADDRESS, title = "Cold")
+                )
+            every { orderRepository.loadOrders(null) } returns flowOf(emptyList())
+            val vm = createViewModel()
+
+            vm.loadData()
+            advanceUntilIdle()
+
+            assertEquals("Bitcoin", vm.state.value.entries.single().network)
+        }
+
+    @Test
+    fun `loadData filtered by one EVM chain still surfaces entries saved under another`() =
+        runTest(testDispatcher) {
+            every { any<SavedStateHandle>().toRoute<Route.AddressBookScreen>() } returns
+                Route.AddressBookScreen(vaultId = VAULT_ID, chainId = Chain.Arbitrum.id)
+            coEvery { addressBookRepository.getEntries() } returns
+                listOf(
+                    AddressBookEntry(
+                        chain = Chain.Ethereum,
+                        address = ALICE_ADDRESS,
+                        title = "Alice",
+                    ),
+                    AddressBookEntry(chain = Chain.Bitcoin, address = BTC_ADDRESS, title = "Cold"),
+                )
+            every { orderRepository.loadOrders(null) } returns flowOf(emptyList())
+            val vm = createViewModel()
+
+            vm.loadData()
+            advanceUntilIdle()
+
+            assertEquals(listOf("Alice"), vm.state.value.entries.map { it.name })
+        }
+
     private fun createViewModel(): AddressBookViewModel =
         AddressBookViewModel(
             savedStateHandle = SavedStateHandle(),
@@ -216,5 +276,6 @@ internal class AddressBookViewModelTest {
         const val VAULT_ID = "vault-1"
         const val ALICE_ADDRESS = "0xAlice"
         const val BOB_ADDRESS = "0xBob"
+        const val BTC_ADDRESS = "1BoatSLRHtKNngkdXEeobR76b53LETtpyT"
     }
 }

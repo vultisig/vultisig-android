@@ -29,10 +29,12 @@ import com.vultisig.wallet.ui.models.send.ChainValidationService
 import com.vultisig.wallet.ui.models.send.GasSettings
 import com.vultisig.wallet.ui.models.send.SendFocusField
 import com.vultisig.wallet.ui.models.send.SendSections
+import com.vultisig.wallet.ui.models.send.selectGasFeeForFeeEstimation
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.utils.UiText
+import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -89,6 +91,7 @@ internal class DefaultSendStrategyTest {
     private var lastError: UiText? = null
     private var defiType: DeFiNavActions? = null
     private val accounts = MutableStateFlow<List<Account>>(emptyList())
+    private val gasSettings = MutableStateFlow<GasSettings?>(null)
 
     @BeforeEach
     fun setUp() {
@@ -135,64 +138,16 @@ internal class DefaultSendStrategyTest {
         mockkStatic(Dispatchers::class)
         every { Dispatchers.IO } returns mainDispatcher
         try {
-            val ethCoin = ethCoin()
-            val account =
-                Account(
-                    token = ethCoin,
-                    tokenValue =
-                        TokenValue(BigInteger.valueOf(1_000_000_000_000_000_000L), ethCoin),
-                    fiatValue = null,
-                    price = null,
-                )
-            vaultId = "vault-1"
-            selectedAccount = account
-            addressFieldState.setTextAndPlaceCursorAtEnd("0xdest")
-            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
-            coEvery { accountValidator.validate() } returns
-                ValidatedAccount(
-                    vaultId = "vault-1",
-                    selectedAccount = account,
-                    chain = Chain.Ethereum,
-                    gasFee = TokenValue(BigInteger.valueOf(21_000), ethCoin),
-                    dstAddress = "0xdest",
-                )
-            coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
-            coEvery {
-                blockChainSpecificRepository.getSpecific(
-                    chain = any(),
-                    address = any(),
-                    token = any(),
-                    gasFee = any(),
-                    isSwap = any(),
-                    isMaxAmountEnabled = any(),
-                    isDeposit = any(),
-                    dstAddress = any(),
-                    tokenAmountValue = any(),
-                    memo = any(),
-                    isThorchainRouterDeposit = any(),
-                )
-            } returns
-                BlockChainSpecificAndUtxo(
+            val captured =
+                arrangeSuccessfulEthSubmit(
+                    ethCoin(),
                     BlockChainSpecific.Ethereum(
                         maxFeePerGasWei = BigInteger.ONE,
                         priorityFeeWei = BigInteger.ONE,
                         nonce = BigInteger.ZERO,
                         gasLimit = BigInteger.valueOf(21000),
-                    )
+                    ),
                 )
-            every { amountManager.currentMaxAmount } returns BigDecimal.ONE
-            coEvery { getAvailableTokenBalance(any(), any()) } returns
-                TokenValue(BigInteger.valueOf(1_000_000_000_000_000_000L), ethCoin)
-            coEvery { gasFeeToEstimatedFee(any()) } returns
-                EstimatedGasFee(
-                    formattedFiatValue = "$0.10",
-                    formattedTokenValue = "0.0001 ETH",
-                    tokenValue = TokenValue(BigInteger.ONE, ethCoin),
-                    fiatValue = mockk(relaxed = true),
-                )
-
-            val captured = slot<Transaction>()
-            coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
 
             build(this).submit()
             advanceUntilIdle()
@@ -207,6 +162,58 @@ internal class DefaultSendStrategyTest {
             unmockkStatic(Dispatchers::class)
         }
     }
+
+    /**
+     * Regression for #5397: the maxFeePerGasWei signed into BlockChainSpecific.Ethereum and the fee
+     * estimate shown to the user (GasFeeSelection.selectGasFeeForFeeEstimation, used by both the
+     * live Send-form estimate and this same submit path's totalGasAndFee) must derive from the same
+     * GasSettings.Eth sum. Previously the signed value dropped the priority fee entirely.
+     */
+    @Test
+    fun `submit sums base and priority fee into the signed maxFeePerGasWei, matching the fee estimate`() =
+        runTest {
+            mockkStatic(Dispatchers::class)
+            every { Dispatchers.IO } returns mainDispatcher
+            try {
+                val ethCoin = ethCoin()
+                val captured =
+                    arrangeSuccessfulEthSubmit(
+                        ethCoin,
+                        BlockChainSpecific.Ethereum(
+                            maxFeePerGasWei = BigInteger.ONE,
+                            priorityFeeWei = BigInteger.ONE,
+                            nonce = BigInteger.ZERO,
+                            gasLimit = BigInteger.valueOf(21000),
+                        ),
+                    )
+
+                val advancedGasSettings =
+                    GasSettings.Eth(
+                        baseFee = BigInteger.valueOf(30_000_000_000L),
+                        priorityFee = BigInteger.valueOf(2_000_000_000L),
+                        gasLimit = BigInteger.valueOf(21_000),
+                    )
+                gasSettings.value = advancedGasSettings
+
+                build(this).submit()
+                advanceUntilIdle()
+
+                assertNull(lastError, "Expected no error; got $lastError")
+                val signedSpec = captured.captured.blockChainSpecific as BlockChainSpecific.Ethereum
+                assertEquals(BigInteger.valueOf(32_000_000_000L), signedSpec.maxFeePerGasWei)
+
+                val displayedEstimateFee =
+                    selectGasFeeForFeeEstimation(
+                        chain = Chain.Ethereum,
+                        gasFee = TokenValue(BigInteger.valueOf(21_000), ethCoin),
+                        planFee = null,
+                        evmGasSettings = advancedGasSettings,
+                    )
+                assertEquals(signedSpec.maxFeePerGasWei, displayedEstimateFee.value)
+            } finally {
+                unmockkStatic(Dispatchers::class)
+            }
+        }
 
     /**
      * Production regression for #4152: when the user reaches the Send form via the THORChain LP
@@ -815,6 +822,66 @@ internal class DefaultSendStrategyTest {
         }
     }
 
+    /**
+     * Arranges a straightforward ETH native-token submit that reaches transactionRepository without
+     * error, returning the captured Transaction slot. [blockChainSpecific] is what getSpecific()
+     * returns before any gasSettings override is applied by the strategy itself.
+     */
+    private fun arrangeSuccessfulEthSubmit(
+        ethCoin: Coin,
+        blockChainSpecific: BlockChainSpecific.Ethereum,
+    ): CapturingSlot<Transaction> {
+        val account =
+            Account(
+                token = ethCoin,
+                tokenValue = TokenValue(BigInteger.valueOf(1_000_000_000_000_000_000L), ethCoin),
+                fiatValue = null,
+                price = null,
+            )
+        vaultId = "vault-1"
+        selectedAccount = account
+        addressFieldState.setTextAndPlaceCursorAtEnd("0xdest")
+        tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+        coEvery { accountValidator.validate() } returns
+            ValidatedAccount(
+                vaultId = "vault-1",
+                selectedAccount = account,
+                chain = Chain.Ethereum,
+                gasFee = TokenValue(BigInteger.valueOf(21_000), ethCoin),
+                dstAddress = "0xdest",
+            )
+        coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+        coEvery {
+            blockChainSpecificRepository.getSpecific(
+                chain = any(),
+                address = any(),
+                token = any(),
+                gasFee = any(),
+                isSwap = any(),
+                isMaxAmountEnabled = any(),
+                isDeposit = any(),
+                dstAddress = any(),
+                tokenAmountValue = any(),
+                memo = any(),
+                isThorchainRouterDeposit = any(),
+            )
+        } returns BlockChainSpecificAndUtxo(blockChainSpecific)
+        every { amountManager.currentMaxAmount } returns BigDecimal.ONE
+        coEvery { getAvailableTokenBalance(any(), any()) } returns
+            TokenValue(BigInteger.valueOf(1_000_000_000_000_000_000L), ethCoin)
+        coEvery { gasFeeToEstimatedFee(any()) } returns
+            EstimatedGasFee(
+                formattedFiatValue = "$0.10",
+                formattedTokenValue = "0.0001 ETH",
+                tokenValue = TokenValue(BigInteger.ONE, ethCoin),
+                fiatValue = mockk(relaxed = true),
+            )
+
+        val captured = slot<Transaction>()
+        coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+        return captured
+    }
+
     private fun xrpCoin(): Coin =
         Coin(
             chain = Chain.Ripple,
@@ -872,7 +939,7 @@ internal class DefaultSendStrategyTest {
             chainValidationService = ChainValidationService(rippleApi = rippleApi),
             addressManager = addressManager,
             amountManager = amountManager,
-            gasSettings = MutableStateFlow<GasSettings?>(null),
+            gasSettings = gasSettings,
             planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null),
             planFee = MutableStateFlow<Long?>(null),
             accounts = accounts,

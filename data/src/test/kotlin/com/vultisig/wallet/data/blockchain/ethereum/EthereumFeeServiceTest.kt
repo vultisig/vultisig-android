@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.utils.NetworkException
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -23,6 +24,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import java.math.BigInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -305,6 +307,14 @@ internal class EthereumFeeServiceTest {
         assertTrue(fee is GasFees)
         assertEquals(gwei(3), fee.price)
         assertEquals(fee.price.multiply(fee.limit), fee.amount)
+    }
+
+    // #5399: a gas-price RPC failure must propagate, not be signed as gasPrice = 0.
+    @Test
+    fun `BSC legacy gas signing propagates a gas price RPC failure`() = runTest {
+        coEvery { evmApi.getGasPrice() } throws NetworkException(0, "rate limited")
+
+        assertFailsWith<NetworkException> { service.calculateDefaultFees(transfer(Chain.BscChain)) }
     }
 
     // ---------- Default limits ----------

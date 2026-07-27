@@ -1047,6 +1047,7 @@
     <string name="fast_vault_invalid_password">유효하지 않은 비밀번호</string>
     <string name="folder">폴더</string>
     <string name="gas_settings_advanced_gas_fee">고급 가스 수수료</string>
+    <string name="gas_settings_gas_price_gwei">가스 가격 (GWEI)</string>
     <string name="gas_settings_max_base_fee_gwei">최대 기본 수수료 (GWEI)</string>
     <string name="gas_settings_priority_fee_gwei">우선 수수료 (GWEI)</string>
     <string name="import_file_import_your_vault_share">볼트 공유 가져오기</string>
