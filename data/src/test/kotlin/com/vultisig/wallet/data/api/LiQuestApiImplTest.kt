@@ -18,9 +18,12 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 /**
- * Pins the `chain` query param LI.FI's price-fallback endpoint receives for every EVM chain,
- * matching iOS's `chain.ticker.lowercased()`. Every non-Ethereum EVM chain used to throw instead of
- * resolving a real identifier.
+ * Pins the `chain` query param LI.FI's price-fallback endpoint receives for every EVM chain: the
+ * chain's real numeric EVM chain id, matching iOS's `chain.chainID` and reusing this repo's own
+ * [com.vultisig.wallet.data.models.evmChainId]. Every non-Ethereum EVM chain used to throw instead
+ * of resolving an identifier; a ticker-based identifier (e.g. "avax", "bnb") was tried first but
+ * verified against the live li.quest API to 400 for 7 of the 13 chains, so the numeric id is what's
+ * asserted here.
  */
 class LiQuestApiImplTest {
 
@@ -44,22 +47,22 @@ class LiQuestApiImplTest {
         )
 
     @Test
-    fun `every EVM chain resolves a lifi chain id matching iOS ticker lowercased`() = runTest {
+    fun `every EVM chain resolves its numeric lifi chain id`() = runTest {
         val evmChainToLifiId =
             mapOf(
-                Chain.Ethereum to "eth",
-                Chain.Avalanche to "avax",
-                Chain.Base to "base",
-                Chain.Blast to "blast",
-                Chain.Arbitrum to "arb",
-                Chain.Polygon to "pol",
-                Chain.Optimism to "op",
-                Chain.BscChain to "bnb",
-                Chain.CronosChain to "cro",
-                Chain.ZkSync to "zk",
-                Chain.Mantle to "mnt",
-                Chain.Sei to "sei",
-                Chain.Hyperliquid to "hype",
+                Chain.Ethereum to "1",
+                Chain.Avalanche to "43114",
+                Chain.Base to "8453",
+                Chain.Blast to "81457",
+                Chain.Arbitrum to "42161",
+                Chain.Polygon to "137",
+                Chain.Optimism to "10",
+                Chain.BscChain to "56",
+                Chain.CronosChain to "25",
+                Chain.ZkSync to "324",
+                Chain.Mantle to "5000",
+                Chain.Sei to "1329",
+                Chain.Hyperliquid to "999",
             )
 
         for ((chain, expectedChainParam) in evmChainToLifiId) {

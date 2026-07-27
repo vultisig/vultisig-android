@@ -2,8 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.LiQuestResponseJson
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.TokenStandard
-import com.vultisig.wallet.data.models.ticker
+import com.vultisig.wallet.data.models.evmChainId
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -31,9 +30,5 @@ internal class LiQuestApiImpl @Inject constructor(private val http: HttpClient) 
             .body()
 
     private val Chain.lifiChainId: String
-        get() =
-            when {
-                standard == TokenStandard.EVM -> ticker().lowercase()
-                else -> error("lifi chain id not found for chain $this")
-            }
+        get() = evmChainId() ?: error("lifi chain id not found for chain $this")
 }
