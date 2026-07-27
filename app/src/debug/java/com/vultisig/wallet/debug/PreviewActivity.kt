@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,6 +43,7 @@ import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBlockedReason
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
+import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -109,7 +111,10 @@ import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimMaturingUtxoUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
+import com.vultisig.wallet.ui.models.send.SendSrc
+import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.LimitExpiryOption
+import com.vultisig.wallet.ui.models.swap.LimitFormSection
 import com.vultisig.wallet.ui.models.swap.LimitOrderUiModel
 import com.vultisig.wallet.ui.models.swap.LimitPricePreset
 import com.vultisig.wallet.ui.models.swap.LimitPriceUnit
@@ -198,6 +203,8 @@ class PreviewActivity : ComponentActivity() {
             OnBoardingComposeTheme {
                 when (screen) {
                     "limit_swap_form" -> LimitSwapFormPreview()
+                    "limit_swap_form_assets" ->
+                        LimitSwapFormPreview(expandedSection = LimitFormSection.Asset)
                     "limit_order_confirm" -> LimitOrderConfirmPreview()
                     "swap_confirm" -> SwapConfirmPreview()
                     "swap_confirm_chain" -> SwapChainIndicatorPreview()
@@ -3064,8 +3071,26 @@ private fun StakingPositionSkeletonPreview() {
     }
 }
 
+/** Wraps [coin] in the [TokenBalanceUiModel] shape the swap token inputs expect. */
+private fun previewTokenBalance(coin: Coin, balance: String, fiatValue: String) =
+    TokenBalanceUiModel(
+        model =
+            SendSrc(
+                address = Address(chain = coin.chain, address = coin.address, accounts = listOf()),
+                account = Account(token = coin, tokenValue = null, fiatValue = null, price = null),
+            ),
+        title = coin.ticker,
+        balance = balance,
+        fiatValue = fiatValue,
+        isNativeToken = coin.isNativeToken,
+        isLayer2 = false,
+        tokenStandard = null,
+        tokenLogo = getCoinLogo(coin.logo),
+        chainLogo = coin.chain.logo,
+    )
+
 @Composable
-private fun LimitSwapFormPreview() {
+private fun LimitSwapFormPreview(expandedSection: LimitFormSection = LimitFormSection.ExecuteWhen) {
     val usdc = Coins.Ethereum.USDC
     val btc = Coins.Bitcoin.BTC
     val state =
@@ -3081,6 +3106,7 @@ private fun LimitSwapFormPreview() {
             sellLogo = getCoinLogo(usdc.logo),
             buyTicker = "BTC",
             buyLogo = getCoinLogo(btc.logo),
+            buyAmountText = "0.0790275",
         )
     Column(
         modifier =
@@ -3110,10 +3136,20 @@ private fun LimitSwapFormPreview() {
         }
         LimitSwapForm(
             state = state,
+            srcToken = previewTokenBalance(usdc, balance = "12,200.52", fiatValue = "$12,200.52"),
+            dstToken = previewTokenBalance(btc, balance = "0.004", fiatValue = "$5,200.55"),
+            srcFiatValue = "$5,200.55",
+            srcAmountTextFieldState = rememberTextFieldState("5,200"),
+            expandedSection = expandedSection,
             onPresetClick = {},
             onExpiryClick = {},
             onToggleUnit = {},
-            onEditAssets = {},
+            onExpandSection = {},
+            onSelectSrcNetworkClick = {},
+            onSelectSrcTokenClick = {},
+            onSelectDstNetworkClick = {},
+            onSelectDstTokenClick = {},
+            onFlipSelectedTokens = {},
         )
         Spacer(Modifier.weight(1f))
         VsButton(

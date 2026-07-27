@@ -25,6 +25,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,6 +61,7 @@ import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.components.v2.utils.toPx
 import com.vultisig.wallet.ui.models.swap.LimitExpiryOption
+import com.vultisig.wallet.ui.models.swap.LimitFormSection
 import com.vultisig.wallet.ui.models.swap.LimitPricePreset
 import com.vultisig.wallet.ui.models.swap.LimitPriceUnit
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
@@ -125,7 +127,6 @@ internal fun NavGraphBuilder.swapScreen(navController: NavHostController) {
             onLimitPresetSelected = model::onLimitPresetSelected,
             onLimitExpirySelected = model::onLimitExpirySelected,
             onLimitUnitSelected = model::onLimitPriceUnitSelected,
-            onEditLimitAssets = model::selectSrcToken,
             onPlaceLimitOrder = model::placeLimitOrder,
         )
     }
@@ -162,7 +163,6 @@ internal fun SwapScreen(
     onLimitPresetSelected: (LimitPricePreset) -> Unit = {},
     onLimitExpirySelected: (LimitExpiryOption) -> Unit = {},
     onLimitUnitSelected: (LimitPriceUnit) -> Unit = {},
-    onEditLimitAssets: () -> Unit = {},
     onPlaceLimitOrder: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
@@ -175,6 +175,11 @@ internal fun SwapScreen(
     val isSrcAmountFocused by interactionSource.collectIsFocusedAsState()
 
     var hasSrcAmountBeenFocused by remember { mutableStateOf(false) }
+
+    // Which of the Limit tab's two cards is expanded (#4154). They behave as an accordion: opening
+    // one collapses the other to its summary row. Pure view state, so it lives here rather than in
+    // the ViewModel, and survives the trip out to token/network selection.
+    var expandedLimitSection by rememberSaveable { mutableStateOf(LimitFormSection.ExecuteWhen) }
 
     LaunchedEffect(isSrcAmountFocused) {
         if (isSrcAmountFocused) {
@@ -235,10 +240,21 @@ internal fun SwapScreen(
                         if (limitOrder != null) {
                             LimitSwapForm(
                                 state = limitOrder,
+                                srcToken = state.selectedSrcToken,
+                                dstToken = state.selectedDstToken,
+                                srcFiatValue = state.srcFiatValue,
+                                srcAmountTextFieldState = srcAmountTextFieldState,
+                                srcAmountInteractionSource = interactionSource,
+                                expandedSection = expandedLimitSection,
                                 onPresetClick = onLimitPresetSelected,
                                 onExpiryClick = onLimitExpirySelected,
                                 onToggleUnit = onLimitUnitSelected,
-                                onEditAssets = onEditLimitAssets,
+                                onExpandSection = { expandedLimitSection = it },
+                                onSelectSrcNetworkClick = onSelectSrcNetworkClick,
+                                onSelectSrcTokenClick = onSelectSrcToken,
+                                onSelectDstNetworkClick = onSelectDstNetworkClick,
+                                onSelectDstTokenClick = onSelectDstToken,
+                                onFlipSelectedTokens = onFlipSelectedTokens,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             // The Market error box is absolutely positioned off the market form, so

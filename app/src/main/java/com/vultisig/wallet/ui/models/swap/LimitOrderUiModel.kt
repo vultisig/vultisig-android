@@ -20,6 +20,15 @@ internal enum class LimitExpiryOption(val hours: Int, val labelRes: Int) {
     ThreeDays(72, R.string.limit_swap_expiry_3d),
 }
 
+/**
+ * The two collapsible sections of the limit form. Exactly one is expanded at a time: opening either
+ * collapses the other to its summary row.
+ */
+internal enum class LimitFormSection {
+    ExecuteWhen,
+    Asset,
+}
+
 /** Which unit the big price number is shown in. The underlying LIM math is unit-agnostic. */
 internal enum class LimitPriceUnit {
     Fiat,
@@ -46,6 +55,11 @@ internal data class LimitOrderUiModel(
     val sellLogo: ImageModel? = null,
     val buyTicker: String = "",
     val buyLogo: ImageModel? = null,
+    /**
+     * Buy-leg amount the entered sell amount would yield at the target price, e.g. "0.0790275".
+     * Shown in the expanded asset editor; "0" until both a price and a sell amount are known.
+     */
+    val buyAmountText: String = "0",
     /**
      * String resource of the price warning to render (below-market / far-above-market), or null.
      */

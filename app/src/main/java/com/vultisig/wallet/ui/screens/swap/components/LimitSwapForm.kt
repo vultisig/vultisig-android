@@ -3,32 +3,49 @@ package com.vultisig.wallet.ui.screens.swap.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.TokenLogo
+import com.vultisig.wallet.ui.components.inputs.VsBasicTextField
+import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.LimitExpiryOption
+import com.vultisig.wallet.ui.models.swap.LimitFormSection
 import com.vultisig.wallet.ui.models.swap.LimitOrderUiModel
 import com.vultisig.wallet.ui.models.swap.LimitPricePreset
 import com.vultisig.wallet.ui.models.swap.LimitPriceUnit
@@ -40,27 +57,70 @@ private val PRICE_BLOCK_HEIGHT = 211.dp
 /**
  * The THORChain limit-order ("Execute when") form body — the content shown under the Limit tab.
  * Renders the target-price entry with a $/asset unit toggle, Market/+1/+5/+10% presets, an expiry
- * selector, a price warning, and a collapsed asset summary. Matches Figma node 78798:74520.
+ * selector, a price warning, and the asset section. Matches Figma node 78798:74520.
+ *
+ * The two sections behave as an accordion: exactly one of "Execute when" and "Asset" is expanded at
+ * a time ([expandedSection]), the other collapses to a summary row whose pencil expands it again.
+ * The expanded asset editor is Figma node 78798:74351 and hosts the same sell/buy token inputs the
+ * Market tab uses.
  *
  * Purely presentational: all values come from [state]; interactions are surfaced as callbacks.
  */
 @Composable
 internal fun LimitSwapForm(
     state: LimitOrderUiModel,
+    srcToken: TokenBalanceUiModel?,
+    dstToken: TokenBalanceUiModel?,
+    srcFiatValue: String,
+    srcAmountTextFieldState: TextFieldState,
+    expandedSection: LimitFormSection,
     onPresetClick: (LimitPricePreset) -> Unit,
     onExpiryClick: (LimitExpiryOption) -> Unit,
     onToggleUnit: (LimitPriceUnit) -> Unit,
-    onEditAssets: () -> Unit,
+    onExpandSection: (LimitFormSection) -> Unit,
+    onSelectSrcNetworkClick: () -> Unit,
+    onSelectSrcTokenClick: () -> Unit,
+    onSelectDstNetworkClick: () -> Unit,
+    onSelectDstTokenClick: () -> Unit,
+    onFlipSelectedTokens: () -> Unit,
     modifier: Modifier = Modifier,
+    srcAmountInteractionSource: MutableInteractionSource? = null,
 ) {
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        ExecuteWhenCard(
-            state = state,
-            onPresetClick = onPresetClick,
-            onExpiryClick = onExpiryClick,
-            onToggleUnit = onToggleUnit,
-        )
-        AssetSummaryRow(state = state, onEditAssets = onEditAssets)
+        if (expandedSection == LimitFormSection.ExecuteWhen) {
+            ExecuteWhenCard(
+                state = state,
+                onPresetClick = onPresetClick,
+                onExpiryClick = onExpiryClick,
+                onToggleUnit = onToggleUnit,
+            )
+        } else {
+            ExecuteWhenSummaryRow(
+                state = state,
+                onEdit = { onExpandSection(LimitFormSection.ExecuteWhen) },
+            )
+        }
+
+        if (expandedSection == LimitFormSection.Asset) {
+            AssetEditorCard(
+                state = state,
+                srcToken = srcToken,
+                dstToken = dstToken,
+                srcFiatValue = srcFiatValue,
+                srcAmountTextFieldState = srcAmountTextFieldState,
+                srcAmountInteractionSource = srcAmountInteractionSource,
+                onSelectSrcNetworkClick = onSelectSrcNetworkClick,
+                onSelectSrcTokenClick = onSelectSrcTokenClick,
+                onSelectDstNetworkClick = onSelectDstNetworkClick,
+                onSelectDstTokenClick = onSelectDstTokenClick,
+                onFlipSelectedTokens = onFlipSelectedTokens,
+            )
+        } else {
+            AssetSummaryRow(
+                state = state,
+                onEditAssets = { onExpandSection(LimitFormSection.Asset) },
+            )
+        }
     }
 }
 
@@ -302,24 +362,120 @@ private fun UnitToggleButton(
     }
 }
 
+/**
+ * Expanded asset editor (Figma node 78798:74351): the "Asset" card hosting the same sell/buy token
+ * inputs and flip button the Market tab uses, so the pair and sell amount can be edited without
+ * leaving the Limit form. Collapses back to [AssetSummaryRow] when "Execute when" is expanded.
+ */
 @Composable
-private fun AssetSummaryRow(state: LimitOrderUiModel, onEditAssets: () -> Unit) {
+private fun AssetEditorCard(
+    state: LimitOrderUiModel,
+    srcToken: TokenBalanceUiModel?,
+    dstToken: TokenBalanceUiModel?,
+    srcFiatValue: String,
+    srcAmountTextFieldState: TextFieldState,
+    srcAmountInteractionSource: MutableInteractionSource?,
+    onSelectSrcNetworkClick: () -> Unit,
+    onSelectSrcTokenClick: () -> Unit,
+    onSelectDstNetworkClick: () -> Unit,
+    onSelectDstTokenClick: () -> Unit,
+    onFlipSelectedTokens: () -> Unit,
+) {
     val colors = Theme.v2.colors
-    Row(
+    val space = 8.dp
+    var topCenter by remember { mutableStateOf(Offset.Zero) }
+    var bottomCenter by remember { mutableStateOf(Offset.Zero) }
+
+    Column(
         modifier =
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
                 .background(colors.backgrounds.background)
                 .border(1.dp, colors.border.light, RoundedCornerShape(24.dp))
-                .padding(horizontal = 16.dp, vertical = 20.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+                .padding(start = 14.dp, end = 14.dp, top = 16.dp, bottom = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
             text = stringResource(R.string.limit_swap_asset_label),
             style = Theme.brockmann.body.m.medium,
             color = colors.text.primary,
         )
+        HorizontalDivider(thickness = 1.dp, color = colors.border.light)
+
+        Column(verticalArrangement = Arrangement.spacedBy(space)) {
+            Box {
+                SrcTokenInput(
+                    isLoading = false,
+                    title = stringResource(R.string.limit_swap_sell),
+                    selectedToken = srcToken,
+                    fiatValue = srcFiatValue,
+                    space = space,
+                    onSelectNetworkClick = onSelectSrcNetworkClick,
+                    onSelectTokenClick = onSelectSrcTokenClick,
+                    onCircleBoundsChanged = { topCenter = it },
+                    textFieldContent = {
+                        VsBasicTextField(
+                            textFieldState = srcAmountTextFieldState,
+                            style = Theme.brockmann.headings.title2,
+                            color = colors.text.primary,
+                            textAlign = TextAlign.End,
+                            hint = "0",
+                            hintColor = colors.text.tertiary,
+                            hintStyle = Theme.brockmann.headings.title2,
+                            lineLimits = TextFieldLineLimits.SingleLine,
+                            interactionSource = srcAmountInteractionSource,
+                            keyboardOptions =
+                                KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done,
+                                ),
+                            modifier = Modifier.fillMaxWidth().testTag("LimitSwapForm.sellAmount"),
+                        )
+                    },
+                )
+                SwapTokenFlipButton(
+                    isLoading = false,
+                    hasError = false,
+                    topCenter = topCenter,
+                    bottomCenter = bottomCenter,
+                    space = space,
+                    onFlip = onFlipSelectedTokens,
+                    onBoundsChanged = {},
+                )
+            }
+
+            DstTokenInput(
+                isLoading = false,
+                title = stringResource(R.string.limit_swap_buy),
+                selectedToken = dstToken,
+                // The buy leg is priced by the target, not by a live quote, so it mirrors the sell
+                // leg's fiat value: at the limit price both legs are worth the same.
+                fiatValue = srcFiatValue,
+                space = space,
+                onSelectNetworkClick = onSelectDstNetworkClick,
+                onSelectTokenClick = onSelectDstTokenClick,
+                onCircleBoundsChanged = { bottomCenter = it },
+                textFieldContent = {
+                    Text(
+                        text = state.buyAmountText,
+                        style = Theme.brockmann.headings.title2,
+                        color = colors.text.primary,
+                        textAlign = TextAlign.End,
+                        maxLines = 1,
+                    )
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun AssetSummaryRow(state: LimitOrderUiModel, onEditAssets: () -> Unit) {
+    SummaryRow(
+        title = stringResource(R.string.limit_swap_asset_label),
+        editContentDescription = stringResource(R.string.limit_swap_edit_assets),
+        onEdit = onEditAssets,
+    ) {
         AssetSummaryLeg(
             label = stringResource(R.string.limit_swap_sell),
             ticker = state.sellTicker,
@@ -332,6 +488,63 @@ private fun AssetSummaryRow(state: LimitOrderUiModel, onEditAssets: () -> Unit) 
             logo = state.buyLogo,
             modifier = Modifier.weight(1f),
         )
+    }
+}
+
+/**
+ * Collapsed counterpart of [ExecuteWhenCard], shown while the asset editor is expanded: the target
+ * price and the chosen expiry, with a pencil that expands the price entry again.
+ */
+@Composable
+private fun ExecuteWhenSummaryRow(state: LimitOrderUiModel, onEdit: () -> Unit) {
+    val colors = Theme.v2.colors
+    SummaryRow(
+        title = stringResource(R.string.limit_swap_execute_when),
+        editContentDescription = stringResource(R.string.limit_swap_edit_price),
+        onEdit = onEdit,
+    ) {
+        Text(
+            text = state.priceText,
+            style = Theme.brockmann.supplementary.caption,
+            color = colors.text.secondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = stringResource(state.selectedExpiry.labelRes),
+            style = Theme.brockmann.supplementary.caption,
+            color = colors.text.tertiary,
+        )
+    }
+}
+
+/**
+ * Shared chrome for the two collapsed sections: the card, its title, the summary [content], the
+ * green readiness check, and the pencil that expands the section.
+ */
+@Composable
+private fun SummaryRow(
+    title: String,
+    editContentDescription: String,
+    onEdit: () -> Unit,
+    content: @Composable RowScope.() -> Unit,
+) {
+    val colors = Theme.v2.colors
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(colors.backgrounds.background)
+                .border(1.dp, colors.border.light, RoundedCornerShape(24.dp))
+                .clickable(onClick = onEdit)
+                .padding(horizontal = 16.dp, vertical = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(text = title, style = Theme.brockmann.body.m.medium, color = colors.text.primary)
+        content()
         Icon(
             painter = painterResource(R.drawable.check_2),
             contentDescription = null,
@@ -340,14 +553,12 @@ private fun AssetSummaryRow(state: LimitOrderUiModel, onEditAssets: () -> Unit) 
         )
         Box(
             modifier =
-                Modifier.size(40.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .clickable(onClick = onEditAssets),
+                Modifier.size(40.dp).clip(RoundedCornerShape(20.dp)).clickable(onClick = onEdit),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 painter = painterResource(R.drawable.pen_v2),
-                contentDescription = stringResource(R.string.limit_swap_edit_assets),
+                contentDescription = editContentDescription,
                 tint = colors.text.primary,
                 modifier = Modifier.size(16.dp),
             )

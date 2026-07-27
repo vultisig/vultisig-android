@@ -1018,6 +1018,7 @@
     <string name="verify_limit_order_target_price">Precio objetivo: %1$s</string>
     <string name="limit_swap_toggle_price_unit">Cambiar unidad de precio</string>
     <string name="limit_swap_edit_assets">Editar activos</string>
+    <string name="limit_swap_edit_price">Editar precio objetivo</string>
     <string name="swap_advanced_sheet_title">Intercambio avanzado</string>
     <string name="swap_advanced_slippage_title">Tolerancia de deslizamiento</string>
     <string name="swap_advanced_slippage_page_title">Deslizamiento</string>

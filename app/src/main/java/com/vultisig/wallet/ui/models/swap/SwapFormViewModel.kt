@@ -518,6 +518,7 @@ constructor(
                         sellLogo = sellLogo,
                         buyTicker = dstCoin.ticker,
                         buyLogo = buyLogo,
+                        buyAmountText = buyAmount?.let(::formatAssetAmount) ?: "0",
                         warningRes = warningRes,
                         // Ready only when there is a resolved target price and a positive sell
                         // amount, so the CTA can't be tapped before the order can actually be
