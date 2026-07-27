@@ -117,6 +117,33 @@ internal class StakeStrategyTest {
     }
 
     @Test
+    fun `submit STAKE_SRUJI bonds into the auto-compounding position with the RUJI denom`() =
+        runTest {
+            withMockedIoDispatcher {
+                givenSuccessfulStake()
+                tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+
+                val captured = slot<DepositTransaction>()
+                coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns
+                    Unit
+
+                build(this, DeFiNavActions.STAKE_SRUJI).submit()
+                advanceUntilIdle()
+
+                val tx = captured.captured
+                // Compounding mints a receipt rather than crediting contract state, so unlike the
+                // bonded path there is no `bond:` memo to render.
+                assertEquals("", tx.memo)
+                val payload = tx.wasmExecuteContractPayload
+                assertNotNull(payload)
+                assertEquals(STAKING_RUJI_CONTRACT, payload.contractAddress)
+                assertEquals("""{ "liquid": { "bond": {} } }""", payload.executeMsg)
+                assertEquals("ruji-contract", payload.coins[0]!!.denom)
+                assertEquals("50000000", payload.coins[0]!!.amount)
+            }
+        }
+
+    @Test
     fun `submit surfaces no_address error when chain validates dst as invalid`() = runTest {
         givenValidatedAccount()
         coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns false

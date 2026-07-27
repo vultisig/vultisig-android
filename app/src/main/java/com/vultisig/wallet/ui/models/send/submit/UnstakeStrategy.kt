@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.send.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -47,6 +48,7 @@ internal class UnstakeStrategy(
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val depositTransactionRepository: DepositTransactionRepository,
     private val navigator: Navigator<Destination>,
+    private val thorChainApi: ThorChainApi,
     private val defiTypeProvider: () -> DeFiNavActions?,
     private val isAutocompoundProvider: () -> Boolean,
     private val showLoading: () -> Unit,
@@ -120,6 +122,17 @@ internal class UnstakeStrategy(
                         when (defiTypeProvider()) {
                             DeFiNavActions.UNSTAKE_RUJI ->
                                 createRUJIUnstakeDepositTransaction(
+                                    vaultId = vaultId,
+                                    selectedToken = selectedToken,
+                                    srcAddress = srcAddress,
+                                    dstAddress = dstAddress,
+                                    tokenAmountInt = tokenAmountInt,
+                                    gasFee = gasFee,
+                                    chain = chain,
+                                )
+
+                            DeFiNavActions.UNSTAKE_SRUJI ->
+                                createRujiCompoundUnstakeDepositTransaction(
                                     vaultId = vaultId,
                                     selectedToken = selectedToken,
                                     srcAddress = srcAddress,
@@ -232,6 +245,84 @@ internal class UnstakeStrategy(
                     fromAddress = srcAddress,
                     stakingContract = STAKING_RUJI_CONTRACT,
                     amount = tokenAmountInt.toString(),
+                ),
+        )
+    }
+
+    /**
+     * Redeems from the auto-compounding RUJI position (`liquid.unbond`).
+     *
+     * The form is denominated in RUJI so it matches the card the user tapped, but the contract is
+     * funded with sRUJI receipt *shares*, so the amount is converted at the pool's live share
+     * price. Shares and size are read from the same response, so their ratio is self-consistent;
+     * redeeming the whole position sends the exact share balance rather than a rounded conversion,
+     * so no dust is stranded. Rounding is downward everywhere else, so the redemption can never
+     * exceed what is held even if the share price moves between the form loading and this submit.
+     */
+    private suspend fun createRujiCompoundUnstakeDepositTransaction(
+        vaultId: String,
+        selectedToken: Coin,
+        srcAddress: String,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+        gasFee: TokenValue,
+        chain: Chain,
+    ): DepositTransaction {
+        val stakeBalances =
+            withContext(Dispatchers.IO) { thorChainApi.getRujiStakeBalance(srcAddress) }
+        val positionValue = stakeBalances.autoCompoundAmount
+        val heldShares = stakeBalances.autoCompoundShares
+
+        if (positionValue <= BigInteger.ZERO || heldShares <= BigInteger.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_insufficient_balance)
+            )
+        }
+
+        val shares =
+            if (tokenAmountInt >= positionValue) {
+                heldShares
+            } else {
+                tokenAmountInt.multiply(heldShares).divide(positionValue)
+            }
+
+        if (shares < BigInteger.ONE) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+
+        val specific =
+            withContext(Dispatchers.IO) {
+                blockChainSpecificRepository.getSpecific(
+                    chain,
+                    srcAddress,
+                    selectedToken,
+                    gasFee,
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                    transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+                )
+            }
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = dstAddress,
+            memo = "",
+            srcTokenValue = TokenValue(value = tokenAmountInt, token = selectedToken),
+            estimatedFees = gasFee,
+            estimateFeesFiat =
+                gasFeeToEstimatedFee.fiatFeesFor(gasFee, selectedToken).formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+            wasmExecuteContractPayload =
+                ThorchainFunctions.unstakeRujiCompound(
+                    shares = shares,
+                    stakingContract = STAKING_RUJI_CONTRACT,
+                    fromAddress = srcAddress,
                 ),
         )
     }

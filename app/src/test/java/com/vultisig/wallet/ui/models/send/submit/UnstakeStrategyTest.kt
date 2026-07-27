@@ -5,6 +5,8 @@ package com.vultisig.wallet.ui.models.send.submit
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.thorchain.RujiStakeBalances
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -38,6 +40,7 @@ import io.mockk.unmockkAll
 import io.mockk.unmockkStatic
 import java.math.BigInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -70,6 +73,7 @@ internal class UnstakeStrategyTest {
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase = mockk()
     private val depositTransactionRepository: DepositTransactionRepository = mockk(relaxed = true)
     private val navigator: Navigator<Destination> = mockk(relaxed = true)
+    private val thorChainApi: ThorChainApi = mockk(relaxed = true)
 
     private var lastError: UiText? = null
 
@@ -210,6 +214,77 @@ internal class UnstakeStrategyTest {
     }
 
     @Test
+    fun `submit UNSTAKE_SRUJI converts the RUJI amount into receipt shares`() = runTest {
+        withMockedIoDispatcher {
+            givenSuccessfulFlow()
+            // The card and the form are denominated in RUJI (liquidSize), but liquid.unbond is
+            // funded in shares, which are fewer because the share price sits above 1.
+            givenAutoCompoundPosition(
+                positionValue = BigInteger.valueOf(100_000_000),
+                heldShares = BigInteger.valueOf(98_500_000),
+            )
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this, DeFiNavActions.UNSTAKE_SRUJI).submit()
+            advanceUntilIdle()
+
+            val payload = captured.captured.wasmExecuteContractPayload
+            assertNotNull(payload)
+            assertEquals("""{ "liquid": { "unbond": {} } }""", payload!!.executeMsg)
+            assertEquals(STAKING_RUJI_CONTRACT, payload.contractAddress)
+            assertEquals("x/staking-x/ruji", payload.coins[0]!!.denom)
+            // 0.5 RUJI of a 1 RUJI position = half the shares held.
+            assertEquals("49250000", payload.coins[0]!!.amount)
+        }
+    }
+
+    @Test
+    fun `submit UNSTAKE_SRUJI redeems the exact share balance when taking the whole position`() =
+        runTest {
+            withMockedIoDispatcher {
+                givenSuccessfulFlow()
+                givenAutoCompoundPosition(
+                    positionValue = BigInteger.valueOf(100_000_000),
+                    heldShares = BigInteger.valueOf(98_500_000),
+                )
+                tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1")
+
+                val captured = slot<DepositTransaction>()
+                coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns
+                    Unit
+
+                build(this, DeFiNavActions.UNSTAKE_SRUJI).submit()
+                advanceUntilIdle()
+
+                // Redeeming everything sends the share balance itself, so a rounded conversion
+                // cannot strand dust in the position.
+                val payload = captured.captured.wasmExecuteContractPayload
+                assertEquals("98500000", payload!!.coins[0]!!.amount)
+            }
+        }
+
+    @Test
+    fun `submit UNSTAKE_SRUJI refuses to build a redemption against an empty position`() = runTest {
+        withMockedIoDispatcher {
+            givenSuccessfulFlow()
+            givenAutoCompoundPosition(positionValue = BigInteger.ZERO, heldShares = BigInteger.ZERO)
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this, DeFiNavActions.UNSTAKE_SRUJI).submit()
+            advanceUntilIdle()
+
+            assertEquals(R.string.send_error_insufficient_balance, lastError.stringId())
+            assertFalse(captured.isCaptured)
+        }
+    }
+
+    @Test
     fun `submit surfaces no_address when chain validates dst as invalid`() = runTest {
         givenValidatedAccount()
         coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns false
@@ -293,6 +368,16 @@ internal class UnstakeStrategyTest {
             )
     }
 
+    private fun givenAutoCompoundPosition(positionValue: BigInteger, heldShares: BigInteger) {
+        coEvery { thorChainApi.getRujiStakeBalance(any()) } returns
+            RujiStakeBalances(
+                stakeAmount = BigInteger.ZERO,
+                stakeTicker = "RUJI",
+                autoCompoundAmount = positionValue,
+                autoCompoundShares = heldShares,
+            )
+    }
+
     private fun givenValidatedAccount(gasFeeValue: BigInteger = BigInteger.valueOf(2_000_000)) {
         coEvery { accountValidator.validate() } returns
             ValidatedAccount(
@@ -337,6 +422,7 @@ internal class UnstakeStrategyTest {
             gasFeeToEstimatedFee = gasFeeToEstimatedFee,
             depositTransactionRepository = depositTransactionRepository,
             navigator = navigator,
+            thorChainApi = thorChainApi,
             defiTypeProvider = { defiType },
             isAutocompoundProvider = { false },
             showLoading = {},

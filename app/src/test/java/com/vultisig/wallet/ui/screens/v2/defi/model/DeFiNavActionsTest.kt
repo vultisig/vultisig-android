@@ -21,6 +21,8 @@ internal class DeFiNavActionsTest {
         assertEquals(DeFiNavActions.UNBOND, parseDepositType("unbond"))
         assertEquals(DeFiNavActions.STAKE_RUJI, parseDepositType("stake_ruji"))
         assertEquals(DeFiNavActions.UNSTAKE_RUJI, parseDepositType("unstake_ruji"))
+        assertEquals(DeFiNavActions.STAKE_SRUJI, parseDepositType("stake_sruji"))
+        assertEquals(DeFiNavActions.UNSTAKE_SRUJI, parseDepositType("unstake_sruji"))
         assertEquals(DeFiNavActions.WITHDRAW_RUJI, parseDepositType("withdraw"))
         assertEquals(DeFiNavActions.STAKE_TCY, parseDepositType("stake_tcy"))
         assertEquals(DeFiNavActions.UNSTAKE_TCY, parseDepositType("unstake_tcy"))
@@ -44,6 +46,9 @@ internal class DeFiNavActionsTest {
     @Test
     fun `parseDepositType accepts separator-free and alias spellings`() {
         assertEquals(DeFiNavActions.STAKE_RUJI, parseDepositType("stakeruji"))
+        // The compounding actions must not collide with the bonded ones after separator stripping.
+        assertEquals(DeFiNavActions.STAKE_SRUJI, parseDepositType("stakesruji"))
+        assertEquals(DeFiNavActions.UNSTAKE_SRUJI, parseDepositType("unstakesruji"))
         assertEquals(DeFiNavActions.MINT_YRUNE, parseDepositType("receive_yrune"))
         assertEquals(DeFiNavActions.REDEEM_YRUNE, parseDepositType("sell_yrune"))
         assertEquals(DeFiNavActions.UNFREEZE_TRX, parseDepositType("unfreezetrx"))
@@ -73,6 +78,7 @@ internal class DeFiNavActionsTest {
     @Test
     fun `getStakeDeFiNavAction maps each stakeable coin to its stake action`() {
         assertEquals(DeFiNavActions.STAKE_RUJI, Coins.ThorChain.RUJI.getStakeDeFiNavAction())
+        assertEquals(DeFiNavActions.STAKE_SRUJI, Coins.ThorChain.sRUJI.getStakeDeFiNavAction())
         assertEquals(DeFiNavActions.STAKE_TCY, Coins.ThorChain.TCY.getStakeDeFiNavAction())
         assertEquals(DeFiNavActions.MINT_YRUNE, Coins.ThorChain.yRUNE.getStakeDeFiNavAction())
         assertEquals(DeFiNavActions.MINT_YTCY, Coins.ThorChain.yTCY.getStakeDeFiNavAction())
@@ -83,6 +89,7 @@ internal class DeFiNavActionsTest {
     @Test
     fun `getUnstakeDeFiNavAction maps each stakeable coin to its unstake action`() {
         assertEquals(DeFiNavActions.UNSTAKE_RUJI, Coins.ThorChain.RUJI.getUnstakeDeFiNavAction())
+        assertEquals(DeFiNavActions.UNSTAKE_SRUJI, Coins.ThorChain.sRUJI.getUnstakeDeFiNavAction())
         assertEquals(DeFiNavActions.UNSTAKE_TCY, Coins.ThorChain.TCY.getUnstakeDeFiNavAction())
         assertEquals(DeFiNavActions.REDEEM_YRUNE, Coins.ThorChain.yRUNE.getUnstakeDeFiNavAction())
         assertEquals(DeFiNavActions.REDEEM_YTCY, Coins.ThorChain.yTCY.getUnstakeDeFiNavAction())

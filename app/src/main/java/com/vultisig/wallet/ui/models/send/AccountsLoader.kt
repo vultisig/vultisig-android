@@ -59,9 +59,15 @@ internal class AccountsLoader(
                         loadUnbondAccount(vaultId, generation)
                     }
 
+                DeFiNavActions.UNSTAKE_SRUJI ->
+                    scope.safeLaunch(onError = ::onLoadError) {
+                        loadAutoCompoundRujiAccount(vaultId, generation)
+                    }
+
                 null,
                 DeFiNavActions.BOND,
                 DeFiNavActions.STAKE_RUJI,
+                DeFiNavActions.STAKE_SRUJI,
                 DeFiNavActions.STAKE_TCY,
                 DeFiNavActions.STAKE_STCY,
                 DeFiNavActions.UNSTAKE_STCY,
@@ -257,6 +263,50 @@ internal class AccountsLoader(
         } else {
             publishLoaded(emptyList(), generation)
         }
+    }
+
+    // The auto-compounding RUJI position is not a wallet token: its sRUJI receipt is deliberately
+    // kept out of token discovery, so no account for it comes back from either addresses flow.
+    // Synthesize one from the staking details the DeFi tab cached, denominated in RUJI (the pool's
+    // `liquidSize`) so the form's MAX and the card the user tapped agree. UnstakeStrategy converts
+    // that amount back into receipt shares at submit time.
+    private suspend fun loadAutoCompoundRujiAccount(vaultId: VaultId, generation: Long) {
+        val cachedDetails =
+            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.sRUJI.id)
+        accountsRepository
+            .loadAddresses(vaultId)
+            .map { addrs -> addrs.flatMap { it.accounts } }
+            .collect { accountsLoaded ->
+                publishAutoCompoundRuji(accountsLoaded, cachedDetails?.stakeAmount, generation)
+            }
+    }
+
+    private fun publishAutoCompoundRuji(
+        accountsLoaded: List<Account>,
+        autoCompoundAmount: BigInteger?,
+        generation: Long,
+    ) {
+        if (generation != currentGeneration) return
+        // The RUNE account carries the THORChain address the unbond is sent from, and funds the gas
+        // fee; without it the synthesized account below would have an empty address.
+        val thorchainAccount =
+            accountsLoaded.find { it.token.id.equals(Coins.ThorChain.RUNE.id, true) }
+                ?: run {
+                    Timber.e("THORChain account not available for sRUJI unstake")
+                    publishLoaded(emptyList(), generation)
+                    return
+                }
+
+        val sRuji = Coins.ThorChain.sRUJI.copy(address = thorchainAccount.token.address)
+        val sRujiAccount =
+            Account(
+                token = sRuji,
+                tokenValue =
+                    TokenValue(value = autoCompoundAmount ?: BigInteger.ZERO, token = sRuji),
+                fiatValue = null,
+                price = null,
+            )
+        publishLoaded(listOf(sRujiAccount, thorchainAccount), generation)
     }
 
     // Unbond draws from the RUNE already bonded to the selected node, not the vault's combined

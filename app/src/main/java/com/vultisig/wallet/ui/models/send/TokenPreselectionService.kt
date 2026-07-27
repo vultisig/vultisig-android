@@ -146,6 +146,11 @@ internal class TokenPreselectionService(
             DeFiNavActions.STAKE_RUJI,
             DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI
 
+            // The auto-compounding position is funded with RUJI and redeemed out of the sRUJI
+            // receipt, so the two directions start from different tokens.
+            DeFiNavActions.STAKE_SRUJI -> Coins.ThorChain.RUJI
+            DeFiNavActions.UNSTAKE_SRUJI -> Coins.ThorChain.sRUJI
+
             DeFiNavActions.STAKE_TCY,
             DeFiNavActions.UNSTAKE_TCY -> Coins.ThorChain.TCY
 

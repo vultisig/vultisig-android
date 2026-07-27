@@ -10,6 +10,8 @@ internal enum class DeFiNavActions(val type: String) {
     WITHDRAW_RUJI("withdraw"),
     STAKE_RUJI("stake_ruji"),
     UNSTAKE_RUJI("unstake_ruji"),
+    STAKE_SRUJI("stake_sruji"),
+    UNSTAKE_SRUJI("unstake_sruji"),
     STAKE_TCY("stake_tcy"),
     UNSTAKE_TCY("unstake_tcy"),
     MINT_YRUNE("mint_yrune"),
@@ -37,6 +39,10 @@ internal fun parseDepositType(type: String?): DeFiNavActions? {
         "stake_ruji" -> DeFiNavActions.STAKE_RUJI
         "unstakeruji",
         "unstake_ruji" -> DeFiNavActions.UNSTAKE_RUJI
+        "stakesruji",
+        "stake_sruji" -> DeFiNavActions.STAKE_SRUJI
+        "unstakesruji",
+        "unstake_sruji" -> DeFiNavActions.UNSTAKE_SRUJI
         "withdrawruji",
         "withdraw_ruji",
         "withdraw" -> DeFiNavActions.WITHDRAW_RUJI
@@ -95,6 +101,7 @@ internal fun parseDepositType(type: String?): DeFiNavActions? {
 internal fun Coin.getStakeDeFiNavAction(): DeFiNavActions {
     return when (this) {
         Coins.ThorChain.RUJI -> DeFiNavActions.STAKE_RUJI
+        Coins.ThorChain.sRUJI -> DeFiNavActions.STAKE_SRUJI
         Coins.ThorChain.TCY -> DeFiNavActions.STAKE_TCY
         Coins.ThorChain.yRUNE -> DeFiNavActions.MINT_YRUNE
         Coins.ThorChain.yTCY -> DeFiNavActions.MINT_YTCY
@@ -107,6 +114,7 @@ internal fun Coin.getStakeDeFiNavAction(): DeFiNavActions {
 internal fun Coin.getUnstakeDeFiNavAction(): DeFiNavActions {
     return when (this) {
         Coins.ThorChain.RUJI -> DeFiNavActions.UNSTAKE_RUJI
+        Coins.ThorChain.sRUJI -> DeFiNavActions.UNSTAKE_SRUJI
         Coins.ThorChain.TCY -> DeFiNavActions.UNSTAKE_TCY
         Coins.ThorChain.yRUNE -> DeFiNavActions.REDEEM_YRUNE
         Coins.ThorChain.yTCY -> DeFiNavActions.REDEEM_YTCY

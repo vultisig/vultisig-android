@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.send.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
+import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -53,10 +54,12 @@ internal data class SendStrategies(
             DeFiNavActions.BOND -> bond.submit()
             DeFiNavActions.UNBOND -> unbond.submit()
             DeFiNavActions.STAKE_RUJI,
+            DeFiNavActions.STAKE_SRUJI,
             DeFiNavActions.STAKE_TCY,
             DeFiNavActions.STAKE_STCY -> stake.submit()
 
             DeFiNavActions.UNSTAKE_RUJI,
+            DeFiNavActions.UNSTAKE_SRUJI,
             DeFiNavActions.UNSTAKE_TCY,
             DeFiNavActions.UNSTAKE_STCY,
             DeFiNavActions.WITHDRAW_RUJI -> unstake.submit()
@@ -139,6 +142,7 @@ constructor(
     private val addressParserRepository: AddressParserRepository,
     private val chainValidationService: ChainValidationService,
     private val navigator: Navigator<Destination>,
+    private val thorChainApi: ThorChainApi,
 ) {
 
     /**
@@ -246,6 +250,7 @@ constructor(
                     gasFeeToEstimatedFee = gasFeeToEstimatedFee,
                     depositTransactionRepository = depositTransactionRepository,
                     navigator = navigator,
+                    thorChainApi = thorChainApi,
                     defiTypeProvider = context.defiTypeProvider,
                     isAutocompoundProvider = context.isAutocompoundProvider,
                     showLoading = context.showLoading,

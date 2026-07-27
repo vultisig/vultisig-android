@@ -148,6 +148,74 @@ internal class AccountsLoaderTest {
             assertEquals(listOf(runeAccount), loadedAccounts)
         }
 
+    // ──────── UNSTAKE_SRUJI ────────
+
+    @Test
+    fun `UNSTAKE_SRUJI synthesizes an sRUJI account carrying the compounded position`() =
+        runTest(mainDispatcher) {
+            // The receipt is deliberately kept out of token discovery, so no sRUJI account comes
+            // back from the addresses flow — without synthesizing one the form has nothing to
+            // redeem against. Its ceiling is the RUJI-denominated position the card showed.
+            defiType = DeFiNavActions.UNSTAKE_SRUJI
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.sRUJI.id,
+                )
+            } returns stakingDetails(stakeAmount = BigInteger("1406486651509"))
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts =
+                                listOf(thorAccount(Coins.ThorChain.RUNE.copy(address = "thor1"))),
+                        )
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            val sRuji = loadedAccounts.single { it.token.id.equals(Coins.ThorChain.sRUJI.id, true) }
+            assertEquals(BigInteger("1406486651509"), sRuji.tokenValue?.value)
+            // The RUNE account rides along: it pays the gas fee and carries the source address.
+            assertTrue(loadedAccounts.any { it.token.id.equals(Coins.ThorChain.RUNE.id, true) })
+            // Without the vault-bound address the redemption would be built from an empty sender.
+            assertEquals("thor1", sRuji.token.address)
+        }
+
+    @Test
+    fun `UNSTAKE_SRUJI publishes a zero ceiling when no position is cached`() =
+        runTest(mainDispatcher) {
+            defiType = DeFiNavActions.UNSTAKE_SRUJI
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.sRUJI.id,
+                )
+            } returns null
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts = listOf(thorAccount(Coins.ThorChain.RUNE)),
+                        )
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            val sRuji = loadedAccounts.single { it.token.id.equals(Coins.ThorChain.sRUJI.id, true) }
+            assertEquals(BigInteger.ZERO, sRuji.tokenValue?.value)
+        }
+
     // ──────── UNBOND ────────
 
     @Test
