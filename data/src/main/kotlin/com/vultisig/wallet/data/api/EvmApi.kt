@@ -501,10 +501,9 @@ class EvmApiImp(
                 },
             )
         if (rpcResp.error != null) {
-            // A failed read must propagate, never collapse into ZERO: a zero allowance is
-            // indistinguishable from a real, already-sufficient one, so the swap layer would stage
-            // a needless approve — which hard-reverts on-chain for USDT-style tokens that reject
-            // raising a non-zero allowance (#5424).
+            // A failed read must propagate, never collapse into ZERO — indistinguishable from a
+            // real allowance, it would force a needless approve that hard-reverts on-chain for
+            // USDT-style tokens (#5424).
             throw NetworkException(
                 httpStatusCode = 0,
                 message =
@@ -512,7 +511,27 @@ class EvmApiImp(
                         "spender=$spender: ${rpcResp.error.message}",
             )
         }
-        return rpcResp.result.convertToBigIntegerOrZero()
+        // Same rationale for a null/malformed result with no explicit error: a healthy node
+        // returns "0x0" for a real zero, so this is still a failed read (#5424).
+        val cleaned = rpcResp.result?.removePrefix("0x")
+        if (cleaned.isNullOrEmpty()) {
+            throw NetworkException(
+                httpStatusCode = 0,
+                message =
+                    "get allowance null result, contract=$contractAddress owner=$owner " +
+                        "spender=$spender",
+            )
+        }
+        return try {
+            BigInteger(cleaned, 16)
+        } catch (e: NumberFormatException) {
+            throw NetworkException(
+                httpStatusCode = 0,
+                message =
+                    "get allowance malformed result, contract=$contractAddress owner=$owner " +
+                        "spender=$spender: ${rpcResp.result}",
+            )
+        }
     }
 
     override suspend fun sendTransaction(signedTransaction: String): String {

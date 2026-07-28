@@ -57,6 +57,20 @@ class EvmApiAllowanceTest {
         assertEquals(BigInteger.ZERO, api.getAllowance(CONTRACT, OWNER, SPENDER))
     }
 
+    // A null result with no explicit `error` is still a failed read, not a zero — a healthy node
+    // always returns "0x0" for a real one.
+    @Test
+    fun `getAllowance propagates a null result instead of swallowing it into zero`() = runTest {
+        val client =
+            MockHttpClient.respondingWith(
+                HttpStatusCode.OK,
+                body = """{"id":1,"result":null,"error":null}""",
+            )
+        val api = EvmApiImp(client, "https://api.vultisig.com/eth/", Chain.Ethereum)
+
+        assertFailsWith<NetworkException> { api.getAllowance(CONTRACT, OWNER, SPENDER) }
+    }
+
     private companion object {
         const val CONTRACT = "0x2222222222222222222222222222222222222222"
         const val OWNER = "0x1111111111111111111111111111111111111111"
