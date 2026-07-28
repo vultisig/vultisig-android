@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.api.ZcashApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.chains.ton.tonUserFriendlyAddress
+import com.vultisig.wallet.data.api.models.BlockChairUtxoInfo
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUM_TRANSFER
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
@@ -37,6 +38,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.Numeric
@@ -318,47 +320,33 @@ constructor(
                             Timber.e(e, "Dash RPC failed, falling back to Blockchair")
                             null
                         }
-                    if (dashUtxos != null) {
-                        BlockChainSpecificAndUtxo(
-                            blockChainSpecific =
-                                BlockChainSpecific.UTXO(
-                                    byteFee = gasFee.value,
-                                    sendMaxAmount = isMaxAmountEnabled,
-                                ),
-                            utxos = dashUtxos.sortedBy(UtxoInfo::amount),
-                        )
-                    } else {
-                        // Fallback to Blockchair with block_id filtering
-                        val utxos = blockChairApi.getAddressInfo(chain = chain, address = address)
-                        BlockChainSpecificAndUtxo(
-                            blockChainSpecific =
-                                BlockChainSpecific.UTXO(
-                                    byteFee = gasFee.value,
-                                    sendMaxAmount = isMaxAmountEnabled,
-                                ),
-                            utxos =
-                                utxos
-                                    ?.utxos
-                                    ?.filter { it.blockId > 0 }
-                                    ?.sortedBy { it.value }
-                                    ?.map {
-                                        UtxoInfo(
-                                            hash = it.transactionHash,
-                                            amount = it.value,
-                                            index = it.index.toUInt(),
-                                        )
-                                    } ?: emptyList(),
-                        )
-                    }
-                } else {
-                    val utxos = blockChairApi.getAddressInfo(chain = chain, address = address)
-
-                    val byteFee = gasFee.value
 
                     BlockChainSpecificAndUtxo(
                         blockChainSpecific =
                             BlockChainSpecific.UTXO(
-                                byteFee = byteFee,
+                                byteFee = gasFee.value,
+                                sendMaxAmount = isMaxAmountEnabled,
+                            ),
+                        utxos =
+                            dashUtxos
+                                ?.filter { it.amount > chain.getDustThreshold.toLong() }
+                                ?.sortedBy(UtxoInfo::amount)
+                                ?: blockChairApi
+                                    .getAllUtxos(chain = chain, address = address)
+                                    .utxos
+                                    .toSpendableUtxos(chain),
+                    )
+                } else {
+                    val utxos =
+                        blockChairApi
+                            .getAllUtxos(chain = chain, address = address)
+                            .utxos
+                            .toSpendableUtxos(chain)
+
+                    BlockChainSpecificAndUtxo(
+                        blockChainSpecific =
+                            BlockChainSpecific.UTXO(
+                                byteFee = gasFee.value,
                                 sendMaxAmount = isMaxAmountEnabled,
                                 // Resolve the live ZIP-243 branch id for ZEC at build time so it
                                 // travels with the payload to the signing helpers; null (constant
@@ -367,18 +355,7 @@ constructor(
                                     if (chain == Chain.Zcash) zcashApi.getConsensusBranchIdHex()
                                     else null,
                             ),
-                        utxos =
-                            utxos
-                                ?.utxos
-                                ?.sortedBy { it.value }
-                                ?.toList()
-                                ?.map {
-                                    UtxoInfo(
-                                        hash = it.transactionHash,
-                                        amount = it.value,
-                                        index = it.index.toUInt(),
-                                    )
-                                } ?: emptyList(),
+                        utxos = utxos,
                     )
                 }
             }
@@ -746,6 +723,19 @@ constructor(
                 )
             }
         }
+
+    /**
+     * Matches the SDK's spendable-UTXO filter (parity with iOS/Windows) so coin selection can't
+     * pick an input that looks present in Blockchair's list but isn't actually usable yet.
+     */
+    private fun List<BlockChairUtxoInfo>.toSpendableUtxos(chain: Chain): List<UtxoInfo> {
+        val dustThreshold = chain.getDustThreshold.toLong()
+        return filter { it.value > dustThreshold && it.isSpendable != false && it.blockId > 0 }
+            .sortedBy { it.value }
+            .map {
+                UtxoInfo(hash = it.transactionHash, amount = it.value, index = it.index.toUInt())
+            }
+    }
 
     private fun isThorchainRouterChain(chain: Chain): Boolean =
         chain == Chain.Ethereum ||

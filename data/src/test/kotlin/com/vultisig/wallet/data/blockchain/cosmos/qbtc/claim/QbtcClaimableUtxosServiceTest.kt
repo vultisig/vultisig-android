@@ -112,14 +112,21 @@ class QbtcClaimableUtxosServiceTest {
     }
 
     @Test
-    fun `returns empty when blockchair has no data`() = runTest {
+    fun `returns empty when blockchair has no utxos`() = runTest {
+        val info =
+            BlockChairInfo(
+                address = BlockChairAddress(balance = 0, unspentOutputCount = 0),
+                utxos = emptyList(),
+            )
         val result =
-            QbtcClaimableUtxosServiceImpl(FakeBlockChairApi(null)).fetchClaimableCandidates("addr")
+            QbtcClaimableUtxosServiceImpl(FakeBlockChairApi(info)).fetchClaimableCandidates("addr")
         assertEquals(emptyList<ClaimableUtxo>(), result)
     }
 
-    private class FakeBlockChairApi(private val info: BlockChairInfo?) : BlockChairApi {
-        override suspend fun getAddressInfo(chain: Chain, address: String): BlockChairInfo? = info
+    private class FakeBlockChairApi(private val info: BlockChairInfo) : BlockChairApi {
+        override suspend fun getAddressInfo(chain: Chain, address: String): BlockChairInfo = info
+
+        override suspend fun getAllUtxos(chain: Chain, address: String): BlockChairInfo = info
 
         override suspend fun getBlockChairStats(chain: Chain): BigInteger = BigInteger.ZERO
 

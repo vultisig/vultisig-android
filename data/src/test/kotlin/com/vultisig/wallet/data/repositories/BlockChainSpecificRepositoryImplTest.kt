@@ -16,6 +16,9 @@ import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.ZcashApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
+import com.vultisig.wallet.data.api.models.BlockChairAddress
+import com.vultisig.wallet.data.api.models.BlockChairInfo
+import com.vultisig.wallet.data.api.models.BlockChairUtxoInfo
 import com.vultisig.wallet.data.api.models.ZkGasFee
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
@@ -33,6 +36,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.increaseByPercent
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -102,6 +106,108 @@ internal class BlockChainSpecificRepositoryImplTest {
         val specific = result.blockChainSpecific
         assertTrue(specific is BlockChainSpecific.UTXO)
         assertEquals("30f33754", (specific as BlockChainSpecific.UTXO).zcashBranchId)
+    }
+
+    @Test
+    fun `Bitcoin UTXO selection excludes dust, unconfirmed, and non-spendable entries`() = runTest {
+        val coin = bitcoinCoin()
+        val blockChairApi =
+            mockk<BlockChairApi> {
+                coEvery { getAllUtxos(Chain.Bitcoin, SOURCE_ADDRESS) } returns
+                    blockChairInfo(rawUtxoFixture())
+            }
+
+        val result =
+            repository(blockChairApi = blockChairApi)
+                .getSpecific(
+                    chain = Chain.Bitcoin,
+                    address = SOURCE_ADDRESS,
+                    token = coin,
+                    gasFee = TokenValue(BigInteger.ONE, coin),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                )
+
+        assertEquals(
+            listOf(
+                UtxoInfo(hash = "tx-confirmed-small", amount = 10_000, index = 0u),
+                UtxoInfo(hash = "tx-confirmed-large", amount = 50_000, index = 0u),
+            ),
+            result.utxos,
+        )
+    }
+
+    @Test
+    fun `Dash-Blockchair-fallback and the generic UTXO branch apply the identical spendable filter`() =
+        runTest {
+            val rawUtxos = rawUtxoFixture()
+            val blockChairApi =
+                mockk<BlockChairApi> {
+                    coEvery { getAllUtxos(any(), SOURCE_ADDRESS) } returns blockChairInfo(rawUtxos)
+                }
+            val failingDashApi =
+                mockk<DashApi> {
+                    coEvery { getAddressUtxos(any()) } throws java.io.IOException("dash rpc down")
+                }
+
+            val dashResult =
+                repository(blockChairApi = blockChairApi, dashApi = failingDashApi)
+                    .getSpecific(
+                        chain = Chain.Dash,
+                        address = SOURCE_ADDRESS,
+                        token = dashCoin(),
+                        gasFee = TokenValue(BigInteger.ONE, dashCoin()),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                    )
+            val bitcoinResult =
+                repository(blockChairApi = blockChairApi)
+                    .getSpecific(
+                        chain = Chain.Bitcoin,
+                        address = SOURCE_ADDRESS,
+                        token = bitcoinCoin(),
+                        gasFee = TokenValue(BigInteger.ONE, bitcoinCoin()),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                    )
+
+            assertEquals(bitcoinResult.utxos, dashResult.utxos)
+        }
+
+    @Test
+    fun `Dash RPC path excludes dust the same way the Blockchair-fallback path does`() = runTest {
+        val dashApi =
+            mockk<DashApi> {
+                coEvery { getAddressUtxos(SOURCE_ADDRESS) } returns
+                    listOf(
+                        UtxoInfo(hash = "tx-dust", amount = 500, index = 0u),
+                        UtxoInfo(hash = "tx-confirmed-large", amount = 50_000, index = 0u),
+                        UtxoInfo(hash = "tx-confirmed-small", amount = 10_000, index = 0u),
+                    )
+            }
+
+        val result =
+            repository(dashApi = dashApi)
+                .getSpecific(
+                    chain = Chain.Dash,
+                    address = SOURCE_ADDRESS,
+                    token = dashCoin(),
+                    gasFee = TokenValue(BigInteger.ONE, dashCoin()),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                )
+
+        assertEquals(
+            listOf(
+                UtxoInfo(hash = "tx-confirmed-small", amount = 10_000, index = 0u),
+                UtxoInfo(hash = "tx-confirmed-large", amount = 50_000, index = 0u),
+            ),
+            result.utxos,
+        )
     }
 
     @Test
@@ -641,6 +747,78 @@ internal class BlockChainSpecificRepositoryImplTest {
             isNativeToken = true,
         )
 
+    private fun bitcoinCoin() =
+        Coin(
+            chain = Chain.Bitcoin,
+            ticker = "BTC",
+            logo = "",
+            address = SOURCE_ADDRESS,
+            decimal = 8,
+            hexPublicKey = "pub",
+            priceProviderID = "bitcoin",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
+    private fun dashCoin() =
+        Coin(
+            chain = Chain.Dash,
+            ticker = "DASH",
+            logo = "",
+            address = SOURCE_ADDRESS,
+            decimal = 8,
+            hexPublicKey = "pub",
+            priceProviderID = "dash",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
+    /**
+     * A dust entry, an unconfirmed entry, and an explicitly non-spendable entry — all excluded by
+     * [toSpendableUtxos] — alongside two valid entries whose values (10_000 / 50_000 sats) clear
+     * every UTXO chain's dust threshold, so the fixture is safe to reuse across chains.
+     */
+    private fun rawUtxoFixture(): List<BlockChairUtxoInfo> =
+        listOf(
+            BlockChairUtxoInfo(
+                transactionHash = "tx-dust",
+                index = 0,
+                value = 500,
+                blockId = 800_000,
+            ),
+            BlockChairUtxoInfo(
+                transactionHash = "tx-unconfirmed",
+                index = 0,
+                value = 50_000,
+                blockId = 0,
+            ),
+            BlockChairUtxoInfo(
+                transactionHash = "tx-not-spendable",
+                index = 0,
+                value = 20_000,
+                blockId = 800_000,
+                isSpendable = false,
+            ),
+            BlockChairUtxoInfo(
+                transactionHash = "tx-confirmed-large",
+                index = 0,
+                value = 50_000,
+                blockId = 800_000,
+            ),
+            BlockChairUtxoInfo(
+                transactionHash = "tx-confirmed-small",
+                index = 0,
+                value = 10_000,
+                blockId = 800_000,
+            ),
+        )
+
+    private fun blockChairInfo(utxos: List<BlockChairUtxoInfo>): BlockChairInfo =
+        BlockChairInfo(
+            address = BlockChairAddress(balance = 0, unspentOutputCount = utxos.size),
+            utxos = utxos,
+        )
+
     private fun solanaCoin() =
         Coin(
             chain = Chain.Solana,
@@ -660,6 +838,7 @@ internal class BlockChainSpecificRepositoryImplTest {
         suiApi: SuiApi = mockk<SuiApi>(relaxed = true),
         suiFeeService: FeeService = NoOpFeeService,
         blockChairApi: BlockChairApi = mockk<BlockChairApi>(relaxed = true),
+        dashApi: DashApi = mockk<DashApi>(relaxed = true),
         zcashApi: ZcashApi = mockk<ZcashApi>(relaxed = true),
         solanaApi: SolanaApi = mockk<SolanaApi>(relaxed = true),
     ): BlockChainSpecificRepositoryImpl {
@@ -675,7 +854,7 @@ internal class BlockChainSpecificRepositoryImplTest {
             solanaApi = solanaApi,
             cosmosApiFactory = mockk<CosmosApiFactory>(relaxed = true),
             blockChairApi = blockChairApi,
-            dashApi = mockk<DashApi>(relaxed = true),
+            dashApi = dashApi,
             zcashApi = zcashApi,
             polkadotApi = mockk<PolkadotApi>(relaxed = true),
             bittensorApi = mockk<BittensorApi>(relaxed = true),

@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.api
 import com.vultisig.wallet.data.api.models.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.api.models.BlockChairInfo
 import com.vultisig.wallet.data.api.models.BlockChairInfoJson
+import com.vultisig.wallet.data.api.models.BlockChairUtxoInfo
 import com.vultisig.wallet.data.api.models.SuggestedTransactionFeeDataJson
 import com.vultisig.wallet.data.api.models.TransactionHashDataJson
 import com.vultisig.wallet.data.api.models.TransactionHashRequestBodyJson
@@ -25,6 +26,13 @@ import timber.log.Timber
 interface BlockChairApi {
     suspend fun getAddressInfo(chain: Chain, address: String): BlockChairInfo?
 
+    /**
+     * Unlike [getAddressInfo], paginates past Blockchair's ~100-entry default page until every UTXO
+     * in `unspent_output_count` is retrieved, and throws rather than returning a silently-truncated
+     * view when a page falls short — see #5433.
+     */
+    suspend fun getAllUtxos(chain: Chain, address: String): BlockChairInfo
+
     suspend fun getBlockChairStats(chain: Chain): BigInteger
 
     suspend fun broadcastTransaction(chain: Chain, signedTransaction: String): String
@@ -41,6 +49,7 @@ constructor(
 ) : BlockChairApi {
     companion object {
         private const val BASE_URL = "https://api.vultisig.com/blockchair"
+        private const val UTXO_PAGE_SIZE = 1000
     }
 
     private fun getChainName(chain: Chain): String =
@@ -73,6 +82,46 @@ constructor(
             Timber.e("fail to get address info from blockchair: ${e.message}")
         }
         return null
+    }
+
+    override suspend fun getAllUtxos(chain: Chain, address: String): BlockChairInfo {
+        val chainName = getChainName(chain)
+        val utxos = mutableListOf<BlockChairUtxoInfo>()
+        var firstPage: BlockChairInfo? = null
+        var expectedUtxoCount = 0
+        var offset = 0
+
+        while (true) {
+            val response =
+                httpClient.get(
+                    "$BASE_URL/$chainName/dashboards/address/$address" +
+                        "?state=latest&limit=$UTXO_PAGE_SIZE&offset=$offset"
+                ) {
+                    header("Content-Type", "application/json")
+                }
+            val body = response.bodyOrThrow<BlockChairInfoJson>()
+            val page =
+                body.data[address]?.copy(currentBlockHeight = body.context?.state?.toLong())
+                    ?: error("Blockchair returned no address data for $chain:$address")
+
+            if (firstPage == null) {
+                firstPage = page
+                expectedUtxoCount = page.address.unspentOutputCount
+            }
+            utxos += page.utxos
+
+            // A page shorter than the page size is the only reliable "no more data" signal — a
+            // full page that happens to match unspent_output_count could still be followed by
+            // more UTXOs if that count itself is a hair stale, which is the exact inconsistency
+            // this method exists to catch.
+            if (page.utxos.size < UTXO_PAGE_SIZE) break
+            offset += UTXO_PAGE_SIZE
+        }
+
+        check(utxos.size >= expectedUtxoCount) {
+            "Blockchair returned ${utxos.size} UTXOs for $chain:$address, expected $expectedUtxoCount"
+        }
+        return checkNotNull(firstPage).copy(utxos = utxos)
     }
 
     override suspend fun getBlockChairStats(chain: Chain): BigInteger {
