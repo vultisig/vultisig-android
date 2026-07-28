@@ -35,6 +35,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 
 internal class UnstakeStrategy(
@@ -268,8 +269,20 @@ internal class UnstakeStrategy(
         gasFee: TokenValue,
         chain: Chain,
     ): DepositTransaction {
+        // The read fails closed on an unreadable position rather than reporting a false zero, so a
+        // failure here is a fetch problem, not a balance problem. Translate it: submit()'s generic
+        // catch would otherwise surface the raw "Could not fetch balances: status …" text.
         val stakeBalances =
-            withContext(Dispatchers.IO) { thorChainApi.getRujiStakeBalance(srcAddress) }
+            withContext(Dispatchers.IO) {
+                    runCatching { thorChainApi.getRujiStakeBalance(srcAddress) }
+                }
+                .getOrElse { error: Throwable ->
+                    if (error is CancellationException) throw error
+                    Timber.e(error, "Failed to read the RUJI staking position for the unbond")
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.dialog_default_error_body)
+                    )
+                }
         val positionValue = stakeBalances.autoCompoundAmount
         val heldShares = stakeBalances.autoCompoundShares
 

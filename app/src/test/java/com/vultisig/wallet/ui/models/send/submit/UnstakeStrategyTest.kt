@@ -285,6 +285,29 @@ internal class UnstakeStrategyTest {
     }
 
     @Test
+    fun `submit UNSTAKE_SRUJI translates a failed position read instead of leaking its message`() =
+        runTest {
+            withMockedIoDispatcher {
+                givenSuccessfulFlow()
+                // The position read fails closed rather than reporting a false zero, so this is a
+                // fetch failure, not an empty position — it must not reach the user as raw text.
+                coEvery { thorChainApi.getRujiStakeBalance(any()) } throws
+                    Exception("Could not fetch balances: status 502")
+                tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+
+                val captured = slot<DepositTransaction>()
+                coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns
+                    Unit
+
+                build(this, DeFiNavActions.UNSTAKE_SRUJI).submit()
+                advanceUntilIdle()
+
+                assertEquals(R.string.dialog_default_error_body, lastError.stringId())
+                assertFalse(captured.isCaptured)
+            }
+        }
+
+    @Test
     fun `submit surfaces no_address when chain validates dst as invalid`() = runTest {
         givenValidatedAccount()
         coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns false

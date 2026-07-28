@@ -459,11 +459,18 @@ constructor(
         val autoCompoundAmount = stake?.liquidSize?.amount.toStakeAmountOrThrow(LIQUID_SIZE_FIELD)
         // Shares come from the same response as the size they back, so their ratio is consistent;
         // the on-chain receipt (identical by construction) only covers a response missing the
-        // field.
+        // field. Nothing to size when the position is empty, so the read is skipped entirely —
+        // every account without an auto-compounding position would otherwise pay for it. When
+        // there *is* a position, an unreadable share count fails closed like the amounts above:
+        // reporting zero shares would silently disable the unbond of a live position.
         val autoCompoundShares =
-            stake?.liquidShares?.amount?.toBigIntegerOrNull()
-                ?: readRujiReceiptBalance(address)
-                ?: BigInteger.ZERO
+            if (autoCompoundAmount <= BigInteger.ZERO) {
+                BigInteger.ZERO
+            } else {
+                stake?.liquidShares?.amount?.toBigIntegerOrNull()
+                    ?: readRujiReceiptBalance(address)
+                    ?: error("RUJI auto-compounding share count is unavailable")
+            }
 
         val stakeTicker = stake?.bonded?.asset?.metadata?.symbol ?: RUJI_STAKE_SYMBOL
         val rewardsAmount = stake?.pendingRevenue?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO

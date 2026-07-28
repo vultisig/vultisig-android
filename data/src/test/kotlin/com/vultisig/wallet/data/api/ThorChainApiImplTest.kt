@@ -425,6 +425,53 @@ class ThorChainApiImplTest {
         }
 
     @Test
+    fun `getRujiStakeBalance throws rather than reporting unreadable shares as zero`() =
+        runBlocking {
+            // Both share sources unavailable on a live position: reporting zero shares would read
+            // downstream as "insufficient balance" and silently disable the unbond, the same false
+            // zero the amounts above fail closed on.
+            val api =
+                newRujiApi(
+                    stakeBody =
+                        rujiStakeBody(
+                            bondedAmount = "0",
+                            liquidSize = "1406486651509",
+                            liquidShares = null,
+                        ),
+                    balancesBody = "",
+                    balancesStatus = HttpStatusCode.InternalServerError,
+                )
+
+            assertThrows(IllegalStateException::class.java) {
+                runBlocking { api.getRujiStakeBalance("thor1abc") }
+            }
+            Unit
+        }
+
+    @Test
+    fun `getRujiStakeBalance skips the receipt read when there is no auto-compounding position`() =
+        runBlocking {
+            // A bonded-only staker has no shares to size, so a failing bank read must not sink the
+            // bonded amount — nor should the request be made at all.
+            val api =
+                newRujiApi(
+                    stakeBody =
+                        rujiStakeBody(
+                            bondedAmount = "7875733",
+                            liquidSize = null,
+                            liquidShares = null,
+                        ),
+                    balancesBody = "",
+                    balancesStatus = HttpStatusCode.InternalServerError,
+                )
+
+            val result = api.getRujiStakeBalance("thor1abc")
+
+            assertEquals(BigInteger("7875733"), result.stakeAmount)
+            assertEquals(BigInteger.ZERO, result.autoCompoundShares)
+        }
+
+    @Test
     fun `getRujiStakeBalance throws rather than reporting an unparseable bonded amount as zero`() =
         runBlocking {
             // Coercing a malformed amount to zero is exactly the failure this issue is about: it
