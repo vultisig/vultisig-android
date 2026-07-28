@@ -442,7 +442,7 @@ constructor(
             }
             val defaultLoadingPositions =
                 loadDefaultStakingPositions()
-                    .filter { coin -> selectedPositions.contains(coin.stakedAmountDisplay) }
+                    .filter { position -> selectedPositions.contains(position.selectionKey()) }
                     .map { positionUiModel -> positionUiModel.copy(isLoading = true) }
             state.update {
                 it.copy(staking = StakingTabUiModel(positions = defaultLoadingPositions))
@@ -1198,8 +1198,18 @@ constructor(
         private val RUJI_POSITION_COIN_IDS =
             setOf(Coins.ThorChain.RUJI.id, Coins.ThorChain.sRUJI.id)
 
+        /**
+         * The Manage-Positions key a placeholder is gated on. Both RUJI positions are toggled by
+         * the single "RUJI" tile, so the auto-compounding placeholder borrows the bonded ticker;
+         * every other placeholder is keyed by its own ticker.
+         */
+        private fun StakePositionUiModel.selectionKey(): String =
+            if (coin.id == Coins.ThorChain.sRUJI.id) Coins.ThorChain.RUJI.ticker
+            else stakedAmountDisplay
+
         private fun loadDefaultStakingPositions(): List<StakePositionUiModel> {
             val rujiCoin = Coins.ThorChain.RUJI
+            val sruji = Coins.ThorChain.sRUJI
             val tcy = Coins.ThorChain.TCY
             val stcy = Coins.ThorChain.sTCY
             val ytcy = Coins.ThorChain.yTCY
@@ -1210,6 +1220,22 @@ constructor(
                     coin = rujiCoin,
                     stakeAssetHeader = UiText.StringResource(R.string.staked_ruji_header),
                     stakedAmountDisplay = rujiCoin.ticker,
+                    apy = null,
+                    canWithdraw = false,
+                    canStake = true,
+                    canUnstake = false,
+                    rewards = null,
+                    nextReward = null,
+                    nextPayout = null,
+                ),
+                StakePositionUiModel(
+                    coin = sruji,
+                    stakeAssetHeader =
+                        UiText.FormattedText(
+                            R.string.defi_header_compounded,
+                            listOf(rujiCoin.ticker),
+                        ),
+                    stakedAmountDisplay = sruji.ticker,
                     apy = null,
                     canWithdraw = false,
                     canStake = true,
