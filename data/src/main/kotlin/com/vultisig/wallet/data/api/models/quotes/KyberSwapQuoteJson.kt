@@ -37,7 +37,8 @@ fun KyberSwapQuoteJson.gasForChain(chain: Chain): Long {
             Chain.Base,
             Chain.Polygon,
             Chain.Avalanche,
-            Chain.BscChain -> 20L
+            Chain.BscChain,
+            Chain.Mantle -> 20L
             else -> 16L
         }
     return (baseGas * gasMultiplierTimes10) / 10
