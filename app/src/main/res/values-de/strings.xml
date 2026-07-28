@@ -195,6 +195,7 @@
     <string name="verify_transaction_value">Wert</string>
     <string name="send_error_no_address">Adresse ist ungültig</string>
     <string name="send_error_invalid_recipient_address">Dieser Empfänger ist keine gültige Adresse für diese Blockchain.</string>
+    <string name="send_error_memo_too_long">Memo ist zu lang: %1$d Zeichen (Maximum %2$d).</string>
     <string name="vault_settings_error_backup_file">ein Fehler ist aufgetreten</string>
     <string name="vault_settings_error_backup_failed">Backup fehlgeschlagen. Es wurde keine Datei gespeichert. Bitte versuchen Sie es erneut.</string>
     <string name="vault_settings_delete_vault_name">Tresorname:</string>

@@ -28,6 +28,7 @@ import com.vultisig.wallet.ui.models.send.GasSettings
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendFocusField
 import com.vultisig.wallet.ui.models.send.SendSections
+import com.vultisig.wallet.ui.models.send.memoLengthErrorOrNull
 import com.vultisig.wallet.ui.models.send.selectGasFeeForFeeEstimation
 import com.vultisig.wallet.ui.models.send.toPlainBigDecimalOrNull
 import com.vultisig.wallet.ui.navigation.Destination
@@ -136,6 +137,13 @@ internal class DefaultSendStrategy(
                     // suppress the dual-write here while the signer still drops it, and a
                     // not-yet-updated co-signer would rebuild an untagged payment.
                     val userMemo = memoFieldState.text.toString().takeIf { it.isNotBlank() }
+
+                    // The form already disables Continue on an over-long memo; re-check here so a
+                    // submit that races the form's per-keystroke validation still can't start a
+                    // keysign the chain rejects at broadcast with "memo too large" (issue #5435).
+                    memoLengthErrorOrNull(chain, userMemo ?: "")?.let {
+                        throw InvalidTransactionDataException(it)
+                    }
 
                     // XRP destination tag: from its own field, carried in the first-class proto
                     // field (not the memo). A non-empty non-canonical value is rejected so a bad

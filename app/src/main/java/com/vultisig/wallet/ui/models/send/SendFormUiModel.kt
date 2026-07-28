@@ -6,7 +6,9 @@ import com.vultisig.wallet.R.string
 import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.maxMemoCharacters
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.ui.models.send.AmountFraction.F100
 import com.vultisig.wallet.ui.models.send.AmountFraction.F25
@@ -67,6 +69,7 @@ internal data class SendFormUiModel(
     val errorText: UiText? = null,
     val dstAddressError: UiText? = null,
     val tokenAmountError: UiText? = null,
+    val memoError: UiText? = null,
     val reapingError: UiText? = null,
     val bondProviderError: UiText? = null,
     val hasMemo: Boolean = false,
@@ -113,6 +116,16 @@ internal val SendFormUiModel.isDstAddressBlocking: Boolean
     get() = dstAddressError != null && isDstAddressEditable
 
 /**
+ * Whether an over-long memo should block the form.
+ *
+ * Only the free-text memo field the form actually renders blocks: DeFi flows build their own memos,
+ * and a token without a memo field ([hasMemo] false) offers the user no way to shorten one, so
+ * blocking there would disable Continue with no visible reason.
+ */
+internal val SendFormUiModel.isMemoBlocking: Boolean
+    get() = memoError != null && hasMemo && defiType == null
+
+/**
  * Whether the Continue action should be disabled for the current form state.
  *
  * The gas-fee-loading gate applies to every flow: while the network fee is (re)computing —
@@ -130,13 +143,40 @@ internal val SendFormUiModel.isDstAddressBlocking: Boolean
  * flow can't proceed from an address that failed chain validation — the inline error is the visible
  * reason, and correcting the field clears it and re-enables Continue.
  *
+ * A memo over the chain's ceiling ([isMemoBlocking]) disables Continue for the same reason: the
+ * node rejects it at broadcast with "memo too large", so letting the flow reach keysign would burn
+ * a full multi-device signing ceremony on a transaction that can never be accepted (issue #5435).
+ *
  * @return true when Continue must stay disabled.
  */
 internal fun SendFormUiModel.isContinueDisabled(): Boolean =
     isLoading ||
         isDstAddressBlocking ||
+        isMemoBlocking ||
         (showGasFee && isGasFeeLoading) ||
         (tronResourceType != null && (!isAmountValid || isTronFrozenBalancesLoading))
+
+/**
+ * Validates a memo against the chain's published ceiling ([Chain.maxMemoCharacters]).
+ *
+ * Shared by the form (inline error + Continue gate) and the submit strategies, so a memo the node
+ * would reject can neither pass the form nor slip through a submit that races the form's
+ * validation.
+ *
+ * The node counts the memo's encoded length (Cosmos SDK `ValidateMemo` measures UTF-8 bytes), so a
+ * multi-byte memo can sit within the character ceiling and still be rejected; whichever measure
+ * exceeds the limit blocks. The reported length is the character count, matching what the user
+ * typed and what the node's own rejection message names.
+ *
+ * @param chain the chain the memo will be signed for; `null` (no chain selected yet) never errors.
+ * @return a [UiText] error naming the current length and the limit, or null when the memo fits.
+ */
+internal fun memoLengthErrorOrNull(chain: Chain?, memo: String): UiText? {
+    val limit = chain?.maxMemoCharacters ?: return null
+    val characters = memo.codePointCount(0, memo.length)
+    if (characters <= limit && memo.toByteArray(Charsets.UTF_8).size <= limit) return null
+    return UiText.FormattedText(string.send_error_memo_too_long, listOf(characters, limit))
+}
 
 internal data class SendSrc(val address: Address, val account: Account)
 

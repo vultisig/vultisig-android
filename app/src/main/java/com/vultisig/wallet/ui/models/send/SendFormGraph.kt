@@ -457,6 +457,15 @@ internal class SendFormGraph(
                 uiState.update { it.copy(reapingError = error) }
             }
         }
+        // Combined with the selected token so switching network re-checks the memo already typed:
+        // the ceiling is per-chain, so the same memo can be fine on one chain and over the cap on
+        // the next.
+        scope.launch {
+            combine(selectedToken, memoFieldState.textAsFlow()) { token, memo ->
+                    memoLengthErrorOrNull(token?.chain, memo.toString())
+                }
+                .collect { error -> uiState.update { it.copy(memoError = error) } }
+        }
         // Only the TRON freeze/unfreeze branch of isContinueDisabled reads isAmountValid, so limit
         // this per-keystroke validation to staking flows instead of paying it on every send screen.
         if (tronStakingService.isStakingType()) {
