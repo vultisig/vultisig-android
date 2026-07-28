@@ -286,9 +286,9 @@ class ThorchainFunctionsTest {
         assertEquals("thor1sender", payload.senderAddress)
         assertEquals("thor1contract", payload.contractAddress)
         assertEquals("""{ "liquid": { "bond": {} } }""", payload.executeMsg)
-        assertEquals(1, payload.coins.size)
-        assertEquals("x/ruji", payload.coins[0]!!.denom)
-        assertEquals("5000000", payload.coins[0]!!.amount)
+        val funds = requireNotNull(payload.coins.single())
+        assertEquals("x/ruji", funds.denom)
+        assertEquals("5000000", funds.amount)
     }
 
     @Test
@@ -307,6 +307,14 @@ class ThorchainFunctionsTest {
         assertThrows<IllegalArgumentException> {
             ThorchainFunctions.stakeRujiCompound("addr", "contract", "x/ruji", BigInteger.ZERO)
         }
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.stakeRujiCompound(
+                "addr",
+                "contract",
+                "x/ruji",
+                BigInteger.valueOf(-1),
+            )
+        }
     }
 
     @Test
@@ -322,9 +330,9 @@ class ThorchainFunctionsTest {
         assertEquals("thor1sender", payload.senderAddress)
         assertEquals("thor1contract", payload.contractAddress)
         assertEquals("""{ "liquid": { "unbond": {} } }""", payload.executeMsg)
-        assertEquals(1, payload.coins.size)
-        assertEquals("x/staking-x/ruji", payload.coins[0]!!.denom)
-        assertEquals("1385594365632", payload.coins[0]!!.amount)
+        val funds = requireNotNull(payload.coins.single())
+        assertEquals("x/staking-x/ruji", funds.denom)
+        assertEquals("1385594365632", funds.amount)
     }
 
     @Test

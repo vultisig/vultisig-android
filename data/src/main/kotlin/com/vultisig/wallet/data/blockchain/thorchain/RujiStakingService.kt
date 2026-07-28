@@ -35,7 +35,9 @@ constructor(
                     }
                 if (cachedDetails.isNotEmpty()) {
                     Timber.d(
-                        "RujiStakingService: Emitting ${cachedDetails.size} cached RUJI staking positions for vault $vaultId"
+                        "RujiStakingService: Emitting %d cached RUJI staking positions for vault %s",
+                        cachedDetails.size,
+                        vaultId,
                     )
                     emit(cachedDetails)
                 }
@@ -47,7 +49,8 @@ constructor(
                         if (e is kotlinx.coroutines.CancellationException) throw e
                         Timber.e(
                             e,
-                            "RujiStakingService: Error fetching RUJI staking details for vault $vaultId",
+                            "RujiStakingService: Error fetching RUJI staking details for vault %s",
+                            vaultId,
                         )
 
                         if (cachedDetails.isNotEmpty()) {
@@ -61,12 +64,13 @@ constructor(
 
                 // Emit new fresh positions
                 Timber.d(
-                    "RujiStakingService: Emitting fresh RUJI staking positions for vault $vaultId"
+                    "RujiStakingService: Emitting fresh RUJI staking positions for vault %s",
+                    vaultId,
                 )
                 emit(freshDetails)
 
                 // Update DB cache
-                Timber.d("RujiStakingService: Saving fresh RUJI positions for vault $vaultId")
+                Timber.d("RujiStakingService: Saving fresh RUJI positions for vault %s", vaultId)
                 stakingDetailsRepository.saveAllStakingDetails(vaultId, freshDetails)
             }
             .flowOn(Dispatchers.IO)

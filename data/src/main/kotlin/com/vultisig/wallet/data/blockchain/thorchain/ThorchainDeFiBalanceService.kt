@@ -224,7 +224,11 @@ class ThorchainDeFiBalanceService(
                     throw exception
                 }
 
-        Timber.d("ThorchainDeFiBalanceService: RUJI staking positions for $address: $positions")
+        Timber.d(
+            "ThorchainDeFiBalanceService: RUJI staking positions for %s: %s",
+            address,
+            positions,
+        )
 
         return DeFiBalance(
             chain = Chain.ThorChain,
