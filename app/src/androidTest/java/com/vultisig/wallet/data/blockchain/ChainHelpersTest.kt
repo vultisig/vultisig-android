@@ -718,6 +718,53 @@ class ChainHelpersTest {
         }
     }
 
+    /**
+     * The golden corpus is shared with vultisig-ios (`VultisigAppTests/TestData`) and the TS core
+     * (`packages/core/mpc/keysign/tests/fixtures/mobile`). MPC keysign requires every co-signing
+     * platform to derive byte-identical pre-image hashes, so a payload class pinned on two
+     * platforms but not the third can drift silently and only surface as a live keysign failure.
+     *
+     * Fixtures are loaded through [FIXTURE_FILES] rather than the asset directory itself, so
+     * dropping a `.json` into `androidTest/assets` without wiring it to a helper would otherwise be
+     * invisible. This asserts the declared set and the directory agree in both directions, that
+     * every file holds at least one case, and that the corpus totals [EXPECTED_CASE_COUNT] — so a
+     * fixture that silently stops contributing cases can't pass. Mirrors the file-count assertion
+     * the TS runner makes over its own fixtures directory (issue #5420).
+     */
+    @Test
+    fun fixtureCorpusMatchesDeclaredFileSet() {
+        val assetFiles =
+            InstrumentationRegistry.getInstrumentation()
+                .context
+                .assets
+                .list("")
+                .orEmpty()
+                .filter { it.endsWith(".json") }
+                .toSet()
+
+        assertEquals(
+            "Fixture files present in androidTest/assets but not declared in FIXTURE_FILES — " +
+                "declare each one and exercise it from a test, or the corpus grows untested",
+            emptySet<String>(),
+            assetFiles - FIXTURE_FILES,
+        )
+        assertEquals(
+            "Fixture files declared in FIXTURE_FILES but absent from androidTest/assets",
+            emptySet<String>(),
+            FIXTURE_FILES - assetFiles,
+        )
+
+        val caseCountsByFile = FIXTURE_FILES.associateWith { loadTransactionData(it).size }
+        val emptyFiles = caseCountsByFile.filterValues { it == 0 }.keys
+        assertEquals("Fixture files that parsed to zero cases", emptySet<String>(), emptyFiles)
+        assertEquals(
+            "Golden fixture case count changed — update EXPECTED_CASE_COUNT deliberately, and " +
+                "keep the case in step with vultisig-ios and the TS core",
+            EXPECTED_CASE_COUNT,
+            caseCountsByFile.values.sum(),
+        )
+    }
+
     private fun loadTransactionData(jsonFile: String): List<TransactionData> {
         val appContext: Context = InstrumentationRegistry.getInstrumentation().context
         val data =
@@ -750,6 +797,36 @@ class ChainHelpersTest {
         private const val LIFI_SWAP_JSON_FILE = "lifiswap.json"
 
         private const val ARB_SWAP_JSON_FILE = "arb.json"
+
+        /**
+         * Every fixture file in `androidTest/assets`, pinned by
+         * [fixtureCorpusMatchesDeclaredFileSet].
+         */
+        private val FIXTURE_FILES =
+            setOf(
+                BSC_JSON_FILE,
+                EVM_JSON_FILE,
+                COSMOS_JSON_FILE,
+                XRP_JSON_FILE,
+                TON_JSON_FILE,
+                SOLANA_JSON_FILE,
+                THORCHAIN_JSON_FILE,
+                MAYACHAIN_JSON_FILE,
+                TERRA_JSON_FILE,
+                UTXO_JSON_FILE,
+                POL_JSON_FILE,
+                DOT_JSON_FILE,
+                SUI_JSON_FILE,
+                TRON_JSON_FILE,
+                KUJIRA_JSON_FILE,
+                CARDANO_JSON_FILE,
+                THORCHAIN_SWAP_JSON_FILE,
+                MAYA_SWAP_JSON_FILE,
+                LIFI_SWAP_JSON_FILE,
+                ARB_SWAP_JSON_FILE,
+            )
+
+        private const val EXPECTED_CASE_COUNT = 67
 
         private const val HEX_PUBLIC_KEY =
             "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b"
