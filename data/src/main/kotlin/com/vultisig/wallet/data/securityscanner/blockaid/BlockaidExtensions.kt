@@ -109,8 +109,9 @@ private fun BlockaidTransactionScanResponseJson.BlockaidSolanaResultJson
 }
 
 /**
- * Derives [SecurityRiskLevel] from the scan response, returning [SecurityRiskLevel.MEDIUM] and
- * logging a warning for any error status instead of throwing.
+ * Derives [SecurityRiskLevel] from the scan response, throwing [SecurityScannerException] for any
+ * error status so the caller surfaces a distinct scan-unavailable state instead of a real risk
+ * finding — mirrors the error handling in [toSolanaSecurityScannerResult] for the same signal.
  */
 private fun BlockaidTransactionScanResponseJson.toValidationRiskLevel(): SecurityRiskLevel {
     val hasFeatures = validation?.features?.isEmpty() == false
@@ -124,9 +125,8 @@ private fun BlockaidTransactionScanResponseJson.toValidationRiskLevel(): Securit
             resultType.equals("error", true) ||
             globalStatus.equals("error", ignoreCase = true)
     ) {
-        val errorMessage = validation?.error ?: "Scanning failed"
-        Timber.w("SecurityScanner scan unavailable: %s", errorMessage)
-        return SecurityRiskLevel.MEDIUM
+        val errorMessage = validation?.error ?: error ?: "Scanning failed"
+        throw SecurityScannerException("SecurityScanner Error: $errorMessage. Payload: $this")
     }
 
     val isBenign =
