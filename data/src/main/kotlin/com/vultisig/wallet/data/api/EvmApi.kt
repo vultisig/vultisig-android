@@ -501,10 +501,16 @@ class EvmApiImp(
                 },
             )
         if (rpcResp.error != null) {
-            Timber.d(
-                "get allowance,contract address: $contractAddress,owner: $owner,spender: $spender, error: ${rpcResp.error.message}"
+            // A failed read must propagate, never collapse into ZERO: a zero allowance is
+            // indistinguishable from a real, already-sufficient one, so the swap layer would stage
+            // a needless approve — which hard-reverts on-chain for USDT-style tokens that reject
+            // raising a non-zero allowance (#5424).
+            throw NetworkException(
+                httpStatusCode = 0,
+                message =
+                    "get allowance rpc error, contract=$contractAddress owner=$owner " +
+                        "spender=$spender: ${rpcResp.error.message}",
             )
-            return BigInteger.ZERO
         }
         return rpcResp.result.convertToBigIntegerOrZero()
     }
