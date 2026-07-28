@@ -724,12 +724,13 @@ class ChainHelpersTest {
      * platform to derive byte-identical pre-image hashes, so a payload class pinned on two
      * platforms but not the third can drift silently and only surface as a live keysign failure.
      *
-     * Fixtures are loaded through [FIXTURE_FILES] rather than the asset directory itself, so
+     * Fixtures are reached through [FIXTURE_TESTS] rather than the asset directory itself, so
      * dropping a `.json` into `androidTest/assets` without wiring it to a helper would otherwise be
-     * invisible. This asserts the declared set and the directory agree in both directions, that
-     * every file holds at least one case, and that the corpus totals [EXPECTED_CASE_COUNT] — so a
-     * fixture that silently stops contributing cases can't pass. Mirrors the file-count assertion
-     * the TS runner makes over its own fixtures directory (issue #5420).
+     * invisible. This asserts the declared files and the directory agree in both directions, that
+     * each declared file names a test that actually exists to hash it, that every file holds at
+     * least one case, and that the corpus totals [EXPECTED_CASE_COUNT] — so a fixture can neither
+     * appear untested nor silently stop contributing cases. Mirrors the file-count assertion the TS
+     * runner makes over its own fixtures directory (issue #5420).
      */
     @Test
     fun fixtureCorpusMatchesDeclaredFileSet() {
@@ -741,20 +742,37 @@ class ChainHelpersTest {
                 .orEmpty()
                 .filter { it.endsWith(".json") }
                 .toSet()
+        val declaredFiles = FIXTURE_TESTS.keys
 
         assertEquals(
-            "Fixture files present in androidTest/assets but not declared in FIXTURE_FILES — " +
-                "declare each one and exercise it from a test, or the corpus grows untested",
+            "Fixture files present in androidTest/assets but not declared in FIXTURE_TESTS — " +
+                "declare each one against the test that signs it, or the corpus grows untested",
             emptySet<String>(),
-            assetFiles - FIXTURE_FILES,
+            assetFiles - declaredFiles,
         )
         assertEquals(
-            "Fixture files declared in FIXTURE_FILES but absent from androidTest/assets",
+            "Fixture files declared in FIXTURE_TESTS but absent from androidTest/assets",
             emptySet<String>(),
-            FIXTURE_FILES - assetFiles,
+            declaredFiles - assetFiles,
         )
 
-        val caseCountsByFile = FIXTURE_FILES.associateWith { loadTransactionData(it).size }
+        // Parsing a fixture is not the same as signing it: without this, a file could be declared,
+        // parse cleanly, count toward the total, and still have no test deriving hashes from it.
+        val signingTests =
+            ChainHelpersTest::class
+                .java
+                .methods
+                .filter { it.isAnnotationPresent(Test::class.java) }
+                .map { it.name }
+                .toSet()
+        assertEquals(
+            "Fixture files bound to a test that doesn't exist or isn't annotated @Test — the " +
+                "fixture would be parsed but never signed",
+            emptyMap<String, String>(),
+            FIXTURE_TESTS.filterValues { it !in signingTests },
+        )
+
+        val caseCountsByFile = declaredFiles.associateWith { loadTransactionData(it).size }
         val emptyFiles = caseCountsByFile.filterValues { it == 0 }.keys
         assertEquals("Fixture files that parsed to zero cases", emptySet<String>(), emptyFiles)
         assertEquals(
@@ -799,31 +817,33 @@ class ChainHelpersTest {
         private const val ARB_SWAP_JSON_FILE = "arb.json"
 
         /**
-         * Every fixture file in `androidTest/assets`, pinned by
-         * [fixtureCorpusMatchesDeclaredFileSet].
+         * Every fixture file in `androidTest/assets`, bound to the test that hashes its cases.
+         * Declaring a file is not enough on its own: [fixtureCorpusMatchesDeclaredFileSet] also
+         * requires the named test to exist, so a fixture can't sit in the corpus parsed but never
+         * signed.
          */
-        private val FIXTURE_FILES =
-            setOf(
-                BSC_JSON_FILE,
-                EVM_JSON_FILE,
-                COSMOS_JSON_FILE,
-                XRP_JSON_FILE,
-                TON_JSON_FILE,
-                SOLANA_JSON_FILE,
-                THORCHAIN_JSON_FILE,
-                MAYACHAIN_JSON_FILE,
-                TERRA_JSON_FILE,
-                UTXO_JSON_FILE,
-                POL_JSON_FILE,
-                DOT_JSON_FILE,
-                SUI_JSON_FILE,
-                TRON_JSON_FILE,
-                KUJIRA_JSON_FILE,
-                CARDANO_JSON_FILE,
-                THORCHAIN_SWAP_JSON_FILE,
-                MAYA_SWAP_JSON_FILE,
-                LIFI_SWAP_JSON_FILE,
-                ARB_SWAP_JSON_FILE,
+        private val FIXTURE_TESTS =
+            mapOf(
+                BSC_JSON_FILE to "sendBSCTest",
+                EVM_JSON_FILE to "sendEVMTest",
+                COSMOS_JSON_FILE to "sendCosmosTest",
+                XRP_JSON_FILE to "sendXRPTest",
+                TON_JSON_FILE to "sendTONTest",
+                SOLANA_JSON_FILE to "sendSolana",
+                THORCHAIN_JSON_FILE to "sendTHORchain",
+                MAYACHAIN_JSON_FILE to "sendMayaChainTest",
+                TERRA_JSON_FILE to "sendTerra",
+                UTXO_JSON_FILE to "sendUTXO",
+                POL_JSON_FILE to "sendPOLTest",
+                DOT_JSON_FILE to "sendPolkadot",
+                SUI_JSON_FILE to "sendSUI",
+                TRON_JSON_FILE to "sendTronTest",
+                KUJIRA_JSON_FILE to "sendKUJIRATest",
+                CARDANO_JSON_FILE to "sendCardano",
+                THORCHAIN_SWAP_JSON_FILE to "sendThorchainSwapTest",
+                MAYA_SWAP_JSON_FILE to "sendMayaChainSwapTest",
+                LIFI_SWAP_JSON_FILE to "oneInchLifiSwapTest",
+                ARB_SWAP_JSON_FILE to "oneInchArbitrumSwapTest",
             )
 
         private const val EXPECTED_CASE_COUNT = 67
