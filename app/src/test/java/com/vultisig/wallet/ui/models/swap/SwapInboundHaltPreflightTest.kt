@@ -96,7 +96,8 @@ internal class SwapInboundHaltPreflightTest {
                 Chain.Bitcoin,
                 memoValue = "=<:ETH.ETH:0xabc:1600000000/14400/0:va:50",
             )
-        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns false
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled(forceRefresh = true) } returns
+            false
 
         assertFailsWith<SwapException.TradingHalted> {
             preflight.assertSourceChainNotHalted(transaction)
@@ -113,13 +114,18 @@ internal class SwapInboundHaltPreflightTest {
                 Chain.Bitcoin,
                 memoValue = "=<:ETH.ETH:0xabc:1600000000/14400/0:va:50",
             )
-        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns true
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled(forceRefresh = true) } returns true
         coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
             listOf(inbound(chain = "BTC"))
 
         preflight.assertSourceChainNotHalted(transaction)
 
         coVerify(exactly = 1) { thorChainApi.getTHORChainInboundAddresses() }
+        // The sign-time re-check must bypass the mimir cache, or it would replay the value the
+        // placement-time check already read and verify nothing.
+        coVerify(exactly = 1) {
+            thorMimirRepository.isAdvancedSwapQueueEnabled(forceRefresh = true)
+        }
     }
 
     private fun transaction(

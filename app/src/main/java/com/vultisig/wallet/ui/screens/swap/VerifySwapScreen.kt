@@ -293,7 +293,7 @@ private fun VerifySwapScreen(
                             )
                             tx.limitExpiryLabel?.let { expiry ->
                                 Text(
-                                    text = expiry,
+                                    text = expiry.asString(),
                                     style = Theme.brockmann.supplementary.caption,
                                     color = Theme.v2.colors.text.secondary,
                                 )

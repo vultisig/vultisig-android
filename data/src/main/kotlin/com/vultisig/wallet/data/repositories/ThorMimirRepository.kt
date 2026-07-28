@@ -34,8 +34,12 @@ interface ThorMimirRepository {
      * mimir. Fails closed — any network or parse failure, and any value other than exactly `1`,
      * returns `false`: a `=<` order placed while the queue is disabled can execute as an
      * unprotected market swap, so the only value that unblocks placement is a live, confirmed `1`.
+     *
+     * [forceRefresh] bypasses (and re-seeds) the shared TTL cache. The sign-time re-check must pass
+     * it: signing usually happens well inside the TTL of the placement-time check, so a cached read
+     * would just replay that earlier answer and never see a queue that flipped off in between.
      */
-    suspend fun isAdvancedSwapQueueEnabled(): Boolean
+    suspend fun isAdvancedSwapQueueEnabled(forceRefresh: Boolean = false): Boolean
 }
 
 internal class ThorMimirRepositoryImpl @Inject constructor(private val thorChainApi: ThorChainApi) :
@@ -52,9 +56,9 @@ internal class ThorMimirRepositoryImpl @Inject constructor(private val thorChain
         return mimir.isOn(key)
     }
 
-    override suspend fun isAdvancedSwapQueueEnabled(): Boolean =
+    override suspend fun isAdvancedSwapQueueEnabled(forceRefresh: Boolean): Boolean =
         try {
-            mimir()[KEY_ADVANCED_SWAP_QUEUE.uppercase()] == 1L
+            mimir(forceRefresh)[KEY_ADVANCED_SWAP_QUEUE.uppercase()] == 1L
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
@@ -69,11 +73,11 @@ internal class ThorMimirRepositoryImpl @Inject constructor(private val thorChain
         return mimir.isOn("HALT${upper}LP") || mimir.isOn("HALT${upper}CHAIN")
     }
 
-    private suspend fun mimir(): Map<String, Long> =
+    private suspend fun mimir(forceRefresh: Boolean = false): Map<String, Long> =
         mutex.withLock {
             val now = nowMillis()
             val current = cached
-            if (current != null && now - cachedAtMillis < TTL_MILLIS) {
+            if (!forceRefresh && current != null && now - cachedAtMillis < TTL_MILLIS) {
                 current
             } else {
                 val fresh = thorChainApi.getMimir().mapKeys { it.key.uppercase() }

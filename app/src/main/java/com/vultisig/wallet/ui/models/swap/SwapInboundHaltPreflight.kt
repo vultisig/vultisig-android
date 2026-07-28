@@ -62,11 +62,15 @@ constructor(
      * starts with `=<`). The mimir can flip while the user sits on the confirmation screen, and a
      * `=<` order placed while the queue is disabled can execute as an unprotected market swap — so
      * the gate is re-run here, fail-closed, just before signing.
+     *
+     * The read forces a network refresh: the mimir cache is a shared 30s-TTL singleton, and signing
+     * normally happens within that window of the placement-time check, so a cached read would
+     * replay the value that already let the order through and verify nothing.
      */
     private suspend fun assertAdvancedSwapQueueEnabledForLimitOrder(transaction: SwapTransaction) {
         val memo = transaction.memo ?: return
         if (!memo.startsWith(LimitSwapMemo.PREFIX)) return
-        if (!thorMimirRepository.isAdvancedSwapQueueEnabled()) {
+        if (!thorMimirRepository.isAdvancedSwapQueueEnabled(forceRefresh = true)) {
             throw SwapException.TradingHalted(ADV_SWAP_QUEUE_DISABLED_MESSAGE)
         }
     }

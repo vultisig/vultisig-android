@@ -94,11 +94,12 @@ sealed interface SwapTransaction {
         // vault's own address. Surfaced on the verify screen so the destination is never a silent
         // default (#4858).
         val externalRecipient: String? = null,
-        // THORChain limit-order confirmation labels (#4154), non-null only for a `=<` order. Both
-        // are in-memory display strings for the verify screen ("Target Price: 1 BTC = $65,800.13",
-        // "24h") and never influence signing.
-        val limitOrderTargetPriceLabel: String? = null,
-        val limitOrderExpiryLabel: String? = null,
+        // THORChain limit-order confirmation values (#4154), non-null only for a `=<` order. Kept
+        // raw (buy-asset units per 1 sell unit, and the order's lifetime in hours) rather than as
+        // display strings so the verify screen can format them in the user's currency and locale.
+        // Read only for display; the signed rate is the one already encoded in the memo's LIM.
+        val limitOrderTargetPrice: BigDecimal? = null,
+        val limitOrderExpiryHours: Int? = null,
     ) : SwapTransaction
 
     companion object {

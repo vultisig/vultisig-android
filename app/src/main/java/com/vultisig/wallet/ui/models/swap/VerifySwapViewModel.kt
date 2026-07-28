@@ -112,7 +112,7 @@ internal data class SwapTransactionUiModel(
     // Price / expiry row on the confirmation screen. False (and null labels) for market swaps.
     val isLimitOrder: Boolean = false,
     val limitTargetPriceLabel: String? = null,
-    val limitExpiryLabel: String? = null,
+    val limitExpiryLabel: UiText? = null,
 )
 
 internal data class ValuedToken(

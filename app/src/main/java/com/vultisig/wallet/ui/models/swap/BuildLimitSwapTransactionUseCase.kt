@@ -17,8 +17,6 @@ import com.vultisig.wallet.data.swap.limit.fromThorchainFixedPoint
 import com.vultisig.wallet.data.swap.limit.thorchainMemoAssetChainPrefix
 import com.vultisig.wallet.data.swap.limit.toThorchainFixedPoint
 import java.math.BigDecimal
-import java.math.RoundingMode
-import java.text.DecimalFormat
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -53,9 +51,6 @@ constructor(
     private val swapGasCalculator: SwapGasCalculator,
     private val allowanceRepository: AllowanceRepository,
 ) {
-
-    private val fiatFormat = DecimalFormat("#,##0.00")
-    private val assetFormat = DecimalFormat("#,##0.########")
 
     data class Params(
         val vaultId: String,
@@ -174,8 +169,8 @@ constructor(
         val externalRecipient = params.destinationAddress.takeIf { it != dstToken.address }
 
         return RegularSwapTransaction(
-            limitOrderTargetPriceLabel = targetPriceLabel(srcToken, dstToken, params.targetPrice),
-            limitOrderExpiryLabel = expiryLabel(params.expiryHours),
+            limitOrderTargetPrice = params.targetPrice,
+            limitOrderExpiryHours = params.expiryHours,
             id = UUID.randomUUID().toString(),
             vaultId = params.vaultId,
             srcToken = srcToken,
@@ -212,26 +207,4 @@ constructor(
                 ),
         )
     }
-
-    /** "1 <buy> = $65,800.13" (fiat when the sell price is known, else in sell-asset units). */
-    private fun targetPriceLabel(srcToken: Coin, dstToken: Coin, targetPrice: BigDecimal): String {
-        val fiat = LimitOrderPricing.fiatPricePerBuyUnit(targetPrice, srcToken.usdPrice)
-        return if (fiat != null) {
-            "1 ${dstToken.ticker} = $${fiatFormat.format(fiat)}"
-        } else {
-            val sellPerBuy =
-                if (targetPrice.signum() > 0) {
-                    BigDecimal.ONE.divide(targetPrice, 8, RoundingMode.HALF_UP)
-                } else {
-                    BigDecimal.ZERO
-                }
-            "1 ${dstToken.ticker} = ${assetFormat.format(sellPerBuy)} ${srcToken.ticker}"
-        }
-    }
-
-    private fun expiryLabel(expiryHours: Int): String =
-        when (expiryHours) {
-            72 -> "3d"
-            else -> "${expiryHours}h"
-        }
 }

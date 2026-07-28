@@ -1,22 +1,35 @@
 package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.swap.limit.LimitSwapMemo
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
+import com.vultisig.wallet.ui.models.swap.LimitExpiryOption
+import com.vultisig.wallet.ui.models.swap.LimitOrderPricing
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.clampDstFiatToSrcFiat
 import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
+import com.vultisig.wallet.ui.utils.UiText
+import java.math.BigDecimal
+import java.math.BigInteger
+import java.math.RoundingMode
+import java.text.DecimalFormat
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
+import timber.log.Timber
 
 internal interface SwapTransactionToUiModelMapper :
     SuspendMapperFunc<SwapTransaction, SwapTransactionUiModel>
@@ -131,11 +144,29 @@ constructor(
                 provider.getSwapProviderId()
             }
 
-        // Limit-order confirmation labels, present only for a `=<` order built with them.
+        // Limit-order confirmation labels, present only for a `=<` order built with them. Both are
+        // formatted here rather than at build time so the price lands in the user's currency and
+        // the expiry reuses the same string resources as the form's pills.
         val isLimitMemo = from.memo?.startsWith(LimitSwapMemo.PREFIX) == true
         val regular = from as? SwapTransaction.RegularSwapTransaction
-        val limitTargetPriceLabel = regular?.limitOrderTargetPriceLabel?.takeIf { isLimitMemo }
-        val limitExpiryLabel = regular?.limitOrderExpiryLabel?.takeIf { isLimitMemo }
+        val limitTargetPrice = regular?.limitOrderTargetPrice?.takeIf { isLimitMemo }
+        val limitTargetPriceLabel =
+            limitTargetPrice?.let { targetPrice ->
+                limitTargetPriceLabel(
+                    srcToken = from.srcToken,
+                    dstToken = from.dstToken,
+                    targetPrice = targetPrice,
+                    currency = currency,
+                )
+            }
+        val limitExpiryLabel =
+            regular
+                ?.limitOrderExpiryHours
+                ?.takeIf { isLimitMemo }
+                ?.let { hours ->
+                    LimitExpiryOption.entries.firstOrNull { it.hours == hours }?.labelRes
+                }
+                ?.let { UiText.StringResource(it) }
 
         return SwapTransactionUiModel(
             src =
@@ -200,5 +231,55 @@ constructor(
             limitTargetPriceLabel = limitTargetPriceLabel,
             limitExpiryLabel = limitExpiryLabel,
         )
+    }
+
+    /**
+     * "1 <buy> = $65,800.13" — the target price expressed per whole buy unit, in the app currency
+     * (never a hardcoded `$`), matching how the limit form prices the same order. Falls back to
+     * sell-asset units when the sell asset has no price.
+     */
+    private suspend fun limitTargetPriceLabel(
+        srcToken: Coin,
+        dstToken: Coin,
+        targetPrice: BigDecimal,
+        currency: AppCurrency,
+    ): String {
+        val sellUnitFiat =
+            try {
+                convertTokenValueToFiat(
+                    srcToken,
+                    TokenValue(
+                        BigInteger.TEN.pow(srcToken.decimal),
+                        srcToken.ticker,
+                        srcToken.decimal,
+                    ),
+                    currency,
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to price the limit order's sell asset")
+                null
+            }
+        val fiat = LimitOrderPricing.fiatPricePerBuyUnit(targetPrice, sellUnitFiat?.value)
+        if (fiat != null) {
+            val formatted =
+                fiatValueToStringMapper(FiatValue(fiat, currency.ticker), asPrice = true)
+            return "1 ${dstToken.ticker} = $formatted"
+        }
+        val sellPerBuy =
+            if (targetPrice.signum() > 0) {
+                BigDecimal.ONE.divide(targetPrice, ASSET_PRICE_SCALE, RoundingMode.HALF_UP)
+            } else {
+                BigDecimal.ZERO
+            }
+        // DecimalFormat is not thread-safe, and this mapper is a singleton called from several
+        // screens' scopes, so the formatter is built per call rather than shared.
+        val assetFormat = DecimalFormat("#,##0.########")
+        return "1 ${dstToken.ticker} = ${assetFormat.format(sellPerBuy)} ${srcToken.ticker}"
+    }
+
+    private companion object {
+        const val ASSET_PRICE_SCALE = 8
     }
 }

@@ -833,7 +833,7 @@ private fun LimitOrderConfirmPreview() {
             hasConsentAllowance = false,
             isLimitOrder = true,
             limitTargetPriceLabel = "1 BTC = $65,800.13",
-            limitExpiryLabel = "24h",
+            limitExpiryLabel = UiText.StringResource(R.string.limit_swap_expiry_24h),
         )
 
     VerifySwapScreen(
@@ -896,7 +896,7 @@ private fun LimitOrderDonePreview() {
                 dstVaultName = "Fast-DKLS",
                 isLimitOrder = true,
                 limitTargetPriceLabel = "1 ETH = $1,952.78",
-                limitExpiryLabel = "24h",
+                limitExpiryLabel = UiText.StringResource(R.string.limit_swap_expiry_24h),
             ),
         isTransactionDetailVisible = true,
         onTransactionDetailVisibleChange = {},

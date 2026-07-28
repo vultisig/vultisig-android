@@ -115,6 +115,8 @@ constructor(
     // user's selected currency instead of hardcoding USD.
     private val sellUnitFiat = MutableStateFlow<FiatValue?>(null)
     private var marketPriceJob: Job? = null
+    // The pair the current market/target prices belong to, so a pair change can invalidate them.
+    private var pricedPairKey: String? = null
     private val assetFormat = DecimalFormat("#,##0.########")
 
     // User-chosen slippage tolerance in basis points, or null for "Auto" (each provider keeps its
@@ -255,6 +257,18 @@ constructor(
                 .collectLatest { (flagEnabled, mode, src, dst) ->
                     val srcCoin = src?.account?.token
                     val dstCoin = dst?.account?.token
+                    // Drop the previous pair's prices before refetching. They are quoted in the
+                    // old pair's units, so leaving them live would keep the CTA enabled against a
+                    // stale rate — and a tap during the fetch window would sign that wrong-pair
+                    // rate into the memo's LIM. A custom (preset-less) price would otherwise never
+                    // be replaced at all, since fetchMarketPrice only reseeds a null target.
+                    val pairKey = pairKeyOf(srcCoin, dstCoin)
+                    if (pairKey != pricedPairKey) {
+                        pricedPairKey = pairKey
+                        marketPriceJob?.cancel()
+                        marketTargetPrice.value = null
+                        limitTargetPrice.value = null
+                    }
                     if (
                         mode == SwapMode.Limit &&
                             flagEnabled &&
@@ -355,6 +369,14 @@ constructor(
         // on-chain deposit) before the UI updates.
         if (isLoadingNextScreen) return
 
+        // Same hard gate as swap(): the recipient is baked into the `=<` memo's dest_addr, and it
+        // survives a destination-chain change unvalidated, so a stale or malformed address must be
+        // rejected here rather than signed into an order that pays out to nowhere.
+        externalRecipientError()?.let { error ->
+            showError(error)
+            return
+        }
+
         val targetPrice = limitTargetPrice.value
         if (targetPrice == null) {
             showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
@@ -425,6 +447,9 @@ constructor(
             isLoadingNextScreen = false
         }
     }
+
+    private fun pairKeyOf(srcCoin: Coin?, dstCoin: Coin?): String? =
+        if (srcCoin == null || dstCoin == null) null else "${srcCoin.id}>${dstCoin.id}"
 
     /**
      * Fetches the affiliate-free reference price (buy units per sell unit) and seeds the preset.
