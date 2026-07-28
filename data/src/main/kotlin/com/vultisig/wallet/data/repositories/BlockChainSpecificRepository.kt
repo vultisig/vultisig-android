@@ -328,9 +328,7 @@ constructor(
                                 sendMaxAmount = isMaxAmountEnabled,
                             ),
                         utxos =
-                            dashUtxos
-                                ?.filter { it.amount > chain.getDustThreshold.toLong() }
-                                ?.sortedBy(UtxoInfo::amount)
+                            dashUtxos?.excludingDust(chain)
                                 ?: blockChairApi
                                     .getAllUtxos(chain = chain, address = address)
                                     .utxos
@@ -724,18 +722,22 @@ constructor(
             }
         }
 
+    /** Shared by every UTXO-chain data source, Blockchair or Dash's own RPC. */
+    private fun List<UtxoInfo>.excludingDust(chain: Chain): List<UtxoInfo> {
+        val dustThreshold = chain.getDustThreshold.toLong()
+        return filter { it.amount > dustThreshold }.sortedBy(UtxoInfo::amount)
+    }
+
     /**
      * Matches the SDK's spendable-UTXO filter (parity with iOS/Windows) so coin selection can't
      * pick an input that looks present in Blockchair's list but isn't actually usable yet.
      */
-    private fun List<BlockChairUtxoInfo>.toSpendableUtxos(chain: Chain): List<UtxoInfo> {
-        val dustThreshold = chain.getDustThreshold.toLong()
-        return filter { it.value > dustThreshold && it.isSpendable != false && it.blockId > 0 }
-            .sortedBy { it.value }
+    private fun List<BlockChairUtxoInfo>.toSpendableUtxos(chain: Chain): List<UtxoInfo> =
+        filter { it.isSpendable != false && it.blockId > 0 && it.index >= 0 }
             .map {
                 UtxoInfo(hash = it.transactionHash, amount = it.value, index = it.index.toUInt())
             }
-    }
+            .excludingDust(chain)
 
     private fun isThorchainRouterChain(chain: Chain): Boolean =
         chain == Chain.Ethereum ||

@@ -50,6 +50,11 @@ constructor(
     companion object {
         private const val BASE_URL = "https://api.vultisig.com/blockchair"
         private const val UTXO_PAGE_SIZE = 1000
+
+        // Blockchair rejects any offset beyond this with HTTP 400 ("Offset value can't be larger
+        // than 1000000"), so it doubles as a hard backstop against an endless loop if the server
+        // ever kept returning full pages.
+        private const val MAX_UTXO_OFFSET = 1_000_000
     }
 
     private fun getChainName(chain: Chain): String =
@@ -92,10 +97,15 @@ constructor(
         var offset = 0
 
         while (true) {
+            check(offset <= MAX_UTXO_OFFSET) {
+                "Blockchair pagination exceeded the max offset for $chain:$address"
+            }
             val response =
                 httpClient.get(
                     "$BASE_URL/$chainName/dashboards/address/$address" +
-                        "?state=latest&limit=$UTXO_PAGE_SIZE&offset=$offset"
+                        // limit/offset take a "transactions,utxo" pair; zeroing the transactions
+                        // side skips fetching hashes this method never reads.
+                        "?state=latest&limit=0,$UTXO_PAGE_SIZE&offset=0,$offset"
                 ) {
                     header("Content-Type", "application/json")
                 }

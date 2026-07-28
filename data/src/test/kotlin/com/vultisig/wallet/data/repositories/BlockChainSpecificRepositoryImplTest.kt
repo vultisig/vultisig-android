@@ -109,34 +109,35 @@ internal class BlockChainSpecificRepositoryImplTest {
     }
 
     @Test
-    fun `Bitcoin UTXO selection excludes dust, unconfirmed, and non-spendable entries`() = runTest {
-        val coin = bitcoinCoin()
-        val blockChairApi =
-            mockk<BlockChairApi> {
-                coEvery { getAllUtxos(Chain.Bitcoin, SOURCE_ADDRESS) } returns
-                    blockChairInfo(rawUtxoFixture())
-            }
+    fun `Bitcoin UTXO selection excludes dust, unconfirmed, non-spendable, and negative-index entries`() =
+        runTest {
+            val coin = bitcoinCoin()
+            val blockChairApi =
+                mockk<BlockChairApi> {
+                    coEvery { getAllUtxos(Chain.Bitcoin, SOURCE_ADDRESS) } returns
+                        blockChairInfo(rawUtxoFixture())
+                }
 
-        val result =
-            repository(blockChairApi = blockChairApi)
-                .getSpecific(
-                    chain = Chain.Bitcoin,
-                    address = SOURCE_ADDRESS,
-                    token = coin,
-                    gasFee = TokenValue(BigInteger.ONE, coin),
-                    isSwap = false,
-                    isMaxAmountEnabled = false,
-                    isDeposit = false,
-                )
+            val result =
+                repository(blockChairApi = blockChairApi)
+                    .getSpecific(
+                        chain = Chain.Bitcoin,
+                        address = SOURCE_ADDRESS,
+                        token = coin,
+                        gasFee = TokenValue(BigInteger.ONE, coin),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                    )
 
-        assertEquals(
-            listOf(
-                UtxoInfo(hash = "tx-confirmed-small", amount = 10_000, index = 0u),
-                UtxoInfo(hash = "tx-confirmed-large", amount = 50_000, index = 0u),
-            ),
-            result.utxos,
-        )
-    }
+            assertEquals(
+                listOf(
+                    UtxoInfo(hash = "tx-confirmed-small", amount = 10_000, index = 0u),
+                    UtxoInfo(hash = "tx-confirmed-large", amount = 50_000, index = 0u),
+                ),
+                result.utxos,
+            )
+        }
 
     @Test
     fun `Dash-Blockchair-fallback and the generic UTXO branch apply the identical spendable filter`() =
@@ -798,6 +799,12 @@ internal class BlockChainSpecificRepositoryImplTest {
                 value = 20_000,
                 blockId = 800_000,
                 isSpendable = false,
+            ),
+            BlockChairUtxoInfo(
+                transactionHash = "tx-negative-index",
+                index = -1,
+                value = 30_000,
+                blockId = 800_000,
             ),
             BlockChairUtxoInfo(
                 transactionHash = "tx-confirmed-large",

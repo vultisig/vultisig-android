@@ -87,7 +87,7 @@ class BlockChairApiGetAllUtxosTest {
 
         assertEquals(3, result.utxos.size)
         assertEquals(1, offsets.size)
-        assertEquals("0", offsets.single())
+        assertEquals("0,0", offsets.single())
     }
 
     @Test
@@ -105,7 +105,7 @@ class BlockChairApiGetAllUtxosTest {
         val result = api.getAllUtxos(Chain.Bitcoin, "addr")
 
         assertEquals(1200, result.utxos.size)
-        assertEquals(listOf("0", "1000"), offsets)
+        assertEquals(listOf("0,0", "0,1000"), offsets)
         // every UTXO from both pages made it into the merged result, not just the first page's
         assertTrue(result.utxos.any { it.transactionHash == "tx0" })
         assertTrue(result.utxos.any { it.transactionHash == "tx1199" })
@@ -131,7 +131,7 @@ class BlockChairApiGetAllUtxosTest {
             val result = api.getAllUtxos(Chain.Bitcoin, "addr")
 
             assertEquals(1200, result.utxos.size)
-            assertEquals(listOf("0", "1000"), offsets)
+            assertEquals(listOf("0,0", "0,1000"), offsets)
         }
 
     @Test
