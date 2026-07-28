@@ -163,20 +163,19 @@ internal fun SendFormUiModel.isContinueDisabled(): Boolean =
  * would reject can neither pass the form nor slip through a submit that races the form's
  * validation.
  *
- * The node counts the memo's encoded length (Cosmos SDK `ValidateMemo` measures UTF-8 bytes), so a
- * multi-byte memo can sit within the character ceiling and still be rejected; whichever measure
- * exceeds the limit blocks. The reported length is that same larger measure, so the inline error
- * always names a number above the limit instead of a character count that looks like it fits.
+ * Measured in UTF-8 bytes, matching what the node compares against the limit (Cosmos SDK
+ * `ValidateMemo` measures the encoded length, so a multi-byte memo can sit within the limit as a
+ * character count and still be rejected). The error reports that same byte length, so it never
+ * names a number that looks like it fits.
  *
  * @param chain the chain the memo will be signed for; `null` (no chain selected yet) never errors.
  * @return a [UiText] error naming the current length and the limit, or null when the memo fits.
  */
 internal fun memoLengthErrorOrNull(chain: Chain?, memo: String): UiText? {
     val limit = chain?.maxMemoCharacters ?: return null
-    val characters = memo.codePointCount(0, memo.length)
-    val length = maxOf(characters, memo.toByteArray(Charsets.UTF_8).size)
-    if (length <= limit) return null
-    return UiText.FormattedText(string.send_error_memo_too_long, listOf(length, limit))
+    val bytes = memo.toByteArray(Charsets.UTF_8).size
+    if (bytes <= limit) return null
+    return UiText.FormattedText(string.send_error_memo_too_long, listOf(bytes, limit))
 }
 
 internal data class SendSrc(val address: Address, val account: Account)

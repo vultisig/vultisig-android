@@ -550,14 +550,18 @@ val Chain.cosmosNativeDenom: String?
  *
  * Cosmos-SDK chains expose this as `max_memo_characters` in their auth-module params and reject a
  * longer memo at broadcast ("memo too large") — i.e. after signing — so the value has to be known
- * before keysign starts. These are the per-chain params, not one shared ceiling: Cosmos Hub raises
- * the SDK default, the rest keep it.
+ * before keysign starts. Despite the param's name the node compares it against the memo's encoded
+ * length (`ValidateMemo` measures the UTF-8 byte length), so this is a byte ceiling. These are the
+ * per-chain values, not one shared ceiling: Cosmos Hub raises the SDK default, THORChain publishes
+ * a lower one, the rest keep it.
  */
 val Chain.maxMemoCharacters: Int?
     get() =
         when (this) {
             // cosmoshub-4 raises max_memo_characters above the SDK default.
             Chain.GaiaChain -> 512
+            // THORChain documents a 250-byte memo limit and ignores anything longer.
+            Chain.ThorChain -> 250
             // Cosmos SDK default max_memo_characters. Noble's 256 is the ceiling named in the
             // broadcast rejection this limit exists to prevent.
             Chain.Noble,
@@ -568,7 +572,6 @@ val Chain.maxMemoCharacters: Int?
             Chain.TerraClassic,
             Chain.Akash,
             Chain.Qbtc,
-            Chain.ThorChain,
             Chain.MayaChain -> 256
             // Other families carry memos differently (XRP memo blobs, TON comments, Cardano
             // metadata) and publish no comparable ceiling, so nothing is enforced client-side.

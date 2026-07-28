@@ -97,6 +97,12 @@ internal class SendFormContinueGateTest {
     }
 
     @Test
+    fun `thorchain enforces its documented 250 byte limit`() {
+        assertNull(memoLengthErrorOrNull(Chain.ThorChain, "a".repeat(250)))
+        assertNotNull(memoLengthErrorOrNull(Chain.ThorChain, "a".repeat(251)))
+    }
+
+    @Test
     fun `chains without a published memo ceiling never error`() {
         assertNull(memoLengthErrorOrNull(Chain.Ethereum, "a".repeat(5_000)))
         assertNull(memoLengthErrorOrNull(null, "a".repeat(5_000)))
@@ -112,8 +118,8 @@ internal class SendFormContinueGateTest {
 
     @Test
     fun `memo within the character limit but over the node's byte limit errors`() {
-        // 200 emoji: 200 characters, but 800 UTF-8 bytes — the length the node measures, and the
-        // one reported so the error doesn't name a number that looks under the limit.
+        // 200 emoji: 200 characters, but 800 UTF-8 bytes — the length the node measures against the
+        // limit, and the one reported so the error doesn't name a number that looks like it fits.
         val error = memoLengthErrorOrNull(Chain.Noble, "😀".repeat(200)) as UiText.FormattedText
 
         assertEquals(listOf<Any>(800, 256), error.formatArgs)
