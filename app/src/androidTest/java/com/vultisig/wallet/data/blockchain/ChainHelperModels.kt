@@ -1,6 +1,8 @@
 import com.vultisig.wallet.data.models.payload.SignDirect
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNames
 import vultisig.keysign.v1.SignTon
 
 @Serializable
@@ -29,12 +31,14 @@ data class KeysignPayload(
     var triggerSmartContractPayload: TriggerSmartContractPayload? = null,
 )
 
+/** Snake-case aliases mirror `TronTriggerSmartContractPayload` in commondata and the iOS corpus. */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class TriggerSmartContractPayload(
-    val ownerAddress: String,
-    val contractAddress: String,
-    val callValue: String? = null,
-    val callDataValue: String? = null,
+    @JsonNames("owner_address") val ownerAddress: String,
+    @JsonNames("contract_address") val contractAddress: String,
+    @JsonNames("call_value") val callValue: String? = null,
+    @JsonNames("call_token_value") val callDataValue: String? = null,
     val data: String,
 )
 
@@ -145,14 +149,22 @@ data class TonSpecific(
     val bounceable: Boolean,
 )
 
+/**
+ * `program_id` / `compute_limit` are the field names in `SolanaSpecific` (commondata
+ * `blockchain_specific.proto`) and are what the iOS and TS-core fixture corpora use; this corpus
+ * historically spelled them `has_program_id` / `priority_limit`. Both spellings are accepted so a
+ * fixture can be copied verbatim between repos without a field silently deserializing to its
+ * default — which would change the signed message while the test still passed.
+ */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class SolanaSpecific(
     @SerialName("recent_block_hash") val recentBlockHash: String,
     @SerialName("priority_fee") val priorityFee: String,
-    @SerialName("has_program_id") val hasProgramId: Boolean? = false,
+    @SerialName("has_program_id") @JsonNames("program_id") val hasProgramId: Boolean? = false,
     @SerialName("from_token_associated_address") val fromAddressPubKey: String? = null,
     @SerialName("to_token_associated_address") val toAddressPubKey: String? = null,
-    @SerialName("priority_limit") val priorityLimit: String? = null,
+    @SerialName("priority_limit") @JsonNames("compute_limit") val priorityLimit: String? = null,
 )
 
 @Serializable
