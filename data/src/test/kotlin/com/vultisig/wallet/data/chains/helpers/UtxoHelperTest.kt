@@ -578,6 +578,71 @@ class UtxoHelperTest {
     }
 
     @Test
+    fun `serializeUnsignedTransaction - throws when the OP_RETURN memo exceeds the OP_PUSHDATA2 limit`() {
+        val helper = newHelper()
+        val plan = transactionPlan(utxos = listOf(Triple("11".repeat(32), 0, -1)), amount = 9_500L)
+        val toScript = Numeric.hexStringToByteArray("0014" + "aa".repeat(20))
+        val oversizedMemo = ByteArray(0x10000) // one byte past the OP_PUSHDATA2 limit
+
+        assertThrows(IllegalArgumentException::class.java) {
+            helper.serializeUnsignedTransaction(plan, toScript, null, oversizedMemo)
+        }
+    }
+
+    @Test
+    fun `serializeUnsignedTransaction - 300 inputs use the multi-byte CompactSize input count`() {
+        val helper = newHelper()
+        val utxos = (0 until 300).map { i -> Triple("%064x".format(i), i, -1) }
+        val plan = transactionPlan(utxos = utxos, amount = 9_500L)
+        val toScript = Numeric.hexStringToByteArray("0014" + "aa".repeat(20))
+
+        val decoded =
+            decodeUnsignedTx(
+                Numeric.toHexStringNoPrefix(
+                    helper.serializeUnsignedTransaction(plan, toScript, null, null)
+                )
+            )
+
+        assertEquals(300, decoded.inputs.size)
+        assertEquals("%064x".format(0), decoded.inputs.first().prevoutHash)
+        assertEquals("%064x".format(299), decoded.inputs.last().prevoutHash)
+        assertTrue(decoded.inputs.all { it.sequence == -1 })
+    }
+
+    @Test
+    fun `serializeUnsignedTransaction - multiple inputs, change, and a memo all combine correctly`() {
+        val helper = newHelper()
+        val plan =
+            transactionPlan(
+                utxos = listOf(Triple("11".repeat(32), 0, -1), Triple("22".repeat(32), 1, -1)),
+                amount = 9_500L,
+                change = 500L,
+            )
+        val toScript = Numeric.hexStringToByteArray("0014" + "aa".repeat(20))
+        val changeScript = Numeric.hexStringToByteArray("0014" + "bb".repeat(20))
+        val memo = "combo-memo".toByteArray()
+
+        val decoded =
+            decodeUnsignedTx(
+                Numeric.toHexStringNoPrefix(
+                    helper.serializeUnsignedTransaction(plan, toScript, changeScript, memo)
+                )
+            )
+
+        assertEquals(2, decoded.inputs.size)
+        assertEquals(3, decoded.outputs.size)
+        assertEquals(9_500L, decoded.outputs[0].amount)
+        assertEquals("0014" + "aa".repeat(20), decoded.outputs[0].scriptHex)
+        assertEquals(500L, decoded.outputs[1].amount)
+        assertEquals("0014" + "bb".repeat(20), decoded.outputs[1].scriptHex)
+        assertEquals(0L, decoded.outputs[2].amount)
+        assertEquals(
+            "6a" + "%02x".format(memo.size) + Numeric.toHexStringNoPrefix(memo),
+            decoded.outputs[2].scriptHex,
+        )
+    }
+
+    @Test
     fun `getUnsignedTransactionHex - end to end matches the plan's amount and change`() {
         val helper = UtxoHelper(CoinType.BITCOIN, "", "")
         val payload = utxoPayload(utxoAmount = 100_000L, toAmount = BigInteger.valueOf(10_000L))

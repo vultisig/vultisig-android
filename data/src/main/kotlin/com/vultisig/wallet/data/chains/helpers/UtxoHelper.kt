@@ -398,29 +398,22 @@ class UtxoHelper(
         val signingInput = getBitcoinSigningInput(keysignPayload)
         val plan = planTransaction(signingInput)
 
-        val toScript = BitcoinScript.lockScriptForAddress(keysignPayload.toAddress, coinType).data()
-        require(toScript.isNotEmpty()) {
-            "Security Scanner: '${keysignPayload.toAddress}' is not a valid $coinType address"
-        }
+        val toScript = requireLockScript(keysignPayload.toAddress)
         val changeScript =
-            if (plan.change > 0) {
-                BitcoinScript.lockScriptForAddress(keysignPayload.coin.address, coinType)
-                    .data()
-                    .also {
-                        require(it.isNotEmpty()) {
-                            "Security Scanner: '${keysignPayload.coin.address}' is not a valid " +
-                                "$coinType address"
-                        }
-                    }
-            } else {
-                null
-            }
+            if (plan.change > 0) requireLockScript(keysignPayload.coin.address) else null
         val opReturnData = signingInput.outputOpReturn.toByteArray().takeIf { it.isNotEmpty() }
 
         return Numeric.toHexStringNoPrefix(
             serializeUnsignedTransaction(plan, toScript, changeScript, opReturnData)
         )
     }
+
+    private fun requireLockScript(address: String): ByteArray =
+        BitcoinScript.lockScriptForAddress(address, coinType).data().also {
+            require(it.isNotEmpty()) {
+                "Security Scanner: '$address' is not a valid $coinType address"
+            }
+        }
 
     /**
      * Pure serialization step for [getUnsignedTransactionHex], split out so it is unit-testable
