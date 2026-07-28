@@ -257,6 +257,7 @@ internal class SwapFormViewModelTest {
                 swapValidator = swapValidator,
                 swapTokenSelector = swapTokenSelector,
                 swapQuoteManager = swapQuoteManager,
+                swapQuoteRepository = swapQuoteRepository,
                 swapTransactionBuilder =
                     SwapTransactionBuilder(swapGasCalculator, allowanceRepository),
                 swapInputCollector =
@@ -3854,6 +3855,54 @@ internal class SwapFormViewModelTest {
             secondPairGate.complete(Unit)
             advanceUntilIdle()
             assertTrue(vm.uiState.value.limitOrder?.isPlaceOrderEnabled == true)
+        }
+
+    @Test
+    fun `limit tab is offered only for a pair THORChain itself can route`() =
+        runTest(mainDispatcher) {
+            coEvery { featureFlagRepository.getFeatureFlags() } returns
+                FeatureFlagJson(isLimitSwapEnabled = true)
+            coEvery {
+                limitMarketPriceRepository.getMarketPrice(any(), any(), any(), any())
+            } returns BigDecimal("0.05")
+            // The pair quotes, but not through THORChain — a limit order could never be placed on
+            // it, so the tab must stay closed even though both chains appear in a limit memo.
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.SWAPKIT)
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            assertFalse(vm.uiState.value.isLimitTabEnabled)
+            assertNull(vm.uiState.value.limitOrder)
+        }
+
+    @Test
+    fun `losing THORChain routing drops the user out of the limit tab`() =
+        runTest(mainDispatcher) {
+            coEvery { featureFlagRepository.getFeatureFlags() } returns
+                FeatureFlagJson(isLimitSwapEnabled = true)
+            coEvery {
+                limitMarketPriceRepository.getMarketPrice(any(), any(), any(), any())
+            } returns BigDecimal("0.05")
+            val eligibilityVersion = MutableStateFlow(0)
+            every { swapQuoteRepository.swapEligibilityVersion } returns eligibilityVersion
+
+            val vm = createViewModelWithSwapTokens()
+            vm.onSelectSwapMode(SwapMode.Limit)
+            advanceUntilIdle()
+            assertTrue(vm.uiState.value.isLimitTabEnabled)
+            assertEquals(SwapMode.Limit, vm.uiState.value.swapMode)
+
+            // Live pool eligibility lands and the pair turns out not to route through THORChain —
+            // the Limit form must not stay up over a pair that can never place an order.
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.SWAPKIT)
+            eligibilityVersion.value = 1
+            advanceUntilIdle()
+
+            assertFalse(vm.uiState.value.isLimitTabEnabled)
+            assertEquals(SwapMode.Market, vm.uiState.value.swapMode)
         }
 
     @Test

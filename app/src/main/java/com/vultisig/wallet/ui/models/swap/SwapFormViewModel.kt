@@ -14,14 +14,15 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
+import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
-import com.vultisig.wallet.data.swap.limit.isThorchainRoutable
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
@@ -64,6 +65,7 @@ constructor(
     private val swapValidator: SwapValidator,
     private val swapTokenSelector: SwapTokenSelector,
     private val swapQuoteManager: SwapQuoteManager,
+    private val swapQuoteRepository: SwapQuoteRepository,
     private val swapTransactionBuilder: SwapTransactionBuilder,
     private val swapInputCollector: SwapInputCollector,
     private val swapQuotePipelineControllerFactory: SwapQuotePipelineController.Factory,
@@ -244,17 +246,21 @@ constructor(
             isLimitFlagEnabled.value = featureFlagRepository.getFeatureFlags().isLimitSwapEnabled
         }
         // Fetch a fresh reference price whenever the Limit tab is shown with a routable pair. The
-        // flag is part of the source set so a late-resolving remote flag re-fires the fetch.
+        // flag is part of the source set so a late-resolving remote flag re-fires the fetch, and so
+        // is the pool-eligibility version, so a pair picked before the live pools land is
+        // re-evaluated once they do.
         viewModelScope.launch {
-            combine(isLimitFlagEnabled, swapMode, selectedSrc, selectedDst) {
-                    flagEnabled,
-                    mode,
-                    src,
-                    dst ->
-                    LimitFetchTrigger(flagEnabled, mode, src, dst)
+            combine(
+                    isLimitFlagEnabled,
+                    swapMode,
+                    selectedSrc,
+                    selectedDst,
+                    swapQuoteRepository.swapEligibilityVersion,
+                ) { flagEnabled, mode, src, dst, eligibilityVersion ->
+                    LimitFetchTrigger(flagEnabled, mode, src, dst, eligibilityVersion)
                 }
                 .distinctUntilChanged()
-                .collectLatest { (flagEnabled, mode, src, dst) ->
+                .collectLatest { (flagEnabled, mode, src, dst, _) ->
                     val srcCoin = src?.account?.token
                     val dstCoin = dst?.account?.token
                     // Drop the previous pair's prices before refetching. They are quoted in the
@@ -274,8 +280,7 @@ constructor(
                             flagEnabled &&
                             srcCoin != null &&
                             dstCoin != null &&
-                            isThorchainRoutable(srcCoin.chain) &&
-                            isThorchainRoutable(dstCoin.chain)
+                            isLimitPairSupported(srcCoin, dstCoin)
                     ) {
                         fetchMarketPrice(srcCoin, dstCoin)
                     }
@@ -332,7 +337,19 @@ constructor(
         val mode: SwapMode,
         val src: SendSrc?,
         val dst: SendSrc?,
+        val eligibilityVersion: Int,
     )
+
+    /**
+     * A limit order is a THORChain-only product, so the tab is offered only for a pair THORChain
+     * itself can route. This asks the live provider table (pool-aware, per token) rather than
+     * `isThorchainRoutable`, which only says the *chain* can appear in a memo — that would offer
+     * the tab for, say, an ETH token with no THORChain pool, whose placement could only fail.
+     */
+    private fun isLimitPairSupported(srcCoin: Coin?, dstCoin: Coin?): Boolean =
+        srcCoin != null &&
+            dstCoin != null &&
+            SwapProvider.THORCHAIN in swapQuoteRepository.getEligibleProviders(srcCoin, dstCoin)
 
     fun onSelectSwapMode(mode: SwapMode) {
         swapMode.value = mode
@@ -451,9 +468,7 @@ constructor(
     private fun pairKeyOf(srcCoin: Coin?, dstCoin: Coin?): String? =
         if (srcCoin == null || dstCoin == null) null else "${srcCoin.id}>${dstCoin.id}"
 
-    /**
-     * Fetches the affiliate-free reference price (buy units per sell unit) and seeds the preset.
-     */
+    /** Fetches the market reference price (buy units per sell unit) and seeds the preset. */
     private fun fetchMarketPrice(src: Coin, dst: Coin) {
         marketPriceJob?.cancel()
         marketPriceJob =
@@ -465,6 +480,9 @@ constructor(
                         fromCoin = src,
                         toCoin = dst,
                         sourcePrice = src.usdPrice ?: BigDecimal.ZERO,
+                        // Quote to where the order would actually pay out, so the reference price
+                        // matches the route the placed order takes.
+                        destinationAddress = externalRecipient.value ?: dst.address,
                     )
                 if (price.signum() > 0) {
                     // The probe divides at scale 18; normalize here so the market price and every
@@ -489,14 +507,14 @@ constructor(
     private suspend fun updateLimitOrderState() {
         val srcCoin = selectedSrc.value?.account?.token
         val dstCoin = selectedDst.value?.account?.token
-        val enabled =
-            isLimitFlagEnabled.value &&
-                srcCoin != null &&
-                dstCoin != null &&
-                isThorchainRoutable(srcCoin.chain) &&
-                isThorchainRoutable(dstCoin.chain)
+        val enabled = isLimitFlagEnabled.value && isLimitPairSupported(srcCoin, dstCoin)
 
         if (!enabled || srcCoin == null || dstCoin == null) {
+            // The tab is about to disappear from under the user — a pair swapped while the Limit
+            // form was open can leave the form showing for a pair THORChain can't route at all.
+            if (swapMode.value == SwapMode.Limit) {
+                onSelectSwapMode(SwapMode.Market)
+            }
             _uiState.update { it.copy(isLimitTabEnabled = enabled, limitOrder = null) }
             return
         }

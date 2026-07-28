@@ -1,6 +1,8 @@
 package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.ThorChainSwapQuoteRequest
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
@@ -9,6 +11,7 @@ import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.models.swapAssetName
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.ThorMimirRepository
 import com.vultisig.wallet.data.swap.limit.LimitSwapMemo
@@ -21,14 +24,16 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import timber.log.Timber
 
 /**
  * Assembles the [RegularSwapTransaction] for a THORChain limit order.
  *
  * Mirrors the Vultisig SDK's `buildLimitSwapKeysignPayload`, reusing the market swap's keysign
- * pipeline (`SwapPayload.ThorChain` + memo → verify → keysign). The only substitutions are a
- * locally-built `=<` memo instead of a server quote memo, and inbound/router addresses fetched
- * directly (a limit order never requests a market quote).
+ * pipeline (`SwapPayload.ThorChain` + memo → verify → keysign). The only substitution is a
+ * locally-built `=<` memo in place of the server quote's memo; the route itself is an ordinary
+ * THORChain swap, so the inbound vault and the ERC20 router are resolved exactly as the market path
+ * resolves them.
  *
  * How the memo reaches the chain depends on the source asset, exactly like the market path:
  * - **native RUNE** → `MsgDeposit` on THORChain (no inbound vault; the deposit target is the
@@ -113,16 +118,21 @@ constructor(
                 } ?: error("No live THORChain inbound for ${srcToken.chain}")
             }
 
-        val router = inbound?.router?.takeIf { it.isNotBlank() }
         // An EVM ERC20 must deposit through the router's depositWithExpiry (which carries the
-        // memo).
-        // With no router it would fall back to a plain transfer that drops the memo and strands the
-        // tokens on the inbound vault — never a protected limit order — so fail closed instead.
-        if (isEvmToken && router == null) {
-            error(
-                "THORChain has no router for ${srcToken.chain}; cannot place an ERC20 limit order"
-            )
-        }
+        // memo). With no router it would fall back to a plain transfer that drops the memo and
+        // strands the tokens on the inbound vault — never a protected limit order — so fail closed
+        // instead. A limit order settles on the ordinary THORChain swap route, so the router comes
+        // from the ordinary swap quote, exactly as the market path resolves it.
+        val router =
+            if (isEvmToken) {
+                fetchSwapRouter(params)
+                    ?: error(
+                        "THORChain has no router for ${srcToken.chain}; cannot place an ERC20 " +
+                            "limit order"
+                    )
+            } else {
+                null
+            }
         val vaultAddress = inbound?.address ?: params.srcAddress
         val isRouterDeposit = isEvmToken
         val dstAddress =
@@ -206,5 +216,37 @@ constructor(
                     )
                 ),
         )
+    }
+
+    /**
+     * The chain's router contract for this swap, read off an ordinary THORChain swap quote — the
+     * node sets it whenever the inbound asset is an ERC20. Null when the node returns no router, or
+     * when the quote itself fails; the caller fails closed on either, since a router-less ERC20
+     * deposit would strand the tokens.
+     */
+    private suspend fun fetchSwapRouter(params: Params): String? {
+        val quote =
+            thorChainApi.getSwapQuotes(
+                ThorChainSwapQuoteRequest(
+                    address = params.destinationAddress,
+                    fromAsset = params.srcToken.swapAssetName(),
+                    toAsset = params.dstToken.swapAssetName(),
+                    amount =
+                        toThorchainFixedPoint(params.srcTokenValue.value, params.srcToken.decimal)
+                            .toString(),
+                    interval = "1",
+                    referralCode = "",
+                    bpsDiscount = 0,
+                    streamingQuantity = 0,
+                )
+            )
+        return when (quote) {
+            is THORChainSwapQuoteDeserialized.Result ->
+                quote.data.router?.takeIf { it.isNotBlank() }
+            is THORChainSwapQuoteDeserialized.Error -> {
+                Timber.w("THORChain router quote failed: %s", quote.error.message)
+                null
+            }
+        }
     }
 }

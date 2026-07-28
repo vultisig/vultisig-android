@@ -1,6 +1,9 @@
 package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -10,6 +13,7 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.ThorMimirRepository
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -35,6 +39,7 @@ internal class BuildLimitSwapTransactionUseCaseTest {
         )
 
     private val btcInbound = "bc1qasgardinboundvaultxxxxxxxxxxxxxxxxxx0wlh"
+    private val thorRouter = "0xD37BbE5744D730a1d98d8DC97c42F0Ca46aD7146"
     private val ethAddress = "0x742d35Cc6634C0532925a3b844Bc9e7595f12345"
     private val btc =
         coin(Chain.Bitcoin, "BTC", address = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", 8, true)
@@ -69,7 +74,7 @@ internal class BuildLimitSwapTransactionUseCaseTest {
     fun `native gas-asset source deposits to the inbound vault with a limit memo`() = runTest {
         coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns true
         coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
-            listOf(inbound("BTC", btcInbound, router = null))
+            listOf(inbound("BTC", btcInbound))
         coEvery {
             swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
         } returns mockk(relaxed = true)
@@ -118,41 +123,56 @@ internal class BuildLimitSwapTransactionUseCaseTest {
     }
 
     @Test
-    fun `fails closed when an ERC20 source has no THORChain router`() = runTest {
-        val usdc =
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "USDC",
-                logo = "",
-                address = ethAddress,
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-                isNativeToken = false,
-            )
+    fun `ERC20 source deposits through the router the swap quote reports`() = runTest {
         coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns true
-        // Inbound present but with no router — a plain transfer would drop the memo and strand the
-        // tokens instead of placing a protected order, so build() must reject the route.
         coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
-            listOf(inbound("ETH", "0xInboundVault", router = null))
+            listOf(inbound("ETH", "0xInboundVault"))
+        coEvery { thorChainApi.getSwapQuotes(any()) } returns quote(router = thorRouter)
         coEvery {
             swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
         } returns mockk(relaxed = true)
         coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
 
-        val error =
-            runCatching {
-                    useCase.build(
-                        params()
-                            .copy(
-                                srcToken = usdc,
-                                srcAddress = usdc.address,
-                                srcTokenValue = TokenValue(BigInteger("1000000"), token = usdc),
-                            )
-                    )
-                }
-                .exceptionOrNull()
+        val tx = useCase.build(usdcParams())
+
+        // The ERC20 deposit is made to the router (depositWithExpiry carries the memo), not to the
+        // inbound vault — and the router comes off the ordinary swap quote.
+        assertEquals(thorRouter, tx.dstAddress)
+        val payload = tx.payload as SwapPayload.ThorChain
+        assertEquals(thorRouter, payload.data.routerAddress)
+    }
+
+    @Test
+    fun `fails closed when an ERC20 source has no THORChain router`() = runTest {
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns true
+        coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
+            listOf(inbound("ETH", "0xInboundVault"))
+        // Quote carries no router — a plain transfer would drop the memo and strand the tokens
+        // instead of placing a protected order, so build() must reject the route.
+        coEvery { thorChainApi.getSwapQuotes(any()) } returns quote(router = null)
+        coEvery {
+            swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
+        } returns mockk(relaxed = true)
+        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+
+        val error = runCatching { useCase.build(usdcParams()) }.exceptionOrNull()
+        assertTrue(error is IllegalStateException)
+        assertTrue(error?.message.orEmpty().contains("router"))
+    }
+
+    @Test
+    fun `fails closed when the router quote itself fails`() = runTest {
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns true
+        coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
+            listOf(inbound("ETH", "0xInboundVault"))
+        coEvery { thorChainApi.getSwapQuotes(any()) } returns
+            THORChainSwapQuoteDeserialized.Error(THORChainSwapQuoteError("thornode unavailable"))
+        coEvery {
+            swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
+        } returns mockk(relaxed = true)
+        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+
+        val error = runCatching { useCase.build(usdcParams()) }.exceptionOrNull()
         assertTrue(error is IllegalStateException)
         assertTrue(error?.message.orEmpty().contains("router"))
     }
@@ -161,7 +181,7 @@ internal class BuildLimitSwapTransactionUseCaseTest {
     fun `rejects a trading-paused inbound at placement`() = runTest {
         coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns true
         coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
-            listOf(inbound("BTC", btcInbound, router = null, chainTradingPaused = true))
+            listOf(inbound("BTC", btcInbound, chainTradingPaused = true))
         coEvery {
             swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
         } returns mockk(relaxed = true)
@@ -172,10 +192,36 @@ internal class BuildLimitSwapTransactionUseCaseTest {
         assertTrue(error?.message.orEmpty().contains("No live THORChain inbound"))
     }
 
+    private val usdc =
+        Coin(
+            chain = Chain.Ethereum,
+            ticker = "USDC",
+            logo = "",
+            address = ethAddress,
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            isNativeToken = false,
+        )
+
+    private fun usdcParams() =
+        params()
+            .copy(
+                srcToken = usdc,
+                srcAddress = usdc.address,
+                srcTokenValue = TokenValue(BigInteger("1000000"), token = usdc),
+            )
+
+    /** A swap quote carrying only the field the router lookup reads. */
+    private fun quote(router: String?) =
+        THORChainSwapQuoteDeserialized.Result(
+            mockk<THORChainSwapQuote>(relaxed = true) { every { this@mockk.router } returns router }
+        )
+
     private fun inbound(
         chain: String,
         address: String,
-        router: String?,
         halted: Boolean = false,
         globalTradingPaused: Boolean = false,
         chainTradingPaused: Boolean = false,
@@ -186,7 +232,6 @@ internal class BuildLimitSwapTransactionUseCaseTest {
             halted = halted,
             globalTradingPaused = globalTradingPaused,
             chainTradingPaused = chainTradingPaused,
-            router = router,
         )
 
     private fun coin(

@@ -1,7 +1,10 @@
 package com.vultisig.wallet.data.swap.limit
 
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.ThorChainSwapQuoteRequest
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.swapAssetName
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -85,17 +88,23 @@ fun getLimitSwapMarketPrice(
  */
 interface LimitSwapMarketPriceRepository {
     /**
-     * @param destinationAddress optional payout address; some quotes price differently per
-     *   destination. Never influences a signed value — this price only seeds the UI.
+     * @param destinationAddress payout address the probe is quoted for — normally the vault's own
+     *   address on the target chain. Never influences a signed value; this price only seeds the UI.
      */
     suspend fun getMarketPrice(
         fromCoin: Coin,
         toCoin: Coin,
         sourcePrice: BigDecimal,
-        destinationAddress: String? = null,
+        destinationAddress: String,
     ): BigDecimal
 }
 
+/**
+ * Prices the pair through THORChain's ordinary `/quote/swap` endpoint — the same call, affiliate
+ * and all, that a market swap makes. A limit order settles on that same route and carries the same
+ * affiliate in its memo, so quoting it any other way would price the form against a rate the order
+ * can never fill at.
+ */
 internal class LimitSwapMarketPriceRepositoryImpl
 @Inject
 constructor(private val thorChainApi: ThorChainApi) : LimitSwapMarketPriceRepository {
@@ -104,16 +113,28 @@ constructor(private val thorChainApi: ThorChainApi) : LimitSwapMarketPriceReposi
         fromCoin: Coin,
         toCoin: Coin,
         sourcePrice: BigDecimal,
-        destinationAddress: String?,
+        destinationAddress: String,
     ): BigDecimal {
         val sourceAmount = getMarketProbeAmount(sourcePrice, fromCoin.decimal)
-        val expectedAmountOut =
-            thorChainApi.getLimitSwapReferenceExpectedOut(
-                fromAsset = fromCoin.thorchainMemoAsset(),
-                toAsset = toCoin.thorchainMemoAsset(),
-                amount = toThorchainFixedPoint(sourceAmount, fromCoin.decimal).toString(),
-                destination = destinationAddress,
+        val quote =
+            thorChainApi.getSwapQuotes(
+                ThorChainSwapQuoteRequest(
+                    address = destinationAddress,
+                    fromAsset = fromCoin.swapAssetName(),
+                    toAsset = toCoin.swapAssetName(),
+                    amount = toThorchainFixedPoint(sourceAmount, fromCoin.decimal).toString(),
+                    interval = "1",
+                    referralCode = "",
+                    bpsDiscount = 0,
+                    streamingQuantity = 0,
+                )
             )
+        val expectedAmountOut =
+            when (quote) {
+                is THORChainSwapQuoteDeserialized.Result -> quote.data.expectedAmountOut
+                is THORChainSwapQuoteDeserialized.Error ->
+                    error("THORChain limit-swap reference quote failed: ${quote.error.message}")
+            }
         return getLimitSwapMarketPrice(
             expectedAmountOut = expectedAmountOut,
             sourceAmount = sourceAmount,

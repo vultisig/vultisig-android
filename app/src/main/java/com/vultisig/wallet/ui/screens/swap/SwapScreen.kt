@@ -232,6 +232,7 @@ internal fun SwapScreen(
                     SwapModeTabs(
                         selectedMode = selectedMode,
                         onSelectMode = onSelectSwapMode,
+                        isLimitTabEnabled = state.isLimitTabEnabled,
                         modifier = Modifier.fillMaxWidth(),
                     )
 
@@ -521,6 +522,7 @@ internal enum class SwapMode {
 private fun SwapModeTabs(
     selectedMode: SwapMode,
     onSelectMode: (SwapMode) -> Unit,
+    isLimitTabEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
@@ -532,9 +534,13 @@ private fun SwapModeTabs(
                 )
             }
             tab {
+                // Limit orders are a THORChain-only product; the tab stays visible but inert for a
+                // pair THORChain can't route, so the mode is never entered on a pair that could
+                // only fail at placement.
                 VsTab(
                     label = stringResource(R.string.swap_mode_limit),
                     onClick = { onSelectMode(SwapMode.Limit) },
+                    isEnabled = isLimitTabEnabled,
                 )
             }
         }

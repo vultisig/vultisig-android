@@ -14,7 +14,6 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosEnvelopedTxResponse
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
-import com.vultisig.wallet.data.api.models.quotes.LimitSwapReferenceQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.quotes.ThorChainSwapQuoteRequest
@@ -76,19 +75,6 @@ interface ThorChainApi {
     suspend fun getAccountNumber(address: String): THORChainAccountValue
 
     suspend fun getSwapQuotes(request: ThorChainSwapQuoteRequest): THORChainSwapQuoteDeserialized
-
-    /**
-     * Fetch `expected_amount_out` (1e8 fixed point) for a limit-swap reference-price probe. Quotes
-     * with no affiliate and zero liquidity tolerance: the result only seeds the limit form's price
-     * field, so any fee or slippage padding would bias the number the user prices their order
-     * against. It is never broadcast.
-     */
-    suspend fun getLimitSwapReferenceExpectedOut(
-        fromAsset: String,
-        toAsset: String,
-        amount: String,
-        destination: String?,
-    ): String
 
     suspend fun broadcastTransaction(tx: String): String?
 
@@ -387,33 +373,6 @@ constructor(
         httpClient
             .get("$THORNODE_BASE/thorchain/mimir") { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
             .bodyOrThrow()
-
-    override suspend fun getLimitSwapReferenceExpectedOut(
-        fromAsset: String,
-        toAsset: String,
-        amount: String,
-        destination: String?,
-    ): String {
-        val quote =
-            httpClient
-                .get("$THORNODE_BASE/thorchain/quote/swap") {
-                    header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
-                    parameter("from_asset", fromAsset)
-                    parameter("to_asset", toAsset)
-                    parameter("amount", amount)
-                    parameter("streaming_interval", "1")
-                    parameter("streaming_quantity", "0")
-                    parameter("liquidity_tolerance_bps", "0")
-                    destination?.let { parameter("destination", it) }
-                }
-                .bodyOrThrow<LimitSwapReferenceQuoteJson>()
-
-        return quote.expectedAmountOut
-            ?: error(
-                "THORChain limit-swap reference quote returned no expected_amount_out" +
-                    (quote.error?.let { ": $it" } ?: "")
-            )
-    }
 
     override suspend fun getPoolStats(period: String?): List<ThorChainPoolStatsJson> =
         httpClient
