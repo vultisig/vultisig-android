@@ -32,11 +32,12 @@ class BlockChairApiGetAllUtxosTest {
     }
 
     private fun pageBody(address: String, unspentOutputCount: Int, utxoValues: List<Long>): String {
-        // Hash derives from the value (globally unique across pages), not the page-local index,
-        // so a multi-page test can tell which page a given UTXO actually came from.
+        // Hash and output index both derive from the value (stable identity independent of a
+        // page-local position), so a repeated value across two pages is a genuine duplicate
+        // outpoint rather than an artifact of list position.
         val utxoJson =
-            utxoValues.withIndex().joinToString(",") { (index, value) ->
-                """{"transaction_hash":"tx$value","index":$index,"value":$value,"block_id":800000}"""
+            utxoValues.joinToString(",") { value ->
+                """{"transaction_hash":"tx$value","index":0,"value":$value,"block_id":800000}"""
             }
         return """
             {
@@ -133,6 +134,58 @@ class BlockChairApiGetAllUtxosTest {
             assertEquals(1200, result.utxos.size)
             assertEquals(listOf("0,0", "0,1000"), offsets)
         }
+
+    @Test
+    fun `throws when the reported unspent_output_count changes between pages`() = runTest {
+        // The count moving mid-walk means the list shifted underneath the offsets already used
+        // — a removed entry slides everything after it into a position already fetched, opening
+        // a gap that merging pages can never detect on its own.
+        val page0 =
+            pageBody("addr", unspentOutputCount = 1200, utxoValues = List(1000) { it.toLong() })
+        val page1 =
+            pageBody(
+                "addr",
+                unspentOutputCount = 1199,
+                utxoValues = List(199) { (1000 + it).toLong() },
+            )
+        val (api, _) = recordingApi(HttpStatusCode.OK to page0, HttpStatusCode.OK to page1)
+
+        val exception =
+            assertThrows<IllegalStateException> { api.getAllUtxos(Chain.Bitcoin, "addr") }
+        assertTrue(exception.message!!.contains("1200"))
+        assertTrue(exception.message!!.contains("1199"))
+    }
+
+    @Test
+    fun `deduplicates a utxo returned on more than one page`() = runTest {
+        // A newest-first list that shifts between two requests can hand the same outpoint back
+        // on both pages; without de-duplication it would be double-counted and could later be
+        // selected as two separate inputs for the same outpoint, which the network would reject.
+        val page0 =
+            pageBody("addr", unspentOutputCount = 1000, utxoValues = List(1000) { it.toLong() })
+        val page1 =
+            pageBody(
+                "addr",
+                unspentOutputCount = 1000,
+                utxoValues = List(1) { 999L }, // tx999 repeated from page0
+            )
+        val (api, _) = recordingApi(HttpStatusCode.OK to page0, HttpStatusCode.OK to page1)
+
+        val result = api.getAllUtxos(Chain.Bitcoin, "addr")
+
+        assertEquals(1000, result.utxos.size)
+        assertEquals(1, result.utxos.count { it.transactionHash == "tx999" })
+    }
+
+    @Test
+    fun `throws instead of paging forever when every page comes back full`() = runTest {
+        val fullPage =
+            pageBody("addr", unspentOutputCount = 100_000, utxoValues = List(1000) { it.toLong() })
+        val (api, offsets) = recordingApi(HttpStatusCode.OK to fullPage)
+
+        assertThrows<IllegalStateException> { api.getAllUtxos(Chain.Bitcoin, "addr") }
+        assertEquals(20, offsets.size)
+    }
 
     @Test
     fun `throws instead of returning a truncated view when a page comes back short`() = runTest {

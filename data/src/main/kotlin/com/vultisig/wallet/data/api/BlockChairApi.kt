@@ -51,10 +51,11 @@ constructor(
         private const val BASE_URL = "https://api.vultisig.com/blockchair"
         private const val UTXO_PAGE_SIZE = 1000
 
-        // Blockchair rejects any offset beyond this with HTTP 400 ("Offset value can't be larger
-        // than 1000000"), so it doubles as a hard backstop against an endless loop if the server
-        // ever kept returning full pages.
-        private const val MAX_UTXO_OFFSET = 1_000_000
+        // A standard transaction tops out near ~1400 P2WPKH inputs at Bitcoin's 100kvB
+        // standardness limit, so an address with more UTXOs than this cap covers has nothing
+        // further worth fetching for a single send. This bounds worst-case pagination latency
+        // (20 sequential requests) rather than expressing any real chain limit.
+        private const val MAX_UTXO_PAGES = 20
     }
 
     private fun getChainName(chain: Chain): String =
@@ -92,14 +93,12 @@ constructor(
     override suspend fun getAllUtxos(chain: Chain, address: String): BlockChairInfo {
         val chainName = getChainName(chain)
         val utxos = mutableListOf<BlockChairUtxoInfo>()
+        val seenOutpoints = mutableSetOf<Pair<String, Int>>()
         var firstPage: BlockChairInfo? = null
-        var expectedUtxoCount = 0
-        var offset = 0
+        var expectedUtxoCount: Int? = null
 
-        while (true) {
-            check(offset <= MAX_UTXO_OFFSET) {
-                "Blockchair pagination exceeded the max offset for $chain:$address"
-            }
+        for (pageIndex in 0 until MAX_UTXO_PAGES) {
+            val offset = pageIndex * UTXO_PAGE_SIZE
             val response =
                 httpClient.get(
                     "$BASE_URL/$chainName/dashboards/address/$address" +
@@ -114,24 +113,43 @@ constructor(
                 body.data[address]?.copy(currentBlockHeight = body.context?.state?.toLong())
                     ?: error("Blockchair returned no address data for $chain:$address")
 
-            if (firstPage == null) {
-                firstPage = page
-                expectedUtxoCount = page.address.unspentOutputCount
+            if (firstPage == null) firstPage = page
+
+            // Offset paging only holds up over a list that stays still: removing one entry
+            // slides everything after it past an offset already walked, opening a gap no
+            // amount of merging can see. The count moves with the list, so a change in it
+            // between pages is that signal — every page must keep reporting the same total.
+            val pageUtxoCount = page.address.unspentOutputCount
+            check(expectedUtxoCount == null || expectedUtxoCount == pageUtxoCount) {
+                "Blockchair UTXO count for $chain:$address moved from $expectedUtxoCount to " +
+                    "$pageUtxoCount mid-walk"
             }
-            utxos += page.utxos
+            expectedUtxoCount = pageUtxoCount
+
+            // A newest-first list that shifts between two page requests can hand back the same
+            // outpoint twice; deduplicating keeps a shifted entry from being counted, or later
+            // selected as a transaction input, twice.
+            for (utxo in page.utxos) {
+                if (seenOutpoints.add(utxo.transactionHash to utxo.index)) utxos += utxo
+            }
 
             // A page shorter than the page size is the only reliable "no more data" signal — a
             // full page that happens to match unspent_output_count could still be followed by
             // more UTXOs if that count itself is a hair stale, which is the exact inconsistency
             // this method exists to catch.
-            if (page.utxos.size < UTXO_PAGE_SIZE) break
-            offset += UTXO_PAGE_SIZE
+            if (page.utxos.size < UTXO_PAGE_SIZE) {
+                check(utxos.size >= pageUtxoCount) {
+                    "Blockchair returned ${utxos.size} UTXOs for $chain:$address, " +
+                        "expected $pageUtxoCount"
+                }
+                return checkNotNull(firstPage).copy(utxos = utxos)
+            }
         }
 
-        check(utxos.size >= expectedUtxoCount) {
-            "Blockchair returned ${utxos.size} UTXOs for $chain:$address, expected $expectedUtxoCount"
-        }
-        return checkNotNull(firstPage).copy(utxos = utxos)
+        error(
+            "Blockchair pagination exceeded $MAX_UTXO_PAGES pages for $chain:$address with " +
+                "${utxos.size} UTXOs retrieved"
+        )
     }
 
     override suspend fun getBlockChairStats(chain: Chain): BigInteger {
