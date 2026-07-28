@@ -2350,7 +2350,6 @@ private fun BtcDetailClaimPreview() {
         onHistory = {},
         onSelectTokens = {},
         onTokenClick = {},
-        onShowReviewPopUp = {},
         onClaimQbtc = {},
     )
 }
@@ -2395,7 +2394,6 @@ private fun QbtcDetailClaimPreview() {
         onHistory = {},
         onSelectTokens = {},
         onTokenClick = {},
-        onShowReviewPopUp = {},
         onClaimQbtc = {},
     )
 }
