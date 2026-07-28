@@ -26,6 +26,7 @@ import wallet.core.jni.BitcoinScript
 import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
+import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
 
 /**
@@ -280,6 +281,316 @@ class UtxoHelperTest {
                 isAffiliate = false,
             )
         )
+
+    // Unsigned-transaction serialization tests (#5431) — exercise `serializeUnsignedTransaction`
+    // directly, bypassing WalletCore's native planner/script builder entirely, so these always
+    // run (never skipped for missing JNI). They decode the produced hex back into its fields
+    // rather than asserting one opaque expected hex string, so a mistake in the test's own
+    // expected-value construction can't silently cancel out a mistake in the production code.
+
+    private fun transactionPlan(
+        utxos: List<Triple<String, Int, Int>>,
+        amount: Long,
+        change: Long = 0L,
+        error: SigningError = SigningError.OK,
+    ): Bitcoin.TransactionPlan {
+        val builder =
+            Bitcoin.TransactionPlan.newBuilder().setAmount(amount).setChange(change).setError(error)
+        utxos.forEach { (hash, index, sequence) ->
+            builder.addUtxos(
+                Bitcoin.UnspentTransaction.newBuilder()
+                    .setOutPoint(
+                        Bitcoin.OutPoint.newBuilder()
+                            .setHash(ByteString.copyFrom(Numeric.hexStringToByteArray(hash)))
+                            .setIndex(index)
+                            .setSequence(sequence)
+                    )
+            )
+        }
+        return builder.build()
+    }
+
+    private data class DecodedInput(val prevoutHash: String, val index: Int, val sequence: Int)
+
+    private data class DecodedOutput(val amount: Long, val scriptHex: String)
+
+    private data class DecodedUnsignedTx(
+        val version: Int,
+        val inputs: List<DecodedInput>,
+        val outputs: List<DecodedOutput>,
+        val locktime: Int,
+    )
+
+    /** Decodes the exact format [UtxoHelper.serializeUnsignedTransaction] produces. */
+    private fun decodeUnsignedTx(hex: String): DecodedUnsignedTx {
+        val bytes = Numeric.hexStringToByteArray(hex)
+        var pos = 0
+
+        fun u32(): Int {
+            val v =
+                (bytes[pos].toInt() and 0xFF) or
+                    ((bytes[pos + 1].toInt() and 0xFF) shl 8) or
+                    ((bytes[pos + 2].toInt() and 0xFF) shl 16) or
+                    ((bytes[pos + 3].toInt() and 0xFF) shl 24)
+            pos += 4
+            return v
+        }
+
+        fun u64(): Long {
+            var v = 0L
+            for (i in 0 until 8) v = v or ((bytes[pos + i].toLong() and 0xFF) shl (8 * i))
+            pos += 8
+            return v
+        }
+
+        fun varInt(): Long {
+            val first = bytes[pos].toInt() and 0xFF
+            return when (first) {
+                0xFD -> {
+                    pos += 1
+                    val v =
+                        (bytes[pos].toLong() and 0xFF) or ((bytes[pos + 1].toLong() and 0xFF) shl 8)
+                    pos += 2
+                    v
+                }
+                else -> {
+                    pos += 1
+                    first.toLong()
+                }
+            }
+        }
+
+        fun bytes(n: Int): ByteArray {
+            val slice = bytes.copyOfRange(pos, pos + n)
+            pos += n
+            return slice
+        }
+
+        val version = u32()
+        val inputCount = varInt()
+        val inputs =
+            (0 until inputCount).map {
+                val prevoutHash = Numeric.toHexStringNoPrefix(bytes(32))
+                val index = u32()
+                val scriptSigLen = varInt()
+                bytes(scriptSigLen.toInt())
+                val sequence = u32()
+                DecodedInput(prevoutHash, index, sequence)
+            }
+        val outputCount = varInt()
+        val outputs =
+            (0 until outputCount).map {
+                val amount = u64()
+                val scriptLen = varInt()
+                val script = Numeric.toHexStringNoPrefix(bytes(scriptLen.toInt()))
+                DecodedOutput(amount, script)
+            }
+        val locktime = u32()
+        assertEquals(bytes.size, pos, "Decoded tx did not consume the entire byte array")
+
+        return DecodedUnsignedTx(version, inputs, outputs, locktime)
+    }
+
+    @Test
+    fun `serializeUnsignedTransaction - single input single output has empty scriptSig and no witness`() {
+        val helper = newHelper()
+        val plan = transactionPlan(utxos = listOf(Triple("11".repeat(32), 0, -1)), amount = 9_500L)
+        val toScript = Numeric.hexStringToByteArray("0014" + "22".repeat(20))
+
+        val decoded =
+            decodeUnsignedTx(
+                Numeric.toHexStringNoPrefix(
+                    helper.serializeUnsignedTransaction(plan, toScript, null, null)
+                )
+            )
+
+        assertEquals(2, decoded.version)
+        assertEquals(1, decoded.inputs.size)
+        assertEquals("11".repeat(32), decoded.inputs[0].prevoutHash)
+        assertEquals(0, decoded.inputs[0].index)
+        assertEquals(-1, decoded.inputs[0].sequence) // 0xFFFFFFFF
+        assertEquals(1, decoded.outputs.size)
+        assertEquals(9_500L, decoded.outputs[0].amount)
+        assertEquals("0014" + "22".repeat(20), decoded.outputs[0].scriptHex)
+        assertEquals(0, decoded.locktime)
+    }
+
+    @Test
+    fun `serializeUnsignedTransaction - two inputs are both serialized in plan order`() {
+        val helper = newHelper()
+        val plan =
+            transactionPlan(
+                utxos = listOf(Triple("11".repeat(32), 0, -1), Triple("22".repeat(32), 3, -1)),
+                amount = 9_500L,
+            )
+        val toScript = Numeric.hexStringToByteArray("0014" + "aa".repeat(20))
+
+        val decoded =
+            decodeUnsignedTx(
+                Numeric.toHexStringNoPrefix(
+                    helper.serializeUnsignedTransaction(plan, toScript, null, null)
+                )
+            )
+
+        assertEquals(2, decoded.inputs.size)
+        assertEquals("11".repeat(32), decoded.inputs[0].prevoutHash)
+        assertEquals(0, decoded.inputs[0].index)
+        assertEquals("22".repeat(32), decoded.inputs[1].prevoutHash)
+        assertEquals(3, decoded.inputs[1].index)
+    }
+
+    @Test
+    fun `serializeUnsignedTransaction - includes a change output when plan reports change`() {
+        val helper = newHelper()
+        val plan =
+            transactionPlan(
+                utxos = listOf(Triple("11".repeat(32), 0, -1)),
+                amount = 9_500L,
+                change = 500L,
+            )
+        val toScript = Numeric.hexStringToByteArray("0014" + "aa".repeat(20))
+        val changeScript = Numeric.hexStringToByteArray("0014" + "bb".repeat(20))
+
+        val decoded =
+            decodeUnsignedTx(
+                Numeric.toHexStringNoPrefix(
+                    helper.serializeUnsignedTransaction(plan, toScript, changeScript, null)
+                )
+            )
+
+        assertEquals(2, decoded.outputs.size)
+        assertEquals(9_500L, decoded.outputs[0].amount)
+        assertEquals("0014" + "aa".repeat(20), decoded.outputs[0].scriptHex)
+        assertEquals(500L, decoded.outputs[1].amount)
+        assertEquals("0014" + "bb".repeat(20), decoded.outputs[1].scriptHex)
+    }
+
+    @Test
+    fun `serializeUnsignedTransaction - appends a short OP_RETURN memo as the last output using a direct push`() {
+        val helper = newHelper()
+        val plan =
+            transactionPlan(
+                utxos = listOf(Triple("11".repeat(32), 0, -1)),
+                amount = 9_500L,
+                change = 500L,
+            )
+        val toScript = Numeric.hexStringToByteArray("0014" + "aa".repeat(20))
+        val changeScript = Numeric.hexStringToByteArray("0014" + "bb".repeat(20))
+        val memo = "SWAP:BTC.BTC:$btcAddress:0:t:0:30".toByteArray()
+        assertTrue(memo.size <= 0x4b, "test memo must fit a direct push")
+
+        val decoded =
+            decodeUnsignedTx(
+                Numeric.toHexStringNoPrefix(
+                    helper.serializeUnsignedTransaction(plan, toScript, changeScript, memo)
+                )
+            )
+
+        assertEquals(3, decoded.outputs.size)
+        val opReturnOutput = decoded.outputs[2]
+        assertEquals(0L, opReturnOutput.amount)
+        val expectedScript = "6a" + "%02x".format(memo.size) + Numeric.toHexStringNoPrefix(memo)
+        assertEquals(expectedScript, opReturnOutput.scriptHex)
+    }
+
+    @Test
+    fun `serializeUnsignedTransaction - OP_RETURN memo over 75 bytes uses OP_PUSHDATA1`() {
+        val helper = newHelper()
+        val plan = transactionPlan(utxos = listOf(Triple("11".repeat(32), 0, -1)), amount = 9_500L)
+        val toScript = Numeric.hexStringToByteArray("0014" + "aa".repeat(20))
+        val memo = "x".repeat(100).toByteArray()
+
+        val decoded =
+            decodeUnsignedTx(
+                Numeric.toHexStringNoPrefix(
+                    helper.serializeUnsignedTransaction(plan, toScript, null, memo)
+                )
+            )
+
+        val opReturnOutput = decoded.outputs.last()
+        val expectedScript = "6a4c64" + Numeric.toHexStringNoPrefix(memo)
+        assertEquals(expectedScript, opReturnOutput.scriptHex)
+    }
+
+    @Test
+    fun `serializeUnsignedTransaction - OP_RETURN memo over 255 bytes uses OP_PUSHDATA2`() {
+        val helper = newHelper()
+        val plan = transactionPlan(utxos = listOf(Triple("11".repeat(32), 0, -1)), amount = 9_500L)
+        val toScript = Numeric.hexStringToByteArray("0014" + "aa".repeat(20))
+        val memo = "x".repeat(300).toByteArray()
+
+        val decoded =
+            decodeUnsignedTx(
+                Numeric.toHexStringNoPrefix(
+                    helper.serializeUnsignedTransaction(plan, toScript, null, memo)
+                )
+            )
+
+        val opReturnOutput = decoded.outputs.last()
+        // OP_RETURN + OP_PUSHDATA2 + 300 as a 2-byte little-endian length (0x012c -> "2c01")
+        val expectedScript = "6a4d2c01" + Numeric.toHexStringNoPrefix(memo)
+        assertEquals(expectedScript, opReturnOutput.scriptHex)
+    }
+
+    @Test
+    fun `serializeUnsignedTransaction - throws when the plan reports an error`() {
+        val helper = newHelper()
+        val plan =
+            transactionPlan(
+                utxos = listOf(Triple("11".repeat(32), 0, -1)),
+                amount = 9_500L,
+                error = SigningError.Error_not_enough_utxos,
+            )
+        val toScript = Numeric.hexStringToByteArray("0014" + "aa".repeat(20))
+
+        assertThrows(IllegalArgumentException::class.java) {
+            helper.serializeUnsignedTransaction(plan, toScript, null, null)
+        }
+    }
+
+    @Test
+    fun `serializeUnsignedTransaction - throws when the plan selects zero inputs`() {
+        val helper = newHelper()
+        val plan = transactionPlan(utxos = emptyList(), amount = 9_500L)
+        val toScript = Numeric.hexStringToByteArray("0014" + "aa".repeat(20))
+
+        assertThrows(IllegalArgumentException::class.java) {
+            helper.serializeUnsignedTransaction(plan, toScript, null, null)
+        }
+    }
+
+    @Test
+    fun `serializeUnsignedTransaction - throws when change is expected but no changeScript is supplied`() {
+        val helper = newHelper()
+        val plan =
+            transactionPlan(
+                utxos = listOf(Triple("11".repeat(32), 0, -1)),
+                amount = 9_500L,
+                change = 500L,
+            )
+        val toScript = Numeric.hexStringToByteArray("0014" + "aa".repeat(20))
+
+        assertThrows(IllegalArgumentException::class.java) {
+            helper.serializeUnsignedTransaction(plan, toScript, null, null)
+        }
+    }
+
+    @Test
+    fun `getUnsignedTransactionHex - end to end matches the plan's amount and change`() {
+        val helper = UtxoHelper(CoinType.BITCOIN, "", "")
+        val payload = utxoPayload(utxoAmount = 100_000L, toAmount = BigInteger.valueOf(10_000L))
+        try {
+            val hex = helper.getUnsignedTransactionHex(payload)
+            val decoded = decodeUnsignedTx(hex)
+            assertEquals(10_000L, decoded.outputs[0].amount)
+            assertTrue(
+                decoded.outputs.size in 1..2,
+                "Expected a payment output and an optional change output",
+            )
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
 
     // BIP-143 sighash tests — exercise the new from-scratch PSBT signing path against the
     // canonical test vectors from https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki

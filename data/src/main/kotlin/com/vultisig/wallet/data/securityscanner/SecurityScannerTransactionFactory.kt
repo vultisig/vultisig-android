@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
-import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -335,16 +334,10 @@ class SecurityScannerTransactionFactory(
                 wasmExecuteContractPayload = null,
             )
 
-        val dummyVault =
-            Vault(
-                id = "dummy",
-                name = "dummy",
-                pubKeyECDSA = "0000000000000000000000000000000000000000000000000000000000000000",
-                hexChainCode = "0000000000000000000000000000000000000000000000000000000000000000",
-            )
-
-        val btcHelper = UtxoHelper.getHelper(dummyVault, CoinType.BITCOIN)
-        val zeroSignedTx = btcHelper.getZeroSignedTransaction(keySignPayload)
+        // No vault key material is needed to plan/serialize an unsigned transaction, so this
+        // constructs the helper directly rather than through a placeholder Vault.
+        val btcHelper = UtxoHelper(CoinType.BITCOIN, vaultHexPublicKey = "", vaultHexChainCode = "")
+        val unsignedTx = btcHelper.getUnsignedTransactionHex(keySignPayload)
 
         return SecurityScannerTransaction(
             chain = transaction.token.chain,
@@ -352,7 +345,7 @@ class SecurityScannerTransactionFactory(
             from = transaction.srcAddress,
             to = transaction.dstAddress,
             amount = BigInteger.ZERO,
-            data = zeroSignedTx,
+            data = unsignedTx,
         )
     }
 }
