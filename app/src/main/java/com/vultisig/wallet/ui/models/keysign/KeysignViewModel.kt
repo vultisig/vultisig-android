@@ -36,6 +36,7 @@ import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.InAppReviewRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.services.KeysignTxStatusPoller
@@ -77,11 +78,16 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -205,6 +211,23 @@ sealed interface TransactionStatus {
 }
 
 /**
+ * True only where the user's funds actually moved on-chain. [TransactionStatus.Signed] never
+ * reaches a network, [TransactionStatus.Pending] and [TransactionStatus.StillConfirming] have no
+ * on-chain result yet, and a failure or refund is the opposite of a moment worth celebrating.
+ */
+private val TransactionStatus.isSuccessful: Boolean
+    get() =
+        when (this) {
+            TransactionStatus.Broadcasted,
+            TransactionStatus.Confirmed -> true
+            TransactionStatus.Signed,
+            TransactionStatus.Pending,
+            TransactionStatus.StillConfirming,
+            is TransactionStatus.Failed,
+            is TransactionStatus.Refunded -> false
+        }
+
+/**
  * Immutable aggregate of every observable keysign UI value. A single backing [MutableStateFlow] in
  * [KeysignViewModel] is the only place these fields are mutated, giving the keysign state machine
  * one source of truth and keeping mutually-dependent fields (e.g. [txHash]/[txLink]) consistent.
@@ -277,6 +300,7 @@ constructor(
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
+    private val inAppReviewRepository: InAppReviewRepository,
 ) : ViewModel() {
 
     /** Creates [KeysignViewModel] with runtime-provided assisted parameters. */
@@ -303,6 +327,15 @@ constructor(
 
     /** Aggregated read-only keysign UI state; observed by the Compose screen. */
     val state: StateFlow<KeysignUiState> = _state.asStateFlow()
+
+    private val _inAppReviewRequests = Channel<Unit>(Channel.BUFFERED)
+
+    /**
+     * Emits at most once, when this transaction succeeded and the throttle in
+     * [InAppReviewRepository] allows asking for a store review. The screen owns the Play call
+     * because the flow needs an Activity.
+     */
+    val inAppReviewRequests = _inAppReviewRequests.receiveAsFlow()
 
     /** Test-only seam to seed [state] without driving the full signing flow. */
     @VisibleForTesting
@@ -377,7 +410,46 @@ constructor(
                 }
             }
         }
+
+        observeInAppReviewEligibility()
     }
+
+    /**
+     * Asks for a store review once this keysign lands on a genuinely successful transaction.
+     *
+     * Only the first qualifying status counts: status polling re-emits
+     * [KeysignState.KeysignFinished] on every tick, so a confirmed transaction would otherwise ask
+     * repeatedly.
+     */
+    private fun observeInAppReviewEligibility() {
+        if (!isTransactionFlow) return
+        viewModelScope.safeLaunch(
+            onError = { e -> Timber.w(e, "Failed to evaluate the in-app review prompt") }
+        ) {
+            state
+                .map { it.signingState }
+                .filterIsInstance<KeysignState.KeysignFinished>()
+                .first { it.transactionStatus.isSuccessful }
+
+            if (inAppReviewRepository.onTransactionSucceeded()) {
+                _inAppReviewRequests.send(Unit)
+            }
+        }
+    }
+
+    /**
+     * True for send/swap/deposit. dApp message signing produces no transaction, so it is never a
+     * "your transaction went through" moment.
+     */
+    private val isTransactionFlow: Boolean
+        get() =
+            when (transactionTypeUiModel) {
+                is TransactionTypeUiModel.Send,
+                is TransactionTypeUiModel.Swap,
+                is TransactionTypeUiModel.Deposit -> true
+                is TransactionTypeUiModel.SignMessage,
+                null -> false
+            }
 
     /** Destination labels resolved for the Transaction-complete screen. */
     private data class DestinationLabels(
