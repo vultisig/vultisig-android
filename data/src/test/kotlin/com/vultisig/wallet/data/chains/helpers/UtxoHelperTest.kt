@@ -353,6 +353,8 @@ class UtxoHelperTest {
                     pos += 2
                     v
                 }
+                0xFE,
+                0xFF -> error("Unexpected varint prefix 0x${first.toString(16)} in test decoder")
                 else -> {
                     pos += 1
                     first.toLong()

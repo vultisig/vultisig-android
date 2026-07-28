@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
+import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -19,7 +20,6 @@ import java.math.BigInteger
 import kotlinx.coroutines.coroutineScope
 import vultisig.keysign.v1.SignSui
 import wallet.core.jni.Base58
-import wallet.core.jni.CoinType
 
 class SecurityScannerTransactionFactory(
     private val solanaApi: SolanaApi,
@@ -335,9 +335,17 @@ class SecurityScannerTransactionFactory(
             )
 
         // No vault key material is needed to plan/serialize an unsigned transaction, so this
-        // constructs the helper directly rather than through a placeholder Vault.
-        val btcHelper = UtxoHelper(CoinType.BITCOIN, vaultHexPublicKey = "", vaultHexChainCode = "")
-        val unsignedTx = btcHelper.getUnsignedTransactionHex(keySignPayload)
+        // constructs the helper directly rather than through a placeholder Vault. The coin type
+        // comes from the chain being sent, not a hardcoded Bitcoin, so the other UTXO chains this
+        // branch also handles (BCH, Litecoin, Dogecoin, Dash, Zcash) get their own address/script
+        // format instead of being validated as Bitcoin addresses.
+        val utxoHelper =
+            UtxoHelper(
+                transaction.token.chain.coinType,
+                vaultHexPublicKey = "",
+                vaultHexChainCode = "",
+            )
+        val unsignedTx = utxoHelper.getUnsignedTransactionHex(keySignPayload)
 
         return SecurityScannerTransaction(
             chain = transaction.token.chain,
