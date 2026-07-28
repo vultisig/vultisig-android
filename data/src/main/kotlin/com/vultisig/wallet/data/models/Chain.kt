@@ -36,6 +36,7 @@ enum class Chain(val raw: ChainId, val standard: TokenStandard, val feeUnit: Str
     Mantle("Mantle", EVM, "Gwei"),
     Sei("Sei", EVM, "Gwei"),
     Hyperliquid("Hyperliquid", EVM, "Gwei"),
+    Robinhood("Robinhood", EVM, "Gwei"),
 
     // BITCOIN
     Bitcoin("Bitcoin", UTXO, "BTC/vbyte"),
@@ -135,6 +136,7 @@ val Chain.coinType: CoinType
             // map SEI to the Ethereum coin type.
             Chain.Sei -> CoinType.ETHEREUM
             Chain.Hyperliquid -> CoinType.ETHEREUM
+            Chain.Robinhood -> CoinType.ROBINHOODCHAIN
             Chain.Qbtc -> CoinType.COSMOS
         }
 
@@ -213,6 +215,7 @@ val Chain.isSwapSupported: Boolean
                 Chain.Cardano,
                 Chain.Ton,
                 Chain.Hyperliquid,
+                Chain.Robinhood,
             )
 
 val Chain.isDepositSupported: Boolean
@@ -328,6 +331,7 @@ val Chain.isLayer2: Boolean
             Chain.Blast,
             Chain.Mantle,
             Chain.Optimism,
+            Chain.Robinhood,
             Chain.ZkSync -> true
             else -> false
         }
@@ -365,6 +369,7 @@ fun Chain.oneInchChainId(): Long =
         Chain.ZkSync -> 324
         Chain.Mantle -> 5000
         Chain.Hyperliquid -> 999
+        Chain.Robinhood -> 4663
         else ->
             throw SwapException.SwapRouteNotAvailable("Chain $this is not supported by 1inch API")
     }
@@ -423,6 +428,7 @@ fun Chain.swapAssetName(): String {
         Chain.Mantle -> "MANTLE"
         Chain.Sei -> "SEI"
         Chain.Hyperliquid -> "HYPE"
+        Chain.Robinhood -> "ROBINHOOD"
         Chain.Qbtc -> "QBTC"
     }
 }
@@ -466,6 +472,7 @@ fun Chain.ticker(): String {
         Chain.Mantle -> "MNT"
         Chain.Sei -> "SEI"
         Chain.Hyperliquid -> "HYPE"
+        Chain.Robinhood -> "ETH"
         Chain.Qbtc -> "QBTC"
     }
 }
@@ -510,7 +517,8 @@ val Chain.blockTimeMs: Long
             Chain.Arbitrum,
             Chain.ZkSync,
             Chain.Sei,
-            Chain.Hyperliquid -> 1_000L
+            Chain.Hyperliquid,
+            Chain.Robinhood -> 1_000L
             else -> 4_000L
         }
 

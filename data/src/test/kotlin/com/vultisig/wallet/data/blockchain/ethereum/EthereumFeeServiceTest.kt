@@ -102,6 +102,15 @@ internal class EthereumFeeServiceTest {
     }
 
     @Test
+    fun `Robinhood priority fee is always zero`() = runTest {
+        stubFeeHistory(listOf(gwei(5)))
+
+        val fee = service.calculateDefaultFees(transfer(Chain.Robinhood)) as Eip1559
+
+        assertEquals(BigInteger.ZERO, fee.maxPriorityFeePerGas)
+    }
+
+    @Test
     fun `Blast with empty history uses the 001 GWEI floor`() = runTest {
         val fee = service.calculateDefaultFees(transfer(Chain.Blast)) as Eip1559
 
