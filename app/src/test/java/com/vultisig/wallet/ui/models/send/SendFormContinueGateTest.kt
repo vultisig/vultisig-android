@@ -91,15 +91,26 @@ internal class SendFormContinueGateTest {
     fun `limit is resolved per chain`() {
         val memo = "a".repeat(300)
 
-        // Cosmos Hub raises max_memo_characters to 512, Noble keeps the SDK default of 256.
+        // Cosmos Hub and Terra 2.0 raise max_memo_characters to 512, Noble keeps the SDK default
+        // of 256.
         assertNull(memoLengthErrorOrNull(Chain.GaiaChain, memo))
+        assertNull(memoLengthErrorOrNull(Chain.Terra, memo))
         assertNotNull(memoLengthErrorOrNull(Chain.Noble, memo))
     }
 
     @Test
-    fun `thorchain enforces its documented 250 byte limit`() {
-        assertNull(memoLengthErrorOrNull(Chain.ThorChain, "a".repeat(250)))
-        assertNotNull(memoLengthErrorOrNull(Chain.ThorChain, "a".repeat(251)))
+    fun `thorchain allows a memo up to the envelope limit a plain send is checked against`() {
+        // 250 bytes is thornode's MsgDeposit-only cap; a plain send carries the memo in the tx
+        // envelope, checked against max_memo_characters instead.
+        assertNull(memoLengthErrorOrNull(Chain.ThorChain, "a".repeat(256)))
+        assertNotNull(memoLengthErrorOrNull(Chain.ThorChain, "a".repeat(257)))
+    }
+
+    @Test
+    fun `a whitespace-only memo never blocks continue`() {
+        // The submit path drops a blank memo to null, so the signed transaction carries no memo at
+        // all — its length can't be a reason to disable Continue.
+        assertNull(memoLengthErrorOrNull(Chain.Noble, " ".repeat(300)))
     }
 
     @Test

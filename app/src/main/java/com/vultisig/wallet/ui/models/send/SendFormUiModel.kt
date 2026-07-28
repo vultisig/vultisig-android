@@ -168,10 +168,15 @@ internal fun SendFormUiModel.isContinueDisabled(): Boolean =
  * character count and still be rejected). The error reports that same byte length, so it never
  * names a number that looks like it fits.
  *
+ * A blank memo never errors, matching the submit path dropping a whitespace-only memo to null: the
+ * signed transaction carries no memo at all, so blocking on its length would disable Continue over
+ * something the node never sees.
+ *
  * @param chain the chain the memo will be signed for; `null` (no chain selected yet) never errors.
  * @return a [UiText] error naming the current length and the limit, or null when the memo fits.
  */
 internal fun memoLengthErrorOrNull(chain: Chain?, memo: String): UiText? {
+    if (memo.isBlank()) return null
     val limit = chain?.maxMemoCharacters ?: return null
     val bytes = memo.toByteArray(Charsets.UTF_8).size
     if (bytes <= limit) return null
