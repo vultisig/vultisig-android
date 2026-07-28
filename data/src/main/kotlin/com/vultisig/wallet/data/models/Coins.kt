@@ -3338,4 +3338,14 @@ object Coins {
         )
 
     val all: List<Coin> = coins.values.flatten()
+
+    /**
+     * Coins that only ever back a DeFi position, never a wallet balance. They are deliberately kept
+     * out of [coins] so token discovery and the token-selection list never offer them, but they
+     * must stay resolvable by id because a persisted position round-trips through its coin id.
+     */
+    val defiOnly: List<Coin> = listOf(ThorChain.sRUJI)
+
+    /** [all] plus [defiOnly] — use whenever a stored coin id is resolved back to its [Coin]. */
+    val allResolvable: List<Coin> = all + defiOnly
 }
