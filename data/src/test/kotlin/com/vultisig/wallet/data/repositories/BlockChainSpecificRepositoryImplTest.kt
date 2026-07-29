@@ -435,6 +435,46 @@ internal class BlockChainSpecificRepositoryImplTest {
     }
 
     @Test
+    fun `zkSync specific clamps a priority fee that exceeds the max fee`() = runTest {
+        val destination = "0xzkrecipient"
+        val coin = evmCoin(chain = Chain.ZkSync, isNativeToken = true)
+        val result =
+            repository(
+                    evmApi =
+                        evmApi(
+                            zkFeesByRecipient =
+                                mapOf(
+                                    destination to
+                                        ZkGasFee(
+                                            gasLimit = BigInteger("25000"),
+                                            gasPerPubdataLimit = BigInteger.ONE,
+                                            maxFeePerGas = BigInteger("77"),
+                                            maxPriorityFeePerGas = BigInteger("99"),
+                                        )
+                                )
+                        ),
+                    evmFeeService = NoOpFeeService,
+                )
+                .getSpecific(
+                    chain = Chain.ZkSync,
+                    address = SOURCE_ADDRESS,
+                    token = coin,
+                    gasFee = TokenValue(BigInteger.ONE, coin),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                    dstAddress = destination,
+                )
+
+        assertEthereumSpecific(
+            result = result,
+            gasLimit = BigInteger("25000"),
+            maxFeePerGas = BigInteger("77"),
+            priorityFee = BigInteger("77"),
+        )
+    }
+
+    @Test
     fun `SUI specific uses GasFees limit and price from fee service`() = runTest {
         val simulatedBudget = BigInteger("4200000")
         val simulatedPrice = BigInteger("750")

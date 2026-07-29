@@ -26,7 +26,7 @@ class ZkFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory)
 
         return Eip1559(
             limit = feeEstimate.gasLimit,
-            maxPriorityFeePerGas = feeEstimate.maxPriorityFeePerGas,
+            maxPriorityFeePerGas = feeEstimate.clampedPriorityFee(),
             maxFeePerGas = feeEstimate.maxFeePerGas,
             networkPrice = feeEstimate.maxFeePerGas,
             amount = feeEstimate.maxFeePerGas * feeEstimate.gasLimit,

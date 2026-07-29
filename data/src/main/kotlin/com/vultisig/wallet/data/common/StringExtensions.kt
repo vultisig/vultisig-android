@@ -106,14 +106,21 @@ fun String.remove0x(): String {
 
 fun String.isNotEmptyContract(): Boolean = isNotEmpty() && !equals(ZERO_ADDRESS, ignoreCase = true)
 
+/**
+ * Parses an Ethereum JSON-RPC `QUANTITY`, which is unsigned by spec, so a signed value is malformed
+ * input and yields zero like any other. The sign floor is load-bearing: `BigInteger(String, radix)`
+ * accepts a leading `-`, so `"-5"` (or `"0x-5"`, since only the prefix is stripped) would otherwise
+ * parse into a real negative that passes every downstream magnitude check and reaches WalletCore as
+ * two's-complement bytes it reads back unsigned — `-5` encodes to `0xfb`, or 251.
+ */
 fun String?.convertToBigIntegerOrZero(): BigInteger {
     val cleanedInput = this?.removePrefix("0x")
     return if (cleanedInput.isNullOrEmpty()) {
         BigInteger.ZERO
     } else {
         try {
-            BigInteger(cleanedInput, 16)
-        } catch (e: NumberFormatException) {
+            BigInteger(cleanedInput, 16).coerceAtLeast(BigInteger.ZERO)
+        } catch (_: NumberFormatException) {
             BigInteger.ZERO
         }
     }
