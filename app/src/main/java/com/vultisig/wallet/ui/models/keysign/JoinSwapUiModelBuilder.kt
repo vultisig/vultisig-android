@@ -29,11 +29,15 @@ import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
 import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
+import com.vultisig.wallet.data.swap.limit.LimitSwapMemo
+import com.vultisig.wallet.data.swap.limit.toThorchainFixedPoint
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
+import com.vultisig.wallet.ui.models.swap.FormatLimitOrderLabelsUseCase
+import com.vultisig.wallet.ui.models.swap.LimitOrderLabels
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
@@ -63,6 +67,7 @@ constructor(
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val swapQuoteRepository: SwapQuoteRepository,
     private val mapSwapTransactionToHistoryData: SwapTransactionToHistoryDataMapper,
+    private val formatLimitOrderLabels: FormatLimitOrderLabelsUseCase,
 ) {
 
     /**
@@ -367,6 +372,14 @@ constructor(
                         externalRecipient = externalRecipient,
                         swapFee = rawFees?.let { dstToken.convertToTokenValue(it.affiliate) },
                         outboundFee = rawFees?.let { dstToken.convertToTokenValue(it.outbound) },
+                        limitOrderLabels =
+                            resolveLimitOrderLabels(
+                                memo = payload.memo,
+                                srcToken = srcToken,
+                                srcTokenValue = srcTokenValue,
+                                dstToken = dstToken,
+                                currency = currency,
+                            ),
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -524,6 +537,9 @@ constructor(
         // Hides the Swap Fee row and drops it from the total for a SwapKit UTXO deposit whose cost
         // is already the Network Fee — matching the initiator's verify screen and the form (#5358).
         swapFeeHidden: Boolean = false,
+        // Non-null only for a THORChain `=<` limit order, recovered from the signed memo. Drives
+        // the limit-order title and the Target Price / expiry row (#4154).
+        limitOrderLabels: LimitOrderLabels? = null,
     ): SwapTransactionUiModel {
         val estimatedFee = convertTokenValueToFiat(providerFeeToken, providerFee, currency)
 
@@ -586,6 +602,42 @@ constructor(
             providerLabel = providerLabel,
             externalRecipient = externalRecipient,
             swapFeeHidden = swapFeeHidden,
+            isLimitOrder = limitOrderLabels != null,
+            limitTargetPriceLabel = limitOrderLabels?.targetPriceLabel,
+            limitExpiryLabel = limitOrderLabels?.expiryLabel,
+        )
+    }
+
+    /**
+     * Recovers the limit order a cosigner would otherwise sign as an ordinary swap (#4154).
+     *
+     * A `=<` order reaches the joining device as a plain THORChain swap payload plus its memo, so
+     * without this it reads "You're swapping" with no target price and no expiry — the two terms
+     * that make the order an order. The memo is the order, so both are recoverable from it: the LIM
+     * against the sold amount gives the target price, the interval blocks give the lifetime. Null
+     * for a market swap or a memo this app can't read back, which leaves the screen exactly as it
+     * was.
+     */
+    private suspend fun resolveLimitOrderLabels(
+        memo: String?,
+        srcToken: Coin,
+        srcTokenValue: TokenValue,
+        dstToken: Coin,
+        currency: AppCurrency,
+    ): LimitOrderLabels? {
+        val parsed = memo?.let { LimitSwapMemo.parse(it) } ?: return null
+        val targetPrice =
+            LimitSwapMemo.targetPrice(
+                limit = parsed.limit,
+                sourceAmount = toThorchainFixedPoint(srcTokenValue.value, srcToken.decimal),
+            ) ?: return null
+        val expiryHours = LimitSwapMemo.expiryHours(parsed.expiryBlocks) ?: return null
+        return formatLimitOrderLabels(
+            srcToken = srcToken,
+            dstToken = dstToken,
+            targetPrice = targetPrice,
+            expiryHours = expiryHours,
+            currency = currency,
         )
     }
 

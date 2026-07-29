@@ -348,6 +348,57 @@ class LimitSwapMemoTest {
         )
     }
 
+    @Test
+    fun `targetPrice inverts the LIM math a cosigner only has the memo for`() {
+        // 1 ETH sold at 0.04 BTC/ETH — the fixture memo's LIM, read back from the wire.
+        val sourceAmount = toThorchainFixedPoint(BigInteger.TEN.pow(18), 18)
+        assertEquals(
+            BigDecimal("0.04000000"),
+            LimitSwapMemo.targetPrice(BigInteger.valueOf(4_000_000L), sourceAmount),
+        )
+    }
+
+    @Test
+    fun `targetPrice returns null for a zero LIM or zero source amount`() {
+        assertEquals(null, LimitSwapMemo.targetPrice(BigInteger.ZERO, BigInteger.TEN))
+        assertEquals(null, LimitSwapMemo.targetPrice(BigInteger.TEN, BigInteger.ZERO))
+        // Floors below the memo's 8-decimal grid rather than reporting a price of zero.
+        assertEquals(null, LimitSwapMemo.targetPrice(BigInteger.ONE, BigInteger.TEN.pow(9)))
+    }
+
+    @Test
+    fun `expiryHours reverses intervalBlocks and rejects a foreign lifetime`() {
+        limitSwapExpiryHours.forEach { hours ->
+            assertEquals(hours, LimitSwapMemo.expiryHours(LimitSwapMemo.intervalBlocks(hours)))
+        }
+        assertEquals(null, LimitSwapMemo.expiryHours(1_234))
+    }
+
+    @Test
+    fun `a built memo round-trips back into its target price and lifetime`() {
+        val sourceAmount = BigInteger.valueOf(10_981L) // 0.00010981 BTC
+        val memo =
+            buildLimitSwapMemoForCoins(
+                fromCoin = nativeCoin(Chain.Bitcoin, "BTC", 8),
+                toCoin = nativeCoin(Chain.Ethereum, "ETH", 18),
+                amount = sourceAmount,
+                targetPrice = BigDecimal("35.05144"),
+                expiryHours = 12,
+                destinationAddress = "0x0cb1D4a24292bB89862f599Ac5B10F42b6DE07e4",
+            )
+        val parsed = checkNotNull(LimitSwapMemo.parse(memo)) { "failed to parse limit memo: $memo" }
+        assertEquals(12, LimitSwapMemo.expiryHours(parsed.expiryBlocks))
+        // Recovered within one floored LIM unit of the placing device's price (#4154).
+        val recovered =
+            checkNotNull(
+                LimitSwapMemo.targetPrice(parsed.limit, toThorchainFixedPoint(sourceAmount, 8))
+            )
+        assertTrue(
+            (BigDecimal("35.05144") - recovered).abs() < BigDecimal("0.0001"),
+            "recovered target price was $recovered",
+        )
+    }
+
     private fun nativeCoin(chain: Chain, ticker: String, decimals: Int) =
         Coin(
             chain = chain,

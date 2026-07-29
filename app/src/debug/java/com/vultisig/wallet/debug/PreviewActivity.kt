@@ -217,6 +217,12 @@ class PreviewActivity : ComponentActivity() {
                     "limit_swap_form_assets" ->
                         LimitSwapFormPreview(expandedSection = LimitFormSection.Asset)
                     "limit_order_confirm" -> LimitOrderConfirmPreview()
+                    "limit_order_fees_before" -> LimitOrderFeesPreview(carriesRouteFees = false)
+                    "limit_order_fees_after" -> LimitOrderFeesPreview(carriesRouteFees = true)
+                    "join_limit_order_confirm_before" ->
+                        JoinLimitOrderConfirmPreview(recognizesLimitOrder = false)
+                    "join_limit_order_confirm_after" ->
+                        JoinLimitOrderConfirmPreview(recognizesLimitOrder = true)
                     "limit_order_done" -> LimitOrderDonePreview()
                     "swap_confirm" -> SwapConfirmPreview()
                     "swap_confirm_chain" -> SwapChainIndicatorPreview()
@@ -867,6 +873,94 @@ private fun LimitOrderConfirmPreview() {
             ),
         hasToolbar = true,
         confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onBackClick = {},
+    )
+}
+
+/**
+ * The *placing* device's confirmation for the same limit order. [carriesRouteFees] false reproduces
+ * the fee rows before the route's breakdown was carried: the swap fee is the source-chain gas fee
+ * read as a destination-token amount, there is no outbound fee, and the total counts the network
+ * fee twice over.
+ */
+@Composable
+private fun LimitOrderFeesPreview(carriesRouteFees: Boolean) {
+    val btcCoin = Coins.Bitcoin.BTC
+    val ethCoin = Coins.Ethereum.ETH
+
+    val tx =
+        SwapTransactionUiModel(
+            src = ValuedToken(token = btcCoin, value = "0.00010981", fiatValue = "$7.08"),
+            dst = ValuedToken(token = ethCoin, value = "0.003849", fiatValue = "$7.08"),
+            networkFee = ValuedToken(token = btcCoin, value = "0.00000705", fiatValue = "$0.45"),
+            providerFee =
+                ValuedToken(
+                    token = ethCoin,
+                    value = if (carriesRouteFees) "0.0000002" else "0.00000705",
+                    fiatValue = if (carriesRouteFees) "$0.04" else "$0.01",
+                ),
+            outboundFee = "$0.25".takeIf { carriesRouteFees },
+            totalFee = if (carriesRouteFees) "$0.74" else "$0.47",
+            networkFeeFormatted = "0.00000705 BTC",
+            provider = "THORChain",
+            providerLabel = "THORChain",
+            isLimitOrder = true,
+            limitTargetPriceLabel = "1 ETH = $1,838.58",
+            limitExpiryLabel = UiText.StringResource(R.string.limit_swap_expiry_12h),
+        )
+
+    VerifySwapScreen(
+        state =
+            VerifySwapUiModel(
+                tx = tx,
+                consentAmount = true,
+                consentReceiveAmount = true,
+                vaultName = "AE_QBTC_IOS",
+            ),
+        hasToolbar = true,
+        confirmTitle = "Sign transaction",
+        onFastSignClick = {},
+        onConfirm = {},
+        onBackClick = {},
+    )
+}
+
+/**
+ * The same limit order as seen on the *joining* device (#4154): no consent checkboxes, no fast sign
+ * — just the overview it signs. [recognizesLimitOrder] false reproduces the cosigner reading the
+ * order as an ordinary swap, before the target price and lifetime were recovered from the memo.
+ */
+@Composable
+private fun JoinLimitOrderConfirmPreview(recognizesLimitOrder: Boolean) {
+    val btcCoin = Coins.Bitcoin.BTC
+    val ethCoin = Coins.Ethereum.ETH
+
+    val tx =
+        SwapTransactionUiModel(
+            src = ValuedToken(token = btcCoin, value = "0.00010981", fiatValue = "$7.36"),
+            dst = ValuedToken(token = ethCoin, value = "0.003849", fiatValue = "$7.36"),
+            networkFee = ValuedToken(token = btcCoin, value = "0.00001125", fiatValue = "$0.73"),
+            providerFee = ValuedToken(token = ethCoin, value = "0.0000002", fiatValue = "$0.04"),
+            outboundFee = "$0.25",
+            totalFee = "$1.01",
+            networkFeeFormatted = "0.00001125 BTC",
+            provider = "THORChain",
+            providerLabel = "THORChain",
+            isLimitOrder = recognizesLimitOrder,
+            limitTargetPriceLabel = "1 ETH = $1,838.58".takeIf { recognizesLimitOrder },
+            limitExpiryLabel =
+                UiText.StringResource(R.string.limit_swap_expiry_12h).takeIf {
+                    recognizesLimitOrder
+                },
+        )
+
+    VerifySwapScreen(
+        state = VerifySwapUiModel(tx = tx, vaultName = "AE_QBTC_SAM"),
+        hasToolbar = true,
+        confirmTitle = "Sign transaction",
+        isConsentsEnabled = false,
         onFastSignClick = {},
         onConfirm = {},
         onBackClick = {},
