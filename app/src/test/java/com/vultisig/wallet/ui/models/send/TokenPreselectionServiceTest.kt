@@ -192,6 +192,22 @@ internal class TokenPreselectionServiceTest {
             assertEquals(emptyList<Any>(), selectedTokens)
         }
 
+    @Test
+    fun `preSelect UNSTAKE_SRUJI - Loaded(empty) does not preselect static template coin`() =
+        runTest(mainDispatcher) {
+            // The sRUJI account is synthesized on top of the vault's RUNE account, so an empty
+            // load means that prerequisite is missing. Selecting the static template would show a
+            // complete Asset section with a blank balance instead of surfacing the gap.
+            defiType = DeFiNavActions.UNSTAKE_SRUJI
+            accountsState.value = AccountsLoadState.Loaded(emptyList())
+            val service = build(backgroundScope)
+
+            service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
+            advanceUntilIdle()
+
+            assertEquals(emptyList<Any>(), selectedTokens)
+        }
+
     // ──────── forcePreselection ────────
 
     @Test
