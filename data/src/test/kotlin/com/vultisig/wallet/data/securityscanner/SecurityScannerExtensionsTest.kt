@@ -3,22 +3,22 @@ package com.vultisig.wallet.data.securityscanner
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.utils.NetworkErrorKind
 import com.vultisig.wallet.data.utils.NetworkException
-import java.math.BigInteger
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import timber.log.Timber
 
 /**
- * Covers [runSecurityScan]'s failure-logging path (#5431's "Also needed": Blockaid's HTTP status
- * and response body must reach the log on scan failure, distinguishing a real HTTP error from a
- * transport failure that never got a response at all).
+ * Covers [runSecurityScan]'s failure path: on any non-cancellation exception it must rethrow as
+ * [SecurityScannerException] (#5432 — so the caller surfaces a distinct scan-unavailable state
+ * instead of a fabricated risk finding), while logging Blockaid's HTTP status and response body
+ * when available (#5431 — so the next rejection report carries the provider's `detail` field
+ * instead of it only being implicitly present inside the exception's stack trace).
  */
 internal class SecurityScannerExtensionsTest {
 
@@ -56,12 +56,10 @@ internal class SecurityScannerExtensionsTest {
             type = SecurityTransactionType.COIN_TRANSFER,
             from = "bc1qsender",
             to = "bc1qrecipient",
-            amount = BigInteger.ZERO,
-            data = "deadbeef",
         )
 
     @Test
-    fun `a successful scan returns the block's result untouched`() = runBlocking {
+    fun `runSecurityScan returns the block result on success`() = runTest {
         val expected =
             SecurityScannerResult(
                 provider = "blockaid",
@@ -77,11 +75,39 @@ internal class SecurityScannerExtensionsTest {
         assertSame(expected, result)
     }
 
+    /**
+     * The whole point of #5432: a scan failure (transport error, or a mapper throwing
+     * [SecurityScannerException] for a provider-signaled error status) must propagate so the caller
+     * can surface a distinct scan-unavailable state, never a fabricated risk finding.
+     */
     @Test
-    fun `an HTTP error response logs the status code and response body`() = runBlocking {
+    fun `runSecurityScan rethrows as SecurityScannerException instead of fabricating a result`() =
+        runTest {
+            val cause = SecurityScannerException("SecurityScanner Error: 502 Bad Gateway")
+
+            val thrown =
+                assertThrows<SecurityScannerException> {
+                    runSecurityScan(transaction) { throw cause }
+                }
+
+            assertSame(cause, thrown.cause)
+            assertEquals(Chain.Bitcoin, thrown.chain)
+        }
+
+    @Test
+    fun `runSecurityScan rethrows CancellationException unwrapped`() = runTest {
+        assertThrows<CancellationException> {
+            runSecurityScan(transaction) { throw CancellationException("scope cancelled") }
+        }
+    }
+
+    @Test
+    fun `an HTTP error response logs the status code and response body`() = runTest {
         val networkException = NetworkException(400, "{\"detail\":\"invalid transaction\"}")
 
-        runSecurityScan(transaction) { throw networkException }
+        assertThrows<SecurityScannerException> {
+            runSecurityScan(transaction) { throw networkException }
+        }
 
         val logged = logEntries.single { it.t === networkException }
         assertEquals(
@@ -92,50 +118,32 @@ internal class SecurityScannerExtensionsTest {
     }
 
     @Test
-    fun `a transport failure with no HTTP response is labelled distinctly from HTTP 0`() =
-        runBlocking {
-            val transportException =
-                NetworkException(0, "Unable to resolve host", NetworkErrorKind.NoConnectivity, null)
+    fun `a transport failure with no HTTP response is labelled distinctly from HTTP 0`() = runTest {
+        val transportException =
+            NetworkException(0, "Unable to resolve host", NetworkErrorKind.NoConnectivity, null)
 
+        assertThrows<SecurityScannerException> {
             runSecurityScan(transaction) { throw transportException }
-
-            val logged = logEntries.single { it.t === transportException }
-            assertEquals(
-                "SecurityScanner: Error scanning ${Chain.Bitcoin.name} transaction " +
-                    "(transport error: Unable to resolve host)",
-                logged.firstLine(),
-            )
         }
 
-    @Test
-    fun `a scan failure returns a scan-unavailable MEDIUM result instead of throwing`() =
-        runBlocking {
-            val result = runSecurityScan(transaction) { throw IllegalStateException("boom") }
-
-            assertEquals(SecurityRiskLevel.MEDIUM, result.riskLevel)
-            assertFalse(result.isSecure)
-            assertEquals("Scan unavailable", result.description)
-        }
+        val logged = logEntries.single { it.t === transportException }
+        assertEquals(
+            "SecurityScanner: Error scanning ${Chain.Bitcoin.name} transaction " +
+                "(transport error: Unable to resolve host)",
+            logged.firstLine(),
+        )
+    }
 
     @Test
-    fun `a non-network exception logs without a network detail suffix`() = runBlocking {
+    fun `a non-network exception logs without a network detail suffix`() = runTest {
         val exception = IllegalStateException("boom")
 
-        runSecurityScan(transaction) { throw exception }
+        assertThrows<SecurityScannerException> { runSecurityScan(transaction) { throw exception } }
 
         val logged = logEntries.single { it.t === exception }
         assertEquals(
             "SecurityScanner: Error scanning ${Chain.Bitcoin.name} transaction",
             logged.firstLine(),
         )
-    }
-
-    @Test
-    fun `cancellation is rethrown instead of being reported as a scan failure`() {
-        assertThrows(CancellationException::class.java) {
-            runBlocking {
-                runSecurityScan(transaction) { throw CancellationException("cancelled") }
-            }
-        }
     }
 }
