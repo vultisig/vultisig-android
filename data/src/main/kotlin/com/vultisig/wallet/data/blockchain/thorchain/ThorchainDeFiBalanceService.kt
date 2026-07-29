@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.blockchain.thorchain
 
 import com.vultisig.wallet.data.blockchain.DeFiService
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance
+import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
@@ -123,25 +124,12 @@ class ThorchainDeFiBalanceService(
 
             // Add RUJI balance if exists
             rujiDetails?.let { details ->
-                val balances = mutableListOf<DeFiBalance.Balance>()
-
-                // Add stake balance with rewards if available
-                val rewardsAmount =
-                    details.rewards
-                        ?.takeIf { it > BigDecimal.ZERO }
-                        ?.let { runCatching { it.toBigInteger() }.getOrDefault(BigInteger.ZERO) }
-                        ?: BigInteger.ZERO
-
-                balances.add(
-                    DeFiBalance.Balance(
-                        coin = details.coin,
-                        amount = details.stakeAmount,
-                        coinRewards = RUJI_REWARDS_COIN,
-                        rewardsAmount = rewardsAmount,
+                defiBalances.add(
+                    DeFiBalance(
+                        chain = Chain.ThorChain,
+                        balances = listOf(details.toBondedRujiBalance()),
                     )
                 )
-
-                defiBalances.add(DeFiBalance(chain = Chain.ThorChain, balances = balances))
             }
 
             // Add the auto-compounding RUJI position if exists. It is independent of the bonded one
@@ -234,10 +222,29 @@ class ThorchainDeFiBalanceService(
             chain = Chain.ThorChain,
             balances =
                 positions.map { position ->
-                    DeFiBalance.Balance(coin = position.coin, amount = position.stakeAmount)
+                    // Only the bonded position has separately-claimable revenue, and a refresh must
+                    // report the same shape as the cache above or it would drop the claimable USDC.
+                    if (position.coin.id == Coins.ThorChain.RUJI.id) {
+                        position.toBondedRujiBalance()
+                    } else {
+                        DeFiBalance.Balance(coin = position.coin, amount = position.stakeAmount)
+                    }
                 },
         )
     }
+
+    /** The bonded RUJI position with its claimable USDC revenue attached. */
+    private fun StakingDetails.toBondedRujiBalance(): DeFiBalance.Balance =
+        DeFiBalance.Balance(
+            coin = coin,
+            amount = stakeAmount,
+            coinRewards = RUJI_REWARDS_COIN,
+            rewardsAmount =
+                rewards
+                    ?.takeIf { it > BigDecimal.ZERO }
+                    ?.let { runCatching { it.toBigInteger() }.getOrDefault(BigInteger.ZERO) }
+                    ?: BigInteger.ZERO,
+        )
 
     private suspend fun getRemoteOrCachedTcyDeFiBalance(
         address: String,
