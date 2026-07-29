@@ -77,9 +77,9 @@ constructor(
             val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
             uiState.update { it.copy(isBalanceVisible = isBalanceVisible) }
         }
-    }
-
-    fun refresh() {
+        // Load here rather than when the sheet finishes opening: the sheet is measured and drawn
+        // before the animation settles, so a load started on expand guarantees a first frame with
+        // no values and no action buttons, and the sheet re-anchors once they arrive.
         loadData()
     }
 

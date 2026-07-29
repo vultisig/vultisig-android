@@ -35,9 +35,10 @@ internal fun DottyBottomSheet(
     content: @Composable ColumnScope.() -> Unit,
 ) {
 
+    // Nothing drives expand() here on purpose: ModalBottomSheet already animates to Expanded on
+    // first composition, and skipPartiallyExpanded leaves nowhere else to settle. Expanding on the
+    // same frame short-circuits that animation and the sheet lands at its target without sliding.
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    LaunchedEffect(Unit) { sheetState.expand() }
 
     LaunchedEffect(sheetState.currentValue) {
         if (sheetState.currentValue != SheetValue.Hidden) {
