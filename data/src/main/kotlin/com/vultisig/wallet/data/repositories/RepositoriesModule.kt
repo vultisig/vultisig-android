@@ -292,6 +292,10 @@ internal interface RepositoriesModule {
     @Binds
     fun bindOnBoardRepository(impl: OnboardingRepositoryImpl): OnboardingRepository
 
+    @Singleton
+    @Binds
+    fun bindInAppReviewRepository(impl: InAppReviewRepositoryImpl): InAppReviewRepository
+
     @Singleton @Binds fun bindFolderRepository(impl: FolderRepositoryImpl): FolderRepository
 
     @Singleton

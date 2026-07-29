@@ -193,7 +193,6 @@ private fun ChainDashboardScreenPreview() {
                 onHistory = {},
                 onSelectTokens = {},
                 onTokenClick = {},
-                onShowReviewPopUp = {},
             )
         },
     )
