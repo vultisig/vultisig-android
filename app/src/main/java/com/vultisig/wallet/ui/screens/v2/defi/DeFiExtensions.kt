@@ -85,9 +85,13 @@ internal fun emptyStakingTabUiModel() = StakingTabUiModel(positions = emptyList(
 
 internal fun DeFiNavActions.getContractByDeFiAction(): String? {
     return when (this) {
+        // Both RUJI positions live on the same rujira-staking contract; they differ only in the
+        // execute message (`account.*` vs `liquid.*`).
         DeFiNavActions.WITHDRAW_RUJI,
         DeFiNavActions.STAKE_RUJI,
-        DeFiNavActions.UNSTAKE_RUJI -> STAKING_RUJI_CONTRACT
+        DeFiNavActions.UNSTAKE_RUJI,
+        DeFiNavActions.STAKE_SRUJI,
+        DeFiNavActions.UNSTAKE_SRUJI -> STAKING_RUJI_CONTRACT
 
         DeFiNavActions.MINT_YTCY,
         DeFiNavActions.MINT_YRUNE -> YRUNE_YTCY_AFFILIATE_CONTRACT

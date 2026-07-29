@@ -133,6 +133,54 @@ object ThorchainFunctions {
     }
 
     /**
+     * Stakes into the auto-compounding RUJI position, which mints sRUJI receipt shares. This is the
+     * `liquid.bond` sibling of [stakeRUJI]'s `account.bond` — the same contract, a different
+     * position — and is funded with the bond token (`x/ruji`), like the bonded side.
+     */
+    fun stakeRujiCompound(
+        fromAddress: String,
+        stakingContract: String,
+        denom: String,
+        amount: BigInteger,
+    ): WasmExecuteContractPayload {
+        require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
+        require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
+        require(denom.isNotEmpty()) { "Denom cannot be empty" }
+        require(amount >= BigInteger.ONE) { "amount cannot be lower than 1" }
+
+        return WasmExecuteContractPayload(
+            senderAddress = fromAddress,
+            contractAddress = stakingContract,
+            executeMsg = ExecMsg.liquidBond(),
+            coins = listOf(CosmosCoin(denom = denom, amount = amount.toString())),
+        )
+    }
+
+    /**
+     * Redeems from the auto-compounding RUJI position. Unlike [unstakeRUJI], which names an amount
+     * of bonded RUJI, this is funded with sRUJI receipt *shares* — the caller must convert a
+     * RUJI-denominated amount at the pool's share price before calling.
+     *
+     * @param shares the sRUJI receipt shares to redeem, in base units
+     */
+    fun unstakeRujiCompound(
+        shares: BigInteger,
+        stakingContract: String,
+        fromAddress: String,
+    ): WasmExecuteContractPayload {
+        require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
+        require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
+        require(shares >= BigInteger.ONE) { "shares cannot be lower than 1" }
+
+        return WasmExecuteContractPayload(
+            senderAddress = fromAddress,
+            contractAddress = stakingContract,
+            executeMsg = ExecMsg.liquidUnbond(),
+            coins = listOf(CosmosCoin(denom = Memo.DENOM_STAKING_RUJI, amount = shares.toString())),
+        )
+    }
+
+    /**
      * Builds the THORChain memo for claiming RUJI staking rewards.
      *
      * @param contractAddress the RUJI staking contract address
@@ -159,6 +207,7 @@ private object Memo {
     const val CLAIM_PREFIX = "claim:"
     const val TCY_UNSTAKE_PREFIX = "TCY-:"
     const val DENOM_STAKING_TCY = "x/staking-tcy"
+    const val DENOM_STAKING_RUJI = "x/staking-x/ruji"
 }
 
 private object ExecMsg {

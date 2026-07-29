@@ -59,9 +59,15 @@ internal class AccountsLoader(
                         loadUnbondAccount(vaultId, generation)
                     }
 
+                DeFiNavActions.UNSTAKE_SRUJI ->
+                    scope.safeLaunch(onError = ::onLoadError) {
+                        loadAutoCompoundRujiAccount(vaultId, generation)
+                    }
+
                 null,
                 DeFiNavActions.BOND,
                 DeFiNavActions.STAKE_RUJI,
+                DeFiNavActions.STAKE_SRUJI,
                 DeFiNavActions.STAKE_TCY,
                 DeFiNavActions.STAKE_STCY,
                 DeFiNavActions.UNSTAKE_STCY,
@@ -126,6 +132,27 @@ internal class AccountsLoader(
         return true
     }
 
+    /**
+     * Finds the wallet account for [tokenId], or abandons this load by publishing an empty list.
+     *
+     * Every derived position below (rewards, Circle USDC, sRUJI) is synthesized on top of a wallet
+     * account and copies its address, so publishing one without its source would hand the form a
+     * token with an empty address and silently break the later submit. [missingReason] is logged
+     * when the absence is genuinely unexpected; callers that also run against a pre-hydration
+     * snapshot omit it rather than flood the error log.
+     */
+    private fun List<Account>.findSourceOrPublishEmpty(
+        tokenId: String,
+        generation: Long,
+        missingReason: String? = null,
+    ): Account? =
+        find { it.token.id.equals(tokenId, true) }
+            ?: run {
+                missingReason?.let { Timber.e(it) }
+                publishLoaded(emptyList(), generation)
+                null
+            }
+
     private suspend fun onLoadError(error: Throwable) {
         Timber.e(error, "Failed to load accounts")
     }
@@ -167,15 +194,14 @@ internal class AccountsLoader(
         generation: Long,
     ) {
         if (generation != currentGeneration) return
+        // Without a vault-bound ETH account the address copied onto USDC below would be empty,
+        // which silently breaks any later submit through WithdrawUsdcCircleStrategy.
         val ethereumAccount =
-            accountsLoaded.find { it.token.id.equals(Coins.Ethereum.ETH.id, true) }
-        if (ethereumAccount == null) {
-            // Without a vault-bound ETH account the address copied onto USDC below would be
-            // empty, which silently breaks any later submit through WithdrawUsdcCircleStrategy.
-            Timber.e("Ethereum account not available for Circle USDC withdrawal")
-            publishLoaded(emptyList(), generation)
-            return
-        }
+            accountsLoaded.findSourceOrPublishEmpty(
+                tokenId = Coins.Ethereum.ETH.id,
+                generation = generation,
+                missingReason = "Ethereum account not available for Circle USDC withdrawal",
+            ) ?: return
 
         val usdc = Coins.Ethereum.USDC.copy(address = ethereumAccount.token.address)
 
@@ -231,18 +257,10 @@ internal class AccountsLoader(
     ) {
         if (generation != currentGeneration) return
         val thorchainAccount =
-            accountsLoaded.find { it.token.id.equals(Coins.ThorChain.RUNE.id, true) }
-                ?: run {
-                    publishLoaded(emptyList(), generation)
-                    return
-                }
+            accountsLoaded.findSourceOrPublishEmpty(Coins.ThorChain.RUNE.id, generation) ?: return
 
         val rujiAccount =
-            accountsLoaded.find { it.token.id.equals(Coins.ThorChain.RUJI.id, true) }
-                ?: run {
-                    publishLoaded(emptyList(), generation)
-                    return
-                }
+            accountsLoaded.findSourceOrPublishEmpty(Coins.ThorChain.RUJI.id, generation) ?: return
 
         if (rewards != null) {
             val rewardsAccount =
@@ -257,6 +275,57 @@ internal class AccountsLoader(
         } else {
             publishLoaded(emptyList(), generation)
         }
+    }
+
+    // The auto-compounding RUJI position is not a wallet token: its sRUJI receipt is deliberately
+    // kept out of token discovery, so no account for it comes back from either addresses flow.
+    // Synthesize one from the staking details the DeFi tab cached, denominated in RUJI (the pool's
+    // `liquidSize`) so the form's MAX and the card the user tapped agree. UnstakeStrategy converts
+    // that amount back into receipt shares at submit time.
+    private suspend fun loadAutoCompoundRujiAccount(vaultId: VaultId, generation: Long) {
+        val cachedDetails =
+            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.sRUJI.id)
+        accountsRepository
+            .loadAddresses(vaultId)
+            .map { addrs -> addrs.flatMap { it.accounts } }
+            .collect { accountsLoaded ->
+                publishAutoCompoundRuji(accountsLoaded, cachedDetails?.stakeAmount, generation)
+            }
+    }
+
+    private fun publishAutoCompoundRuji(
+        accountsLoaded: List<Account>,
+        autoCompoundAmount: BigInteger?,
+        generation: Long,
+    ) {
+        if (generation != currentGeneration) return
+        // The RUNE account carries the THORChain address the unbond is sent from, and funds the gas
+        // fee; without it the synthesized account below would have an empty address.
+        val thorchainAccount =
+            accountsLoaded.findSourceOrPublishEmpty(
+                tokenId = Coins.ThorChain.RUNE.id,
+                generation = generation,
+                missingReason = "THORChain account not available for sRUJI unstake",
+            ) ?: return
+
+        // The receipt is never discovered as a wallet token, so its template carries an empty
+        // key. It becomes KeysignPayload.coin, and ThorChainHelper builds the signing input from
+        // coin.hexPublicKey — an empty one aborts the redemption before the keysign QR appears.
+        // Every THORChain token shares the chain's derived key, so the RUNE account supplies it.
+        val sRuji =
+            Coins.ThorChain.sRUJI.copy(
+                address = thorchainAccount.token.address,
+                hexPublicKey = thorchainAccount.token.hexPublicKey,
+            )
+        val sRujiAccount =
+            Account(
+                token = sRuji,
+                tokenValue =
+                    TokenValue(value = autoCompoundAmount ?: BigInteger.ZERO, token = sRuji),
+                fiatValue = null,
+                price = null,
+            )
+        publishLoaded(listOf(sRujiAccount, thorchainAccount), generation)
     }
 
     // Unbond draws from the RUNE already bonded to the selected node, not the vault's combined
