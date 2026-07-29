@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.services
 
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
@@ -14,21 +13,19 @@ import com.vultisig.wallet.app.activity.MainActivity
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @AndroidEntryPoint
 class VultisigFirebaseMessagingService : FirebaseMessagingService() {
 
     @Inject lateinit var pushNotificationManager: PushNotificationManager
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onNewToken(token: String) {
-        serviceScope.launch { pushNotificationManager.onNewToken(token) }
+        // Both halves are synchronous so neither can be lost to service teardown: the token is
+        // persisted here and the HTTP re-registration is handed to WorkManager, which owns the
+        // retries. Callbacks arrive on a Firebase background thread, so the prefs write is safe.
+        pushNotificationManager.storeToken(token)
+        PushRegistrationWorker.enqueue(this, replaceExisting = true)
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
@@ -65,14 +62,6 @@ class VultisigFirebaseMessagingService : FirebaseMessagingService() {
     private fun showSystemNotification(qrCodeData: String) {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-        val channel =
-            NotificationChannel(
-                CHANNEL_ID,
-                getString(R.string.keysign_notification_channel_name),
-                NotificationManager.IMPORTANCE_HIGH,
-            )
-        notificationManager.createNotificationChannel(channel)
-
         val tapIntent =
             Intent(this, MainActivity::class.java).apply {
                 flags =
@@ -92,7 +81,7 @@ class VultisigFirebaseMessagingService : FirebaseMessagingService() {
             )
 
         val notification =
-            NotificationCompat.Builder(this, CHANNEL_ID)
+            NotificationCompat.Builder(this, KeysignNotificationChannel.id(this))
                 .setContentTitle(getString(R.string.keysign_notification_title))
                 .setContentText(getString(R.string.keysign_notification_body))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -104,15 +93,9 @@ class VultisigFirebaseMessagingService : FirebaseMessagingService() {
         notificationManager.notify(notificationId, notification)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        serviceScope.cancel()
-    }
-
     companion object {
         const val PUSH_NOTIFICATION_ACTION = "com.vultisig.wallet.PUSH_NOTIFICATION"
         const val QR_CODE_DATA = "message"
-        private const val CHANNEL_ID = "keysign_requests_channel"
         private val notificationIdCounter = AtomicInteger(1000)
     }
 }

@@ -3,9 +3,14 @@ package com.vultisig.wallet.data.di
 import android.content.Context
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.vultisig.wallet.data.repositories.PrettyJson
+import com.vultisig.wallet.data.services.AndroidSystemNotificationStatus
+import com.vultisig.wallet.data.services.FcmTokenProvider
+import com.vultisig.wallet.data.services.FirebaseFcmTokenProvider
+import com.vultisig.wallet.data.services.SystemNotificationStatus
 import com.vultisig.wallet.data.utils.BigDecimalSerializer
 import com.vultisig.wallet.data.utils.BigIntegerSerializer
 import com.vultisig.wallet.data.utils.KeysignResponseSerializer
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,6 +28,14 @@ import tss.KeysignResponse
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface DataModule {
+
+    @Binds @Singleton fun bindFcmTokenProvider(impl: FirebaseFcmTokenProvider): FcmTokenProvider
+
+    @Binds
+    @Singleton
+    fun bindSystemNotificationStatus(
+        impl: AndroidSystemNotificationStatus
+    ): SystemNotificationStatus
 
     companion object {
 

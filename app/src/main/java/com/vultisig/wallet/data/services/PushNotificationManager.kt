@@ -3,7 +3,6 @@ package com.vultisig.wallet.data.services
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.google.firebase.messaging.FirebaseMessaging
 import com.vultisig.wallet.data.api.DeviceRegistrationRequest
 import com.vultisig.wallet.data.api.DeviceUnregisterRequest
 import com.vultisig.wallet.data.api.NotificationApi
@@ -17,7 +16,6 @@ import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
 @SuppressLint(
@@ -31,27 +29,53 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val vaultNotificationSettingsDao: VaultNotificationSettingsDao,
     private val encryptedPrefs: SharedPreferences,
+    private val fcmTokenProvider: FcmTokenProvider,
 ) {
     fun getStoredToken(): String? = encryptedPrefs.getString(FCM_TOKEN_KEY, null)
 
-    suspend fun onNewToken(token: String) {
+    /**
+     * Persists a freshly minted token. Synchronous by design: `FirebaseMessagingService` stops
+     * itself once `onNewToken` returns, so a token handed to a coroutine can be lost when the
+     * service's scope is torn down mid-flight. The network half is re-registration, which
+     * [PushRegistrationWorker] owns.
+     */
+    fun storeToken(token: String) {
         encryptedPrefs.edit { putString(FCM_TOKEN_KEY, token) }
-        reRegisterAllOptedInVaults(token)
     }
 
     suspend fun refreshTokenIfNeeded() {
-        if (getStoredToken() != null) return
-        try {
-            val token = FirebaseMessaging.getInstance().token.await()
-            onNewToken(token)
+        currentToken()
+    }
+
+    /**
+     * The token to register with, minting and persisting one if none is stored yet.
+     *
+     * @return null when no token could be obtained; the caller should retry later rather than treat
+     *   this as a permanent state.
+     */
+    suspend fun currentToken(): String? {
+        getStoredToken()?.let {
+            return it
+        }
+        return try {
+            fcmTokenProvider.fetchToken().also { storeToken(it) }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.w(e, "Failed to fetch FCM token")
+            null
         }
     }
 
-    private suspend fun reRegisterAllOptedInVaults(token: String) {
+    /**
+     * Re-points every opted-in vault at [token] on the server.
+     *
+     * @return false when at least one vault failed, so the caller can reschedule. Registrations
+     *   that are never retried leave the server holding a dead token while the local toggle still
+     *   reads ON — pushes stop and never heal.
+     */
+    suspend fun reRegisterOptedInVaults(token: String): Boolean {
         val enabledSettings = vaultNotificationSettingsDao.getAllEnabled()
+        var allSucceeded = true
         enabledSettings.forEach { settings ->
             val vault =
                 vaultRepository.get(settings.vaultId)?.takeIf { it.isSecureVault() }
@@ -66,10 +90,15 @@ constructor(
                 )
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                Timber.w(e, "Failed to re-register vault ${vault.id} with new FCM token")
+                Timber.w(e, "Failed to re-register vault %s with new FCM token", vault.id)
+                allSucceeded = false
             }
         }
+        return allSucceeded
     }
+
+    suspend fun hasOptedInVaults(): Boolean =
+        vaultNotificationSettingsDao.getAllEnabled().isNotEmpty()
 
     private fun notificationVaultId(vault: Vault): String {
         val input = (vault.pubKeyECDSA + vault.hexChainCode).toByteArray()
