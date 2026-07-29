@@ -1156,6 +1156,23 @@
     <string name="token_details_bottom_sheet_price">价格</string>
     <string name="token_details_bottom_sheet_network">网络</string>
 
+    <!-- Price chart + market data — issue #5428 -->
+    <string name="price_chart_content_description">价格图表，变化 %1$s</string>
+    <string name="token_details_market_stats_title">市场数据</string>
+    <string name="token_details_price_extremes_title">价格区间</string>
+    <string name="token_details_token_info_title">代币信息</string>
+    <string name="token_details_market_cap">市值</string>
+    <string name="token_details_market_cap_rank">排名</string>
+    <string name="token_details_fully_diluted_valuation">完全稀释估值</string>
+    <string name="token_details_volume_24h">24小时交易量</string>
+    <string name="token_details_circulating_supply">流通供应量</string>
+    <string name="token_details_max_supply">最大供应量</string>
+    <string name="token_details_low_24h">24小时最低价</string>
+    <string name="token_details_high_24h">24小时最高价</string>
+    <string name="token_details_all_time_high">历史最高价</string>
+    <string name="token_details_all_time_low">历史最低价</string>
+    <string name="token_details_contract_address">合约地址</string>
+    <string name="token_details_decimals">小数位数</string>
 
     <!-- Invite to X Banner -->
     <string name="send_tx_overview_add_to_address_book">添加到地址簿</string>

@@ -1052,6 +1052,23 @@
     <string name="vault_list_edit_vaults_header">볼트 수정</string>
     <string name="token_details_bottom_sheet_price">가격</string>
     <string name="token_details_bottom_sheet_network">네트워크</string>
+    <!-- Price chart + market data — issue #5428 -->
+    <string name="price_chart_content_description">가격 차트, %1$s 변동</string>
+    <string name="token_details_market_stats_title">시장 통계</string>
+    <string name="token_details_price_extremes_title">가격 범위</string>
+    <string name="token_details_token_info_title">토큰 정보</string>
+    <string name="token_details_market_cap">시가총액</string>
+    <string name="token_details_market_cap_rank">순위</string>
+    <string name="token_details_fully_diluted_valuation">완전 희석 가치</string>
+    <string name="token_details_volume_24h">24시간 거래량</string>
+    <string name="token_details_circulating_supply">유통량</string>
+    <string name="token_details_max_supply">최대 공급량</string>
+    <string name="token_details_low_24h">24시간 최저가</string>
+    <string name="token_details_high_24h">24시간 최고가</string>
+    <string name="token_details_all_time_high">역대 최고가</string>
+    <string name="token_details_all_time_low">역대 최저가</string>
+    <string name="token_details_contract_address">컨트랙트 주소</string>
+    <string name="token_details_decimals">소수 자릿수</string>
     <string name="vault_ceil_active">활성</string>
     <string name="send_tx_overview_add_to_address_book">주소록에 추가</string>
     <string name="invite_to_x_banner_title">Vultisig는 여러분과 함께 성장합니다.</string>

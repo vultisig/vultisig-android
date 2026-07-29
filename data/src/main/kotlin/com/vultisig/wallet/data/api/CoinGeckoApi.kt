@@ -1,6 +1,10 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.CoinMarketStatsJson
+import com.vultisig.wallet.data.api.models.MarketChartResponseJson
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.coinGeckoAssetPlatformId
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -24,6 +28,23 @@ interface CoinGeckoApi {
         contractAddresses: List<String>,
         currencies: List<String>,
     ): Map<String, CurrencyToPrice>
+
+    /**
+     * `/coins/{id}/market_chart` — id lookups are case-sensitive on CoinGecko, so [id] must be
+     * lowercased by the caller.
+     */
+    suspend fun getMarketChart(id: String, currency: String, days: String): MarketChartResponseJson
+
+    /** `/coins/{platform}/contract/{address}/market_chart`, for tokens with no CoinGecko id. */
+    suspend fun getContractMarketChart(
+        chain: Chain,
+        contractAddress: String,
+        currency: String,
+        days: String,
+    ): MarketChartResponseJson
+
+    /** `/coins/markets` — market cap, rank, FDV, volume, supply and price-extreme stats. */
+    suspend fun getMarketStats(id: String, currency: String): List<CoinMarketStatsJson>
 }
 
 internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient) : CoinGeckoApi {
@@ -81,22 +102,48 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
             }
             .body()
 
-    private val Chain.coinGeckoAssetId: String
-        get() =
-            when (this) {
-                Chain.Ethereum -> "ethereum"
-                Chain.Avalanche -> "avalanche"
-                Chain.Base -> "base"
-                Chain.Blast -> "blast"
-                Chain.Arbitrum -> "arbitrum-one"
-                Chain.Polygon -> "polygon-pos"
-                Chain.Optimism -> "optimistic-ethereum"
-                Chain.BscChain -> "binance-smart-chain"
-                Chain.ZkSync -> "zksync"
-                Chain.Solana -> "solana"
-                Chain.Robinhood -> "robinhood"
-                Chain.Mantle -> "mantle"
-
-                else -> error("No CoinGecko asset id for chain $this")
+    override suspend fun getMarketChart(
+        id: String,
+        currency: String,
+        days: String,
+    ): MarketChartResponseJson =
+        http
+            .get(
+                "https://api.vultisig.com/coingeicko/api/v3/coins/${id.lowercase()}/market_chart"
+            ) {
+                parameter("vs_currency", currency)
+                parameter("days", days)
+                header("Content-Type", "application/json")
             }
+            .bodyOrThrow()
+
+    override suspend fun getContractMarketChart(
+        chain: Chain,
+        contractAddress: String,
+        currency: String,
+        days: String,
+    ): MarketChartResponseJson =
+        http
+            .get(
+                "https://api.vultisig.com/coingeicko/api/v3/coins/" +
+                    "${chain.coinGeckoAssetId}/contract/$contractAddress/market_chart"
+            ) {
+                parameter("vs_currency", currency)
+                parameter("days", days)
+                header("Content-Type", "application/json")
+            }
+            .bodyOrThrow()
+
+    override suspend fun getMarketStats(id: String, currency: String): List<CoinMarketStatsJson> =
+        http
+            .get("https://api.vultisig.com/coingeicko/api/v3/coins/markets") {
+                parameter("vs_currency", currency)
+                parameter("ids", id.lowercase())
+                parameter("price_change_percentage", "24h")
+                header("Content-Type", "application/json")
+            }
+            .bodyOrThrow()
+
+    private val Chain.coinGeckoAssetId: String
+        get() = coinGeckoAssetPlatformId() ?: error("No CoinGecko asset id for chain $this")
 }

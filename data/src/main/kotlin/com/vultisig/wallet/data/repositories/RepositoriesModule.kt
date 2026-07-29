@@ -96,6 +96,12 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindTokenPriceChartRepository(
+        impl: TokenPriceChartRepositoryImpl
+    ): TokenPriceChartRepository
+
+    @Binds
+    @Singleton
     fun bindAppLocaleRepository(impl: AppLocaleRepositoryImpl): AppLocaleRepository
 
     @Binds
