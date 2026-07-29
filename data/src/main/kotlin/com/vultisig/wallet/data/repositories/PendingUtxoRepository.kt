@@ -35,11 +35,10 @@ data class PendingSpend(
  * confirmed yet, so coin selection can subtract them from a confirmed-only UTXO list.
  *
  * Dash InstantSend-locks the inputs of a broadcast transaction within seconds, so a second send
- * started before the first confirms is rejected with `tx-txlock-conflict` — after the full
- * signing ceremony — as soon as coin selection reuses one of those inputs. Neither Dash's
- * `getaddressutxos` address index (built from mined blocks) nor the Blockchair fallback (filtered
- * to `block_id > 0`) knows about mempool spends, so the pending view is tracked here instead. See
- * issue #5453.
+ * started before the first confirms is rejected with `tx-txlock-conflict` — after the full signing
+ * ceremony — as soon as coin selection reuses one of those inputs. Neither Dash's `getaddressutxos`
+ * address index (built from mined blocks) nor the Blockchair fallback (filtered to `block_id > 0`)
+ * knows about mempool spends, so the pending view is tracked here instead. See issue #5453.
  *
  * Records are dropped as soon as one of their outputs turns up in the confirmed set, and expire
  * after 30 minutes so a transaction that fell out of the mempool cannot strand funds.
