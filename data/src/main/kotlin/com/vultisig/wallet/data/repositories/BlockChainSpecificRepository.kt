@@ -38,6 +38,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
@@ -57,6 +58,7 @@ import timber.log.Timber
 import vultisig.keysign.v1.CosmosIbcDenomTrace
 import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.Base58
+import wallet.core.jni.BitcoinScript
 
 data class BlockChainSpecificAndUtxo(
     val blockChainSpecific: BlockChainSpecific,
@@ -101,6 +103,7 @@ constructor(
     private val tronApi: TronApi,
     private val cardanoApi: CardanoApi,
     private val feeServiceComposite: FeeServiceComposite,
+    private val pendingUtxoRepository: PendingUtxoRepository = PendingUtxoRepository(),
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -321,18 +324,28 @@ constructor(
                             null
                         }
 
+                    val confirmedUtxos =
+                        dashUtxos?.excludingDust(chain)
+                            ?: blockChairApi
+                                .getAllUtxos(chain = chain, address = address)
+                                .utxos
+                                .toSpendableUtxos(chain)
+                    val ownScript = lockScriptHexOrNull(chain, address)
+
                     BlockChainSpecificAndUtxo(
                         blockChainSpecific =
                             BlockChainSpecific.UTXO(
                                 byteFee = gasFee.value,
                                 sendMaxAmount = isMaxAmountEnabled,
                             ),
+                        // Every Dash source is confirmed-only, so an outpoint already spent by a
+                        // broadcast-but-unconfirmed send is still offered here and reusing it is
+                        // rejected as tx-txlock-conflict; subtract the locally tracked mempool
+                        // view before coin selection sees the list (issue #5453).
                         utxos =
-                            dashUtxos?.excludingDust(chain)
-                                ?: blockChairApi
-                                    .getAllUtxos(chain = chain, address = address)
-                                    .utxos
-                                    .toSpendableUtxos(chain),
+                            pendingUtxoRepository
+                                .applyTo(chain, confirmedUtxos, ownScript)
+                                .excludingDust(chain),
                     )
                 } else {
                     val utxos =
@@ -720,6 +733,23 @@ constructor(
                         )
                 )
             }
+        }
+
+    /**
+     * Hex scriptPubKey locking funds to [address] on [chain], or null when WalletCore can't decode
+     * the address. Lets [PendingUtxoRepository] tell a pending transaction's change output apart
+     * from its payment outputs. Catches [Throwable] because this crosses a JNI boundary: a missing
+     * native library must degrade to the plain outpoint exclusion, not break coin selection.
+     */
+    private fun lockScriptHexOrNull(chain: Chain, address: String): String? =
+        try {
+            BitcoinScript.lockScriptForAddress(address, chain.coinType)
+                .data()
+                .takeIf { it.isNotEmpty() }
+                ?.let(Numeric::toHexStringNoPrefix)
+        } catch (e: Throwable) {
+            Timber.w(e, "could not derive the %s lock script for the pending change output", chain)
+            null
         }
 
     /** Shared by every UTXO-chain data source, Blockchair or Dash's own RPC. */

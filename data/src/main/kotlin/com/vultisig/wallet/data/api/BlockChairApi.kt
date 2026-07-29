@@ -21,7 +21,19 @@ import io.ktor.http.isSuccess
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
+
+/**
+ * A node refused the transaction. Blockchair wraps the node's reason in a JSON envelope, which is
+ * unreadable on the Keysign error sheet, so [message] carries the extracted reason instead.
+ *
+ * @property isPermanent True when the reason can never succeed on a retry (a conflicting or
+ *   already-spent input), as opposed to something transient like a fee that is momentarily too low.
+ */
+class BroadcastRejectedException(message: String, val isPermanent: Boolean) : Exception(message)
 
 interface BlockChairApi {
     suspend fun getAddressInfo(chain: Chain, address: String): BlockChairInfo?
@@ -56,6 +68,23 @@ constructor(
         // further worth fetching for a single send. This bounds worst-case pagination latency
         // (20 sequential requests) rather than expressing any real chain limit.
         private const val MAX_UTXO_PAGES = 20
+
+        private const val MAX_BODY_CHARS = 200
+
+        // Node reasons that mean an input is already claimed by another transaction. Retrying
+        // never clears them — the earlier transaction has to confirm first (issue #5453).
+        private val PERMANENT_REJECTIONS =
+            mapOf(
+                "tx-txlock-conflict" to
+                    "This transaction spends coins that an earlier transaction from this vault " +
+                        "already locked. Wait for that transaction to confirm, then send again.",
+                "txn-mempool-conflict" to
+                    "This transaction spends coins that an earlier pending transaction already " +
+                        "used. Wait for that transaction to confirm, then send again.",
+                "bad-txns-inputs-missingorspent" to
+                    "The coins this transaction spends have already been spent. Wait for your " +
+                        "balance to refresh, then send again.",
+            )
     }
 
     private fun getChainName(chain: Chain): String =
@@ -195,13 +224,35 @@ constructor(
                     }
                 if (response.status != HttpStatusCode.OK) {
                     val errorBody = response.bodyAsText()
-                    Timber.e("fail to broadcast transaction: $errorBody")
-                    error("fail to broadcast transaction: $errorBody")
+                    Timber.e("fail to broadcast transaction: %s", errorBody)
+                    throw broadcastRejection(errorBody)
                 }
 
                 return response.bodyOrThrow<TransactionHashDataJson>().data.value
             }
         }
+    }
+
+    /**
+     * Builds the [BroadcastRejectedException] for a rejected push. Blockchair reports the node's
+     * reason as `context.error`; a permanent one gets an explanation the user can act on, anything
+     * else falls back to the bare reason (or a trimmed body when the shape is unexpected).
+     */
+    private fun broadcastRejection(errorBody: String): BroadcastRejectedException {
+        val reason =
+            try {
+                val context = json.parseToJsonElement(errorBody).jsonObject["context"]
+                context?.jsonObject?.get("error")?.jsonPrimitive?.contentOrNull
+            } catch (_: Exception) {
+                null
+            }
+        val detail = reason?.takeIf { it.isNotBlank() } ?: errorBody.take(MAX_BODY_CHARS)
+        val explanation =
+            PERMANENT_REJECTIONS.entries.firstOrNull { detail.contains(it.key, ignoreCase = true) }
+        return BroadcastRejectedException(
+            message = explanation?.value ?: "Failed to broadcast transaction: $detail",
+            isPermanent = explanation != null,
+        )
     }
 
     override suspend fun getTsStatus(chain: Chain, txHash: String): BlockChainStatusDeserialized? {

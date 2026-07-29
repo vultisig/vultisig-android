@@ -49,6 +49,7 @@ import com.vultisig.wallet.data.models.Chain.ThorChain
 import com.vultisig.wallet.data.models.Chain.Ton
 import com.vultisig.wallet.data.models.Chain.ZkSync
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.repositories.PendingUtxoRepository
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
 import javax.inject.Inject
@@ -77,6 +78,7 @@ constructor(
     private val tronApi: TronApi,
     private val cardanoApi: CardanoApi,
     private val transactionStatusRepository: TransactionStatusRepository,
+    private val pendingUtxoRepository: PendingUtxoRepository = PendingUtxoRepository(),
 ) : BroadcastTxUseCase {
 
     override suspend fun invoke(chain: Chain, tx: SignedTransactionResult) =
@@ -99,18 +101,7 @@ constructor(
             Litecoin,
             Dogecoin,
             Dash,
-            Chain.Zcash ->
-                recoverIfAlreadyBroadcast(
-                    tx = tx,
-                    broadcast = { blockChairApi.broadcastTransaction(chain, tx.rawTransaction) },
-                    verify = { hash ->
-                        val response = blockChairApi.getTsStatus(chain, hash)
-                        (response as? BlockChainStatusDeserialized.Result)
-                            ?.data
-                            ?.data
-                            ?.containsKey(hash) == true
-                    },
-                )
+            Chain.Zcash -> broadcastBlockChairTx(chain, tx)
 
             Ethereum,
             CronosChain,
@@ -243,6 +234,31 @@ constructor(
                     verify = { hash -> (cardanoApi.getTxStatus(hash)?.numConfirmations ?: 0) > 0 },
                 )
         }
+
+    /**
+     * Broadcasts a Blockchair-backed UTXO transaction and, on Dash, remembers the outpoints it
+     * spends. Dash InstantSend-locks them within seconds, so a follow-up send that reuses one is
+     * rejected outright with `tx-txlock-conflict`; coin selection has to skip them until this
+     * transaction confirms (issue #5453).
+     */
+    private suspend fun broadcastBlockChairTx(chain: Chain, tx: SignedTransactionResult): String? {
+        val hash =
+            recoverIfAlreadyBroadcast(
+                tx = tx,
+                broadcast = { blockChairApi.broadcastTransaction(chain, tx.rawTransaction) },
+                verify = { hash ->
+                    val response = blockChairApi.getTsStatus(chain, hash)
+                    (response as? BlockChainStatusDeserialized.Result)
+                        ?.data
+                        ?.data
+                        ?.containsKey(hash) == true
+                },
+            )
+        if (chain == Dash && hash != null) {
+            pendingUtxoRepository.record(chain, tx.rawTransaction, hash)
+        }
+        return hash
+    }
 
     private suspend fun recoverIfAlreadyBroadcast(
         tx: SignedTransactionResult,
