@@ -160,16 +160,6 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         }
     }
 
-    // ERC-20 transfer(address,uint256) calldata, built with plain hex concatenation (no JNI) so
-    // this
-    // class stays unit-testable. Matches EvmApi.constructERC20TransferData.
-    private fun erc20TransferCallData(recipient: String, amount: BigInteger): ByteArray {
-        val methodId = "a9059cbb"
-        val paddedAddress = recipient.removePrefix("0x").padStart(64, '0')
-        val paddedValue = amount.toString(16).padStart(64, '0')
-        return Numeric.hexStringToByteArray(methodId + paddedAddress + paddedValue)
-    }
-
     private data class L1CallContext(val to: String, val value: BigInteger, val data: ByteArray)
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {

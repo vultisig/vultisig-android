@@ -5,6 +5,10 @@ import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.Fee
+import com.vultisig.wallet.data.blockchain.model.Swap
+import com.vultisig.wallet.data.blockchain.model.Transfer
+import com.vultisig.wallet.data.common.add0x
+import com.vultisig.wallet.data.utils.Numeric
 import javax.inject.Inject
 
 class ZkFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory) : FeeService {
@@ -15,16 +19,14 @@ class ZkFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory)
         estimateFee(transaction)
 
     private suspend fun estimateFee(transaction: BlockchainTransaction): Fee {
-        val chain = transaction.coin.chain
-        val coin = transaction.coin
-        val toAddress = transaction.to
-        val evmApi = evmApiFactory.createEvmApi(chain)
+        val evmApi = evmApiFactory.createEvmApi(transaction.coin.chain)
+        val call = resolveCall(transaction)
 
         val feeEstimate =
             evmApi.zkEstimateFee(
-                srcAddress = coin.address,
-                dstAddress = toAddress,
-                data = PLACEHOLDER_CALL_DATA,
+                srcAddress = transaction.coin.address,
+                dstAddress = call.to,
+                data = call.data,
             )
 
         return Eip1559(
@@ -36,18 +38,47 @@ class ZkFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory)
         )
     }
 
-    companion object {
-        private const val PLACEHOLDER_MEMO = "0xffffffff"
+    /**
+     * zkSync meters both gas and pubdata by calldata byte, and the signed gas limit comes from this
+     * same estimate — so the estimate has to describe the call the transaction will actually
+     * broadcast rather than a fixed stand-in payload. A longer memo is a longer, costlier payload,
+     * and a stand-in that ignores it both misprices the preview and under-funds the signed
+     * transaction.
+     */
+    private fun resolveCall(transaction: BlockchainTransaction): ZkCall {
+        val coin = transaction.coin
+        return when (transaction) {
+            is Transfer ->
+                if (coin.isNativeToken) {
+                    // A native send calls the recipient directly and carries the memo as its
+                    // payload — no memo means no calldata.
+                    ZkCall(to = transaction.to, data = memoCallData(transaction.memo).asCallData())
+                } else {
+                    // An ERC-20 send calls the token contract, not the recipient (see
+                    // ERC20Helper). Estimating against the recipient priced a bare value
+                    // transfer, so the signed limit could not cover the token transfer.
+                    ZkCall(
+                        to = coin.contractAddress,
+                        data =
+                            erc20TransferCallData(transaction.to, transaction.amount).asCallData(),
+                    )
+                }
+            is Swap ->
+                ZkCall(
+                    to = transaction.to,
+                    // Router calldata is fetched in parallel with the quote, so callers that build
+                    // a Swap purely to price it leave it empty; there is nothing to build then.
+                    data =
+                        transaction.callData.takeIf { it.isNotEmpty() }?.add0x() ?: EMPTY_CALL_DATA,
+                )
+        }
+    }
 
-        /**
-         * zkSync prices gas and pubdata by calldata size, so every `zks_estimateFee` call must send
-         * the same placeholder payload or the previewed fee and the signed gas limit diverge.
-         * Mirrors iOS `RpcEvmService.getGasInfoZk`: the UTF-8 bytes of [PLACEHOLDER_MEMO],
-         * hex-encoded — a 10-byte payload, not the 4 bytes the literal string looks like.
-         */
-        internal val PLACEHOLDER_CALL_DATA: String =
-            PLACEHOLDER_MEMO.toByteArray().joinToString(prefix = "0x", separator = "") { byte ->
-                String.format("%02x", byte)
-            }
+    private fun ByteArray.asCallData(): String = Numeric.toHexString(this)
+
+    private data class ZkCall(val to: String, val data: String)
+
+    internal companion object {
+        internal const val EMPTY_CALL_DATA = "0x"
     }
 }

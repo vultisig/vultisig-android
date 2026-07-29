@@ -456,7 +456,11 @@ internal class BlockChainSpecificRepositoryImplTest {
                 isMaxAmountEnabled = false,
                 isDeposit = false,
                 dstAddress = destination,
+                memo = MEMO,
             )
+
+        // The signing path must have priced the memo it is about to sign, not a fixed stand-in.
+        coVerify(exactly = 1) { evmApi.zkEstimateFee(SOURCE_ADDRESS, destination, MEMO_CALL_DATA) }
 
         ZkFeeService(evmApiFactory)
             .calculateFees(
@@ -465,13 +469,12 @@ internal class BlockChainSpecificRepositoryImplTest {
                     vault = VaultData("", ""),
                     amount = BigInteger.ZERO,
                     to = destination,
+                    memo = MEMO,
                 )
             )
 
         // Both entry points must send byte-identical calldata: zkSync prices gas by payload size.
-        coVerify(exactly = 2) {
-            evmApi.zkEstimateFee(SOURCE_ADDRESS, destination, ZkFeeService.PLACEHOLDER_CALL_DATA)
-        }
+        coVerify(exactly = 2) { evmApi.zkEstimateFee(SOURCE_ADDRESS, destination, MEMO_CALL_DATA) }
     }
 
     @Test
@@ -1049,6 +1052,9 @@ internal class BlockChainSpecificRepositoryImplTest {
     private companion object {
         val NONCE: BigInteger = BigInteger("7")
         const val SOURCE_ADDRESS = "0xsource"
+        const val MEMO = "hi there"
+        // "hi there" UTF-8 encoded — the payload the signed transaction carries.
+        const val MEMO_CALL_DATA = "0x6869207468657265"
     }
 }
 
