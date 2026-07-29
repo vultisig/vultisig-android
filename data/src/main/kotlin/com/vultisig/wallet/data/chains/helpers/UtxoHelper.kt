@@ -22,7 +22,6 @@ import wallet.core.jni.BitcoinScript
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
 import wallet.core.jni.Hash
-import wallet.core.jni.PrivateKey
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
@@ -385,33 +384,111 @@ class UtxoHelper(
         )
     }
 
-    fun getZeroSignedTransaction(keysignPayload: KeysignPayload): String {
-        val inputData = getBitcoinPreSigningInputData(keysignPayload)
-        val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
-        val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes).checkError()
-        val publicKeys = DataVector()
-        val allSignatures = DataVector()
+    /**
+     * Builds a genuinely unsigned raw Bitcoin transaction hex for Blockaid's pre-signing scan: the
+     * real planned inputs/outputs/scripts with every scriptSig left empty and no witness data at
+     * all, mirroring iOS's `getUnsignedTransactionHex`. WalletCore's `TransactionCompiler` has no
+     * unsigned-output mode — `compileWithSignatures` always requires signature bytes, which is why
+     * this used to splice in a throwaway keypair's signature instead — so this is hand-serialized
+     * from the [Bitcoin.TransactionPlan]. Unlike iOS's version, this uses the correct CompactSize
+     * encoding for input/output counts and the real destination/change locking scripts rather than
+     * placeholder bytes.
+     */
+    fun getUnsignedTransactionHex(keysignPayload: KeysignPayload): String {
+        val signingInput = getBitcoinSigningInput(keysignPayload)
+        val plan = planTransaction(signingInput)
 
-        // Create a dummy private key for generating valid DER signatures
-        val privateKey = PrivateKey()
-        val publicKey = privateKey.getPublicKeySecp256k1(true)
+        val toScript = requireLockScript(keysignPayload.toAddress)
+        val changeScript =
+            if (plan.change > 0) requireLockScript(keysignPayload.coin.address) else null
+        val opReturnData = signingInput.outputOpReturn.toByteArray().takeIf { it.isNotEmpty() }
 
-        for (item in preSigningOutput.hashPublicKeysList) {
-            val derSignature = privateKey.signAsDER(item.dataHash.toByteArray())
-            allSignatures.add(derSignature)
-            publicKeys.add(publicKey.data())
+        return Numeric.toHexStringNoPrefix(
+            serializeUnsignedTransaction(plan, toScript, changeScript, opReturnData)
+        )
+    }
+
+    private fun requireLockScript(address: String): ByteArray =
+        BitcoinScript.lockScriptForAddress(address, coinType).data().also {
+            require(it.isNotEmpty()) {
+                "Security Scanner: '$address' is not a valid $coinType address"
+            }
         }
 
-        val compiledWithSignature =
-            TransactionCompiler.compileWithSignatures(
-                coinType,
-                inputData,
-                allSignatures,
-                publicKeys,
-            )
-        val output = Bitcoin.SigningOutput.parseFrom(compiledWithSignature).checkError()
+    /**
+     * Pure serialization step for [getUnsignedTransactionHex], split out so it is unit-testable
+     * without WalletCore's native planner/script builder (mirrors [buildSuiKeysignPayload] and
+     * [getBitcoinTransactionPlanFromSignBitcoin]). Spends exactly [plan]'s selected UTXOs — not
+     * every candidate from the original signing input — since coin selection may pick a subset.
+     */
+    internal fun serializeUnsignedTransaction(
+        plan: Bitcoin.TransactionPlan,
+        toScript: ByteArray,
+        changeScript: ByteArray?,
+        opReturnData: ByteArray?,
+    ): ByteArray {
+        require(plan.error == SigningError.OK) {
+            "Security Scanner: Failed to plan the BTC transaction: ${plan.error}"
+        }
+        require(plan.utxosCount > 0) {
+            "Security Scanner: No inputs selected for the planned BTC transaction"
+        }
 
-        return Numeric.toHexStringNoPrefix(output.encoded.toByteArray())
+        val buf = ByteArrayOutputStream()
+        buf.write(uint32LE(UNSIGNED_TX_VERSION))
+        buf.write(varInt(plan.utxosCount.toLong()))
+        for (utxo in plan.utxosList) {
+            buf.write(utxo.outPoint.hash.toByteArray())
+            buf.write(uint32LE(utxo.outPoint.index))
+            buf.write(varInt(0)) // scriptSig left empty — this is the whole point: no signature
+            buf.write(uint32LE(utxo.outPoint.sequence))
+        }
+
+        val outputs = buildList {
+            add(plan.amount to toScript)
+            if (plan.change > 0) {
+                add(
+                    plan.change to
+                        requireNotNull(changeScript) {
+                            "Security Scanner: changeScript required when plan.change > 0"
+                        }
+                )
+            }
+            opReturnData?.let { add(0L to opReturnScript(it)) }
+        }
+        buf.write(varInt(outputs.size.toLong()))
+        for ((amount, script) in outputs) {
+            buf.write(uint64LE(amount))
+            buf.write(varInt(script.size.toLong()))
+            buf.write(script)
+        }
+        buf.write(uint32LE(0)) // locktime
+
+        return buf.toByteArray()
+    }
+
+    /** Standard minimal-push OP_RETURN script: `OP_RETURN <push opcode> <data>`. */
+    private fun opReturnScript(data: ByteArray): ByteArray {
+        require(data.size <= MAX_PUSHDATA2_LEN) {
+            "Security Scanner: OP_RETURN memo of ${data.size} bytes exceeds the OP_PUSHDATA2 " +
+                "limit of $MAX_PUSHDATA2_LEN"
+        }
+        val buf = ByteArrayOutputStream()
+        buf.write(OP_RETURN_OPCODE)
+        when {
+            data.size <= MAX_DIRECT_PUSH_LEN -> buf.write(data.size)
+            data.size <= MAX_PUSHDATA1_LEN -> {
+                buf.write(OP_PUSHDATA1_OPCODE)
+                buf.write(data.size)
+            }
+            else -> {
+                buf.write(OP_PUSHDATA2_OPCODE)
+                buf.write(data.size and 0xFF)
+                buf.write((data.size ushr 8) and 0xFF)
+            }
+        }
+        buf.write(data)
+        return buf.toByteArray()
     }
 
     fun getBitcoinTransactionPlan(keysignPayload: KeysignPayload): Bitcoin.TransactionPlan {
@@ -892,3 +969,15 @@ private const val SEGWIT_INPUT_VBYTES: Long = 68L
 private const val SEGWIT_OUTPUT_VBYTES: Long = 31L
 // Length of a P2SH scriptPubKey: OP_HASH160 (1) + push20 (1) + 20-byte hash + OP_EQUAL (1).
 private const val P2SH_SCRIPT_LEN: Int = 23
+// Modern standard Bitcoin transaction version; only affects relative-locktime (BIP68) semantics,
+// irrelevant to a scan-only artifact that is never broadcast.
+private const val UNSIGNED_TX_VERSION: Int = 2
+private const val OP_RETURN_OPCODE: Int = 0x6a
+private const val OP_PUSHDATA1_OPCODE: Int = 0x4c
+private const val OP_PUSHDATA2_OPCODE: Int = 0x4d
+// Largest data push encodable as a single direct opcode (the opcode byte IS the length).
+private const val MAX_DIRECT_PUSH_LEN: Int = 0x4b
+// Largest data push encodable with OP_PUSHDATA1's one-byte length prefix.
+private const val MAX_PUSHDATA1_LEN: Int = 0xff
+// Largest data push encodable with OP_PUSHDATA2's two-byte length prefix.
+private const val MAX_PUSHDATA2_LEN: Int = 0xffff
