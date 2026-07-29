@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,6 +43,7 @@ import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBlockedReason
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
+import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -111,6 +113,13 @@ import com.vultisig.wallet.ui.models.qbtc.QbtcClaimMaturingUtxoUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
 import com.vultisig.wallet.ui.models.send.GasSettingsUiModel
+import com.vultisig.wallet.ui.models.send.SendSrc
+import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
+import com.vultisig.wallet.ui.models.swap.LimitExpiryOption
+import com.vultisig.wallet.ui.models.swap.LimitFormSection
+import com.vultisig.wallet.ui.models.swap.LimitOrderUiModel
+import com.vultisig.wallet.ui.models.swap.LimitPricePreset
+import com.vultisig.wallet.ui.models.swap.LimitPriceUnit
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -149,6 +158,7 @@ import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateBottomShe
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheetContent
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
+import com.vultisig.wallet.ui.screens.swap.components.LimitSwapForm
 import com.vultisig.wallet.ui.screens.swap.components.SwapAdvancedSettingsLockedSheet
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedExternalRecipientPreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedGasLimitPreview
@@ -158,6 +168,7 @@ import com.vultisig.wallet.ui.screens.swap.preview.AdvancedSlippagePreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapFormQuoteLoadingPreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapToolbarPreview
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
+import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
@@ -195,6 +206,11 @@ class PreviewActivity : ComponentActivity() {
         setContent {
             OnBoardingComposeTheme {
                 when (screen) {
+                    "limit_swap_form" -> LimitSwapFormPreview()
+                    "limit_swap_form_assets" ->
+                        LimitSwapFormPreview(expandedSection = LimitFormSection.Asset)
+                    "limit_order_confirm" -> LimitOrderConfirmPreview()
+                    "limit_order_done" -> LimitOrderDonePreview()
                     "swap_confirm" -> SwapConfirmPreview()
                     "swap_confirm_chain" -> SwapChainIndicatorPreview()
                     "swap_confirm_disabled" -> SwapConfirmPreview(allConsents = false)
@@ -797,6 +813,93 @@ private fun SwapConfirmPreview(allConsents: Boolean = true, externalRecipient: S
         onFastSignClick = {},
         onConfirm = {},
         onBackClick = {},
+    )
+}
+
+@Composable
+private fun LimitOrderConfirmPreview() {
+    val ethCoin = Coins.Ethereum.ETH
+    val btcCoin = Coins.Bitcoin.BTC
+
+    val tx =
+        SwapTransactionUiModel(
+            src = ValuedToken(token = ethCoin, value = "1.5", fiatValue = "$3,847.50"),
+            dst = ValuedToken(token = btcCoin, value = "0.0589", fiatValue = "$3,820.00"),
+            networkFee = ValuedToken(token = ethCoin, value = "0.0024", fiatValue = "$6.15"),
+            providerFee = ValuedToken(token = ethCoin, value = "0.0045", fiatValue = "$11.52"),
+            totalFee = "$17.67",
+            networkFeeFormatted = "0.0024 ETH ($6.15)",
+            providerFeeFormatted = "0.0045 ETH ($11.52)",
+            hasConsentAllowance = false,
+            isLimitOrder = true,
+            limitTargetPriceLabel = "1 BTC = $65,800.13",
+            limitExpiryLabel = UiText.StringResource(R.string.limit_swap_expiry_24h),
+        )
+
+    VerifySwapScreen(
+        state =
+            VerifySwapUiModel(
+                tx = tx,
+                consentAmount = true,
+                consentReceiveAmount = true,
+                consentAllowance = false,
+                hasFastSign = true,
+                txScanStatus =
+                    TransactionScanStatus.Scanned(
+                        SecurityScannerResult(
+                            provider = "Blockaid",
+                            isSecure = true,
+                            riskLevel = SecurityRiskLevel.NONE,
+                            warnings = emptyList(),
+                            description = "Transaction is safe",
+                            recommendations = "",
+                        )
+                    ),
+                vaultName = "Main Vault",
+            ),
+        hasToolbar = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onBackClick = {},
+    )
+}
+
+/**
+ * Transaction-complete screen for a placed limit order: same swap overview as a market swap, plus
+ * the "Limit Orders" notice pointing at the Transaction History tab that tracks resting orders.
+ */
+@Composable
+private fun LimitOrderDonePreview() {
+    val btcCoin = Coins.Bitcoin.BTC
+    val ethCoin = Coins.Ethereum.ETH
+
+    SwapTransactionOverviewScreen(
+        transactionHash = "2d154c8a1f0b47c9e6d3a29f5b7c8e1d4a6f9b2c3e5d7a8f9b1c2d3e4f5a99c7c",
+        approveTransactionHash = "",
+        transactionLink = "",
+        approveTransactionLink = "",
+        transactionStatus = TransactionStatus.Broadcasted,
+        onComplete = {},
+        progressLink = "https://track.ninerealms.com",
+        transactionTypeUiModel =
+            SwapTransactionUiModel(
+                src = ValuedToken(token = btcCoin, value = "0.000062", fiatValue = "$4.05"),
+                dst = ValuedToken(token = ethCoin, value = "0.00205334", fiatValue = "$4.03"),
+                networkFee =
+                    ValuedToken(token = btcCoin, value = "0.00000765", fiatValue = "$0.50"),
+                providerFee =
+                    ValuedToken(token = btcCoin, value = "0.0000003", fiatValue = "$0.02"),
+                networkFeeFormatted = "0.00000765 BTC",
+                totalFee = "$0.51",
+                srcVaultName = "Fast-DKLS",
+                dstVaultName = "Fast-DKLS",
+                isLimitOrder = true,
+                limitTargetPriceLabel = "1 ETH = $1,952.78",
+                limitExpiryLabel = UiText.StringResource(R.string.limit_swap_expiry_24h),
+            ),
+        isTransactionDetailVisible = true,
+        onTransactionDetailVisibleChange = {},
     )
 }
 
@@ -3039,5 +3142,95 @@ private fun StakingPositionSkeletonPreview() {
     ) {
         StakingPositionSkeleton()
         StakingPositionSkeleton()
+    }
+}
+
+/** Wraps [coin] in the [TokenBalanceUiModel] shape the swap token inputs expect. */
+private fun previewTokenBalance(coin: Coin, balance: String, fiatValue: String) =
+    TokenBalanceUiModel(
+        model =
+            SendSrc(
+                address = Address(chain = coin.chain, address = coin.address, accounts = listOf()),
+                account = Account(token = coin, tokenValue = null, fiatValue = null, price = null),
+            ),
+        title = coin.ticker,
+        balance = balance,
+        fiatValue = fiatValue,
+        isNativeToken = coin.isNativeToken,
+        isLayer2 = false,
+        tokenStandard = null,
+        tokenLogo = getCoinLogo(coin.logo),
+        chainLogo = coin.chain.logo,
+    )
+
+@Composable
+private fun LimitSwapFormPreview(expandedSection: LimitFormSection = LimitFormSection.ExecuteWhen) {
+    val usdc = Coins.Ethereum.USDC
+    val btc = Coins.Bitcoin.BTC
+    val state =
+        LimitOrderUiModel(
+            priceText = "$65,800.13",
+            referenceAmountLabel = "1 BTC",
+            referenceLogo = getCoinLogo(btc.logo),
+            secondaryPriceLabel = "0.07902 BTC",
+            priceUnit = LimitPriceUnit.Fiat,
+            selectedPreset = LimitPricePreset.Market,
+            selectedExpiry = LimitExpiryOption.TwentyFourHours,
+            sellTicker = "USDC",
+            sellLogo = getCoinLogo(usdc.logo),
+            buyTicker = "BTC",
+            buyLogo = getCoinLogo(btc.logo),
+            buyAmountText = "0.0790275",
+        )
+    Column(
+        modifier =
+            Modifier.background(Theme.v2.colors.backgrounds.background)
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Spacer(Modifier.padding(top = 24.dp))
+        Text(
+            text = stringResource(R.string.chain_account_view_swap),
+            style = Theme.brockmann.headings.title2,
+            color = Theme.v2.colors.text.primary,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(
+                text = stringResource(R.string.swap_mode_market),
+                style = Theme.brockmann.body.m.medium,
+                color = Theme.v2.colors.text.tertiary,
+            )
+            Text(
+                text = stringResource(R.string.swap_mode_limit),
+                style = Theme.brockmann.body.m.medium,
+                color = Theme.v2.colors.text.primary,
+            )
+        }
+        LimitSwapForm(
+            state = state,
+            srcToken = previewTokenBalance(usdc, balance = "12,200.52", fiatValue = "$12,200.52"),
+            dstToken = previewTokenBalance(btc, balance = "0.004", fiatValue = "$5,200.55"),
+            srcFiatValue = "$5,200.55",
+            srcAmountTextFieldState = rememberTextFieldState("5,200"),
+            expandedSection = expandedSection,
+            onPresetClick = {},
+            onExpiryClick = {},
+            onToggleUnit = {},
+            onExpandSection = {},
+            onSelectSrcNetworkClick = {},
+            onSelectSrcTokenClick = {},
+            onSelectDstNetworkClick = {},
+            onSelectDstTokenClick = {},
+            onFlipSelectedTokens = {},
+        )
+        Spacer(Modifier.weight(1f))
+        VsButton(
+            label = stringResource(R.string.limit_swap_place_order),
+            variant = VsButtonVariant.CTA,
+            onClick = {},
+            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+        )
     }
 }

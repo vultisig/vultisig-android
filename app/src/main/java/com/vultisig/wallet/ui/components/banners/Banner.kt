@@ -34,12 +34,14 @@ internal enum class BannerVariant {
 internal fun Banner(
     text: String,
     modifier: Modifier = Modifier,
+    title: String? = null,
     variant: BannerVariant = BannerVariant.Info,
     onCloseClick: () -> Unit,
 ) =
     Banner(
         text = text,
         modifier = modifier,
+        title = title,
         variant = variant,
         actions = {
             Icon(
@@ -62,6 +64,8 @@ internal fun Banner(
 internal fun Banner(
     text: String,
     modifier: Modifier = Modifier,
+    /** Optional heading above [text], for banners that need a subject line of their own. */
+    title: String? = null,
     variant: BannerVariant = BannerVariant.Info,
     @SuppressLint("ComposableLambdaParameterNaming") actions: (@Composable () -> Unit)? = null,
 ) {
@@ -107,12 +111,17 @@ internal fun Banner(
 
         UiIcon(drawableResId = R.drawable.ic_info, size = 16.dp, tint = contentColor)
 
-        Text(
-            text = text,
-            color = contentColor,
-            style = Theme.brockmann.supplementary.footnote,
-            modifier = Modifier.weight(1f),
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
+            title?.let {
+                Text(
+                    text = it,
+                    color = Theme.v2.colors.text.primary,
+                    style = Theme.brockmann.body.s.medium,
+                )
+            }
+
+            Text(text = text, color = contentColor, style = Theme.brockmann.supplementary.footnote)
+        }
 
         actions?.invoke()
     }
@@ -126,5 +135,11 @@ private fun BannerPreview() {
         Banner(text = "This is info", variant = BannerVariant.Info)
         Banner(text = "This is an error", variant = BannerVariant.Error)
         Banner(text = "This is a success", variant = BannerVariant.Success)
+        Banner(
+            title = "This has a title",
+            text = "And a body line under it",
+            variant = BannerVariant.Info,
+            onCloseClick = {},
+        )
     }
 }

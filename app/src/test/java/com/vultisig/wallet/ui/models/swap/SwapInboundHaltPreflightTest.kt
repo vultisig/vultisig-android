@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.repositories.ThorMimirRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -20,7 +21,9 @@ internal class SwapInboundHaltPreflightTest {
 
     private val thorChainApi = mockk<ThorChainApi>()
     private val mayaChainApi = mockk<MayaChainApi>()
-    private val preflight = SwapInboundHaltPreflight(thorChainApi, mayaChainApi)
+    private val thorMimirRepository = mockk<ThorMimirRepository>(relaxed = true)
+    private val preflight =
+        SwapInboundHaltPreflight(thorChainApi, mayaChainApi, thorMimirRepository)
 
     @Test
     fun `THORChain route is blocked when its source chain inbound is halted`() = runTest {
@@ -85,9 +88,54 @@ internal class SwapInboundHaltPreflightTest {
         coVerify(exactly = 0) { mayaChainApi.getInboundAddresses() }
     }
 
-    private fun transaction(swapPayload: SwapPayload, sourceChain: Chain): SwapTransaction =
+    @Test
+    fun `limit order is blocked when the advanced swap queue is disabled`() = runTest {
+        val transaction =
+            transaction(
+                SwapPayload.ThorChain(mockk(relaxed = true)),
+                Chain.Bitcoin,
+                memoValue = "=<:ETH.ETH:0xabc:1600000000/14400/0:va:50",
+            )
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled(forceRefresh = true) } returns
+            false
+
+        assertFailsWith<SwapException.TradingHalted> {
+            preflight.assertSourceChainNotHalted(transaction)
+        }
+        // Fails closed before even fetching inbound status.
+        coVerify(exactly = 0) { thorChainApi.getTHORChainInboundAddresses() }
+    }
+
+    @Test
+    fun `limit order proceeds to inbound validation when the queue is enabled`() = runTest {
+        val transaction =
+            transaction(
+                SwapPayload.ThorChain(mockk(relaxed = true)),
+                Chain.Bitcoin,
+                memoValue = "=<:ETH.ETH:0xabc:1600000000/14400/0:va:50",
+            )
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled(forceRefresh = true) } returns true
+        coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
+            listOf(inbound(chain = "BTC"))
+
+        preflight.assertSourceChainNotHalted(transaction)
+
+        coVerify(exactly = 1) { thorChainApi.getTHORChainInboundAddresses() }
+        // The sign-time re-check must bypass the mimir cache, or it would replay the value the
+        // placement-time check already read and verify nothing.
+        coVerify(exactly = 1) {
+            thorMimirRepository.isAdvancedSwapQueueEnabled(forceRefresh = true)
+        }
+    }
+
+    private fun transaction(
+        swapPayload: SwapPayload,
+        sourceChain: Chain,
+        memoValue: String? = null,
+    ): SwapTransaction =
         mockk(relaxed = true) {
             every { payload } returns swapPayload
+            every { memo } returns memoValue
             every { srcToken } returns
                 mockk<Coin>(relaxed = true) { every { chain } returns sourceChain }
         }

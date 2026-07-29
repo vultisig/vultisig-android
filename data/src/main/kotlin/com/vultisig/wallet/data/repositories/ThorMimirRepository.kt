@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.ThorChainApi
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -27,6 +28,18 @@ interface ThorMimirRepository {
      * `BTC`, `BSC`) is halted via either `HALT<CHAIN>LP` or `HALT<CHAIN>CHAIN`.
      */
     suspend fun isLpHalted(chainPrefix: String): Boolean
+
+    /**
+     * Whether THORChain currently accepts resting limit orders, gated on the `EnableAdvSwapQueue`
+     * mimir. Fails closed — any network or parse failure, and any value other than exactly `1`,
+     * returns `false`: a `=<` order placed while the queue is disabled can execute as an
+     * unprotected market swap, so the only value that unblocks placement is a live, confirmed `1`.
+     *
+     * [forceRefresh] bypasses (and re-seeds) the shared TTL cache. The sign-time re-check must pass
+     * it: signing usually happens well inside the TTL of the placement-time check, so a cached read
+     * would just replay that earlier answer and never see a queue that flipped off in between.
+     */
+    suspend fun isAdvancedSwapQueueEnabled(forceRefresh: Boolean = false): Boolean
 }
 
 internal class ThorMimirRepositoryImpl @Inject constructor(private val thorChainApi: ThorChainApi) :
@@ -43,17 +56,28 @@ internal class ThorMimirRepositoryImpl @Inject constructor(private val thorChain
         return mimir.isOn(key)
     }
 
+    override suspend fun isAdvancedSwapQueueEnabled(forceRefresh: Boolean): Boolean =
+        try {
+            mimir(forceRefresh)[KEY_ADVANCED_SWAP_QUEUE.uppercase()] == 1L
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Fail closed: no confirmed `1` (network/parse failure included) keeps placement
+            // blocked.
+            false
+        }
+
     override suspend fun isLpHalted(chainPrefix: String): Boolean {
         val mimir = mimir()
         val upper = chainPrefix.uppercase()
         return mimir.isOn("HALT${upper}LP") || mimir.isOn("HALT${upper}CHAIN")
     }
 
-    private suspend fun mimir(): Map<String, Long> =
+    private suspend fun mimir(forceRefresh: Boolean = false): Map<String, Long> =
         mutex.withLock {
             val now = nowMillis()
             val current = cached
-            if (current != null && now - cachedAtMillis < TTL_MILLIS) {
+            if (!forceRefresh && current != null && now - cachedAtMillis < TTL_MILLIS) {
                 current
             } else {
                 val fresh = thorChainApi.getMimir().mapKeys { it.key.uppercase() }
@@ -78,5 +102,6 @@ internal class ThorMimirRepositoryImpl @Inject constructor(private val thorChain
         const val TTL_MILLIS = 30_000L
         const val KEY_GLOBAL_LP_PAUSE = "PAUSELP"
         const val KEY_PER_POOL_LP_DEPOSIT_PAUSE = "PAUSELPDEPOSIT"
+        const val KEY_ADVANCED_SWAP_QUEUE = "EnableAdvSwapQueue"
     }
 }

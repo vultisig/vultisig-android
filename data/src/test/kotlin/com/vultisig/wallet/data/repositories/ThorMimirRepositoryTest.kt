@@ -110,4 +110,32 @@ internal class ThorMimirRepositoryTest {
 
         coVerify(exactly = 1) { api.getMimir() }
     }
+
+    @Test
+    fun `advanced swap queue is on only for exactly 1`() = runTest {
+        coEvery { api.getMimir() } returns mapOf("ENABLEADVSWAPQUEUE" to 1L)
+        assertTrue(repository.isAdvancedSwapQueueEnabled())
+
+        repository = ThorMimirRepositoryImpl(api)
+        coEvery { api.getMimir() } returns mapOf("ENABLEADVSWAPQUEUE" to 2L)
+        assertFalse(repository.isAdvancedSwapQueueEnabled())
+
+        repository = ThorMimirRepositoryImpl(api)
+        coEvery { api.getMimir() } throws RuntimeException("thornode down")
+        assertFalse(repository.isAdvancedSwapQueueEnabled())
+    }
+
+    @Test
+    fun `forceRefresh re-reads the queue flag inside the TTL`() = runTest {
+        coEvery { api.getMimir() } returns mapOf("ENABLEADVSWAPQUEUE" to 1L)
+        assertTrue(repository.isAdvancedSwapQueueEnabled())
+
+        // The flag flips off while the cached value is still fresh: the sign-time re-check must
+        // see it, so it can't be served from the cache the placement-time check populated.
+        coEvery { api.getMimir() } returns mapOf("ENABLEADVSWAPQUEUE" to 0L)
+        assertTrue(repository.isAdvancedSwapQueueEnabled())
+        assertFalse(repository.isAdvancedSwapQueueEnabled(forceRefresh = true))
+
+        coVerify(exactly = 2) { api.getMimir() }
+    }
 }
