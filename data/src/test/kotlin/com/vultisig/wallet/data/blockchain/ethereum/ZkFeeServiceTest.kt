@@ -47,7 +47,9 @@ internal class ZkFeeServiceTest {
         assertEquals(BigInteger("21000"), fee.limit)
         assertEquals(BigInteger("7"), fee.maxFeePerGas)
         assertEquals(BigInteger("2"), fee.maxPriorityFeePerGas)
-        coVerify(exactly = 1) { evmApi.zkEstimateFee("0xSender", "0xRecipient", "0xffffffff") }
+        coVerify(exactly = 1) {
+            evmApi.zkEstimateFee("0xSender", "0xRecipient", ZkFeeService.PLACEHOLDER_CALL_DATA)
+        }
     }
 
     @Test
@@ -112,7 +114,14 @@ internal class ZkFeeServiceTest {
 
         assertEquals(BigInteger("21000"), fee.limit)
         assertEquals(BigInteger("147000"), fee.amount)
-        coVerify(exactly = 1) { evmApi.zkEstimateFee("0xSender", "0xRecipient", "0xffffffff") }
+        coVerify(exactly = 1) {
+            evmApi.zkEstimateFee("0xSender", "0xRecipient", ZkFeeService.PLACEHOLDER_CALL_DATA)
+        }
+    }
+
+    @Test
+    fun `placeholder calldata is the hex-encoded memo shared with the signing path`() {
+        assertEquals("0x30786666666666666666", ZkFeeService.PLACEHOLDER_CALL_DATA)
     }
 
     private fun transfer() =

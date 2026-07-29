@@ -23,7 +23,6 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN
-import com.vultisig.wallet.data.blockchain.ethereum.clampedPriorityFee
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Swap
@@ -150,127 +149,110 @@ constructor(
             TokenStandard.EVM -> {
                 val evmApi = evmApiFactory.createEvmApi(chain)
                 val recipientAddress = dstAddress ?: address
-                if (chain == Chain.ZkSync) {
-                    val memoDataHex =
-                        "0xffffffff".toByteArray().joinToString(separator = "") { byte ->
-                            String.format("%02x", byte)
+
+                val fees =
+                    if (isSwap) {
+                        feeServiceComposite.calculateDefaultFees(
+                            Swap(
+                                coin = token,
+                                vault = VaultData("", ""),
+                                amount = tokenAmountValue ?: BigInteger.ZERO,
+                                to = recipientAddress,
+                                callData = "",
+                                approvalData = null,
+                            )
+                        )
+                    } else {
+                        feeServiceComposite.calculateFees(
+                            Transfer(
+                                coin = token,
+                                vault = VaultData("", ""),
+                                amount = tokenAmountValue ?: BigInteger.ZERO,
+                                to = recipientAddress,
+                                memo = memo,
+                            )
+                        )
+                    }
+
+                val (maxFeePerGas, priorityFeeWei) =
+                    when (fees) {
+                        is Eip1559 -> fees.maxFeePerGas to fees.maxPriorityFeePerGas
+                        is GasFees -> fees.price to BigInteger.ZERO
+                        else ->
+                            error("Unsupported fee type ${fees::class.simpleName} for chain=$chain")
+                    }
+
+                val gasLimitFee =
+                    if (chain == Chain.ZkSync) {
+                        // zks_estimateFee prices by calldata size, so the signed gas limit has to
+                        // come from the same estimate that produced the previewed fee.
+                        check(fees is Eip1559) {
+                            "Expected Eip1559 fee for $chain, got ${fees::class.simpleName}"
                         }
+                        fees.limit
+                    } else {
+                        val defaultGasLimit =
+                            when {
+                                isSwap -> DEFAULT_SWAP_LIMIT
+                                chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER
+                                token.isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT
+                                // ERC-20 floor mirrors EthereumFeeService.getDefaultLimit so the
+                                // signed gasLimit equals the displayed fee bond (issue #4857).
+                                else -> DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN
+                            }
 
-                    val data = "0x$memoDataHex"
-                    val nonce = evmApi.getNonce(address)
+                        // ERC-20 router deposits need depositWithExpiry headroom, but
+                        // eth_estimateGas reverts when the router hasn't been approved yet —
+                        // so we hardcode the limit and skip the estimate RPC.
+                        val routerDepositGasLimit =
+                            if (
+                                isThorchainRouterDeposit &&
+                                    !token.isNativeToken &&
+                                    isThorchainRouterChain(chain)
+                            )
+                                THORCHAIN_ROUTER_DEPOSIT_GAS_LIMIT
+                            else null
 
-                    val feeEstimate =
-                        evmApi.zkEstimateFee(
-                            srcAddress = token.address,
-                            dstAddress = recipientAddress,
-                            data = data,
-                        )
-
-                    BlockChainSpecificAndUtxo(
-                        BlockChainSpecific.Ethereum(
-                            maxFeePerGasWei = feeEstimate.maxFeePerGas,
-                            priorityFeeWei = feeEstimate.clampedPriorityFee(),
-                            nonce = nonce,
-                            gasLimit = feeEstimate.gasLimit,
-                        )
-                    )
-                } else {
-                    val defaultGasLimit =
-                        when {
-                            isSwap -> DEFAULT_SWAP_LIMIT
-                            chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER
-                            token.isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT
-                            // ERC-20 floor mirrors EthereumFeeService.getDefaultLimit so the
-                            // signed gasLimit equals the displayed fee bond (issue #4857).
-                            else -> DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN
-                        }
-
-                    // ERC-20 router deposits need depositWithExpiry headroom, but
-                    // eth_estimateGas reverts when the router hasn't been approved yet —
-                    // so we hardcode the limit and skip the estimate RPC.
-                    val routerDepositGasLimit =
-                        if (
-                            isThorchainRouterDeposit &&
-                                !token.isNativeToken &&
-                                isThorchainRouterChain(chain)
-                        )
-                            THORCHAIN_ROUTER_DEPOSIT_GAS_LIMIT
-                        else null
-
-                    val estimateGasLimit =
-                        when {
-                            routerDepositGasLimit != null -> routerDepositGasLimit
-                            token.isNativeToken ->
-                                evmApi.estimateGasForEthTransaction(
-                                    senderAddress = token.address,
-                                    recipientAddress = recipientAddress,
-                                    value = tokenAmountValue ?: BigInteger.ZERO,
-                                    memo = memo,
-                                )
-                            else ->
-                                evmApi
-                                    .estimateGasForERC20Transfer(
+                        val estimateGasLimit =
+                            when {
+                                routerDepositGasLimit != null -> routerDepositGasLimit
+                                token.isNativeToken ->
+                                    evmApi.estimateGasForEthTransaction(
                                         senderAddress = token.address,
                                         recipientAddress = recipientAddress,
-                                        contractAddress = token.contractAddress,
                                         value = tokenAmountValue ?: BigInteger.ZERO,
+                                        memo = memo,
                                     )
-                                    .increaseByPercent(
-                                        50
-                                    ) // keep it consistent with how we calculate default gas
-                        // limit in EthereumFeeService
-                        }
+                                else ->
+                                    evmApi
+                                        .estimateGasForERC20Transfer(
+                                            senderAddress = token.address,
+                                            recipientAddress = recipientAddress,
+                                            contractAddress = token.contractAddress,
+                                            value = tokenAmountValue ?: BigInteger.ZERO,
+                                        )
+                                        .increaseByPercent(
+                                            50
+                                        ) // keep it consistent with how we calculate default gas
+                            // limit in EthereumFeeService
+                            }
 
-                    val nonce = evmApi.getNonce(address)
-
-                    // Router deposits use their hardcoded headroom verbatim — the raised ERC-20
-                    // default floor must not bump it up via max(). Everything else floors the
-                    // on-chain estimate at the chain default.
-                    val gasLimitFee =
+                        // Router deposits use their hardcoded headroom verbatim — the raised ERC-20
+                        // default floor must not bump it up via max(). Everything else floors the
+                        // on-chain estimate at the chain default.
                         gasLimit ?: routerDepositGasLimit ?: max(defaultGasLimit, estimateGasLimit)
-                    val fees =
-                        if (isSwap) {
-                            feeServiceComposite.calculateDefaultFees(
-                                Swap(
-                                    coin = token,
-                                    vault = VaultData("", ""),
-                                    amount = tokenAmountValue ?: BigInteger.ZERO,
-                                    to = dstAddress ?: address,
-                                    callData = "",
-                                    approvalData = null,
-                                )
-                            )
-                        } else {
-                            feeServiceComposite.calculateFees(
-                                Transfer(
-                                    coin = token,
-                                    vault = VaultData("", ""),
-                                    amount = tokenAmountValue ?: BigInteger.ZERO,
-                                    to = recipientAddress,
-                                    memo = memo,
-                                )
-                            )
-                        }
+                    }
 
-                    val (maxFeePerGas, priorityFeeWei) =
-                        when (fees) {
-                            is Eip1559 -> fees.maxFeePerGas to fees.maxPriorityFeePerGas
-                            is GasFees -> fees.price to BigInteger.ZERO
-                            else ->
-                                error(
-                                    "Unsupported fee type ${fees::class.simpleName} for chain=$chain"
-                                )
-                        }
+                val nonce = evmApi.getNonce(address)
 
-                    BlockChainSpecificAndUtxo(
-                        BlockChainSpecific.Ethereum(
-                            maxFeePerGasWei = maxFeePerGas,
-                            priorityFeeWei = priorityFeeWei,
-                            nonce = nonce,
-                            gasLimit = gasLimitFee,
-                        )
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.Ethereum(
+                        maxFeePerGasWei = maxFeePerGas,
+                        priorityFeeWei = priorityFeeWei,
+                        nonce = nonce,
+                        gasLimit = gasLimitFee,
                     )
-                }
+                )
             }
 
             TokenStandard.UTXO -> {

@@ -19,10 +19,13 @@ class ZkFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory)
         val coin = transaction.coin
         val toAddress = transaction.to
         val evmApi = evmApiFactory.createEvmApi(chain)
-        val data = "0xffffffff"
 
         val feeEstimate =
-            evmApi.zkEstimateFee(srcAddress = coin.address, dstAddress = toAddress, data = data)
+            evmApi.zkEstimateFee(
+                srcAddress = coin.address,
+                dstAddress = toAddress,
+                data = PLACEHOLDER_CALL_DATA,
+            )
 
         return Eip1559(
             limit = feeEstimate.gasLimit,
@@ -31,5 +34,20 @@ class ZkFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory)
             networkPrice = feeEstimate.maxFeePerGas,
             amount = feeEstimate.maxFeePerGas * feeEstimate.gasLimit,
         )
+    }
+
+    companion object {
+        private const val PLACEHOLDER_MEMO = "0xffffffff"
+
+        /**
+         * zkSync prices gas and pubdata by calldata size, so every `zks_estimateFee` call must send
+         * the same placeholder payload or the previewed fee and the signed gas limit diverge.
+         * Mirrors iOS `RpcEvmService.getGasInfoZk`: the UTF-8 bytes of [PLACEHOLDER_MEMO],
+         * hex-encoded — a 10-byte payload, not the 4 bytes the literal string looks like.
+         */
+        internal val PLACEHOLDER_CALL_DATA: String =
+            PLACEHOLDER_MEMO.toByteArray().joinToString(prefix = "0x", separator = "") { byte ->
+                String.format("%02x", byte)
+            }
     }
 }
