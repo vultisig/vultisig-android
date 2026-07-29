@@ -11,8 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
@@ -27,6 +29,21 @@ enum class AssetAction {
     RECEIVE,
     FUNCTIONS,
 }
+
+/**
+ * Height of a single [AssetActionButton]. Rows built from flags that resolve asynchronously should
+ * reserve this, so the row is not zero-height on the first frame — a container sized by its content
+ * (a bottom sheet, above all) re-anchors when the buttons appear.
+ */
+internal val assetActionButtonHeight: Dp
+    @Composable
+    get() =
+        IconBoxSize +
+            IconLabelSpacing +
+            with(LocalDensity.current) { Theme.brockmann.supplementary.caption.lineHeight.toDp() }
+
+private val IconBoxSize = 52.dp
+private val IconLabelSpacing = 8.dp
 
 @Composable
 fun AssetActionButton(
@@ -60,7 +77,7 @@ fun AssetActionButton(
     ) {
         Box(
             modifier =
-                Modifier.size(size = 52.dp)
+                Modifier.size(size = IconBoxSize)
                     .clip(shape = RoundedCornerShape(16.dp))
                     .border(
                         width = 1.dp,
@@ -73,7 +90,7 @@ fun AssetActionButton(
             UiIcon(drawableResId = logo, size = 20.dp, tint = Theme.v2.colors.text.primary)
         }
 
-        UiSpacer(8.dp)
+        UiSpacer(IconLabelSpacing)
 
         Text(
             text = stringResource(title),

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -36,6 +37,7 @@ import com.vultisig.wallet.ui.models.TokenDetailViewModel
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
+import com.vultisig.wallet.ui.screens.v2.home.components.assetActionButtonHeight
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
 
@@ -48,7 +50,6 @@ internal fun TokenDetailScreen(
 
     TokenDetailScreen(
         uiModel = uiModel,
-        onBottomSheetExpanded = viewModel::refresh,
         onSend = viewModel::send,
         onSwap = viewModel::swap,
         onDeposit = viewModel::deposit,
@@ -59,17 +60,16 @@ internal fun TokenDetailScreen(
 }
 
 @Composable
-private fun TokenDetailScreen(
+internal fun TokenDetailScreen(
     uiModel: TokenDetailUiModel,
-    onBottomSheetExpanded: () -> Unit,
-    onSend: () -> Unit,
-    onSwap: () -> Unit,
-    onDeposit: () -> Unit,
-    onDismiss: () -> Unit,
-    onBuy: () -> Unit,
-    onExplorer: () -> Unit,
+    onSend: () -> Unit = {},
+    onSwap: () -> Unit = {},
+    onDeposit: () -> Unit = {},
+    onDismiss: () -> Unit = {},
+    onBuy: () -> Unit = {},
+    onExplorer: () -> Unit = {},
 ) {
-    DottyBottomSheet(onExpand = onBottomSheetExpanded, onDismiss = onDismiss) {
+    DottyBottomSheet(onDismiss = onDismiss) {
         TokenDetailsContent(
             uiModel = uiModel,
             onSend = onSend,
@@ -136,7 +136,13 @@ private fun TokenDetailsContent(
         Row(
             horizontalArrangement =
                 Arrangement.spacedBy(space = 20.dp, alignment = Alignment.CenterHorizontally),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+            // Every flag below starts false and only resolves once the account loads, so without a
+            // reserved height this row is zero-height on the first frame and the sheet re-anchors
+            // the moment the buttons appear.
+            modifier =
+                Modifier.fillMaxWidth()
+                    .heightIn(min = assetActionButtonHeight)
+                    .padding(horizontal = 24.dp),
         ) {
             if (uiModel.canSwap) {
                 AssetActionButton(action = AssetAction.SWAP, isSelected = true, onClick = onSwap)
