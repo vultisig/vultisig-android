@@ -121,8 +121,9 @@ constructor(private val oneInchApi: OneInchApi, private val evmApiFactory: EvmAp
         discovered: List<Coin>,
     ): List<Coin> {
         if (chain != Chain.Ethereum) return discovered
-        val alreadyHasVult =
-            discovered.any { it.contractAddress.equals(VULT_ETHEREUM_CONTRACT, ignoreCase = true) }
+        val alreadyHasVult = discovered.any {
+            it.contractAddress.equals(VULT_ETHEREUM_CONTRACT, ignoreCase = true)
+        }
         if (alreadyHasVult) return discovered
 
         val vult =
