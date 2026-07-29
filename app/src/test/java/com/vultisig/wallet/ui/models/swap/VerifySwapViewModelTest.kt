@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SecurityScannerException
 import com.vultisig.wallet.data.securityscanner.SecurityScannerFeaturesType
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.SecurityScannerSupport
@@ -28,6 +29,7 @@ import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -322,6 +324,72 @@ internal class VerifySwapViewModelTest {
             vm.state.value.txScanStatus shouldBe TransactionScanStatus.NotStarted
             coVerify(exactly = 0) { securityScannerService.scanTransaction(any()) }
         }
+
+    /**
+     * Regression test for #5432, mirroring the Send-side test in `VerifyTransactionViewModelTest`:
+     * the same scan-failure input must produce the same outcome on the Swap path — a distinct,
+     * non-blocking [TransactionScanStatus.Error], never a fabricated risk finding that blocks
+     * signing. This is the cross-path invariant between the Send and Swap consumers of the shared
+     * security-scanner classifier.
+     */
+    @Test
+    fun `joinKeySign signs through when the scan itself fails, without a risk warning`() =
+        runTest(testDispatcher) {
+            givenEvmSwap()
+            coEvery { securityScannerService.scanTransaction(any()) } throws
+                SecurityScannerException("SecurityScanner Error: 502 Bad Gateway")
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.consentAmount(true)
+            vm.consentReceiveAmount(true)
+            vm.joinKeySign()
+
+            vm.state.value.txScanStatus.shouldBeInstanceOf<TransactionScanStatus.Error>()
+            vm.state.value.showScanningWarning shouldBe false
+            coVerify {
+                launchKeysign(
+                    KeysignInitType.QR_CODE,
+                    TX_ID,
+                    any(),
+                    Route.Keysign.Keysign.TxType.Swap,
+                    VAULT_ID,
+                )
+            }
+        }
+
+    /** Drives `init` with an EVM-to-EVM swap so the full-transaction scan path runs. */
+    private fun givenEvmSwap() {
+        val tx =
+            mockk<SwapTransaction.RegularSwapTransaction>(relaxed = true) {
+                every { isApprovalRequired } returns false
+                every { memo } returns null
+                every { srcToken } returns
+                    mockk<Coin>(relaxed = true).apply { every { chain } returns Chain.Ethereum }
+                every { dstToken } returns
+                    mockk<Coin>(relaxed = true).apply { every { chain } returns Chain.Ethereum }
+            }
+        coEvery { swapTransactionRepository.getTransaction(TX_ID) } returns tx
+        coEvery { mapTransactionToUiModel(tx) } returns SwapTransactionUiModel()
+        coEvery { securityScannerService.isSecurityServiceEnabled() } returns true
+        every { securityScannerService.getSupportedChainsByFeature() } returns
+            listOf(
+                SecurityScannerSupport(
+                    provider = "blockaid",
+                    feature =
+                        listOf(
+                            SecurityScannerSupport.Feature(
+                                chains = listOf(Chain.Ethereum),
+                                featureType = SecurityScannerFeaturesType.SCAN_TRANSACTION,
+                            )
+                        ),
+                )
+            )
+        coEvery {
+            securityScannerService.createSecurityScannerTransaction(any<SwapTransaction>())
+        } returns mockk<SecurityScannerTransaction>(relaxed = true)
+    }
 
     /**
      * Drives `init` with a Solana-source swap: the source chain is Blockaid-supported but isn't
