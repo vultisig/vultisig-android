@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -25,10 +26,12 @@ import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.ui.models.findCurrentSrc
@@ -40,6 +43,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.select.AssetSelected
+import com.vultisig.wallet.ui.screens.swap.SwapMode
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import io.mockk.coEvery
@@ -113,6 +117,9 @@ internal class SwapFormViewModelTest {
     private lateinit var requestResultRepository: RequestResultRepository
     private lateinit var tokenBalanceMapper: AccountToTokenBalanceUiModelMapper
     private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
+    private lateinit var featureFlagRepository: FeatureFlagRepository
+    private lateinit var limitMarketPriceRepository: LimitSwapMarketPriceRepository
+    private lateinit var buildLimitSwapTransactionUseCase: BuildLimitSwapTransactionUseCase
 
     private val currencyFlow = MutableStateFlow(AppCurrency.USD)
 
@@ -155,6 +162,14 @@ internal class SwapFormViewModelTest {
         // are unaffected. The external-recipient validation tests override this per case.
         chainAccountAddressRepository = mockk(relaxed = true)
         every { chainAccountAddressRepository.isValid(any(), any()) } returns true
+
+        // Limit-order collaborators. The flag is off by default, so the limit form stays inert for
+        // every test that doesn't opt into it.
+        featureFlagRepository = mockk(relaxed = true)
+        coEvery { featureFlagRepository.getFeatureFlags() } returns
+            FeatureFlagJson(isLimitSwapEnabled = false)
+        limitMarketPriceRepository = mockk(relaxed = true)
+        buildLimitSwapTransactionUseCase = mockk(relaxed = true)
 
         swapValidator = SwapValidator()
         swapDiscountChecker = mockk(relaxed = true)
@@ -242,6 +257,7 @@ internal class SwapFormViewModelTest {
                 swapValidator = swapValidator,
                 swapTokenSelector = swapTokenSelector,
                 swapQuoteManager = swapQuoteManager,
+                swapQuoteRepository = swapQuoteRepository,
                 swapTransactionBuilder =
                     SwapTransactionBuilder(swapGasCalculator, allowanceRepository),
                 swapInputCollector =
@@ -250,6 +266,12 @@ internal class SwapFormViewModelTest {
                     swapQuotePipelineControllerFactory(ioDispatcher),
                 chainAccountAddressRepository = chainAccountAddressRepository,
                 getDiscountBpsUseCase = getDiscountBpsUseCase,
+                featureFlagRepository = featureFlagRepository,
+                limitMarketPriceRepository = limitMarketPriceRepository,
+                buildLimitSwapTransactionUseCase = buildLimitSwapTransactionUseCase,
+                appCurrencyRepository = mockk(relaxed = true),
+                convertTokenValueToFiat = mockk(relaxed = true),
+                fiatValueToString = mockk(relaxed = true),
             )
             .also { createdViewModels += it }
 
@@ -3794,6 +3816,124 @@ internal class SwapFormViewModelTest {
         }
 
     // endregion
+
+    @Test
+    fun `changing the pair drops the previous pair's target price until the new one resolves`() =
+        runTest(mainDispatcher) {
+            coEvery { featureFlagRepository.getFeatureFlags() } returns
+                FeatureFlagJson(isLimitSwapEnabled = true)
+            // The first pair prices immediately; the second parks, so the assertion lands inside
+            // the window where a stale target price would still be placeable.
+            val secondPairGate = CompletableDeferred<Unit>()
+            var priceCalls = 0
+            coEvery {
+                limitMarketPriceRepository.getMarketPrice(any(), any(), any(), any())
+            } coAnswers
+                {
+                    if (priceCalls++ > 0) secondPairGate.await()
+                    BigDecimal("0.05")
+                }
+            coEvery { requestResultRepository.request<AssetSelected>(any()) } returns
+                AssetSelected(token = USDC_COIN, isDisabled = false)
+            coEvery { tokenSelectorAccountsRepository.loadAccount(any(), any()) } returns
+                createAccount(USDC_COIN, BigInteger("1000000000"))
+
+            val vm = createViewModelWithSwapTokens()
+            vm.onSelectSwapMode(SwapMode.Limit)
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+            assertTrue(vm.uiState.value.limitOrder?.isPlaceOrderEnabled == true)
+
+            vm.selectDstToken()
+            advanceUntilIdle()
+
+            // The ETH→BTC price is quoted in BTC per ETH; leaving it live would let the user place
+            // an order that signs that rate into an ETH→USDC memo's LIM.
+            assertFalse(vm.uiState.value.limitOrder?.isPlaceOrderEnabled == true)
+
+            secondPairGate.complete(Unit)
+            advanceUntilIdle()
+            assertTrue(vm.uiState.value.limitOrder?.isPlaceOrderEnabled == true)
+        }
+
+    @Test
+    fun `limit tab is offered only for a pair THORChain itself can route`() =
+        runTest(mainDispatcher) {
+            coEvery { featureFlagRepository.getFeatureFlags() } returns
+                FeatureFlagJson(isLimitSwapEnabled = true)
+            coEvery {
+                limitMarketPriceRepository.getMarketPrice(any(), any(), any(), any())
+            } returns BigDecimal("0.05")
+            // The pair quotes, but not through THORChain — a limit order could never be placed on
+            // it, so the tab must stay closed even though both chains appear in a limit memo.
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.SWAPKIT)
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            assertFalse(vm.uiState.value.isLimitTabEnabled)
+            assertNull(vm.uiState.value.limitOrder)
+        }
+
+    @Test
+    fun `losing THORChain routing drops the user out of the limit tab`() =
+        runTest(mainDispatcher) {
+            coEvery { featureFlagRepository.getFeatureFlags() } returns
+                FeatureFlagJson(isLimitSwapEnabled = true)
+            coEvery {
+                limitMarketPriceRepository.getMarketPrice(any(), any(), any(), any())
+            } returns BigDecimal("0.05")
+            val eligibilityVersion = MutableStateFlow(0)
+            every { swapQuoteRepository.swapEligibilityVersion } returns eligibilityVersion
+
+            val vm = createViewModelWithSwapTokens()
+            vm.onSelectSwapMode(SwapMode.Limit)
+            advanceUntilIdle()
+            assertTrue(vm.uiState.value.isLimitTabEnabled)
+            assertEquals(SwapMode.Limit, vm.uiState.value.swapMode)
+
+            // Live pool eligibility lands and the pair turns out not to route through THORChain —
+            // the Limit form must not stay up over a pair that can never place an order.
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.SWAPKIT)
+            eligibilityVersion.value = 1
+            advanceUntilIdle()
+
+            assertFalse(vm.uiState.value.isLimitTabEnabled)
+            assertEquals(SwapMode.Market, vm.uiState.value.swapMode)
+        }
+
+    @Test
+    fun `placeLimitOrder is refused when the external recipient is invalid`() =
+        runTest(mainDispatcher) {
+            coEvery { featureFlagRepository.getFeatureFlags() } returns
+                FeatureFlagJson(isLimitSwapEnabled = true)
+            coEvery {
+                limitMarketPriceRepository.getMarketPrice(any(), any(), any(), any())
+            } returns BigDecimal("0.05")
+            // The recipient is baked into the `=<` memo's dest_addr, so an address the destination
+            // chain rejects must never reach the builder (#4858's gate, limit path).
+            every { chainAccountAddressRepository.isValid(any(), any()) } returns false
+
+            val vm = createViewModelWithSwapTokens()
+            vm.onSelectSwapMode(SwapMode.Limit)
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+            vm.setExternalRecipient("not-a-bitcoin-address")
+            advanceUntilIdle()
+
+            vm.placeLimitOrder()
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.StringResource(R.string.swap_external_recipient_invalid),
+                vm.uiState.value.error,
+            )
+            coVerify(exactly = 0) { buildLimitSwapTransactionUseCase.build(any()) }
+        }
 
     // region Helpers
 

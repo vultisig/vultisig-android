@@ -191,6 +191,7 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             transactionHistoryRepository = transactionHistoryRepository,
             balanceRepository = mockk(relaxed = true),
             gasFeeToEstimatedFee = mockk(relaxed = true),
+            pendingLimitOrderRepository = mockk(relaxed = true),
             awaitApprovalConfirmation = mockk(relaxed = true),
         )
 }
