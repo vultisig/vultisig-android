@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 internal data class SecretUiModel(
     val isSwapKitEnabled: Boolean = true,
     val isCustomRpcEnabled: Boolean = false,
-    val isLimitSwapEnabled: Boolean = true,
+    val isLimitSwapEnabled: Boolean = false,
 )
 
 @HiltViewModel
