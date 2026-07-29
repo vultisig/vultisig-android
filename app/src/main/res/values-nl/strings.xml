@@ -390,6 +390,7 @@
     <string name="push_notifications_sent">Melding succesvol verzonden!</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Ontvang een melding wanneer uw handtekening vereist is of een apparaat toegang aanvraagt.</string>
     <string name="keysign_notification_channel_name">Ondertekeningsverzoeken</string>
+    <string name="push_notifications_blocked_by_system">Meldingen voor Vultisig zijn uitgeschakeld in de systeeminstellingen. U ontvangt geen ondertekeningsverzoeken totdat u ze weer inschakelt.</string>
     <string name="keysign_notification_title">Transactie ondertekenen</string>
     <string name="keysign_notification_body">Er wacht een nieuw ondertekeningsverzoek op u</string>
     <string name="foreground_notification_banner_title">Doe mee aan transactie</string>
@@ -593,6 +594,7 @@
     <string name="vault_settings_advanced_title">Geavanceerd</string>
     <string name="settings_advanced_swapkit_toggle">SwapKit-aggregator</string>
     <string name="settings_advanced_custom_rpc_toggle">Aangepaste RPC</string>
+    <string name="settings_advanced_limit_swap_toggle">Limietorders</string>
     <string name="custom_rpc_title">Aangepaste RPC</string>
     <string name="custom_rpc_tier_badge">VULT TIER</string>
     <string name="custom_rpc_advanced_subtitle">Gebruik je eigen nodes per blockchain</string>

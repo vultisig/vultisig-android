@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.blockchain.thorchain
 
 import com.vultisig.wallet.data.blockchain.DeFiService
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance
+import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
@@ -98,6 +99,12 @@ class ThorchainDeFiBalanceService(
                     Coins.ThorChain.RUJI.id,
                 )
             }
+            val sRujiDetailsDeferred = async {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    vaultId,
+                    Coins.ThorChain.sRUJI.id,
+                )
+            }
             val tcyDetailsDeferred = async {
                 stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.TCY.id)
             }
@@ -108,6 +115,7 @@ class ThorchainDeFiBalanceService(
             val bonDetailsDeferred = async { activeBondedNodeRepository.getBondedNodes(vaultId) }
 
             val rujiDetails = rujiDetailsDeferred.await()
+            val sRujiDetails = sRujiDetailsDeferred.await()
             val tcyDetails = tcyDetailsDeferred.await()
             val defaultDetails = defaultDetailsDeferred.await()
             val bonDetails = bonDetailsDeferred.await()
@@ -116,25 +124,29 @@ class ThorchainDeFiBalanceService(
 
             // Add RUJI balance if exists
             rujiDetails?.let { details ->
-                val balances = mutableListOf<DeFiBalance.Balance>()
-
-                // Add stake balance with rewards if available
-                val rewardsAmount =
-                    details.rewards
-                        ?.takeIf { it > BigDecimal.ZERO }
-                        ?.let { runCatching { it.toBigInteger() }.getOrDefault(BigInteger.ZERO) }
-                        ?: BigInteger.ZERO
-
-                balances.add(
-                    DeFiBalance.Balance(
-                        coin = details.coin,
-                        amount = details.stakeAmount,
-                        coinRewards = RUJI_REWARDS_COIN,
-                        rewardsAmount = rewardsAmount,
+                defiBalances.add(
+                    DeFiBalance(
+                        chain = Chain.ThorChain,
+                        balances = listOf(details.toBondedRujiBalance()),
                     )
                 )
+            }
 
-                defiBalances.add(DeFiBalance(chain = Chain.ThorChain, balances = balances))
+            // Add the auto-compounding RUJI position if exists. It is independent of the bonded one
+            // above and carries no separately-claimable revenue.
+            sRujiDetails?.let { details ->
+                defiBalances.add(
+                    DeFiBalance(
+                        chain = Chain.ThorChain,
+                        balances =
+                            listOf(
+                                DeFiBalance.Balance(
+                                    coin = details.coin,
+                                    amount = details.stakeAmount,
+                                )
+                            ),
+                    )
+                )
             }
 
             // Add TCY balance if exists
@@ -193,22 +205,46 @@ class ThorchainDeFiBalanceService(
         address: String,
         vaultId: String,
     ): DeFiBalance {
-        val amount =
-            runCatching {
-                    rujiStakingService.getStakingDetails(address, vaultId).last().stakeAmount
-                }
+        val positions =
+            runCatching { rujiStakingService.getStakingDetails(address, vaultId).last() }
                 .getOrElse { exception ->
                     Timber.e(exception, "ThorchainDeFiBalanceService: Failed to fetch RUJI balance")
                     throw exception
                 }
 
-        Timber.d("ThorchainDeFiBalanceService: RUJI staking amount for $address: $amount")
+        Timber.d(
+            "ThorchainDeFiBalanceService: RUJI staking positions for %s: %s",
+            address,
+            positions,
+        )
 
         return DeFiBalance(
             chain = Chain.ThorChain,
-            balances = listOf(DeFiBalance.Balance(coin = Coins.ThorChain.RUJI, amount = amount)),
+            balances =
+                positions.map { position ->
+                    // Only the bonded position has separately-claimable revenue, and a refresh must
+                    // report the same shape as the cache above or it would drop the claimable USDC.
+                    if (position.coin.id == Coins.ThorChain.RUJI.id) {
+                        position.toBondedRujiBalance()
+                    } else {
+                        DeFiBalance.Balance(coin = position.coin, amount = position.stakeAmount)
+                    }
+                },
         )
     }
+
+    /** The bonded RUJI position with its claimable USDC revenue attached. */
+    private fun StakingDetails.toBondedRujiBalance(): DeFiBalance.Balance =
+        DeFiBalance.Balance(
+            coin = coin,
+            amount = stakeAmount,
+            coinRewards = RUJI_REWARDS_COIN,
+            rewardsAmount =
+                rewards
+                    ?.takeIf { it > BigDecimal.ZERO }
+                    ?.let { runCatching { it.toBigInteger() }.getOrDefault(BigInteger.ZERO) }
+                    ?: BigInteger.ZERO,
+        )
 
     private suspend fun getRemoteOrCachedTcyDeFiBalance(
         address: String,

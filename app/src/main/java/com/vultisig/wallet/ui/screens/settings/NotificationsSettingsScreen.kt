@@ -1,7 +1,11 @@
 package com.vultisig.wallet.ui.screens.settings
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -17,18 +21,26 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsSwitch
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.icons.VaultIcon
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.settings.NotificationsSettingsUiState
@@ -57,12 +69,41 @@ internal fun NotificationsSettingsScreen() {
         }
     }
 
+    // Re-checked on every resume: the user can revoke permission or mute the channel in system
+    // settings — including via the button below — and the OS raises no callback for either.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.refreshSystemNotificationState()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    val context = LocalContext.current
+
     NotificationsSettingsScreen(
         state = state,
         onMasterToggle = viewModel::onMasterToggle,
         onVaultToggle = viewModel::onVaultToggle,
+        onOpenSystemSettings = { context.openAppNotificationSettings() },
         onBackClick = viewModel::back,
     )
+}
+
+private fun Context.openAppNotificationSettings() {
+    val intent =
+        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+            .putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    runCatching { startActivity(intent) }
+        .onFailure {
+            startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    .setData(Uri.fromParts("package", packageName, null))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        }
 }
 
 @Composable
@@ -70,11 +111,17 @@ private fun NotificationsSettingsScreen(
     state: NotificationsSettingsUiState,
     onMasterToggle: (Boolean) -> Unit,
     onVaultToggle: (String, Boolean) -> Unit,
+    onOpenSystemSettings: () -> Unit,
     onBackClick: () -> Unit,
 ) {
     V2Scaffold(title = stringResource(R.string.notifications), onBackClick = onBackClick) {
         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
             MasterNotificationToggle(isChecked = state.masterEnabled, onToggle = onMasterToggle)
+
+            if (state.masterEnabled && state.isBlockedBySystem) {
+                UiSpacer(size = 16.dp)
+                SystemNotificationsBlockedWarning(onClick = onOpenSystemSettings)
+            }
 
             if (state.masterEnabled && state.vaults.isNotEmpty()) {
                 UiSpacer(size = 22.dp)
@@ -103,6 +150,35 @@ private fun NotificationsSettingsScreen(
 
             UiSpacer(size = 24.dp)
         }
+    }
+}
+
+@Composable
+private fun SystemNotificationsBlockedWarning(onClick: () -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(size = 12.dp))
+                .clickOnce(onClick = onClick)
+                .background(color = Theme.v2.colors.backgrounds.surface1)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.alerts.warning,
+                    shape = RoundedCornerShape(size = 12.dp),
+                )
+                .padding(all = 16.dp),
+    ) {
+        UiIcon(
+            drawableResId = R.drawable.ic_triangle_alert,
+            tint = Theme.v2.colors.alerts.warning,
+            size = 16.dp,
+        )
+        Text(
+            text = stringResource(R.string.push_notifications_blocked_by_system),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.alerts.warning,
+        )
     }
 }
 
@@ -206,6 +282,32 @@ private fun NotificationsSettingsScreenPreview() {
             ),
         onMasterToggle = {},
         onVaultToggle = { _, _ -> },
+        onOpenSystemSettings = {},
+        onBackClick = {},
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NotificationsSettingsScreenBlockedPreview() {
+    NotificationsSettingsScreen(
+        state =
+            NotificationsSettingsUiState(
+                masterEnabled = true,
+                isBlockedBySystem = true,
+                vaults =
+                    listOf(
+                        VaultNotificationUiModel(
+                            vaultId = "1",
+                            vaultName = "Secure Vault",
+                            isEnabled = true,
+                            isFastVault = false,
+                        )
+                    ),
+            ),
+        onMasterToggle = {},
+        onVaultToggle = { _, _ -> },
+        onOpenSystemSettings = {},
         onBackClick = {},
     )
 }

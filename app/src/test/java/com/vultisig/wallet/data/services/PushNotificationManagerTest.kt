@@ -24,9 +24,16 @@ internal class PushNotificationManagerTest {
     private val vaultRepository: VaultRepository = mockk(relaxed = true)
     private val settingsDao: VaultNotificationSettingsDao = mockk(relaxed = true)
     private val encryptedPrefs: SharedPreferences = mockk(relaxed = true)
+    private val fcmTokenProvider: FcmTokenProvider = mockk(relaxed = true)
 
     private val manager =
-        PushNotificationManager(notificationApi, vaultRepository, settingsDao, encryptedPrefs)
+        PushNotificationManager(
+            notificationApi,
+            vaultRepository,
+            settingsDao,
+            encryptedPrefs,
+            fcmTokenProvider,
+        )
 
     private val vault =
         Vault(

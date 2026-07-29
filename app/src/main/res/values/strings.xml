@@ -13,7 +13,11 @@
     </plurals>
     <string name="push_notifications_sent">Notification sent successfully!</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Get notified when your signature is required or a device requests access.</string>
+    <!-- Channel id, not user-facing: shared by AndroidManifest's Firebase default-channel meta-data
+         and KeysignNotificationChannel so the two can never drift apart. -->
+    <string name="keysign_notification_channel_id" translatable="false">keysign_requests_channel</string>
     <string name="keysign_notification_channel_name">Keysign Requests</string>
+    <string name="push_notifications_blocked_by_system">Notifications are turned off for Vultisig in system settings. You will not receive signing requests until you turn them back on.</string>
     <string name="keysign_notification_title">Sign transaction</string>
     <string name="keysign_notification_body">A new signing request is waiting for you</string>
     <string name="foreground_notification_banner_title">Join transaction</string>
@@ -907,6 +911,7 @@
     <string name="vault_settings_advanced_title">Advanced</string>
     <string name="settings_advanced_swapkit_toggle">SwapKit aggregator</string>
     <string name="settings_advanced_custom_rpc_toggle">Custom RPC</string>
+    <string name="settings_advanced_limit_swap_toggle">Limit Orders</string>
     <string name="custom_rpc_title">Custom RPCs</string>
     <string name="custom_rpc_tier_badge">VULT TIER</string>
     <string name="custom_rpc_advanced_subtitle">Use your own nodes per chain</string>

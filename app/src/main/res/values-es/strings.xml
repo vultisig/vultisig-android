@@ -391,6 +391,7 @@
     <string name="push_notifications_sent">¡Notificación enviada correctamente!</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Recibe una notificación cuando se requiera tu firma o un dispositivo solicite acceso.</string>
     <string name="keysign_notification_channel_name">Solicitudes de firma</string>
+    <string name="push_notifications_blocked_by_system">Las notificaciones de Vultisig están desactivadas en la configuración del sistema. No recibirás solicitudes de firma hasta que vuelvas a activarlas.</string>
     <string name="keysign_notification_title">Firmar transacción</string>
     <string name="keysign_notification_body">Hay una nueva solicitud de firma esperándote</string>
     <string name="foreground_notification_banner_title">Unirse a la transacción</string>
@@ -598,6 +599,7 @@
     <string name="vault_settings_advanced_title">Avanzado</string>
     <string name="settings_advanced_swapkit_toggle">Agregador SwapKit</string>
     <string name="settings_advanced_custom_rpc_toggle">RPC personalizado</string>
+    <string name="settings_advanced_limit_swap_toggle">Órdenes límite</string>
     <string name="custom_rpc_title">RPC personalizado</string>
     <string name="custom_rpc_tier_badge">VULT TIER</string>
     <string name="custom_rpc_advanced_subtitle">Usa tus propios nodos por cadena</string>

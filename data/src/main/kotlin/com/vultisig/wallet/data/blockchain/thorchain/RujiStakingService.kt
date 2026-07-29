@@ -21,16 +21,20 @@ constructor(
     private val stakingDetailsRepository: StakingDetailsRepository,
 ) {
 
-    fun getStakingDetails(address: String, vaultId: String): Flow<StakingDetails> =
+    /**
+     * Emits the vault's RUJI staking positions: the bonded one (carrying the APR and the claimable
+     * USDC revenue) and the auto-compounding one, receipted by sRUJI. They are independent — an
+     * account may hold either, both or neither — so both are always emitted and a holder of one is
+     * never reported as empty because the other is.
+     */
+    fun getStakingDetails(address: String, vaultId: String): Flow<List<StakingDetails>> =
         flow {
-                val cachedDetails =
-                    stakingDetailsRepository.getStakingDetailsByCoindId(
-                        vaultId,
-                        Coins.ThorChain.RUJI.id,
-                    )
-                if (cachedDetails != null) {
+                val cachedDetails = readCompleteCachedPositions(vaultId)
+                if (cachedDetails.isNotEmpty()) {
                     Timber.d(
-                        "RujiStakingService: Emitting cached RUJI staking position for vault $vaultId"
+                        "RujiStakingService: Emitting %d cached RUJI staking positions for vault %s",
+                        cachedDetails.size,
+                        vaultId,
                     )
                     emit(cachedDetails)
                 }
@@ -39,13 +43,15 @@ constructor(
                     try {
                         getStakingDetailsFromNetwork(address)
                     } catch (e: Exception) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
                         Timber.e(
                             e,
-                            "RujiStakingService: Error fetching RUJI staking details for vault $vaultId",
+                            "RujiStakingService: Error fetching RUJI staking details for vault %s",
+                            vaultId,
                         )
 
-                        if (cachedDetails != null) {
-                            Timber.d("RujiStakingService: Using cached RUJI position due to error")
+                        if (cachedDetails.isNotEmpty()) {
+                            Timber.d("RujiStakingService: Using cached RUJI positions due to error")
                             emit(cachedDetails)
                             return@flow
                         }
@@ -55,29 +61,63 @@ constructor(
 
                 // Emit new fresh positions
                 Timber.d(
-                    "RujiStakingService: Emitting fresh RUJI staking position for vault $vaultId"
+                    "RujiStakingService: Emitting fresh RUJI staking positions for vault %s",
+                    vaultId,
                 )
                 emit(freshDetails)
 
                 // Update DB cache
-                Timber.d("RujiStakingService: Saving fresh RUJI position for vault $vaultId")
-                stakingDetailsRepository.saveStakingDetails(vaultId, freshDetails)
+                Timber.d("RujiStakingService: Saving fresh RUJI positions for vault %s", vaultId)
+                stakingDetailsRepository.saveAllStakingDetails(vaultId, freshDetails)
             }
             .flowOn(Dispatchers.IO)
 
-    suspend fun getStakingDetailsFromNetwork(address: String): StakingDetails {
+    /**
+     * Returns the cached RUJI positions only when *both* of them are present.
+     *
+     * Every write below persists the pair, so a cache holding just one row predates this dual-read
+     * and its single RUJI amount was produced by the old collapsed logic — a false zero for a
+     * bonded-only staker, or a raw sRUJI share count. Rendering that onto the new bonded card, and
+     * leaving the compounding card with nothing to resolve its placeholder, is worse than having no
+     * cache at all: treat a partial cache as empty and let the fresh fetch rewrite it. Self-heals
+     * on the first successful response, so no migration is needed.
+     */
+    private suspend fun readCompleteCachedPositions(vaultId: String): List<StakingDetails> {
+        val cached =
+            stakingDetailsRepository.getStakingDetails(vaultId).filter {
+                it.coin.id in RUJI_POSITION_COIN_IDS
+            }
+        val cachedIds = cached.mapTo(mutableSetOf()) { it.coin.id }
+        return if (cachedIds.containsAll(RUJI_POSITION_COIN_IDS)) cached else emptyList()
+    }
+
+    suspend fun getStakingDetailsFromNetwork(address: String): List<StakingDetails> {
         return try {
             val rujiStakeInfo = thorChainApi.getRujiStakeBalance(address)
 
-            StakingDetails(
-                id = Coins.ThorChain.RUJI.generateId(),
-                coin = Coins.ThorChain.RUJI,
-                stakeAmount = rujiStakeInfo.stakeAmount,
-                apr = null,
-                estimatedRewards = null, // Not available for Ruji
-                nextPayoutDate = null, // Not available for Ruji
-                rewards = rujiStakeInfo.rewardsAmount.toBigDecimal(),
-                rewardsCoin = RUJI_REWARDS_COIN,
+            listOf(
+                StakingDetails(
+                    id = Coins.ThorChain.RUJI.generateId(),
+                    coin = Coins.ThorChain.RUJI,
+                    stakeAmount = rujiStakeInfo.stakeAmount,
+                    apr = null,
+                    estimatedRewards = null, // Not available for Ruji
+                    nextPayoutDate = null, // Not available for Ruji
+                    rewards = rujiStakeInfo.rewardsAmount.toBigDecimal(),
+                    rewardsCoin = RUJI_REWARDS_COIN,
+                ),
+                // The auto-compounding position reinvests its revenue into its own amount, so it
+                // carries no separately-claimable rewards and no APR of its own.
+                StakingDetails(
+                    id = Coins.ThorChain.sRUJI.generateId(),
+                    coin = Coins.ThorChain.sRUJI,
+                    stakeAmount = rujiStakeInfo.autoCompoundAmount,
+                    apr = null,
+                    estimatedRewards = null,
+                    nextPayoutDate = null,
+                    rewards = null,
+                    rewardsCoin = null,
+                ),
             )
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
@@ -87,6 +127,12 @@ constructor(
     }
 
     companion object {
+        /**
+         * The coin ids of the two RUJI staking positions. Shared so the cache filter here and the
+         * DeFi tab's loading gate cannot drift apart.
+         */
+        val RUJI_POSITION_COIN_IDS = setOf(Coins.ThorChain.RUJI.id, Coins.ThorChain.sRUJI.id)
+
         val RUJI_REWARDS_COIN =
             Coin(
                 chain = Chain.ThorChain,

@@ -4065,6 +4065,21 @@ object Coins {
                 isNativeToken = false,
             )
 
+        // The auto-compounding RUJI staking position. Its DeFi card is denominated in RUJI (the
+        // pool's `liquidSize`), not in receipt shares, so it prices off RUJI.
+        val sRUJI =
+            Coin(
+                chain = Chain.ThorChain,
+                ticker = "sRUJI",
+                logo = "ruji",
+                address = "",
+                decimal = 8,
+                hexPublicKey = "",
+                priceProviderID = "ruji",
+                contractAddress = "x/staking-x/ruji",
+                isNativeToken = false,
+            )
+
         val sTCY =
             Coin(
                 chain = Chain.ThorChain,
@@ -4452,4 +4467,14 @@ object Coins {
         )
 
     val all: List<Coin> = coins.values.flatten()
+
+    /**
+     * Coins that only ever back a DeFi position, never a wallet balance. They are deliberately kept
+     * out of [coins] so token discovery and the token-selection list never offer them, but they
+     * must stay resolvable by id because a persisted position round-trips through its coin id.
+     */
+    val defiOnly: List<Coin> = listOf(ThorChain.sRUJI)
+
+    /** [all] plus [defiOnly] — use whenever a stored coin id is resolved back to its [Coin]. */
+    val allResolvable: List<Coin> = all + defiOnly
 }

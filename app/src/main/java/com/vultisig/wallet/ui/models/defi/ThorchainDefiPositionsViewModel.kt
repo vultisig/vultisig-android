@@ -6,8 +6,10 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolStatsJson
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
+import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
+import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_POSITION_COIN_IDS
 import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -441,7 +443,7 @@ constructor(
             }
             val defaultLoadingPositions =
                 loadDefaultStakingPositions()
-                    .filter { coin -> selectedPositions.contains(coin.stakedAmountDisplay) }
+                    .filter { position -> selectedPositions.contains(position.selectionKey()) }
                     .map { positionUiModel -> positionUiModel.copy(isLoading = true) }
             state.update {
                 it.copy(staking = StakingTabUiModel(positions = defaultLoadingPositions))
@@ -516,7 +518,7 @@ constructor(
                                 it.staking.copy(
                                     positions =
                                         it.staking.positions.map { position ->
-                                            if (position.coin.id == Coins.ThorChain.RUJI.id) {
+                                            if (position.coin.id in RUJI_POSITION_COIN_IDS) {
                                                 position.copy(isLoading = false)
                                             } else {
                                                 position
@@ -526,41 +528,62 @@ constructor(
                         )
                     }
                 }
-                .collect { details ->
-                    val stakedAmount = Chain.ThorChain.coinType.toValue(details.stakeAmount)
-                    val formattedAmount = "${stakedAmount.toPlainString()} $RUJI_SYMBOL"
-                    val stakedFiat = calculateStakingFiatPrice(stakedAmount, details.coin)
+                .collect { detailsList ->
+                    for (details in detailsList) {
+                        updateExistingPosition(rujiPositionUiModel(details))
+                    }
 
-                    val rewards =
-                        details.rewards?.let { rewardAmount ->
-                            val rewardAmountFormatted =
-                                Chain.ThorChain.coinType.toValue(rewardAmount)
-                            val rewardValue = rewardAmountFormatted.setScale(6, RoundingMode.DOWN)
-                            "${rewardValue.toPlainString()} ${details.rewardsCoin?.ticker ?: RUJI_REWARDS_SYMBOL}"
+                    // Both positions are denominated in RUJI, so the tab's RUJI total is their sum.
+                    _totalValueRujiStake.update {
+                        detailsList.fold(BigInteger.ZERO) { acc, details ->
+                            acc + details.stakeAmount
                         }
-
-                    val stakePosition =
-                        StakePositionUiModel(
-                            coin = details.coin,
-                            stakeAssetHeader = UiText.StringResource(R.string.staked_ruji_header),
-                            stakeAmount = stakedAmount,
-                            stakedAmountDisplay = formattedAmount,
-                            stakedFiatDisplay = stakedFiat,
-                            apy = details.apr?.formatPercentage(),
-                            canWithdraw = details.rewards?.let { it > BigDecimal.ZERO } == true,
-                            canStake = true,
-                            canUnstake = details.stakeAmount > BigInteger.ZERO,
-                            rewards = rewards,
-                            nextReward = null,
-                            nextPayout = null,
-                        )
-
-                    updateExistingPosition(stakePosition)
-
-                    _totalValueRujiStake.update { details.stakeAmount }
+                    }
                     _isLoadingTotalAmount.update { false }
                 }
         }
+    }
+
+    /**
+     * Builds the card for one of the two RUJI staking positions.
+     *
+     * Both are denominated in RUJI — the auto-compounding one is valued at the pool's share price
+     * rather than shown as a raw sRUJI share count — and are priced off RUJI. The APR and the
+     * claimable USDC belong to the bonded position; the auto-compounding one reinvests its revenue
+     * into its own amount and so stays stat-free.
+     */
+    private suspend fun rujiPositionUiModel(details: StakingDetails): StakePositionUiModel {
+        val isAutoCompound = details.coin.id == Coins.ThorChain.sRUJI.id
+        val stakedAmount = Chain.ThorChain.coinType.toValue(details.stakeAmount)
+        val formattedAmount = "${stakedAmount.toPlainString()} $RUJI_SYMBOL"
+        val stakedFiat = calculateStakingFiatPrice(stakedAmount, Coins.ThorChain.RUJI)
+
+        val rewards =
+            details.rewards?.let { rewardAmount ->
+                val rewardAmountFormatted = Chain.ThorChain.coinType.toValue(rewardAmount)
+                val rewardValue = rewardAmountFormatted.setScale(6, RoundingMode.DOWN)
+                "${rewardValue.toPlainString()} ${details.rewardsCoin?.ticker ?: RUJI_REWARDS_SYMBOL}"
+            }
+
+        return StakePositionUiModel(
+            coin = details.coin,
+            stakeAssetHeader =
+                if (isAutoCompound) {
+                    UiText.FormattedText(R.string.defi_header_compounded, listOf(RUJI_SYMBOL))
+                } else {
+                    UiText.StringResource(R.string.staked_ruji_header)
+                },
+            stakeAmount = stakedAmount,
+            stakedAmountDisplay = formattedAmount,
+            stakedFiatDisplay = stakedFiat,
+            apy = details.apr?.formatPercentage(),
+            canWithdraw = details.rewards?.let { it > BigDecimal.ZERO } == true,
+            canStake = true,
+            canUnstake = details.stakeAmount > BigInteger.ZERO,
+            rewards = rewards,
+            nextReward = null,
+            nextPayout = null,
+        )
     }
 
     private fun createTCYStakePosition(address: String, vaultId: String) {
@@ -1118,6 +1141,9 @@ constructor(
                 when (defiNavAction) {
                     DeFiNavActions.STAKE_RUJI -> Coins.ThorChain.RUJI.id
                     DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI.id
+                    // Compounding is funded with RUJI; only the redemption starts from the receipt.
+                    DeFiNavActions.STAKE_SRUJI -> Coins.ThorChain.RUJI.id
+                    DeFiNavActions.UNSTAKE_SRUJI -> Coins.ThorChain.sRUJI.id
                     DeFiNavActions.STAKE_TCY -> Coins.ThorChain.TCY.id
                     DeFiNavActions.UNSTAKE_TCY -> Coins.ThorChain.TCY.id
                     DeFiNavActions.STAKE_STCY -> Coins.ThorChain.TCY.id
@@ -1169,8 +1195,18 @@ constructor(
         private const val RUJI_REWARDS_SYMBOL = "USDC"
         private const val POSITION_DISPLAY_SCALE = 4
 
+        /**
+         * The Manage-Positions key a placeholder is gated on. Both RUJI positions are toggled by
+         * the single "RUJI" tile, so the auto-compounding placeholder borrows the bonded ticker;
+         * every other placeholder is keyed by its own ticker.
+         */
+        private fun StakePositionUiModel.selectionKey(): String =
+            if (coin.id == Coins.ThorChain.sRUJI.id) Coins.ThorChain.RUJI.ticker
+            else stakedAmountDisplay
+
         private fun loadDefaultStakingPositions(): List<StakePositionUiModel> {
             val rujiCoin = Coins.ThorChain.RUJI
+            val sruji = Coins.ThorChain.sRUJI
             val tcy = Coins.ThorChain.TCY
             val stcy = Coins.ThorChain.sTCY
             val ytcy = Coins.ThorChain.yTCY
@@ -1181,6 +1217,22 @@ constructor(
                     coin = rujiCoin,
                     stakeAssetHeader = UiText.StringResource(R.string.staked_ruji_header),
                     stakedAmountDisplay = rujiCoin.ticker,
+                    apy = null,
+                    canWithdraw = false,
+                    canStake = true,
+                    canUnstake = false,
+                    rewards = null,
+                    nextReward = null,
+                    nextPayout = null,
+                ),
+                StakePositionUiModel(
+                    coin = sruji,
+                    stakeAssetHeader =
+                        UiText.FormattedText(
+                            R.string.defi_header_compounded,
+                            listOf(rujiCoin.ticker),
+                        ),
+                    stakedAmountDisplay = sruji.ticker,
                     apy = null,
                     canWithdraw = false,
                     canStake = true,

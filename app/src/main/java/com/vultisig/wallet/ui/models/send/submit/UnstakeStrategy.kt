@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.send.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -34,6 +35,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 
 internal class UnstakeStrategy(
@@ -47,6 +49,7 @@ internal class UnstakeStrategy(
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val depositTransactionRepository: DepositTransactionRepository,
     private val navigator: Navigator<Destination>,
+    private val thorChainApi: ThorChainApi,
     private val defiTypeProvider: () -> DeFiNavActions?,
     private val isAutocompoundProvider: () -> Boolean,
     private val showLoading: () -> Unit,
@@ -107,7 +110,18 @@ internal class UnstakeStrategy(
                         getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
                             ?: BigInteger.ZERO
 
-                    if (tokenAmountInt > availableTokenBalance) {
+                    val defiType = defiTypeProvider()
+
+                    // The auto-compounding position is the one case where this ceiling is not the
+                    // balance the transaction is sized against: the form is seeded from the
+                    // position the DeFi tab cached, while the redemption re-reads the live one.
+                    // Enforcing the stale ceiling would reject amounts the live position can
+                    // honour, so the live read below is the sole authority — it clamps to the
+                    // whole position and so can never over-redeem.
+                    if (
+                        defiType != DeFiNavActions.UNSTAKE_SRUJI &&
+                            tokenAmountInt > availableTokenBalance
+                    ) {
                         throw InvalidTransactionDataException(
                             UiText.FormattedText(
                                 R.string.send_error_insufficient_native_balance_with_fees,
@@ -117,9 +131,20 @@ internal class UnstakeStrategy(
                     }
 
                     val depositTx =
-                        when (defiTypeProvider()) {
+                        when (defiType) {
                             DeFiNavActions.UNSTAKE_RUJI ->
                                 createRUJIUnstakeDepositTransaction(
+                                    vaultId = vaultId,
+                                    selectedToken = selectedToken,
+                                    srcAddress = srcAddress,
+                                    dstAddress = dstAddress,
+                                    tokenAmountInt = tokenAmountInt,
+                                    gasFee = gasFee,
+                                    chain = chain,
+                                )
+
+                            DeFiNavActions.UNSTAKE_SRUJI ->
+                                createRujiCompoundUnstakeDepositTransaction(
                                     vaultId = vaultId,
                                     selectedToken = selectedToken,
                                     srcAddress = srcAddress,
@@ -232,6 +257,109 @@ internal class UnstakeStrategy(
                     fromAddress = srcAddress,
                     stakingContract = STAKING_RUJI_CONTRACT,
                     amount = tokenAmountInt.toString(),
+                ),
+        )
+    }
+
+    /**
+     * Redeems from the auto-compounding RUJI position (`liquid.unbond`).
+     *
+     * The form is denominated in RUJI so it matches the card the user tapped, but the contract is
+     * funded with sRUJI receipt *shares*, so the amount is converted at the pool's live share
+     * price. Shares and size are read from the same response, so their ratio is self-consistent;
+     * redeeming the whole position sends the exact share balance rather than a rounded conversion,
+     * so no dust is stranded. Rounding is downward everywhere else, so the redemption can never
+     * exceed what is held even if the share price moves between the form loading and this submit.
+     *
+     * The amount the form was seeded with comes from the cached position and can sit above the live
+     * one, so the redemption is clamped to what is actually held — and the transaction carries that
+     * clamped value, so the Verify screen shows the amount the contract will really return rather
+     * than the larger figure that was typed.
+     */
+    private suspend fun createRujiCompoundUnstakeDepositTransaction(
+        vaultId: String,
+        selectedToken: Coin,
+        srcAddress: String,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+        gasFee: TokenValue,
+        chain: Chain,
+    ): DepositTransaction {
+        // The read fails closed on an unreadable position rather than reporting a false zero, so a
+        // failure here is a fetch problem, not a balance problem. Translate it: submit()'s generic
+        // catch would otherwise surface the raw "Could not fetch balances: status …" text.
+        val stakeBalances =
+            withContext(Dispatchers.IO) {
+                    runCatching { thorChainApi.getRujiStakeBalance(srcAddress) }
+                }
+                .getOrElse { error: Throwable ->
+                    if (error is CancellationException) throw error
+                    Timber.e(error, "Failed to read the RUJI staking position for the unbond")
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.dialog_default_error_body)
+                    )
+                }
+        val positionValue = stakeBalances.autoCompoundAmount
+
+        // An unreadable share count is not an empty position: sizing a redemption off a guessed
+        // count is exactly what the null guards against, so stop here instead.
+        val heldShares =
+            stakeBalances.autoCompoundShares
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.dialog_default_error_body)
+                )
+
+        if (positionValue <= BigInteger.ZERO || heldShares <= BigInteger.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_insufficient_balance)
+            )
+        }
+
+        val redeemedValue = tokenAmountInt.coerceAtMost(positionValue)
+        val shares =
+            if (redeemedValue >= positionValue) {
+                heldShares
+            } else {
+                redeemedValue.multiply(heldShares).divide(positionValue)
+            }
+
+        if (shares < BigInteger.ONE) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+
+        val specific =
+            withContext(Dispatchers.IO) {
+                blockChainSpecificRepository.getSpecific(
+                    chain,
+                    srcAddress,
+                    selectedToken,
+                    gasFee,
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                    transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+                )
+            }
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = dstAddress,
+            memo = "",
+            srcTokenValue = TokenValue(value = redeemedValue, token = selectedToken),
+            estimatedFees = gasFee,
+            estimateFeesFiat =
+                gasFeeToEstimatedFee.fiatFeesFor(gasFee, selectedToken).formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+            wasmExecuteContractPayload =
+                ThorchainFunctions.unstakeRujiCompound(
+                    shares = shares,
+                    stakingContract = STAKING_RUJI_CONTRACT,
+                    fromAddress = srcAddress,
                 ),
         )
     }

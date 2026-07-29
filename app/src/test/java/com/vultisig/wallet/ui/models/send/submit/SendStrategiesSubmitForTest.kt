@@ -82,6 +82,8 @@ internal class SendStrategiesSubmitForTest {
                 DeFiNavActions.WITHDRAW_RUJI to Target.UNSTAKE,
                 DeFiNavActions.STAKE_RUJI to Target.STAKE,
                 DeFiNavActions.UNSTAKE_RUJI to Target.UNSTAKE,
+                DeFiNavActions.STAKE_SRUJI to Target.STAKE,
+                DeFiNavActions.UNSTAKE_SRUJI to Target.UNSTAKE,
                 DeFiNavActions.STAKE_TCY to Target.STAKE,
                 DeFiNavActions.UNSTAKE_TCY to Target.UNSTAKE,
                 DeFiNavActions.MINT_YRUNE to Target.MINT,

@@ -116,12 +116,15 @@ internal class TokenPreselectionService(
         // RUNE/RUJI in vault for WITHDRAW_RUJI, no ETH for WITHDRAW_USDC_CIRCLE). Returning
         // a static template coin here would cause collectSelectedAccount to synthesize an
         // Account with tokenValue = null, making the form look submittable when it isn't.
+        // UNSTAKE_SRUJI belongs to the same group: its account is synthesized on top of the
+        // vault's RUNE account, so no accounts means that prerequisite is missing too.
         // STAKE types keep their defaults even on empty accounts because the default coin
         // guides the user toward what they would be staking.
         if (accounts.isEmpty()) {
             return when (defiTypeProvider()) {
                 DeFiNavActions.WITHDRAW_RUJI,
-                DeFiNavActions.WITHDRAW_USDC_CIRCLE -> null
+                DeFiNavActions.WITHDRAW_USDC_CIRCLE,
+                DeFiNavActions.UNSTAKE_SRUJI -> null
                 else -> defaultDefiCoin(accounts, preSelectedChainIds, preSelectedTokenId)
             }
         }
@@ -145,6 +148,11 @@ internal class TokenPreselectionService(
         when (defiTypeProvider()) {
             DeFiNavActions.STAKE_RUJI,
             DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI
+
+            // The auto-compounding position is funded with RUJI and redeemed out of the sRUJI
+            // receipt, so the two directions start from different tokens.
+            DeFiNavActions.STAKE_SRUJI -> Coins.ThorChain.RUJI
+            DeFiNavActions.UNSTAKE_SRUJI -> Coins.ThorChain.sRUJI
 
             DeFiNavActions.STAKE_TCY,
             DeFiNavActions.UNSTAKE_TCY -> Coins.ThorChain.TCY

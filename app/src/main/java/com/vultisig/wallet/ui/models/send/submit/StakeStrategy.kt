@@ -129,6 +129,17 @@ internal class StakeStrategy(
                                     chain = chain,
                                 )
 
+                            DeFiNavActions.STAKE_SRUJI ->
+                                createRujiCompoundStakeDepositTransaction(
+                                    vaultId = vaultId,
+                                    selectedToken = selectedToken,
+                                    srcAddress = srcAddress,
+                                    dstAddress = dstAddress,
+                                    tokenAmountInt = tokenAmountInt,
+                                    gasFee = gasFee,
+                                    chain = chain,
+                                )
+
                             DeFiNavActions.STAKE_TCY,
                             DeFiNavActions.STAKE_STCY ->
                                 createTCYStakeDepositTransaction(
@@ -206,6 +217,56 @@ internal class StakeStrategy(
             blockChainSpecific = specific.blockChainSpecific,
             wasmExecuteContractPayload =
                 ThorchainFunctions.stakeRUJI(
+                    fromAddress = srcAddress,
+                    stakingContract = STAKING_RUJI_CONTRACT,
+                    denom = selectedToken.contractAddress,
+                    amount = tokenAmountInt,
+                ),
+        )
+    }
+
+    /**
+     * Stakes RUJI into the auto-compounding position (`liquid.bond`). Funded with the same `x/ruji`
+     * denom as the bonded path, but mints sRUJI receipt shares instead of crediting contract state,
+     * so it carries no `bond:` memo.
+     */
+    private suspend fun createRujiCompoundStakeDepositTransaction(
+        vaultId: String,
+        selectedToken: Coin,
+        srcAddress: String,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+        gasFee: TokenValue,
+        chain: Chain,
+    ): DepositTransaction {
+        val specific =
+            withContext(Dispatchers.IO) {
+                blockChainSpecificRepository.getSpecific(
+                    chain,
+                    srcAddress,
+                    selectedToken,
+                    gasFee,
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                    transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+                )
+            }
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = dstAddress,
+            memo = "",
+            srcTokenValue = TokenValue(value = tokenAmountInt, token = selectedToken),
+            estimatedFees = gasFee,
+            estimateFeesFiat =
+                gasFeeToEstimatedFee.fiatFeesFor(gasFee, selectedToken).formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+            wasmExecuteContractPayload =
+                ThorchainFunctions.stakeRujiCompound(
                     fromAddress = srcAddress,
                     stakingContract = STAKING_RUJI_CONTRACT,
                     denom = selectedToken.contractAddress,

@@ -165,6 +165,8 @@ internal class AmountFractionManager(
                 defiType != DeFiNavActions.BOND &&
                 defiType != DeFiNavActions.STAKE_RUJI &&
                 defiType != DeFiNavActions.UNSTAKE_RUJI &&
+                defiType != DeFiNavActions.STAKE_SRUJI &&
+                defiType != DeFiNavActions.UNSTAKE_SRUJI &&
                 defiType != DeFiNavActions.STAKE_TCY &&
                 defiType != DeFiNavActions.UNSTAKE_TCY &&
                 defiType != DeFiNavActions.STAKE_STCY &&
@@ -252,6 +254,7 @@ internal class AmountFractionManager(
                 defiType == null ||
                     defiType == DeFiNavActions.BOND ||
                     defiType == DeFiNavActions.STAKE_RUJI ||
+                    defiType == DeFiNavActions.STAKE_SRUJI ||
                     defiType == DeFiNavActions.STAKE_TCY ||
                     defiType == DeFiNavActions.STAKE_STCY ||
                     defiType == DeFiNavActions.MINT_YRUNE ||

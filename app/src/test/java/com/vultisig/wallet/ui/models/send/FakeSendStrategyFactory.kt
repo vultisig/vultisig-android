@@ -26,4 +26,5 @@ internal fun fakeSendStrategyFactory(
         addressParserRepository = mockk(relaxed = true),
         chainValidationService = mockk(relaxed = true),
         navigator = navigator,
+        thorChainApi = mockk(relaxed = true),
     )

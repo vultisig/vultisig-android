@@ -148,6 +148,84 @@ internal class AccountsLoaderTest {
             assertEquals(listOf(runeAccount), loadedAccounts)
         }
 
+    // ──────── UNSTAKE_SRUJI ────────
+
+    @Test
+    fun `UNSTAKE_SRUJI synthesizes an sRUJI account carrying the compounded position`() =
+        runTest(mainDispatcher) {
+            // The receipt is deliberately kept out of token discovery, so no sRUJI account comes
+            // back from the addresses flow — without synthesizing one the form has nothing to
+            // redeem against. Its ceiling is the RUJI-denominated position the card showed.
+            defiType = DeFiNavActions.UNSTAKE_SRUJI
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.sRUJI.id,
+                )
+            } returns stakingDetails(stakeAmount = BigInteger("1406486651509"))
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts =
+                                listOf(
+                                    thorAccount(
+                                        Coins.ThorChain.RUNE.copy(
+                                            address = "thor1",
+                                            hexPublicKey = THOR_PUBLIC_KEY,
+                                        )
+                                    )
+                                ),
+                        )
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            val sRuji = loadedAccounts.single { it.token.id.equals(Coins.ThorChain.sRUJI.id, true) }
+            assertEquals(BigInteger("1406486651509"), sRuji.tokenValue?.value)
+            // The RUNE account rides along: it pays the gas fee and carries the source address.
+            assertTrue(loadedAccounts.any { it.token.id.equals(Coins.ThorChain.RUNE.id, true) })
+            // Without the vault-bound address the redemption would be built from an empty sender.
+            assertEquals("thor1", sRuji.token.address)
+            // The receipt template ships an empty key; carrying the vault's key over is what lets
+            // the signing input be built at all, so the redemption reaches the keysign QR.
+            assertEquals(THOR_PUBLIC_KEY, sRuji.token.hexPublicKey)
+        }
+
+    @Test
+    fun `UNSTAKE_SRUJI publishes a zero ceiling when no position is cached`() =
+        runTest(mainDispatcher) {
+            defiType = DeFiNavActions.UNSTAKE_SRUJI
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.sRUJI.id,
+                )
+            } returns null
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts = listOf(thorAccount(Coins.ThorChain.RUNE)),
+                        )
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            val sRuji = loadedAccounts.single { it.token.id.equals(Coins.ThorChain.sRUJI.id, true) }
+            assertEquals(BigInteger.ZERO, sRuji.tokenValue?.value)
+        }
+
     // ──────── UNBOND ────────
 
     @Test
@@ -794,5 +872,7 @@ internal class AccountsLoaderTest {
     private companion object {
         const val VAULT_ID = "vault-id"
         const val VAULT_ID_2 = "vault-id-2"
+        const val THOR_PUBLIC_KEY =
+            "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
     }
 }

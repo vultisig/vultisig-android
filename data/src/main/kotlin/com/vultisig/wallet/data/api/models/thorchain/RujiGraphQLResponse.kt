@@ -26,17 +26,39 @@ import kotlinx.serialization.Serializable
 /** The size (amount) of a position in a pool. */
 @Serializable data class Size(val amount: String?)
 
-/** A single RUJI staking-v2 position with bonded amount, pending revenue, and pool info. */
+/**
+ * A single RUJI staking-v2 position.
+ *
+ * A Rujira staking account holds two independent positions at once: the bonded ("standard") one,
+ * which earns manually-claimable USDC revenue, and the auto-compounding one, whose revenue buys
+ * more of the bond token into the position and is receipted by an sRUJI share token.
+ */
 @Serializable
 data class StakingV2(
     val account: String,
     val bonded: Bonded,
+    val liquidSize: LiquidSize? = null,
+    val liquidShares: LiquidShares? = null,
     val pendingRevenue: PendingRevenue?,
     val pool: Pool?,
 )
 
 /** Bonded (staked) token amount and asset for a staking position. */
-@Serializable data class Bonded(val amount: String, val asset: Asset)
+@Serializable data class Bonded(val amount: String? = null, val asset: Asset? = null)
+
+/**
+ * The auto-compounding position's value, denominated in the *bond* token (RUJI) rather than in
+ * receipt shares. This is the displayable amount: the share price rises as revenue compounds, so
+ * the raw share count understates the position.
+ */
+@Serializable data class LiquidSize(val amount: String? = null)
+
+/**
+ * The raw sRUJI receipt share count backing the auto-compounding position — equal to the vault's
+ * on-chain `x/staking-x/ruji` balance. Not a display value; it sizes the `liquid.unbond`
+ * redemption, which is funded in shares.
+ */
+@Serializable data class LiquidShares(val amount: String? = null)
 
 /** Pending revenue amount and asset accrued by a staking position. */
 @Serializable data class PendingRevenue(val amount: String, val asset: Asset)

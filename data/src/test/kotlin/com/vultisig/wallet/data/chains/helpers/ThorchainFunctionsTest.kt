@@ -271,4 +271,77 @@ class ThorchainFunctionsTest {
             ThorchainFunctions.unStakeTcyCompound(BigInteger.valueOf(-1L), "contract", "addr")
         }
     }
+
+    @Test
+    fun `stakeRujiCompound produces liquid bond funded with the RUJI bond denom`() {
+        // The auto-compounding position is entered with the bond token, exactly like the bonded
+        // one; only the execute message differs.
+        val payload =
+            ThorchainFunctions.stakeRujiCompound(
+                fromAddress = "thor1sender",
+                stakingContract = "thor1contract",
+                denom = "x/ruji",
+                amount = BigInteger.valueOf(5_000_000L),
+            )
+        assertEquals("thor1sender", payload.senderAddress)
+        assertEquals("thor1contract", payload.contractAddress)
+        assertEquals("""{ "liquid": { "bond": {} } }""", payload.executeMsg)
+        val funds = requireNotNull(payload.coins.single())
+        assertEquals("x/ruji", funds.denom)
+        assertEquals("5000000", funds.amount)
+    }
+
+    @Test
+    fun `stakeRujiCompound throws on blank inputs or sub-unit amounts`() {
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.stakeRujiCompound("", "contract", "x/ruji", BigInteger.ONE)
+        }
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.stakeRujiCompound("addr", "", "x/ruji", BigInteger.ONE)
+        }
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.stakeRujiCompound("addr", "contract", "", BigInteger.ONE)
+        }
+        // Dust below one base unit would build a funds-less execute — a no-op the user pays gas
+        // for.
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.stakeRujiCompound("addr", "contract", "x/ruji", BigInteger.ZERO)
+        }
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.stakeRujiCompound(
+                "addr",
+                "contract",
+                "x/ruji",
+                BigInteger.valueOf(-1),
+            )
+        }
+    }
+
+    @Test
+    fun `unstakeRujiCompound funds liquid unbond with sRUJI receipt shares`() {
+        // Redemption is funded with the receipt, not with RUJI: the caller converts at the pool's
+        // share price before calling.
+        val payload =
+            ThorchainFunctions.unstakeRujiCompound(
+                shares = BigInteger.valueOf(1_385_594_365_632L),
+                stakingContract = "thor1contract",
+                fromAddress = "thor1sender",
+            )
+        assertEquals("thor1sender", payload.senderAddress)
+        assertEquals("thor1contract", payload.contractAddress)
+        assertEquals("""{ "liquid": { "unbond": {} } }""", payload.executeMsg)
+        val funds = requireNotNull(payload.coins.single())
+        assertEquals("x/staking-x/ruji", funds.denom)
+        assertEquals("1385594365632", funds.amount)
+    }
+
+    @Test
+    fun `unstakeRujiCompound throws when shares is zero or below one`() {
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.unstakeRujiCompound(BigInteger.ZERO, "contract", "addr")
+        }
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.unstakeRujiCompound(BigInteger.valueOf(-1L), "contract", "addr")
+        }
+    }
 }
