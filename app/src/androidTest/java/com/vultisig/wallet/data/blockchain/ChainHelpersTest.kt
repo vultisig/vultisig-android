@@ -7,8 +7,10 @@ import Coin
 import JsonReader
 import KeysignPayload
 import SignData
+import SolanaSpecific
 import TonSpecific
 import TransactionData
+import TriggerSmartContractPayload
 import android.content.Context
 import androidx.test.platform.app.InstrumentationRegistry
 import com.vultisig.wallet.data.chains.helpers.CardanoHelper
@@ -33,8 +35,10 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import java.math.BigInteger
 import java.util.Base64
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.bouncycastle.crypto.digests.Blake2bDigest
+import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
@@ -783,7 +787,62 @@ class ChainHelpersTest {
         )
     }
 
+    /**
+     * `SolanaSpecific.priorityLimit`/`hasProgramId` and `TriggerSmartContractPayload`'s snake_case
+     * aliases exist so a fixture can be copied verbatim from iOS/TS-core without a field silently
+     * deserializing to its default, but no golden fixture case currently reaches an asserted hash
+     * through those aliases: the one `compute_limit` case in `solana.json` takes the `signSolana`
+     * raw-transaction shortcut, and the one `TriggerSmartContractPayload` case in `tron.json` uses
+     * the camelCase spelling. Decoding directly here is a cheap way to prove the aliases resolve to
+     * the right field without needing new cross-repo golden fixtures.
+     */
+    @Test
+    fun jsonNamesAcceptBothFieldSpellings() {
+        val solanaSpecific =
+            json.decodeFromString<SolanaSpecific>(
+                """
+                {
+                  "recent_block_hash": "hash",
+                  "priority_fee": "1",
+                  "program_id": true,
+                  "compute_limit": "100000"
+                }
+                """
+                    .trimIndent()
+            )
+        assertEquals(true, solanaSpecific.hasProgramId)
+        assertEquals("100000", solanaSpecific.priorityLimit)
+
+        val triggerSmartContractPayload =
+            json.decodeFromString<TriggerSmartContractPayload>(
+                """
+                {
+                  "owner_address": "owner",
+                  "contract_address": "contract",
+                  "call_value": "1",
+                  "call_token_value": "2",
+                  "data": "deadbeef"
+                }
+                """
+                    .trimIndent()
+            )
+        assertEquals("owner", triggerSmartContractPayload.ownerAddress)
+        assertEquals("contract", triggerSmartContractPayload.contractAddress)
+        assertEquals("1", triggerSmartContractPayload.callValue)
+        assertEquals("2", triggerSmartContractPayload.callDataValue)
+    }
+
     private fun loadTransactionData(jsonFile: String): List<TransactionData> {
+        val callerTest =
+            Thread.currentThread()
+                .stackTrace
+                .first {
+                    it.className == ChainHelpersTest::class.java.name &&
+                        it.methodName != "loadTransactionData"
+                }
+                .methodName
+        loadedFilesByTestMethod.getOrPut(callerTest) { mutableSetOf() }.add(jsonFile)
+
         val appContext: Context = InstrumentationRegistry.getInstrumentation().context
         val data =
             JsonReader.readJsonFromAsset(appContext, jsonFile)
@@ -792,6 +851,9 @@ class ChainHelpersTest {
     }
 
     private companion object {
+        /** file -> names of tests observed calling [loadTransactionData] with that file. */
+        private val loadedFilesByTestMethod = mutableMapOf<String, MutableSet<String>>()
+
         private const val BSC_JSON_FILE = "bsc.json"
         private const val EVM_JSON_FILE = "evm.json"
         private const val COSMOS_JSON_FILE = "cosmos.json"
@@ -854,5 +916,34 @@ class ChainHelpersTest {
             "75be85178816db3bc71a4f3e64e5c89866d8b7daae827ba9cf4ecd1ed9e645d5"
         private const val HEX_CHAIN_CODE =
             "c9b189a8232b872b8d9ccd867d0db316dd10f56e729c310fe072adf5fd204ae7"
+
+        /**
+         * [fixtureCorpusMatchesDeclaredFileSet] only checks that a [FIXTURE_TESTS] value names a
+         * real `@Test` method — not that the method's body actually loads that key's file. A
+         * mis-bound entry (e.g. pointing a file at an unrelated existing test) would otherwise stay
+         * green while that file is never signed. [loadTransactionData] records its caller in
+         * [loadedFilesByTestMethod], and this runs after every test in the class so every binding
+         * has had a chance to be proven true.
+         *
+         * Only flags a binding whose test actually ran this session but never touched the file — a
+         * bound test absent from [loadedFilesByTestMethod] (e.g. because only one test method was
+         * selected to run) is silently skipped rather than failed, so running a single test in
+         * isolation still works.
+         */
+        @JvmStatic
+        @AfterClass
+        fun verifyFixtureBindingsWereActuallyLoaded() {
+            val unproven =
+                FIXTURE_TESTS.filter { (file, test) ->
+                    val filesLoadedByTest = loadedFilesByTestMethod[test]
+                    filesLoadedByTest != null && file !in filesLoadedByTest
+                }
+            assertEquals(
+                "FIXTURE_TESTS binds a file to a test whose body never loaded it — the binding " +
+                    "has drifted from what the test actually signs",
+                emptyMap<String, String>(),
+                unproven,
+            )
+        }
     }
 }

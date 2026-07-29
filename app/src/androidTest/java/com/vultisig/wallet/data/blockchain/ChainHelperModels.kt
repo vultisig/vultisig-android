@@ -151,10 +151,16 @@ data class TonSpecific(
 
 /**
  * `program_id` / `compute_limit` are the field names in `SolanaSpecific` (commondata
- * `blockchain_specific.proto`) and are what the iOS and TS-core fixture corpora use; this corpus
- * historically spelled them `has_program_id` / `priority_limit`. Both spellings are accepted so a
- * fixture can be copied verbatim between repos without a field silently deserializing to its
- * default — which would change the signed message while the test still passed.
+ * `blockchain_specific.proto`); this corpus historically spelled them `has_program_id` /
+ * `priority_limit`. Both spellings are accepted so a fixture can be copied verbatim between repos
+ * without a field silently deserializing to its default — which would change the signed message
+ * while the test still passed.
+ *
+ * Note this is a defensive accommodation, not proof of cross-platform correctness: iOS's own
+ * `KeysignPayloadCodable` only ever decodes `priority_limit`, so its `solana-sign-data.json`
+ * fixture — which spells the field `compute_limit` — silently loses that value on iOS too.
+ * Accepting `compute_limit` here means Android won't drop it the way iOS does, not that the value
+ * is verified identical across platforms.
  */
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
