@@ -898,6 +898,7 @@
     <string name="vault_settings_advanced_title">고급</string>
     <string name="settings_advanced_swapkit_toggle">SwapKit 어그리게이터</string>
     <string name="settings_advanced_custom_rpc_toggle">사용자 지정 RPC</string>
+    <string name="settings_advanced_limit_swap_toggle">지정가 주문</string>
     <string name="custom_rpc_title">사용자 지정 RPC</string>
     <string name="custom_rpc_tier_badge">VULT TIER</string>
     <string name="custom_rpc_advanced_subtitle">체인별로 자체 노드를 사용하세요</string>

@@ -13,6 +13,8 @@ import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
 import com.vultisig.wallet.data.repositories.swap.JupiterQuoteSource
 import com.vultisig.wallet.data.repositories.swap.KyberQuoteSource
 import com.vultisig.wallet.data.repositories.swap.LiFiQuoteSource
+import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
+import com.vultisig.wallet.data.repositories.swap.LimitSwapConfigImpl
 import com.vultisig.wallet.data.repositories.swap.MayaQuoteSource
 import com.vultisig.wallet.data.repositories.swap.OneInchQuoteSource
 import com.vultisig.wallet.data.repositories.swap.SwapKitConfig
@@ -371,6 +373,8 @@ internal interface RepositoriesModule {
     @Binds @Singleton fun bindCustomRpcConfig(impl: CustomRpcConfigImpl): CustomRpcConfig
 
     @Binds @Singleton fun bindSwapKitConfig(impl: SwapKitConfigImpl): SwapKitConfig
+
+    @Binds @Singleton fun bindLimitSwapConfig(impl: LimitSwapConfigImpl): LimitSwapConfig
 
     // Phase 2 scaffolding. The cache is fully implemented and bound, but is intentionally NOT yet
     // injected into SwapKitQuoteSource: Phase 1 deliberately drops the client-side provider gate

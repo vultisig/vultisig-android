@@ -597,6 +597,7 @@
     <string name="vault_settings_advanced_title">Avanzato</string>
     <string name="settings_advanced_swapkit_toggle">Aggregatore SwapKit</string>
     <string name="settings_advanced_custom_rpc_toggle">RPC personalizzato</string>
+    <string name="settings_advanced_limit_swap_toggle">Ordini limite</string>
     <string name="custom_rpc_title">RPC personalizzato</string>
     <string name="custom_rpc_tier_badge">VULT TIER</string>
     <string name="custom_rpc_advanced_subtitle">Usa i tuoi nodi per ogni catena</string>

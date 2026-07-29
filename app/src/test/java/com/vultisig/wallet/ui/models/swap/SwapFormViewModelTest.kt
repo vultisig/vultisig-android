@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
 import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
@@ -118,6 +119,7 @@ internal class SwapFormViewModelTest {
     private lateinit var tokenBalanceMapper: AccountToTokenBalanceUiModelMapper
     private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
     private lateinit var featureFlagRepository: FeatureFlagRepository
+    private lateinit var limitSwapConfig: LimitSwapConfig
     private lateinit var limitMarketPriceRepository: LimitSwapMarketPriceRepository
     private lateinit var buildLimitSwapTransactionUseCase: BuildLimitSwapTransactionUseCase
 
@@ -168,6 +170,9 @@ internal class SwapFormViewModelTest {
         featureFlagRepository = mockk(relaxed = true)
         coEvery { featureFlagRepository.getFeatureFlags() } returns
             FeatureFlagJson(isLimitSwapEnabled = false)
+        // Local Advanced Settings toggle defaults to enabled, so the remote flag above stays the
+        // single source of "off" for tests that don't opt into the limit form.
+        limitSwapConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(true) }
         limitMarketPriceRepository = mockk(relaxed = true)
         buildLimitSwapTransactionUseCase = mockk(relaxed = true)
 
@@ -267,6 +272,7 @@ internal class SwapFormViewModelTest {
                 chainAccountAddressRepository = chainAccountAddressRepository,
                 getDiscountBpsUseCase = getDiscountBpsUseCase,
                 featureFlagRepository = featureFlagRepository,
+                limitSwapConfig = limitSwapConfig,
                 limitMarketPriceRepository = limitMarketPriceRepository,
                 buildLimitSwapTransactionUseCase = buildLimitSwapTransactionUseCase,
                 appCurrencyRepository = mockk(relaxed = true),

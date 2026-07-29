@@ -3,6 +3,7 @@
 package com.vultisig.wallet.ui.models
 
 import com.vultisig.wallet.data.repositories.CustomRpcConfig
+import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
 import com.vultisig.wallet.data.repositories.swap.SwapKitConfig
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -29,6 +30,7 @@ internal class SecretViewModelTest {
 
     private lateinit var swapKitConfig: SwapKitConfig
     private lateinit var customRpcConfig: CustomRpcConfig
+    private lateinit var limitSwapConfig: LimitSwapConfig
     private lateinit var navigator: Navigator<Destination>
 
     /** Sets up mocks and test dispatcher before each test. */
@@ -37,6 +39,7 @@ internal class SecretViewModelTest {
         Dispatchers.setMain(testDispatcher)
         swapKitConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
         customRpcConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
+        limitSwapConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
         navigator = mockk(relaxed = true)
     }
 
@@ -50,6 +53,7 @@ internal class SecretViewModelTest {
         SecretViewModel(
             swapKitConfig = swapKitConfig,
             customRpcConfig = customRpcConfig,
+            limitSwapConfig = limitSwapConfig,
             navigator = navigator,
         )
 
@@ -97,5 +101,28 @@ internal class SecretViewModelTest {
             val vm = createViewModel()
 
             vm.state.value.isCustomRpcEnabled.shouldBeTrue()
+        }
+
+    /** Verifies toggleLimitSwap persists the new feature flag value. */
+    @Test
+    fun `toggleLimitSwap persists the new flag value`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+
+            vm.toggleLimitSwap(true)
+            coVerify { limitSwapConfig.setFeatureEnabled(true) }
+
+            vm.toggleLimitSwap(false)
+            coVerify { limitSwapConfig.setFeatureEnabled(false) }
+        }
+
+    /** Verifies a `true` emission from limitSwapConfig.isFeatureEnabled reflects into the state. */
+    @Test
+    fun `limit swap feature emissions reflect into state`() =
+        runTest(testDispatcher) {
+            every { limitSwapConfig.isFeatureEnabled } returns flowOf(true)
+            val vm = createViewModel()
+
+            vm.state.value.isLimitSwapEnabled.shouldBeTrue()
         }
 }
