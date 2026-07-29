@@ -323,12 +323,16 @@ class ThorChainApiImplTest {
                 {
                   "account": "thor1abc",
                   "bonded": { "amount": "0", "asset": { "metadata": { "symbol": "TCY" } } },
+                  "liquidSize": { "amount": "0" },
+                  "liquidShares": { "amount": "0" },
                   "pendingRevenue": { "amount": "999", "asset": { "metadata": { "symbol": "USDC" } } },
                   "pool": { "mergeAsset": null, "summary": { "apr": { "value": "0.05" } } }
                 },
                 {
                   "account": "thor1abc",
                   "bonded": { "amount": "$bondedRuji", "asset": { "metadata": { "symbol": "RUJI" } } },
+                  "liquidSize": { "amount": "0" },
+                  "liquidShares": { "amount": "0" },
                   "pendingRevenue": { "amount": "500", "asset": { "metadata": { "symbol": "USDC" } } },
                   "pool": { "mergeAsset": null, "summary": { "apr": { "value": "0.12" } } }
                 }
@@ -425,16 +429,17 @@ class ThorChainApiImplTest {
         }
 
     @Test
-    fun `getRujiStakeBalance throws rather than reporting unreadable shares as zero`() =
+    fun `getRujiStakeBalance reports unreadable shares as unknown without losing the amounts`() =
         runBlocking {
-            // Both share sources unavailable on a live position: reporting zero shares would read
-            // downstream as "insufficient balance" and silently disable the unbond, the same false
-            // zero the amounts above fail closed on.
+            // Both share sources unavailable on a live position. Reporting zero shares would read
+            // downstream as "insufficient balance" and silently disable the unbond, so the count is
+            // reported as unknown — but the share read is a separate bank query, so failing it must
+            // not discard the two displayable amounts that did arrive.
             val api =
                 newRujiApi(
                     stakeBody =
                         rujiStakeBody(
-                            bondedAmount = "0",
+                            bondedAmount = "7875733",
                             liquidSize = "1406486651509",
                             liquidShares = null,
                         ),
@@ -442,10 +447,11 @@ class ThorChainApiImplTest {
                     balancesStatus = HttpStatusCode.InternalServerError,
                 )
 
-            assertThrows(IllegalStateException::class.java) {
-                runBlocking { api.getRujiStakeBalance("thor1abc") }
-            }
-            Unit
+            val result = api.getRujiStakeBalance("thor1abc")
+
+            assertEquals(BigInteger("7875733"), result.stakeAmount)
+            assertEquals(BigInteger("1406486651509"), result.autoCompoundAmount)
+            assertNull(result.autoCompoundShares)
         }
 
     @Test
@@ -458,7 +464,7 @@ class ThorChainApiImplTest {
                     stakeBody =
                         rujiStakeBody(
                             bondedAmount = "7875733",
-                            liquidSize = null,
+                            liquidSize = "0",
                             liquidShares = null,
                         ),
                     balancesBody = "",
@@ -469,6 +475,24 @@ class ThorChainApiImplTest {
 
             assertEquals(BigInteger("7875733"), result.stakeAmount)
             assertEquals(BigInteger.ZERO, result.autoCompoundShares)
+        }
+
+    @Test
+    fun `getRujiStakeBalance throws rather than zeroing an amount a present position omits`() =
+        runBlocking {
+            // The Rujira schema marks these amounts non-null, so a position that reports one
+            // without the other is a degraded response, not an empty position: zeroing it would
+            // persist a false zero over a live bond and disable its Unstake.
+            val api =
+                newRujiApi(
+                    stakeBody = rujiStakeBody(bondedAmount = "7875733", liquidSize = null),
+                    balancesBody = """{"balances":[]}""",
+                )
+
+            assertThrows(IllegalStateException::class.java) {
+                runBlocking { api.getRujiStakeBalance("thor1abc") }
+            }
+            Unit
         }
 
     @Test

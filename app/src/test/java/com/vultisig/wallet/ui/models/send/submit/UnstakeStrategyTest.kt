@@ -308,6 +308,31 @@ internal class UnstakeStrategyTest {
         }
 
     @Test
+    fun `submit UNSTAKE_SRUJI refuses to size a redemption against an unknown share count`() =
+        runTest {
+            withMockedIoDispatcher {
+                givenSuccessfulFlow()
+                // Shares unreadable on a funded position: guessing the count could redeem the wrong
+                // slice, and calling it zero would report a live position as empty.
+                givenAutoCompoundPosition(
+                    positionValue = BigInteger.valueOf(100_000_000),
+                    heldShares = null,
+                )
+                tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+
+                val captured = slot<DepositTransaction>()
+                coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns
+                    Unit
+
+                build(this, DeFiNavActions.UNSTAKE_SRUJI).submit()
+                advanceUntilIdle()
+
+                assertEquals(R.string.dialog_default_error_body, lastError.stringId())
+                assertFalse(captured.isCaptured)
+            }
+        }
+
+    @Test
     fun `submit surfaces no_address when chain validates dst as invalid`() = runTest {
         givenValidatedAccount()
         coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns false
@@ -391,7 +416,7 @@ internal class UnstakeStrategyTest {
             )
     }
 
-    private fun givenAutoCompoundPosition(positionValue: BigInteger, heldShares: BigInteger) {
+    private fun givenAutoCompoundPosition(positionValue: BigInteger, heldShares: BigInteger?) {
         coEvery { thorChainApi.getRujiStakeBalance(any()) } returns
             RujiStakeBalances(
                 stakeAmount = BigInteger.ZERO,

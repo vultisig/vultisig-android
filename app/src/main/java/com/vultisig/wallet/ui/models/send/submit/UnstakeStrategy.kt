@@ -284,7 +284,14 @@ internal class UnstakeStrategy(
                     )
                 }
         val positionValue = stakeBalances.autoCompoundAmount
-        val heldShares = stakeBalances.autoCompoundShares
+
+        // An unreadable share count is not an empty position: sizing a redemption off a guessed
+        // count is exactly what the null guards against, so stop here instead.
+        val heldShares =
+            stakeBalances.autoCompoundShares
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.dialog_default_error_body)
+                )
 
         if (positionValue <= BigInteger.ZERO || heldShares <= BigInteger.ZERO) {
             throw InvalidTransactionDataException(

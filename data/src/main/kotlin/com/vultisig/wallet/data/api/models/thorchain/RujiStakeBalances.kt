@@ -15,8 +15,12 @@ data class RujiStakeBalances(
     val stakeTicker: String = "",
     /** Auto-compounding position valued in RUJI base units (the API's `liquidSize`). */
     val autoCompoundAmount: BigInteger = BigInteger.ZERO,
-    /** sRUJI receipt shares backing [autoCompoundAmount]; funds the `liquid.unbond` redemption. */
-    val autoCompoundShares: BigInteger = BigInteger.ZERO,
+    /**
+     * sRUJI receipt shares backing [autoCompoundAmount]; funds the `liquid.unbond` redemption.
+     * `null` when the count could not be read — never zero in that case, or a live position would
+     * look empty and its redemption would be silently disabled.
+     */
+    val autoCompoundShares: BigInteger? = BigInteger.ZERO,
     val rewardsAmount: BigInteger = BigInteger.ZERO,
     val rewardsTicker: String = "USDC",
     val apr: Double = 0.0,

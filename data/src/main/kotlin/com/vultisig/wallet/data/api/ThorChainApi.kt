@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.api.models.thorchain.MidgardNetworkData
 import com.vultisig.wallet.data.api.models.thorchain.NodeDetailsResponse
 import com.vultisig.wallet.data.api.models.thorchain.RootData
 import com.vultisig.wallet.data.api.models.thorchain.RujiStakeBalances
+import com.vultisig.wallet.data.api.models.thorchain.StakingV2
 import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
 import com.vultisig.wallet.data.api.models.thorchain.TcyDistribution
 import com.vultisig.wallet.data.api.models.thorchain.TcyModuleBalanceResponse
@@ -455,21 +456,26 @@ constructor(
         // the other kind. `liquidSize` — not the raw receipt balance — is the auto-compounding
         // amount, because the receipt is denominated in shares whose price rises as revenue
         // compounds.
-        val bondedAmount = stake?.bonded?.amount.toStakeAmountOrThrow(BONDED_FIELD)
-        val autoCompoundAmount = stake?.liquidSize?.amount.toStakeAmountOrThrow(LIQUID_SIZE_FIELD)
+        //
+        // No RUJI node at all is the one genuine zero: the account holds neither position. Once a
+        // node *is* present both amounts are required by the schema, so a missing one is read the
+        // same way as a malformed one — see [toStakeAmountOrThrow].
+        val bondedAmount = stake?.bonded?.amount.toStakeAmountOrThrow(stake, BONDED_FIELD)
+        val autoCompoundAmount =
+            stake?.liquidSize?.amount.toStakeAmountOrThrow(stake, LIQUID_SIZE_FIELD)
         // Shares come from the same response as the size they back, so their ratio is consistent;
-        // the on-chain receipt (identical by construction) only covers a response missing the
-        // field. Nothing to size when the position is empty, so the read is skipped entirely —
-        // every account without an auto-compounding position would otherwise pay for it. When
-        // there *is* a position, an unreadable share count fails closed like the amounts above:
-        // reporting zero shares would silently disable the unbond of a live position.
+        // the on-chain receipt only covers a response missing the field. Nothing to size when the
+        // position is empty, so the read is skipped entirely — every account without an
+        // auto-compounding position would otherwise pay for it. Unlike the amounts above, an
+        // unreadable share count is reported as unknown rather than thrown: it comes from a
+        // separate bank query, is needed only to size a redemption, and failing the whole read
+        // would drop two perfectly good displayable positions over it. The unbond fails closed on
+        // the null instead, so a live position is never redeemed against a guessed share count.
         val autoCompoundShares =
             if (autoCompoundAmount <= BigInteger.ZERO) {
                 BigInteger.ZERO
             } else {
-                stake?.liquidShares?.amount?.toBigIntegerOrNull()
-                    ?: readRujiReceiptBalance(address)
-                    ?: error("RUJI auto-compounding share count is unavailable")
+                stake?.liquidShares?.amount?.toBigIntegerOrNull() ?: readRujiReceiptBalance(address)
             }
 
         val stakeTicker = stake?.bonded?.asset?.metadata?.symbol ?: RUJI_STAKE_SYMBOL
@@ -490,16 +496,18 @@ constructor(
     }
 
     /**
-     * Parses a staking position amount, failing closed on a malformed value.
+     * Parses an amount belonging to [position], failing closed on anything unreadable.
      *
-     * An absent amount means the account holds no such position, which is a genuine zero. A
-     * *present* but unparseable one is a partial response: coercing it to zero would erase a live
-     * position from the UI, so it throws and lets the caller keep its cached position instead.
+     * A null [position] means the account holds no RUJI staking node at all, which is a genuine
+     * zero for both amounts. Within a node that *does* exist the Rujira schema marks every amount
+     * non-null, so a missing value is as much a degraded response as a malformed one: coercing
+     * either to zero would erase a live position from the UI and persist that false zero to the
+     * cache. Throwing instead lets the caller keep its cached position.
      */
-    private fun String?.toStakeAmountOrThrow(field: String): BigInteger {
-        if (this == null) return BigInteger.ZERO
-        return toBigIntegerOrNull()
-            ?: error("RUJI staking `$field` amount '$this' is not a valid number")
+    private fun String?.toStakeAmountOrThrow(position: StakingV2?, field: String): BigInteger {
+        if (position == null) return BigInteger.ZERO
+        return this?.toBigIntegerOrNull()
+            ?: error("RUJI staking `$field` amount '$this' is missing or not a valid number")
     }
 
     /**
