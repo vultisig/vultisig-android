@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosTxStatusJson
 import com.vultisig.wallet.data.api.models.cosmos.TxResponse
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.repositories.PendingUtxoRepository
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
 import io.mockk.coEvery
@@ -456,6 +457,7 @@ class BroadcastTxUseCaseTest {
         bittensorApi: BittensorApi = mockk(relaxed = true),
         cardanoApi: CardanoApi = mockk(relaxed = true),
         transactionStatusRepository: TransactionStatusRepository = mockk(relaxed = true),
+        pendingUtxoRepository: PendingUtxoRepository = PendingUtxoRepository(),
     ) =
         BroadcastTxUseCaseImpl(
             thorChainApi = thorChainApi,
@@ -472,6 +474,7 @@ class BroadcastTxUseCaseTest {
             tronApi = mockk<TronApi>(relaxed = true),
             cardanoApi = cardanoApi,
             transactionStatusRepository = transactionStatusRepository,
+            pendingUtxoRepository = pendingUtxoRepository,
         )
 
     private fun txStatus(code: Int) =

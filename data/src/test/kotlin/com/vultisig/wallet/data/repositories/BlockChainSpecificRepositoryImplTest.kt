@@ -848,6 +848,7 @@ internal class BlockChainSpecificRepositoryImplTest {
         dashApi: DashApi = mockk<DashApi>(relaxed = true),
         zcashApi: ZcashApi = mockk<ZcashApi>(relaxed = true),
         solanaApi: SolanaApi = mockk<SolanaApi>(relaxed = true),
+        pendingUtxoRepository: PendingUtxoRepository = PendingUtxoRepository(),
     ): BlockChainSpecificRepositoryImpl {
         val evmApiFactory =
             object : EvmApiFactory {
@@ -885,6 +886,7 @@ internal class BlockChainSpecificRepositoryImplTest {
                     cosmosFeeService = NoOpFeeService,
                     utxoFeeService = NoOpFeeService,
                 ),
+            pendingUtxoRepository = pendingUtxoRepository,
         )
     }
 

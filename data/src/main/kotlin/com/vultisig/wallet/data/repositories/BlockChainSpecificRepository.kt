@@ -103,7 +103,7 @@ constructor(
     private val tronApi: TronApi,
     private val cardanoApi: CardanoApi,
     private val feeServiceComposite: FeeServiceComposite,
-    private val pendingUtxoRepository: PendingUtxoRepository = PendingUtxoRepository(),
+    private val pendingUtxoRepository: PendingUtxoRepository,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(

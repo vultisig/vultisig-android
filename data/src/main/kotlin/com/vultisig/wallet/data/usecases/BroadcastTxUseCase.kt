@@ -78,7 +78,7 @@ constructor(
     private val tronApi: TronApi,
     private val cardanoApi: CardanoApi,
     private val transactionStatusRepository: TransactionStatusRepository,
-    private val pendingUtxoRepository: PendingUtxoRepository = PendingUtxoRepository(),
+    private val pendingUtxoRepository: PendingUtxoRepository,
 ) : BroadcastTxUseCase {
 
     override suspend fun invoke(chain: Chain, tx: SignedTransactionResult) =
