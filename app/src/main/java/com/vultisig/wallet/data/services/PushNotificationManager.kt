@@ -216,12 +216,15 @@ constructor(
         setVaultsOptIn(allVaults.map { it.id to enabled })
     }
 
+    /**
+     * Asks the server to push the keysign QR to this vault's registered devices.
+     *
+     * Deliberately independent of the local device's own push state: [NotifyRequest] carries no
+     * token, and the server picks the recipients from the devices registered under `vaultId`. An
+     * initiator that never opted in — or whose token write was lost — must still be able to notify
+     * peers that did. Failures propagate so the caller can report them rather than claim success.
+     */
     suspend fun notifyVaultDevices(vault: Vault, qrCodeData: String) {
-        val token = getStoredToken()
-        if (token == null) {
-            Timber.d("No FCM token available, skipping notification")
-            return
-        }
         notificationApi.notify(
             NotifyRequest(
                 vaultId = notificationVaultId(vault),

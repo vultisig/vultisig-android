@@ -21,7 +21,11 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -82,6 +86,7 @@ import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.ChainUiModel
 import com.vultisig.wallet.ui.models.DeviceMeta
+import com.vultisig.wallet.ui.models.TokenDetailUiModel
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VaultDetailUiModel
@@ -128,6 +133,7 @@ import com.vultisig.wallet.ui.models.swap.VultTierGateUiModel
 import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesUiState
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
+import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingPositionsContent
@@ -190,6 +196,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import java.math.BigDecimal
+import kotlinx.coroutines.delay
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -219,6 +226,7 @@ class PreviewActivity : ComponentActivity() {
                             externalRecipient = "0x9876543210FeDcBa9876543210FeDcBa98765432"
                         )
                     "asset_action_button" -> AssetActionButtonPreview()
+                    "token_detail_sheet_loading" -> TokenDetailSheetLoadingPreview()
                     "camera_button" -> CameraButton(onClick = {})
                     "banner" -> BannerPreview()
                     "send_tx_done" -> SendTxDonePreview()
@@ -3233,4 +3241,38 @@ private fun LimitSwapFormPreview(expandedSection: LimitFormSection = LimitFormSe
             modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
         )
     }
+}
+
+/**
+ * Reproduces the real open of the token detail sheet: it is composed with an empty model, and the
+ * account lands a few hundred milliseconds later. Record this to see whether the sheet settles once
+ * or slides a second time when the values and action buttons arrive.
+ */
+@Composable
+private fun TokenDetailSheetLoadingPreview() {
+    var uiModel by remember { mutableStateOf(TokenDetailUiModel()) }
+
+    LaunchedEffect(Unit) {
+        delay(700)
+        uiModel =
+            TokenDetailUiModel(
+                token =
+                    ChainTokenUiModel(
+                        name = "SOL",
+                        balance = "0.07010079 SOL",
+                        fiatBalance = "$5.15",
+                        tokenLogo = getCoinLogo(Coins.Solana.SOL.logo),
+                        chainLogo = Chain.Solana.logo,
+                        price = "$73.51",
+                        network = Chain.Solana.raw,
+                    ),
+                canSwap = true,
+                canSend = true,
+                canBuy = true,
+            )
+    }
+
+    Box(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary))
+
+    TokenDetailScreen(uiModel = uiModel)
 }

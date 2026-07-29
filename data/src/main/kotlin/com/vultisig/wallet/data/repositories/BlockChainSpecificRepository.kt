@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN
+import com.vultisig.wallet.data.blockchain.ethereum.clampedPriorityFee
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Swap
@@ -168,7 +169,7 @@ constructor(
                     BlockChainSpecificAndUtxo(
                         BlockChainSpecific.Ethereum(
                             maxFeePerGasWei = feeEstimate.maxFeePerGas,
-                            priorityFeeWei = feeEstimate.maxPriorityFeePerGas,
+                            priorityFeeWei = feeEstimate.clampedPriorityFee(),
                             nonce = nonce,
                             gasLimit = feeEstimate.gasLimit,
                         )

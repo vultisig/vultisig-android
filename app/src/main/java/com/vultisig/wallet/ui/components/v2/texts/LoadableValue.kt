@@ -1,6 +1,9 @@
 package com.vultisig.wallet.ui.components.v2.texts
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -42,7 +46,22 @@ internal fun LoadableValue(
     minLines: Int = 1,
     onTextLayout: ((TextLayoutResult) -> Unit)? = null,
 ) {
-    AnimatedContent(modifier = modifier, targetState = value) { v ->
+    // The placeholder has to stand as tall as the line it replaces, otherwise the layout around it
+    // shifts the moment the value lands.
+    val placeholderMinHeight =
+        with(LocalDensity.current) {
+            val loadedLineHeight = if (lineHeight.isSp) lineHeight else style.lineHeight
+            if (loadedLineHeight.isSp) loadedLineHeight.toDp() else PlaceholderMinHeight
+        }
+
+    AnimatedContent(
+        modifier = modifier,
+        targetState = value,
+        // Cross-fade only. The default transition carries a SizeTransform, so the box keeps
+        // re-measuring for the length of the animation after the value arrives, and anything sized
+        // by its content around it re-anchors while that runs.
+        transitionSpec = { fadeIn() togetherWith fadeOut() using null },
+    ) { v ->
         ToggleVisibilityText(
             text = v ?: "",
             isVisible = isVisible,
@@ -53,7 +72,10 @@ internal fun LoadableValue(
                 modifier
                     .clip(RoundedCornerShape(2.dp))
                     .background(Theme.v2.colors.backgrounds.tertiary_2)
-                    .defaultMinSize(minWidth = 20.dp, minHeight = 16.dp)
+                    .defaultMinSize(
+                        minWidth = PlaceholderMinWidth,
+                        minHeight = placeholderMinHeight,
+                    )
                     .takeIf { v == null } ?: modifier,
             fontSize = fontSize,
             fontStyle = fontStyle,
@@ -70,3 +92,6 @@ internal fun LoadableValue(
         )
     }
 }
+
+private val PlaceholderMinWidth = 20.dp
+private val PlaceholderMinHeight = 16.dp
