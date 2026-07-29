@@ -18,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +33,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsOverviewToken
+import com.vultisig.wallet.ui.components.banners.Banner
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
@@ -65,6 +67,8 @@ internal fun SwapTransactionOverviewScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
+    var isLimitNoticeVisible by rememberSaveable { mutableStateOf(true) }
+
     TxDoneScaffold(
         snackbarHostState = snackbarHostState,
         transactionHash = transactionHash,
@@ -75,6 +79,19 @@ internal fun SwapTransactionOverviewScreen(
         isTransactionDetailVisible = isTransactionDetailVisible,
         onTransactionDetailVisibleChange = onTransactionDetailVisibleChange,
         dappMetadata = dappMetadata,
+        // A limit order rests on THORChain until it fills, so the done screen has to say where to
+        // follow it — otherwise the broadcast looks like a completed swap that never arrived.
+        noticeContent =
+            if (transactionTypeUiModel.isLimitOrder && isLimitNoticeVisible) {
+                {
+                    Banner(
+                        title = stringResource(R.string.limit_swap_done_notice_title),
+                        text = stringResource(R.string.limit_swap_done_notice_message),
+                        onCloseClick = { isLimitNoticeVisible = false },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            } else null,
         tokenContent = {
             Box {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

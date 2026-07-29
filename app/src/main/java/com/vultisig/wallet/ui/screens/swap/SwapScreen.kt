@@ -60,12 +60,17 @@ import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.components.v2.utils.toPx
+import com.vultisig.wallet.ui.models.swap.LimitExpiryOption
+import com.vultisig.wallet.ui.models.swap.LimitFormSection
+import com.vultisig.wallet.ui.models.swap.LimitPricePreset
+import com.vultisig.wallet.ui.models.swap.LimitPriceUnit
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.swap.components.AdvancedSwapSettingsSheet
 import com.vultisig.wallet.ui.screens.swap.components.DstTokenInput
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
+import com.vultisig.wallet.ui.screens.swap.components.LimitSwapForm
 import com.vultisig.wallet.ui.screens.swap.components.PercentagePicker
 import com.vultisig.wallet.ui.screens.swap.components.QuoteTimer
 import com.vultisig.wallet.ui.screens.swap.components.SrcTokenInput
@@ -118,6 +123,11 @@ internal fun NavGraphBuilder.swapScreen(navController: NavHostController) {
             onDismissAdvancedSettings = model::dismissAdvancedSettings,
             onDismissAdvancedSettingsGate = model::dismissAdvancedSettingsGate,
             onGetVult = model::onGetVult,
+            onSelectSwapMode = model::onSelectSwapMode,
+            onLimitPresetSelected = model::onLimitPresetSelected,
+            onLimitExpirySelected = model::onLimitExpirySelected,
+            onLimitUnitSelected = model::onLimitPriceUnitSelected,
+            onPlaceLimitOrder = model::placeLimitOrder,
         )
     }
 }
@@ -149,18 +159,27 @@ internal fun SwapScreen(
     onDismissAdvancedSettings: () -> Unit = {},
     onDismissAdvancedSettingsGate: () -> Unit = {},
     onGetVult: () -> Unit = {},
+    onSelectSwapMode: (SwapMode) -> Unit = {},
+    onLimitPresetSelected: (LimitPricePreset) -> Unit = {},
+    onLimitExpirySelected: (LimitExpiryOption) -> Unit = {},
+    onLimitUnitSelected: (LimitPriceUnit) -> Unit = {},
+    onPlaceLimitOrder: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
-    // Market/Limit mode is local UI state: Limit-order execution is out of scope (#4858), so the
-    // ViewModel has no stake in it yet. Market hosts the existing swap form; Limit is a
-    // placeholder.
-    var selectedMode by rememberSaveable { mutableStateOf(SwapMode.Market) }
+    // Market/Limit mode is owned by the ViewModel (#4154): the limit form and its feature-flag +
+    // routable-pair gating react to it. Market hosts the existing swap form.
+    val selectedMode = state.swapMode
 
     val interactionSource = remember { MutableInteractionSource() }
     val isSrcAmountFocused by interactionSource.collectIsFocusedAsState()
 
     var hasSrcAmountBeenFocused by remember { mutableStateOf(false) }
+
+    // Which of the Limit tab's two cards is expanded (#4154). They behave as an accordion: opening
+    // one collapses the other to its summary row. Pure view state, so it lives here rather than in
+    // the ViewModel, and survives the trip out to token/network selection.
+    var expandedLimitSection by rememberSaveable { mutableStateOf(LimitFormSection.ExecuteWhen) }
 
     LaunchedEffect(isSrcAmountFocused) {
         if (isSrcAmountFocused) {
@@ -212,17 +231,52 @@ internal fun SwapScreen(
                 ) {
                     SwapModeTabs(
                         selectedMode = selectedMode,
-                        onSelectMode = { selectedMode = it },
+                        onSelectMode = onSelectSwapMode,
+                        isLimitTabEnabled = state.isLimitTabEnabled,
                         modifier = Modifier.fillMaxWidth(),
                     )
 
                     if (selectedMode == SwapMode.Limit) {
-                        Text(
-                            text = stringResource(R.string.swap_limit_coming_soon),
-                            style = Theme.brockmann.body.m.medium,
-                            color = Theme.v2.colors.text.tertiary,
-                            modifier = Modifier.padding(vertical = 48.dp),
-                        )
+                        val limitOrder = state.limitOrder
+                        if (limitOrder != null) {
+                            LimitSwapForm(
+                                state = limitOrder,
+                                srcToken = state.selectedSrcToken,
+                                dstToken = state.selectedDstToken,
+                                srcFiatValue = state.srcFiatValue,
+                                srcAmountTextFieldState = srcAmountTextFieldState,
+                                srcAmountInteractionSource = interactionSource,
+                                expandedSection = expandedLimitSection,
+                                onPresetClick = onLimitPresetSelected,
+                                onExpiryClick = onLimitExpirySelected,
+                                onToggleUnit = onLimitUnitSelected,
+                                onExpandSection = { expandedLimitSection = it },
+                                onSelectSrcNetworkClick = onSelectSrcNetworkClick,
+                                onSelectSrcTokenClick = onSelectSrcToken,
+                                onSelectDstNetworkClick = onSelectDstNetworkClick,
+                                onSelectDstTokenClick = onSelectDstToken,
+                                onFlipSelectedTokens = onFlipSelectedTokens,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                            // The Market error box is absolutely positioned off the market form, so
+                            // limit placement/validation failures get their own inline surface here
+                            // rather than failing silently.
+                            error?.let {
+                                Text(
+                                    text = it.asString(),
+                                    style = Theme.brockmann.supplementary.caption,
+                                    color = Theme.v2.colors.alerts.error,
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = stringResource(R.string.swap_limit_coming_soon),
+                                style = Theme.brockmann.body.m.medium,
+                                color = Theme.v2.colors.text.tertiary,
+                                modifier = Modifier.padding(vertical = 48.dp),
+                            )
+                        }
                     } else {
                         Box(
                             modifier =
@@ -379,7 +433,8 @@ internal fun SwapScreen(
             }
         },
         bottomBar = {
-            // No Swap CTA in Limit mode (placeholder until limit orders ship, #4858).
+            // Market shows the live Swap CTA; Limit shows the "Place Limit Order" CTA below
+            // (#4154).
             if (selectedMode == SwapMode.Market) {
                 AnimatedContent(
                     targetState = isSrcAmountFocused && isShowingKeyboard,
@@ -423,14 +478,40 @@ internal fun SwapScreen(
                         }
                     }
                 }
+            } else if (selectedMode == SwapMode.Limit && state.limitOrder != null) {
+                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
+                    VsButton(
+                        label = stringResource(R.string.limit_swap_place_order),
+                        variant = VsButtonVariant.CTA,
+                        state =
+                            if (
+                                state.isLoadingNextScreen ||
+                                    state.limitOrder?.isPlaceOrderEnabled != true
+                            ) {
+                                VsButtonState.Disabled
+                            } else {
+                                VsButtonState.Enabled
+                            },
+                        isLoading = state.isLoadingNextScreen,
+                        onClick = {
+                            focusManager.clearFocus(true)
+                            onPlaceLimitOrder()
+                        },
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .padding(vertical = 12.dp)
+                                .testTag("SwapFormScreen.placeLimitOrderButton"),
+                    )
+                }
             }
         },
     )
 }
 
 /**
- * Swap mode tabs (#4858). Only [Market] is functional; [Limit] is a visible placeholder until
- * limit-order execution ships. `NFTs – Soon` from the design stays hidden.
+ * Swap mode tabs. [Market] hosts the existing swap form; [Limit] shows the THORChain limit-order
+ * form when the feature flag is on and the pair is routable, otherwise a coming-soon placeholder
+ * (#4154). `NFTs – Soon` from the design stays hidden.
  */
 internal enum class SwapMode {
     Market,
@@ -441,6 +522,7 @@ internal enum class SwapMode {
 private fun SwapModeTabs(
     selectedMode: SwapMode,
     onSelectMode: (SwapMode) -> Unit,
+    isLimitTabEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
@@ -452,9 +534,13 @@ private fun SwapModeTabs(
                 )
             }
             tab {
+                // Limit orders are a THORChain-only product; the tab stays visible but inert for a
+                // pair THORChain can't route, so the mode is never entered on a pair that could
+                // only fail at placement.
                 VsTab(
                     label = stringResource(R.string.swap_mode_limit),
                     onClick = { onSelectMode(SwapMode.Limit) },
+                    isEnabled = isLimitTabEnabled,
                 )
             }
         }
