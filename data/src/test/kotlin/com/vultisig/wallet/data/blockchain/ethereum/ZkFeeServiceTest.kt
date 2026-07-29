@@ -67,6 +67,38 @@ internal class ZkFeeServiceTest {
     }
 
     @Test
+    fun `a negative priority fee is floored at zero rather than passed through`() = runTest {
+        // Ordering alone would let this through: -9 is already below the cap. Left signed, it
+        // reaches WalletCore as two's-complement bytes read back unsigned.
+        coEvery { evmApi.zkEstimateFee(any(), any(), any()) } returns
+            ZkGasFee(
+                gasLimit = BigInteger("21000"),
+                gasPerPubdataLimit = BigInteger.ONE,
+                maxFeePerGas = BigInteger("7"),
+                maxPriorityFeePerGas = BigInteger("-9"),
+            )
+
+        val fee = service.calculateFees(transfer()) as Eip1559
+
+        assertEquals(BigInteger.ZERO, fee.maxPriorityFeePerGas)
+    }
+
+    @Test
+    fun `a negative max fee cannot drag the priority fee below zero`() = runTest {
+        coEvery { evmApi.zkEstimateFee(any(), any(), any()) } returns
+            ZkGasFee(
+                gasLimit = BigInteger("21000"),
+                gasPerPubdataLimit = BigInteger.ONE,
+                maxFeePerGas = BigInteger("-7"),
+                maxPriorityFeePerGas = BigInteger("2"),
+            )
+
+        val fee = service.calculateFees(transfer()) as Eip1559
+
+        assertEquals(BigInteger.ZERO, fee.maxPriorityFeePerGas)
+    }
+
+    @Test
     fun `priority fee below the max fee is left untouched`() = runTest {
         val fee = service.calculateFees(transfer()) as Eip1559
 

@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.common
 
 import io.kotest.matchers.shouldBe
+import java.math.BigInteger
 import org.junit.jupiter.api.Test
 
 class StringExtensionsTest {
@@ -43,5 +44,30 @@ class StringExtensionsTest {
         val message = "0x008z41"
 
         message.normalizeMessageFormat() shouldBe message
+    }
+
+    @Test
+    fun `convertToBigIntegerOrZero parses an unsigned quantity`() {
+        "0x2540be400".convertToBigIntegerOrZero() shouldBe BigInteger("10000000000")
+        "2540be400".convertToBigIntegerOrZero() shouldBe BigInteger("10000000000")
+        "0x0".convertToBigIntegerOrZero() shouldBe BigInteger.ZERO
+    }
+
+    @Test
+    fun `convertToBigIntegerOrZero rejects a signed quantity`() {
+        // BigInteger(String, radix) honours a leading "-", so without a sign floor a hostile RPC
+        // could hand back a real negative fee. WalletCore would then encode it as two's-complement
+        // bytes and read them back unsigned ("-5" -> 0xfb -> 251), inflating the signed fee.
+        "-5".convertToBigIntegerOrZero() shouldBe BigInteger.ZERO
+        "0x-5".convertToBigIntegerOrZero() shouldBe BigInteger.ZERO
+        "-2540be400".convertToBigIntegerOrZero() shouldBe BigInteger.ZERO
+    }
+
+    @Test
+    fun `convertToBigIntegerOrZero falls back to zero on malformed input`() {
+        null.convertToBigIntegerOrZero() shouldBe BigInteger.ZERO
+        "".convertToBigIntegerOrZero() shouldBe BigInteger.ZERO
+        "0x".convertToBigIntegerOrZero() shouldBe BigInteger.ZERO
+        "0xzz".convertToBigIntegerOrZero() shouldBe BigInteger.ZERO
     }
 }
