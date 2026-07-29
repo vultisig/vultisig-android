@@ -1,0 +1,255 @@
+package com.vultisig.wallet.ui.models.swap
+
+import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
+import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.repositories.AllowanceRepository
+import com.vultisig.wallet.data.repositories.ThorMimirRepository
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
+import java.math.BigDecimal
+import java.math.BigInteger
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+
+internal class BuildLimitSwapTransactionUseCaseTest {
+
+    private val thorChainApi = mockk<ThorChainApi>()
+    private val thorMimirRepository = mockk<ThorMimirRepository>()
+    private val swapGasCalculator = mockk<SwapGasCalculator>()
+    private val allowanceRepository = mockk<AllowanceRepository>()
+
+    private val useCase =
+        BuildLimitSwapTransactionUseCase(
+            thorChainApi = thorChainApi,
+            thorMimirRepository = thorMimirRepository,
+            swapGasCalculator = swapGasCalculator,
+            allowanceRepository = allowanceRepository,
+        )
+
+    private val btcInbound = "bc1qasgardinboundvaultxxxxxxxxxxxxxxxxxx0wlh"
+    private val thorRouter = "0xD37BbE5744D730a1d98d8DC97c42F0Ca46aD7146"
+    private val ethAddress = "0x742d35Cc6634C0532925a3b844Bc9e7595f12345"
+    private val btc =
+        coin(Chain.Bitcoin, "BTC", address = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", 8, true)
+    private val eth = coin(Chain.Ethereum, "ETH", address = ethAddress, 18, true)
+
+    private fun params() =
+        BuildLimitSwapTransactionUseCase.Params(
+            vaultId = "vault",
+            srcToken = btc,
+            dstToken = eth,
+            srcAddress = btc.address,
+            srcTokenValue = TokenValue(BigInteger("100000000"), token = btc),
+            targetPrice = BigDecimal("16"),
+            expiryHours = 24,
+            destinationAddress = eth.address,
+            gasFee = TokenValue(BigInteger("1000"), token = btc),
+            gasFeeFiatValue = FiatValue(BigDecimal.ZERO, "USD"),
+            estimatedNetworkFeeTokenValue = null,
+            estimatedNetworkFeeFiatValue = null,
+            now = 0L,
+        )
+
+    @Test
+    fun `fails closed when the advanced swap queue is disabled`() = runTest {
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns false
+        val error = runCatching { useCase.build(params()) }.exceptionOrNull()
+        assertTrue(error is IllegalStateException)
+        assertTrue(error?.message.orEmpty().contains("advanced swap queue is disabled"))
+    }
+
+    @Test
+    fun `native gas-asset source deposits to the inbound vault with a limit memo`() = runTest {
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns true
+        coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
+            listOf(inbound("BTC", btcInbound))
+        coEvery {
+            swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
+        } returns mockk(relaxed = true)
+        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+
+        val tx = useCase.build(params())
+
+        // 1 BTC * 16 ETH/BTC -> LIM 1_600_000_000 (1e8), interval 24h = 14400 blocks.
+        assertEquals("=<:ETH.ETH:$ethAddress:1600000000/14400/0:va:50", tx.memo)
+        // Native gas source: funds go to the Asgard inbound vault, no router, no approval.
+        assertEquals(btcInbound, tx.dstAddress)
+        assertFalse(tx.isApprovalRequired)
+        val payload = tx.payload as SwapPayload.ThorChain
+        assertEquals(btcInbound, payload.data.vaultAddress)
+        assertEquals(null, payload.data.routerAddress)
+    }
+
+    @Test
+    fun `RUNE source deposits to the signer's own address (MsgDeposit)`() = runTest {
+        val rune =
+            coin(
+                Chain.ThorChain,
+                "RUNE",
+                address = "thor1x2whgc2nt665y0kc44uywhynazvp0l8tp0vtu6",
+                8,
+                true,
+            )
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns true
+        coEvery {
+            swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
+        } returns mockk(relaxed = true)
+        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+
+        val tx =
+            useCase.build(
+                params()
+                    .copy(
+                        srcToken = rune,
+                        srcAddress = rune.address,
+                        srcTokenValue = TokenValue(BigInteger("100000000"), token = rune),
+                    )
+            )
+
+        assertEquals(rune.address, tx.dstAddress)
+        assertTrue(tx.memo!!.startsWith("=<:ETH.ETH:$ethAddress:"))
+    }
+
+    @Test
+    fun `ERC20 source deposits through the router the swap quote reports`() = runTest {
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns true
+        coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
+            listOf(inbound("ETH", "0xInboundVault"))
+        coEvery { thorChainApi.getSwapQuotes(any()) } returns quote(router = thorRouter)
+        coEvery {
+            swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
+        } returns mockk(relaxed = true)
+        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+
+        val tx = useCase.build(usdcParams())
+
+        // The ERC20 deposit is made to the router (depositWithExpiry carries the memo), not to the
+        // inbound vault — and the router comes off the ordinary swap quote.
+        assertEquals(thorRouter, tx.dstAddress)
+        val payload = tx.payload as SwapPayload.ThorChain
+        assertEquals(thorRouter, payload.data.routerAddress)
+    }
+
+    @Test
+    fun `fails closed when an ERC20 source has no THORChain router`() = runTest {
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns true
+        coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
+            listOf(inbound("ETH", "0xInboundVault"))
+        // Quote carries no router — a plain transfer would drop the memo and strand the tokens
+        // instead of placing a protected order, so build() must reject the route.
+        coEvery { thorChainApi.getSwapQuotes(any()) } returns quote(router = null)
+        coEvery {
+            swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
+        } returns mockk(relaxed = true)
+        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+
+        val error = runCatching { useCase.build(usdcParams()) }.exceptionOrNull()
+        assertTrue(error is IllegalStateException)
+        assertTrue(error?.message.orEmpty().contains("router"))
+    }
+
+    @Test
+    fun `fails closed when the router quote itself fails`() = runTest {
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns true
+        coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
+            listOf(inbound("ETH", "0xInboundVault"))
+        coEvery { thorChainApi.getSwapQuotes(any()) } returns
+            THORChainSwapQuoteDeserialized.Error(THORChainSwapQuoteError("thornode unavailable"))
+        coEvery {
+            swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
+        } returns mockk(relaxed = true)
+        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+
+        val error = runCatching { useCase.build(usdcParams()) }.exceptionOrNull()
+        assertTrue(error is IllegalStateException)
+        assertTrue(error?.message.orEmpty().contains("router"))
+    }
+
+    @Test
+    fun `rejects a trading-paused inbound at placement`() = runTest {
+        coEvery { thorMimirRepository.isAdvancedSwapQueueEnabled() } returns true
+        coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
+            listOf(inbound("BTC", btcInbound, chainTradingPaused = true))
+        coEvery {
+            swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
+        } returns mockk(relaxed = true)
+        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+
+        val error = runCatching { useCase.build(params()) }.exceptionOrNull()
+        assertTrue(error is IllegalStateException)
+        assertTrue(error?.message.orEmpty().contains("No live THORChain inbound"))
+    }
+
+    private val usdc =
+        Coin(
+            chain = Chain.Ethereum,
+            ticker = "USDC",
+            logo = "",
+            address = ethAddress,
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            isNativeToken = false,
+        )
+
+    private fun usdcParams() =
+        params()
+            .copy(
+                srcToken = usdc,
+                srcAddress = usdc.address,
+                srcTokenValue = TokenValue(BigInteger("1000000"), token = usdc),
+            )
+
+    /** A swap quote carrying only the field the router lookup reads. */
+    private fun quote(router: String?) =
+        THORChainSwapQuoteDeserialized.Result(
+            mockk<THORChainSwapQuote>(relaxed = true) { every { this@mockk.router } returns router }
+        )
+
+    private fun inbound(
+        chain: String,
+        address: String,
+        halted: Boolean = false,
+        globalTradingPaused: Boolean = false,
+        chainTradingPaused: Boolean = false,
+    ) =
+        THORChainInboundAddress(
+            chain = chain,
+            address = address,
+            halted = halted,
+            globalTradingPaused = globalTradingPaused,
+            chainTradingPaused = chainTradingPaused,
+        )
+
+    private fun coin(
+        chain: Chain,
+        ticker: String,
+        address: String,
+        decimals: Int,
+        native: Boolean,
+    ) =
+        Coin(
+            chain = chain,
+            ticker = ticker,
+            logo = "",
+            address = address,
+            decimal = decimals,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "",
+            isNativeToken = native,
+        )
+}

@@ -80,6 +80,8 @@ internal fun TxDoneScaffold(
     detailContent: @Composable () -> Unit,
     bottomBarContent: @Composable () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    /** Optional follow-up notice rendered under the details card, e.g. where to track the tx. */
+    noticeContent: (@Composable () -> Unit)? = null,
 ) {
 
     val coroutineScope = rememberCoroutineScope()
@@ -109,6 +111,7 @@ internal fun TxDoneScaffold(
                 snackbarHostState = snackbarHostState,
                 context = context,
                 detailContent = detailContent,
+                noticeContent = noticeContent,
                 dappMetadata = dappMetadata,
                 successTitle = successTitle,
                 isTransactionDetailVisible = isTransactionDetailVisible,
@@ -149,6 +152,7 @@ private fun SuccessTransaction(
     detailContent: @Composable (() -> Unit),
     isTransactionDetailVisible: Boolean,
     onTransactionDetailVisibleChange: (Boolean) -> Unit,
+    noticeContent: (@Composable () -> Unit)? = null,
     dappMetadata: DAppMetadata? = null,
     successTitle: String? = null,
 ) {
@@ -319,6 +323,11 @@ private fun SuccessTransaction(
             }
 
             AnimatedVisibility(isTransactionDetailVisible) { detailContent() }
+        }
+
+        noticeContent?.let {
+            UiSpacer(8.dp)
+            it()
         }
     }
 }

@@ -7,6 +7,8 @@ import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.swapAssetName
+import com.vultisig.wallet.data.repositories.ThorMimirRepository
+import com.vultisig.wallet.data.swap.limit.LimitSwapMemo
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
@@ -20,9 +22,15 @@ import timber.log.Timber
  */
 internal class SwapInboundHaltPreflight
 @Inject
-constructor(private val thorChainApi: ThorChainApi, private val mayaChainApi: MayaChainApi) {
+constructor(
+    private val thorChainApi: ThorChainApi,
+    private val mayaChainApi: MayaChainApi,
+    private val thorMimirRepository: ThorMimirRepository,
+) {
 
     suspend fun assertSourceChainNotHalted(transaction: SwapTransaction) {
+        assertAdvancedSwapQueueEnabledForLimitOrder(transaction)
+
         val fetchInboundAddresses: suspend () -> List<THORChainInboundAddress> =
             when (transaction.payload) {
                 is SwapPayload.ThorChain -> thorChainApi::getTHORChainInboundAddresses
@@ -49,7 +57,27 @@ constructor(private val thorChainApi: ThorChainApi, private val mayaChainApi: Ma
         }
     }
 
+    /**
+     * Re-checks the `EnableAdvSwapQueue` mimir at sign time for a THORChain limit order (memo
+     * starts with `=<`). The mimir can flip while the user sits on the confirmation screen, and a
+     * `=<` order placed while the queue is disabled can execute as an unprotected market swap — so
+     * the gate is re-run here, fail-closed, just before signing.
+     *
+     * The read forces a network refresh: the mimir cache is a shared 30s-TTL singleton, and signing
+     * normally happens within that window of the placement-time check, so a cached read would
+     * replay the value that already let the order through and verify nothing.
+     */
+    private suspend fun assertAdvancedSwapQueueEnabledForLimitOrder(transaction: SwapTransaction) {
+        val memo = transaction.memo ?: return
+        if (!memo.startsWith(LimitSwapMemo.PREFIX)) return
+        if (!thorMimirRepository.isAdvancedSwapQueueEnabled(forceRefresh = true)) {
+            throw SwapException.TradingHalted(ADV_SWAP_QUEUE_DISABLED_MESSAGE)
+        }
+    }
+
     private companion object {
         const val SIGNING_BLOCKED_MESSAGE = "Source-chain trading is halted or unavailable"
+        const val ADV_SWAP_QUEUE_DISABLED_MESSAGE =
+            "THORChain's advanced swap queue is disabled; limit orders can't be placed right now"
     }
 }
