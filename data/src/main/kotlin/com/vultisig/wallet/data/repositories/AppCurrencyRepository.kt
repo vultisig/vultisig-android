@@ -55,12 +55,12 @@ internal class AppCurrencyRepositoryImpl @Inject constructor(private val dataSto
     override suspend fun getCurrencyFormat(): NumberFormat {
         val appCurrency = currency.first()
         return mutex.withLock {
-            val currentLocale = Locale.getDefault()
-            // Rebuild when either the device locale or the selected app currency changes. The
-            // locale
-            // drives grouping/decimal conventions while the selected currency drives the symbol, so
-            // a USD vault always renders "$" even when the device locale would otherwise default to
-            // another currency (e.g. en_GB defaults to "£").
+            val currentLocale = resolveFormatLocale(Locale.getDefault())
+            // Rebuild when either the format locale or the selected app currency changes. The
+            // locale drives grouping/decimal conventions and the localized currency symbol, while
+            // the selected currency drives which symbol is used, so a USD vault always renders
+            // "$" even when the locale would otherwise default to another currency (e.g. en_GB
+            // defaults to "£") or spell USD out as "US$".
             if (
                 cachedLocale != currentLocale ||
                     cachedCurrency != appCurrency ||
@@ -85,7 +85,17 @@ internal class AppCurrencyRepositoryImpl @Inject constructor(private val dataSto
         }
     }
 
+    // Older app versions applied "en-GB" as the application locale for the English entry, and
+    // en_GB renders USD as "US$" instead of "$". Those users keep the persisted en-GB app locale
+    // after updating, so format English with US conventions (identical grouping and decimal
+    // separators, "$" for USD) to keep fiat amounts consistent with a fresh install.
+    private fun resolveFormatLocale(locale: Locale): Locale =
+        if (locale.language == ENGLISH_LANGUAGE && locale.country == UK_COUNTRY) Locale.US
+        else locale
+
     companion object {
         private const val CURRENCY_KEY = "currency_key"
+        private const val ENGLISH_LANGUAGE = "en"
+        private const val UK_COUNTRY = "GB"
     }
 }
