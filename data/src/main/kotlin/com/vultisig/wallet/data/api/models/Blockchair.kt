@@ -24,6 +24,7 @@ data class BlockChairUtxoInfo(
     @SerialName("index") val index: Int,
     @SerialName("value") val value: Long,
     @SerialName("block_id") val blockId: Int = 0,
+    @SerialName("is_spendable") val isSpendable: Boolean? = null,
 )
 
 @Serializable
