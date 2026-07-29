@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.models.isSecureVault
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.services.PushNotificationManager
+import com.vultisig.wallet.data.services.SystemNotificationStatus
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.navigation.Destination
@@ -35,6 +36,12 @@ internal data class VaultNotificationUiModel(
 internal data class NotificationsSettingsUiState(
     val masterEnabled: Boolean = false,
     val vaults: List<VaultNotificationUiModel> = emptyList(),
+    /**
+     * Opted in in-app, but the OS will drop every push — permission revoked or the keysign channel
+     * muted after opt-in. Neither raises a callback, so without this the toggle reads ON while
+     * nothing is delivered.
+     */
+    val isBlockedBySystem: Boolean = false,
 )
 
 @HiltViewModel
@@ -44,6 +51,7 @@ constructor(
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val pushNotificationManager: PushNotificationManager,
+    private val systemNotificationStatus: SystemNotificationStatus,
     private val snackbarFlow: SnackbarFlow,
 ) : ViewModel() {
     private val _state = MutableStateFlow(NotificationsSettingsUiState())
@@ -73,12 +81,13 @@ constructor(
                             )
                         }
 
-                    NotificationsSettingsUiState(
-                        masterEnabled = masterEnabled,
-                        vaults = vaultUiModels,
-                    )
+                    masterEnabled to vaultUiModels
                 }
-                .collect { newState -> _state.update { newState } }
+                .collect { (masterEnabled, vaultUiModels) ->
+                    // Preserve isBlockedBySystem: it comes from the OS on resume, not from this
+                    // flow, and replacing the whole state here would clear the warning.
+                    _state.update { it.copy(masterEnabled = masterEnabled, vaults = vaultUiModels) }
+                }
         }
     }
 
@@ -128,6 +137,16 @@ constructor(
                     pushNotificationManager.setVaultOptIn(pending.vaultId, enabled = true)
             }
         }
+    }
+
+    /**
+     * Re-reads the OS notification state. Called on every resume because the user can revoke
+     * permission or mute the channel from system settings while this screen sits in the background,
+     * and neither change notifies the app.
+     */
+    fun refreshSystemNotificationState() {
+        val blocked = !systemNotificationStatus.areNotificationsEnabled()
+        _state.update { it.copy(isBlockedBySystem = blocked) }
     }
 
     fun back() {
