@@ -211,9 +211,13 @@ sealed interface TransactionStatus {
 }
 
 /**
- * True only where the user's funds actually moved on-chain. [TransactionStatus.Signed] never
- * reaches a network, [TransactionStatus.Pending] and [TransactionStatus.StillConfirming] have no
- * on-chain result yet, and a failure or refund is the opposite of a moment worth celebrating.
+ * True where the transaction reached the best result we're able to observe. [Confirmed] is observed
+ * on-chain directly. [Broadcasted] only promises submission, not inclusion — but it's used as a
+ * terminal status precisely when nothing better is available (chains without status-poll support,
+ * or no primary tx hash to poll), so a clean broadcast is the closest signal to success we have
+ * there. [TransactionStatus.Signed] never reaches a network, [TransactionStatus.Pending] and
+ * [TransactionStatus.StillConfirming] are provisional — polling continues past them toward an
+ * eventual terminal result — and a failure or refund is the opposite of a moment worth celebrating.
  */
 private val TransactionStatus.isSuccessful: Boolean
     get() =
