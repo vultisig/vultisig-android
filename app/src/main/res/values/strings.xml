@@ -907,6 +907,7 @@
     <string name="vault_settings_advanced_title">Advanced</string>
     <string name="settings_advanced_swapkit_toggle">SwapKit aggregator</string>
     <string name="settings_advanced_custom_rpc_toggle">Custom RPC</string>
+    <string name="settings_advanced_limit_swap_toggle">Limit Orders</string>
     <string name="custom_rpc_title">Custom RPCs</string>
     <string name="custom_rpc_tier_badge">VULT TIER</string>
     <string name="custom_rpc_advanced_subtitle">Use your own nodes per chain</string>

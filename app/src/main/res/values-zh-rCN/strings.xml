@@ -846,6 +846,7 @@
     <string name="vault_settings_advanced_title">高级</string>
     <string name="settings_advanced_swapkit_toggle">SwapKit 聚合器</string>
     <string name="settings_advanced_custom_rpc_toggle">自定义 RPC</string>
+    <string name="settings_advanced_limit_swap_toggle">限价订单</string>
     <string name="custom_rpc_title">自定义 RPC</string>
     <string name="custom_rpc_tier_badge">VULT TIER</string>
     <string name="custom_rpc_advanced_subtitle">为每条链使用您自己的节点</string>

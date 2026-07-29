@@ -596,6 +596,7 @@
     <string name="vault_settings_advanced_title">Fortschrittlich</string>
     <string name="settings_advanced_swapkit_toggle">SwapKit Aggregator</string>
     <string name="settings_advanced_custom_rpc_toggle">Benutzerdefinierter RPC</string>
+    <string name="settings_advanced_limit_swap_toggle">Limit-Orders</string>
     <string name="custom_rpc_title">Benutzerdefinierter RPC</string>
     <string name="custom_rpc_tier_badge">VULT TIER</string>
     <string name="custom_rpc_advanced_subtitle">Nutze eigene Nodes pro Blockchain</string>

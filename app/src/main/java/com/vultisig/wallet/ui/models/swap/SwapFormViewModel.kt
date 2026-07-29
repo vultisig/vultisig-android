@@ -22,6 +22,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
 import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
@@ -72,6 +73,7 @@ constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val getDiscountBpsUseCase: GetDiscountBpsUseCase,
     private val featureFlagRepository: FeatureFlagRepository,
+    private val limitSwapConfig: LimitSwapConfig,
     private val limitMarketPriceRepository: LimitSwapMarketPriceRepository,
     private val buildLimitSwapTransactionUseCase: BuildLimitSwapTransactionUseCase,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -243,7 +245,10 @@ constructor(
      */
     private fun observeLimitForm() {
         viewModelScope.safeLaunch {
-            isLimitFlagEnabled.value = featureFlagRepository.getFeatureFlags().isLimitSwapEnabled
+            val isRemoteEnabled = featureFlagRepository.getFeatureFlags().isLimitSwapEnabled
+            limitSwapConfig.isFeatureEnabled.collect { isLocallyEnabled ->
+                isLimitFlagEnabled.value = isRemoteEnabled && isLocallyEnabled
+            }
         }
         // Fetch a fresh reference price whenever the Limit tab is shown with a routable pair. The
         // flag is part of the source set so a late-resolving remote flag re-fires the fetch, and so
