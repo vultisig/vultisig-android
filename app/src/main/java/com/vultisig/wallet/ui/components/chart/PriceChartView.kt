@@ -179,11 +179,12 @@ private fun PriceChartCanvas(
                 var scrubX by remember(points) { mutableStateOf<Float?>(null) }
                 var canvasSize by remember { mutableStateOf(IntSize.Zero) }
                 val latestPoints by rememberUpdatedState(points)
+                val latestOnScrub by rememberUpdatedState(onScrub)
 
                 fun updateScrub(x: Float, width: Float) {
                     val current = latestPoints
                     scrubX = x
-                    onScrub(current[nearestPointIndex(x, width, current.size)])
+                    latestOnScrub(current[nearestPointIndex(x, width, current.size)])
                 }
 
                 val geometry =
@@ -210,11 +211,11 @@ private fun PriceChartCanvas(
                                     },
                                     onDragEnd = {
                                         scrubX = null
-                                        onScrub(null)
+                                        latestOnScrub(null)
                                     },
                                     onDragCancel = {
                                         scrubX = null
-                                        onScrub(null)
+                                        latestOnScrub(null)
                                     },
                                 )
                             }

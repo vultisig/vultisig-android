@@ -10,6 +10,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
+import io.ktor.http.appendPathSegments
 import java.math.BigDecimal
 import javax.inject.Inject
 import timber.log.Timber
@@ -124,10 +125,16 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
         days: String,
     ): MarketChartResponseJson =
         http
-            .get(
-                "https://api.vultisig.com/coingeicko/api/v3/coins/" +
-                    "${chain.coinGeckoAssetId}/contract/$contractAddress/market_chart"
-            ) {
+            .get("https://api.vultisig.com/coingeicko/api/v3/coins") {
+                url {
+                    // encodeSlash = true so a contractAddress containing '/' (defaults to false in
+                    // Ktor, which would let it split into extra path segments) can't retarget the
+                    // request path.
+                    appendPathSegments(
+                        listOf(chain.coinGeckoAssetId, "contract", contractAddress, "market_chart"),
+                        encodeSlash = true,
+                    )
+                }
                 parameter("vs_currency", currency)
                 parameter("days", days)
                 header("Content-Type", "application/json")

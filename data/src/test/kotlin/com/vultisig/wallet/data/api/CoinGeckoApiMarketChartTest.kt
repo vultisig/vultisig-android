@@ -84,6 +84,21 @@ internal class CoinGeckoApiMarketChartTest {
     }
 
     @Test
+    fun `getContractMarketChart percent-encodes a contract address instead of letting it redirect the path`() =
+        runTest {
+            val (api, url) = apiCapturingUrl("""{"prices":[]}""")
+
+            api.getContractMarketChart(
+                chain = Chain.Base,
+                contractAddress = "0xabc/../evil",
+                currency = "usd",
+                days = "1",
+            )
+
+            assertContains(url(), "/coins/base/contract/0xabc%2F..%2Fevil/market_chart")
+        }
+
+    @Test
     fun `getMarketStats lowercases the id and queries the markets endpoint`() = runTest {
         val (api, url) = apiCapturingUrl("""[{"market_cap":1000000}]""")
 

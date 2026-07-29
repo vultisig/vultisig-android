@@ -161,6 +161,10 @@ constructor(
     // (must not relabel that stale data as if it belonged to the new selection).
     private var lastLoadedChartKey: Pair<ChartRange, String>? = null
 
+    // Currency the market stats/price extremes currently held in [uiState] were formatted for,
+    // updated only on a successful fetch — same purpose as [lastLoadedChartKey] for the chart.
+    private var lastLoadedStatsCurrency: String? = null
+
     init {
         // Now a full-page destination (composable<TokenDetail>, not a dialog), so there's no
         // ModalBottomSheet onExpand callback to trigger the first load from — kick it off directly.
@@ -421,14 +425,23 @@ constructor(
             ) {
                 val currency = appCurrencyRepository.currency.first()
                 val stats = tokenPriceChartRepository.getStats(coin, currency)
+                // A failed fetch may only fall back to previously-held stats if those were
+                // formatted for this exact currency — otherwise a currency switch would silently
+                // keep displaying amounts in the old currency with statsLoading already false.
+                val keepHeldOnFailure = lastLoadedStatsCurrency == currency.ticker
                 uiState.update {
                     it.copy(
                         statsLoading = false,
                         marketStats =
-                            stats?.toMarketStatsUiModel(currency.ticker) ?: it.marketStats,
+                            stats?.toMarketStatsUiModel(currency.ticker)
+                                ?: it.marketStats.takeIf { keepHeldOnFailure },
                         priceExtremes =
-                            stats?.toPriceExtremesUiModel(currency.ticker) ?: it.priceExtremes,
+                            stats?.toPriceExtremesUiModel(currency.ticker)
+                                ?: it.priceExtremes.takeIf { keepHeldOnFailure },
                     )
+                }
+                if (stats != null) {
+                    lastLoadedStatsCurrency = currency.ticker
                 }
             }
     }
