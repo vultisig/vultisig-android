@@ -29,10 +29,7 @@ constructor(
      */
     fun getStakingDetails(address: String, vaultId: String): Flow<List<StakingDetails>> =
         flow {
-                val cachedDetails =
-                    stakingDetailsRepository.getStakingDetails(vaultId).filter {
-                        it.coin.id in RUJI_POSITION_COIN_IDS
-                    }
+                val cachedDetails = readCompleteCachedPositions(vaultId)
                 if (cachedDetails.isNotEmpty()) {
                     Timber.d(
                         "RujiStakingService: Emitting %d cached RUJI staking positions for vault %s",
@@ -74,6 +71,25 @@ constructor(
                 stakingDetailsRepository.saveAllStakingDetails(vaultId, freshDetails)
             }
             .flowOn(Dispatchers.IO)
+
+    /**
+     * Returns the cached RUJI positions only when *both* of them are present.
+     *
+     * Every write below persists the pair, so a cache holding just one row predates this dual-read
+     * and its single RUJI amount was produced by the old collapsed logic — a false zero for a
+     * bonded-only staker, or a raw sRUJI share count. Rendering that onto the new bonded card, and
+     * leaving the compounding card with nothing to resolve its placeholder, is worse than having no
+     * cache at all: treat a partial cache as empty and let the fresh fetch rewrite it. Self-heals
+     * on the first successful response, so no migration is needed.
+     */
+    private suspend fun readCompleteCachedPositions(vaultId: String): List<StakingDetails> {
+        val cached =
+            stakingDetailsRepository.getStakingDetails(vaultId).filter {
+                it.coin.id in RUJI_POSITION_COIN_IDS
+            }
+        val cachedIds = cached.mapTo(mutableSetOf()) { it.coin.id }
+        return if (cachedIds.containsAll(RUJI_POSITION_COIN_IDS)) cached else emptyList()
+    }
 
     suspend fun getStakingDetailsFromNetwork(address: String): List<StakingDetails> {
         return try {

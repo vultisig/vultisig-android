@@ -9,8 +9,10 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigInteger
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 internal class RujiStakingServiceTest {
@@ -104,6 +106,38 @@ internal class RujiStakingServiceTest {
 
         assertEquals(cached, emissions.last())
     }
+
+    @Test
+    fun `ignores a pre-upgrade cache holding only the bonded row`() = runTest {
+        // A single cached row predates the dual read: its RUJI amount came from the old collapsed
+        // logic, so it may be a false zero or a raw sRUJI share count. Emitting it would render a
+        // wrong bonded amount and leave the compounding card with nothing to resolve it.
+        givenBalances(bonded = BigInteger("100"), autoCompound = BigInteger("200"))
+        coEvery { stakingDetailsRepository.getStakingDetails(VAULT_ID) } returns
+            listOf(stakingDetails(Coins.ThorChain.RUJI, BigInteger("999")))
+
+        val emissions = service.getStakingDetails(ADDRESS, VAULT_ID).toList()
+
+        assertEquals(1, emissions.size)
+        assertEquals(BigInteger("100"), emissions.single().forCoin(Coins.ThorChain.RUJI.id))
+        assertEquals(BigInteger("200"), emissions.single().forCoin(Coins.ThorChain.sRUJI.id))
+    }
+
+    @Test
+    fun `surfaces the failure rather than a legacy half cache when the network read fails`() =
+        runTest {
+            // Nothing trustworthy to fall back on, so the error must reach the caller: the DeFi tab
+            // clears both cards' loading state on it, where a half emission would leave the
+            // compounding one spinning forever and drop it from the aggregate balance.
+            coEvery { thorChainApi.getRujiStakeBalance(ADDRESS) } throws RuntimeException("boom")
+            coEvery { stakingDetailsRepository.getStakingDetails(VAULT_ID) } returns
+                listOf(stakingDetails(Coins.ThorChain.RUJI, BigInteger("999")))
+
+            assertThrows(RuntimeException::class.java) {
+                runBlocking { service.getStakingDetails(ADDRESS, VAULT_ID).toList() }
+            }
+            Unit
+        }
 
     private fun givenBalances(
         bonded: BigInteger,
