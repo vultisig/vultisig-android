@@ -170,7 +170,14 @@ internal class AccountsLoaderTest {
                             chain = Chain.ThorChain,
                             address = "thor1",
                             accounts =
-                                listOf(thorAccount(Coins.ThorChain.RUNE.copy(address = "thor1"))),
+                                listOf(
+                                    thorAccount(
+                                        Coins.ThorChain.RUNE.copy(
+                                            address = "thor1",
+                                            hexPublicKey = THOR_PUBLIC_KEY,
+                                        )
+                                    )
+                                ),
                         )
                     )
                 )
@@ -185,6 +192,9 @@ internal class AccountsLoaderTest {
             assertTrue(loadedAccounts.any { it.token.id.equals(Coins.ThorChain.RUNE.id, true) })
             // Without the vault-bound address the redemption would be built from an empty sender.
             assertEquals("thor1", sRuji.token.address)
+            // The receipt template ships an empty key; carrying the vault's key over is what lets
+            // the signing input be built at all, so the redemption reaches the keysign QR.
+            assertEquals(THOR_PUBLIC_KEY, sRuji.token.hexPublicKey)
         }
 
     @Test
@@ -862,5 +872,7 @@ internal class AccountsLoaderTest {
     private companion object {
         const val VAULT_ID = "vault-id"
         const val VAULT_ID_2 = "vault-id-2"
+        const val THOR_PUBLIC_KEY =
+            "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
     }
 }

@@ -308,7 +308,15 @@ internal class AccountsLoader(
                 missingReason = "THORChain account not available for sRUJI unstake",
             ) ?: return
 
-        val sRuji = Coins.ThorChain.sRUJI.copy(address = thorchainAccount.token.address)
+        // The receipt is never discovered as a wallet token, so its template carries an empty
+        // key. It becomes KeysignPayload.coin, and ThorChainHelper builds the signing input from
+        // coin.hexPublicKey — an empty one aborts the redemption before the keysign QR appears.
+        // Every THORChain token shares the chain's derived key, so the RUNE account supplies it.
+        val sRuji =
+            Coins.ThorChain.sRUJI.copy(
+                address = thorchainAccount.token.address,
+                hexPublicKey = thorchainAccount.token.hexPublicKey,
+            )
         val sRujiAccount =
             Account(
                 token = sRuji,
