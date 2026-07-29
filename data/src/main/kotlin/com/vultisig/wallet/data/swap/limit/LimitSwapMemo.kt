@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 
 /** Allowed limit-order lifetimes, in hours. Anything else is rejected. */
 val limitSwapExpiryHours: List<Int> = listOf(12, 24, 72)
@@ -33,10 +34,16 @@ object LimitSwapMemo {
     const val UTXO_BYTE_LIMIT = 80
     const val OTHER_BYTE_LIMIT = 250
 
-    private val PRICE_SCALE: BigInteger = BigInteger.TEN.pow(8)
+    /** Fractional digits a target price can carry — the grid both the memo and its inverse use. */
+    private const val PRICE_DECIMALS = 8
+
+    private val PRICE_SCALE: BigInteger = BigInteger.TEN.pow(PRICE_DECIMALS)
 
     private val expiryHoursToIntervalBlocks: Map<Int, Int> =
         mapOf(12 to 7_200, 24 to 14_400, 72 to 43_200)
+
+    private val intervalBlocksToExpiryHours: Map<Int, Int> =
+        expiryHoursToIntervalBlocks.entries.associate { (hours, blocks) -> blocks to hours }
 
     private val PRICE_PATTERN = Regex("^(\\d+)(?:\\.(\\d{1,8})?)?$")
 
@@ -48,6 +55,29 @@ object LimitSwapMemo {
         requireNotNull(expiryHoursToIntervalBlocks[expiryHours]) {
             "expiry_hours must be one of ${limitSwapExpiryHours.joinToString(", ")}, got $expiryHours"
         }
+
+    /**
+     * Reverse of [intervalBlocks]: the order's lifetime in hours, or null when the memo carries a
+     * block count outside [limitSwapExpiryHours] — a memo built by another client, which has no
+     * expiry pill to render.
+     */
+    fun expiryHours(intervalBlocks: Int): Int? = intervalBlocksToExpiryHours[intervalBlocks]
+
+    /**
+     * The order's target price recovered from a memo's LIM — for a cosigner, whose only record of
+     * the order is the memo it is asked to sign.
+     *
+     * Inverts [getLimitAmount]: `LIM = floor(sourceAmount * targetPrice)`, so this can land up to
+     * one LIM unit below the price the placing device entered. Display-only (the confirmation
+     * screen's Target Price row); the signed bytes are the memo itself and are never derived from
+     * this. Both amounts are in THORChain's 1e8 fixed point.
+     */
+    fun targetPrice(limit: BigInteger, sourceAmount: BigInteger): BigDecimal? {
+        if (limit.signum() <= 0 || sourceAmount.signum() <= 0) return null
+        return BigDecimal(limit)
+            .divide(BigDecimal(sourceAmount), PRICE_DECIMALS, RoundingMode.HALF_UP)
+            .takeIf { it.signum() > 0 }
+    }
 
     /**
      * The order's guaranteed minimum output (LIM), in the target's 1e8 fixed point.

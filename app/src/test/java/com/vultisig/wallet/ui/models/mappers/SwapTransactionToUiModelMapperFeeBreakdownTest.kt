@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
+import com.vultisig.wallet.ui.models.swap.FormatLimitOrderLabelsUseCase
 import com.vultisig.wallet.ui.models.swap.PriceImpactLevel
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -54,6 +55,11 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
             convertTokenValueToFiat = convertTokenValueToFiat,
             appCurrencyRepository = appCurrencyRepository,
             tokenRepository = tokenRepository,
+            formatLimitOrderLabels =
+                FormatLimitOrderLabelsUseCase(
+                    convertTokenValueToFiat = convertTokenValueToFiat,
+                    fiatValueToStringMapper = fiatValueToStringMapper,
+                ),
         )
 
     @Test
