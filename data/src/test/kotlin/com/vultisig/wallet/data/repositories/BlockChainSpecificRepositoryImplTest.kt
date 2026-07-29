@@ -22,12 +22,14 @@ import com.vultisig.wallet.data.api.models.BlockChairUtxoInfo
 import com.vultisig.wallet.data.api.models.ZkGasFee
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.ethereum.ZkFeeService
 import com.vultisig.wallet.data.blockchain.model.BasicFee
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Transfer
+import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
@@ -432,6 +434,47 @@ internal class BlockChainSpecificRepositoryImplTest {
             maxFeePerGas = BigInteger("77"),
             priorityFee = BigInteger("33"),
         )
+    }
+
+    @Test
+    fun `zkSync signing path estimates with the same calldata as the fee preview`() = runTest {
+        val destination = "0xzkrecipient"
+        val coin = evmCoin(chain = Chain.ZkSync, isNativeToken = true)
+        val evmApi = evmApi()
+        val evmApiFactory =
+            object : EvmApiFactory {
+                override fun createEvmApi(chain: Chain): EvmApi = evmApi
+            }
+
+        repository(evmApi = evmApi, evmFeeService = NoOpFeeService)
+            .getSpecific(
+                chain = Chain.ZkSync,
+                address = SOURCE_ADDRESS,
+                token = coin,
+                gasFee = TokenValue(BigInteger.ONE, coin),
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = false,
+                dstAddress = destination,
+                memo = MEMO,
+            )
+
+        // The signing path must have priced the memo it is about to sign, not a fixed stand-in.
+        coVerify(exactly = 1) { evmApi.zkEstimateFee(SOURCE_ADDRESS, destination, MEMO_CALL_DATA) }
+
+        ZkFeeService(evmApiFactory)
+            .calculateFees(
+                Transfer(
+                    coin = coin,
+                    vault = VaultData("", ""),
+                    amount = BigInteger.ZERO,
+                    to = destination,
+                    memo = MEMO,
+                )
+            )
+
+        // Both entry points must send byte-identical calldata: zkSync prices gas by payload size.
+        coVerify(exactly = 2) { evmApi.zkEstimateFee(SOURCE_ADDRESS, destination, MEMO_CALL_DATA) }
     }
 
     @Test
@@ -913,7 +956,7 @@ internal class BlockChainSpecificRepositoryImplTest {
             feeServiceComposite =
                 FeeServiceComposite(
                     ethereumFeeService = evmFeeService,
-                    zkFeeService = NoOpFeeService,
+                    zkFeeService = ZkFeeService(evmApiFactory),
                     polkadotFeeService = NoOpFeeService,
                     bittensorFeeService = NoOpFeeService,
                     rippleFeeService = NoOpFeeService,
@@ -1009,6 +1052,9 @@ internal class BlockChainSpecificRepositoryImplTest {
     private companion object {
         val NONCE: BigInteger = BigInteger("7")
         const val SOURCE_ADDRESS = "0xsource"
+        const val MEMO = "hi there"
+        // "hi there" UTF-8 encoded — the payload the signed transaction carries.
+        const val MEMO_CALL_DATA = "0x6869207468657265"
     }
 }
 
