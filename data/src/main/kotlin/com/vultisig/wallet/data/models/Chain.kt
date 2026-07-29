@@ -545,6 +545,45 @@ val Chain.cosmosNativeDenom: String?
         }
 
 /**
+ * Longest memo the chain's nodes accept, or `null` when the chain publishes no memo ceiling the
+ * send form can enforce up-front.
+ *
+ * Cosmos-SDK chains expose this as `max_memo_characters` in their auth-module params and reject a
+ * longer memo at broadcast ("memo too large") — i.e. after signing — so the value has to be known
+ * before keysign starts. Despite the param's name the node compares it against the memo's encoded
+ * length (`ValidateMemo` measures the UTF-8 byte length), so this is a byte ceiling. These are the
+ * per-chain values, not one shared ceiling: cosmoshub-4 and phoenix-1 raise the SDK default, the
+ * rest keep it.
+ *
+ * Only the envelope-level `max_memo_characters` belongs here, since that is what the plain send
+ * path this gate protects is checked against. Tighter message-level caps (THORChain's 250-byte
+ * `MsgDeposit` memo, for one) do not apply to a plain send and would wrongly block memos the node
+ * accepts.
+ */
+val Chain.maxMemoCharacters: Int?
+    get() =
+        when (this) {
+            // cosmoshub-4 and Terra 2.0's phoenix-1 raise max_memo_characters above the SDK
+            // default.
+            Chain.GaiaChain,
+            Chain.Terra -> 512
+            // Cosmos SDK default max_memo_characters. Noble's 256 is the ceiling named in the
+            // broadcast rejection this limit exists to prevent.
+            Chain.Noble,
+            Chain.Osmosis,
+            Chain.Kujira,
+            Chain.Dydx,
+            Chain.TerraClassic,
+            Chain.Akash,
+            Chain.Qbtc,
+            Chain.ThorChain,
+            Chain.MayaChain -> 256
+            // Other families carry memos differently (XRP memo blobs, TON comments, Cardano
+            // metadata) and publish no comparable ceiling, so nothing is enforced client-side.
+            else -> null
+        }
+
+/**
  * The chain's native token as declared in [Coins] — the single source of truth for the native
  * ticker and decimals.
  *

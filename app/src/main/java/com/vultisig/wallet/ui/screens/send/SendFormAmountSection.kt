@@ -41,6 +41,7 @@ import com.vultisig.wallet.ui.components.TokenFiatToggle
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.models.send.AmountFraction
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendSections
@@ -262,6 +263,12 @@ internal fun FoldableAmountWidget(
             if (state.hasMemo && state.defiType == null) {
                 var isMemoExpanded by remember { mutableStateOf(false) }
 
+                // Reveal the field while the memo is over the chain's limit: the inline error is
+                // the only visible reason Continue is disabled.
+                LaunchedEffect(state.memoError) {
+                    if (state.memoError != null) isMemoExpanded = true
+                }
+
                 val rotationAngle by
                     animateFloatAsState(
                         targetValue = if (isMemoExpanded) 180f else 0f,
@@ -273,7 +280,11 @@ internal fun FoldableAmountWidget(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     modifier =
-                        Modifier.clickable { isMemoExpanded = !isMemoExpanded }
+                        Modifier.clickable {
+                                // Collapsing while the memo is over the limit would hide that
+                                // error, so it stays open until the memo fits.
+                                isMemoExpanded = state.memoError != null || !isMemoExpanded
+                            }
                             .padding(vertical = 2.dp),
                 ) {
                     Text(
@@ -300,6 +311,10 @@ internal fun FoldableAmountWidget(
                             textFieldState = memoFieldState,
                             hint = stringResource(R.string.send_form_enter_memo),
                             autoCorrectEnabled = false,
+                            innerState =
+                                if (state.memoError != null) VsTextInputFieldInnerState.Error
+                                else VsTextInputFieldInnerState.Default,
+                            footNote = state.memoError?.asString(),
                             trailingIcon = R.drawable.paste,
                             onTrailingIconClick = {
                                 clipboardData.value
