@@ -24,12 +24,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.VaultId
@@ -61,7 +59,6 @@ import com.vultisig.wallet.ui.screens.v2.home.components.CopiableAddress
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.KeyboardAware
 import com.vultisig.wallet.ui.utils.VsUriHandler
-import com.vultisig.wallet.ui.utils.showReviewPopUp
 
 @Composable
 internal fun ChainTokensScreen(
@@ -71,8 +68,6 @@ internal fun ChainTokensScreen(
     viewModel: ChainTokensViewModel = hiltViewModel<ChainTokensViewModel>(),
 ) {
     val uiModel by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
-    val reviewManager = remember { ReviewManagerFactory.create(context) }
 
     KeyboardAware(viewModel::handleKeyboardState)
 
@@ -92,7 +87,6 @@ internal fun ChainTokensScreen(
         onTokenClick = viewModel::openToken,
         onHideSearchBar = viewModel::hideSearchBar,
         onShowSearchBar = viewModel::showSearchBar,
-        onShowReviewPopUp = { reviewManager.showReviewPopUp(context) },
         onClaimQbtc = viewModel::onClaimQbtc,
     )
 }
@@ -113,7 +107,6 @@ internal fun ChainTokensScreen(
     onHistory: () -> Unit,
     onSelectTokens: () -> Unit,
     onTokenClick: (ChainTokenUiModel) -> Unit,
-    onShowReviewPopUp: () -> Unit,
     onClaimQbtc: () -> Unit = {},
 ) {
     val snackbarState = rememberVsSnackbarState()
@@ -196,10 +189,7 @@ internal fun ChainTokensScreen(
 
                 CopiableAddress(
                     address = uiModel.chainAddress,
-                    onAddressCopied = {
-                        snackbarState.show(addressCopiedMessage)
-                        onShowReviewPopUp()
-                    },
+                    onAddressCopied = { snackbarState.show(addressCopiedMessage) },
                     modifier =
                         Modifier.clip(RoundedCornerShape(size = 8.dp))
                             .background(color = Theme.v2.colors.text.button.dim.copy(alpha = 0.12f))
@@ -386,6 +376,5 @@ private fun PreviewChainCoinScreen1() {
         onHistory = {},
         onSelectTokens = {},
         onTokenClick = {},
-        onShowReviewPopUp = {},
     )
 }

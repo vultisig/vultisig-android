@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api.chains
 
 import com.vultisig.wallet.data.api.models.EvmRpcResponseJson
+import com.vultisig.wallet.data.api.models.RpcError
 import com.vultisig.wallet.data.api.models.SuiTransactionBlockOptions
 import com.vultisig.wallet.data.api.models.SuiTransactionBlockResponse
 import com.vultisig.wallet.data.api.utils.RpcResponseJson
@@ -62,20 +63,18 @@ constructor(private val http: HttpClient, private val json: Json) : SuiApi {
 
         return response.result?.jsonObject?.get("totalBalance")?.jsonPrimitive?.content?.let {
             BigInteger(it)
-        } ?: error("Failed to get sui balance")
+        } ?: error(response.error.describe("Failed to get sui balance"))
     }
 
     override suspend fun getReferenceGasPrice(): BigInteger {
-        return http
-            .postRpc<RpcResponseJson>(
+        val response =
+            http.postRpc<RpcResponseJson>(
                 url = rpcUrl,
                 method = "suix_getReferenceGasPrice",
                 params = JsonArray(emptyList()),
             )
-            .result
-            ?.jsonPrimitive
-            ?.content
-            ?.let { BigInteger(it) } ?: error("Failed to fetch sui reference gas price")
+        return response.result?.jsonPrimitive?.content?.let { BigInteger(it) }
+            ?: error(response.error.describe("Failed to fetch sui reference gas price"))
     }
 
     override suspend fun getAllCoins(address: String): List<SuiCoin> {
@@ -87,19 +86,19 @@ constructor(private val http: HttpClient, private val json: Json) : SuiApi {
         // a token whose objects all land on a later page is invisible here and a token send gets
         // silently misclassified as a native SUI transfer. Mirrors iOS SuiService.getAllCoins.
         do {
+            val response =
+                http.postRpc<RpcResponseJson>(
+                    url = rpcUrl,
+                    method = "suix_getAllCoins",
+                    params =
+                        buildJsonArray {
+                            add(address)
+                            cursor?.let { add(it) }
+                        },
+                )
             val result =
-                http
-                    .postRpc<RpcResponseJson>(
-                        url = rpcUrl,
-                        method = "suix_getAllCoins",
-                        params =
-                            buildJsonArray {
-                                add(address)
-                                cursor?.let { add(it) }
-                            },
-                    )
-                    .result
-                    ?.jsonObject ?: error("Failed to fetch all coins for sui")
+                response.result?.jsonObject
+                    ?: error(response.error.describe("Failed to fetch all coins for sui"))
 
             result["data"]?.jsonArray?.forEach { element ->
                 val obj = element.jsonObject
@@ -128,8 +127,8 @@ constructor(private val http: HttpClient, private val json: Json) : SuiApi {
         unsignedTransaction: String,
         signature: String,
     ): String {
-        return http
-            .postRpc<RpcResponseJson>(
+        val response =
+            http.postRpc<RpcResponseJson>(
                 url = rpcUrl,
                 method = "sui_executeTransactionBlock",
                 params =
@@ -138,11 +137,8 @@ constructor(private val http: HttpClient, private val json: Json) : SuiApi {
                         addJsonArray { add(signature) }
                     },
             )
-            .result
-            ?.jsonObject
-            ?.get("digest")
-            ?.jsonPrimitive
-            ?.content ?: error("Failed to execute transaction block")
+        return response.result?.jsonObject?.get("digest")?.jsonPrimitive?.content
+            ?: error(response.error.describe("Failed to execute transaction block"))
     }
 
     override suspend fun dryRunTransaction(transactionBytes: String): SuiDryRunResponse {
@@ -155,7 +151,7 @@ constructor(private val http: HttpClient, private val json: Json) : SuiApi {
 
         val dryRunResponse =
             response.result?.let { json.decodeFromJsonElement<SuiDryRunResponse>(it) }
-                ?: error("Failed to dry run transaction")
+                ?: error(response.error.describe("Failed to dry run transaction"))
 
         if (dryRunResponse.effects.status.error.isNotEmpty()) {
             throw Exception("Simulation Error: ${dryRunResponse.effects.status.error}")
@@ -175,9 +171,17 @@ constructor(private val http: HttpClient, private val json: Json) : SuiApi {
                         add(json.encodeToJsonElement(SuiTransactionBlockOptions()))
                     },
             )
-        if (response.result == null) {
-            Timber.d("checkStatus error: ${response.error?.message}")
-            return null
+        val error = response.error
+        if (error != null) {
+            // The node returns Invalid Params (-32602) when the digest hasn't landed yet — a
+            // genuine not-found, safe to keep polling. Any other code is a terminal RPC failure
+            // (rate limit, malformed digest, indexer outage) and must surface immediately instead
+            // of being masked as the same retryable outcome.
+            if (error.code == SUI_TX_NOT_FOUND_RPC_CODE) {
+                Timber.d("checkStatus not found: %s", error.message)
+                return null
+            }
+            throw SuiRpcException(error)
         }
         return response.result
     }
@@ -195,7 +199,25 @@ constructor(private val http: HttpClient, private val json: Json) : SuiApi {
         }
         return response.result.toLongOrNull()
     }
+
+    private companion object {
+        // Verified against iOS's SuiTransactionStatusProvider: Sui's full node returns this
+        // JSON-RPC "Invalid params" code, not a dedicated one, when a digest hasn't landed yet.
+        const val SUI_TX_NOT_FOUND_RPC_CODE = -32602
+    }
 }
+
+/** Appends the JSON-RPC error's message and code to [fallback] when present. */
+private fun RpcError?.describe(fallback: String): String =
+    if (this == null) fallback else "$fallback: $message (code $code)"
+
+/**
+ * A terminal Sui JSON-RPC error surfaced by [SuiApi.checkStatus] — any [RpcError] other than the
+ * not-found code. Lets [SuiStatusProvider][com.vultisig.wallet.data.api.txstatus.SuiStatusProvider]
+ * report a persistent RPC failure immediately instead of masking it as a retryable pending poll.
+ */
+internal class SuiRpcException(val rpcError: RpcError) :
+    Exception("Sui RPC error ${rpcError.code}: ${rpcError.message}")
 
 @Serializable
 data class SuiDryRunResponse(@SerialName("effects") val effects: SuiTransactionEffects)

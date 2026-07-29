@@ -64,6 +64,24 @@ class FeatureFlagApiTest {
         assertEquals(false, flags.isTssBatchEnabled)
     }
 
+    @Test
+    fun `limit-swap defaults to true when missing from payload`() = runTest {
+        val api = apiReturning("""{"encrypt-gcm": false, "tss-batch": false}""")
+
+        val flags = api.getFeatureFlags()
+
+        assertEquals(true, flags.isLimitSwapEnabled)
+    }
+
+    @Test
+    fun `limit-swap false in payload disables the limit tab`() = runTest {
+        val api = apiReturning("""{"limit-swap": false}""")
+
+        val flags = api.getFeatureFlags()
+
+        assertEquals(false, flags.isLimitSwapEnabled)
+    }
+
     private fun apiReturning(json: String): FeatureFlagApi {
         val client =
             HttpClient(

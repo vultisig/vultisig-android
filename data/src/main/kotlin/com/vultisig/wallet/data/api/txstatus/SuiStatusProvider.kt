@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api.txstatus
 
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.api.chains.SuiRpcException
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
@@ -17,6 +18,11 @@ class SuiStatusProvider @Inject constructor(private val suiApi: SuiApi) :
                 suiApi.checkStatus(txHash)
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: SuiRpcException) {
+                // A terminal RPC error (any code other than not-found) — report it now instead of
+                // retrying until the poll timeout masks a persistent failure as still pending.
+                Timber.w(e, "Sui status check failed for %s", txHash)
+                return TransactionResult.Failed(e.rpcError.message)
             } catch (e: Exception) {
                 Timber.w(e, "Sui status check failed for %s", txHash)
                 return TransactionResult.Pending

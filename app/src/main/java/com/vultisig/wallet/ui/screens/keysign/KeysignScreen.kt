@@ -4,11 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState.Error
@@ -16,10 +13,10 @@ import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.KeysignViewModel
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.InAppReviewEffect
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.performHaptic
-import com.vultisig.wallet.ui.utils.showReviewPopUp
 
 @Composable
 internal fun KeysignScreen(
@@ -64,10 +61,7 @@ private fun Keysign(
     viewModel: KeysignViewModel,
     onError: (UiText) -> Unit,
     onComplete: () -> Unit,
-    onKeysignFinished: (() -> Unit)? = null,
 ) {
-    val context = LocalContext.current
-    val reviewManager = remember { ReviewManagerFactory.create(context) }
     val view = LocalView.current
 
     val wrapperViewModel =
@@ -85,18 +79,14 @@ private fun Keysign(
         when (state) {
             is KeysignState.Error -> onError(state.errorMessage)
             is KeysignState.KeysignECDSA,
-            is KeysignState.KeysignEdDSA -> {
-                view.performHaptic()
-            }
-
+            is KeysignState.KeysignEdDSA,
             is KeysignState.KeysignFinished -> {
                 view.performHaptic()
-                onKeysignFinished?.invoke()
-                reviewManager.showReviewPopUp(context)
             }
             else -> Unit
         }
     }
+    InAppReviewEffect(keysignViewModel.inAppReviewRequests)
     KeysignView(
         state = state,
         transactionTypeUiModel = uiState.transactionUiModel,

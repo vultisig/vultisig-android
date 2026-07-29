@@ -960,3 +960,30 @@ internal val MIGRATION_37_38 =
             }
         }
     }
+
+// Adds the pending_limit_order table: a local record of placed THORChain limit orders (#4154),
+// keyed by the inbound deposit tx hash. Phase 1 has no in-app open-orders list, so this is a
+// write-only store for now; Phase 2 surfaces it inside TX History.
+internal val MIGRATION_38_39 =
+    object : Migration(38, 39) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            CREATE TABLE IF NOT EXISTS `pending_limit_order` (
+                `inbound_tx_hash` TEXT NOT NULL,
+                `vault_id` TEXT NOT NULL,
+                `source_asset` TEXT NOT NULL,
+                `source_amount` TEXT NOT NULL,
+                `target_asset` TEXT NOT NULL,
+                `dest_addr` TEXT NOT NULL,
+                `target_price` TEXT NOT NULL,
+                `expiry_blocks` INTEGER NOT NULL,
+                `created_at` INTEGER NOT NULL,
+                `status` TEXT NOT NULL,
+                PRIMARY KEY(`inbound_tx_hash`)
+            )
+            """
+                    .trimIndent()
+            )
+        }
+    }

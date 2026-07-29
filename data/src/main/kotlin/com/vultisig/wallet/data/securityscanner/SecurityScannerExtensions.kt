@@ -5,8 +5,10 @@ import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 /**
- * Executes [block] as a security scan for [transaction], returning a scan-unavailable MEDIUM result
- * on any non-cancellation failure instead of propagating the exception.
+ * Executes [block] as a security scan for [transaction], logging and rethrowing as
+ * [SecurityScannerException] on any non-cancellation exception so the caller can surface a distinct
+ * scan-unavailable state instead of a fabricated risk finding. Fatal JVM errors ([Error], e.g.
+ * [OutOfMemoryError]) are not caught and propagate immediately.
  */
 internal suspend fun runSecurityScan(
     transaction: SecurityScannerTransaction,
@@ -17,18 +19,11 @@ internal suspend fun runSecurityScan(
         val result = block()
         Timber.d("SecurityScanner: Result for ${transaction.chain.name} transaction: $result")
         result
-    } catch (t: Throwable) {
+    } catch (t: Exception) {
         if (t is CancellationException) throw t
         val errorMessage = "SecurityScanner: Error scanning ${transaction.chain.name}"
         Timber.e(t, errorMessage)
-        SecurityScannerResult(
-            provider = "",
-            isSecure = false,
-            riskLevel = SecurityRiskLevel.MEDIUM,
-            warnings = emptyList(),
-            description = "Scan unavailable",
-            recommendations = "",
-        )
+        throw SecurityScannerException(errorMessage, t, transaction.chain, transaction.toString())
     }
 }
 
