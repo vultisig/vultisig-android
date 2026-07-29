@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
+import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_POSITION_COIN_IDS
 import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -1193,10 +1194,6 @@ constructor(
         private const val RUJI_SYMBOL = "RUJI"
         private const val RUJI_REWARDS_SYMBOL = "USDC"
         private const val POSITION_DISPLAY_SCALE = 4
-
-        // The bonded and auto-compounding RUJI positions render as two independent cards.
-        private val RUJI_POSITION_COIN_IDS =
-            setOf(Coins.ThorChain.RUJI.id, Coins.ThorChain.sRUJI.id)
 
         /**
          * The Manage-Positions key a placeholder is gated on. Both RUJI positions are toggled by

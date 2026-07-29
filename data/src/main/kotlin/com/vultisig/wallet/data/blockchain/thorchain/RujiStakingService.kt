@@ -127,8 +127,11 @@ constructor(
     }
 
     companion object {
-        private val RUJI_POSITION_COIN_IDS =
-            setOf(Coins.ThorChain.RUJI.id, Coins.ThorChain.sRUJI.id)
+        /**
+         * The coin ids of the two RUJI staking positions. Shared so the cache filter here and the
+         * DeFi tab's loading gate cannot drift apart.
+         */
+        val RUJI_POSITION_COIN_IDS = setOf(Coins.ThorChain.RUJI.id, Coins.ThorChain.sRUJI.id)
 
         val RUJI_REWARDS_COIN =
             Coin(
