@@ -102,7 +102,9 @@ internal class KeysignViewModelSaveTransactionHistoryTest {
             chainAccountAddressRepository = mockk(relaxed = true),
             transactionHistoryRepository = transactionHistoryRepository,
             balanceRepository = mockk(relaxed = true),
+            inAppReviewRepository = mockk(relaxed = true),
             gasFeeToEstimatedFee = mockk(relaxed = true),
+            pendingLimitOrderRepository = mockk(relaxed = true),
             awaitApprovalConfirmation = mockk(relaxed = true),
         )
 

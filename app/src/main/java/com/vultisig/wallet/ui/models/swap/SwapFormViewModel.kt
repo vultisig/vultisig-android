@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.swap
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -12,13 +13,21 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.FeatureFlagRepository
+import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
+import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.swap.SwapTokenSelector.Companion.ARG_SELECTED_DST_TOKEN_ID
@@ -27,6 +36,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.swap.SwapMode
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
@@ -34,9 +44,11 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
@@ -53,11 +65,18 @@ constructor(
     private val swapValidator: SwapValidator,
     private val swapTokenSelector: SwapTokenSelector,
     private val swapQuoteManager: SwapQuoteManager,
+    private val swapQuoteRepository: SwapQuoteRepository,
     private val swapTransactionBuilder: SwapTransactionBuilder,
     private val swapInputCollector: SwapInputCollector,
     private val swapQuotePipelineControllerFactory: SwapQuotePipelineController.Factory,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val getDiscountBpsUseCase: GetDiscountBpsUseCase,
+    private val featureFlagRepository: FeatureFlagRepository,
+    private val limitMarketPriceRepository: LimitSwapMarketPriceRepository,
+    private val buildLimitSwapTransactionUseCase: BuildLimitSwapTransactionUseCase,
+    private val appCurrencyRepository: AppCurrencyRepository,
+    private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
+    private val fiatValueToString: FiatValueToStringMapper,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -80,6 +99,27 @@ constructor(
     private val selectedSrcId = MutableStateFlow<String?>(null)
     private val selectedDstId = MutableStateFlow<String?>(null)
     private val referralCode = MutableStateFlow<String?>(null)
+
+    // THORChain limit-order ("Execute when") form state. Additive to the Market path — none of it
+    // touches the quote pipeline; the whole tab is gated behind the remote limit-swap flag. The
+    // flag
+    // is a flow (not a plain var) so a late-resolving remote value re-triggers the market-price
+    // fetch instead of leaving the tab enabled with no price.
+    private val isLimitFlagEnabled = MutableStateFlow(false)
+    private val swapMode = MutableStateFlow(SwapMode.Market)
+    private val limitPriceUnit = MutableStateFlow(LimitPriceUnit.Fiat)
+    private val limitPreset = MutableStateFlow<LimitPricePreset?>(LimitPricePreset.Market)
+    private val limitExpiry = MutableStateFlow(LimitExpiryOption.TwentyFourHours)
+    // Both prices are canonical: buy-asset units per 1 sell-asset unit (what the memo LIM needs).
+    private val marketTargetPrice = MutableStateFlow<BigDecimal?>(null)
+    private val limitTargetPrice = MutableStateFlow<BigDecimal?>(null)
+    // App-currency price of one whole sell-asset unit, so the limit form's fiat display honors the
+    // user's selected currency instead of hardcoding USD.
+    private val sellUnitFiat = MutableStateFlow<FiatValue?>(null)
+    private var marketPriceJob: Job? = null
+    // The pair the current market/target prices belong to, so a pair change can invalidate them.
+    private var pricedPairKey: String? = null
+    private val assetFormat = DecimalFormat("#,##0.########")
 
     // User-chosen slippage tolerance in basis points, or null for "Auto" (each provider keeps its
     // own default). Owned here and passed to the pipeline controller so a change re-fetches the
@@ -150,6 +190,7 @@ constructor(
         collectSelectedTokens()
         observeGasLimitApplicability()
         observeExternalRecipientValidity()
+        observeLimitForm()
 
         quotePipeline.start()
     }
@@ -193,6 +234,362 @@ constructor(
             selectedDst.collect { syncExternalRecipientRouting() }
         }
     }
+
+    /**
+     * Wires up the limit-order form. Entirely additive to the Market path: it reads the remote flag
+     * once, fetches a reference price when the Limit tab is shown with a routable pair, and
+     * recomputes the displayed values on any limit input change. Nothing here feeds the quote
+     * pipeline or the Market swap.
+     */
+    private fun observeLimitForm() {
+        viewModelScope.safeLaunch {
+            isLimitFlagEnabled.value = featureFlagRepository.getFeatureFlags().isLimitSwapEnabled
+        }
+        // Fetch a fresh reference price whenever the Limit tab is shown with a routable pair. The
+        // flag is part of the source set so a late-resolving remote flag re-fires the fetch, and so
+        // is the pool-eligibility version, so a pair picked before the live pools land is
+        // re-evaluated once they do.
+        viewModelScope.launch {
+            combine(
+                    isLimitFlagEnabled,
+                    swapMode,
+                    selectedSrc,
+                    selectedDst,
+                    swapQuoteRepository.swapEligibilityVersion,
+                ) { flagEnabled, mode, src, dst, eligibilityVersion ->
+                    LimitFetchTrigger(flagEnabled, mode, src, dst, eligibilityVersion)
+                }
+                .distinctUntilChanged()
+                .collectLatest { (flagEnabled, mode, src, dst, _) ->
+                    val srcCoin = src?.account?.token
+                    val dstCoin = dst?.account?.token
+                    // Drop the previous pair's prices before refetching. They are quoted in the
+                    // old pair's units, so leaving them live would keep the CTA enabled against a
+                    // stale rate — and a tap during the fetch window would sign that wrong-pair
+                    // rate into the memo's LIM. A custom (preset-less) price would otherwise never
+                    // be replaced at all, since fetchMarketPrice only reseeds a null target.
+                    val pairKey = pairKeyOf(srcCoin, dstCoin)
+                    if (pairKey != pricedPairKey) {
+                        pricedPairKey = pairKey
+                        marketPriceJob?.cancel()
+                        marketTargetPrice.value = null
+                        limitTargetPrice.value = null
+                    }
+                    if (
+                        mode == SwapMode.Limit &&
+                            flagEnabled &&
+                            srcCoin != null &&
+                            dstCoin != null &&
+                            isLimitPairSupported(srcCoin, dstCoin)
+                    ) {
+                        fetchMarketPrice(srcCoin, dstCoin)
+                    }
+                    updateLimitOrderState()
+                }
+        }
+        // Keep the sell asset's app-currency unit price current so fiat display honors the
+        // currency.
+        viewModelScope.launch {
+            combine(selectedSrc, appCurrencyRepository.currency) { src, currency ->
+                    src?.account?.token to currency
+                }
+                .collectLatest { (srcCoin, currency) ->
+                    sellUnitFiat.value =
+                        if (srcCoin == null) {
+                            null
+                        } else {
+                            try {
+                                convertTokenValueToFiat(
+                                    srcCoin,
+                                    TokenValue(
+                                        BigInteger.TEN.pow(srcCoin.decimal),
+                                        srcCoin.ticker,
+                                        srcCoin.decimal,
+                                    ),
+                                    currency,
+                                )
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                Timber.w(e, "Failed to price sell asset for limit form")
+                                null
+                            }
+                        }
+                    updateLimitOrderState()
+                }
+        }
+        viewModelScope.launch {
+            combine(
+                    limitTargetPrice,
+                    limitPriceUnit,
+                    limitPreset,
+                    limitExpiry,
+                    snapshotFlow { srcAmountState.text.toString() },
+                ) { _, _, _, _, _ ->
+                    Unit
+                }
+                .collect { updateLimitOrderState() }
+        }
+    }
+
+    private data class LimitFetchTrigger(
+        val flagEnabled: Boolean,
+        val mode: SwapMode,
+        val src: SendSrc?,
+        val dst: SendSrc?,
+        val eligibilityVersion: Int,
+    )
+
+    /**
+     * A limit order is a THORChain-only product, so the tab is offered only for a pair THORChain
+     * itself can route. This asks the live provider table (pool-aware, per token) rather than
+     * `isThorchainRoutable`, which only says the *chain* can appear in a memo — that would offer
+     * the tab for, say, an ETH token with no THORChain pool, whose placement could only fail.
+     */
+    private fun isLimitPairSupported(srcCoin: Coin?, dstCoin: Coin?): Boolean =
+        srcCoin != null &&
+            dstCoin != null &&
+            SwapProvider.THORCHAIN in swapQuoteRepository.getEligibleProviders(srcCoin, dstCoin)
+
+    fun onSelectSwapMode(mode: SwapMode) {
+        swapMode.value = mode
+        // The Limit form recomputes via the swapMode collector in observeLimitForm().
+        _uiState.update { it.copy(swapMode = mode) }
+    }
+
+    fun onLimitPresetSelected(preset: LimitPricePreset) {
+        limitPreset.value = preset
+        marketTargetPrice.value?.let { market ->
+            limitTargetPrice.value =
+                LimitOrderPricing.applyPreset(market, preset.percentAboveMarket)
+        }
+    }
+
+    fun onLimitExpirySelected(option: LimitExpiryOption) {
+        limitExpiry.value = option
+    }
+
+    fun onLimitPriceUnitSelected(unit: LimitPriceUnit) {
+        limitPriceUnit.value = unit
+    }
+
+    /**
+     * Stages a THORChain limit order and routes to the confirmation screen. Reuses the market
+     * swap's input validation ([SwapInputCollector]) for the resolved coins/amount/gas — the pair
+     * is THORChain-routable so a market quote exists — then hands off to
+     * [BuildLimitSwapTransactionUseCase], which builds the `=<` deposit and re-checks the advanced
+     * swap queue. Placement flows through the same verify → keysign path as a market swap.
+     */
+    fun placeLimitOrder() {
+        // Re-entry guard: the CTA disables off isLoadingNextScreen, but that flips inside this
+        // method, so a fast second tap could otherwise start a second placement (a duplicate
+        // on-chain deposit) before the UI updates.
+        if (isLoadingNextScreen) return
+
+        // Same hard gate as swap(): the recipient is baked into the `=<` memo's dest_addr, and it
+        // survives a destination-chain change unvalidated, so a stale or malformed address must be
+        // rejected here rather than signed into an order that pays out to nowhere.
+        externalRecipientError()?.let { error ->
+            showError(error)
+            return
+        }
+
+        val targetPrice = limitTargetPrice.value
+        if (targetPrice == null) {
+            showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
+            return
+        }
+
+        val inputs =
+            try {
+                isLoadingNextScreen = true
+                swapInputCollector.collect(
+                    vaultId = vaultId,
+                    selectedSrc = selectedSrc.value,
+                    selectedDst = selectedDst.value,
+                    srcAmount = srcAmountState.text.toString(),
+                    quote = quoteState.quote,
+                    gasFee = quotePipeline.gasFee.value,
+                    estimatedNetworkFeeTokenValue =
+                        quotePipeline.estimatedNetworkFeeTokenValue.value,
+                    estimatedNetworkFeeFiatValue = quotePipeline.estimatedNetworkFeeFiatValue.value,
+                )
+            } catch (e: InvalidTransactionDataException) {
+                isLoadingNextScreen = false
+                showError(e.text)
+                return
+            } catch (e: Exception) {
+                isLoadingNextScreen = false
+                Timber.e(e)
+                showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
+                return
+            }
+
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                isLoadingNextScreen = false
+                if (e is InvalidTransactionDataException) {
+                    showError(e.text)
+                } else {
+                    Timber.e(e)
+                    showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
+                }
+            }
+        ) {
+            val transaction =
+                buildLimitSwapTransactionUseCase.build(
+                    BuildLimitSwapTransactionUseCase.Params(
+                        vaultId = inputs.vaultId,
+                        srcToken = inputs.srcToken,
+                        dstToken = inputs.dstToken,
+                        srcAddress = inputs.srcAddress,
+                        srcTokenValue = inputs.srcTokenValue,
+                        // Fail-safe: the memo only accepts 8 fractional digits, and rejects
+                        // anything longer with an exception rather than rounding it itself.
+                        targetPrice = LimitOrderPricing.toMemoScale(targetPrice),
+                        expiryHours = limitExpiry.value.hours,
+                        destinationAddress = externalRecipient.value ?: inputs.dstToken.address,
+                        gasFee = inputs.gasFee,
+                        gasFeeFiatValue = inputs.gasFeeFiatValue,
+                        estimatedNetworkFeeTokenValue = inputs.estimatedNetworkFeeTokenValue,
+                        estimatedNetworkFeeFiatValue = inputs.estimatedNetworkFeeFiatValue,
+                    )
+                )
+
+            swapTransactionRepository.addTransaction(transaction)
+
+            navigator.route(
+                Route.VerifySwap(transactionId = transaction.id, vaultId = inputs.vaultId)
+            )
+            isLoadingNextScreen = false
+        }
+    }
+
+    private fun pairKeyOf(srcCoin: Coin?, dstCoin: Coin?): String? =
+        if (srcCoin == null || dstCoin == null) null else "${srcCoin.id}>${dstCoin.id}"
+
+    /** Fetches the market reference price (buy units per sell unit) and seeds the preset. */
+    private fun fetchMarketPrice(src: Coin, dst: Coin) {
+        marketPriceJob?.cancel()
+        marketPriceJob =
+            viewModelScope.safeLaunch(
+                onError = { Timber.w(it, "Failed to fetch limit-swap market price") }
+            ) {
+                val price =
+                    limitMarketPriceRepository.getMarketPrice(
+                        fromCoin = src,
+                        toCoin = dst,
+                        sourcePrice = src.usdPrice ?: BigDecimal.ZERO,
+                        // Quote to where the order would actually pay out, so the reference price
+                        // matches the route the placed order takes.
+                        destinationAddress = externalRecipient.value ?: dst.address,
+                    )
+                if (price.signum() > 0) {
+                    // The probe divides at scale 18; normalize here so the market price and every
+                    // preset derived from it sit on the same 8-decimal grid the memo can express —
+                    // otherwise the Market preset would read as *above* market and lose its
+                    // "already available" warning.
+                    val marketPrice = LimitOrderPricing.toMemoScale(price)
+                    marketTargetPrice.value = marketPrice
+                    val preset = limitPreset.value
+                    if (preset != null || limitTargetPrice.value == null) {
+                        limitTargetPrice.value =
+                            LimitOrderPricing.applyPreset(
+                                marketPrice,
+                                (preset ?: LimitPricePreset.Market).percentAboveMarket,
+                            )
+                    }
+                    updateLimitOrderState()
+                }
+            }
+    }
+
+    private suspend fun updateLimitOrderState() {
+        val srcCoin = selectedSrc.value?.account?.token
+        val dstCoin = selectedDst.value?.account?.token
+        val enabled = isLimitFlagEnabled.value && isLimitPairSupported(srcCoin, dstCoin)
+
+        if (!enabled || srcCoin == null || dstCoin == null) {
+            // The tab is about to disappear from under the user — a pair swapped while the Limit
+            // form was open can leave the form showing for a pair THORChain can't route at all.
+            if (swapMode.value == SwapMode.Limit) {
+                onSelectSwapMode(SwapMode.Market)
+            }
+            _uiState.update { it.copy(isLimitTabEnabled = enabled, limitOrder = null) }
+            return
+        }
+
+        val target = limitTargetPrice.value
+        val market = marketTargetPrice.value
+        val sellAmount = srcAmountState.text.toString().toBigDecimalOrNull()
+        // Fiat display uses the sell asset's app-currency unit price (not raw USD), matching the
+        // Market swap flow so non-USD users see the correct symbol and value.
+        val sellFiat = sellUnitFiat.value
+        val fiatPerBuy = target?.let { LimitOrderPricing.fiatPricePerBuyUnit(it, sellFiat?.value) }
+        val buyAmount = target?.let { LimitOrderPricing.expectedBuyAmount(sellAmount, it) }
+
+        val fiatText = formatFiat(fiatPerBuy, sellFiat?.currency)
+        val amountText =
+            buyAmount?.let { "${formatAssetAmount(it)} ${dstCoin.ticker}" } ?: EMPTY_PRICE
+        val unit = limitPriceUnit.value
+        val priceText = if (unit == LimitPriceUnit.Fiat) fiatText else amountText
+        val secondaryText = if (unit == LimitPriceUnit.Fiat) amountText else fiatText
+        val warningRes =
+            if (target != null && market != null) {
+                when (LimitOrderPricing.warningFor(target, market)) {
+                    LimitOrderPricing.LimitWarning.BelowMarket ->
+                        R.string.limit_swap_warning_below_market
+                    LimitOrderPricing.LimitWarning.FarAboveMarket ->
+                        R.string.limit_swap_warning_far_above_market
+                    null -> null
+                }
+            } else null
+
+        // Use the resolved token logos the Market form uses (drawable/URL ImageModel), not the raw
+        // Coin.logo name, which SubcomposeAsyncImage can't load — that is why the reference/asset
+        // logos rendered as first-letter placeholders (#4154 UI).
+        val current = _uiState.value
+        val sellLogo = current.selectedSrcToken?.tokenLogo ?: srcCoin.logo
+        val buyLogo = current.selectedDstToken?.tokenLogo ?: dstCoin.logo
+
+        _uiState.update {
+            it.copy(
+                isLimitTabEnabled = true,
+                limitOrder =
+                    LimitOrderUiModel(
+                        priceText = priceText,
+                        referenceAmountLabel = "1 ${dstCoin.ticker}",
+                        referenceLogo = buyLogo,
+                        secondaryPriceLabel = secondaryText,
+                        priceUnit = unit,
+                        selectedPreset = limitPreset.value,
+                        selectedExpiry = limitExpiry.value,
+                        sellTicker = srcCoin.ticker,
+                        sellLogo = sellLogo,
+                        buyTicker = dstCoin.ticker,
+                        buyLogo = buyLogo,
+                        buyAmountText = buyAmount?.let(::formatAssetAmount) ?: "0",
+                        warningRes = warningRes,
+                        // Ready only when there is a resolved target price and a positive sell
+                        // amount, so the CTA can't be tapped before the order can actually be
+                        // built.
+                        isPlaceOrderEnabled =
+                            target != null && sellAmount != null && sellAmount.signum() > 0,
+                    ),
+            )
+        }
+    }
+
+    /** Formats a fiat amount in the app currency, or [EMPTY_PRICE] when the price is unknown. */
+    private suspend fun formatFiat(value: BigDecimal?, currency: String?): String =
+        if (value != null && currency != null) {
+            fiatValueToString(FiatValue(value, currency), asPrice = true)
+        } else {
+            EMPTY_PRICE
+        }
+
+    private fun formatAssetAmount(value: BigDecimal): String =
+        assetFormat.format(value.stripTrailingZeros())
 
     /**
      * The address-format error for the current external recipient, or `null` when the recipient is
@@ -709,6 +1106,9 @@ constructor(
 
         // Upper bound for slippage tolerance: 10_000 bps = 100%.
         private const val MAX_SLIPPAGE_BPS = 10_000
+
+        // Placeholder shown in the limit form's price fields before a market price resolves.
+        private const val EMPTY_PRICE = "—"
 
         // Rent-exempt minimum for an SPL token account (~0.00203928 SOL, in lamports). Held back on
         // native-SOL MAX swaps to cover a first-use Jupiter fee-ATA creation the fee estimate
