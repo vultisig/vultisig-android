@@ -267,6 +267,57 @@ internal class UnstakeStrategyTest {
         }
 
     @Test
+    fun `submit UNSTAKE_SRUJI honours an amount the cached ceiling has fallen behind`() = runTest {
+        withMockedIoDispatcher {
+            givenSuccessfulFlow()
+            // The form was seeded from a cached 1 RUJI position that has since compounded to 1.5.
+            // Measuring the typed amount against that stale ceiling would reject a redemption the
+            // live position can honour, so the live read is the authority.
+            givenAutoCompoundPosition(
+                positionValue = BigInteger.valueOf(150_000_000),
+                heldShares = BigInteger.valueOf(147_000_000),
+            )
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1.2")
+
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this, DeFiNavActions.UNSTAKE_SRUJI).submit()
+            advanceUntilIdle()
+
+            val payload = captured.captured.wasmExecuteContractPayload
+            assertEquals("117600000", payload!!.coins[0]!!.amount)
+        }
+    }
+
+    @Test
+    fun `submit UNSTAKE_SRUJI redeems and displays only what the live position still holds`() =
+        runTest {
+            withMockedIoDispatcher {
+                givenSuccessfulFlow()
+                // The cache says 1 RUJI, the live position is 0.6 — redeeming everything is right,
+                // but the transaction must carry the real amount so Verify shows what the contract
+                // will return rather than the larger figure that was typed.
+                givenAutoCompoundPosition(
+                    positionValue = BigInteger.valueOf(60_000_000),
+                    heldShares = BigInteger.valueOf(59_000_000),
+                )
+                tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1")
+
+                val captured = slot<DepositTransaction>()
+                coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns
+                    Unit
+
+                build(this, DeFiNavActions.UNSTAKE_SRUJI).submit()
+                advanceUntilIdle()
+
+                val tx = captured.captured
+                assertEquals("59000000", tx.wasmExecuteContractPayload!!.coins[0]!!.amount)
+                assertEquals(BigInteger.valueOf(60_000_000), tx.srcTokenValue.value)
+            }
+        }
+
+    @Test
     fun `submit UNSTAKE_SRUJI refuses to build a redemption against an empty position`() = runTest {
         withMockedIoDispatcher {
             givenSuccessfulFlow()

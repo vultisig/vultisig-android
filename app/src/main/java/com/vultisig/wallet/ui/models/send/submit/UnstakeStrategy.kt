@@ -110,7 +110,18 @@ internal class UnstakeStrategy(
                         getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
                             ?: BigInteger.ZERO
 
-                    if (tokenAmountInt > availableTokenBalance) {
+                    val defiType = defiTypeProvider()
+
+                    // The auto-compounding position is the one case where this ceiling is not the
+                    // balance the transaction is sized against: the form is seeded from the
+                    // position the DeFi tab cached, while the redemption re-reads the live one.
+                    // Enforcing the stale ceiling would reject amounts the live position can
+                    // honour, so the live read below is the sole authority — it clamps to the
+                    // whole position and so can never over-redeem.
+                    if (
+                        defiType != DeFiNavActions.UNSTAKE_SRUJI &&
+                            tokenAmountInt > availableTokenBalance
+                    ) {
                         throw InvalidTransactionDataException(
                             UiText.FormattedText(
                                 R.string.send_error_insufficient_native_balance_with_fees,
@@ -120,7 +131,7 @@ internal class UnstakeStrategy(
                     }
 
                     val depositTx =
-                        when (defiTypeProvider()) {
+                        when (defiType) {
                             DeFiNavActions.UNSTAKE_RUJI ->
                                 createRUJIUnstakeDepositTransaction(
                                     vaultId = vaultId,
@@ -259,6 +270,11 @@ internal class UnstakeStrategy(
      * redeeming the whole position sends the exact share balance rather than a rounded conversion,
      * so no dust is stranded. Rounding is downward everywhere else, so the redemption can never
      * exceed what is held even if the share price moves between the form loading and this submit.
+     *
+     * The amount the form was seeded with comes from the cached position and can sit above the live
+     * one, so the redemption is clamped to what is actually held — and the transaction carries that
+     * clamped value, so the Verify screen shows the amount the contract will really return rather
+     * than the larger figure that was typed.
      */
     private suspend fun createRujiCompoundUnstakeDepositTransaction(
         vaultId: String,
@@ -299,11 +315,12 @@ internal class UnstakeStrategy(
             )
         }
 
+        val redeemedValue = tokenAmountInt.coerceAtMost(positionValue)
         val shares =
-            if (tokenAmountInt >= positionValue) {
+            if (redeemedValue >= positionValue) {
                 heldShares
             } else {
-                tokenAmountInt.multiply(heldShares).divide(positionValue)
+                redeemedValue.multiply(heldShares).divide(positionValue)
             }
 
         if (shares < BigInteger.ONE) {
@@ -333,7 +350,7 @@ internal class UnstakeStrategy(
             srcAddress = srcAddress,
             dstAddress = dstAddress,
             memo = "",
-            srcTokenValue = TokenValue(value = tokenAmountInt, token = selectedToken),
+            srcTokenValue = TokenValue(value = redeemedValue, token = selectedToken),
             estimatedFees = gasFee,
             estimateFeesFiat =
                 gasFeeToEstimatedFee.fiatFeesFor(gasFee, selectedToken).formattedFiatValue,
