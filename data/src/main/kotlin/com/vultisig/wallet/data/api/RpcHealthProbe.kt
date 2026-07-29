@@ -130,6 +130,7 @@ internal class RpcHealthProbeImpl @Inject constructor(private val httpClient: Ht
             Chain.ZkSync -> 324
             Chain.Mantle -> 5000
             Chain.Sei -> 1329
+            Chain.Robinhood -> 4663
             Chain.Hyperliquid -> 999
             else -> null
         }

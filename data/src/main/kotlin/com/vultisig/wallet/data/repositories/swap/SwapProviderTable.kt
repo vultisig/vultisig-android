@@ -118,6 +118,10 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
 
             Chain.Mantle -> setOf(SwapProvider.LIFI, SwapProvider.KYBER)
 
+            // All three live-confirmed on 4663; 1inch /swap returns executable calldata to its
+            // deployed router (0x5a70…89c7).
+            Chain.Robinhood -> setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
+
             Chain.ThorChain -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA)
             Chain.Bitcoin -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA, SwapProvider.SWAPKIT)
 

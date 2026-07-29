@@ -12,7 +12,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
-import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -20,7 +20,6 @@ import java.math.BigInteger
 import kotlinx.coroutines.coroutineScope
 import vultisig.keysign.v1.SignSui
 import wallet.core.jni.Base58
-import wallet.core.jni.CoinType
 
 class SecurityScannerTransactionFactory(
     private val solanaApi: SolanaApi,
@@ -335,16 +334,18 @@ class SecurityScannerTransactionFactory(
                 wasmExecuteContractPayload = null,
             )
 
-        val dummyVault =
-            Vault(
-                id = "dummy",
-                name = "dummy",
-                pubKeyECDSA = "0000000000000000000000000000000000000000000000000000000000000000",
-                hexChainCode = "0000000000000000000000000000000000000000000000000000000000000000",
+        // No vault key material is needed to plan/serialize an unsigned transaction, so this
+        // constructs the helper directly rather than through a placeholder Vault. The coin type
+        // comes from the chain being sent, not a hardcoded Bitcoin, so the other UTXO chains this
+        // branch also handles (BCH, Litecoin, Dogecoin, Dash, Zcash) get their own address/script
+        // format instead of being validated as Bitcoin addresses.
+        val utxoHelper =
+            UtxoHelper(
+                transaction.token.chain.coinType,
+                vaultHexPublicKey = "",
+                vaultHexChainCode = "",
             )
-
-        val btcHelper = UtxoHelper.getHelper(dummyVault, CoinType.BITCOIN)
-        val zeroSignedTx = btcHelper.getZeroSignedTransaction(keySignPayload)
+        val unsignedTx = utxoHelper.getUnsignedTransactionHex(keySignPayload)
 
         return SecurityScannerTransaction(
             chain = transaction.token.chain,
@@ -352,7 +353,7 @@ class SecurityScannerTransactionFactory(
             from = transaction.srcAddress,
             to = transaction.dstAddress,
             amount = BigInteger.ZERO,
-            data = zeroSignedTx,
+            data = unsignedTx,
         )
     }
 }

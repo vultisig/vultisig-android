@@ -238,6 +238,7 @@ object SigningHelper {
                     Chain.CronosChain,
                     Chain.ZkSync,
                     Chain.Sei,
+                    Chain.Robinhood,
                     Chain.Hyperliquid -> {
                         if (payload.coin.isNativeToken) {
                             EvmHelper(payload.coin.coinType, ecdsaKey, ecdsaChainCode)
@@ -584,6 +585,7 @@ object SigningHelper {
             Chain.Arbitrum,
             Chain.Optimism,
             Chain.Sei,
+            Chain.Robinhood,
             Chain.Polygon,
             Chain.Base,
             Chain.ZkSync,

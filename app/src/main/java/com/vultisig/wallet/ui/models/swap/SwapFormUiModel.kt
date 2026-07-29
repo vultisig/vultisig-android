@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.screens.settings.TierType
+import com.vultisig.wallet.ui.screens.swap.SwapMode
 import com.vultisig.wallet.ui.utils.UiText
 import kotlinx.datetime.Instant
 
@@ -84,6 +85,14 @@ internal data class SwapFormUiModel(
     // Non-null when the vault is below the Silver tier required for advanced settings — drives the
     // tier-locked upsell sheet shown in place of the advanced sheet (#4858).
     val advancedSettingsGate: VultTierGateUiModel? = null,
+    // Market vs Limit tab selection, owned by the ViewModel so the limit form and its gating can
+    // react to it.
+    val swapMode: SwapMode = SwapMode.Market,
+    // Whether the Limit tab is usable: the remote feature flag is on AND the selected pair is
+    // THORChain-routable. When false the tab shows the coming-soon placeholder.
+    val isLimitTabEnabled: Boolean = false,
+    // Limit-order form state, non-null only while the Limit tab is active with a routable pair.
+    val limitOrder: LimitOrderUiModel? = null,
 )
 
 /**

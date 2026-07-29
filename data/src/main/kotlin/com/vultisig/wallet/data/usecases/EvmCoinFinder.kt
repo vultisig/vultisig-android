@@ -14,7 +14,6 @@ import java.math.BigInteger
 import java.net.SocketTimeoutException
 import javax.inject.Inject
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
 
@@ -27,7 +26,9 @@ import timber.log.Timber
  * `/token/v1.2/{chain}/custom`. Legitimacy is gated by the CoinGecko-provider allowlist, replacing
  * the empty-logo heuristic that was dropping legit small-caps (see #4555). For EVM chains outside
  * 1inch's surface — Blast / Cronos / Hyperliquid / Mantle / Sei / zkSync — discovery falls back to
- * `balanceOf`-iterating the curated [Coins] catalog.
+ * `balanceOf`-iterating the curated [Coins] catalog. Robinhood unions both paths: 1inch `/balance`
+ * indexes the chain, but `/token` has no metadata for its 96 stock tokens, so either path alone
+ * drops holdings.
  */
 interface EvmCoinFinder {
     suspend fun find(chain: Chain, address: String): List<Coin>
@@ -39,14 +40,30 @@ constructor(private val oneInchApi: OneInchApi, private val evmApiFactory: EvmAp
     EvmCoinFinder {
 
     override suspend fun find(chain: Chain, address: String): List<Coin> {
-        if (chain !in ONE_INCH_SUPPORTED_CHAINS) return findFallback(chain, address)
-
-        val heldContracts = fetchHeldContracts(chain, address)
         val discovered =
-            if (heldContracts.isEmpty()) emptyList()
-            else fetchMetadataAndFilter(chain, heldContracts)
-
+            when (chain) {
+                in HYBRID_DISCOVERY_CHAINS -> findHybrid(chain, address)
+                in ONE_INCH_SUPPORTED_CHAINS -> findOneInch(chain, address)
+                else -> findFallback(chain, address)
+            }
         return vultTopUpOnEthereum(chain, address, discovered)
+    }
+
+    private suspend fun findOneInch(chain: Chain, address: String): List<Coin> {
+        val heldContracts = fetchHeldContracts(chain, address)
+        if (heldContracts.isEmpty()) return emptyList()
+        return fetchMetadataAndFilter(chain, heldContracts)
+    }
+
+    private suspend fun findHybrid(chain: Chain, address: String): List<Coin> = coroutineScope {
+        val oneInch = async { findOneInch(chain, address) }
+        val curated = async { findFallback(chain, address) }
+        // Dedupe on [Coin.id] — the Room PK (REPLACE-on-conflict) — not the contract:
+        // two contracts sharing a ticker collapse into one persisted row, so the second
+        // would silently overwrite the first. Curated first, so its hand-verified entry
+        // is the one that survives. Same-contract duplicates already share an id because
+        // the 1inch path resolves known contracts through the curated catalog.
+        (curated.await() + oneInch.await()).distinctBy { it.id.lowercase() }
     }
 
     private suspend fun fetchHeldContracts(chain: Chain, address: String): List<String> =
@@ -92,17 +109,9 @@ constructor(private val oneInchApi: OneInchApi, private val evmApiFactory: EvmAp
         if (curated.isEmpty()) return emptyList()
 
         val evmApi = evmApiFactory.createEvmApi(chain)
-        return coroutineScope {
-            curated
-                .map { coin ->
-                    async {
-                        coin.takeIf {
-                            balanceOrZero(evmApi, address, coin.contractAddress) > BigInteger.ZERO
-                        }
-                    }
-                }
-                .awaitAll()
-                .filterNotNull()
+        val balances = evmApi.getBalances(address, curated.map { it.contractAddress })
+        return curated.filter {
+            (balances[it.contractAddress] ?: BigInteger.ZERO) > BigInteger.ZERO
         }
     }
 
@@ -180,6 +189,12 @@ constructor(private val oneInchApi: OneInchApi, private val evmApiFactory: EvmAp
                 Chain.BscChain,
                 Chain.Avalanche,
             )
+
+        /**
+         * 1inch `/balance` indexes these chains but `/token` metadata is incomplete (Robinhood
+         * stock tokens 404) — discovery unions the 1inch path with the curated-catalog scan.
+         */
+        val HYBRID_DISCOVERY_CHAINS: Set<Chain> = setOf(Chain.Robinhood)
 
         /** Placeholder 1inch uses for the chain's native gas token; already covered separately. */
         private const val NATIVE_COIN_SENTINEL = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"

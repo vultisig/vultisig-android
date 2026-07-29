@@ -19,11 +19,9 @@ internal class QbtcClaimableUtxosServiceImpl
 constructor(private val blockChairApi: BlockChairApi) : QbtcClaimableUtxosService {
 
     override suspend fun fetchClaimableCandidates(btcAddress: String): List<ClaimableUtxo> {
-        val info = blockChairApi.getAddressInfo(Chain.Bitcoin, btcAddress)
-        val currentBlockHeight = info?.currentBlockHeight
-        return info
-            ?.utxos
-            .orEmpty()
+        val info = blockChairApi.getAllUtxos(Chain.Bitcoin, btcAddress)
+        val currentBlockHeight = info.currentBlockHeight
+        return info.utxos
             .filter { it.transactionHash.isNotEmpty() && it.index >= 0 && it.value >= 0 }
             .map { utxo ->
                 val blockId = utxo.blockId.takeIf { it > 0 }?.toLong()

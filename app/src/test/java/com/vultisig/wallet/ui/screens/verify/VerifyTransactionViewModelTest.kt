@@ -16,12 +16,14 @@ import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SecurityScannerException
 import com.vultisig.wallet.data.securityscanner.SecurityScannerFeaturesType
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.SecurityScannerSupport
 import com.vultisig.wallet.data.securityscanner.SecurityScannerTransaction
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
+import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -35,6 +37,7 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -255,6 +258,51 @@ internal class VerifyTransactionViewModelTest {
             vm.dismissScanningWarning()
 
             vm.uiState.value.showScanningWarning.shouldBeFalse()
+        }
+
+    /**
+     * Regression test for #5432: a scan that fails (transport error, or Blockaid answering with a
+     * provider-signaled error status) must land in [TransactionScanStatus.Error] — a distinct,
+     * non-blocking state — and never be treated as a real risk finding that blocks signing.
+     */
+    @Test
+    fun `joinKeySign signs through when the scan itself fails, without a risk warning`() =
+        runTest(testDispatcher) {
+            val coin = mockk<Coin>(relaxed = true)
+            every { coin.chain } returns Chain.Ethereum
+            val tx = mockk<Transaction>(relaxed = true)
+            every { tx.token } returns coin
+            coEvery { transactionRepository.getTransaction(TX_ID) } returns tx
+
+            val support =
+                SecurityScannerSupport(
+                    provider = "test",
+                    feature =
+                        listOf(
+                            SecurityScannerSupport.Feature(
+                                chains = listOf(Chain.Ethereum),
+                                featureType = SecurityScannerFeaturesType.SCAN_TRANSACTION,
+                            )
+                        ),
+                )
+            every { securityScannerService.getSupportedChainsByFeature() } returns listOf(support)
+            coEvery { securityScannerService.isSecurityServiceEnabled() } returns true
+            coEvery {
+                securityScannerService.createSecurityScannerTransaction(any<Transaction>())
+            } returns mockk<SecurityScannerTransaction>(relaxed = true)
+            coEvery { securityScannerService.scanTransaction(any()) } throws
+                SecurityScannerException("SecurityScanner Error: 502 Bad Gateway")
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.checkConsentAddress(true)
+            vm.checkConsentAmount(true)
+            vm.joinKeySign()
+
+            vm.uiState.value.txScanStatus.shouldBeInstanceOf<TransactionScanStatus.Error>()
+            vm.uiState.value.showScanningWarning.shouldBeFalse()
+            coVerify { launchKeysign(KeysignInitType.QR_CODE, TX_ID, any(), any(), VAULT_ID) }
         }
 
     /** Verifies hasFastSign is true when isVaultHasFastSignById returns true. */

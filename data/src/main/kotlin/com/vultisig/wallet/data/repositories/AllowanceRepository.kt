@@ -8,6 +8,10 @@ import javax.inject.Inject
 
 interface AllowanceRepository {
 
+    /**
+     * Returns `null` only when approval doesn't apply (native token / non-EVM chain); a failed RPC
+     * read throws instead, so "not needed" can't be confused with "couldn't check" (#5424).
+     */
     suspend fun getAllowance(
         chain: Chain,
         contractAddress: String,

@@ -199,6 +199,7 @@ fun Vault.getPubKeyByChain(chain: Chain): String {
         Chain.ZkSync,
         Chain.Mantle,
         Chain.Sei,
+        Chain.Robinhood,
         Chain.Hyperliquid -> pubKeyECDSA
 
         // Utxo
