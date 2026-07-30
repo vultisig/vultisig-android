@@ -757,6 +757,24 @@
     <string name="vault_list_edit_vaults_header">Редактировать хранилища</string>
     <string name="token_details_bottom_sheet_price">Цена</string>
     <string name="token_details_bottom_sheet_network">Сеть</string>
+    <!-- Price chart + market data — issue #5428 -->
+    <string name="price_chart_content_description">График цены, изменение %1$s</string>
+    <string name="price_chart_retry_hint">Не удалось загрузить график. Нажмите, чтобы повторить.</string>
+    <string name="token_details_market_stats_title">Рыночная статистика</string>
+    <string name="token_details_price_extremes_title">Экстремумы цены</string>
+    <string name="token_details_token_info_title">Информация о токене</string>
+    <string name="token_details_market_cap">Рыночная капитализация</string>
+    <string name="token_details_market_cap_rank">Рейтинг</string>
+    <string name="token_details_fully_diluted_valuation">Полностью разводненная оценка</string>
+    <string name="token_details_volume_24h">Объём за 24ч</string>
+    <string name="token_details_circulating_supply">Оборотное предложение</string>
+    <string name="token_details_max_supply">Максимальное предложение</string>
+    <string name="token_details_low_24h">Минимум за 24ч</string>
+    <string name="token_details_high_24h">Максимум за 24ч</string>
+    <string name="token_details_all_time_high">Исторический максимум</string>
+    <string name="token_details_all_time_low">Исторический минимум</string>
+    <string name="token_details_contract_address">Адрес контракта</string>
+    <string name="token_details_decimals">Знаков после запятой</string>
     <string name="send_tx_overview_add_to_address_book">Добавить в адресную книгу</string>
     <string name="invite_to_x_banner_title">Vultisig строит вместе с вами.</string>
     <string name="invite_to_x_banner_desc">Подпишитесь на нас в X</string>

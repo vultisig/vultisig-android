@@ -1074,6 +1074,29 @@
     <string name="vault_list_edit_vaults_header">Edit Vaults</string>
     <string name="token_details_bottom_sheet_price">Price</string>
     <string name="token_details_bottom_sheet_network">Network</string>
+    <!-- Price chart + market data — issue #5428 -->
+    <string name="chart_range_1d" translatable="false">1D</string>
+    <string name="chart_range_1w" translatable="false">1W</string>
+    <string name="chart_range_1m" translatable="false">1M</string>
+    <string name="chart_range_1y" translatable="false">1Y</string>
+    <string name="chart_range_all" translatable="false">ALL</string>
+    <string name="price_chart_content_description">Price chart, %1$s change</string>
+    <string name="price_chart_retry_hint">Couldn\'t load chart. Tap to retry.</string>
+    <string name="token_details_market_stats_title">Market Stats</string>
+    <string name="token_details_price_extremes_title">Price Extremes</string>
+    <string name="token_details_token_info_title">Token Info</string>
+    <string name="token_details_market_cap">Market Cap</string>
+    <string name="token_details_market_cap_rank">Rank</string>
+    <string name="token_details_fully_diluted_valuation">Fully Diluted Valuation</string>
+    <string name="token_details_volume_24h">24h Volume</string>
+    <string name="token_details_circulating_supply">Circulating Supply</string>
+    <string name="token_details_max_supply">Max Supply</string>
+    <string name="token_details_low_24h">24h Low</string>
+    <string name="token_details_high_24h">24h High</string>
+    <string name="token_details_all_time_high">All-Time High</string>
+    <string name="token_details_all_time_low">All-Time Low</string>
+    <string name="token_details_contract_address">Contract Address</string>
+    <string name="token_details_decimals">Decimals</string>
     <string name="defi" translatable="false">DeFi</string>
     <string name="vault_ceil_active">Active</string>
     <string name="send_tx_overview_add_to_address_book">Add to Address Book</string>

@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.common.toKeccak256ByteArray
 import com.vultisig.wallet.data.common.toSha256ByteArray
 import com.vultisig.wallet.data.common.toSha512ByteArray
+import com.vultisig.wallet.data.common.toSuiPersonalMessageDigest
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.crypto.TonHelper
@@ -70,12 +71,16 @@ object SigningHelper {
         //  - Ripple (XRPL GemWallet signMessage / ripple-keypairs) signs SHA-512-half — the
         //    first 32 bytes of SHA-512 — of the message bytes. keccak256 here diverges from
         //    the extension initiator's digest and cross-platform co-signing 404s.
+        //  - Sui is EdDSA but is *not* a raw passthrough: the Wallet Standard
+        //    signPersonalMessage/signMessage digest is intent-wrapped and BCS-length-prefixed,
+        //    so it must be carved out ahead of the EdDSA branch below.
         //  - Everything else (EVM, Tron) signs the keccak256.
         val bytes =
             when {
                 chain?.standard == TokenStandard.COSMOS ||
                     chain?.standard == TokenStandard.THORCHAIN -> processedBytes.toSha256ByteArray()
                 chain == Chain.Ripple -> processedBytes.toSha512ByteArray().copyOf(32)
+                chain == Chain.Sui -> processedBytes.toSuiPersonalMessageDigest()
                 chain?.TssKeysignType == TssKeyType.EDDSA -> processedBytes
                 else -> processedBytes.toKeccak256ByteArray()
             }

@@ -124,6 +124,68 @@ class SigningHelperCustomMessageTest {
     }
 
     @Test
+    fun `Sui digest is byte-identical to the vultisig-windows extension contract`() {
+        // Pinned reference vectors produced by the canonical initiator implementation
+        // (@vultisig/core-chain `getSuiPersonalMessageDigest`, which getCustomMessageHex.ts's
+        // `sui` branch calls): blake2b_256([0x03,0x00,0x00] || uleb128(len) || message).
+        val utf8Payload =
+            CustomMessagePayload(
+                method = "sui_signPersonalMessage",
+                message = "Hello Vultisig",
+                chain = "Sui",
+            )
+        SigningHelper.getKeysignMessages(utf8Payload) shouldBe
+            listOf("4a140032aaf9e5699dc678b2caf2687349a2a6ac1103cdba6a2d3f462ca21182")
+
+        // "0x56756c7469736967" decodes to the ASCII bytes of "Vultisig" before wrapping.
+        val hexPayload =
+            CustomMessagePayload(
+                method = "sui_signPersonalMessage",
+                message = "0x56756c7469736967",
+                chain = "Sui",
+            )
+        SigningHelper.getKeysignMessages(hexPayload) shouldBe
+            listOf("245f3ecbbcca443e43d26989bab5ba55cf03c6db0f9b28a4e12d072b894e83d6")
+    }
+
+    @Test
+    fun `Sui message longer than 127 bytes uses a multi-byte uleb128 length prefix`() {
+        // 200 bytes forces the BCS length prefix to spill to two bytes (0xC8 0x01). A single-byte
+        // encoding would silently truncate the length and diverge from the initiator on exactly
+        // the messages most likely to be real — dApp login challenges are routinely > 127 bytes.
+        val payload =
+            CustomMessagePayload(
+                method = "sui_signPersonalMessage",
+                message = "0x" + "41".repeat(200),
+                chain = "Sui",
+            )
+
+        SigningHelper.getKeysignMessages(payload) shouldBe
+            listOf("a90b2a8fe4149193029c26b2e2000730da6e64f6dee07ccf939142d02ef7ceb6")
+    }
+
+    @Test
+    fun `Sui does not fall through to the raw EdDSA passthrough`() {
+        // Sui's TssKeysignType is EdDSA, so without an explicit carve-out it would sign the raw
+        // message bytes and never converge with the Windows initiator (#5442).
+        val message = "Hello Vultisig"
+        val payload =
+            CustomMessagePayload(
+                method = "sui_signPersonalMessage",
+                message = message,
+                chain = "Sui",
+            )
+
+        val messages = SigningHelper.getKeysignMessages(payload)
+
+        messages shouldNotBe listOf(message.toByteArray().toHexString())
+        messages shouldNotBe
+            SigningHelper.getKeysignMessages(
+                CustomMessagePayload(method = "sign", message = message, chain = "Solana")
+            )
+    }
+
+    @Test
     fun `ECDSA and EdDSA produce different keysign messages for the same hex input`() {
         val hexMessage = "0xabcdef0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d"
 

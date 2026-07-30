@@ -433,6 +433,33 @@ fun Chain.swapAssetName(): String {
     }
 }
 
+/**
+ * CoinGecko's asset-platform id for the chains its contract-lookup endpoints
+ * (`/coins/{platform}/contract/{address}/...`) actually index, or null when unmapped. This is the
+ * single source of truth for both [com.vultisig.wallet.data.api.CoinGeckoApiImpl]'s contract-lookup
+ * URLs and [hasMarketDataSource]'s contract-address gate, so a chain can never be treated as
+ * chartable-by-contract-address without CoinGecko actually supporting the lookup. Sei and
+ * Hyperliquid are deliberately absent: their CoinGecko asset-platform ids are unverified, so they
+ * stay ungated rather than guessed.
+ */
+fun Chain.coinGeckoAssetPlatformId(): String? =
+    when (this) {
+        Chain.Ethereum -> "ethereum"
+        Chain.Avalanche -> "avalanche"
+        Chain.Base -> "base"
+        Chain.Blast -> "blast"
+        Chain.Arbitrum -> "arbitrum-one"
+        Chain.Polygon -> "polygon-pos"
+        Chain.Optimism -> "optimistic-ethereum"
+        Chain.BscChain -> "binance-smart-chain"
+        Chain.ZkSync -> "zksync"
+        Chain.Solana -> "solana"
+        Chain.Robinhood -> "robinhood"
+        Chain.Mantle -> "mantle"
+        Chain.CronosChain -> "cronos"
+        else -> null
+    }
+
 fun Chain.ticker(): String {
     return when (this) {
         Chain.ThorChain -> "RUNE"

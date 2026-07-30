@@ -56,6 +56,19 @@ data class Coin(
     }
 }
 
+/**
+ * True when this coin has a CoinGecko price-provider id, or a contract address on a chain
+ * [coinGeckoAssetPlatformId] actually supports for contract lookups. Pool-priced assets
+ * (THORChain/Maya/Solana pool tokens) have neither, and contract addresses on chains CoinGecko
+ * doesn't index by platform (e.g. Kujira's `factory/`/`ibc/` denoms, or Sei/Hyperliquid) would
+ * otherwise pass a bare non-empty check yet always fail the actual fetch — so this gates the token
+ * detail screen's price chart and market stats sections on a source that can genuinely resolve.
+ */
+val Coin.hasMarketDataSource: Boolean
+    get() =
+        priceProviderID.isNotEmpty() ||
+            (contractAddress.isNotEmpty() && chain.coinGeckoAssetPlatformId() != null)
+
 /** True if the coin represents a liquidity-pool position rather than a plain token. */
 val Coin.isLpToken: Boolean
     get() =
