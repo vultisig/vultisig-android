@@ -24,6 +24,7 @@ import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
+import wallet.core.jni.proto.Common.SigningError
 
 /** Why a cancel could not be prepared. Each case maps to its own user-facing message. */
 internal enum class LimitOrderCancelFailure {
@@ -268,9 +269,7 @@ constructor(
      *
      * On a UTXO chain [gasFee] is a sat/vByte rate, so the total has to come from a transaction
      * plan built over the same inputs, amount and OP_RETURN the cancel will carry. Everywhere else
-     * the fee service already reports a total. A plan that cannot be built falls back to the rate,
-     * which under-states the fee — deliberately, because refusing a cancel on a failed local
-     * estimate is worse than letting the node have the last word.
+     * the fee service already reports a total.
      */
     private suspend fun totalFee(
         vaultId: String,
@@ -283,9 +282,9 @@ constructor(
         memo: String,
     ): BigInteger {
         if (chain.standard != TokenStandard.UTXO || destination == null) return gasFee.value
-        return try {
-            depositGasFeeHelper
-                .getBitcoinTransactionPlan(
+        val plan =
+            try {
+                depositGasFeeHelper.getBitcoinTransactionPlan(
                     vaultId = vaultId,
                     selectedToken = signingCoin,
                     dstAddress = destination.address,
@@ -293,14 +292,29 @@ constructor(
                     specific = specific,
                     memo = memo,
                 )
-                .fee
-                .toBigInteger()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Timber.w(e, "Could not plan the cancel transaction on %s; pricing off the rate", chain)
-            gasFee.value
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // A planner that BLEW UP told us nothing, so fall back to the rate and let the node
+                // have the last word — refusing a cancel on a failed local estimate is worse than
+                // under-stating the fee.
+                Timber.w(e, "Could not plan the cancel on %s; pricing off the rate", chain)
+                return gasFee.value
+            }
+
+        // A plan that came back carrying an error is NOT a failed estimate — it is the planner's
+        // answer, and the answer that matters here (`Error_not_enough_utxos`) reports a fee of
+        // ZERO.
+        // Reading that fee would make any balance look sufficient, so an unaffordable cancel would
+        // sail through the check below and only fail after the whole signing ceremony, at
+        // broadcast.
+        if (plan.error != SigningError.OK || plan.utxosCount == 0) {
+            throw LimitOrderCancelException(
+                LimitOrderCancelFailure.InsufficientBalance,
+                "cannot select inputs for the cancel on $chain: ${plan.error}",
+            )
         }
+        return plan.fee.toBigInteger()
     }
 
     private data class InboundVault(val address: String, val dustThreshold: String?)
