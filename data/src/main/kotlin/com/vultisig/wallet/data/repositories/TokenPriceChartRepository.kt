@@ -17,6 +17,8 @@ import com.vultisig.wallet.data.utils.downsampleChartPoints
 import java.time.Instant
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 interface TokenPriceChartRepository {
@@ -40,6 +42,13 @@ interface TokenPriceChartRepository {
 private data class ChartCacheKey(val coinId: String, val range: ChartRange, val currency: String)
 
 private data class StatsCacheKey(val coinId: String, val currency: String)
+
+/**
+ * Signals that CoinGecko's markets response for a coin was genuinely empty (e.g. a delisted coin) —
+ * a dedicated type rather than a generic [NoSuchElementException], so this catch can never
+ * accidentally swallow an unrelated bug that happens to throw the same standard-library exception.
+ */
+private class NoMarketStatsException(coinId: String) : Exception("No market stats for $coinId")
 
 internal class TokenPriceChartRepositoryImpl
 @Inject
@@ -88,12 +97,17 @@ constructor(private val coinGeckoApi: CoinGeckoApi) : TokenPriceChartRepository 
                     range.days,
                 )
             }
-        val points =
-            downsampleChartPoints(
-                decodeMarketChartPoints(response.prices),
-                DEFAULT_MAX_CHART_POINTS,
-            )
-        return MarketChart(points = points, changePercent = changePercent(points))
+        // CoinGecko can return thousands of raw points (e.g. the ALL range); decoding each into a
+        // BigDecimal and sorting the full series is real CPU work that must not run on the
+        // caller's dispatcher (viewModelScope defaults to Dispatchers.Main.immediate).
+        return withContext(Dispatchers.Default) {
+            val points =
+                downsampleChartPoints(
+                    decodeMarketChartPoints(response.prices),
+                    DEFAULT_MAX_CHART_POINTS,
+                )
+            MarketChart(points = points, changePercent = changePercent(points))
+        }
     }
 
     override suspend fun getStats(coin: Coin, currency: AppCurrency): CoinMarketStats? {
@@ -106,7 +120,7 @@ constructor(private val coinGeckoApi: CoinGeckoApi) : TokenPriceChartRepository 
         } catch (e: NetworkException) {
             Timber.e(e, "Failed to fetch market stats for %s", coin.id)
             statsCache.peekStale(key)
-        } catch (e: NoSuchElementException) {
+        } catch (_: NoMarketStatsException) {
             // CoinGecko genuinely has no markets entry for this coin (e.g. delisted) — not a
             // failure to fail open from, just no stats to show.
             null
@@ -117,8 +131,7 @@ constructor(private val coinGeckoApi: CoinGeckoApi) : TokenPriceChartRepository 
         val json =
             coinGeckoApi
                 .getMarketStats(coin.priceProviderID, currency.ticker.lowercase())
-                .firstOrNull()
-                ?: throw NoSuchElementException("No market stats for ${coin.priceProviderID}")
+                .firstOrNull() ?: throw NoMarketStatsException(coin.priceProviderID)
         return json.toDomain()
     }
 
