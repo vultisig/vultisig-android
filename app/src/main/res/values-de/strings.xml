@@ -758,6 +758,24 @@
     <string name="vault_list_edit_vaults_header">Vaults bearbeiten</string>
     <string name="token_details_bottom_sheet_price">Preis</string>
     <string name="token_details_bottom_sheet_network">Netzwerk</string>
+    <!-- Price chart + market data — issue #5428 -->
+    <string name="price_chart_content_description">Preisdiagramm, Veränderung %1$s</string>
+    <string name="price_chart_retry_hint">Diagramm konnte nicht geladen werden. Zum erneuten Versuch tippen.</string>
+    <string name="token_details_market_stats_title">Marktdaten</string>
+    <string name="token_details_price_extremes_title">Preisextreme</string>
+    <string name="token_details_token_info_title">Token-Info</string>
+    <string name="token_details_market_cap">Marktkapitalisierung</string>
+    <string name="token_details_market_cap_rank">Rang</string>
+    <string name="token_details_fully_diluted_valuation">Vollständig verwässerte Bewertung</string>
+    <string name="token_details_volume_24h">24-Std.-Volumen</string>
+    <string name="token_details_circulating_supply">Umlaufversorgung</string>
+    <string name="token_details_max_supply">Maximalversorgung</string>
+    <string name="token_details_low_24h">24-Std.-Tief</string>
+    <string name="token_details_high_24h">24-Std.-Hoch</string>
+    <string name="token_details_all_time_high">Allzeithoch</string>
+    <string name="token_details_all_time_low">Allzeittief</string>
+    <string name="token_details_contract_address">Vertragsadresse</string>
+    <string name="token_details_decimals">Dezimalstellen</string>
     <string name="send_tx_overview_add_to_address_book">Zum Adressbuch hinzufügen</string>
     <string name="invite_to_x_banner_title">Vultisig entwickelt mit Ihnen.</string>
     <string name="invite_to_x_banner_desc">Folgen Sie uns auf X</string>

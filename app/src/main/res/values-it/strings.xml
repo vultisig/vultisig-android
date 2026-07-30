@@ -756,6 +756,24 @@
     <string name="vault_list_edit_vaults_header">Modifica Vault</string>
     <string name="token_details_bottom_sheet_price">Prezzo</string>
     <string name="token_details_bottom_sheet_network">Rete</string>
+    <!-- Price chart + market data — issue #5428 -->
+    <string name="price_chart_content_description">Grafico dei prezzi, variazione %1$s</string>
+    <string name="price_chart_retry_hint">Impossibile caricare il grafico. Tocca per riprovare.</string>
+    <string name="token_details_market_stats_title">Statistiche di mercato</string>
+    <string name="token_details_price_extremes_title">Estremi di prezzo</string>
+    <string name="token_details_token_info_title">Informazioni sul token</string>
+    <string name="token_details_market_cap">Capitalizzazione di mercato</string>
+    <string name="token_details_market_cap_rank">Posizione</string>
+    <string name="token_details_fully_diluted_valuation">Valutazione completamente diluita</string>
+    <string name="token_details_volume_24h">Volume nelle 24 ore</string>
+    <string name="token_details_circulating_supply">Offerta in circolazione</string>
+    <string name="token_details_max_supply">Offerta massima</string>
+    <string name="token_details_low_24h">Minimo nelle 24 ore</string>
+    <string name="token_details_high_24h">Massimo nelle 24 ore</string>
+    <string name="token_details_all_time_high">Massimo storico</string>
+    <string name="token_details_all_time_low">Minimo storico</string>
+    <string name="token_details_contract_address">Indirizzo del contratto</string>
+    <string name="token_details_decimals">Decimali</string>
     <string name="send_tx_overview_add_to_address_book">Aggiungi alla rubrica</string>
     <string name="invite_to_x_banner_title">Vultisig sta costruendo con te.</string>
     <string name="invite_to_x_banner_desc">Seguici su X</string>

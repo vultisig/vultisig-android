@@ -1,14 +1,13 @@
 package com.vultisig.wallet.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -20,20 +19,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.ChartRange
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.bottomsheets.DottyBottomSheet
-import com.vultisig.wallet.ui.components.v2.buttons.DesignType
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.chart.MarketStatsSection
+import com.vultisig.wallet.ui.components.chart.PriceChartSection
+import com.vultisig.wallet.ui.components.chart.PriceExtremesSection
+import com.vultisig.wallet.ui.components.chart.TokenInfoSection
 import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenMetaRow
+import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
+import com.vultisig.wallet.ui.models.ChartUiModel
+import com.vultisig.wallet.ui.models.MarketStatsUiModel
+import com.vultisig.wallet.ui.models.PriceExtremesUiModel
 import com.vultisig.wallet.ui.models.TokenDetailUiModel
 import com.vultisig.wallet.ui.models.TokenDetailViewModel
+import com.vultisig.wallet.ui.models.TokenInfoUiModel
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
@@ -53,9 +56,10 @@ internal fun TokenDetailScreen(
         onSend = viewModel::send,
         onSwap = viewModel::swap,
         onDeposit = viewModel::deposit,
-        onDismiss = viewModel::back,
+        onBack = viewModel::back,
         onBuy = viewModel::buy,
         onExplorer = { uiModel.explorerUrl.takeIf { it.isNotEmpty() }?.let(uriHandler::openUri) },
+        onChartRangeSelected = viewModel::onChartRangeSelected,
     )
 }
 
@@ -65,44 +69,41 @@ internal fun TokenDetailScreen(
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
     onDeposit: () -> Unit = {},
-    onDismiss: () -> Unit = {},
+    onBack: () -> Unit = {},
     onBuy: () -> Unit = {},
     onExplorer: () -> Unit = {},
+    onChartRangeSelected: (ChartRange) -> Unit = {},
 ) {
-    DottyBottomSheet(onDismiss = onDismiss) {
+    V3Scaffold(
+        title = uiModel.token.name,
+        onBackClick = onBack,
+        rightIcon = R.drawable.explor,
+        onRightIconClick = onExplorer,
+    ) {
         TokenDetailsContent(
             uiModel = uiModel,
             onSend = onSend,
             onSwap = onSwap,
             onDeposit = onDeposit,
             onBuy = onBuy,
-            onExplorer = onExplorer,
+            onChartRangeSelected = onChartRangeSelected,
         )
     }
 }
 
 @Composable
-private fun TokenDetailsContent(
+internal fun TokenDetailsContent(
     uiModel: TokenDetailUiModel,
     onSend: () -> Unit,
     onSwap: () -> Unit,
     onDeposit: () -> Unit,
     onBuy: () -> Unit,
-    onExplorer: () -> Unit,
+    onChartRangeSelected: (ChartRange) -> Unit,
 ) {
     Column(
-        modifier = Modifier.padding(all = 24.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        VsCircleButton(
-            onClick = onExplorer,
-            size = VsCircleButtonSize.Small,
-            icon = R.drawable.explor,
-            type = VsCircleButtonType.Secondary,
-            designType = DesignType.Shined,
-            modifier = Modifier.align(Alignment.End).offset(x = 8.dp, y = (-8).dp),
-        )
-
         Row(verticalAlignment = Alignment.CenterVertically) {
             ChainLogo(name = uiModel.token.name, logo = uiModel.token.tokenLogo)
             UiSpacer(size = 8.dp)
@@ -137,12 +138,9 @@ private fun TokenDetailsContent(
             horizontalArrangement =
                 Arrangement.spacedBy(space = 20.dp, alignment = Alignment.CenterHorizontally),
             // Every flag below starts false and only resolves once the account loads, so without a
-            // reserved height this row is zero-height on the first frame and the sheet re-anchors
-            // the moment the buttons appear.
-            modifier =
-                Modifier.fillMaxWidth()
-                    .heightIn(min = assetActionButtonHeight)
-                    .padding(horizontal = 24.dp),
+            // reserved height this row is zero-height on the first frame and the content jumps
+            // once the buttons appear.
+            modifier = Modifier.fillMaxWidth().heightIn(min = assetActionButtonHeight),
         ) {
             if (uiModel.canSwap) {
                 AssetActionButton(action = AssetAction.SWAP, isSelected = true, onClick = onSwap)
@@ -169,55 +167,50 @@ private fun TokenDetailsContent(
 
         TopShineContainer(backgroundColor = Theme.v2.colors.backgrounds.surface1) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                TokenMeta(
+                TokenMetaRow(
                     key = stringResource(R.string.token_details_bottom_sheet_price),
                     value = uiModel.token.price,
                 )
-                UiHorizontalDivider(modifier = Modifier.width(320.dp))
-                TokenMeta(
+                UiHorizontalDivider(modifier = Modifier.fillMaxWidth())
+                TokenMetaRow(
                     key = stringResource(R.string.token_details_bottom_sheet_network),
                     value = uiModel.token.network,
                 )
             }
         }
-    }
 
-    UiSpacer(size = 12.dp)
-}
-
-@Composable
-private fun TokenMeta(key: String, value: String?, isVisible: Boolean = true) {
-    Row(
-        modifier =
-            Modifier.fillMaxWidth()
-                .background(Theme.v2.colors.backgrounds.primary)
-                .padding(all = 16.dp)
-    ) {
-        V2Container {
-            Text(
-                text = key,
-                color = Theme.v2.colors.text.primary,
-                style = Theme.brockmann.body.s.medium,
-                modifier = Modifier.padding(all = 4.dp),
+        uiModel.chart?.let { chart ->
+            UiSpacer(size = 24.dp)
+            PriceChartSection(
+                chart = chart,
+                onRangeSelected = onChartRangeSelected,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
-        UiSpacer(weight = 1f)
-        V2Container(type = ContainerType.TERTIARY) {
-            LoadableValue(
-                value = value,
-                color = Theme.v2.colors.text.primary,
-                style = Theme.satoshi.price.bodyS,
-                isVisible = isVisible,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            )
+
+        if (uiModel.statsLoading || uiModel.marketStats?.hasAnyValue() == true) {
+            UiSpacer(size = 24.dp)
+            MarketStatsSection(stats = uiModel.marketStats, isLoading = uiModel.statsLoading)
         }
+
+        if (uiModel.statsLoading || uiModel.priceExtremes?.hasAnyValue() == true) {
+            UiSpacer(size = 24.dp)
+            PriceExtremesSection(extremes = uiModel.priceExtremes, isLoading = uiModel.statsLoading)
+        }
+
+        uiModel.tokenInfo?.let { info ->
+            UiSpacer(size = 24.dp)
+            TokenInfoSection(info = info)
+        }
+
+        UiSpacer(size = 12.dp)
     }
 }
 
 @Preview
 @Composable
 private fun TokenDetailsScreenPreview() {
-    TokenDetailsContent(
+    TokenDetailScreen(
         uiModel =
             TokenDetailUiModel(
                 token =
@@ -232,11 +225,17 @@ private fun TokenDetailsScreenPreview() {
                     ),
                 canSwap = true,
                 canDeposit = true,
+                chart = ChartUiModel(),
+                marketStats = MarketStatsUiModel(marketCap = "$1.2B", marketCapRank = "#42"),
+                priceExtremes = PriceExtremesUiModel(low24h = "$0.98", high24h = "$1.02"),
+                tokenInfo = TokenInfoUiModel(decimals = "6"),
             ),
         onSend = {},
         onSwap = {},
         onDeposit = {},
+        onBack = {},
         onBuy = {},
         onExplorer = {},
+        onChartRangeSelected = {},
     )
 }

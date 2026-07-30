@@ -759,6 +759,24 @@
     <string name="vault_list_edit_vaults_header">Uredi trezore</string>
     <string name="token_details_bottom_sheet_price">Cijena</string>
     <string name="token_details_bottom_sheet_network">Mreža</string>
+    <!-- Price chart + market data — issue #5428 -->
+    <string name="price_chart_content_description">Grafikon cijena, promjena %1$s</string>
+    <string name="price_chart_retry_hint">Nije moguće učitati grafikon. Dodirni za ponovni pokušaj.</string>
+    <string name="token_details_market_stats_title">Tržišna statistika</string>
+    <string name="token_details_price_extremes_title">Ekstremi cijene</string>
+    <string name="token_details_token_info_title">Informacije o tokenu</string>
+    <string name="token_details_market_cap">Tržišna kapitalizacija</string>
+    <string name="token_details_market_cap_rank">Rang</string>
+    <string name="token_details_fully_diluted_valuation">Potpuno razrijeđena vrijednost</string>
+    <string name="token_details_volume_24h">24-satni volumen</string>
+    <string name="token_details_circulating_supply">Optjecajna ponuda</string>
+    <string name="token_details_max_supply">Maksimalna ponuda</string>
+    <string name="token_details_low_24h">24-satni minimum</string>
+    <string name="token_details_high_24h">24-satni maksimum</string>
+    <string name="token_details_all_time_high">Najviša cijena ikad</string>
+    <string name="token_details_all_time_low">Najniža cijena ikad</string>
+    <string name="token_details_contract_address">Adresa ugovora</string>
+    <string name="token_details_decimals">Decimale</string>
     <string name="send_tx_overview_add_to_address_book">Dodaj u adresar</string>
     <string name="invite_to_x_banner_title">Vultisig gradi s vama.</string>
     <string name="invite_to_x_banner_desc">Pratite nas na X</string>
