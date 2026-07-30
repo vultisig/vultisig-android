@@ -15,10 +15,18 @@ import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.getProviderLogo
+import com.vultisig.wallet.data.repositories.DepositTransactionRepository
+import com.vultisig.wallet.data.repositories.PendingLimitOrderRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryType
+import com.vultisig.wallet.data.usecases.RefreshLimitOrdersUseCase
 import com.vultisig.wallet.data.usecases.RefreshPendingTransactionsUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.limitorder.BuildLimitOrderCancelTransactionUseCase
+import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelException
+import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelFailure
+import com.vultisig.wallet.ui.models.limitorder.LimitOrderHistoryUiModel
+import com.vultisig.wallet.ui.models.limitorder.LimitOrderToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -39,6 +47,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -48,6 +57,14 @@ enum class TransactionHistoryTab {
     OVERVIEW,
     SWAP,
     SEND,
+
+    /**
+     * THORChain limit orders. Its own tab rather than rows in [SWAP] because a resting order is not
+     * a settled transaction: it has a live status, a countdown, and — while it rests — an action.
+     * The inbound deposit that placed it still appears under [SWAP] and [OVERVIEW] as the on-chain
+     * transaction it is.
+     */
+    LIMIT,
 }
 
 data class TransactionHistoryGroupUiModel(
@@ -144,6 +161,9 @@ data class TransactionHistoryUiState(
     val selectedAssetIds: Set<String> = emptySet(),
     val selectedAssets: List<TransactionAssetUiModel> = emptyList(),
     val chainName: String? = null,
+    val limitOrders: List<LimitOrderHistoryUiModel> = emptyList(),
+    /** Why the last cancel attempt could not even be prepared. Cleared on dismissal. */
+    val cancelError: UiText? = null,
 )
 
 @HiltViewModel
@@ -153,6 +173,11 @@ constructor(
     savedStateHandle: SavedStateHandle,
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val refreshPendingTransactions: RefreshPendingTransactionsUseCase,
+    private val pendingLimitOrderRepository: PendingLimitOrderRepository,
+    private val refreshLimitOrders: RefreshLimitOrdersUseCase,
+    private val mapLimitOrderToUiModel: LimitOrderToUiModelMapper,
+    private val buildLimitOrderCancelTransaction: BuildLimitOrderCancelTransactionUseCase,
+    private val depositTransactionRepository: DepositTransactionRepository,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
@@ -168,6 +193,7 @@ constructor(
     init {
         observeTransactions()
         observeAssetSearchItems()
+        observeLimitOrders()
         refreshOnEnter()
     }
 
@@ -237,6 +263,7 @@ constructor(
             _uiState.update { it.copy(isRefreshing = true) }
             try {
                 refreshPendingTransactions(vaultId, chainId)
+                refreshLimitOrders(vaultId)
                 delay(100.milliseconds) // prevent refresh ui freezing
             } finally {
                 _uiState.update { it.copy(isRefreshing = false) }
@@ -246,7 +273,74 @@ constructor(
 
     private fun refreshOnEnter() {
         viewModelScope.safeLaunch { refreshPendingTransactions(vaultId, chainId) }
+        // Separate from the pending-transaction refresh: a queue poll that fails must not take the
+        // rest of the history down with it, and vice versa.
+        viewModelScope.safeLaunch(onError = { t -> Timber.w(t, "Limit-order refresh failed") }) {
+            refreshLimitOrders(vaultId)
+        }
     }
+
+    /**
+     * Limit orders come from their own table rather than the transaction-history rows, because a
+     * resting order is not a settled transaction: THORChain's queue is the only thing that knows
+     * whether it is still live, and the inbound deposit that placed it confirms within minutes
+     * regardless.
+     *
+     * Not filtered by [chainId]: an order is a claim about a PAIR, and hiding one because the user
+     * opened history from the destination chain would hide exactly the order they came looking for.
+     */
+    private fun observeLimitOrders() {
+        viewModelScope.launch {
+            pendingLimitOrderRepository.observeOrders(vaultId).collect { orders ->
+                val uiModels = mapLimitOrderToUiModel.map(orders, System.currentTimeMillis())
+                _uiState.update { it.copy(limitOrders = uiModels) }
+            }
+        }
+    }
+
+    /**
+     * Prepare the cancel for [orderId] and hand it to the ordinary deposit verify → keysign flow.
+     *
+     * Eligibility is re-checked inside the builder against the stored record, not against the
+     * tapped card: the list snapshot can be minutes old, and in that window the order can fill,
+     * expire, or already have a cancel against it. A cancel signed for a closed order spends a fee
+     * (and on an L1 route donates dust) for a memo that can no longer match anything.
+     */
+    fun cancelLimitOrder(orderId: String) {
+        viewModelScope.safeLaunch(
+            onError = { t ->
+                Timber.w(t, "Could not prepare a limit-order cancel")
+                _uiState.update { it.copy(cancelError = t.toCancelErrorText()) }
+            }
+        ) {
+            val order =
+                pendingLimitOrderRepository.getOrder(orderId)
+                    ?: error("limit order $orderId is no longer stored")
+            val transaction = buildLimitOrderCancelTransaction.build(vaultId, order)
+            depositTransactionRepository.addTransaction(transaction)
+            navigator.route(Route.VerifyDeposit(vaultId = vaultId, transactionId = transaction.id))
+        }
+    }
+
+    fun dismissCancelError() {
+        _uiState.update { it.copy(cancelError = null) }
+    }
+
+    private fun Throwable.toCancelErrorText(): UiText =
+        UiText.StringResource(
+            when ((this as? LimitOrderCancelException)?.failure) {
+                LimitOrderCancelFailure.MissingSigningCoin ->
+                    R.string.limit_order_cancel_error_missing_coin
+                LimitOrderCancelFailure.NoInboundAddress ->
+                    R.string.limit_order_cancel_error_no_inbound
+                LimitOrderCancelFailure.DustUnavailable ->
+                    R.string.limit_order_cancel_error_dust_unavailable
+                LimitOrderCancelFailure.InsufficientBalance ->
+                    R.string.limit_order_cancel_error_insufficient_balance
+                LimitOrderCancelFailure.NotCancellable,
+                null -> R.string.limit_order_cancel_error_generic
+            }
+        )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeTransactions() {
@@ -255,11 +349,16 @@ constructor(
                 .map { it.selectedTab }
                 .distinctUntilChanged()
                 .flatMapLatest { tab ->
-                    transactionHistoryRepository.observeTransactions(
-                        vaultId = vaultId,
-                        type = tab.toRepositoryType(),
-                        chain = chainId,
-                    )
+                    // The limit tab is fed by its own table, not by transaction-history rows, so
+                    // this query stands down rather than emitting the previous tab's transactions
+                    // underneath it.
+                    tab.toRepositoryType()?.let { type ->
+                        transactionHistoryRepository.observeTransactions(
+                            vaultId = vaultId,
+                            type = type,
+                            chain = chainId,
+                        )
+                    } ?: flowOf(emptyList())
                 }
                 .map { entities ->
                     val now = System.currentTimeMillis()
@@ -345,11 +444,13 @@ constructor(
         }
     }
 
-    private fun TransactionHistoryTab.toRepositoryType() =
+    /** Null for the tab that has no transaction-history rows behind it. */
+    private fun TransactionHistoryTab.toRepositoryType(): TransactionHistoryType? =
         when (this) {
             TransactionHistoryTab.OVERVIEW -> TransactionHistoryType.OVERVIEW
             TransactionHistoryTab.SWAP -> TransactionHistoryType.SWAPS
             TransactionHistoryTab.SEND -> TransactionHistoryType.SEND
+            TransactionHistoryTab.LIMIT -> null
         }
 
     private fun TransactionHistoryEntity.toUiModel(): TransactionHistoryItemUiModel? {

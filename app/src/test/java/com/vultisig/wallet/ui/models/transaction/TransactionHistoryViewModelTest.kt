@@ -4,13 +4,19 @@ package com.vultisig.wallet.ui.models.transaction
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.repositories.DepositTransactionRepository
+import com.vultisig.wallet.data.repositories.PendingLimitOrderRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
+import com.vultisig.wallet.data.usecases.RefreshLimitOrdersUseCase
 import com.vultisig.wallet.data.usecases.RefreshPendingTransactionsUseCase
 import com.vultisig.wallet.ui.models.TransactionAssetUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryTab
 import com.vultisig.wallet.ui.models.TransactionHistoryViewModel
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel
+import com.vultisig.wallet.ui.models.limitorder.BuildLimitOrderCancelTransactionUseCase
+import com.vultisig.wallet.ui.models.limitorder.LimitOrderToUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapperImpl
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -59,6 +65,11 @@ internal class TransactionHistoryViewModelTest {
 
     private lateinit var transactionHistoryRepository: TransactionHistoryRepository
     private lateinit var refreshPendingTransactions: RefreshPendingTransactionsUseCase
+    private lateinit var pendingLimitOrderRepository: PendingLimitOrderRepository
+    private lateinit var refreshLimitOrders: RefreshLimitOrdersUseCase
+    private lateinit var mapLimitOrderToUiModel: LimitOrderToUiModelMapper
+    private lateinit var buildLimitOrderCancelTransaction: BuildLimitOrderCancelTransactionUseCase
+    private lateinit var depositTransactionRepository: DepositTransactionRepository
     private lateinit var navigator: Navigator<Destination>
 
     /** Sets up mocks and test dispatcher before each test. */
@@ -70,6 +81,12 @@ internal class TransactionHistoryViewModelTest {
             Route.TransactionHistory(vaultId = VAULT_ID)
         transactionHistoryRepository = mockk(relaxed = true)
         refreshPendingTransactions = mockk(relaxed = true)
+        pendingLimitOrderRepository = mockk(relaxed = true)
+        every { pendingLimitOrderRepository.observeOrders(any()) } returns flowOf(emptyList())
+        refreshLimitOrders = mockk(relaxed = true)
+        mapLimitOrderToUiModel = LimitOrderToUiModelMapper(TokenValueToDecimalUiStringMapperImpl())
+        buildLimitOrderCancelTransaction = mockk(relaxed = true)
+        depositTransactionRepository = mockk(relaxed = true)
         navigator = mockk(relaxed = true)
     }
 
@@ -86,6 +103,11 @@ internal class TransactionHistoryViewModelTest {
             savedStateHandle = SavedStateHandle(),
             transactionHistoryRepository = transactionHistoryRepository,
             refreshPendingTransactions = refreshPendingTransactions,
+            pendingLimitOrderRepository = pendingLimitOrderRepository,
+            refreshLimitOrders = refreshLimitOrders,
+            mapLimitOrderToUiModel = mapLimitOrderToUiModel,
+            buildLimitOrderCancelTransaction = buildLimitOrderCancelTransaction,
+            depositTransactionRepository = depositTransactionRepository,
             navigator = navigator,
         )
 

@@ -1215,6 +1215,37 @@
     <string name="transaction_history_tab_overview">Resumen</string>
     <string name="transaction_history_tab_send">Enviar</string>
     <string name="transaction_history_tab_swap">Intercambiar</string>
+    <string name="transaction_history_tab_limit">Órdenes límite</string>
+    <!-- Limit Orders (THORChain limit swaps) -->
+    <string name="limit_order_card_title">Orden límite</string>
+    <string name="limit_order_target_price_label">Precio objetivo</string>
+    <string name="limit_order_target_price_value">1 %1$s = %2$s %3$s</string>
+    <string name="limit_order_expiry_label">Vence</string>
+    <string name="limit_order_expires_in_hours">en %1$d h %2$d min</string>
+    <string name="limit_order_expires_in_minutes">en %1$d min</string>
+    <string name="limit_order_expiry_imminent">en cualquier momento</string>
+    <string name="limit_order_filled_label">Ejecutada</string>
+    <string name="limit_order_filled_value">%1$d%%</string>
+    <string name="limit_order_status_resting">Abierta</string>
+    <string name="limit_order_status_cancelling">Cancelando…</string>
+    <string name="limit_order_status_filled">Ejecutada</string>
+    <string name="limit_order_status_expired">Vencida</string>
+    <string name="limit_order_status_cancelled">Cancelada</string>
+    <string name="limit_order_status_refunded">Reembolsada</string>
+    <string name="limit_order_cancel_button">Cancelar orden</string>
+    <string name="limit_order_cancel_duplicate_warning">Otra orden abierta tiene el mismo par y precio. THORChain cancela la primera coincidencia, así que podría cerrarse esa en lugar de esta.</string>
+    <string name="limit_order_cancel_blocked_closed">Esta orden ya está cerrada.</string>
+    <string name="limit_order_cancel_blocked_missing_data">Esta orden se creó antes de que se admitiera la cancelación, así que solo puede cerrarse al ejecutarse o vencer.</string>
+    <string name="limit_order_cancel_blocked_already_sent">Se ha enviado una cancelación. La orden sigue abierta hasta que THORChain confirme su cierre.</string>
+    <string name="limit_order_cancel_blocked_unsupported_chain">THORChain no puede enrutar la cadena de origen de esta orden, así que no se puede enviar una cancelación.</string>
+    <string name="limit_order_cancel_blocked_memo_too_long">Una cancelación no cabe en los límites de transacción de esta cadena de origen. La orden se reembolsa igualmente al vencer.</string>
+    <string name="limit_order_cancel_blocked_disagrees">Los datos de esta orden no coinciden con lo que informa THORChain, así que cancelarla no es seguro.</string>
+    <string name="limit_order_cancel_error_title">No se puede cancelar esta orden</string>
+    <string name="limit_order_cancel_error_missing_coin">Esta bóveda no tiene monedas en la red desde la que debe enviarse la cancelación.</string>
+    <string name="limit_order_cancel_error_no_inbound">THORChain no tiene ahora una dirección de entrada disponible para esta red. Inténtalo de nuevo en breve.</string>
+    <string name="limit_order_cancel_error_dust_unavailable">No se pudo determinar con seguridad el importe que debe acompañar a una cancelación. Inténtalo de nuevo en breve.</string>
+    <string name="limit_order_cancel_error_insufficient_balance">Esta bóveda no puede cubrir la comisión de red de la cancelación.</string>
+    <string name="limit_order_cancel_error_generic">No se pudo preparar la cancelación. Inténtalo de nuevo en breve.</string>
     <string name="transaction_history_empty_title">Aún no hay transacciones</string>
     <string name="transaction_history_empty_desc">Aún no has realizado ningún swap, envío ni aprobación desde esta bóveda.</string>
     <string name="transaction_history_search_asset_title">Buscar activo</string>

@@ -987,3 +987,44 @@ internal val MIGRATION_38_39 =
             )
         }
     }
+
+// Widens pending_limit_order from a write-only placement record into the table the Limit Orders tab
+// and the cancel flow read (#4154). Three groups of columns:
+//   * identity — the source chain and sender address, without which an order can neither be polled
+//     (the queue endpoint is scoped by sender) nor cancelled;
+//   * the exact integers and full asset spellings a `m=<` cancel memo must reproduce, captured at
+//     signing because none of them is recoverable afterwards;
+//   * observations — fill split, expiry countdown, the assets/trade target THORChain itself
+// reports,
+//     and the local cancel bookkeeping.
+// Every column is nullable (or defaulted) so existing rows survive: a null there means "unknown",
+// and unknown cancel inputs deliberately leave an older order uncancellable rather than cancelled
+// with guessed values.
+internal val MIGRATION_39_40 =
+    object : Migration(39, 40) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            listOf(
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `source_chain` TEXT",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `source_decimals` INTEGER",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `source_address` TEXT",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `source_ticker` TEXT",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `target_ticker` TEXT",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `source_amount_1e8` TEXT",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `trade_target` TEXT",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `source_asset_full` TEXT",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `target_asset_full` TEXT",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `observed_trade_target` TEXT",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `observed_source_asset` TEXT",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `observed_target_asset` TEXT",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `deposit_amount` TEXT",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `filled_in_amount` TEXT",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `filled_out_amount` TEXT",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `time_to_expiry_blocks` INTEGER",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `expiry_observed_at` INTEGER",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `cancel_broadcast_hash` TEXT",
+                    "ALTER TABLE `pending_limit_order` ADD COLUMN `cancel_confirmed` " +
+                        "INTEGER NOT NULL DEFAULT 0",
+                )
+                .forEach(db::execSQL)
+        }
+    }

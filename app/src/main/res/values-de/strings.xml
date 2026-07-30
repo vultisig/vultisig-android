@@ -1217,6 +1217,37 @@
     <string name="transaction_history_tab_overview">Übersicht</string>
     <string name="transaction_history_tab_send">Senden</string>
     <string name="transaction_history_tab_swap">Swaps</string>
+    <string name="transaction_history_tab_limit">Limit-Orders</string>
+    <!-- Limit Orders (THORChain limit swaps) -->
+    <string name="limit_order_card_title">Limit-Order</string>
+    <string name="limit_order_target_price_label">Zielkurs</string>
+    <string name="limit_order_target_price_value">1 %1$s = %2$s %3$s</string>
+    <string name="limit_order_expiry_label">Läuft ab</string>
+    <string name="limit_order_expires_in_hours">in %1$d Std. %2$d Min.</string>
+    <string name="limit_order_expires_in_minutes">in %1$d Min.</string>
+    <string name="limit_order_expiry_imminent">jeden Moment</string>
+    <string name="limit_order_filled_label">Ausgeführt</string>
+    <string name="limit_order_filled_value">%1$d%%</string>
+    <string name="limit_order_status_resting">Offen</string>
+    <string name="limit_order_status_cancelling">Wird storniert…</string>
+    <string name="limit_order_status_filled">Ausgeführt</string>
+    <string name="limit_order_status_expired">Abgelaufen</string>
+    <string name="limit_order_status_cancelled">Storniert</string>
+    <string name="limit_order_status_refunded">Erstattet</string>
+    <string name="limit_order_cancel_button">Order stornieren</string>
+    <string name="limit_order_cancel_duplicate_warning">Eine weitere offene Order hat dasselbe Paar und denselben Kurs. THORChain storniert die erste Übereinstimmung, daher könnte diese stattdessen geschlossen werden.</string>
+    <string name="limit_order_cancel_blocked_closed">Diese Order ist bereits geschlossen.</string>
+    <string name="limit_order_cancel_blocked_missing_data">Diese Order wurde erstellt, bevor Stornierungen unterstützt wurden. Sie kann nur durch Ausführung oder Ablauf geschlossen werden.</string>
+    <string name="limit_order_cancel_blocked_already_sent">Eine Stornierung wurde gesendet. Die Order bleibt offen, bis THORChain ihre Schließung bestätigt.</string>
+    <string name="limit_order_cancel_blocked_unsupported_chain">THORChain kann die Quell-Blockchain dieser Order nicht routen, daher ist keine Stornierung möglich.</string>
+    <string name="limit_order_cancel_blocked_memo_too_long">Eine Stornierung passt nicht in die Transaktionsgrenzen dieser Quell-Blockchain. Die Order wird bei Ablauf trotzdem erstattet.</string>
+    <string name="limit_order_cancel_blocked_disagrees">Die Daten dieser Order stimmen nicht mit den Angaben von THORChain überein, eine Stornierung wäre nicht sicher.</string>
+    <string name="limit_order_cancel_error_title">Stornierung nicht möglich</string>
+    <string name="limit_order_cancel_error_missing_coin">Dieser Tresor besitzt keine Coins in dem Netzwerk, aus dem die Stornierung gesendet werden muss.</string>
+    <string name="limit_order_cancel_error_no_inbound">THORChain hat derzeit keine verfügbare Eingangsadresse für dieses Netzwerk. Bitte gleich erneut versuchen.</string>
+    <string name="limit_order_cancel_error_dust_unavailable">Der Betrag, den eine Stornierung mitsenden muss, konnte nicht sicher ermittelt werden. Bitte gleich erneut versuchen.</string>
+    <string name="limit_order_cancel_error_insufficient_balance">Dieser Tresor kann die Netzwerkgebühr der Stornierung nicht decken.</string>
+    <string name="limit_order_cancel_error_generic">Die Stornierung konnte nicht vorbereitet werden. Bitte gleich erneut versuchen.</string>
     <string name="transaction_history_empty_title">Noch keine Transaktionen</string>
     <string name="transaction_history_empty_desc">Sie haben noch keine Swaps, Senden oder Genehmigungen aus diesem Tresor vorgenommen.</string>
     <string name="transaction_history_search_asset_title">Asset suchen</string>

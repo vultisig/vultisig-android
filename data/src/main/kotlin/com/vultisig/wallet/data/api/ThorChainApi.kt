@@ -41,6 +41,7 @@ import com.vultisig.wallet.data.api.models.thorchain.ThorChainTransactionJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorNameResponseJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorOwnerData
 import com.vultisig.wallet.data.api.models.thorchain.ThorchainConstantsResponse
+import com.vultisig.wallet.data.api.models.thorchain.ThorchainLimitSwapQueueResponse
 import com.vultisig.wallet.data.api.models.thorchain.VaultRedemptionResponseJson
 import com.vultisig.wallet.data.chains.helpers.ThorChainAffiliateHelper
 import com.vultisig.wallet.data.common.Endpoints
@@ -90,6 +91,16 @@ interface ThorChainApi {
     suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson
 
     suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress>
+
+    /**
+     * Every limit (`=<`) order currently resting in THORChain's advanced swap queue for [sender].
+     *
+     * Scoped by sender rather than by tx hash because that is what the route offers: one request
+     * serves every order a given source-chain address has open. An order that has closed is simply
+     * absent — the queue never reports why — so the caller must treat a missing `limit_swaps` key
+     * as "no information" rather than as an empty queue.
+     */
+    suspend fun getLimitSwapQueue(sender: String): ThorchainLimitSwapQueueResponse
 
     suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata?
 
@@ -353,6 +364,17 @@ constructor(
                 // Inbound status drives a fail-closed halt gate, so it must never be served from
                 // the shared HttpCache if upstream ever starts sending cache headers.
                 header(HttpHeaders.CacheControl, "no-cache, no-store")
+            }
+            .bodyOrThrow()
+
+    override suspend fun getLimitSwapQueue(sender: String): ThorchainLimitSwapQueueResponse =
+        httpClient
+            .get("$THORNODE_BASE/thorchain/queue/limit_swaps") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+                // An order's absence from this list is the only signal that it closed, so a stale
+                // cached page would close live orders. Never served from the shared HttpCache.
+                header(HttpHeaders.CacheControl, "no-cache, no-store")
+                parameter("sender", sender)
             }
             .bodyOrThrow()
 

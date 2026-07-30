@@ -1221,6 +1221,37 @@
     <string name="transaction_history_tab_overview">Pregled</string>
     <string name="transaction_history_tab_send">Slanje</string>
     <string name="transaction_history_tab_swap">Zamjene</string>
+    <string name="transaction_history_tab_limit">Limit nalozi</string>
+    <!-- Limit Orders (THORChain limit swaps) -->
+    <string name="limit_order_card_title">Limit nalog</string>
+    <string name="limit_order_target_price_label">Ciljna cijena</string>
+    <string name="limit_order_target_price_value">1 %1$s = %2$s %3$s</string>
+    <string name="limit_order_expiry_label">Istječe</string>
+    <string name="limit_order_expires_in_hours">za %1$d h %2$d min</string>
+    <string name="limit_order_expires_in_minutes">za %1$d min</string>
+    <string name="limit_order_expiry_imminent">svakog trenutka</string>
+    <string name="limit_order_filled_label">Ispunjeno</string>
+    <string name="limit_order_filled_value">%1$d%%</string>
+    <string name="limit_order_status_resting">Otvoren</string>
+    <string name="limit_order_status_cancelling">Otkazivanje…</string>
+    <string name="limit_order_status_filled">Ispunjen</string>
+    <string name="limit_order_status_expired">Istekao</string>
+    <string name="limit_order_status_cancelled">Otkazan</string>
+    <string name="limit_order_status_refunded">Vraćeno</string>
+    <string name="limit_order_cancel_button">Otkaži nalog</string>
+    <string name="limit_order_cancel_duplicate_warning">Drugi otvoreni nalog ima isti par i cijenu. THORChain otkazuje prvo podudaranje, pa bi se mogao zatvoriti on umjesto ovoga.</string>
+    <string name="limit_order_cancel_blocked_closed">Ovaj je nalog već zatvoren.</string>
+    <string name="limit_order_cancel_blocked_missing_data">Ovaj je nalog postavljen prije nego što je otkazivanje bilo podržano, pa se može zatvoriti samo ispunjenjem ili istekom.</string>
+    <string name="limit_order_cancel_blocked_already_sent">Otkazivanje je poslano. Nalog ostaje otvoren dok THORChain ne potvrdi da je zatvoren.</string>
+    <string name="limit_order_cancel_blocked_unsupported_chain">THORChain ne može usmjeriti izvornu mrežu ovog naloga, pa se otkazivanje ne može poslati.</string>
+    <string name="limit_order_cancel_blocked_memo_too_long">Otkazivanje ne stane u ograničenja transakcije ove izvorne mreže. Nalog se svejedno vraća po isteku.</string>
+    <string name="limit_order_cancel_blocked_disagrees">Podaci ovog naloga ne odgovaraju onome što javlja THORChain, pa ga nije sigurno otkazati.</string>
+    <string name="limit_order_cancel_error_title">Nije moguće otkazati ovaj nalog</string>
+    <string name="limit_order_cancel_error_missing_coin">Ovaj trezor nema sredstava na mreži s koje se otkazivanje mora poslati.</string>
+    <string name="limit_order_cancel_error_no_inbound">THORChain trenutačno nema dostupnu dolaznu adresu za ovu mrežu. Pokušajte ponovno uskoro.</string>
+    <string name="limit_order_cancel_error_dust_unavailable">Iznos koji otkazivanje mora priložiti nije se mogao sigurno utvrditi. Pokušajte ponovno uskoro.</string>
+    <string name="limit_order_cancel_error_insufficient_balance">Ovaj trezor ne može pokriti mrežnu naknadu otkazivanja.</string>
+    <string name="limit_order_cancel_error_generic">Otkazivanje se nije moglo pripremiti. Pokušajte ponovno uskoro.</string>
     <string name="transaction_history_empty_title">Još nema transakcija</string>
     <string name="transaction_history_empty_desc">Još niste napravili nijedne zamjene, slanje ni odobrenje iz ovog sefa.</string>
     <string name="transaction_history_search_asset_title">Pretraži imovinu</string>

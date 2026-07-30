@@ -1212,6 +1212,37 @@
     <string name="transaction_history_tab_overview">Overzicht</string>
     <string name="transaction_history_tab_send">Sturen</string>
     <string name="transaction_history_tab_swap">Swaps</string>
+    <string name="transaction_history_tab_limit">Limietorders</string>
+    <!-- Limit Orders (THORChain limit swaps) -->
+    <string name="limit_order_card_title">Limietorder</string>
+    <string name="limit_order_target_price_label">Doelprijs</string>
+    <string name="limit_order_target_price_value">1 %1$s = %2$s %3$s</string>
+    <string name="limit_order_expiry_label">Verloopt</string>
+    <string name="limit_order_expires_in_hours">over %1$d u %2$d min</string>
+    <string name="limit_order_expires_in_minutes">over %1$d min</string>
+    <string name="limit_order_expiry_imminent">elk moment</string>
+    <string name="limit_order_filled_label">Gevuld</string>
+    <string name="limit_order_filled_value">%1$d%%</string>
+    <string name="limit_order_status_resting">Open</string>
+    <string name="limit_order_status_cancelling">Annuleren…</string>
+    <string name="limit_order_status_filled">Uitgevoerd</string>
+    <string name="limit_order_status_expired">Verlopen</string>
+    <string name="limit_order_status_cancelled">Geannuleerd</string>
+    <string name="limit_order_status_refunded">Terugbetaald</string>
+    <string name="limit_order_cancel_button">Order annuleren</string>
+    <string name="limit_order_cancel_duplicate_warning">Een andere open order heeft hetzelfde paar en dezelfde prijs. THORChain annuleert de eerste overeenkomst, dus die kan sluiten in plaats van deze.</string>
+    <string name="limit_order_cancel_blocked_closed">Deze order is al gesloten.</string>
+    <string name="limit_order_cancel_blocked_missing_data">Deze order is geplaatst voordat annuleren werd ondersteund en kan alleen sluiten door uitvoering of verloop.</string>
+    <string name="limit_order_cancel_blocked_already_sent">Er is een annulering verzonden. De order blijft open tot THORChain bevestigt dat hij gesloten is.</string>
+    <string name="limit_order_cancel_blocked_unsupported_chain">THORChain kan de bronblockchain van deze order niet routeren, dus er kan geen annulering worden verzonden.</string>
+    <string name="limit_order_cancel_blocked_memo_too_long">Een annulering past niet binnen de transactielimieten van deze bronblockchain. De order wordt bij verloop alsnog terugbetaald.</string>
+    <string name="limit_order_cancel_blocked_disagrees">De gegevens van deze order komen niet overeen met wat THORChain meldt, dus annuleren is niet veilig.</string>
+    <string name="limit_order_cancel_error_title">Kan deze order niet annuleren</string>
+    <string name="limit_order_cancel_error_missing_coin">Deze kluis heeft geen munten op het netwerk waarvandaan de annulering moet worden verzonden.</string>
+    <string name="limit_order_cancel_error_no_inbound">THORChain heeft nu geen beschikbaar inkomend adres voor dit netwerk. Probeer het zo opnieuw.</string>
+    <string name="limit_order_cancel_error_dust_unavailable">Het bedrag dat een annulering moet meesturen, kon niet veilig worden bepaald. Probeer het zo opnieuw.</string>
+    <string name="limit_order_cancel_error_insufficient_balance">Deze kluis kan de netwerkkosten van de annulering niet dekken.</string>
+    <string name="limit_order_cancel_error_generic">De annulering kon niet worden voorbereid. Probeer het zo opnieuw.</string>
     <string name="transaction_history_empty_title">Nog geen transacties</string>
     <string name="transaction_history_empty_desc">U heeft nog geen swaps, verzendingen of goedkeuringen vanuit deze kluis uitgevoerd.</string>
     <string name="transaction_history_search_asset_title">Asset zoeken</string>

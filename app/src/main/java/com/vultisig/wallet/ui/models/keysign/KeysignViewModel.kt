@@ -41,7 +41,9 @@ import com.vultisig.wallet.data.repositories.PendingLimitOrderRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.services.KeysignTxStatusPoller
+import com.vultisig.wallet.data.swap.limit.LimitSwapCancelMemo
 import com.vultisig.wallet.data.swap.limit.LimitSwapMemo
+import com.vultisig.wallet.data.swap.limit.findOrderAddressedByCancelMemo
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.tss.getSignature
@@ -956,26 +958,53 @@ constructor(
     }
 
     /**
-     * Records a placed THORChain limit order once its inbound deposit has broadcast (#4154). Keyed
-     * off the signed `=<` memo, so it fires only for limit orders and never for market swaps or
-     * other transactions. Best-effort: a storage failure must never break the keysign success path.
+     * Records a THORChain limit order's lifecycle events once the transaction has broadcast
+     * (#4154).
+     *
+     * Keyed off the signed memo, so it fires only for limit orders and never for market swaps or
+     * other transactions: `=<` places an order, `m=<:…:0` cancels one that is already resting.
+     * Best-effort: a storage failure must never break the keysign success path.
      */
     private suspend fun recordPendingLimitOrderIfNeeded(txHash: String) {
         val payload = keysignPayload ?: return
         val memo = payload.memo ?: return
-        if (!memo.startsWith(LimitSwapMemo.PREFIX)) return
         try {
-            pendingLimitOrderRepository.record(
-                vaultId = vault.id,
-                inboundTxHash = txHash,
-                sourceCoin = payload.coin,
-                sourceAmount = payload.toAmount,
-                memo = memo,
-            )
+            when {
+                memo.startsWith(LimitSwapMemo.PREFIX) ->
+                    pendingLimitOrderRepository.record(
+                        vaultId = vault.id,
+                        inboundTxHash = txHash,
+                        sourceCoin = payload.coin,
+                        sourceAmount = payload.toAmount,
+                        // The queue endpoint is scoped by sender, so the order cannot be tracked
+                        // without the address the deposit went out from.
+                        sourceAddress = payload.coin.address,
+                        // Only the swap payload knows the bought coin, and only it can supply the
+                        // target asset's full contract spelling — the memo carries the abbreviated
+                        // form, which a cancel may not use.
+                        targetCoin = payload.swapPayload?.dstToken,
+                        memo = memo,
+                    )
+
+                // A broadcast cancel is a claim about OUR transaction, never about the order: it
+                // moves the order to the non-terminal `cancelling`, and the tracker decides what
+                // actually happened from THORChain's own account of the closure.
+                LimitSwapCancelMemo.isCancelMemo(memo) ->
+                    findOrderAddressedByCancelMemo(
+                            memo = memo,
+                            orders = pendingLimitOrderRepository.getOpenOrders(vault.id),
+                        )
+                        ?.let { order ->
+                            pendingLimitOrderRepository.recordCancelBroadcast(
+                                inboundTxHash = order.inboundTxHash,
+                                cancelTxHash = txHash,
+                            )
+                        }
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.w(e, "Failed to record pending limit order")
+            Timber.w(e, "Failed to record limit-order state for %s", txHash)
         }
     }
 
