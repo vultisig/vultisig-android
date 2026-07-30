@@ -106,7 +106,16 @@ internal data class MarketStatsUiModel(
     val volume24h: String? = null,
     val circulatingSupply: String? = null,
     val maxSupply: String? = null,
-)
+) {
+    /** CoinGecko can return a markets entry with every field absent (a stale/inactive coin). */
+    fun hasAnyValue(): Boolean =
+        marketCap != null ||
+            marketCapRank != null ||
+            fullyDilutedValuation != null ||
+            volume24h != null ||
+            circulatingSupply != null ||
+            maxSupply != null
+}
 
 @Immutable
 internal data class PriceExtremesUiModel(
@@ -116,7 +125,16 @@ internal data class PriceExtremesUiModel(
     val athDate: String? = null,
     val atlPrice: String? = null,
     val atlDate: String? = null,
-)
+) {
+    /** CoinGecko can return a markets entry with every field absent (a stale/inactive coin). */
+    fun hasAnyValue(): Boolean =
+        low24h != null ||
+            high24h != null ||
+            athPrice != null ||
+            athDate != null ||
+            atlPrice != null ||
+            atlDate != null
+}
 
 @Immutable
 internal data class TokenInfoUiModel(

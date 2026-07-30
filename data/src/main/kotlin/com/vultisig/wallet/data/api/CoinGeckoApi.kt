@@ -31,8 +31,8 @@ interface CoinGeckoApi {
     ): Map<String, CurrencyToPrice>
 
     /**
-     * `/coins/{id}/market_chart` — id lookups are case-sensitive on CoinGecko, so [id] must be
-     * lowercased by the caller.
+     * `/coins/{id}/market_chart` — id lookups are case-sensitive on CoinGecko; [id] is lowercased
+     * internally before the request, so callers don't need to normalize it themselves.
      */
     suspend fun getMarketChart(id: String, currency: String, days: String): MarketChartResponseJson
 
@@ -109,9 +109,13 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
         days: String,
     ): MarketChartResponseJson =
         http
-            .get(
-                "https://api.vultisig.com/coingeicko/api/v3/coins/${id.lowercase()}/market_chart"
-            ) {
+            .get("https://api.vultisig.com/coingeicko/api/v3/coins") {
+                // id can come from remote, untrusted data (e.g. a Solana token list's
+                // extensions.coingeckoId); encodeSlash = true stops a '/' in it from retargeting
+                // the request path, same as getContractMarketChart below.
+                url {
+                    appendPathSegments(listOf(id.lowercase(), "market_chart"), encodeSlash = true)
+                }
                 parameter("vs_currency", currency)
                 parameter("days", days)
                 header("Content-Type", "application/json")

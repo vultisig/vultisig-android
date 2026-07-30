@@ -53,7 +53,6 @@ internal fun PriceExtremesSection(
         }
     if (rows.isEmpty()) return
 
-    UiSpacer(size = 24.dp)
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.token_details_price_extremes_title),

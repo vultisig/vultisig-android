@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.utils
 
 import com.vultisig.wallet.data.models.MarketChartPoint
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Decodes CoinGecko's `market_chart` `prices` array (`[[msEpoch, price], ...]`) into
@@ -29,7 +30,7 @@ fun changePercent(points: List<MarketChartPoint>): Double {
     if (first.signum() == 0) return 0.0
     return last
         .subtract(first)
-        .divide(first, 10, java.math.RoundingMode.HALF_UP)
+        .divide(first, 10, RoundingMode.HALF_UP)
         .multiply(BigDecimal(100))
         .toDouble()
 }

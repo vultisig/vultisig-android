@@ -343,4 +343,24 @@ internal class TokenDetailViewModelTest {
 
             vm.uiState.value.chart shouldBe null
         }
+
+    @Test
+    fun `MarketStatsUiModel hasAnyValue is false when every field is null`() {
+        MarketStatsUiModel().hasAnyValue() shouldBe false
+    }
+
+    @Test
+    fun `MarketStatsUiModel hasAnyValue is true when any single field is set`() {
+        MarketStatsUiModel(marketCap = "$1.2B").hasAnyValue() shouldBe true
+    }
+
+    @Test
+    fun `PriceExtremesUiModel hasAnyValue is false when every field is null`() {
+        PriceExtremesUiModel().hasAnyValue() shouldBe false
+    }
+
+    @Test
+    fun `PriceExtremesUiModel hasAnyValue is true when any single field is set`() {
+        PriceExtremesUiModel(low24h = "$0.98").hasAnyValue() shouldBe true
+    }
 }

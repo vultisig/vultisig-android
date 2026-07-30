@@ -1081,6 +1081,7 @@
     <string name="chart_range_1y" translatable="false">1Y</string>
     <string name="chart_range_all" translatable="false">ALL</string>
     <string name="price_chart_content_description">Price chart, %1$s change</string>
+    <string name="price_chart_retry_hint">Couldn\'t load chart. Tap to retry.</string>
     <string name="token_details_market_stats_title">Market Stats</string>
     <string name="token_details_price_extremes_title">Price Extremes</string>
     <string name="token_details_token_info_title">Token Info</string>

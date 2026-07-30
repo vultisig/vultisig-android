@@ -68,7 +68,16 @@ class TtlCache<K : Any, V> {
 
         return when (lookup) {
             is Lookup.Hit -> lookup.value
-            is Lookup.Await -> lookup.deferred.await()
+            is Lookup.Await ->
+                try {
+                    lookup.deferred.await()
+                } catch (_: CoalescedFetchCancelledException) {
+                    // The fetch we were coalescing with was cancelled by whoever started it, not
+                    // by us — that isn't a real outcome to fail open on, so retry as a fresh
+                    // attempt instead of silently defeating the fail-open-to-stale contract for
+                    // every follower coalesced on it.
+                    getOrPut(key, ttlMillis, nowMillis, loader)
+                }
             is Lookup.Start -> {
                 try {
                     val value = loader()

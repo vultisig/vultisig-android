@@ -759,6 +759,7 @@
     <string name="token_details_bottom_sheet_network">Сеть</string>
     <!-- Price chart + market data — issue #5428 -->
     <string name="price_chart_content_description">График цены, изменение %1$s</string>
+    <string name="price_chart_retry_hint">Не удалось загрузить график. Нажмите, чтобы повторить.</string>
     <string name="token_details_market_stats_title">Рыночная статистика</string>
     <string name="token_details_price_extremes_title">Экстремумы цены</string>
     <string name="token_details_token_info_title">Информация о токене</string>

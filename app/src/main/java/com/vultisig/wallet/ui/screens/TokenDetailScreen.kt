@@ -188,11 +188,13 @@ internal fun TokenDetailsContent(
             )
         }
 
-        if (uiModel.statsLoading || uiModel.marketStats != null) {
+        if (uiModel.statsLoading || uiModel.marketStats?.hasAnyValue() == true) {
+            UiSpacer(size = 24.dp)
             MarketStatsSection(stats = uiModel.marketStats, isLoading = uiModel.statsLoading)
         }
 
-        if (uiModel.statsLoading || uiModel.priceExtremes != null) {
+        if (uiModel.statsLoading || uiModel.priceExtremes?.hasAnyValue() == true) {
+            UiSpacer(size = 24.dp)
             PriceExtremesSection(extremes = uiModel.priceExtremes, isLoading = uiModel.statsLoading)
         }
 

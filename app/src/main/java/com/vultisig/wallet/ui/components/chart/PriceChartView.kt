@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.components.chart
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -69,8 +71,10 @@ internal fun PriceChartSection(
             points = chart.points,
             isPositive = chart.isPositive,
             isLoading = chart.isLoading,
+            isStale = chart.isStale,
             changePercentText = chart.changePercentText,
             onScrub = { scrubbedPoint = it },
+            onRetry = { onRangeSelected(chart.selectedRange) },
         )
         UiSpacer(size = 16.dp)
         ChartRangePicker(selectedRange = chart.selectedRange, onRangeSelected = onRangeSelected)
@@ -162,8 +166,10 @@ private fun PriceChartCanvas(
     points: List<ChartPointUiModel>,
     isPositive: Boolean,
     isLoading: Boolean,
+    isStale: Boolean,
     changePercentText: String,
     onScrub: (ChartPointUiModel?) -> Unit,
+    onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val tint = if (isPositive) Theme.v2.colors.alerts.success else Theme.v2.colors.alerts.error
@@ -277,6 +283,27 @@ private fun PriceChartCanvas(
                             .clip(RoundedCornerShape(12.dp))
                             .background(placeholderColor)
                 )
+            }
+
+            // A range switch that fails before any data has ever loaded for it lands here
+            // (isStale=true, points cleared) — surface a retry affordance rather than a
+            // silent blank box, since nothing else on screen signals the fetch failed.
+            isStale -> {
+                Box(
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .height(CHART_HEIGHT)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(placeholderColor)
+                            .clickable(onClick = onRetry),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(R.string.price_chart_retry_hint),
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.v2.colors.text.tertiary,
+                    )
+                }
             }
 
             else -> Unit

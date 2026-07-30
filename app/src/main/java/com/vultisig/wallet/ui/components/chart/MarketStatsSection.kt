@@ -62,7 +62,6 @@ internal fun MarketStatsSection(
         }
     if (rows.isEmpty()) return
 
-    UiSpacer(size = 24.dp)
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.token_details_market_stats_title),

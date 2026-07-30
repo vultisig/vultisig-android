@@ -68,6 +68,17 @@ internal class CoinGeckoApiMarketChartTest {
     }
 
     @Test
+    fun `getMarketChart percent-encodes an id instead of letting it redirect the path`() = runTest {
+        val (api, url) = apiCapturingUrl("""{"prices":[]}""")
+
+        // priceProviderID can come from remote, untrusted data (e.g. a Solana token list's
+        // extensions.coingeckoId), not just a hardcoded table.
+        api.getMarketChart(id = "abc/../evil", currency = "usd", days = "1")
+
+        assertContains(url(), "/coins/abc%2F..%2Fevil/market_chart")
+    }
+
+    @Test
     fun `getContractMarketChart routes through the chain's CoinGecko platform id`() = runTest {
         val (api, url) = apiCapturingUrl("""{"prices":[]}""")
 

@@ -1158,6 +1158,7 @@
 
     <!-- Price chart + market data — issue #5428 -->
     <string name="price_chart_content_description">价格图表，变化 %1$s</string>
+    <string name="price_chart_retry_hint">无法加载图表。点击重试。</string>
     <string name="token_details_market_stats_title">市场数据</string>
     <string name="token_details_price_extremes_title">价格区间</string>
     <string name="token_details_token_info_title">代币信息</string>

@@ -5,8 +5,6 @@ package com.vultisig.wallet.data.utils
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -161,7 +159,7 @@ internal class TtlCacheTest {
         }
 
     @Test
-    fun `a follower observes a real failure instead of hanging when the coalesced leader is cancelled`() =
+    fun `a follower retries its own fetch instead of failing when the coalesced leader is cancelled`() =
         runTest {
             val cache = TtlCache<String, Int>()
             val leaderStarted = CompletableDeferred<Unit>()
@@ -176,16 +174,14 @@ internal class TtlCacheTest {
 
             leaderStarted.await()
 
-            val followerResult = async {
-                runCatching { cache.getOrPut("k", ttlMillis = 1_000) { 2 } }
-            }
+            val followerResult = async { cache.getOrPut("k", ttlMillis = 1_000) { 2 } }
             runCurrent() // let the follower reach Lookup.Await before the leader is cancelled
 
             leaderJob.cancel()
             leaderJob.join()
 
-            val result = followerResult.await()
-            assertTrue(result.isFailure)
-            assertTrue(result.exceptionOrNull() !is CancellationException)
+            // The leader's cancellation isn't a real outcome for the follower to fail open on —
+            // it retries its own fetch rather than silently defeating the fail-open contract.
+            assertEquals(2, followerResult.await())
         }
 }

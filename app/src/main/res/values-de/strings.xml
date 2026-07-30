@@ -760,6 +760,7 @@
     <string name="token_details_bottom_sheet_network">Netzwerk</string>
     <!-- Price chart + market data — issue #5428 -->
     <string name="price_chart_content_description">Preisdiagramm, Veränderung %1$s</string>
+    <string name="price_chart_retry_hint">Diagramm konnte nicht geladen werden. Zum erneuten Versuch tippen.</string>
     <string name="token_details_market_stats_title">Marktdaten</string>
     <string name="token_details_price_extremes_title">Preisextreme</string>
     <string name="token_details_token_info_title">Token-Info</string>

@@ -1054,6 +1054,7 @@
     <string name="token_details_bottom_sheet_network">네트워크</string>
     <!-- Price chart + market data — issue #5428 -->
     <string name="price_chart_content_description">가격 차트, %1$s 변동</string>
+    <string name="price_chart_retry_hint">차트를 불러올 수 없습니다. 다시 시도하려면 탭하세요.</string>
     <string name="token_details_market_stats_title">시장 통계</string>
     <string name="token_details_price_extremes_title">가격 범위</string>
     <string name="token_details_token_info_title">토큰 정보</string>
