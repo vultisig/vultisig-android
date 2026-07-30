@@ -237,7 +237,17 @@ private fun DepositTransactionDetail(depositTransaction: DepositTransactionUiMod
 
         if (depositTransaction.dstAddress.isNotBlank()) {
             AddressField(
-                title = stringResource(R.string.verify_deposit_node_address_title),
+                // A cancel's destination is THORChain's inbound vault, not a node — and the Verify
+                // screen it follows already calls it "To", so the two would otherwise disagree
+                // about the same address.
+                title =
+                    stringResource(
+                        if (depositTransaction.limitCancelPair != null) {
+                            R.string.verify_transaction_to_title
+                        } else {
+                            R.string.verify_deposit_node_address_title
+                        }
+                    ),
                 address = depositTransaction.dstAddress,
             )
         }

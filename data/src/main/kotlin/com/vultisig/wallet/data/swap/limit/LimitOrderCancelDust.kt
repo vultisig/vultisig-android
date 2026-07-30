@@ -28,7 +28,8 @@ import java.math.BigInteger
  * with no refund path, so doubling doubles that donation. It is bounded by the dust amount itself
  * and disclosed on the confirmation screen.
  */
-private val DUST_SAFETY_MULTIPLE: BigInteger = BigInteger.TWO
+// `BigInteger.TWO` is API 33; this module ships to minSdk 26.
+private val DUST_SAFETY_MULTIPLE: BigInteger = BigInteger.valueOf(2)
 
 /** Failure modes of [limitOrderCancelDustAmount]. Each one means there is nothing safe to sign. */
 sealed class LimitOrderCancelDustError(message: String) : IllegalStateException(message) {
