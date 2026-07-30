@@ -41,18 +41,20 @@ class TtlCache<K : Any, V> {
      * Returns the cached value for [key] if it hasn't expired, otherwise runs [loader] (coalescing
      * concurrent callers for the same key) and caches the result for [ttlMillis].
      *
-     * [now] defaults to a monotonic clock (immune to wall-clock/NTP adjustments) rather than
-     * [System.currentTimeMillis], so TTL expiry tracks elapsed time, not wall-clock time.
+     * [nowMillis] defaults to a monotonic clock (immune to wall-clock/NTP adjustments) rather than
+     * [System.currentTimeMillis], so TTL expiry tracks elapsed time, not wall-clock time. Taken as
+     * a function (read again after [loader] completes) rather than a single snapshot, so a slow
+     * fetch doesn't shrink the entry's freshness window by its own latency.
      */
     suspend fun getOrPut(
         key: K,
         ttlMillis: Long,
-        now: Long = System.nanoTime() / 1_000_000,
+        nowMillis: () -> Long = { System.nanoTime() / 1_000_000 },
         loader: suspend () -> V,
     ): V {
         val lookup =
             mutex.withLock {
-                val fresh = entries[key]?.takeIf { it.expiresAt > now }
+                val fresh = entries[key]?.takeIf { it.expiresAt > nowMillis() }
                 when {
                     fresh != null -> Lookup.Hit(fresh.value)
                     inFlight[key] != null -> Lookup.Await(inFlight.getValue(key))
@@ -71,7 +73,7 @@ class TtlCache<K : Any, V> {
                 try {
                     val value = loader()
                     mutex.withLock {
-                        entries[key] = Entry(value, now + ttlMillis)
+                        entries[key] = Entry(value, nowMillis() + ttlMillis)
                         inFlight.remove(key)
                     }
                     lookup.deferred.complete(value)

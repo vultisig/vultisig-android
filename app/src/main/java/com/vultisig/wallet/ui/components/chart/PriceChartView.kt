@@ -119,9 +119,11 @@ private class ChartGeometry(
     val fillPath: Path,
     val fillBrush: Brush,
 ) {
-    fun yFor(price: Double): Float =
-        heightPx - ((price - minPrice) / priceRange * heightPx).toFloat()
+    fun yFor(price: Double): Float = yForPrice(price, minPrice, priceRange, heightPx)
 }
+
+private fun yForPrice(price: Double, minPrice: Double, priceRange: Double, heightPx: Float): Float =
+    heightPx - ((price - minPrice) / priceRange * heightPx).toFloat()
 
 private fun buildChartGeometry(
     points: List<ChartPointUiModel>,
@@ -135,14 +137,11 @@ private fun buildChartGeometry(
     val heightPx = size.height.toFloat()
     val stepX = size.width / (points.size - 1).toFloat()
 
-    fun yFor(price: Double): Float =
-        heightPx - ((price - minPrice) / priceRange * heightPx).toFloat()
-
     val linePath =
         Path().apply {
             points.forEachIndexed { index, point ->
                 val x = index * stepX
-                val y = yFor(point.price)
+                val y = yForPrice(point.price, minPrice, priceRange, heightPx)
                 if (index == 0) moveTo(x, y) else lineTo(x, y)
             }
         }

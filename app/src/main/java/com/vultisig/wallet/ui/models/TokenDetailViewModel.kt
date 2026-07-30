@@ -429,15 +429,15 @@ constructor(
                 // formatted for this exact currency — otherwise a currency switch would silently
                 // keep displaying amounts in the old currency with statsLoading already false.
                 val keepHeldOnFailure = lastLoadedStatsCurrency == currency.ticker
-                uiState.update {
-                    it.copy(
+                uiState.update { state ->
+                    state.copy(
                         statsLoading = false,
                         marketStats =
                             stats?.toMarketStatsUiModel(currency.ticker)
-                                ?: it.marketStats.takeIf { keepHeldOnFailure },
+                                ?: state.marketStats.takeIf { keepHeldOnFailure },
                         priceExtremes =
                             stats?.toPriceExtremesUiModel(currency.ticker)
-                                ?: it.priceExtremes.takeIf { keepHeldOnFailure },
+                                ?: state.priceExtremes.takeIf { keepHeldOnFailure },
                     )
                 }
                 if (stats != null) {

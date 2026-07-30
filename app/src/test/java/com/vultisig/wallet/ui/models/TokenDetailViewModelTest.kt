@@ -46,7 +46,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 internal class TokenDetailViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -315,7 +314,7 @@ internal class TokenDetailViewModelTest {
         }
 
     @Test
-    fun `ADVERSARIAL PROBE - pool-priced coin chart stays null after currency switch`() =
+    fun `a pool-priced coin chart stays null after a currency switch`() =
         runTest(testDispatcher) {
             val poolCoin = coin.copy(priceProviderID = "", contractAddress = "")
             coEvery { accountsRepository.loadAddress(any(), any()) } returns
@@ -334,7 +333,6 @@ internal class TokenDetailViewModelTest {
                             ),
                     )
                 )
-            coEvery { tokenPriceChartRepository.getChart(poolCoin, any(), any()) } returns null
 
             val vm = createViewModel()
             advanceUntilIdle()

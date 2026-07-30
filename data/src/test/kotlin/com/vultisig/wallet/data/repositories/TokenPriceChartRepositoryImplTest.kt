@@ -7,11 +7,13 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChartRange
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.settings.AppCurrency
+import com.vultisig.wallet.data.utils.NetworkException
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigDecimal
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -99,12 +101,23 @@ internal class TokenPriceChartRepositoryImplTest {
         runTest {
             val token = coin(priceProviderId = "ethereum")
             coEvery { coinGeckoApi.getMarketChart(any(), any(), any()) } throws
-                RuntimeException("network down")
+                NetworkException(500, "network down")
 
             val chart = repository.getChart(token, ChartRange.ONE_DAY, AppCurrency.USD)
 
             assertNull(chart)
         }
+
+    @Test
+    fun `getChart propagates a bug instead of silently failing open`() = runTest {
+        val token = coin(priceProviderId = "ethereum")
+        coEvery { coinGeckoApi.getMarketChart(any(), any(), any()) } throws
+            IllegalStateException("a real bug, not a network failure")
+
+        assertFailsWith<IllegalStateException> {
+            repository.getChart(token, ChartRange.ONE_DAY, AppCurrency.USD)
+        }
+    }
 
     @Test
     fun `getChart returns null for a genuinely successful response with fewer than 2 points`() =
@@ -122,11 +135,20 @@ internal class TokenPriceChartRepositoryImplTest {
     fun `getStats returns null (no crash) when the network call fails`() = runTest {
         val token = coin(priceProviderId = "ethereum")
         coEvery { coinGeckoApi.getMarketStats(any(), any()) } throws
-            RuntimeException("network down")
+            NetworkException(500, "network down")
 
         val stats = repository.getStats(token, AppCurrency.USD)
 
         assertNull(stats)
+    }
+
+    @Test
+    fun `getStats propagates a bug instead of silently failing open`() = runTest {
+        val token = coin(priceProviderId = "ethereum")
+        coEvery { coinGeckoApi.getMarketStats(any(), any()) } throws
+            IllegalStateException("a real bug, not a network failure")
+
+        assertFailsWith<IllegalStateException> { repository.getStats(token, AppCurrency.USD) }
     }
 
     @Test

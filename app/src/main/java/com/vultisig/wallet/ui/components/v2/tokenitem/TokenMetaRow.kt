@@ -34,7 +34,8 @@ internal fun TokenMetaRow(
             modifier
                 .fillMaxWidth()
                 .background(Theme.v2.colors.backgrounds.primary)
-                .padding(all = 16.dp)
+                .padding(all = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         V2Container {
             Text(

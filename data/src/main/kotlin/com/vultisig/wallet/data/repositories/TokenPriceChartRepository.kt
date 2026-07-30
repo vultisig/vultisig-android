@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.MarketChart
 import com.vultisig.wallet.data.models.hasMarketDataSource
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.utils.DEFAULT_MAX_CHART_POINTS
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.TtlCache
 import com.vultisig.wallet.data.utils.changePercent
 import com.vultisig.wallet.data.utils.decodeMarketChartPoints
@@ -59,7 +60,7 @@ constructor(private val coinGeckoApi: CoinGeckoApi) : TokenPriceChartRepository 
                 chartCache.getOrPut(key, range.cacheTtlMillis) { fetchChart(coin, range, currency) }
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: Throwable) {
+            } catch (e: NetworkException) {
                 Timber.e(e, "Failed to fetch market chart for %s", coin.id)
                 // Fail open to the last-good series rather than a blank/error chart.
                 chartCache.peekStale(key)
@@ -102,9 +103,13 @@ constructor(private val coinGeckoApi: CoinGeckoApi) : TokenPriceChartRepository 
             statsCache.getOrPut(key, STATS_CACHE_TTL_MILLIS) { fetchStats(coin, currency) }
         } catch (e: CancellationException) {
             throw e
-        } catch (e: Throwable) {
+        } catch (e: NetworkException) {
             Timber.e(e, "Failed to fetch market stats for %s", coin.id)
             statsCache.peekStale(key)
+        } catch (e: NoSuchElementException) {
+            // CoinGecko genuinely has no markets entry for this coin (e.g. delisted) — not a
+            // failure to fail open from, just no stats to show.
+            null
         }
     }
 
@@ -112,7 +117,8 @@ constructor(private val coinGeckoApi: CoinGeckoApi) : TokenPriceChartRepository 
         val json =
             coinGeckoApi
                 .getMarketStats(coin.priceProviderID, currency.ticker.lowercase())
-                .firstOrNull() ?: error("No market stats for ${coin.priceProviderID}")
+                .firstOrNull()
+                ?: throw NoSuchElementException("No market stats for ${coin.priceProviderID}")
         return json.toDomain()
     }
 

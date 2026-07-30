@@ -25,12 +25,12 @@ internal class TtlCacheTest {
         val loadCount = AtomicInteger(0)
 
         val first =
-            cache.getOrPut("k", ttlMillis = 1_000, now = 0L) {
+            cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 0L }) {
                 loadCount.incrementAndGet()
                 42
             }
         val second =
-            cache.getOrPut("k", ttlMillis = 1_000, now = 500L) {
+            cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 500L }) {
                 loadCount.incrementAndGet()
                 99
             }
@@ -45,12 +45,12 @@ internal class TtlCacheTest {
         val cache = TtlCache<String, Int>()
         val loadCount = AtomicInteger(0)
 
-        cache.getOrPut("k", ttlMillis = 1_000, now = 0L) {
+        cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 0L }) {
             loadCount.incrementAndGet()
             42
         }
         val afterExpiry =
-            cache.getOrPut("k", ttlMillis = 1_000, now = 1_001L) {
+            cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 1_001L }) {
                 loadCount.incrementAndGet()
                 99
             }
@@ -90,7 +90,7 @@ internal class TtlCacheTest {
     fun `peekStale returns the last cached value even after expiry`() = runTest {
         val cache = TtlCache<String, Int>()
 
-        cache.getOrPut("k", ttlMillis = 1_000, now = 0L) { 42 }
+        cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 0L }) { 42 }
 
         assertEquals(42, cache.peekStale("k"))
     }
@@ -120,12 +120,12 @@ internal class TtlCacheTest {
         val cache = TtlCache<String, Int>()
         val loadCount = AtomicInteger(0)
 
-        cache.getOrPut("k", ttlMillis = 1_000, now = 0L) {
+        cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 0L }) {
             loadCount.incrementAndGet()
             42
         }
         val atExactExpiry =
-            cache.getOrPut("k", ttlMillis = 1_000, now = 1_000L) {
+            cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 1_000L }) {
                 loadCount.incrementAndGet()
                 99
             }
@@ -133,6 +133,32 @@ internal class TtlCacheTest {
         assertEquals(99, atExactExpiry)
         assertEquals(2, loadCount.get())
     }
+
+    @Test
+    fun `bases the entry's expiry on a clock reading taken after the loader completes, not before`() =
+        runTest {
+            val cache = TtlCache<String, Int>()
+            var currentTime = 0L
+
+            cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { currentTime }) {
+                currentTime = 500L // the loader itself takes 500ms of (real/wall) time to resolve
+                42
+            }
+
+            // A stale (call-start) reading would have set expiresAt to 0 + 1_000 = 1_000, making
+            // this lookup at now=1_200 see the entry as already expired. Reading the clock again
+            // after the loader completes sets expiresAt to 500 + 1_000 = 1_500, so it's still
+            // fresh.
+            val loadCount = AtomicInteger(0)
+            val cachedValue =
+                cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 1_200L }) {
+                    loadCount.incrementAndGet()
+                    99
+                }
+
+            assertEquals(42, cachedValue)
+            assertEquals(0, loadCount.get())
+        }
 
     @Test
     fun `a follower observes a real failure instead of hanging when the coalesced leader is cancelled`() =
