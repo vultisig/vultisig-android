@@ -66,13 +66,13 @@ internal fun TokenDetailScreen(
 @Composable
 internal fun TokenDetailScreen(
     uiModel: TokenDetailUiModel,
-    onSend: () -> Unit,
-    onSwap: () -> Unit,
-    onDeposit: () -> Unit,
-    onBack: () -> Unit,
-    onBuy: () -> Unit,
-    onExplorer: () -> Unit,
-    onChartRangeSelected: (ChartRange) -> Unit,
+    onSend: () -> Unit = {},
+    onSwap: () -> Unit = {},
+    onDeposit: () -> Unit = {},
+    onBack: () -> Unit = {},
+    onBuy: () -> Unit = {},
+    onExplorer: () -> Unit = {},
+    onChartRangeSelected: (ChartRange) -> Unit = {},
 ) {
     V3Scaffold(
         title = uiModel.token.name,
