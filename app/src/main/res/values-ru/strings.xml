@@ -1247,6 +1247,12 @@
     <string name="limit_order_cancel_blocked_unsupported_chain">THORChain не может маршрутизировать исходную сеть этого ордера, поэтому отмену отправить нельзя.</string>
     <string name="limit_order_cancel_blocked_memo_too_long">Отмена не укладывается в ограничения транзакции исходной сети. Средства по ордеру всё равно вернутся по истечении срока.</string>
     <string name="limit_order_cancel_blocked_disagrees">Данные этого ордера не совпадают с тем, что сообщает THORChain, поэтому отменять его небезопасно.</string>
+    <string name="verify_limit_order_cancel_title">Вы отменяете лимитный ордер</string>
+    <string name="limit_order_cancel_done_title">Отмена</string>
+    <string name="limit_order_cancel_done_title_highlight">отправлена</string>
+    <string name="limit_order_cancel_done_detail">Ваш ордер остаётся открытым, пока THORChain не подтвердит его закрытие.</string>
+    <string name="limit_order_cancel_explanation">Отмена закрывает этот ордер и возвращает неисполненную часть. Уже исполненная часть остаётся исполненной и не возвращается. За это списывается одна сетевая комиссия THORChain.</string>
+    <string name="limit_order_cancel_blocked_not_resting_yet">Этот ордер ещё не размещён в THORChain. Отменить его можно после подтверждения депозита.</string>
     <string name="limit_order_cancel_error_title">Не удалось отменить ордер</string>
     <string name="limit_order_cancel_error_missing_coin">В этом хранилище нет монет в сети, из которой нужно отправить отмену.</string>
     <string name="limit_order_cancel_error_no_inbound">Сейчас у THORChain нет доступного входящего адреса для этой сети. Повторите попытку чуть позже.</string>

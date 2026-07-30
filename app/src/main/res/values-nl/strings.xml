@@ -1237,6 +1237,12 @@
     <string name="limit_order_cancel_blocked_unsupported_chain">THORChain kan de bronblockchain van deze order niet routeren, dus er kan geen annulering worden verzonden.</string>
     <string name="limit_order_cancel_blocked_memo_too_long">Een annulering past niet binnen de transactielimieten van deze bronblockchain. De order wordt bij verloop alsnog terugbetaald.</string>
     <string name="limit_order_cancel_blocked_disagrees">De gegevens van deze order komen niet overeen met wat THORChain meldt, dus annuleren is niet veilig.</string>
+    <string name="verify_limit_order_cancel_title">Je annuleert een limietorder</string>
+    <string name="limit_order_cancel_done_title">Annulering</string>
+    <string name="limit_order_cancel_done_title_highlight">verzonden</string>
+    <string name="limit_order_cancel_done_detail">Je order blijft open tot THORChain bevestigt dat hij gesloten is.</string>
+    <string name="limit_order_cancel_explanation">Annuleren sluit deze order en betaalt het deel terug dat nog niet is uitgevoerd. Wat al is uitgevoerd blijft uitgevoerd en wordt niet teruggegeven. Hiervoor betaal je eenmaal netwerkkosten van THORChain.</string>
+    <string name="limit_order_cancel_blocked_not_resting_yet">Deze order staat nog niet open op THORChain. Je kunt hem annuleren zodra de storting is bevestigd.</string>
     <string name="limit_order_cancel_error_title">Kan deze order niet annuleren</string>
     <string name="limit_order_cancel_error_missing_coin">Deze kluis heeft geen munten op het netwerk waarvandaan de annulering moet worden verzonden.</string>
     <string name="limit_order_cancel_error_no_inbound">THORChain heeft nu geen beschikbaar inkomend adres voor dit netwerk. Probeer het zo opnieuw.</string>

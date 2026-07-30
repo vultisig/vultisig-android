@@ -1241,6 +1241,12 @@
     <string name="limit_order_cancel_blocked_unsupported_chain">A THORChain não consegue encaminhar a blockchain de origem desta ordem, por isso não é possível enviar um cancelamento.</string>
     <string name="limit_order_cancel_blocked_memo_too_long">Um cancelamento não cabe nos limites de transação desta blockchain de origem. A ordem é reembolsada na mesma quando expirar.</string>
     <string name="limit_order_cancel_blocked_disagrees">Os dados desta ordem não correspondem ao que a THORChain reporta, por isso cancelá-la não é seguro.</string>
+    <string name="verify_limit_order_cancel_title">Estás a cancelar uma ordem limite</string>
+    <string name="limit_order_cancel_done_title">Cancelamento</string>
+    <string name="limit_order_cancel_done_title_highlight">enviado</string>
+    <string name="limit_order_cancel_done_detail">A tua ordem permanece aberta até a THORChain confirmar o fecho.</string>
+    <string name="limit_order_cancel_explanation">Cancelar encerra esta ordem e reembolsa a parte que ainda não foi executada. O que já foi executado permanece executado e não é devolvido. Isto custa uma taxa de rede da THORChain.</string>
+    <string name="limit_order_cancel_blocked_not_resting_yet">Esta ordem ainda não está aberta na THORChain. Poderás cancelá-la assim que o depósito for confirmado.</string>
     <string name="limit_order_cancel_error_title">Não é possível cancelar esta ordem</string>
     <string name="limit_order_cancel_error_missing_coin">Este cofre não tem moedas na rede a partir da qual o cancelamento tem de ser enviado.</string>
     <string name="limit_order_cancel_error_no_inbound">A THORChain não tem agora um endereço de entrada disponível para esta rede. Tente novamente daqui a pouco.</string>

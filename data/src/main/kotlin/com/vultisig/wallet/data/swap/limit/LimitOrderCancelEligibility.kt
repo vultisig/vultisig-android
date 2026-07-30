@@ -31,6 +31,20 @@ enum class LimitOrderCancelBlocker {
     UnsupportedSourceChain,
 
     /**
+     * The order's own inbound deposit has not been seen resting in THORChain's queue yet.
+     *
+     * Cancelling now cannot work and can actively do harm. THORChain has not observed the deposit,
+     * so there is no resting order for a `m=<` to match — and on a UTXO source the cancel is built
+     * from a UTXO set that still lists the inputs the unconfirmed placement is spending, so the two
+     * transactions conflict: at an equal fee rate the node rejects the cancel outright
+     * (`insufficient fee, rejecting replacement`), and at a higher one it would REPLACE the
+     * placement, destroying the order by a completely different mechanism than the user asked for.
+     *
+     * Self-resolving: the first queue poll that sees the order resting clears this.
+     */
+    PlacementNotObserved,
+
+    /**
      * The cancel memo does not fit the source chain's per-transaction budget — in practice an ERC20
      * target from a UTXO source, where two full contract-suffixed assets plus two exact amounts
      * overflow the 80-byte `OP_RETURN` cap. Nothing in a cancel memo can be shortened. The order
@@ -125,6 +139,12 @@ fun limitOrderCancelEligibility(order: PendingLimitOrderEntity): LimitOrderCance
     }
     if (order.cancelBroadcastHash != null) {
         return LimitOrderCancelEligibility.Blocked(LimitOrderCancelBlocker.CancelAlreadyBroadcast)
+    }
+    // The order has to be RESTING before it can be cancelled — see [PlacementNotObserved]. Any
+    // field the queue writes proves it was there; `expiryObservedAt` is the one written on every
+    // resting poll, so it is the honest witness rather than a field that only some responses carry.
+    if (order.expiryObservedAt == null && order.depositAmount == null) {
+        return LimitOrderCancelEligibility.Blocked(LimitOrderCancelBlocker.PlacementNotObserved)
     }
 
     // The source chain is recorded explicitly at placement because `sourceAsset` cannot stand in

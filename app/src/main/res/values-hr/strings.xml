@@ -1246,6 +1246,12 @@
     <string name="limit_order_cancel_blocked_unsupported_chain">THORChain ne može usmjeriti izvornu mrežu ovog naloga, pa se otkazivanje ne može poslati.</string>
     <string name="limit_order_cancel_blocked_memo_too_long">Otkazivanje ne stane u ograničenja transakcije ove izvorne mreže. Nalog se svejedno vraća po isteku.</string>
     <string name="limit_order_cancel_blocked_disagrees">Podaci ovog naloga ne odgovaraju onome što javlja THORChain, pa ga nije sigurno otkazati.</string>
+    <string name="verify_limit_order_cancel_title">Otkazuješ limit nalog</string>
+    <string name="limit_order_cancel_done_title">Otkazivanje</string>
+    <string name="limit_order_cancel_done_title_highlight">poslano</string>
+    <string name="limit_order_cancel_done_detail">Tvoj nalog ostaje otvoren dok THORChain ne potvrdi da je zatvoren.</string>
+    <string name="limit_order_cancel_explanation">Otkazivanje zatvara ovaj nalog i vraća dio koji još nije izvršen. Ono što je već izvršeno ostaje izvršeno i ne vraća se. Ovo košta jednu THORChain mrežnu naknadu.</string>
+    <string name="limit_order_cancel_blocked_not_resting_yet">Ovaj nalog još nije aktivan na THORChainu. Možeš ga otkazati kad se njegov polog potvrdi.</string>
     <string name="limit_order_cancel_error_title">Nije moguće otkazati ovaj nalog</string>
     <string name="limit_order_cancel_error_missing_coin">Ovaj trezor nema sredstava na mreži s koje se otkazivanje mora poslati.</string>
     <string name="limit_order_cancel_error_no_inbound">THORChain trenutačno nema dostupnu dolaznu adresu za ovu mrežu. Pokušajte ponovno uskoro.</string>

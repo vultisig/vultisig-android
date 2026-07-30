@@ -31,6 +31,9 @@ internal class LimitOrderCancelEligibilityTest {
         cancelBroadcastHash: String? = null,
         inboundTxHash: String = "HASH",
         createdAt: Long = 0L,
+        // Observed resting by default: every case below is about a live order, and an order the
+        // queue has never reported is blocked for its own reason (see the dedicated test).
+        expiryObservedAt: Long? = 1L,
     ) =
         PendingLimitOrderEntity(
             inboundTxHash = inboundTxHash,
@@ -54,6 +57,7 @@ internal class LimitOrderCancelEligibilityTest {
             observedTargetAsset = observedTargetAsset,
             observedTradeTarget = observedTradeTarget,
             depositAmount = depositAmount,
+            expiryObservedAt = expiryObservedAt,
             cancelBroadcastHash = cancelBroadcastHash,
         )
 
@@ -111,8 +115,26 @@ internal class LimitOrderCancelEligibilityTest {
     }
 
     @Test
-    fun `an unpolled order is cancellable — absence is not disagreement`() {
+    fun `a resting order whose observation carried no amounts is still cancellable`() {
+        // Absence is NOT disagreement: a poll that reported the order resting without echoing its
+        // amounts leaves the signed values as the only source, and they are exact.
         limitOrderCancelEligibility(order(depositAmount = null, observedTradeTarget = null))
+            .isCancellable shouldBe true
+    }
+
+    @Test
+    fun `an order the queue has never reported cannot be cancelled yet`() {
+        // Cancelling here cannot work and can do harm: THORChain has not observed the deposit, so
+        // there is no resting order to match — and on a UTXO source the cancel is built from a UTXO
+        // set that still lists the inputs the unconfirmed placement is spending, so the two
+        // conflict.
+        blockerOf(order(expiryObservedAt = null, depositAmount = null)) shouldBe
+            LimitOrderCancelBlocker.PlacementNotObserved
+    }
+
+    @Test
+    fun `a deposit amount alone proves the order was seen resting`() {
+        limitOrderCancelEligibility(order(expiryObservedAt = null, depositAmount = "100000000"))
             .isCancellable shouldBe true
     }
 

@@ -3,9 +3,12 @@ package com.vultisig.wallet.ui.models.limitorder
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.db.models.PendingLimitOrderEntity
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.swap.limit.LimitOrderCancelDustError
 import com.vultisig.wallet.data.swap.limit.LimitOrderCancelEligibility
@@ -18,7 +21,9 @@ import com.vultisig.wallet.ui.models.deposit.DepositGasFeeHelper
 import java.math.BigInteger
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.first
+import timber.log.Timber
 
 /** Why a cancel could not be prepared. Each case maps to its own user-facing message. */
 internal enum class LimitOrderCancelFailure {
@@ -125,8 +130,6 @@ constructor(
             if (destination == null) BigInteger.ZERO
             else resolveDust(sourceChain, signingCoin.decimal, destination.dustThreshold)
 
-        assertAffordable(vaultId, sourceChain, amount, gasFee)
-
         val specific =
             blockChainSpecificRepository.getSpecific(
                 chain = sourceChain,
@@ -140,6 +143,21 @@ constructor(
                 tokenAmountValue = amount,
                 memo = memo,
             )
+
+        // Priced AFTER the specific, because on a UTXO chain `gasFee` is a per-byte RATE, not a
+        // total — comparing a balance against it would wave through a cancel the vault cannot pay
+        // for. The plan gives the real fee for the exact inputs and OP_RETURN this cancel will
+        // carry.
+        assertAffordable(
+            vaultId = vaultId,
+            chain = sourceChain,
+            signingCoin = signingCoin,
+            amount = amount,
+            gasFee = gasFee,
+            destination = destination,
+            specific = specific,
+            memo = memo,
+        )
 
         val estimatedFee =
             depositGasFeeHelper.getFeesFiatValue(sourceChain, specific, gasFee, signingCoin)
@@ -220,8 +238,12 @@ constructor(
     private suspend fun assertAffordable(
         vaultId: String,
         chain: Chain,
+        signingCoin: Coin,
         amount: BigInteger,
         gasFee: TokenValue,
+        destination: InboundVault?,
+        specific: BlockChainSpecificAndUtxo,
+        memo: String,
     ) {
         val balance =
             accountsRepository
@@ -231,11 +253,53 @@ constructor(
                 .firstOrNull { it.token.isNativeToken }
                 ?.tokenValue
                 ?.value ?: return
-        if (balance < amount + gasFee.value) {
+        val totalFee =
+            totalFee(vaultId, chain, signingCoin, amount, gasFee, destination, specific, memo)
+        if (balance < amount + totalFee) {
             throw LimitOrderCancelException(
                 LimitOrderCancelFailure.InsufficientBalance,
                 "vault cannot cover the cancel on $chain",
             )
+        }
+    }
+
+    /**
+     * The whole fee this cancel will pay, in the signing coin's smallest units.
+     *
+     * On a UTXO chain [gasFee] is a sat/vByte rate, so the total has to come from a transaction
+     * plan built over the same inputs, amount and OP_RETURN the cancel will carry. Everywhere else
+     * the fee service already reports a total. A plan that cannot be built falls back to the rate,
+     * which under-states the fee — deliberately, because refusing a cancel on a failed local
+     * estimate is worse than letting the node have the last word.
+     */
+    private suspend fun totalFee(
+        vaultId: String,
+        chain: Chain,
+        signingCoin: Coin,
+        amount: BigInteger,
+        gasFee: TokenValue,
+        destination: InboundVault?,
+        specific: BlockChainSpecificAndUtxo,
+        memo: String,
+    ): BigInteger {
+        if (chain.standard != TokenStandard.UTXO || destination == null) return gasFee.value
+        return try {
+            depositGasFeeHelper
+                .getBitcoinTransactionPlan(
+                    vaultId = vaultId,
+                    selectedToken = signingCoin,
+                    dstAddress = destination.address,
+                    tokenAmountInt = amount,
+                    specific = specific,
+                    memo = memo,
+                )
+                .fee
+                .toBigInteger()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Could not plan the cancel transaction on %s; pricing off the rate", chain)
+            gasFee.value
         }
     }
 

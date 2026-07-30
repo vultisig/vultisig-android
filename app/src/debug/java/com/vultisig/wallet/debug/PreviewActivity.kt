@@ -114,6 +114,7 @@ import com.vultisig.wallet.ui.models.keysign.TonMessageOperation
 import com.vultisig.wallet.ui.models.keysign.TonMessageUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
+import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelPresentation
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderHistoryStatus
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderHistoryUiModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
@@ -244,6 +245,8 @@ class PreviewActivity : ComponentActivity() {
                     "deposit_mint_done" -> DepositMintDonePreview()
                     "transaction_history_empty" -> TransactionHistoryEmptyState()
                     "limit_orders_tab" -> LimitOrdersTabPreview()
+                    "limit_order_cancel_verify" -> LimitOrderCancelVerifyPreview()
+                    "limit_order_cancel_done" -> LimitOrderCancelDonePreview()
                     "limit_orders_tab_empty" -> LimitOrdersTabPreview(orders = emptyList())
                     "empty_referral" -> EmptyReferralBanner(onClickedCreateReferral = {})
                     "fast_vault_verification" -> FastVaultVerificationPreview()
@@ -3435,3 +3438,44 @@ private val previewLimitOrders =
             createdAt = 0L,
         ),
     )
+
+/** The cancel as it reads before signing and once broadcast — both keyed off the `m=<` memo. */
+private const val PREVIEW_CANCEL_MEMO = "m=<:620000000BTC.BTC:12400000ETH.ETH:0"
+
+private val previewCancelDeposit =
+    DepositTransactionUiModel(
+        token = ValuedToken(token = Coins.Bitcoin.BTC, value = "0.00002", fiatValue = "$1.28"),
+        srcAddress = "bc1qrncuculen6deh35at408fv95ng9kx3ve70gjjx",
+        dstAddress = "bc1qp6yzmq5kjr8yvyw7v7cw9m7qvz3d7q9j4pqh0s",
+        memo = PREVIEW_CANCEL_MEMO,
+        networkFeeTokenValue = "0.00001 BTC",
+        networkFeeFiatValue = "$0.64",
+        titleRes = R.string.verify_limit_order_cancel_title,
+        limitCancelPair = LimitOrderCancelPresentation.pairCaption(PREVIEW_CANCEL_MEMO),
+    )
+
+@Composable
+private fun LimitOrderCancelVerifyPreview() {
+    VerifyDepositScreen(
+        state = VerifyDepositUiModel(depositTransactionUiModel = previewCancelDeposit),
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onFastSignClick = {},
+        onConfirm = {},
+    )
+}
+
+@Composable
+private fun LimitOrderCancelDonePreview() {
+    TransactionDoneView(
+        transactionHash = "aeb458a07d13966eecdc7216bfd9a06dfd643472df456923ea5ffc90d0fa0254",
+        approveTransactionHash = "",
+        transactionLink = "",
+        approveTransactionLink = "",
+        onComplete = {},
+        onBack = {},
+        onUriClick = {},
+        transactionTypeUiModel = TransactionTypeUiModel.Deposit(previewCancelDeposit),
+        showToolbar = true,
+    )
+}

@@ -146,6 +146,8 @@ private fun LimitOrderCancelBlocker.toUiText(): UiText =
                 R.string.limit_order_cancel_blocked_already_sent
             LimitOrderCancelBlocker.UnsupportedSourceChain ->
                 R.string.limit_order_cancel_blocked_unsupported_chain
+            LimitOrderCancelBlocker.PlacementNotObserved ->
+                R.string.limit_order_cancel_blocked_not_resting_yet
             LimitOrderCancelBlocker.MemoTooLongForSourceChain ->
                 R.string.limit_order_cancel_blocked_memo_too_long
             LimitOrderCancelBlocker.SignedDataDisagreesWithChain ->
