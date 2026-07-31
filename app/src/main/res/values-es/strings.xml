@@ -1263,6 +1263,7 @@
     <string name="limit_order_cancel_done_title_highlight">enviada</string>
     <string name="limit_order_cancel_done_detail">Tu orden sigue abierta hasta que THORChain confirme que se cerró.</string>
     <string name="limit_order_cancel_explanation">Cancelar cierra esta orden y reembolsa la parte que aún no se ha ejecutado. Lo que ya se ejecutó permanece ejecutado y no se devuelve. Esto cuesta una comisión de red de THORChain.</string>
+    <string name="limit_order_cancel_explanation_l1">Cancelar cierra esta orden y reembolsa la parte que aún no se ha ejecutado. Lo ya ejecutado se mantiene y no se devuelve. El importe de arriba es el mínimo que THORChain necesita para ver esta solicitud — se dona al pool y no se puede reembolsar — más una comisión de red.</string>
     <string name="limit_order_cancel_blocked_not_resting_yet">Esta orden aún no está abierta en THORChain. Podrás cancelarla cuando su depósito se confirme.</string>
     <string name="limit_order_cancel_blocked_legacy">Esta orden se creó con una versión anterior de la app, que no guardó los datos necesarios para cancelarla. Se reembolsará automáticamente al vencer.</string>
     <string name="limit_order_cancel_error_title">No se puede cancelar esta orden</string>

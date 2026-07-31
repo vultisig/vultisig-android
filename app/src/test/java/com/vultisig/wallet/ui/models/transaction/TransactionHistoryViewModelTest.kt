@@ -5,6 +5,7 @@ package com.vultisig.wallet.ui.models.transaction
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.db.models.PendingLimitOrderEntity
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
@@ -13,8 +14,10 @@ import com.vultisig.wallet.data.models.LimitOrderStatus
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
+import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.PendingLimitOrderRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
+import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
 import com.vultisig.wallet.data.usecases.RefreshLimitOrdersUseCase
 import com.vultisig.wallet.data.usecases.RefreshPendingTransactionsUseCase
 import com.vultisig.wallet.ui.models.TransactionAssetUiModel
@@ -84,6 +87,8 @@ internal class TransactionHistoryViewModelTest {
     private lateinit var mapLimitOrderToUiModel: LimitOrderToUiModelMapper
     private lateinit var buildLimitOrderCancelTransaction: BuildLimitOrderCancelTransactionUseCase
     private lateinit var depositTransactionRepository: DepositTransactionRepository
+    private lateinit var featureFlagRepository: FeatureFlagRepository
+    private lateinit var limitSwapConfig: LimitSwapConfig
     private lateinit var navigator: Navigator<Destination>
 
     /** Sets up mocks and test dispatcher before each test. */
@@ -101,6 +106,13 @@ internal class TransactionHistoryViewModelTest {
         mapLimitOrderToUiModel = LimitOrderToUiModelMapper(TokenValueToDecimalUiStringMapperImpl())
         buildLimitOrderCancelTransaction = mockk(relaxed = true)
         depositTransactionRepository = mockk(relaxed = true)
+        // Both flags ON by default so the existing cases see the Limit tab; the gate has its own
+        // tests below.
+        featureFlagRepository = mockk(relaxed = true)
+        coEvery { featureFlagRepository.getFeatureFlags() } returns
+            FeatureFlagJson(isLimitSwapEnabled = true)
+        limitSwapConfig = mockk(relaxed = true)
+        every { limitSwapConfig.isFeatureEnabled } returns flowOf(true)
         navigator = mockk(relaxed = true)
     }
 
@@ -122,6 +134,8 @@ internal class TransactionHistoryViewModelTest {
             mapLimitOrderToUiModel = mapLimitOrderToUiModel,
             buildLimitOrderCancelTransaction = buildLimitOrderCancelTransaction,
             depositTransactionRepository = depositTransactionRepository,
+            featureFlagRepository = featureFlagRepository,
+            limitSwapConfig = limitSwapConfig,
             navigator = navigator,
         )
 
@@ -344,6 +358,33 @@ internal class TransactionHistoryViewModelTest {
         testScope.runCurrent()
 
         vm.uiState.value.limitOrders.map { it.id } shouldBe listOf("RUNE_TO_ETH")
+    }
+
+    /**
+     * Placing an order needs the remote kill switch AND the local toggle, which defaults off — so
+     * an unconditional tab is a fourth, permanently empty tab for nearly everyone.
+     */
+    @Test
+    fun `the limit tab is hidden when the feature cannot be reached`() {
+        every { limitSwapConfig.isFeatureEnabled } returns flowOf(false)
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+
+        vm.uiState.value.isLimitTabVisible.shouldBeFalse()
+    }
+
+    /** Turning the feature off must never hide an order that is still resting and cancellable. */
+    @Test
+    fun `an existing order keeps the limit tab reachable with the feature off`() {
+        every { limitSwapConfig.isFeatureEnabled } returns flowOf(false)
+        every { pendingLimitOrderRepository.observeOrders(VAULT_ID) } returns
+            flowOf(listOf(restingOrder()))
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+
+        vm.uiState.value.isLimitTabVisible.shouldBeTrue()
     }
 
     private fun restingOrder(

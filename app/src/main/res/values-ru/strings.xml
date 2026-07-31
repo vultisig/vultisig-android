@@ -1270,6 +1270,7 @@
     <string name="limit_order_cancel_done_title_highlight">отправлена</string>
     <string name="limit_order_cancel_done_detail">Ваш ордер остаётся открытым, пока THORChain не подтвердит его закрытие.</string>
     <string name="limit_order_cancel_explanation">Отмена закрывает этот ордер и возвращает неисполненную часть. Уже исполненная часть остаётся исполненной и не возвращается. За это списывается одна сетевая комиссия THORChain.</string>
+    <string name="limit_order_cancel_explanation_l1">Отмена закрывает этот ордер и возвращает неисполненную часть. Уже исполненная часть остаётся исполненной и не возвращается. Сумма выше — это минимум, необходимый THORChain, чтобы увидеть этот запрос: она передаётся в пул и не подлежит возврату, плюс одна сетевая комиссия.</string>
     <string name="limit_order_cancel_blocked_not_resting_yet">Этот ордер ещё не размещён в THORChain. Отменить его можно после подтверждения депозита.</string>
     <string name="limit_order_cancel_blocked_legacy">Этот ордер размещён в более старой версии приложения, которая не сохранила данные, нужные для отмены. Средства вернутся автоматически по истечении срока.</string>
     <string name="limit_order_cancel_error_title">Не удалось отменить ордер</string>

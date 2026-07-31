@@ -1294,6 +1294,7 @@
     <string name="limit_order_cancel_done_title_highlight">전송됨</string>
     <string name="limit_order_cancel_done_detail">THORChain이 종료를 확인할 때까지 주문은 계속 열려 있습니다.</string>
     <string name="limit_order_cancel_explanation">취소하면 이 주문이 종료되고 아직 체결되지 않은 부분이 환불됩니다. 이미 체결된 부분은 그대로 유지되며 반환되지 않습니다. THORChain 네트워크 수수료가 한 번 부과됩니다.</string>
+    <string name="limit_order_cancel_explanation_l1">취소하면 이 주문이 종료되고 아직 체결되지 않은 부분이 환불됩니다. 이미 체결된 부분은 그대로 유지되며 반환되지 않습니다. 위 금액은 THORChain이 이 요청을 인식하는 데 필요한 최소 금액으로, 풀에 기부되며 환불되지 않습니다. 여기에 네트워크 수수료가 추가됩니다.</string>
     <string name="limit_order_cancel_blocked_not_resting_yet">이 주문은 아직 THORChain에 등록되지 않았습니다. 입금이 확인되면 취소할 수 있습니다.</string>
     <string name="limit_order_cancel_blocked_legacy">이 주문은 취소에 필요한 정보를 저장하지 않는 이전 버전의 앱에서 생성되었습니다. 만료되면 자동으로 환불됩니다.</string>
     <string name="limit_order_cancel_error_title">이 주문을 취소할 수 없습니다</string>

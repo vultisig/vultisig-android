@@ -3393,6 +3393,7 @@ private fun LimitOrdersTabPreview(orders: List<LimitOrderHistoryUiModel> = previ
                 selectedTab = TransactionHistoryTab.LIMIT,
                 isLoading = false,
                 limitOrders = orders,
+                isLimitTabVisible = true,
             ),
         onBack = {},
         onTabSelected = {},

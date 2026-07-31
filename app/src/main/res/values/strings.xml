@@ -1351,6 +1351,7 @@
     <string name="limit_order_cancel_done_title_highlight">sent</string>
     <string name="limit_order_cancel_done_detail">Your order stays open until THORChain confirms it closed.</string>
     <string name="limit_order_cancel_explanation">Cancelling closes this order and refunds the part that hasn\'t filled yet. Anything already filled stays filled and is not returned. This costs one THORChain network fee.</string>
+    <string name="limit_order_cancel_explanation_l1">Cancelling closes this order and refunds the part that hasn\'t filled yet. Anything already filled stays filled and is not returned. The amount above is the minimum THORChain needs to see this request — it is donated to the pool and cannot be refunded — plus one network fee.</string>
     <string name="limit_order_cancel_blocked_not_resting_yet">This order isn\'t resting on THORChain yet. You can cancel it once its deposit confirms.</string>
     <string name="limit_order_cancel_blocked_legacy">This order was placed by an older version of the app, which didn\'t record what a cancellation needs. It will still refund automatically when it expires.</string>
     <string name="limit_order_cancel_error_title">Cannot cancel this order</string>

@@ -1269,6 +1269,7 @@
     <string name="limit_order_cancel_done_title_highlight">poslano</string>
     <string name="limit_order_cancel_done_detail">Tvoj nalog ostaje otvoren dok THORChain ne potvrdi da je zatvoren.</string>
     <string name="limit_order_cancel_explanation">Otkazivanje zatvara ovaj nalog i vraća dio koji još nije izvršen. Ono što je već izvršeno ostaje izvršeno i ne vraća se. Ovo košta jednu THORChain mrežnu naknadu.</string>
+    <string name="limit_order_cancel_explanation_l1">Otkazivanje zatvara ovaj nalog i vraća dio koji još nije izvršen. Već izvršeni dio ostaje izvršen i ne vraća se. Iznos iznad je minimum koji THORChain treba da vidi ovaj zahtjev — donira se poolu i ne može se vratiti — uz jednu mrežnu naknadu.</string>
     <string name="limit_order_cancel_blocked_not_resting_yet">Ovaj nalog još nije aktivan na THORChainu. Možeš ga otkazati kad se njegov polog potvrdi.</string>
     <string name="limit_order_cancel_blocked_legacy">Ovaj nalog postavljen je starijom verzijom aplikacije koja nije spremila podatke potrebne za otkazivanje. Sredstva će se automatski vratiti kad nalog istekne.</string>
     <string name="limit_order_cancel_error_title">Nije moguće otkazati ovaj nalog</string>

@@ -164,12 +164,19 @@ internal fun VerifyDepositScreen(
                     SwapToken(valuedToken = tx.token, isLoading = state.isLoading)
 
                     // Stated before signing, not after: cancelling refunds only what has not
-                    // filled,
-                    // and on an L1 route the amount above is donated with no refund path.
+                    // filled, and on the L1 route the amount above is dust that is DONATED — it has
+                    // no refund path — so that route gets a sentence that names it rather than the
+                    // one-network-fee wording, which would understate the cost by 2 DOGE on
+                    // Dogecoin.
                     if (tx.limitCancelPair != null) {
                         UiSpacer(12.dp)
                         Text(
-                            text = stringResource(R.string.limit_order_cancel_explanation),
+                            text =
+                                stringResource(
+                                    if (tx.limitCancelDonatesDust)
+                                        R.string.limit_order_cancel_explanation_l1
+                                    else R.string.limit_order_cancel_explanation
+                                ),
                             style = Theme.brockmann.supplementary.caption,
                             color = Theme.v2.colors.text.tertiary,
                         )

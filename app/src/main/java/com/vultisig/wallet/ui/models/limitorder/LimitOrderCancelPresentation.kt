@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.limitorder
 
 import com.vultisig.wallet.data.swap.limit.LimitSwapCancelMemo
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
+import java.math.BigInteger
 
 /**
  * How a limit-order CANCEL reads on the screens that surround signing: Verify and the done screen.
@@ -20,6 +21,19 @@ import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 internal object LimitOrderCancelPresentation {
 
     fun isCancel(memo: String?): Boolean = LimitSwapCancelMemo.isCancelMemo(memo)
+
+    /**
+     * Whether this cancel donates dust on top of the network fee — true on the L1 route, false on
+     * the THORChain one.
+     *
+     * Read off the AMOUNT rather than the source chain, because the amount is what the user is
+     * actually about to part with: a THORChain-sourced cancel is a `MsgDeposit` carrying no coins,
+     * every other route carries the dust Bifrost needs to observe the request. Nothing attached to
+     * an `m=<` is refundable, so a cost sentence that mentions only the network fee understates it
+     * — by 2 DOGE on Dogecoin.
+     */
+    fun donatesDust(memo: String?, amount: BigInteger): Boolean =
+        isCancel(memo) && amount.signum() > 0
 
     /**
      * The order's asset pair (`SRC → TGT`) parsed out of a cancel memo, or null when either leg

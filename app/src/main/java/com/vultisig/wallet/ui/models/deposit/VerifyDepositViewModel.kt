@@ -60,6 +60,15 @@ internal data class DepositTransactionUiModel(
      * co-signer — which derives it from the same memo bytes — cannot disagree.
      */
     val limitCancelPair: String? = null,
+    /**
+     * True when this cancel is the L1 route, i.e. it attaches dust to reach THORChain.
+     *
+     * That dust is DONATED — nothing attached to an `m=<` has a refund path — and on Dogecoin it is
+     * 2 DOGE, not a rounding error. It is the cancel's second cost and the only one the network-fee
+     * row does not cover, so the explanation has to name it. False for the THORChain route, whose
+     * `MsgDeposit` carries no coins and whose whole cost really is one network fee.
+     */
+    val limitCancelDonatesDust: Boolean = false,
 )
 
 internal data class VerifyDepositUiModel(
@@ -124,7 +133,13 @@ constructor(
                         pairedAddress = transaction.pairedAddress,
                         pool = transaction.pool,
                         titleRes = depositVerifyTitleRes(transaction.operation, transaction.memo),
-                        limitCancelPair = LimitOrderCancelPresentation.pairCaption(transaction.memo),
+                        limitCancelPair =
+                            LimitOrderCancelPresentation.pairCaption(transaction.memo),
+                        limitCancelDonatesDust =
+                            LimitOrderCancelPresentation.donatesDust(
+                                memo = transaction.memo,
+                                amount = transaction.srcTokenValue.value,
+                            ),
                     )
 
                 state.update {

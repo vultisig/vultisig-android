@@ -219,8 +219,15 @@ private fun PendingLimitOrderEntity.expiryText(nowMs: Long): UiText? {
  *
  * An order fills via streaming sub-swaps, so a partial fill is a real, stable state and the split
  * is what explains a two-leg settlement: part paid out in the target asset, the remainder refunded.
+ *
+ * Suppressed for a FILLED order, and only for that one. Its stored split is the last RESTING
+ * observation, taken before the fill that closed it, and `recordStatus` does not revise the fill
+ * columns — so the card would contradict itself, reading "Filled" beside "Filled 40%". Every other
+ * terminal keeps it: an order that expired 40% filled paid out that part and refunded the rest, and
+ * that split is the only explanation the user gets for a two-leg settlement.
  */
 private fun PendingLimitOrderEntity.fillPercent(): Int? {
+    if (LimitOrderStatus.fromRaw(status) == LimitOrderStatus.Filled) return null
     val deposit = depositAmount?.toBigIntegerOrNull()?.takeIf { it.signum() > 0 } ?: return null
     val filled = filledInAmount?.toBigIntegerOrNull()?.takeIf { it.signum() > 0 } ?: return null
     if (filled >= deposit) return 100

@@ -16,9 +16,11 @@ import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
+import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.PendingLimitOrderRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryType
+import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
 import com.vultisig.wallet.data.usecases.RefreshLimitOrdersUseCase
 import com.vultisig.wallet.data.usecases.RefreshPendingTransactionsUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -161,6 +163,16 @@ data class TransactionHistoryUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val selectedItem: TransactionHistoryItemUiModel? = null,
+    /**
+     * Whether the Limit tab is offered at all.
+     *
+     * Placing an order needs BOTH the remote `limit-swap` kill switch and the local Advanced
+     * Settings toggle, which defaults off — so for almost everyone an unconditional tab is a
+     * fourth, permanently empty tab for a feature they cannot reach. It is also shown when the
+     * vault already HAS orders, so turning the feature off never hides an order that is still
+     * resting.
+     */
+    val isLimitTabVisible: Boolean = false,
     val isAssetSearchSheetVisible: Boolean = false,
     val assetSearchItems: List<TransactionAssetUiModel> = emptyList(),
     val selectedAssetIds: Set<String> = emptySet(),
@@ -183,6 +195,8 @@ constructor(
     private val mapLimitOrderToUiModel: LimitOrderToUiModelMapper,
     private val buildLimitOrderCancelTransaction: BuildLimitOrderCancelTransactionUseCase,
     private val depositTransactionRepository: DepositTransactionRepository,
+    private val featureFlagRepository: FeatureFlagRepository,
+    private val limitSwapConfig: LimitSwapConfig,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
@@ -197,6 +211,7 @@ constructor(
 
     init {
         observeTransactions()
+        observeLimitTabVisibility()
         observeAssetSearchItems()
         observeLimitOrders()
         refreshOnEnter()
@@ -330,7 +345,32 @@ constructor(
                 ) { orders, now, assetIds ->
                     mapLimitOrderToUiModel.map(orders, now).filter { it.matchesAssetIds(assetIds) }
                 }
-                .collect { uiModels -> _uiState.update { it.copy(limitOrders = uiModels) } }
+                .collect { uiModels ->
+                    _uiState.update {
+                        it.copy(
+                            limitOrders = uiModels,
+                            // An order the user already has keeps the tab reachable regardless of
+                            // the flags — it is still resting, and it is still cancellable.
+                            isLimitTabVisible = it.isLimitTabVisible || uiModels.isNotEmpty(),
+                        )
+                    }
+                }
+        }
+    }
+
+    /**
+     * The Limit tab is offered only when the feature is actually reachable: the remote `limit-swap`
+     * kill switch AND the local Advanced Settings toggle, the same conjunction the swap form gates
+     * placement on. Without it every user gets a fourth tab that can only ever be empty.
+     */
+    private fun observeLimitTabVisibility() {
+        viewModelScope.safeLaunch(onError = { t -> Timber.w(t, "Limit tab gate failed") }) {
+            val isRemoteEnabled = featureFlagRepository.getFeatureFlags().isLimitSwapEnabled
+            limitSwapConfig.isFeatureEnabled.collect { isLocallyEnabled ->
+                if (isRemoteEnabled && isLocallyEnabled) {
+                    _uiState.update { it.copy(isLimitTabVisible = true) }
+                }
+            }
         }
     }
 

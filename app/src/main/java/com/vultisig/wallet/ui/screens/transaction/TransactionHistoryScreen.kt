@@ -177,11 +177,16 @@ internal fun TransactionHistoryScreen(
                             onClick = { onTabSelected(TransactionHistoryTab.SEND) },
                         )
                     }
-                    tab {
-                        VsTab(
-                            label = stringResource(R.string.transaction_history_tab_limit),
-                            onClick = { onTabSelected(TransactionHistoryTab.LIMIT) },
-                        )
+                    // Last, and only when the feature is reachable or the vault already has orders
+                    // — see [TransactionHistoryUiState.isLimitTabVisible]. Being last is what keeps
+                    // the other three tabs' indices matching their ordinals when it is absent.
+                    if (state.isLimitTabVisible) {
+                        tab {
+                            VsTab(
+                                label = stringResource(R.string.transaction_history_tab_limit),
+                                onClick = { onTabSelected(TransactionHistoryTab.LIMIT) },
+                            )
+                        }
                     }
                 }
                 UiSpacer(weight = 1f)
