@@ -46,8 +46,9 @@ class KeysignPayloadProtoMapperSignSuiTest {
 
     @Test
     fun `signSui takes precedence over a present suicheSpecific`() {
-        // Defensive: even if an initiator wrongly attaches both, the SignDirect bytes win so the
-        // helper never rebuilds a Pay/PaySui from RPC coins it shouldn't use.
+        // Initiators do attach both — iOS and the extension send a zeroed `suicheSpecific`, and so
+        // does this app's own outbound mapper. The SignDirect bytes win either way, so the helper
+        // never rebuilds a Pay/PaySui from RPC coins it shouldn't use.
         val payload =
             inbound(
                 basePayload(

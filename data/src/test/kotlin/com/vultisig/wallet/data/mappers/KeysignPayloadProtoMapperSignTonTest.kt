@@ -13,12 +13,15 @@ import vultisig.keysign.v1.TonMessage
 /**
  * Pins the `signTon` (TON Connect messages) proto round-trip in both directions.
  *
- * The outbound mapper used to drop `signTon`, so a relayed payload reached the peer with `signTon
- * == null`. [TonHelper] then took its native-send fallback and built a single plain transfer to
- * `toAddress`/`toAmount` with the memo as a text comment — discarding messages 2..N and message 1's
- * `payload`/`stateInit` BOC. The resulting signing input hashes differently from the initiator's,
- * so the DKLS setup message (keyed by `md5(hash)`) 404s and keysign never completes. TON Connect
- * requests routinely carry more than one message, so the fallback is not a near-miss.
+ * The outbound mapper dropped `signTon`, so any payload it relayed would reach the peer with
+ * `signTon == null`. [TonHelper] then takes its native-send fallback and builds a single plain
+ * transfer to `toAddress`/`toAmount` with the memo as a text comment — discarding messages 2..N and
+ * message 1's `payload`/`stateInit` BOC. That signing input hashes differently from the
+ * initiator's, so the DKLS setup message (keyed by `md5(hash)`) 404s and keysign never completes.
+ * TON Connect requests routinely carry more than one message, so the fallback is not a near-miss.
+ *
+ * Only the extension originates `signTon` today, and Android never re-serializes a payload it
+ * joined, so the gap was latent rather than a shipped regression.
  */
 class KeysignPayloadProtoMapperSignTonTest {
 

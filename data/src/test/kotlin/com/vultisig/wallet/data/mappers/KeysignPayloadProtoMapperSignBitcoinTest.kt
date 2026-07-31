@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import java.math.BigInteger
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import vultisig.keysign.v1.BitcoinInput
 import vultisig.keysign.v1.BitcoinOutput
@@ -16,10 +17,13 @@ import vultisig.keysign.v1.SignBitcoin
  * Pins the `signBitcoin` (dApp PSBT) proto round-trip in both directions.
  *
  * `signBitcoin` is the only carrier of the PSBT marker: [BlockChainSpecific.BitcoinPSBT] is a
- * sibling of `UTXO`, not a subtype, so it deliberately maps to no `blockchain_specific` member. The
- * outbound mapper used to drop `signBitcoin`, which left the relayed payload with neither a
- * `sign_bitcoin` block nor a chain-specific one — and the inbound mapper rejects that outright
- * rather than merely signing different bytes.
+ * sibling of `UTXO`, not a subtype, so it maps to no `blockchain_specific` member. The outbound
+ * mapper dropped `signBitcoin`, which left anything it relayed with neither a `sign_bitcoin` block
+ * nor a chain-specific one — and the inbound mapper rejects that outright rather than merely
+ * signing different bytes, which the second test pins.
+ *
+ * Only the extension originates `signBitcoin` today, and Android never re-serializes a payload it
+ * joined, so the gap was latent rather than a shipped regression.
  */
 class KeysignPayloadProtoMapperSignBitcoinTest {
 
@@ -28,7 +32,43 @@ class KeysignPayloadProtoMapperSignBitcoinTest {
 
     @Test
     fun `signBitcoin survives the KeysignPayload to proto round-trip`() {
-        val signBitcoin =
+        val proto = requireNotNull(outbound(psbtPayload()))
+        // The outbound mapper must carry signBitcoin onto the wire. `BitcoinPSBT` holds no data,
+        // so Android re-emits no chain-specific block and signBitcoin is the peer's only handle.
+        assertEquals(PSBT, proto.signBitcoin)
+        assertNull(proto.utxoSpecific)
+
+        // …and the inbound mapper must restore both the PSBT and its marker on the peer device.
+        val restored = inbound(proto)
+        assertEquals(PSBT, restored.signBitcoin)
+        assertEquals(PSBT.inputs, restored.signBitcoin?.inputs)
+        assertEquals(PSBT.outputs, restored.signBitcoin?.outputs)
+        assertEquals(BlockChainSpecific.BitcoinPSBT, restored.blockChainSpecific)
+    }
+
+    @Test
+    fun `a PSBT payload stripped of signBitcoin leaves the peer nothing to resolve`() {
+        val proto = requireNotNull(outbound(psbtPayload())).copy(signBitcoin = null)
+
+        assertThrows(IllegalStateException::class.java) { inbound(proto) }
+    }
+
+    private fun psbtPayload() =
+        KeysignPayload(
+            coin = BTC,
+            toAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+            toAmount = BigInteger("200000"),
+            blockChainSpecific = BlockChainSpecific.BitcoinPSBT,
+            memo = null,
+            vaultPublicKeyECDSA = "pub",
+            vaultLocalPartyID = "local",
+            libType = null,
+            wasmExecuteContractPayload = null,
+            signBitcoin = PSBT,
+        )
+
+    private companion object {
+        val PSBT =
             SignBitcoin(
                 version = 2u,
                 locktime = 0u,
@@ -55,35 +95,6 @@ class KeysignPayloadProtoMapperSignBitcoinTest {
                     ),
             )
 
-        val payload =
-            KeysignPayload(
-                coin = BTC,
-                toAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-                toAmount = BigInteger("200000"),
-                blockChainSpecific = BlockChainSpecific.BitcoinPSBT,
-                memo = null,
-                vaultPublicKeyECDSA = "pub",
-                vaultLocalPartyID = "local",
-                libType = null,
-                wasmExecuteContractPayload = null,
-                signBitcoin = signBitcoin,
-            )
-
-        val proto = requireNotNull(outbound(payload))
-        // The outbound mapper must carry signBitcoin onto the wire; a PSBT payload has no
-        // chain-specific block, so this is the peer's only handle on the transaction.
-        assertEquals(signBitcoin, proto.signBitcoin)
-        assertNull(proto.utxoSpecific)
-
-        // …and the inbound mapper must restore both the PSBT and its marker on the peer device.
-        val restored = inbound(proto)
-        assertEquals(signBitcoin, restored.signBitcoin)
-        assertEquals(signBitcoin.inputs, restored.signBitcoin?.inputs)
-        assertEquals(signBitcoin.outputs, restored.signBitcoin?.outputs)
-        assertEquals(BlockChainSpecific.BitcoinPSBT, restored.blockChainSpecific)
-    }
-
-    private companion object {
         val BTC =
             Coin(
                 chain = Chain.Bitcoin,

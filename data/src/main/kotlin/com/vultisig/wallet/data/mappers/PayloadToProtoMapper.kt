@@ -258,12 +258,13 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                 } else null,
             wasmExecuteContractPayload = keysignPayload.wasmExecuteContractPayload,
             // Every `sign_data` variant carries pre-built signing bytes a peer cannot reconstruct.
-            // Relaying one as null makes the peer rebuild a default input (bank send / plain
-            // transfer / Pay / OperationPayment) whose message hash diverges from the initiator's,
-            // so the DKLS setup message — keyed by md5(hash) — 404s and keysign never completes.
-            // `signBitcoin` also carries the only PSBT marker: drop it and the payload reaches the
-            // peer with no `blockchain_specific` member at all, which the inbound mapper rejects.
-            // The proto keeps the seven in a `oneof`, so at most one is ever set.
+            // Relaying one as null makes the peer fall back to rebuilding a default input (bank
+            // send / plain transfer / Pay / OperationPayment): at best its message hash diverges
+            // from the initiator's and the md5(hash)-keyed DKLS setup message 404s; at worst there
+            // is nothing to rebuild from and it throws — a `signSui` payload carries no toAddress,
+            // and `signBitcoin` carries the only PSBT marker, so without it the payload reaches the
+            // peer with no `blockchain_specific` member at all. The proto keeps the seven in a
+            // `oneof`, so at most one is ever set.
             signAmino = keysignPayload.signAmino,
             signDirect = keysignPayload.signDirect,
             signSolana = keysignPayload.signSolana,
