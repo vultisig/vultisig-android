@@ -53,7 +53,10 @@ object SuiHelper {
         return "0x" + hex.ifEmpty { "0" }
     }
 
-    private fun SuiCoin.isNativeSui(): Boolean = isSameSuiCoinType(coinType, suiContractAddress)
+    internal fun isNativeSuiCoinType(coinType: String): Boolean =
+        isSameSuiCoinType(coinType, suiContractAddress)
+
+    private fun SuiCoin.isNativeSui(): Boolean = isNativeSuiCoinType(coinType)
 
     /**
      * Upper bound on the coin objects a single send may reference. Sui rejects a transaction whose

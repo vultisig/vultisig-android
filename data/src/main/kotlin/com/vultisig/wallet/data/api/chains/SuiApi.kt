@@ -34,6 +34,9 @@ interface SuiApi {
 
     suspend fun getAllCoins(address: String): List<SuiCoin>
 
+    /** The on-chain [SuiCoinMetadata] for [coinType], or `null` when the coin publishes none. */
+    suspend fun getCoinMetadata(coinType: String): SuiCoinMetadata?
+
     suspend fun executeTransactionBlock(unsignedTransaction: String, signature: String): String
 
     suspend fun dryRunTransaction(transactionBytes: String): SuiDryRunResponse
@@ -121,6 +124,21 @@ constructor(private val http: HttpClient, private val json: Json) : SuiApi {
         } while (cursor != null)
 
         return allCoins
+    }
+
+    override suspend fun getCoinMetadata(coinType: String): SuiCoinMetadata? {
+        val response =
+            http.postRpc<EvmRpcResponseJson<SuiCoinMetadata>>(
+                url = rpcUrl,
+                method = "suix_getCoinMetadata",
+                params = buildJsonArray { add(coinType) },
+            )
+        // A null result is the node's answer for a coin that publishes no metadata object, and is
+        // distinct from an RPC failure — only the latter may abort, so a transient outage is never
+        // read as "this coin has no metadata".
+        val error = response.error
+        if (error != null) error(error.describe("Failed to fetch sui coin metadata"))
+        return response.result
     }
 
     override suspend fun executeTransactionBlock(
@@ -218,6 +236,18 @@ private fun RpcError?.describe(fallback: String): String =
  */
 internal class SuiRpcException(val rpcError: RpcError) :
     Exception("Sui RPC error ${rpcError.code}: ${rpcError.message}")
+
+/**
+ * A Sui coin's on-chain `CoinMetadata` object. [decimals] and [symbol] are required: a coin the
+ * node cannot describe must be dropped rather than shown at a guessed magnitude or under a
+ * placeholder ticker.
+ */
+@Serializable
+data class SuiCoinMetadata(
+    @SerialName("decimals") val decimals: Int,
+    @SerialName("symbol") val symbol: String,
+    @SerialName("iconUrl") val iconUrl: String? = null,
+)
 
 @Serializable
 data class SuiDryRunResponse(@SerialName("effects") val effects: SuiTransactionEffects)
