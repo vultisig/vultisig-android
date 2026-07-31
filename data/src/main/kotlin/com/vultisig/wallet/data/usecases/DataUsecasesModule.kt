@@ -186,6 +186,8 @@ internal interface DataUsecasesModule {
 
     @Binds @Singleton fun bindRippleTokenFinder(impl: RippleTokenFinderImpl): RippleTokenFinder
 
+    @Binds @Singleton fun bindSuiTokenFinder(impl: SuiTokenFinderImpl): SuiTokenFinder
+
     @Binds
     @Singleton
     fun bindGetChainTokenUseCase(impl: GetChainTokensUseCaseImpl): GetChainTokensUseCase

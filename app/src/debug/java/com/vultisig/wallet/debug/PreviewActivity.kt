@@ -87,6 +87,8 @@ import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.ChainUiModel
 import com.vultisig.wallet.ui.models.DeviceMeta
 import com.vultisig.wallet.ui.models.TokenDetailUiModel
+import com.vultisig.wallet.ui.models.TokenSelectionUiModel
+import com.vultisig.wallet.ui.models.TokenUiModel
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VaultDetailUiModel
@@ -134,6 +136,7 @@ import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesUiState
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
+import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingPositionsContent
@@ -350,6 +353,8 @@ class PreviewActivity : ComponentActivity() {
                     "edit_folder" -> EditFolderPreview()
                     "gas_settings_bsc_before" -> GasSettingsBscPreview(isLegacyGas = false)
                     "gas_settings_bsc_after" -> GasSettingsBscPreview(isLegacyGas = true)
+                    "sui_token_selection_before" -> SuiTokenSelectionPreview(discovered = false)
+                    "sui_token_selection_after" -> SuiTokenSelectionPreview(discovered = true)
                     else -> SwapConfirmPreview()
                 }
             }
@@ -385,6 +390,45 @@ private fun ChainSelectionClipPreview() {
         onBackClick = {},
     )
 }
+
+/**
+ * Sui "Select tokens" list (#5443). `discovered = false` is the catalog-only list Sui offered
+ * before held-token discovery; `true` adds the coin types the address actually holds. Discovered
+ * coins carry their icon as a URL rather than a bundled drawable, so they fall back to a letter
+ * tile.
+ */
+@Composable
+private fun SuiTokenSelectionPreview(discovered: Boolean) {
+    val held =
+        listOf(
+            suiToken("HASUI", "0xbde4ba4c2e274a60ce15c1cfff9e5c42e41654ac8b6d906a57efa4bd3c29f47d"),
+            suiToken("BUCK", "0xce7ff77a83ea0cb6fd39bd8748e2ec89a3f41e8efdc3f4eb123e0ca37b184db2"),
+            suiToken("SCA", "0x7016aae72cfc67f2fadf55769c0a7dd54291a583b63051a5ed71081cce836ac6"),
+        )
+    val tokens =
+        Coins.Sui.all.filterNot { it.isNativeToken } + if (discovered) held else emptyList()
+    TokenSelectionScreen(
+        searchTextFieldState = remember { TextFieldState() },
+        state =
+            TokenSelectionUiModel(
+                tokens = tokens.map { TokenUiModel(isEnabled = false, coin = it) }
+            ),
+        hasCustomToken = true,
+    )
+}
+
+private fun suiToken(ticker: String, packageAddress: String) =
+    Coin(
+        chain = Chain.Sui,
+        ticker = ticker,
+        logo = "",
+        address = "",
+        decimal = 9,
+        hexPublicKey = "",
+        priceProviderID = "",
+        contractAddress = "$packageAddress::${ticker.lowercase()}::$ticker",
+        isNativeToken = false,
+    )
 
 @Composable
 private fun ErrorScreenAfterPreview() {
