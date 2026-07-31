@@ -17,6 +17,17 @@ enum class LimitOrderCancelBlocker {
     MissingSignedData,
 
     /**
+     * The order was placed by a build that recorded neither the source chain nor the sender
+     * address, so it can be neither polled (the queue endpoint is scoped by sender) nor cancelled.
+     *
+     * Distinct from [PlacementNotObserved], and that distinction is the whole point: an unobserved
+     * order becomes cancellable on the next poll, and telling one of these to wait for a poll that
+     * will never come is a promise the app cannot keep. Nothing is lost — the order still refunds
+     * automatically at expiry.
+     */
+    LegacyOrderNotTrackable,
+
+    /**
      * A cancel for this order has already broadcast and is waiting to be observed in the queue.
      *
      * The order stays NON-terminal on purpose — `cancelling` — because that is what keeps a cancel
@@ -140,27 +151,38 @@ fun limitOrderCancelEligibility(order: PendingLimitOrderEntity): LimitOrderCance
     if (order.cancelBroadcastHash != null) {
         return LimitOrderCancelEligibility.Blocked(LimitOrderCancelBlocker.CancelAlreadyBroadcast)
     }
-    // The order has to be RESTING before it can be cancelled — see [PlacementNotObserved]. Any
-    // field the queue writes proves it was there; `expiryObservedAt` is the one written on every
-    // resting poll, so it is the honest witness rather than a field that only some responses carry.
-    if (order.expiryObservedAt == null && order.depositAmount == null) {
-        return LimitOrderCancelEligibility.Blocked(LimitOrderCancelBlocker.PlacementNotObserved)
+    // Checked BEFORE the resting gate below, because an order missing either of these is never
+    // polled at all: the queue endpoint is scoped by sender, so it can never become observed and
+    // the "wait for the deposit to confirm" reason would sit on the card for the order's whole
+    // life. Both columns arrived with the tracking work, so this is exactly the set of orders
+    // placed by an earlier build.
+    if (order.sourceChain == null || order.sourceAddress.isNullOrBlank()) {
+        return LimitOrderCancelEligibility.Blocked(LimitOrderCancelBlocker.LegacyOrderNotTrackable)
     }
 
     // The source chain is recorded explicitly at placement because `sourceAsset` cannot stand in
     // for
     // it: a SECURED asset source is THORChain-placed but its memo asset is a bare denom with no
     // `THOR.` prefix, while a `THOR.`-prefixed string says nothing about where the deposit came
-    // from. Null means the order predates that column.
+    // from.
     val sourceChain =
         Chain.entries.firstOrNull { it.raw == order.sourceChain }
             ?: return LimitOrderCancelEligibility.Blocked(LimitOrderCancelBlocker.MissingSignedData)
+
     // Both routes are supported: a THORChain-sourced order cancels via MsgDeposit from the vault's
     // THOR address, and an L1-sourced order cancels by sending the same memo from the chain that
     // funded it — THORNode dispatches `m=<` from the Bifrost observed-tx path too. What matters is
-    // only that THORChain can route the source chain at all.
+    // only that THORChain can route the source chain at all. Ahead of the resting gate, because an
+    // unroutable source has no cancel route however well observed the order is.
     if (!isThorchainRoutable(sourceChain)) {
         return LimitOrderCancelEligibility.Blocked(LimitOrderCancelBlocker.UnsupportedSourceChain)
+    }
+
+    // The order has to be RESTING before it can be cancelled — see [PlacementNotObserved]. Any
+    // field the queue writes proves it was there; `expiryObservedAt` is the one written on every
+    // resting poll, so it is the honest witness rather than a field that only some responses carry.
+    if (order.expiryObservedAt == null && order.depositAmount == null) {
+        return LimitOrderCancelEligibility.Blocked(LimitOrderCancelBlocker.PlacementNotObserved)
     }
 
     val signedSourceAmount = order.sourceAmount1e8?.toBigIntegerOrNull()

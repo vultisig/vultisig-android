@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.thorchain.ThorchainLimitSwapQueueEntry
 import com.vultisig.wallet.data.api.txstatus.LimitOrderOutcome
 import com.vultisig.wallet.data.api.txstatus.MidgardLimitOutcomeResolver
+import com.vultisig.wallet.data.api.txstatus.thorchainTxId
 import com.vultisig.wallet.data.db.models.PendingLimitOrderEntity
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.LimitOrderStatus
@@ -14,6 +15,9 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 
 /**
@@ -63,7 +67,45 @@ constructor(
      */
     private val settledCancelHashes = ConcurrentHashMap.newKeySet<String>()
 
+    /**
+     * The poll currently running for each vault, so a second caller can join it instead of starting
+     * another. Guarded by [refreshMutex], which is held only across the map lookup — never across
+     * the network round-trip.
+     */
+    private val inFlightByVault = mutableMapOf<String, CompletableDeferred<Unit>>()
+    private val refreshMutex = Mutex()
+
+    /**
+     * Refreshes are COALESCED per vault: a caller that arrives while a poll is running waits for
+     * that poll rather than starting a second one.
+     *
+     * Not an optimisation. The screen kicks off a poll on entry and pull-to-refresh can fire
+     * another a moment later, and two rounds landing milliseconds apart hit the same load-balanced
+     * backend — so a single stale "no resting orders" would be counted twice and reach
+     * [ABSENT_POLLS_BEFORE_CLOSING] on its own, permanently closing a live order. The threshold
+     * only means anything if the polls behind it are independent in time.
+     */
     suspend operator fun invoke(vaultId: String) {
+        val own = CompletableDeferred<Unit>()
+        val running =
+            refreshMutex.withLock {
+                val existing = inFlightByVault[vaultId]
+                if (existing == null) inFlightByVault[vaultId] = own
+                existing
+            }
+        if (running != null) {
+            running.join()
+            return
+        }
+        try {
+            reconcile(vaultId)
+        } finally {
+            refreshMutex.withLock { inFlightByVault.remove(vaultId) }
+            own.complete(Unit)
+        }
+    }
+
+    private suspend fun reconcile(vaultId: String) {
         val open = repository.getOpenOrders(vaultId)
         if (open.isEmpty()) return
 
@@ -97,21 +139,32 @@ constructor(
             return
         }
 
-        // Hex case is not semantic, and the queue's casing need not match the hash we broadcast
-        // under, so match case-insensitively.
-        val restingByHash = resting.associateBy { it.swap.tx.id.uppercase() }
+        // Both sides go through [thorchainTxId]: hex case is not semantic and the queue's casing
+        // need not match the hash we broadcast under, and an EVM hash is stored `0x`-prefixed while
+        // the queue reports the bare form — without stripping it, no ETH/AVAX/BSC/BASE order ever
+        // matches its own queue entry and Cancel stays blocked on `PlacementNotObserved` for good.
+        val restingByHash = resting.associateBy { thorchainTxId(it.swap.tx.id) }
 
         orders.forEach { order ->
-            val entry = restingByHash[order.inboundTxHash.uppercase()]
-            if (entry != null) {
-                // Back in the queue, so any absence recorded earlier was wrong. This reset is the
-                // self-correcting half of the guard, and a reappearance is the stale-backend
-                // signature itself.
-                absentPollStreaks.remove(order.inboundTxHash)
-                verifyPendingCancel(order)
-                observeResting(order, entry)
-            } else {
-                observeAbsent(order)
+            // Per-ORDER isolation, matching the per-sender isolation the queue fetch above already
+            // has: a Room write that throws for one order must not abandon its siblings, nor the
+            // remaining senders in the outer loop.
+            try {
+                val entry = restingByHash[thorchainTxId(order.inboundTxHash)]
+                if (entry != null) {
+                    // Back in the queue, so any absence recorded earlier was wrong. This reset is
+                    // the self-correcting half of the guard, and a reappearance is the
+                    // stale-backend signature itself.
+                    absentPollStreaks.remove(order.inboundTxHash)
+                    verifyPendingCancel(order)
+                    observeResting(order, entry)
+                } else {
+                    observeAbsent(order)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(e, "Could not reconcile limit order %s", order.inboundTxHash)
             }
         }
     }
@@ -201,6 +254,12 @@ constructor(
      * Everything else stays [LimitOrderStatus.Refunded] — the observable fact, with no cause
      * attached. An order rejected at placement (halted pool, bad memo) also refunds, seconds in,
      * and inventing a cause here would be inventing it for that user too.
+     *
+     * The TTL is approximated from [THORCHAIN_BLOCK_MS], and real block time drifts, so right at
+     * the boundary this can read a genuine expiry as a cancel or the reverse. Deliberately
+     * tolerated: the two differ only in the label on a closed order — the funds took the same path
+     * either way — and the alternative, an exact block height, is not knowable for an order that
+     * has already left the queue.
      */
     private fun refundedOrCredited(order: PendingLimitOrderEntity): LimitOrderStatus {
         if (order.cancelBroadcastHash == null || !order.cancelConfirmed) {

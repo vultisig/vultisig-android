@@ -141,6 +141,40 @@ internal class RefreshLimitOrdersUseCaseTest {
     }
 
     @Test
+    fun `matches an EVM order against the queue's unprefixed hash`() = runTest {
+        // EvmApi.sendTransaction returns — and we store — a `0x`-prefixed hash, while THORNode
+        // reports `swap.tx.id` as bare hex. Compared verbatim, no ETH/AVAX/BSC/BASE order ever
+        // matches its own queue entry: it is never seen resting, so Cancel stays blocked on
+        // `PlacementNotObserved` for the order's whole life.
+        val evmOrder =
+            order.copy(
+                inboundTxHash = "0xabc123def456",
+                sourceChain = Chain.Ethereum.raw,
+                sourceAddress = "0xsender",
+            )
+        coEvery { repository.getOpenOrders("vault") } returns listOf(evmOrder)
+        coEvery { thorChainApi.getLimitSwapQueue("0xsender") } returns
+            ThorchainLimitSwapQueueResponse(listOf(restingEntry(hash = "ABC123DEF456")))
+
+        useCase().invoke("vault")
+
+        coVerify {
+            repository.recordObservation(
+                inboundTxHash = "0xabc123def456",
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        }
+        coVerify(exactly = 0) { repository.recordStatus(any(), any()) }
+    }
+
+    @Test
     fun `a single absent poll does not close the order`() = runTest {
         coEvery { repository.getOpenOrders("vault") } returns listOf(order)
         coEvery { thorChainApi.getLimitSwapQueue("thor1abc") } returns

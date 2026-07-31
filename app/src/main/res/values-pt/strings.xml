@@ -1265,6 +1265,7 @@
     <string name="limit_order_cancel_done_detail">A tua ordem permanece aberta até a THORChain confirmar o fecho.</string>
     <string name="limit_order_cancel_explanation">Cancelar encerra esta ordem e reembolsa a parte que ainda não foi executada. O que já foi executado permanece executado e não é devolvido. Isto custa uma taxa de rede da THORChain.</string>
     <string name="limit_order_cancel_blocked_not_resting_yet">Esta ordem ainda não está aberta na THORChain. Poderás cancelá-la assim que o depósito for confirmado.</string>
+    <string name="limit_order_cancel_blocked_legacy">Esta ordem foi criada com uma versão anterior da app, que não registou os dados necessários para o cancelamento. Será reembolsada automaticamente quando expirar.</string>
     <string name="limit_order_cancel_error_title">Não é possível cancelar esta ordem</string>
     <string name="limit_order_cancel_error_missing_coin">Este cofre não tem moedas na rede a partir da qual o cancelamento tem de ser enviado.</string>
     <string name="limit_order_cancel_error_no_inbound">A THORChain não tem agora um endereço de entrada disponível para esta rede. Tente novamente daqui a pouco.</string>

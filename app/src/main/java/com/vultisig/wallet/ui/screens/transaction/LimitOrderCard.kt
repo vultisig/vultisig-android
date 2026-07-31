@@ -69,10 +69,14 @@ internal fun LimitOrderCard(
             Text(
                 text =
                     buildAnnotatedString {
-                        withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) {
-                            append(item.sellAmount)
+                        // An order whose precision was never recorded shows the pair alone. Better
+                        // no amount than one printed in the coin's smallest units.
+                        item.sellAmount?.let { amount ->
+                            withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) {
+                                append(amount)
+                            }
+                            append(" ")
                         }
-                        append(" ")
                         withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) {
                             append(item.sellTicker)
                         }

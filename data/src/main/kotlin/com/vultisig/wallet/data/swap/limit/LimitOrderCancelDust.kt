@@ -186,16 +186,25 @@ fun minimumObservableInbound(decimals: Int): BigInteger =
  * Set roughly an order of magnitude above each chain's live `dust_threshold` doubled — the amount a
  * cancel actually attaches. Loose enough that a legitimate threshold change does not break
  * cancelling, tight enough that a bad value cannot quietly donate a meaningful sum. Sized against
- * the thresholds `inbound_addresses` publishes in natural units: DOGE 1, LTC 0.001, AVAX 0.001,
- * GAIA 0.01, BCH/BSC 0.0001, BTC/ETH 0.00001.
+ * the thresholds `inbound_addresses` publishes, converted to natural units: DOGE 1, XRP 1, TRON
+ * 0.1, LTC 0.001, AVAX 0.001, SOL 0.001, GAIA 0.01, BCH/BSC 0.0001, BTC/ETH 0.00001.
+ *
+ * **Every routable chain needs its own row or a fall-through that genuinely fits it.** A ceiling
+ * below the doubled attach does not degrade — it refuses every cancel on that chain outright, with
+ * a live Cancel button still on the card. XRP, TRON and SOL sat under the `else` at 0.001 and were
+ * exactly that: 2000x, 200x and 2x over.
  */
 fun limitOrderCancelDustCeiling(chain: Chain): BigDecimal =
     when (chain) {
-        // The outlier: a 1 DOGE threshold, so 2 DOGE is the normal attach.
-        Chain.Dogecoin -> BigDecimal.TEN
-        // Both publish a 0.001 threshold, so 0.002 is the normal attach.
+        // The outliers: a 1-unit threshold, so 2 units is the normal attach.
+        Chain.Dogecoin,
+        Chain.Ripple -> BigDecimal.TEN
+        // A 0.1 TRX threshold, so 0.2 TRX is the normal attach.
+        Chain.Tron -> BigDecimal.ONE
+        // All three publish a 0.001 threshold, so 0.002 is the normal attach.
         Chain.Litecoin,
-        Chain.Avalanche -> BigDecimal("0.02")
+        Chain.Avalanche,
+        Chain.Solana -> BigDecimal("0.02")
         Chain.Bitcoin,
         Chain.BitcoinCash,
         Chain.Dash,
@@ -203,9 +212,9 @@ fun limitOrderCancelDustCeiling(chain: Chain): BigDecimal =
         Chain.GaiaChain,
         Chain.Noble,
         Chain.Kujira -> BigDecimal("0.5")
-        // ETH (0.00002 attach), BSC (0.0002) and anything else. Immaterial in fiat on every
-        // supported chain while still leaving room for a threshold that moves by an order of
-        // magnitude.
+        // ETH (0.00002 attach), BSC (0.0002) and the remaining EVM chains, which quote in ETH-like
+        // units. Immaterial in fiat there while still leaving room for a threshold that moves by an
+        // order of magnitude.
         else -> BigDecimal("0.001")
     }
 

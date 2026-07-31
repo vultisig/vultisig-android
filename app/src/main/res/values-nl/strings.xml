@@ -1261,6 +1261,7 @@
     <string name="limit_order_cancel_done_detail">Je order blijft open tot THORChain bevestigt dat hij gesloten is.</string>
     <string name="limit_order_cancel_explanation">Annuleren sluit deze order en betaalt het deel terug dat nog niet is uitgevoerd. Wat al is uitgevoerd blijft uitgevoerd en wordt niet teruggegeven. Hiervoor betaal je eenmaal netwerkkosten van THORChain.</string>
     <string name="limit_order_cancel_blocked_not_resting_yet">Deze order staat nog niet open op THORChain. Je kunt hem annuleren zodra de storting is bevestigd.</string>
+    <string name="limit_order_cancel_blocked_legacy">Deze order is geplaatst met een oudere versie van de app, die niet vastlegde wat voor een annulering nodig is. Bij het verlopen wordt hij automatisch terugbetaald.</string>
     <string name="limit_order_cancel_error_title">Kan deze order niet annuleren</string>
     <string name="limit_order_cancel_error_missing_coin">Deze kluis heeft geen munten op het netwerk waarvandaan de annulering moet worden verzonden.</string>
     <string name="limit_order_cancel_error_no_inbound">THORChain heeft nu geen beschikbaar inkomend adres voor dit netwerk. Probeer het zo opnieuw.</string>

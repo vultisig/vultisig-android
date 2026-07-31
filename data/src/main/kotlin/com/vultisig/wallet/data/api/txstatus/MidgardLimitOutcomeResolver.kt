@@ -56,12 +56,14 @@ class MidgardLimitOutcomeResolver @Inject constructor(private val httpClient: Ht
         try {
             val response: MidgardLimitActionsResponse =
                 httpClient
-                    .get(THORCHAIN_MIDGARD_ACTIONS_URL) { parameter(TXID_PARAM, inboundTxHash) }
+                    .get(THORCHAIN_MIDGARD_ACTIONS_URL) {
+                        // Midgard keys every chain's txid as bare uppercase hex. An EVM hash is
+                        // stored `0x`-prefixed, and passing it verbatim returns zero actions — so
+                        // an EVM-sourced order would resolve no outcome and rest forever.
+                        parameter(TXID_PARAM, thorchainTxId(inboundTxHash))
+                    }
                     .bodyOrThrow()
-            // Midgard indexes the swap and its refund as separate actions against the same inbound.
-            // A settled swap is the stronger claim, so it wins over a refund of the unfilled
-            // remainder — an order that filled 60% and refunded the rest did fill.
-            response.actions.firstNotNullOfOrNull(::classify) ?: LimitOrderOutcome.Unresolved
+            classify(response.actions)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -69,23 +71,35 @@ class MidgardLimitOutcomeResolver @Inject constructor(private val httpClient: Ht
             LimitOrderOutcome.Unresolved
         }
 
-    /** Null when this action says nothing about the order's fate. */
-    private fun classify(action: MidgardLimitAction): LimitOrderOutcome? =
-        when (action.type) {
-            ACTION_TYPE_SWAP ->
-                if (action.status == ACTION_STATUS_SUCCESS) LimitOrderOutcome.Filled else null
-
-            ACTION_TYPE_REFUND -> {
-                val reason = action.metadata?.refund?.reason.orEmpty().lowercase()
-                when {
-                    reason.contains(REASON_CANCELLED) -> LimitOrderOutcome.Cancelled
-                    reason.contains(REASON_EXPIRED) -> LimitOrderOutcome.Expired
-                    else -> LimitOrderOutcome.Refunded
-                }
+    /**
+     * What the indexed actions say about the order's fate.
+     *
+     * A REFUND outranks a fill wherever both are present, rather than whichever Midgard happened to
+     * list first: an order that partially filled and then closed has both indexed, and what closed
+     * it is the refund. Reading the older fill would report it terminally Filled on the strength of
+     * a fill that was only part of the story. The fill split is reported separately, from the
+     * queue's own last observation.
+     *
+     * `limit_swap` is deliberately not read at all. It is the PLACEMENT action — a still-resting
+     * order has exactly that and nothing else — so treating it as an outcome would close every live
+     * order the moment Midgard first indexed it.
+     */
+    private fun classify(actions: List<MidgardLimitAction>): LimitOrderOutcome {
+        val refund = actions.firstOrNull { it.type == ACTION_TYPE_REFUND }
+        if (refund != null) {
+            val reason = refund.metadata?.refund?.reason.orEmpty().lowercase()
+            return when {
+                reason.contains(REASON_CANCELLED) -> LimitOrderOutcome.Cancelled
+                reason.contains(REASON_EXPIRED) -> LimitOrderOutcome.Expired
+                else -> LimitOrderOutcome.Refunded
             }
-
-            else -> null
         }
+        val filled =
+            actions.any { it.type == ACTION_TYPE_SWAP && it.status == ACTION_STATUS_SUCCESS }
+        // Only the placement action, an outbound still in flight, or nothing at all — none of which
+        // is an answer yet.
+        return if (filled) LimitOrderOutcome.Filled else LimitOrderOutcome.Unresolved
+    }
 
     private companion object {
         const val THORCHAIN_MIDGARD_ACTIONS_URL =

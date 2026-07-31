@@ -1270,6 +1270,7 @@
     <string name="limit_order_cancel_done_detail">Tvoj nalog ostaje otvoren dok THORChain ne potvrdi da je zatvoren.</string>
     <string name="limit_order_cancel_explanation">Otkazivanje zatvara ovaj nalog i vraća dio koji još nije izvršen. Ono što je već izvršeno ostaje izvršeno i ne vraća se. Ovo košta jednu THORChain mrežnu naknadu.</string>
     <string name="limit_order_cancel_blocked_not_resting_yet">Ovaj nalog još nije aktivan na THORChainu. Možeš ga otkazati kad se njegov polog potvrdi.</string>
+    <string name="limit_order_cancel_blocked_legacy">Ovaj nalog postavljen je starijom verzijom aplikacije koja nije spremila podatke potrebne za otkazivanje. Sredstva će se automatski vratiti kad nalog istekne.</string>
     <string name="limit_order_cancel_error_title">Nije moguće otkazati ovaj nalog</string>
     <string name="limit_order_cancel_error_missing_coin">Ovaj trezor nema sredstava na mreži s koje se otkazivanje mora poslati.</string>
     <string name="limit_order_cancel_error_no_inbound">THORChain trenutačno nema dostupnu dolaznu adresu za ovu mrežu. Pokušajte ponovno uskoro.</string>

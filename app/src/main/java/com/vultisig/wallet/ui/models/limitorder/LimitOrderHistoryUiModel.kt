@@ -5,10 +5,12 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.db.models.PendingLimitOrderEntity
 import com.vultisig.wallet.data.models.LimitOrderStatus
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.nativeToken
 import com.vultisig.wallet.data.swap.limit.LimitOrderCancelBlocker
 import com.vultisig.wallet.data.swap.limit.LimitOrderCancelEligibility
 import com.vultisig.wallet.data.swap.limit.duplicateRestingLimitOrders
 import com.vultisig.wallet.data.swap.limit.limitOrderCancelEligibility
+import com.vultisig.wallet.data.swap.limit.thorchainAssetPrefixToChain
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigDecimal
@@ -39,8 +41,12 @@ data class LimitOrderHistoryUiModel(
     val id: String,
     val sellTicker: String,
     val buyTicker: String,
-    /** Deposited amount in the source coin's natural units. */
-    val sellAmount: String,
+    /**
+     * Deposited amount in the source coin's natural units, or null when the order's precision was
+     * never recorded and cannot be recovered. Null renders as no amount at all — an order whose
+     * scale is unknown says `BTC → ETH`, never `50000000 BTC`.
+     */
+    val sellAmount: String?,
     /** Buy-asset units per 1 sell unit, as the memo's LIM encodes it. */
     val targetPrice: String,
     val status: LimitOrderHistoryStatus,
@@ -103,13 +109,39 @@ constructor(private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStr
         )
     }
 
-    private fun formatSourceAmount(order: PendingLimitOrderEntity): String {
-        val amount = order.sourceAmount.toBigIntegerOrNull() ?: return order.sourceAmount
-        val decimals = order.sourceDecimals ?: return order.sourceAmount
+    /**
+     * The deposit in the source coin's natural units, or null when its precision is unknowable.
+     *
+     * `source_decimals` arrived with the tracking work, so an order placed by an earlier build has
+     * none — and [PendingLimitOrderEntity.sourceAmount] is in the coin's SMALLEST units, which
+     * printed unscaled turns half a bitcoin into "50000000 BTC" beside a correct target price.
+     * Where the placement memo names a chain's own native asset the precision is still recoverable
+     * from [Chain.nativeToken]; a token leg is not, and is rendered without an amount rather than
+     * with a wrong one.
+     */
+    private fun formatSourceAmount(order: PendingLimitOrderEntity): String? {
+        val amount = order.sourceAmount.toBigIntegerOrNull() ?: return null
+        val decimals = order.sourceDecimals ?: order.sourceAsset.nativeDecimalsFromMemoAsset()
+        if (decimals == null) return null
         return mapTokenValueToDecimalUiString(
             TokenValue(value = amount, unit = order.sourceTicker.orEmpty(), decimals = decimals)
         )
     }
+}
+
+/**
+ * Precision of the chain's NATIVE coin when a memo asset names it — `BTC.BTC` → 8, `THOR.RUNE` → 8.
+ *
+ * Null for anything else: a token leg (`ETH.USDC-0X…`) carries its own precision, which the memo
+ * does not spell, and a bare denom says nothing about the chain it came from.
+ */
+private fun String.nativeDecimalsFromMemoAsset(): Int? {
+    val chainEnd = indexOfFirst { it == '.' }
+    if (chainEnd < 0) return null
+    val chain = thorchainAssetPrefixToChain[substring(0, chainEnd).uppercase()] ?: return null
+    val nativeToken = chain.nativeToken
+    val symbol = substring(chainEnd + 1)
+    return if (symbol.equals(nativeToken.ticker, ignoreCase = true)) nativeToken.decimal else null
 }
 
 /**
@@ -146,6 +178,8 @@ private fun LimitOrderCancelBlocker.toUiText(): UiText =
                 R.string.limit_order_cancel_blocked_already_sent
             LimitOrderCancelBlocker.UnsupportedSourceChain ->
                 R.string.limit_order_cancel_blocked_unsupported_chain
+            LimitOrderCancelBlocker.LegacyOrderNotTrackable ->
+                R.string.limit_order_cancel_blocked_legacy
             LimitOrderCancelBlocker.PlacementNotObserved ->
                 R.string.limit_order_cancel_blocked_not_resting_yet
             LimitOrderCancelBlocker.MemoTooLongForSourceChain ->

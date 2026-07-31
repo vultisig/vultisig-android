@@ -31,6 +31,7 @@ internal class LimitOrderCancelEligibilityTest {
         cancelBroadcastHash: String? = null,
         inboundTxHash: String = "HASH",
         createdAt: Long = 0L,
+        sourceAddress: String? = "thor1abc",
         // Observed resting by default: every case below is about a live order, and an order the
         // queue has never reported is blocked for its own reason (see the dedicated test).
         expiryObservedAt: Long? = 1L,
@@ -48,7 +49,7 @@ internal class LimitOrderCancelEligibilityTest {
             status = status.raw,
             sourceChain = sourceChain,
             sourceDecimals = 8,
-            sourceAddress = "thor1abc",
+            sourceAddress = sourceAddress,
             sourceAmount1e8 = sourceAmount1e8,
             tradeTarget = tradeTarget,
             sourceAssetFull = sourceAssetFull,
@@ -87,7 +88,28 @@ internal class LimitOrderCancelEligibilityTest {
     fun `an order placed before the cancel inputs were recorded is blocked`() {
         blockerOf(order(sourceAmount1e8 = null)) shouldBe LimitOrderCancelBlocker.MissingSignedData
         blockerOf(order(tradeTarget = null)) shouldBe LimitOrderCancelBlocker.MissingSignedData
-        blockerOf(order(sourceChain = null)) shouldBe LimitOrderCancelBlocker.MissingSignedData
+    }
+
+    @Test
+    fun `an order that can never be polled says so instead of promising a poll`() {
+        // Both columns arrived with the tracking work, so an order missing either was placed by an
+        // earlier build. The queue endpoint is scoped by sender, so such an order is skipped by
+        // every poll — and `PlacementNotObserved`, which is what it used to report, promises it
+        // becomes cancellable "once its deposit confirms". That never happens.
+        blockerOf(order(sourceChain = null)) shouldBe
+            LimitOrderCancelBlocker.LegacyOrderNotTrackable
+        blockerOf(order(sourceAddress = null)) shouldBe
+            LimitOrderCancelBlocker.LegacyOrderNotTrackable
+        blockerOf(order(sourceAddress = "")) shouldBe
+            LimitOrderCancelBlocker.LegacyOrderNotTrackable
+    }
+
+    @Test
+    fun `an untrackable order reports that ahead of the resting gate`() {
+        // Ordering matters: a legacy order has never been observed either, so whichever check runs
+        // first decides what the card says for the rest of the order's life.
+        blockerOf(order(sourceAddress = null, expiryObservedAt = null)) shouldBe
+            LimitOrderCancelBlocker.LegacyOrderNotTrackable
     }
 
     @Test

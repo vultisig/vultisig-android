@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.limitorder
 
 import com.vultisig.wallet.data.swap.limit.LimitSwapCancelMemo
+import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 
 /**
  * How a limit-order CANCEL reads on the screens that surround signing: Verify and the done screen.
@@ -46,3 +47,13 @@ internal object LimitOrderCancelPresentation {
     private fun assetAfterAmount(field: String): String? =
         field.dropWhile { it in '0'..'9' }.takeIf { it.isNotEmpty() }
 }
+
+/**
+ * Whether this completed transaction is a limit-order cancel.
+ *
+ * A cancel is an ordinary deposit on the wire, so without this it lands on the send overview, which
+ * headlines the attached dust as though the user had sent it somewhere — and the cancel header and
+ * its `limit_order_cancel_done_*` strings never render at all.
+ */
+internal fun TransactionTypeUiModel?.isLimitOrderCancel(): Boolean =
+    (this as? TransactionTypeUiModel.Deposit)?.depositTransactionUiModel?.limitCancelPair != null

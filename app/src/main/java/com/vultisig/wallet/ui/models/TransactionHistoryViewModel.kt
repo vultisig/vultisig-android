@@ -38,15 +38,20 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -262,12 +267,32 @@ constructor(
         ) {
             _uiState.update { it.copy(isRefreshing = true) }
             try {
-                refreshPendingTransactions(vaultId, chainId)
-                refreshLimitOrders(vaultId)
+                // Independently, for the same reason refreshOnEnter keeps them apart: a queue poll
+                // that fails must not take the rest of the history down with it, and vice versa.
+                // One `try` around both would silently skip the limit orders whenever the pending
+                // transactions threw.
+                coroutineScope {
+                    launch {
+                        runCatchingRefresh("pending transactions") {
+                            refreshPendingTransactions(vaultId, chainId)
+                        }
+                    }
+                    launch { runCatchingRefresh("limit orders") { refreshLimitOrders(vaultId) } }
+                }
                 delay(100.milliseconds) // prevent refresh ui freezing
             } finally {
                 _uiState.update { it.copy(isRefreshing = false) }
             }
+        }
+    }
+
+    private suspend fun runCatchingRefresh(what: String, block: suspend () -> Unit) {
+        try {
+            block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Pull-to-refresh failed for %s", what)
         }
     }
 
@@ -288,13 +313,49 @@ constructor(
      *
      * Not filtered by [chainId]: an order is a claim about a PAIR, and hiding one because the user
      * opened history from the destination chain would hide exactly the order they came looking for.
+     * The asset chips ARE honoured, on either leg, because those the user chose deliberately and a
+     * list that ignores an active chip is simply wrong.
+     *
+     * Re-mapped on a timer as well as on a Room emission. The expiry label is computed against a
+     * `now` baked in at map time, and the only writers to that table are the on-enter poll and
+     * pull-to-refresh — so without a tick a card sits reading "Expires in 4m" long after the order
+     * expired.
      */
     private fun observeLimitOrders() {
         viewModelScope.launch {
-            pendingLimitOrderRepository.observeOrders(vaultId).collect { orders ->
-                val uiModels = mapLimitOrderToUiModel.map(orders, System.currentTimeMillis())
-                _uiState.update { it.copy(limitOrders = uiModels) }
-            }
+            combine(
+                    pendingLimitOrderRepository.observeOrders(vaultId),
+                    expiryTicks(),
+                    _uiState.map { it.selectedAssetIds }.distinctUntilChanged(),
+                ) { orders, now, assetIds ->
+                    mapLimitOrderToUiModel.map(orders, now).filter { it.matchesAssetIds(assetIds) }
+                }
+                .collect { uiModels -> _uiState.update { it.copy(limitOrders = uiModels) } }
+        }
+    }
+
+    /** `now`, re-emitted often enough that a minute-granularity countdown never reads stale. */
+    private fun expiryTicks(): Flow<Long> = flow {
+        while (true) {
+            emit(System.currentTimeMillis())
+            delay(EXPIRY_TICK)
+        }
+    }
+
+    /**
+     * An order matches a chip on EITHER leg — the pair is what an order is about, and someone
+     * filtering to ETH wants their RUNE→ETH order in the list as much as their ETH→BTC one.
+     *
+     * Matched on the ticker alone. A chip's id is `chain:ticker`, but only the order's SOURCE chain
+     * is recorded, so qualifying the buy leg by chain is not possible and qualifying only one of
+     * them would be arbitrary.
+     */
+    private fun LimitOrderHistoryUiModel.matchesAssetIds(assetIds: Set<String>): Boolean {
+        if (assetIds.isEmpty()) return true
+        return assetIds.any { id ->
+            val ticker = id.substringAfterLast(':')
+            ticker.equals(sellTicker, ignoreCase = true) ||
+                ticker.equals(buyTicker, ignoreCase = true)
         }
     }
 
@@ -543,5 +604,14 @@ constructor(
                     dateKey = date.toString(),
                 )
             }
+    }
+
+    private companion object {
+        /**
+         * How often the limit-order cards are re-mapped so their countdown advances. Well under the
+         * minute the label is granular to, and it costs one pure re-map of a short list — no
+         * network and no database.
+         */
+        val EXPIRY_TICK = 15.seconds
     }
 }

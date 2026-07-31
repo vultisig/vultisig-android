@@ -1266,6 +1266,7 @@
     <string name="limit_order_cancel_done_detail">Ihre Order bleibt offen, bis THORChain die Schließung bestätigt.</string>
     <string name="limit_order_cancel_explanation">Durch das Stornieren wird diese Order geschlossen und der noch nicht ausgeführte Teil erstattet. Bereits ausgeführte Anteile bleiben bestehen und werden nicht zurückerstattet. Dafür fällt eine THORChain-Netzwerkgebühr an.</string>
     <string name="limit_order_cancel_blocked_not_resting_yet">Diese Order ruht noch nicht auf THORChain. Sie können sie stornieren, sobald ihre Einzahlung bestätigt ist.</string>
+    <string name="limit_order_cancel_blocked_legacy">Diese Order wurde mit einer älteren App-Version aufgegeben, die die für eine Stornierung nötigen Daten nicht gespeichert hat. Sie wird bei Ablauf weiterhin automatisch erstattet.</string>
     <string name="limit_order_cancel_error_title">Stornierung nicht möglich</string>
     <string name="limit_order_cancel_error_missing_coin">Dieser Tresor besitzt keine Coins in dem Netzwerk, aus dem die Stornierung gesendet werden muss.</string>
     <string name="limit_order_cancel_error_no_inbound">THORChain hat derzeit keine verfügbare Eingangsadresse für dieses Netzwerk. Bitte gleich erneut versuchen.</string>

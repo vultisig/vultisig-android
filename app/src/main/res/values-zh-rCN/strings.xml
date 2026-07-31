@@ -1596,6 +1596,7 @@
     <string name="limit_order_cancel_done_detail">在 THORChain 确认订单关闭之前，您的订单仍然有效。</string>
     <string name="limit_order_cancel_explanation">取消将关闭此订单并退还尚未成交的部分。已成交的部分将保持不变，不会退回。此操作需支付一次 THORChain 网络手续费。</string>
     <string name="limit_order_cancel_blocked_not_resting_yet">该订单尚未在 THORChain 上挂出。待其存款确认后即可取消。</string>
+    <string name="limit_order_cancel_blocked_legacy">该订单由旧版应用创建，未记录取消所需的信息。到期后仍会自动退款。</string>
     <string name="limit_order_cancel_error_title">无法取消该订单</string>
     <string name="limit_order_cancel_error_missing_coin">该保险库在发送取消请求所需的网络上没有资产。</string>
     <string name="limit_order_cancel_error_no_inbound">THORChain 目前没有该网络的可用入金地址。请稍后重试。</string>

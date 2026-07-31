@@ -226,6 +226,16 @@ constructor(
                 "could not resolve the dust an L1 cancel must attach",
                 e,
             )
+        } catch (e: ArithmeticException) {
+            // `toBigIntegerExact` on the ceiling throws if a chain's ceiling has a finer scale than
+            // its own precision. Unreachable with today's table, but a chain added with an awkward
+            // scale would otherwise degrade to a generic error instead of the DustUnavailable this
+            // branch exists to report.
+            throw LimitOrderCancelException(
+                LimitOrderCancelFailure.DustUnavailable,
+                "the cancel dust ceiling for $chain does not fit the chain's precision",
+                e,
+            )
         }
 
     /**
@@ -234,7 +244,9 @@ constructor(
      * cancel built here would otherwise fail at broadcast after the whole signing ceremony.
      *
      * A balance that cannot be read is NOT treated as insufficient: that would block a cancel the
-     * user can afford on the strength of a failed lookup.
+     * user can afford on the strength of a failed lookup. The FEE is still priced first even so — a
+     * planner that answers "cannot select inputs" is a refusal in its own right, and it must not be
+     * skipped just because the balance behind it was unavailable.
      */
     private suspend fun assertAffordable(
         vaultId: String,
@@ -246,16 +258,9 @@ constructor(
         specific: BlockChainSpecificAndUtxo,
         memo: String,
     ) {
-        val balance =
-            accountsRepository
-                .loadAddress(vaultId, chain)
-                .first()
-                .accounts
-                .firstOrNull { it.token.isNativeToken }
-                ?.tokenValue
-                ?.value ?: return
         val totalFee =
             totalFee(vaultId, chain, signingCoin, amount, gasFee, destination, specific, memo)
+        val balance = nativeBalance(vaultId, signingCoin) ?: return
         if (balance < amount + totalFee) {
             throw LimitOrderCancelException(
                 LimitOrderCancelFailure.InsufficientBalance,
@@ -263,6 +268,24 @@ constructor(
             )
         }
     }
+
+    /**
+     * The vault's spendable balance of the signing coin, or null when it cannot be read.
+     *
+     * Deliberately NOT `loadAddress(...).first()`: that first emission comes straight from
+     * [com.vultisig.wallet.data.mappers.ChainAndTokensToAddressMapper], which builds every account
+     * with `tokenValue = null` before any balance is fetched. Reading it left the whole guard below
+     * short-circuiting on every single call — a dead check that looked live.
+     */
+    private suspend fun nativeBalance(vaultId: String, signingCoin: Coin): BigInteger? =
+        try {
+            accountsRepository.loadAccount(vaultId, signingCoin).tokenValue?.value
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Could not read the balance to price a cancel on %s", signingCoin.chain)
+            null
+        }
 
     /**
      * The whole fee this cancel will pay, in the signing coin's smallest units.
