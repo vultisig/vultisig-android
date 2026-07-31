@@ -257,37 +257,19 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     )
                 } else null,
             wasmExecuteContractPayload = keysignPayload.wasmExecuteContractPayload,
-            // Cosmos SignDoc artefacts MUST round-trip to peer devices. Without these, a relayed
-            // payload arrives with `signDirect`/`signAmino == null` on the peer, which then
-            // rebuilds
-            // a default (bank-send) signing input — its message hash diverges from the initiator's,
-            // so the DKLS setup message (keyed by md5(hash)) 404s and keysign never completes. The
-            // inbound [KeysignPayloadProtoMapper] already reads both fields; this makes the mapping
-            // symmetric. Required for the LUNA / LUNC staking flows (signDirect = MsgDelegate / …
-            // ).
+            // Every `sign_data` variant carries pre-built signing bytes a peer cannot reconstruct.
+            // Relaying one as null makes the peer rebuild a default input (bank send / plain
+            // transfer / Pay / OperationPayment) whose message hash diverges from the initiator's,
+            // so the DKLS setup message — keyed by md5(hash) — 404s and keysign never completes.
+            // `signBitcoin` also carries the only PSBT marker: drop it and the payload reaches the
+            // peer with no `blockchain_specific` member at all, which the inbound mapper rejects.
+            // The proto keeps the seven in a `oneof`, so at most one is ever set.
             signAmino = keysignPayload.signAmino,
             signDirect = keysignPayload.signDirect,
-            // Same round-trip requirement as signAmino/signDirect above: this carries the
-            // pre-built,
-            // byte-parity Solana native-staking raw transaction. Without relaying it, a co-signer
-            // receives signSolana == null and rebuilds a default (plain-transfer) signing input —
-            // its message hash diverges from the initiator's, so the DKLS setup message (keyed by
-            // md5(hash)) 404s and keysign never completes. The inbound [KeysignPayloadProtoMapper]
-            // already reads it; this makes the mapping symmetric. Required for multi-device (secure
-            // vault) Solana staking (delegate / unstake / move / finish-move / withdraw).
-            //
-            // NOTE: the inbound mapper also reads signTon / signSui / signBitcoin, which this
-            // outbound mapper still drops — so those chains retain the same latent multi-device
-            // relay gap. Fixing them is deliberately out of scope for this Solana PR (untested on
-            // those chains); tracked as a separate follow-up so any regression stays bisectable.
             signSolana = keysignPayload.signSolana,
-            // Same round-trip requirement: the dApp's raw XRPL transaction must reach the peer
-            // co-signer verbatim. Without relaying it, a co-signer receives signRipple == null and
-            // rebuilds a native OperationPayment from toAddress/toAmount — its signing bytes
-            // diverge
-            // from the initiator's, the DKLS setup message (keyed by md5(hash)) 404s, and the
-            // co-sign never completes. The inbound [KeysignPayloadProtoMapper] already reads it;
-            // this makes the mapping symmetric. Required for Secure Vault XRPL dApp co-signing.
+            signTon = keysignPayload.signTon,
+            signBitcoin = keysignPayload.signBitcoin,
+            signSui = keysignPayload.signSui,
             signRipple = keysignPayload.signRipple,
             erc20ApprovePayload =
                 if (approvePayload is ERC20ApprovePayload) {

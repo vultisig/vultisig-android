@@ -11,7 +11,7 @@ import vultisig.keysign.v1.SignSui
 import vultisig.keysign.v1.SuiSpecific
 
 /**
- * Pins the inbound mapping of a dApp-supplied Sui PTB (`signSui`).
+ * Pins the mapping of a dApp-supplied Sui PTB (`signSui`) in both directions.
  *
  * A `SignSui` payload is signed verbatim from its base64 `TransactionData` BCS bytes via
  * WalletCore's SignDirect path, so the initiator omits the SUI RPC-derived `suicheSpecific` (coins
@@ -19,9 +19,15 @@ import vultisig.keysign.v1.SuiSpecific
  * takes the SignDirect branch, and (2) stand in an empty [BlockChainSpecific.Sui] placeholder so
  * the helper — which casts `blockChainSpecific` to `Sui` — has a value to read. This mirrors how
  * `signBitcoin` short-circuits to [BlockChainSpecific.BitcoinPSBT].
+ *
+ * The outbound mapper must put `signSui` back on the wire: a peer that receives it as null skips
+ * the SignDirect branch and rebuilds a `Pay`/`PaySui` from the placeholder's empty coin list and
+ * the PTB's empty `toAddress`, so it signs different bytes — or dies constructing the address —
+ * instead of the PTB the dApp asked for.
  */
 class KeysignPayloadProtoMapperSignSuiTest {
 
+    private val outbound = PayloadToProtoMapperImpl()
     private val inbound = KeysignPayloadProtoMapperImpl()
 
     @Test
@@ -80,6 +86,23 @@ class KeysignPayloadProtoMapperSignSuiTest {
         check(specific is BlockChainSpecific.Sui)
         assertEquals(BigInteger("750"), specific.referenceGasPrice)
         assertEquals(BigInteger("3000000"), specific.gasBudget)
+    }
+
+    @Test
+    fun `signSui survives the proto to KeysignPayload round-trip`() {
+        val signSui = SignSui(unsignedTxMsg = "AAACAAgA4fUFAAAAAA==")
+
+        val relayed = requireNotNull(outbound(inbound(basePayload(signSui = signSui))))
+
+        assertEquals(signSui, relayed.signSui)
+        // The placeholder re-serializes into a zeroed `suicheSpecific`, which is harmless: the
+        // inbound `signSui` branch runs first, so a peer still takes the SignDirect path and the
+        // payload settles after one pass.
+        assertEquals(
+            SuiSpecific(referenceGasPrice = "0", gasBudget = "0", coins = emptyList()),
+            relayed.suicheSpecific,
+        )
+        assertEquals(relayed, outbound(inbound(relayed)))
     }
 
     private fun basePayload(signSui: SignSui? = null, suicheSpecific: SuiSpecific? = null) =
