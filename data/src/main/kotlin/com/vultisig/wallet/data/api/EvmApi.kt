@@ -672,19 +672,21 @@ class EvmApiImp(
                 },
             )
         return if (response.error != null) {
-            Timber.d(
-                "zk estimate fee, srcAddress: $srcAddress,dstAddress: $dstAddress," +
-                    "data: $data error: ${response.error.message}"
+            // A failed estimate must propagate, never collapse into ZERO: a zeroed gasLimit/
+            // maxFeePerGas signs a tx that broadcast then rejects as intrinsic-gas-too-low,
+            // after the ceremony already ran (#5398).
+            throw NetworkException(
+                httpStatusCode = 0,
+                message =
+                    "zk estimate fee rpc error, srcAddress: $srcAddress,dstAddress: $dstAddress," +
+                        "data: $data error: ${response.error.message}",
             )
-            ZkGasFee(BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO)
         } else {
             val resultJson =
                 response.result
-                    ?: return ZkGasFee(
-                        BigInteger.ZERO,
-                        BigInteger.ZERO,
-                        BigInteger.ZERO,
-                        BigInteger.ZERO,
+                    ?: throw NetworkException(
+                        httpStatusCode = 0,
+                        message = "zk estimate fee rpc returned no result",
                     )
             ZkGasFee(
                 gasLimit = resultJson.gasLimit.convertToBigIntegerOrZero(),
