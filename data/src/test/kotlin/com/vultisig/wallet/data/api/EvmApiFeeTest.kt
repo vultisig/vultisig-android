@@ -65,6 +65,54 @@ class EvmApiFeeTest {
         assertEquals(BigInteger.valueOf(2_000_000_000), api.getMaxPriorityFeePerGas())
     }
 
+    @Test
+    fun `zkEstimateFee propagates an RPC failure instead of returning zero`() = runTest {
+        val client =
+            MockHttpClient.respondingWith(
+                HttpStatusCode.OK,
+                body =
+                    """{"id":1,"result":null,"error":{"code":-32601,"message":"method not found"}}""",
+            )
+        val api = EvmApiImp(client, "https://api.vultisig.com/zksync/", Chain.ZkSync)
+
+        assertFailsWith<NetworkException> {
+            api.zkEstimateFee(srcAddress = "0xSender", dstAddress = "0xRecipient", data = "0x")
+        }
+    }
+
+    @Test
+    fun `zkEstimateFee propagates a missing result instead of returning zero`() = runTest {
+        val client =
+            MockHttpClient.respondingWith(
+                HttpStatusCode.OK,
+                body = """{"id":1,"result":null,"error":null}""",
+            )
+        val api = EvmApiImp(client, "https://api.vultisig.com/zksync/", Chain.ZkSync)
+
+        assertFailsWith<NetworkException> {
+            api.zkEstimateFee(srcAddress = "0xSender", dstAddress = "0xRecipient", data = "0x")
+        }
+    }
+
+    @Test
+    fun `zkEstimateFee returns parsed fee on 200`() = runTest {
+        val client =
+            MockHttpClient.respondingWith(
+                HttpStatusCode.OK,
+                body =
+                    """{"id":1,"result":{"gas_limit":"0x30d40","gas_per_pubdata_limit":"0x14",""" +
+                        """"max_fee_per_gas":"0x77359400","max_priority_fee_per_gas":"0x0"},""" +
+                        """"error":null}""",
+            )
+        val api = EvmApiImp(client, "https://api.vultisig.com/zksync/", Chain.ZkSync)
+
+        val fee =
+            api.zkEstimateFee(srcAddress = "0xSender", dstAddress = "0xRecipient", data = "0x")
+
+        assertEquals(BigInteger.valueOf(200_000), fee.gasLimit)
+        assertEquals(BigInteger.valueOf(2_000_000_000), fee.maxFeePerGas)
+    }
+
     // Avalanche is the one chain whose EIP-1559 calc (EthereumFeeService) reads BOTH getBaseFee()
     // and getMaxPriorityFeePerGas() directly, so a shared RPC outage could previously zero both
     // components at once and sign a tx priced near nothing. Both calls on the same failing
