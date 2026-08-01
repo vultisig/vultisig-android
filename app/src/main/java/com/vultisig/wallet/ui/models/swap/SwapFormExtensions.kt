@@ -9,20 +9,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlinx.coroutines.flow.MutableStateFlow
 
-/**
- * Display-only cap on fraction digits. It must never be applied to an amount that is swapped, or it
- * would strand dust on tokens with more than 8 decimals (#5318).
- */
 private const val MAX_DISPLAY_DECIMALS = 8
-
-/**
- * Formats an amount at the token's own precision, without the [MAX_DISPLAY_DECIMALS] display cap,
- * so the value stays exact for the swap.
- *
- * @param tokenDecimals the token's decimal precision.
- */
-internal fun BigDecimal.formatExactAmount(tokenDecimals: Int): String =
-    setScale(tokenDecimals, RoundingMode.DOWN).stripTrailingZeros().toPlainString()
 
 /**
  * Formats an amount for display after a flip, trimming to the token's decimals (capped at

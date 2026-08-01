@@ -947,9 +947,7 @@ constructor(
         val amount =
             TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
                 .multiply(percentage.toBigDecimal())
-                // Exact at the token's own decimals, not the 8-dp display cap: a 100% tap on a
-                // 9-18-decimal token must empty the balance instead of stranding dust (#5318).
-                .formatExactAmount(srcTokenValue.decimals)
+                .formatFlippedAmount(srcTokenValue.decimals)
 
         // A percentage / Max tap is an explicit, deliberate amount — fetch the quote immediately
         // instead of waiting out the typing debounce (#4712). Mark before mutating the text so the
