@@ -737,6 +737,41 @@ internal class SwapFormViewModelTest {
         }
 
     @Test
+    fun `selectSrcPercentage keeps all 18 decimals instead of capping at 8`() =
+        runTest(mainDispatcher) {
+            // 5.987654321098765432 of an 18-decimal ERC-20. A non-native source reserves no network
+            // fee, so 100% must insert the full balance: capping at 8 display decimals used to
+            // strand 0.000000001098765432 (#5318).
+            val dai =
+                USDC_COIN.copy(
+                    ticker = "DAI",
+                    decimal = 18,
+                    contractAddress = "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+                )
+            val daiAddress =
+                Address(
+                    chain = Chain.Ethereum,
+                    address = "0xethaddress",
+                    accounts =
+                        listOf(
+                            createAccount(dai, BigInteger("5987654321098765432")),
+                            createAccount(ETH_COIN, BigInteger("1000000000000000000")),
+                        ),
+                )
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(daiAddress, btcAddress()),
+                    srcTokenId = dai.id,
+                    dstTokenId = BTC_COIN.id,
+                )
+            advanceUntilIdle()
+
+            vm.selectSrcPercentage(1.0f)
+
+            assertEquals("5.987654321098765432", vm.srcAmountState.text.toString())
+        }
+
+    @Test
     fun `selectSrcPercentage does not subtract the LIFI destination-denominated swap fee`() =
         runTest(mainDispatcher) {
             // LI.FI's integrator fee is denominated in the destination token's raw units, so
