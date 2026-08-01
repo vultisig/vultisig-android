@@ -3864,7 +3864,7 @@ internal class SwapFormViewModelTest {
         }
 
     @Test
-    fun `the limit price reads as a rate per sell unit, not the sell amount's output`() =
+    fun `the limit price card quotes the sell amount the user entered`() =
         runTest(mainDispatcher) {
             coEvery { featureFlagRepository.getFeatureFlags() } returns
                 FeatureFlagJson(isLimitSwapEnabled = true)
@@ -3878,10 +3878,9 @@ internal class SwapFormViewModelTest {
             advanceUntilIdle()
 
             val beforeAmount = vm.uiState.value.limitOrder!!
-            // Headed by the SELL asset, matching iOS/macOS: "1 ETH is worth 0.05 BTC" (#5464).
+            // Before an amount is entered the card falls back to one whole sell unit, so the pair
+            // still shows a price instead of the em dash placeholder.
             assertEquals("1 ETH", beforeAmount.referenceAmountLabel)
-            // A price is a property of the pair, so it must show before an amount is typed — this
-            // used to render the em dash placeholder until the sell field was filled in.
             assertEquals("0.05 BTC", beforeAmount.priceText)
 
             vm.srcAmountState.setTextAndPlaceCursorAtEnd("3")
@@ -3889,9 +3888,10 @@ internal class SwapFormViewModelTest {
             advanceUntilIdle()
 
             val withAmount = vm.uiState.value.limitOrder!!
-            // Entering an amount must not turn the rate into a total: 3 ETH's 0.15 BTC output
-            // belongs on the buy leg of the asset editor, not under the "1 ETH" header.
-            assertEquals("0.05 BTC", withAmount.priceText)
+            // Header and value describe the SAME quantity — 3 ETH, and what those 3 ETH fetch —
+            // and the value matches the buy leg of the asset editor exactly (#5464).
+            assertEquals("3 ETH", withAmount.referenceAmountLabel)
+            assertEquals("0.15 BTC", withAmount.priceText)
             assertEquals("0.15", withAmount.buyAmountText)
         }
 

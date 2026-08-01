@@ -52,11 +52,7 @@ internal class SwapTransactionToUiModelMapperSwapKitProviderTest {
             convertTokenValueToFiat = convertTokenValueToFiat,
             appCurrencyRepository = appCurrencyRepository,
             tokenRepository = tokenRepository,
-            formatLimitOrderLabels =
-                FormatLimitOrderLabelsUseCase(
-                    convertTokenValueToFiat = convertTokenValueToFiat,
-                    fiatValueToStringMapper = fiatValueToStringMapper,
-                ),
+            formatLimitOrderLabels = FormatLimitOrderLabelsUseCase(),
         )
 
     @Test

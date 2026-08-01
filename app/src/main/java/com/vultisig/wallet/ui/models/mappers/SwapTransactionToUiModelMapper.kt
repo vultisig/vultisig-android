@@ -148,7 +148,6 @@ constructor(
                     dstToken = from.dstToken,
                     targetPrice = limitTargetPrice,
                     expiryHours = limitExpiryHours,
-                    currency = currency,
                 )
             } else {
                 null

@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.models.swap
 
 import java.math.BigDecimal
-import java.math.RoundingMode
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -61,41 +60,6 @@ class LimitOrderPricingTest {
             LimitOrderPricing.LimitWarning.BelowMarket,
             LimitOrderPricing.warningFor(LimitOrderPricing.applyPreset(market, 0), market),
         )
-    }
-
-    @Test
-    fun `fiat price of one sell unit prices the target price through the buy asset`() {
-        // target 2.6474 DOGE per RUNE at $0.16 a DOGE -> 1 RUNE is worth ~$0.42.
-        val fiat =
-            LimitOrderPricing.fiatPricePerSellUnit(
-                targetPrice = BigDecimal("2.6474"),
-                buyUnitFiat = BigDecimal("0.16"),
-            )!!
-        assertEquals(0, BigDecimal("0.42").compareTo(fiat.setScale(2, RoundingMode.HALF_UP)))
-    }
-
-    @Test
-    fun `raising the preset raises the fiat value of one sell unit by the same percent`() {
-        // The header figure has to track the ORDER, not the market: a +10% target must read 10%
-        // higher. Reading it off the sell asset's own market price would leave it unchanged.
-        val market = BigDecimal("2.6474")
-        val atMarket = LimitOrderPricing.fiatPricePerSellUnit(market, BigDecimal("0.16"))!!
-        val plusTen =
-            LimitOrderPricing.fiatPricePerSellUnit(
-                LimitOrderPricing.applyPreset(market, 10),
-                BigDecimal("0.16"),
-            )!!
-        assertEquals(
-            0,
-            (atMarket * BigDecimal("1.1"))
-                .setScale(6, RoundingMode.HALF_UP)
-                .compareTo(plusTen.setScale(6, RoundingMode.HALF_UP)),
-        )
-    }
-
-    @Test
-    fun `fiat price is null without a buy unit price`() {
-        assertNull(LimitOrderPricing.fiatPricePerSellUnit(BigDecimal("2"), null))
     }
 
     @Test

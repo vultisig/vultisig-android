@@ -47,21 +47,6 @@ internal object LimitOrderPricing {
                         .divide(BigDecimal(100), PRICE_SCALE, RoundingMode.HALF_UP))
         )
 
-    /**
-     * Fiat value of ONE sell unit at [targetPrice] — the figure shown under the "1 <sell>" header.
-     *
-     * Priced through the BUY asset ([buyUnitFiat] × [targetPrice]) rather than read off the sell
-     * asset's own market price, because this is the value the *order* implies, not the value the
-     * market currently assigns: raising the preset to +10% must raise this figure by 10%, which a
-     * sell-side market price could never do.
-     */
-    fun fiatPricePerSellUnit(targetPrice: BigDecimal, buyUnitFiat: BigDecimal?): BigDecimal? {
-        if (targetPrice.signum() <= 0 || buyUnitFiat == null || buyUnitFiat.signum() <= 0) {
-            return null
-        }
-        return targetPrice * buyUnitFiat
-    }
-
     /** Buy units received for [sellAmount] sell units at [targetPrice]. */
     fun expectedBuyAmount(sellAmount: BigDecimal?, targetPrice: BigDecimal): BigDecimal? {
         if (sellAmount == null || sellAmount.signum() <= 0 || targetPrice.signum() <= 0) return null
