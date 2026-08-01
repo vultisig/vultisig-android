@@ -43,7 +43,7 @@ internal enum class LimitPriceUnit {
 internal data class LimitOrderUiModel(
     /**
      * What [referenceAmountLabel]'s worth of the sell asset fetches at the target price, in the
-     * emphasized unit — e.g. "$2.15" (fiat) or "12.76050795 DOGE" (asset).
+     * emphasized unit — e.g. "15.3171771 DOGE" (asset) or that amount's fiat value, "$2.58".
      */
     val priceText: String = "",
     /**
@@ -52,7 +52,7 @@ internal data class LimitOrderUiModel(
      */
     val referenceAmountLabel: String = "",
     val referenceLogo: ImageModel? = null,
-    /** The same value as [priceText] in the other unit, e.g. "12.76050795 DOGE" next to "$2.15". */
+    /** The same value as [priceText] in the other unit, e.g. "15.3171771 DOGE" next to "$2.58". */
     val secondaryPriceLabel: String = "",
     val priceUnit: LimitPriceUnit = LimitPriceUnit.Fiat,
     val selectedPreset: LimitPricePreset? = LimitPricePreset.Market,

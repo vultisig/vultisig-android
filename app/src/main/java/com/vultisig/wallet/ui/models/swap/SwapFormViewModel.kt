@@ -115,12 +115,12 @@ constructor(
     // Both prices are canonical: buy-asset units per 1 sell-asset unit (what the memo LIM needs).
     private val marketTargetPrice = MutableStateFlow<BigDecimal?>(null)
     private val limitTargetPrice = MutableStateFlow<BigDecimal?>(null)
-    // App-currency price of one whole sell-asset unit, so the limit form's fiat display honors the
-    // user's selected currency instead of hardcoding USD. Deliberately the SELL asset and the same
-    // conversion the asset editor's sell leg uses, so the fiat figure in "Execute when" always
-    // agrees with the one beside the sell amount — the two feeds (fiat prices vs the THORChain pool
-    // rate) do not always agree, and one screen must not quote both.
-    private val sellUnitFiat = MutableStateFlow<FiatValue?>(null)
+    // App-currency price of one whole BUY-asset unit, so the limit form's fiat display honors the
+    // user's selected currency instead of hardcoding USD. The buy side is what the price card's
+    // fiat line values: it prices the buy amount the order would fetch, so it moves with the
+    // preset pills the way the asset line does — a sell-side valuation would sit frozen while the
+    // user raises the target.
+    private val buyUnitFiat = MutableStateFlow<FiatValue?>(null)
     private var marketPriceJob: Job? = null
     // The pair the current market/target prices belong to, so a pair change can invalidate them.
     private var pricedPairKey: String? = null
@@ -295,31 +295,30 @@ constructor(
                     updateLimitOrderState()
                 }
         }
-        // Keep the sell asset's app-currency unit price current so fiat display honors the
-        // currency.
+        // Keep the buy asset's app-currency unit price current so fiat display honors the currency.
         viewModelScope.launch {
-            combine(selectedSrc, appCurrencyRepository.currency) { src, currency ->
-                    src?.account?.token to currency
+            combine(selectedDst, appCurrencyRepository.currency) { dst, currency ->
+                    dst?.account?.token to currency
                 }
-                .collectLatest { (srcCoin, currency) ->
-                    sellUnitFiat.value =
-                        if (srcCoin == null) {
+                .collectLatest { (dstCoin, currency) ->
+                    buyUnitFiat.value =
+                        if (dstCoin == null) {
                             null
                         } else {
                             try {
                                 convertTokenValueToFiat(
-                                    srcCoin,
+                                    dstCoin,
                                     TokenValue(
-                                        BigInteger.TEN.pow(srcCoin.decimal),
-                                        srcCoin.ticker,
-                                        srcCoin.decimal,
+                                        BigInteger.TEN.pow(dstCoin.decimal),
+                                        dstCoin.ticker,
+                                        dstCoin.decimal,
                                     ),
                                     currency,
                                 )
                             } catch (e: CancellationException) {
                                 throw e
                             } catch (e: Exception) {
-                                Timber.w(e, "Failed to price sell asset for limit form")
+                                Timber.w(e, "Failed to price buy asset for limit form")
                                 null
                             }
                         }
@@ -535,16 +534,18 @@ constructor(
         // pair still shows a price). Quoting the header against a different quantity than the two
         // numbers under it is what made the card unreadable (#5464).
         val quotedSellAmount = sellAmount?.takeIf { it.signum() > 0 } ?: BigDecimal.ONE
-        // Fiat display uses the sell asset's app-currency unit price (not raw USD), matching the
-        // Market swap flow so non-USD users see the correct symbol and value — and, critically, the
-        // same conversion the asset editor's sell leg shows, so the two never disagree.
-        val sellFiat = sellUnitFiat.value
-        val quotedFiat = sellFiat?.value?.multiply(quotedSellAmount)
         val quotedBuyAmount =
             target?.let { LimitOrderPricing.expectedBuyAmount(quotedSellAmount, it) }
         val buyAmount = target?.let { LimitOrderPricing.expectedBuyAmount(sellAmount, it) }
+        // The fiat line values the BUY amount the two lines beside it name, in the buy asset's
+        // app-currency price (not raw USD), matching the Market swap flow so non-USD users see the
+        // correct symbol and value. Pricing the destination is what makes it dynamic: it is derived
+        // from `quotedBuyAmount`, which carries the target price, so a +5% preset moves the fiat
+        // figure by 5% instead of leaving it pinned to what the sell side is worth today.
+        val buyFiat = buyUnitFiat.value
+        val quotedFiat = quotedBuyAmount?.let { amount -> buyFiat?.value?.multiply(amount) }
 
-        val fiatText = formatFiat(quotedFiat, sellFiat?.currency)
+        val fiatText = formatFiat(quotedFiat, buyFiat?.currency)
         val buyAmountAtTargetText =
             quotedBuyAmount?.let { "${formatAssetAmount(it)} ${dstCoin.ticker}" } ?: EMPTY_PRICE
         val unit = limitPriceUnit.value
