@@ -17,11 +17,13 @@ import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
 import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
@@ -79,6 +81,7 @@ constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val fiatValueToString: FiatValueToStringMapper,
+    private val tokenPriceRepository: TokenPriceRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -475,6 +478,32 @@ constructor(
     private fun pairKeyOf(srcCoin: Coin?, dstCoin: Coin?): String? =
         if (srcCoin == null || dstCoin == null) null else "${srcCoin.id}>${dstCoin.id}"
 
+    /**
+     * USD price of one whole [coin], used ONLY to size the market-price probe.
+     *
+     * `Coin.usdPrice` cannot serve here: nothing populates it outside the SPL token path, so every
+     * other source arrived as null and the probe silently fell back to ONE WHOLE UNIT. For a cheap
+     * source that is a tiny trade whose output the destination chain's outbound fee dominates — a 1
+     * RUNE probe into DOGE lost ~3.6 DOGE of fee out of ~6.1 DOGE gross, so the market price read
+     * ~2.5 DOGE/RUNE against an actual ~6.1 (#5464). Every preset derived from it, the warning
+     * thresholds, and the LIM the order signs were all off by the same factor.
+     *
+     * Priced in USD explicitly, not the app currency: the probe aims for a fixed ~$100 notional, so
+     * feeding it a JPY-denominated price would size the probe ~150× too small and re-introduce the
+     * same fee-dominated quote for a user who merely changed their display currency. Returns zero
+     * when no price is cached, which keeps the previous one-whole-unit behaviour as the fallback
+     * rather than failing the fetch outright.
+     */
+    private suspend fun sourceUsdUnitPrice(coin: Coin): BigDecimal =
+        try {
+            tokenPriceRepository.getCachedPrice(coin.id, AppCurrency.USD) ?: BigDecimal.ZERO
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to price the limit probe's source asset")
+            BigDecimal.ZERO
+        }
+
     /** Fetches the market reference price (buy units per sell unit) and seeds the preset. */
     private fun fetchMarketPrice(src: Coin, dst: Coin) {
         marketPriceJob?.cancel()
@@ -486,7 +515,7 @@ constructor(
                     limitMarketPriceRepository.getMarketPrice(
                         fromCoin = src,
                         toCoin = dst,
-                        sourcePrice = src.usdPrice ?: BigDecimal.ZERO,
+                        sourcePrice = sourceUsdUnitPrice(src),
                         // Quote to where the order would actually pay out, so the reference price
                         // matches the route the placed order takes.
                         destinationAddress = externalRecipient.value ?: dst.address,

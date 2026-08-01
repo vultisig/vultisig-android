@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
 import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
@@ -103,6 +104,7 @@ internal class SwapFormViewModelTest {
     private lateinit var navigator: Navigator<Destination>
     private lateinit var fiatValueToString: FiatValueToStringMapper
     private lateinit var convertTokenValueToFiat: ConvertTokenValueToFiatUseCase
+    private lateinit var tokenPriceRepository: TokenPriceRepository
     private lateinit var convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase
     private lateinit var swapQuoteRepository: SwapQuoteRepository
     // The recipient flow the ViewModel feeds into the quote pipeline (gated to valid addresses).
@@ -142,6 +144,7 @@ internal class SwapFormViewModelTest {
         fiatValueToString = mockk(relaxed = true)
         coEvery { fiatValueToString(any(), any()) } returns "$0.00"
         convertTokenValueToFiat = mockk(relaxed = true)
+        tokenPriceRepository = mockk(relaxed = true)
 
         convertTokenAndValueToTokenValue = mockk(relaxed = true)
         every { convertTokenAndValueToTokenValue(any(), any()) } answers
@@ -282,6 +285,7 @@ internal class SwapFormViewModelTest {
                 appCurrencyRepository = appCurrencyRepository,
                 convertTokenValueToFiat = convertTokenValueToFiat,
                 fiatValueToString = fiatValueToString,
+                tokenPriceRepository = tokenPriceRepository,
             )
             .also { createdViewModels += it }
 
@@ -3897,6 +3901,61 @@ internal class SwapFormViewModelTest {
             assertEquals("3 ETH", withAmount.referenceAmountLabel)
             assertEquals("0.15 BTC", withAmount.priceText)
             assertEquals("0.15", withAmount.buyAmountText)
+        }
+
+    @Test
+    fun `the market probe is sized from the source's USD price, not one whole unit`() =
+        runTest(mainDispatcher) {
+            coEvery { featureFlagRepository.getFeatureFlags() } returns
+                FeatureFlagJson(isLimitSwapEnabled = true)
+            coEvery {
+                limitMarketPriceRepository.getMarketPrice(any(), any(), any(), any())
+            } returns BigDecimal("0.05")
+            coEvery { tokenPriceRepository.getCachedPrice(any(), AppCurrency.USD) } returns
+                BigDecimal("2500")
+
+            val vm = createViewModelWithSwapTokens()
+            vm.onSelectSwapMode(SwapMode.Limit)
+            advanceUntilIdle()
+
+            // The probe has to be quoted at a realistic notional. Priced at one whole unit, a
+            // cheap source's quote is dominated by the destination chain's outbound fee and the
+            // market price comes back a multiple too low — which every preset, every warning
+            // threshold and the signed LIM then inherit (#5464).
+            coVerify {
+                limitMarketPriceRepository.getMarketPrice(
+                    fromCoin = any(),
+                    toCoin = any(),
+                    sourcePrice = BigDecimal("2500"),
+                    destinationAddress = any(),
+                )
+            }
+        }
+
+    @Test
+    fun `an unpriced source still probes rather than failing the fetch`() =
+        runTest(mainDispatcher) {
+            coEvery { featureFlagRepository.getFeatureFlags() } returns
+                FeatureFlagJson(isLimitSwapEnabled = true)
+            coEvery {
+                limitMarketPriceRepository.getMarketPrice(any(), any(), any(), any())
+            } returns BigDecimal("0.05")
+            coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns null
+
+            val vm = createViewModelWithSwapTokens()
+            vm.onSelectSwapMode(SwapMode.Limit)
+            advanceUntilIdle()
+
+            // Zero is what getMarketProbeAmount reads as "no price", falling back to one whole
+            // unit — a worse probe, but still a probe. A form with no price at all is worse.
+            coVerify {
+                limitMarketPriceRepository.getMarketPrice(
+                    fromCoin = any(),
+                    toCoin = any(),
+                    sourcePrice = BigDecimal.ZERO,
+                    destinationAddress = any(),
+                )
+            }
         }
 
     @Test
