@@ -9,7 +9,6 @@ import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.math.RoundingMode
 import java.text.DecimalFormat
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -59,9 +58,13 @@ constructor(
     }
 
     /**
-     * "1 <buy> = $65,800.13" — the target price expressed per whole buy unit, in the app currency
+     * "1 <sell> = $0.42" — the target price expressed per whole SELL unit, in the app currency
      * (never a hardcoded `$`), matching how the limit form prices the same order. Falls back to
-     * sell-asset units when the sell asset has no price.
+     * buy-asset units when the buy asset has no price.
+     *
+     * Quoted per sell unit rather than per buy unit so the label states the rate the memo's LIM
+     * actually encodes instead of its reciprocal, and so the confirm screen a co-signer reads
+     * matches the form the initiator placed the order from.
      */
     private suspend fun targetPriceLabel(
         srcToken: Coin,
@@ -69,43 +72,33 @@ constructor(
         targetPrice: BigDecimal,
         currency: AppCurrency,
     ): String {
-        val sellUnitFiat =
+        val buyUnitFiat =
             try {
                 convertTokenValueToFiat(
-                    srcToken,
+                    dstToken,
                     TokenValue(
-                        BigInteger.TEN.pow(srcToken.decimal),
-                        srcToken.ticker,
-                        srcToken.decimal,
+                        BigInteger.TEN.pow(dstToken.decimal),
+                        dstToken.ticker,
+                        dstToken.decimal,
                     ),
                     currency,
                 )
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.w(e, "Failed to price the limit order's sell asset")
+                Timber.w(e, "Failed to price the limit order's buy asset")
                 null
             }
-        val fiat = LimitOrderPricing.fiatPricePerBuyUnit(targetPrice, sellUnitFiat?.value)
+        val fiat = LimitOrderPricing.fiatPricePerSellUnit(targetPrice, buyUnitFiat?.value)
         if (fiat != null) {
             val formatted =
                 fiatValueToStringMapper(FiatValue(fiat, currency.ticker), asPrice = true)
-            return "1 ${dstToken.ticker} = $formatted"
+            return "1 ${srcToken.ticker} = $formatted"
         }
-        val sellPerBuy =
-            if (targetPrice.signum() > 0) {
-                BigDecimal.ONE.divide(targetPrice, ASSET_PRICE_SCALE, RoundingMode.HALF_UP)
-            } else {
-                BigDecimal.ZERO
-            }
         // DecimalFormat is not thread-safe, and this use case is injected into singleton-scoped
         // callers reached from several screens' scopes, so the formatter is built per call rather
         // than shared.
         val assetFormat = DecimalFormat("#,##0.########")
-        return "1 ${dstToken.ticker} = ${assetFormat.format(sellPerBuy)} ${srcToken.ticker}"
-    }
-
-    private companion object {
-        const val ASSET_PRICE_SCALE = 8
+        return "1 ${srcToken.ticker} = ${assetFormat.format(targetPrice)} ${dstToken.ticker}"
     }
 }

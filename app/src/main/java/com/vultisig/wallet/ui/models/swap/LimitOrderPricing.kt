@@ -8,8 +8,11 @@ import java.math.RoundingMode
  *
  * The one canonical quantity is **targetPrice = buy-asset units per 1 sell-asset unit** — exactly
  * what the memo's LIM is computed from (`buildLimitSwapMemoForCoins`). Everything the UI shows (the
- * fiat price of one buy unit, the expected buy amount, the % from market, the warnings) is derived
+ * fiat value of one sell unit, the expected buy amount, the % from market, the warnings) is derived
  * from it, so the `$`/asset display toggle can never change the value that gets signed.
+ *
+ * The form quotes the price **per sell unit** ("1 RUNE is worth 2.6474 DOGE"), matching iOS/macOS,
+ * so the rate the user reads is the rate the memo encodes rather than its reciprocal.
  */
 internal object LimitOrderPricing {
 
@@ -44,13 +47,19 @@ internal object LimitOrderPricing {
                         .divide(BigDecimal(100), PRICE_SCALE, RoundingMode.HALF_UP))
         )
 
-    /** Fiat value of one buy unit at [targetPrice], given the sell asset's USD price. */
-    fun fiatPricePerBuyUnit(targetPrice: BigDecimal, sellUsdPrice: BigDecimal?): BigDecimal? {
-        if (targetPrice.signum() <= 0 || sellUsdPrice == null || sellUsdPrice.signum() <= 0) {
+    /**
+     * Fiat value of ONE sell unit at [targetPrice] — the figure shown under the "1 <sell>" header.
+     *
+     * Priced through the BUY asset ([buyUnitFiat] × [targetPrice]) rather than read off the sell
+     * asset's own market price, because this is the value the *order* implies, not the value the
+     * market currently assigns: raising the preset to +10% must raise this figure by 10%, which a
+     * sell-side market price could never do.
+     */
+    fun fiatPricePerSellUnit(targetPrice: BigDecimal, buyUnitFiat: BigDecimal?): BigDecimal? {
+        if (targetPrice.signum() <= 0 || buyUnitFiat == null || buyUnitFiat.signum() <= 0) {
             return null
         }
-        val sellPerBuy = BigDecimal.ONE.divide(targetPrice, PRICE_SCALE, RoundingMode.HALF_UP)
-        return sellPerBuy * sellUsdPrice
+        return targetPrice * buyUnitFiat
     }
 
     /** Buy units received for [sellAmount] sell units at [targetPrice]. */

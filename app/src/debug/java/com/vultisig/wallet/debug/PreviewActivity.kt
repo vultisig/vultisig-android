@@ -3281,10 +3281,10 @@ private fun LimitSwapFormPreview(expandedSection: LimitFormSection = LimitFormSe
     val btc = Coins.Bitcoin.BTC
     val state =
         LimitOrderUiModel(
-            priceText = "$65,800.13",
-            referenceAmountLabel = "1 BTC",
-            referenceLogo = getCoinLogo(btc.logo),
-            secondaryPriceLabel = "0.07902 BTC",
+            priceText = "$1.00",
+            referenceAmountLabel = "1 USDC",
+            referenceLogo = getCoinLogo(usdc.logo),
+            secondaryPriceLabel = "0.0000152 BTC",
             priceUnit = LimitPriceUnit.Fiat,
             selectedPreset = LimitPricePreset.Market,
             selectedExpiry = LimitExpiryOption.TwentyFourHours,

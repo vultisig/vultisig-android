@@ -199,7 +199,7 @@ private fun PriceEntryBlock(
                     state.referenceLogo?.let { logo ->
                         TokenLogo(
                             logo = logo,
-                            title = state.buyTicker,
+                            title = state.sellTicker,
                             modifier = Modifier.size(24.dp),
                             errorLogoModifier = Modifier.size(24.dp),
                         )
