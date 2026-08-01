@@ -37,8 +37,17 @@ internal fun VsTabGroup(index: Int, content: VsTabGroupScope.() -> Unit) {
     val scope = VsTabGroupScope().apply(content)
     val tabs = scope.tabs
 
-    val tabWidths = remember { mutableStateListOf<Dp>().apply { repeat(tabs.size) { add(0.dp) } } }
-    val underLineWidth = tabWidths[index]
+    // Keyed on the tab COUNT, not remembered once: callers may add or drop a tab at runtime — the
+    // transaction history's Limit tab only appears once its feature gate and orders resolve, a
+    // frame or two after the screen first composes. An unkeyed list keeps its original size, so the
+    // onGloballyPositioned write below indexes past its end and throws IndexOutOfBounds from inside
+    // the layout pass, which is unrecoverable. Re-keying costs one frame of a zero-width underline
+    // while the new set of tabs reports its sizes.
+    val tabWidths =
+        remember(tabs.size) { mutableStateListOf<Dp>().apply { repeat(tabs.size) { add(0.dp) } } }
+    // Defensive: a caller can hand us a selected index that outruns the tabs it emitted (a tab
+    // hidden while it was selected). Rendering no underline beats taking the process down.
+    val underLineWidth = tabWidths.getOrElse(index) { 0.dp }
     val animateWidth by animateDpAsState(underLineWidth)
     val density = LocalDensity.current
     val itemsSpace = 16.dp
@@ -53,7 +62,11 @@ internal fun VsTabGroup(index: Int, content: VsTabGroupScope.() -> Unit) {
                 Box(
                     modifier =
                         Modifier.onGloballyPositioned { coordinates ->
-                            tabWidths[index] = with(density) { coordinates.size.width.toDp() }
+                            // Layout can outlive the composition that sized [tabWidths] by a
+                            // frame, so re-check rather than trusting the captured index.
+                            if (index < tabWidths.size) {
+                                tabWidths[index] = with(density) { coordinates.size.width.toDp() }
+                            }
                         },
                     content = tab,
                 )
@@ -64,7 +77,11 @@ internal fun VsTabGroup(index: Int, content: VsTabGroupScope.() -> Unit) {
             animateDpAsState(
                 targetValue =
                     if (index == 0) 0.dp
-                    else itemsSpace * (index) + tabWidths.take(index).reduce { acc, dp -> acc + dp }
+                    // fold, not reduce: `take` yields an empty list when the selected index
+                    // outruns the measured tabs, and reduce throws on an empty list.
+                    else
+                        itemsSpace * index +
+                            tabWidths.take(index).fold(0.dp) { acc, dp -> acc + dp }
             )
 
         TabUnderLine(width = { animateWidth }, offset = offsetAnimated::value)
