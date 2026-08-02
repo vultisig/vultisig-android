@@ -2,7 +2,6 @@
 
 package com.vultisig.wallet.ui.components.v2.scaffold
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
@@ -30,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollDispatcher
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -206,15 +206,29 @@ fun VsExpandableTopBar(
             tonalElevation = 0.dp,
             color = backgroundColor,
         ) {
-            Crossfade(
-                targetState = expandedFraction > 0.5f,
-                animationSpec = tween(durationMillis = 150),
-                label = "content_transition",
-            ) { isExpanded ->
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    content = if (isExpanded) expandedContent else collapsedContent,
-                )
+            // Both contents carry the portfolio balance, so a Crossfade — which overlaps its two
+            // children by design — drew the amount twice mid-transition (#5473). Drive the alphas
+            // off expandedFraction over non-overlapping halves of the range instead: the expanded
+            // content only fades in above 0.5, the collapsed content only below it, so they hand
+            // over cleanly and follow the drag in both directions rather than snapping on a
+            // threshold. Each is skipped entirely at zero alpha so an invisible content never
+            // holds a click target.
+            val expandedAlpha = ((expandedFraction - 0.5f) * 2f).coerceIn(0f, 1f)
+            val collapsedAlpha = ((0.5f - expandedFraction) * 2f).coerceIn(0f, 1f)
+
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (expandedAlpha > 0f) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().graphicsLayer { alpha = expandedAlpha },
+                        content = expandedContent,
+                    )
+                }
+                if (collapsedAlpha > 0f) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().graphicsLayer { alpha = collapsedAlpha },
+                        content = collapsedContent,
+                    )
+                }
             }
         }
     }

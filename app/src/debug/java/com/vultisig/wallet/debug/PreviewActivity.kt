@@ -91,6 +91,7 @@ import com.vultisig.wallet.ui.models.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.TokenUiModel
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
+import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultDetailUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
@@ -146,6 +147,7 @@ import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
 import com.vultisig.wallet.ui.screens.folder.generateFakeVault
+import com.vultisig.wallet.ui.screens.home.VaultAccountsScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
@@ -355,6 +357,7 @@ class PreviewActivity : ComponentActivity() {
                     "gas_settings_bsc_after" -> GasSettingsBscPreview(isLegacyGas = true)
                     "sui_token_selection_before" -> SuiTokenSelectionPreview(discovered = false)
                     "sui_token_selection_after" -> SuiTokenSelectionPreview(discovered = true)
+                    "home_topbar" -> HomeTopBarPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -3414,3 +3417,84 @@ private fun TokenDetailSheetLoadingPreview() {
 
     TokenDetailScreen(uiModel = uiModel)
 }
+
+/**
+ * Vault home (#5473) with the expandable top bar. Used to capture the bar mid-collapse: a slow `adb
+ * shell input swipe` over the list drives `expandedFraction` through the transition so the frame
+ * where both the expanded and collapsed balance are drawn can be recorded.
+ */
+@Composable
+private fun HomeTopBarPreview() {
+    VaultAccountsScreen(
+        state =
+            VaultAccountsUiModel(
+                vaultName = "Main Vault",
+                totalFiatValue = "$12,345.67",
+                isBalanceValueVisible = true,
+                accounts =
+                    listOf(
+                        homeAccount(
+                            Chain.Ethereum,
+                            "Ethereum",
+                            R.drawable.ethereum,
+                            "0xAbCd1234",
+                            "0.5 ETH",
+                            "$1,234.56",
+                            "ETH",
+                            3,
+                        ),
+                        homeAccount(
+                            Chain.Bitcoin,
+                            "Bitcoin",
+                            R.drawable.bitcoin,
+                            "bc1qxyz",
+                            "0.1 BTC",
+                            "$6,500.00",
+                            "BTC",
+                            1,
+                        ),
+                        homeAccount(
+                            Chain.ThorChain,
+                            "THORChain",
+                            R.drawable.rune,
+                            "thor1abc",
+                            "100 RUNE",
+                            "$400.00",
+                            "RUNE",
+                            1,
+                        ),
+                        homeAccount(
+                            Chain.Solana,
+                            "Solana",
+                            R.drawable.solana,
+                            "So1anaAddr",
+                            "12 SOL",
+                            "$2,210.11",
+                            "SOL",
+                            2,
+                        ),
+                    ),
+            )
+    )
+}
+
+private fun homeAccount(
+    chain: Chain,
+    chainName: String,
+    logo: Int,
+    address: String,
+    nativeTokenAmount: String,
+    fiatAmount: String,
+    ticker: String,
+    assetsSize: Int,
+) =
+    AccountUiModel(
+        model = Address(chain = chain, address = address, accounts = emptyList()),
+        chainName = chainName,
+        logo = logo,
+        address = address,
+        nativeTokenAmount = nativeTokenAmount,
+        fiatAmount = fiatAmount,
+        assetsSize = assetsSize,
+        nativeTokenTicker = ticker,
+    )
