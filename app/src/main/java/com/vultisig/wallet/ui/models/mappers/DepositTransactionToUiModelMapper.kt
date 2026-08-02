@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.OPERATION_UNBOND
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
+import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelPresentation
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
@@ -16,18 +17,26 @@ internal interface DepositTransactionToUiModelMapper :
     SuspendMapperFunc<DepositTransaction, DepositTransactionUiModel>
 
 /**
- * Resolves the "Function overview" header for a deposit: an Unbond reads "Unbonding" rather than
- * the generic "You're sending", since it isn't a send (issue #5301). Keyed off the structured
- * [operation] alone — never the raw memo — so a Custom deposit whose free-text memo happens to
- * start with "unbond" is not mislabeled. Every unbond producer sets the operation: the two
- * UnbondStrategy paths on the initiator, and the joiner via ThorchainMemoParser.
+ * The sentence the Verify/done screens lead with.
+ *
+ * [memo] is consulted FIRST because a limit-order cancel carries no distinguishing operation — it
+ * is an ordinary `MsgDeposit` (or memo-bearing transfer) whose entire meaning lives in its `m=<`
+ * memo, which is also all a CO-SIGNING device ever sees. Without this it would read "You're sending
+ * 0 RUNE", or "You're sending 0.0002 BTC" of dust that is about to be donated to the pool — neither
+ * of which is what the user is doing.
+ *
+ * Everything else is keyed off the structured [operation] alone — never the raw memo — so a Custom
+ * deposit whose free-text memo happens to start with "unbond" is not mislabeled. An Unbond reads
+ * "Unbonding" rather than the generic "You're sending", since it isn't a send (issue #5301). Every
+ * unbond producer sets the operation: the two UnbondStrategy paths on the initiator, and the joiner
+ * via ThorchainMemoParser.
  */
 @StringRes
-internal fun depositVerifyTitleRes(operation: String): Int =
-    if (operation == OPERATION_UNBOND) {
-        R.string.verify_deposit_unbonding
-    } else {
-        R.string.verify_deposit_sending
+internal fun depositVerifyTitleRes(operation: String, memo: String = ""): Int =
+    when {
+        LimitOrderCancelPresentation.isCancel(memo) -> R.string.verify_limit_order_cancel_title
+        operation == OPERATION_UNBOND -> R.string.verify_deposit_unbonding
+        else -> R.string.verify_deposit_sending
     }
 
 internal class DepositTransactionUiModelMapperImpl
@@ -72,7 +81,13 @@ constructor(
             pairedAddress = from.pairedAddress,
             pool = from.pool,
             validatorName = from.validatorName.orEmpty(),
-            titleRes = depositVerifyTitleRes(from.operation),
+            titleRes = depositVerifyTitleRes(from.operation, from.memo),
+            limitCancelPair = LimitOrderCancelPresentation.pairCaption(from.memo),
+            limitCancelDonatesDust =
+                LimitOrderCancelPresentation.donatesDust(
+                    memo = from.memo,
+                    amount = from.srcTokenValue.value,
+                ),
         )
     }
 }

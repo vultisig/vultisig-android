@@ -85,8 +85,7 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
     override fun providersFor(coin: Coin): Set<SwapProvider> {
         val ticker = coin.ticker.uppercase()
         return when (coin.chain) {
-            Chain.MayaChain,
-            Chain.Kujira -> setOf(SwapProvider.MAYA)
+            Chain.MayaChain -> setOf(SwapProvider.MAYA)
 
             // SwapKit DASH routes are signed by SwapKitLegacyP2PKHSigner (legacy P2PKH PSBT via
             // CoinType.DASH). Mirrors iOS' `.dash → [.mayachain, .swapkit]`.
@@ -187,6 +186,11 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
             // body, Ed25519 vkey witness). Mirrors iOS' `.cardano → [.swapkit]`.
             Chain.Cardano -> setOf(SwapProvider.SWAPKIT)
 
+            // MayaChain was the only provider ever mapped for Kujira, and it has delisted every
+            // KUJI.* pool (verified against /mayachain/pools on 2026-08-01), so every Kujira quote
+            // is a guaranteed failure (#5472). [poolEligibility] can only ADD routes, so the entry
+            // has to go for the pair to stop being offered.
+            Chain.Kujira,
             Chain.Polkadot,
             Chain.Bittensor,
             Chain.Dydx,

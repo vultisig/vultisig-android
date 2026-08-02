@@ -46,6 +46,7 @@ import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.keysign.progress
+import com.vultisig.wallet.ui.models.limitorder.isLimitOrderCancel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
@@ -144,26 +145,44 @@ internal fun KeysignView(
                                 dappMetadata = dappMetadata,
                             )
                         }
+                        // A limit-order cancel is an ordinary deposit on the wire, but the send
+                        // overview is the wrong screen for it: it headlines the dust the cancel
+                        // attaches as though the user had sent it somewhere. It goes to
+                        // TransactionDoneView, which carries the cancel header instead.
                         is TransactionTypeUiModel.Deposit,
-                        is TransactionTypeUiModel.Send -> {
-                            var isTransactionDetailVisible by remember { mutableStateOf(false) }
-                            SendTxOverviewScreen(
-                                transactionHash = txHash,
-                                transactionLink = transactionLink,
-                                onComplete = onComplete,
-                                onBack = onBack,
-                                transactionStatus = targetState.transactionStatus,
-                                tx = transactionTypeUiModel.toUiTransactionInfo(),
-                                showToolbar = showToolbar,
-                                onAddToAddressBook = onAddToAddressBook,
-                                showSaveToAddressBook = showSaveToAddressBook,
-                                isTransactionDetailVisible = isTransactionDetailVisible,
-                                onTransactionDetailVisibleChange = {
-                                    isTransactionDetailVisible = it
-                                },
-                                dappMetadata = dappMetadata,
-                            )
-                        }
+                        is TransactionTypeUiModel.Send ->
+                            if (transactionTypeUiModel.isLimitOrderCancel()) {
+                                val uriHandler = VsUriHandler()
+                                TransactionDoneView(
+                                    transactionHash = txHash,
+                                    approveTransactionHash = approveTransactionHash,
+                                    transactionLink = transactionLink,
+                                    approveTransactionLink = approveTransactionLink,
+                                    onComplete = onComplete,
+                                    onBack = onBack,
+                                    transactionTypeUiModel = transactionTypeUiModel,
+                                    showToolbar = showToolbar,
+                                    onUriClick = uriHandler::openUri,
+                                )
+                            } else {
+                                var isTransactionDetailVisible by remember { mutableStateOf(false) }
+                                SendTxOverviewScreen(
+                                    transactionHash = txHash,
+                                    transactionLink = transactionLink,
+                                    onComplete = onComplete,
+                                    onBack = onBack,
+                                    transactionStatus = targetState.transactionStatus,
+                                    tx = transactionTypeUiModel.toUiTransactionInfo(),
+                                    showToolbar = showToolbar,
+                                    onAddToAddressBook = onAddToAddressBook,
+                                    showSaveToAddressBook = showSaveToAddressBook,
+                                    isTransactionDetailVisible = isTransactionDetailVisible,
+                                    onTransactionDetailVisibleChange = {
+                                        isTransactionDetailVisible = it
+                                    },
+                                    dappMetadata = dappMetadata,
+                                )
+                            }
                         else -> {
 
                             val uriHandler = VsUriHandler()
