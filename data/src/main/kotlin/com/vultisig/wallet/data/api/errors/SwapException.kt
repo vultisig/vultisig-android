@@ -56,6 +56,13 @@ sealed class SwapException(message: String) : Exception(message) {
                         InsufficentSwapAmount(error)
                     contains("failed to simulate swap: pool") -> SwapRouteNotAvailable(error)
                     contains("failed to simulate handler: pool") -> SwapRouteNotAvailable(error)
+                    // Maya's streaming path fails before the pool lookup when a chain has been
+                    // delisted, reporting an internal "dev error" instead of "pool X doesn't
+                    // exist". Deterministic — retrying or changing the amount can never help.
+                    contains("both pools have no rune balance") -> SwapRouteNotAvailable(error)
+                    contains("failed to calculate max streaming swap quantity") ->
+                        SwapRouteNotAvailable(error)
+                    contains("pool") && contains("doesn't exist") -> SwapRouteNotAvailable(error)
                     contains("insufficient funds") -> InsufficientFunds(error)
                     contains("no available quotes for the requested") ->
                         SwapRouteNotAvailable(error)
