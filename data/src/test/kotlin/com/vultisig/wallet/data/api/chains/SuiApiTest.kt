@@ -86,6 +86,63 @@ class SuiApiTest {
     }
 
     @Test
+    fun `getCoinMetadata throws with the real RPC error message and code`() = runTest {
+        val api =
+            api("""{"id":1,"result":null,"error":{"code":-32602,"message":"bad coin type"}}""")
+
+        val e = assertFailsWith<IllegalStateException> { api.getCoinMetadata(COIN_TYPE) }
+        assert(e.message!!.contains("bad coin type")) { "message was: ${e.message}" }
+        assert(e.message!!.contains("-32602")) { "message was: ${e.message}" }
+    }
+
+    @Test
+    fun `getCoinMetadata returns null when the coin publishes no metadata`() = runTest {
+        val api = api("""{"id":1,"result":null,"error":null}""")
+
+        assertNull(api.getCoinMetadata(COIN_TYPE))
+    }
+
+    @Test
+    fun `getCoinMetadata returns the parsed metadata on success`() = runTest {
+        val api =
+            api(
+                """{"id":1,"result":{"decimals":6,"name":"Gold","symbol":"GOLD","description":"","iconUrl":"https://example.test/gold.png","id":"0x9"},"error":null}"""
+            )
+
+        val metadata = api.getCoinMetadata(COIN_TYPE)
+
+        assertEquals(6, metadata?.decimals)
+        assertEquals("GOLD", metadata?.symbol)
+        assertEquals("https://example.test/gold.png", metadata?.iconUrl)
+    }
+
+    @Test
+    fun `getCoinMetadata leaves an absent iconUrl null`() = runTest {
+        val api = api("""{"id":1,"result":{"decimals":9,"symbol":"SILVER"},"error":null}""")
+
+        assertNull(api.getCoinMetadata(COIN_TYPE)?.iconUrl)
+    }
+
+    @Test
+    fun `getCoinMetadata asks the node for the requested coin type`() = runTest {
+        val capture = MockHttpClient.RequestCapture()
+        val api =
+            SuiApiImpl(
+                MockHttpClient.capturingRequest(
+                    HttpStatusCode.OK,
+                    """{"id":1,"result":{"decimals":6,"symbol":"GOLD"},"error":null}""",
+                    capture,
+                ),
+                json,
+            )
+
+        api.getCoinMetadata(COIN_TYPE)
+
+        assert(capture.lastBody.contains("suix_getCoinMetadata")) { capture.lastBody }
+        assert(capture.lastBody.contains(COIN_TYPE)) { capture.lastBody }
+    }
+
+    @Test
     fun `checkStatus returns null for the not-found RPC code`() = runTest {
         val api =
             api(
@@ -110,5 +167,10 @@ class SuiApiTest {
         val api = api("""{"id":1,"result":{"digest":"abc","checkpoint":10},"error":null}""")
 
         assertEquals("abc", api.checkStatus("digest")?.digest)
+    }
+
+    private companion object {
+        const val COIN_TYPE =
+            "0x0a2b3c4d5e6f7809000000000000000000000000000000000000000000000001::gold::GOLD"
     }
 }

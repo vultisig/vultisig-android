@@ -87,10 +87,13 @@ import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.ChainUiModel
 import com.vultisig.wallet.ui.models.DeviceMeta
 import com.vultisig.wallet.ui.models.TokenDetailUiModel
+import com.vultisig.wallet.ui.models.TokenSelectionUiModel
+import com.vultisig.wallet.ui.models.TokenUiModel
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryTab
 import com.vultisig.wallet.ui.models.TransactionHistoryUiState
 import com.vultisig.wallet.ui.models.TransactionScanStatus
+import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultDetailUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
@@ -139,6 +142,7 @@ import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesUiState
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
+import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingPositionsContent
@@ -148,6 +152,7 @@ import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
 import com.vultisig.wallet.ui.screens.folder.generateFakeVault
+import com.vultisig.wallet.ui.screens.home.VaultAccountsScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
@@ -360,6 +365,9 @@ class PreviewActivity : ComponentActivity() {
                     "edit_folder" -> EditFolderPreview()
                     "gas_settings_bsc_before" -> GasSettingsBscPreview(isLegacyGas = false)
                     "gas_settings_bsc_after" -> GasSettingsBscPreview(isLegacyGas = true)
+                    "sui_token_selection_before" -> SuiTokenSelectionPreview(discovered = false)
+                    "sui_token_selection_after" -> SuiTokenSelectionPreview(discovered = true)
+                    "home_topbar" -> HomeTopBarPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -395,6 +403,45 @@ private fun ChainSelectionClipPreview() {
         onBackClick = {},
     )
 }
+
+/**
+ * Sui "Select tokens" list (#5443). `discovered = false` is the catalog-only list Sui offered
+ * before held-token discovery; `true` adds the coin types the address actually holds. Discovered
+ * coins carry their icon as a URL rather than a bundled drawable, so they fall back to a letter
+ * tile.
+ */
+@Composable
+private fun SuiTokenSelectionPreview(discovered: Boolean) {
+    val held =
+        listOf(
+            suiToken("HASUI", "0xbde4ba4c2e274a60ce15c1cfff9e5c42e41654ac8b6d906a57efa4bd3c29f47d"),
+            suiToken("BUCK", "0xce7ff77a83ea0cb6fd39bd8748e2ec89a3f41e8efdc3f4eb123e0ca37b184db2"),
+            suiToken("SCA", "0x7016aae72cfc67f2fadf55769c0a7dd54291a583b63051a5ed71081cce836ac6"),
+        )
+    val tokens =
+        Coins.Sui.all.filterNot { it.isNativeToken } + if (discovered) held else emptyList()
+    TokenSelectionScreen(
+        searchTextFieldState = remember { TextFieldState() },
+        state =
+            TokenSelectionUiModel(
+                tokens = tokens.map { TokenUiModel(isEnabled = false, coin = it) }
+            ),
+        hasCustomToken = true,
+    )
+}
+
+private fun suiToken(ticker: String, packageAddress: String) =
+    Coin(
+        chain = Chain.Sui,
+        ticker = ticker,
+        logo = "",
+        address = "",
+        decimal = 9,
+        hexPublicKey = "",
+        priceProviderID = "",
+        contractAddress = "$packageAddress::${ticker.lowercase()}::$ticker",
+        isNativeToken = false,
+    )
 
 @Composable
 private fun ErrorScreenAfterPreview() {
@@ -3380,6 +3427,96 @@ private fun TokenDetailSheetLoadingPreview() {
 
     TokenDetailScreen(uiModel = uiModel)
 }
+
+/**
+ * Vault home (#5473) with the expandable top bar. Renders the bar mid-collapse so the handover can
+ * be checked: only one of the two balances may ever be legible.
+ *
+ * Scrolling the asset list — not dragging the bar — is what drives `expandedFraction`. `input
+ * swipe` releases on its own, so hold the gesture instead and stretch the fade wide enough to
+ * capture:
+ * ```
+ * adb shell settings put global animator_duration_scale 10
+ * adb shell "input motionevent DOWN 540 1600; input motionevent MOVE 540 1450; \
+ *            input motionevent MOVE 540 1150; screencap -p /sdcard/mid.png; \
+ *            input motionevent UP 540 1150"
+ * ```
+ */
+@Composable
+private fun HomeTopBarPreview() {
+    VaultAccountsScreen(
+        state =
+            VaultAccountsUiModel(
+                vaultName = "Main Vault",
+                totalFiatValue = "$12,345.67",
+                isBalanceValueVisible = true,
+                accounts =
+                    listOf(
+                        homeAccount(
+                            Chain.Ethereum,
+                            "Ethereum",
+                            R.drawable.ethereum,
+                            "0xAbCd1234",
+                            "0.5 ETH",
+                            "$1,234.56",
+                            "ETH",
+                            3,
+                        ),
+                        homeAccount(
+                            Chain.Bitcoin,
+                            "Bitcoin",
+                            R.drawable.bitcoin,
+                            "bc1qxyz",
+                            "0.1 BTC",
+                            "$6,500.00",
+                            "BTC",
+                            1,
+                        ),
+                        homeAccount(
+                            Chain.ThorChain,
+                            "THORChain",
+                            R.drawable.rune,
+                            "thor1abc",
+                            "100 RUNE",
+                            "$400.00",
+                            "RUNE",
+                            1,
+                        ),
+                        homeAccount(
+                            Chain.Solana,
+                            "Solana",
+                            R.drawable.solana,
+                            "So1anaAddr",
+                            "12 SOL",
+                            "$2,210.11",
+                            "SOL",
+                            2,
+                        ),
+                    ),
+            )
+    )
+}
+
+private fun homeAccount(
+    chain: Chain,
+    chainName: String,
+    logo: Int,
+    address: String,
+    nativeTokenAmount: String,
+    fiatAmount: String,
+    ticker: String,
+    assetsSize: Int,
+) =
+    AccountUiModel(
+        model = Address(chain = chain, address = address, accounts = emptyList()),
+        chainName = chainName,
+        logo = logo,
+        address = address,
+        nativeTokenAmount = nativeTokenAmount,
+        fiatAmount = fiatAmount,
+        assetsSize = assetsSize,
+        nativeTokenTicker = ticker,
+    )
 
 /**
  * The Limit Orders tab of TX History, rendered as the user sees it: the real screen composable with

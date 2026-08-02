@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.repositories.SplTokenRepository
 import com.vultisig.wallet.data.repositories.ThorChainSecuredAssetRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.OneInchToCoinsUseCase
+import com.vultisig.wallet.data.usecases.SuiTokenFinder
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
@@ -25,6 +26,7 @@ constructor(
     private val oneInchApi: OneInchApi,
     private val oneInchToCoins: OneInchToCoinsUseCase,
     private val securedAssetRepository: ThorChainSecuredAssetRepository,
+    private val suiTokenFinder: SuiTokenFinder,
 ) : GetChainTokensUseCase {
 
     override fun invoke(chain: Chain, vault: Vault): Flow<List<Coin>> = flow {
@@ -47,6 +49,9 @@ constructor(
             }
             chain.standard == TokenStandard.SOL -> {
                 emitSolTokens(vault, chain, refreshedTokens, builtInTokens)
+            }
+            chain.standard == TokenStandard.SUI -> {
+                emitSuiTokens(vault, chain, refreshedTokens, builtInTokens)
             }
             else -> Unit
         }
@@ -86,6 +91,21 @@ constructor(
         val jupiterTokens =
             runCatching { splTokenRepository.getJupiterTokens() }.getOrElse { emptyList() }
         emitUniqueTokens(refreshedTokens, builtInTokens, tokens, jupiterTokens)
+    }
+
+    private suspend fun FlowCollector<List<Coin>>.emitSuiTokens(
+        vault: Vault,
+        chain: Chain,
+        refreshedTokens: List<Coin>,
+        builtInTokens: List<Coin>,
+    ) {
+        val address =
+            vault.coins.firstOrNull { it.chain == chain }?.address
+                ?: run {
+                    emitUniqueTokens(refreshedTokens, builtInTokens)
+                    return
+                }
+        emitUniqueTokens(refreshedTokens, builtInTokens, suiTokenFinder.find(address))
     }
 
     private suspend fun FlowCollector<List<Coin>>.emitUniqueTokens(vararg items: List<Coin>) {

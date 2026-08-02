@@ -4,10 +4,13 @@ package com.vultisig.wallet.data.usecases.chaintokens
 
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ThorChainSecuredAssetRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.usecases.SuiTokenFinder
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.assertEquals
@@ -21,6 +24,7 @@ internal class GetChainTokensUseCaseTest {
 
     private val tokenRepository: TokenRepository = mockk()
     private val securedAssetRepository: ThorChainSecuredAssetRepository = mockk()
+    private val suiTokenFinder: SuiTokenFinder = mockk()
     private val vault: Vault = mockk()
 
     private val useCase =
@@ -30,6 +34,7 @@ internal class GetChainTokensUseCaseTest {
             oneInchApi = mockk(relaxed = true),
             oneInchToCoins = mockk(relaxed = true),
             securedAssetRepository = securedAssetRepository,
+            suiTokenFinder = suiTokenFinder,
         )
 
     @Test
@@ -121,6 +126,53 @@ internal class GetChainTokensUseCaseTest {
         assertEquals(listOf(heldBtcSecured), emitted)
     }
 
+    @Test
+    fun `surfaces a discovered sui token alongside the curated catalog`() = runTest {
+        val curated = Coins.Sui.USDC
+        val discovered = coin(Chain.Sui, ticker = "GOLD", contractAddress = "0xa::gold::GOLD")
+        stubSuiVault()
+        every { tokenRepository.builtInTokens } returns flowOf(listOf(curated))
+        coEvery { suiTokenFinder.find(SUI_ADDRESS) } returns listOf(discovered)
+
+        val emitted = useCase(Chain.Sui, vault).toList().last()
+
+        assertEquals(setOf(curated, discovered), emitted.toSet())
+    }
+
+    @Test
+    fun `a discovered sui token never displaces the curated entry sharing its ticker`() = runTest {
+        // Anyone can mint a Sui coin whose symbol is USDC. Coin.id is ticker-chainId on Sui, so
+        // the two collide on the list key — the hand-verified catalog entry has to be the survivor,
+        // not a spoof carrying its own decimals and no price source.
+        val curated = Coins.Sui.USDC
+        val spoof = coin(Chain.Sui, ticker = "USDC", contractAddress = "0xbad::usdc::USDC", 2)
+        stubSuiVault()
+        every { tokenRepository.builtInTokens } returns flowOf(listOf(curated))
+        coEvery { suiTokenFinder.find(SUI_ADDRESS) } returns listOf(spoof)
+
+        val emitted = useCase(Chain.Sui, vault).toList().last()
+
+        assertEquals(listOf(curated), emitted)
+    }
+
+    @Test
+    fun `skips sui discovery when the vault holds no sui address`() = runTest {
+        val curated = Coins.Sui.USDC
+        every { vault.coins } returns emptyList()
+        every { tokenRepository.builtInTokens } returns flowOf(listOf(curated))
+        coEvery { tokenRepository.getRefreshTokens(any(), any()) } returns emptyList()
+
+        val emitted = useCase(Chain.Sui, vault).toList().last()
+
+        assertEquals(listOf(curated), emitted)
+        coVerify(exactly = 0) { suiTokenFinder.find(any()) }
+    }
+
+    private fun stubSuiVault() {
+        every { vault.coins } returns listOf(Coins.Sui.SUI.copy(address = SUI_ADDRESS))
+        coEvery { tokenRepository.getRefreshTokens(any(), any()) } returns emptyList()
+    }
+
     private fun coin(chain: Chain, ticker: String, contractAddress: String, decimal: Int = 18) =
         Coin(
             chain = chain,
@@ -133,4 +185,8 @@ internal class GetChainTokensUseCaseTest {
             contractAddress = contractAddress,
             isNativeToken = false,
         )
+
+    private companion object {
+        const val SUI_ADDRESS = "0xf00d"
+    }
 }

@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.crypto.TonHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import java.math.BigInteger
@@ -119,6 +120,64 @@ class ChainHelpersTest {
                 }
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
+    }
+
+    /**
+     * One native-send vector per EVM chain not otherwise covered by [sendEVMTest]/[sendBSCTest]/
+     * [sendPOLTest]. Every case's payload is identical apart from `coin.chain` (and that chain's
+     * real native-asset ticker/logo, which the EVM signing input never reads), so the only thing
+     * that can separate their pre-image hashes is the EIP-155 chain ID — see
+     * [evmChainMatrixVectorsAreChainSpecific] for the guard that recomputes this directly. Mirrors
+     * iOS `ChainHelperTests.testEvmChainMatrixFixture`.
+     */
+    @Test
+    fun sendEvmChainMatrixTest() {
+        val transactions: List<TransactionData> = loadTransactionData(EVM_CHAIN_MATRIX_JSON_FILE)
+
+        transactions.forEach { transaction ->
+            val payload = transaction.keysignPayload.toInternalKeySignPayload()
+            val helper = EvmHelper(payload.coin.chain.coinType, HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
+            val preImageHashes = helper.getPreSignedImageHash(payload)
+
+            assertEquals(preImageHashes, transaction.expectedImageHash)
+        }
+    }
+
+    /**
+     * Every EVM native send in the corpus must produce a different pre-image hash. The hashes are
+     * *recomputed* here from the payloads rather than read back out of the fixtures: since every
+     * matrix payload holds every pre-image-feeding field identical and varies only the chain, the
+     * only thing that can separate them is the EIP-155 chain ID. A chain that fell back to its
+     * WalletCore coin type's default chain ID — the hazard for chains sharing a coin type — would
+     * collapse onto another chain's hash while each vector still individually matched its own
+     * committed value; only the relationship between them exposes that. Mirrors iOS
+     * `testEvmChainMatrixVectorsAreChainSpecific`.
+     */
+    @Test
+    fun evmChainMatrixVectorsAreChainSpecific() {
+        val nativeSends =
+            (loadTransactionData(EVM_CHAIN_MATRIX_JSON_FILE) + loadTransactionData(EVM_JSON_FILE))
+                .filter { it.keysignPayload.coin.isNativeToken }
+
+        val hashesByCase =
+            nativeSends.associate { transaction ->
+                val payload = transaction.keysignPayload.toInternalKeySignPayload()
+                val helper = EvmHelper(payload.coin.chain.coinType, HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
+                transaction.name to helper.getPreSignedImageHash(payload)
+            }
+
+        val allHashes = hashesByCase.values.flatten()
+        assertEquals(
+            "Every EVM native send should produce exactly one pre-image hash",
+            hashesByCase.size,
+            allHashes.size,
+        )
+        assertEquals(
+            "Two EVM native sends computed the same pre-image hash. Their payloads differ only " +
+                "by chain, so a chain has stopped contributing its own EIP-155 chain ID: $hashesByCase",
+            allHashes.size,
+            allHashes.toSet().size,
+        )
     }
 
     @Test
@@ -475,6 +534,23 @@ class ChainHelpersTest {
     @Test
     fun sendTHORchain() {
         val transactions: List<TransactionData> = loadTransactionData(THORCHAIN_JSON_FILE)
+        val helper = ThorChainHelper.thor(HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
+        transactions.forEach { transaction ->
+            val preImageHashes =
+                helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
+
+            assertEquals(preImageHashes, transaction.expectedImageHash)
+        }
+    }
+
+    /**
+     * TCY send + intra-chain TCY -> RUNE swap (`MsgDeposit` with a swap memo), the same
+     * non-RUNE-denom deposit shape `thorchain.json` already covers for RUJI/KUJI. Regression for
+     * vultisig-windows#4464. Mirrors iOS `ChainHelperTests.testTcyFixture`.
+     */
+    @Test
+    fun sendTCYTest() {
+        val transactions: List<TransactionData> = loadTransactionData(TCY_JSON_FILE)
         val helper = ThorChainHelper.thor(HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
         transactions.forEach { transaction ->
             val preImageHashes =
@@ -856,6 +932,8 @@ class ChainHelpersTest {
 
         private const val BSC_JSON_FILE = "bsc.json"
         private const val EVM_JSON_FILE = "evm.json"
+        private const val EVM_CHAIN_MATRIX_JSON_FILE = "evm-chain-matrix.json"
+        private const val TCY_JSON_FILE = "tcy.json"
         private const val COSMOS_JSON_FILE = "cosmos.json"
         private const val XRP_JSON_FILE = "xrp.json"
         private const val TON_JSON_FILE = "ton.json"
@@ -888,6 +966,8 @@ class ChainHelpersTest {
             mapOf(
                 BSC_JSON_FILE to "sendBSCTest",
                 EVM_JSON_FILE to "sendEVMTest",
+                EVM_CHAIN_MATRIX_JSON_FILE to "sendEvmChainMatrixTest",
+                TCY_JSON_FILE to "sendTCYTest",
                 COSMOS_JSON_FILE to "sendCosmosTest",
                 XRP_JSON_FILE to "sendXRPTest",
                 TON_JSON_FILE to "sendTONTest",
@@ -908,7 +988,7 @@ class ChainHelpersTest {
                 ARB_SWAP_JSON_FILE to "oneInchArbitrumSwapTest",
             )
 
-        private const val EXPECTED_CASE_COUNT = 67
+        private const val EXPECTED_CASE_COUNT = 77
 
         private const val HEX_PUBLIC_KEY =
             "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b"
