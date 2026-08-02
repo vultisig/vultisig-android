@@ -201,11 +201,15 @@ class HandleSwapExceptionTest {
     }
 
     @Test
-    fun `pool does not exist variant maps to SwapRouteNotAvailable`() {
+    fun `maya max streaming quantity error maps to SwapRouteNotAvailable`() {
         val result =
-            SwapException.handleSwapException(
-                "failed to simulate swap: pool KUJI.KUJI doesn't exist"
-            )
+            SwapException.handleSwapException("failed to calculate max streaming swap quantity")
+        assertInstanceOf(SwapException.SwapRouteNotAvailable::class.java, result)
+    }
+
+    @Test
+    fun `pool does not exist variant maps to SwapRouteNotAvailable`() {
+        val result = SwapException.handleSwapException("pool KUJI.KUJI doesn't exist")
         assertInstanceOf(SwapException.SwapRouteNotAvailable::class.java, result)
     }
 }
