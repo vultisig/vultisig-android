@@ -3419,9 +3419,18 @@ private fun TokenDetailSheetLoadingPreview() {
 }
 
 /**
- * Vault home (#5473) with the expandable top bar. Used to capture the bar mid-collapse: a slow `adb
- * shell input swipe` over the list drives `expandedFraction` through the transition so the frame
- * where both the expanded and collapsed balance are drawn can be recorded.
+ * Vault home (#5473) with the expandable top bar. Renders the bar mid-collapse so the handover can
+ * be checked: only one of the two balances may ever be legible.
+ *
+ * Scrolling the asset list — not dragging the bar — is what drives `expandedFraction`. `input
+ * swipe` releases on its own, so hold the gesture instead and stretch the fade wide enough to
+ * capture:
+ * ```
+ * adb shell settings put global animator_duration_scale 10
+ * adb shell "input motionevent DOWN 540 1600; input motionevent MOVE 540 1450; \
+ *            input motionevent MOVE 540 1150; screencap -p /sdcard/mid.png; \
+ *            input motionevent UP 540 1150"
+ * ```
  */
 @Composable
 private fun HomeTopBarPreview() {
