@@ -65,6 +65,11 @@ internal fun TransactionDoneView(
         (transactionTypeUiModel as? TransactionTypeUiModel.Send)?.tx?.heroContent ==
             HeroContent.Unverified
 
+    val limitCancelPair =
+        (transactionTypeUiModel as? TransactionTypeUiModel.Deposit)
+            ?.depositTransactionUiModel
+            ?.limitCancelPair
+
     V2Scaffold(
         applyDefaultPaddings = true,
         applyScaffoldPaddings = true,
@@ -82,58 +87,74 @@ internal fun TransactionDoneView(
                     CustomMessageDetail(transactionTypeUiModel.model, transactionHash)
                 }
             } else {
-                FormCard(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    Column(
-                        modifier = Modifier.padding(all = 12.dp).fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        if (transactionTypeUiModel is TransactionTypeUiModel.Send) {
-                            val transaction = transactionTypeUiModel.tx
-                            TransactionHero(
-                                heroContent =
-                                    transaction.heroContent.takeUnless {
-                                        it == HeroContent.Unverified
-                                    },
-                                functionName = transaction.functionName,
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                VsOverviewToken(
-                                    header = stringResource(R.string.tx_overview_screen_tx_send),
-                                    valuedToken = transaction.token,
-                                    shape = RoundedCornerShape(24.dp),
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()).fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    // A cancel is the one completed transaction whose success is NOT the user's
+                    // answer: THORChain accepts a cancel that matches no order, so the honest
+                    // headline is that the request was sent, and the order stays open until the
+                    // chain says otherwise. Keyed off the memo so a co-signer reads the same thing.
+                    limitCancelPair?.let { pair ->
+                        LimitOrderCancelDoneHeader(pair = pair, modifier = Modifier.fillMaxWidth())
+                    }
+
+                    FormCard {
+                        Column(
+                            modifier = Modifier.padding(all = 12.dp).fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            if (transactionTypeUiModel is TransactionTypeUiModel.Send) {
+                                val transaction = transactionTypeUiModel.tx
+                                TransactionHero(
+                                    heroContent =
+                                        transaction.heroContent.takeUnless {
+                                            it == HeroContent.Unverified
+                                        },
+                                    functionName = transaction.functionName,
                                     modifier = Modifier.fillMaxWidth(),
-                                )
+                                ) {
+                                    VsOverviewToken(
+                                        header =
+                                            stringResource(R.string.tx_overview_screen_tx_send),
+                                        valuedToken = transaction.token,
+                                        shape = RoundedCornerShape(24.dp),
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
+                                }
                             }
-                        }
 
-                        if (approveTransactionHash.isNotEmpty()) {
-                            TxLinkAndHash(
-                                transactionLink = approveTransactionLink,
-                                onUriClick = onUriClick,
-                                transactionHash = approveTransactionHash,
-                                isApproved = true,
-                            )
-                            UiHorizontalDivider()
-                        }
-                        TxLinkAndHash(
-                            transactionLink = transactionLink,
-                            transactionHash = transactionHash,
-                            onUriClick = onUriClick,
-                        )
-
-                        when (transactionTypeUiModel) {
-                            is TransactionTypeUiModel.Deposit ->
-                                DepositTransactionDetail(
-                                    transactionTypeUiModel.depositTransactionUiModel
+                            if (approveTransactionHash.isNotEmpty()) {
+                                TxLinkAndHash(
+                                    transactionLink = approveTransactionLink,
+                                    onUriClick = onUriClick,
+                                    transactionHash = approveTransactionHash,
+                                    isApproved = true,
                                 )
+                                UiHorizontalDivider()
+                            }
+                            TxLinkAndHash(
+                                transactionLink = transactionLink,
+                                transactionHash = transactionHash,
+                                onUriClick = onUriClick,
+                            )
 
-                            is TransactionTypeUiModel.Send ->
-                                TransactionDetail(transaction = transactionTypeUiModel.tx)
+                            when (transactionTypeUiModel) {
+                                is TransactionTypeUiModel.Deposit ->
+                                    DepositTransactionDetail(
+                                        transactionTypeUiModel.depositTransactionUiModel
+                                    )
 
-                            is TransactionTypeUiModel.Swap ->
-                                SwapTransactionDetail(transactionTypeUiModel.swapTransactionUiModel)
+                                is TransactionTypeUiModel.Send ->
+                                    TransactionDetail(transaction = transactionTypeUiModel.tx)
 
-                            else -> Unit
+                                is TransactionTypeUiModel.Swap ->
+                                    SwapTransactionDetail(
+                                        transactionTypeUiModel.swapTransactionUiModel
+                                    )
+
+                                else -> Unit
+                            }
                         }
                     }
                 }
@@ -216,7 +237,17 @@ private fun DepositTransactionDetail(depositTransaction: DepositTransactionUiMod
 
         if (depositTransaction.dstAddress.isNotBlank()) {
             AddressField(
-                title = stringResource(R.string.verify_deposit_node_address_title),
+                // A cancel's destination is THORChain's inbound vault, not a node — and the Verify
+                // screen it follows already calls it "To", so the two would otherwise disagree
+                // about the same address.
+                title =
+                    stringResource(
+                        if (depositTransaction.limitCancelPair != null) {
+                            R.string.verify_transaction_to_title
+                        } else {
+                            R.string.verify_deposit_node_address_title
+                        }
+                    ),
                 address = depositTransaction.dstAddress,
             )
         }
@@ -468,4 +499,61 @@ private fun TransactionDoneViewPreview() {
                 )
             ),
     )
+}
+
+/**
+ * The completed-cancel headline, mirroring the desktop/iOS wording.
+ *
+ * "sent", never "complete": a cancel that addresses the wrong ratio bucket is accepted by the
+ * chain, costs a fee, and closes nothing. Saying the order is cancelled here would be the exact
+ * false success this feature exists to prevent — only THORChain's own account of the closure, read
+ * by the tracker, promotes the order to Cancelled.
+ */
+@Composable
+private fun LimitOrderCancelDoneHeader(pair: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text =
+                buildAnnotatedString {
+                    withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) {
+                        append(stringResource(R.string.limit_order_cancel_done_title))
+                        append(" ")
+                    }
+                    withStyle(SpanStyle(color = Theme.v2.colors.primary.accent4)) {
+                        append(stringResource(R.string.limit_order_cancel_done_title_highlight))
+                    }
+                },
+            style = Theme.brockmann.headings.title2,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = stringResource(R.string.limit_order_cancel_done_detail),
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.v2.colors.text.tertiary,
+            textAlign = TextAlign.Center,
+        )
+        FormCard {
+            Column(
+                modifier = Modifier.padding(all = 16.dp).fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.verify_limit_order_cancel_title),
+                    style = Theme.brockmann.headings.subtitle,
+                    color = Theme.v2.colors.text.primary,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = pair,
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+            }
+        }
+    }
 }

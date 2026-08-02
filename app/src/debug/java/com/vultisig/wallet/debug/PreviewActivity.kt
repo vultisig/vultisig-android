@@ -90,6 +90,8 @@ import com.vultisig.wallet.ui.models.TokenDetailUiModel
 import com.vultisig.wallet.ui.models.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.TokenUiModel
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
+import com.vultisig.wallet.ui.models.TransactionHistoryTab
+import com.vultisig.wallet.ui.models.TransactionHistoryUiState
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultDetailUiModel
@@ -115,6 +117,9 @@ import com.vultisig.wallet.ui.models.keysign.TonMessageOperation
 import com.vultisig.wallet.ui.models.keysign.TonMessageUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
+import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelPresentation
+import com.vultisig.wallet.ui.models.limitorder.LimitOrderHistoryStatus
+import com.vultisig.wallet.ui.models.limitorder.LimitOrderHistoryUiModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimMaturingUtxoUiModel
@@ -181,6 +186,7 @@ import com.vultisig.wallet.ui.screens.swap.preview.SwapToolbarPreview
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
+import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryScreen
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
 import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
@@ -243,6 +249,10 @@ class PreviewActivity : ComponentActivity() {
                     "send_tx_done" -> SendTxDonePreview()
                     "deposit_mint_done" -> DepositMintDonePreview()
                     "transaction_history_empty" -> TransactionHistoryEmptyState()
+                    "limit_orders_tab" -> LimitOrdersTabPreview()
+                    "limit_order_cancel_verify" -> LimitOrderCancelVerifyPreview()
+                    "limit_order_cancel_done" -> LimitOrderCancelDonePreview()
+                    "limit_orders_tab_empty" -> LimitOrdersTabPreview(orders = emptyList())
                     "empty_referral" -> EmptyReferralBanner(onClickedCreateReferral = {})
                     "fast_vault_verification" -> FastVaultVerificationPreview()
                     "bond_form_thor" -> BondFormThorPreview()
@@ -3318,9 +3328,9 @@ private fun LimitSwapFormPreview(expandedSection: LimitFormSection = LimitFormSe
     val btc = Coins.Bitcoin.BTC
     val state =
         LimitOrderUiModel(
-            priceText = "$65,800.13",
-            referenceAmountLabel = "1 BTC",
-            referenceLogo = getCoinLogo(btc.logo),
+            priceText = "$5,200.00",
+            referenceAmountLabel = "5,200 USDC",
+            referenceLogo = getCoinLogo(usdc.logo),
             secondaryPriceLabel = "0.07902 BTC",
             priceUnit = LimitPriceUnit.Fiat,
             selectedPreset = LimitPricePreset.Market,
@@ -3329,7 +3339,7 @@ private fun LimitSwapFormPreview(expandedSection: LimitFormSection = LimitFormSe
             sellLogo = getCoinLogo(usdc.logo),
             buyTicker = "BTC",
             buyLogo = getCoinLogo(btc.logo),
-            buyAmountText = "0.0790275",
+            buyAmountText = "0.07902",
         )
     Column(
         modifier =
@@ -3507,3 +3517,103 @@ private fun homeAccount(
         assetsSize = assetsSize,
         nativeTokenTicker = ticker,
     )
+
+/**
+ * The Limit Orders tab of TX History, rendered as the user sees it: the real screen composable with
+ * mock state, not the card in isolation.
+ */
+@Composable
+private fun LimitOrdersTabPreview(orders: List<LimitOrderHistoryUiModel> = previewLimitOrders) {
+    TransactionHistoryScreen(
+        state =
+            TransactionHistoryUiState(
+                selectedTab = TransactionHistoryTab.LIMIT,
+                isLoading = false,
+                limitOrders = orders,
+                isLimitTabVisible = true,
+            ),
+        onBack = {},
+        onTabSelected = {},
+        onRefresh = {},
+        onItemClick = {},
+    )
+}
+
+private val previewLimitOrders =
+    listOf(
+        LimitOrderHistoryUiModel(
+            id = "A1",
+            sellTicker = "RUNE",
+            buyTicker = "BTC",
+            sellAmount = "125.5",
+            targetPrice = "0.00021",
+            status = LimitOrderHistoryStatus.Resting,
+            createdAt = 0L,
+            expiry = UiText.DynamicString("in 11h 32m"),
+            fillPercent = 42,
+            isCancellable = true,
+        ),
+        LimitOrderHistoryUiModel(
+            id = "A2",
+            sellTicker = "BTC",
+            buyTicker = "ETH",
+            sellAmount = "0.25",
+            targetPrice = "18.4",
+            status = LimitOrderHistoryStatus.Cancelling,
+            createdAt = 0L,
+            expiry = UiText.DynamicString("in 2h 05m"),
+            isCancellable = false,
+            cancelBlockedReason =
+                UiText.StringResource(R.string.limit_order_cancel_blocked_already_sent),
+        ),
+        LimitOrderHistoryUiModel(
+            id = "A3",
+            sellTicker = "ETH",
+            buyTicker = "USDC",
+            sellAmount = "1.0",
+            targetPrice = "4200",
+            status = LimitOrderHistoryStatus.Filled,
+            createdAt = 0L,
+        ),
+    )
+
+/** The cancel as it reads before signing and once broadcast — both keyed off the `m=<` memo. */
+private const val PREVIEW_CANCEL_MEMO = "m=<:620000000BTC.BTC:12400000ETH.ETH:0"
+
+private val previewCancelDeposit =
+    DepositTransactionUiModel(
+        token = ValuedToken(token = Coins.Bitcoin.BTC, value = "0.00002", fiatValue = "$1.28"),
+        srcAddress = "bc1qrncuculen6deh35at408fv95ng9kx3ve70gjjx",
+        dstAddress = "bc1qp6yzmq5kjr8yvyw7v7cw9m7qvz3d7q9j4pqh0s",
+        memo = PREVIEW_CANCEL_MEMO,
+        networkFeeTokenValue = "0.00001 BTC",
+        networkFeeFiatValue = "$0.64",
+        titleRes = R.string.verify_limit_order_cancel_title,
+        limitCancelPair = LimitOrderCancelPresentation.pairCaption(PREVIEW_CANCEL_MEMO),
+    )
+
+@Composable
+private fun LimitOrderCancelVerifyPreview() {
+    VerifyDepositScreen(
+        state = VerifyDepositUiModel(depositTransactionUiModel = previewCancelDeposit),
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onFastSignClick = {},
+        onConfirm = {},
+    )
+}
+
+@Composable
+private fun LimitOrderCancelDonePreview() {
+    TransactionDoneView(
+        transactionHash = "aeb458a07d13966eecdc7216bfd9a06dfd643472df456923ea5ffc90d0fa0254",
+        approveTransactionHash = "",
+        transactionLink = "",
+        approveTransactionLink = "",
+        onComplete = {},
+        onBack = {},
+        onUriClick = {},
+        transactionTypeUiModel = TransactionTypeUiModel.Deposit(previewCancelDeposit),
+        showToolbar = true,
+    )
+}

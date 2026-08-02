@@ -109,3 +109,35 @@ fun Coin.thorchainMemoAsset(): String {
     }
     return "$prefix.$normalizedTicker-${contract.takeLast(CONTRACT_SUFFIX_LENGTH).uppercase()}"
 }
+
+/**
+ * The same asset spelled the way a **cancel** memo must spell it: an EVM token carries its FULL
+ * contract address rather than [thorchainMemoAsset]'s 6-character abbreviation.
+ *
+ * `ModifyLimitSwapMemo` (`m=<`) is the one inbound memo type THORChain does not run through
+ * `fuzzyAssetMatch`, so the asset string is used verbatim to build the order's lookup key. A cancel
+ * that repeats the placement memo's abbreviation is accepted by the chain, costs a fee, addresses a
+ * bucket no order was ever indexed under, and cancels nothing — a failure indistinguishable from
+ * success on the client. The abbreviation is not reversible, so the long form has to be captured at
+ * placement time while the contract address is still in hand.
+ *
+ * Every other flavour spells identically to [thorchainMemoAsset]: a native leg (`BTC.BTC`,
+ * `THOR.RUNE`) and a secured denom (`eth-usdc-0x…`) carry no truncated identifier to begin with.
+ */
+fun Coin.thorchainCancelMemoAsset(): String {
+    if (isNativeToken || chain == Chain.ThorChain) return thorchainMemoAsset()
+
+    val prefix =
+        requireNotNull(thorchainMemoAssetChainPrefix[chain]) {
+            "thorchainCancelMemoAsset: $chain is not routable through THORChain"
+        }
+    val normalizedTicker = ticker.trim()
+    require(normalizedTicker.isNotEmpty()) {
+        "thorchainCancelMemoAsset: ticker must be a non-empty string for $chain"
+    }
+    val contract = contractAddress.trim()
+    require(contract.isNotEmpty()) {
+        "thorchainCancelMemoAsset: $normalizedTicker on $chain has no contract address"
+    }
+    return "$prefix.$normalizedTicker-${contract.uppercase()}"
+}

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
@@ -45,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TokenLogo
+import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
@@ -67,6 +69,7 @@ import com.vultisig.wallet.ui.models.TransactionHistoryTab
 import com.vultisig.wallet.ui.models.TransactionHistoryUiState
 import com.vultisig.wallet.ui.models.TransactionHistoryViewModel
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel
+import com.vultisig.wallet.ui.models.limitorder.LimitOrderHistoryUiModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -90,12 +93,15 @@ internal fun TransactionHistoryScreen(viewModel: TransactionHistoryViewModel = h
         onDismissAssetSearch = viewModel::closeSearch,
         onRemoveAssetFilter = viewModel::removeAssetFilter,
         onClearAllFilters = viewModel::clearAllFilters,
+        onCancelLimitOrder = viewModel::cancelLimitOrder,
+        onDismissCancelError = viewModel::dismissCancelError,
     )
 }
 
+/** Stateless body, exposed so debug previews can render the real screen against mock state. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TransactionHistoryScreen(
+internal fun TransactionHistoryScreen(
     state: TransactionHistoryUiState,
     onBack: () -> Unit,
     onTabSelected: (TransactionHistoryTab) -> Unit,
@@ -110,12 +116,22 @@ private fun TransactionHistoryScreen(
     onDismissAssetSearch: () -> Unit = {},
     onRemoveAssetFilter: (String) -> Unit = {},
     onClearAllFilters: () -> Unit = {},
+    onCancelLimitOrder: (String) -> Unit = {},
+    onDismissCancelError: () -> Unit = {},
 ) {
     if (state.selectedItem != null) {
         TransactionDetailBottomSheet(
             item = state.selectedItem,
             onDismiss = onDismissDetail,
             onViewExplorer = onViewExplorer,
+        )
+    }
+
+    state.cancelError?.let { error ->
+        UiAlertDialog(
+            title = stringResource(R.string.limit_order_cancel_error_title),
+            text = error.asString(),
+            onDismiss = onDismissCancelError,
         )
     }
 
@@ -161,6 +177,17 @@ private fun TransactionHistoryScreen(
                             onClick = { onTabSelected(TransactionHistoryTab.SEND) },
                         )
                     }
+                    // Last, and only when the feature is reachable or the vault already has orders
+                    // — see [TransactionHistoryUiState.isLimitTabVisible]. Being last is what keeps
+                    // the other three tabs' indices matching their ordinals when it is absent.
+                    if (state.isLimitTabVisible) {
+                        tab {
+                            VsTab(
+                                label = stringResource(R.string.transaction_history_tab_limit),
+                                onClick = { onTabSelected(TransactionHistoryTab.LIMIT) },
+                            )
+                        }
+                    }
                 }
                 UiSpacer(weight = 1f)
                 V2Container(
@@ -191,19 +218,64 @@ private fun TransactionHistoryScreen(
                 onRefresh = onRefresh,
                 modifier = Modifier.fillMaxSize(),
             ) {
-                if (state.groups.isEmpty() && !state.isLoading) {
-                    TransactionHistoryEmptyState(
-                        modifier =
-                            Modifier.fillMaxWidth().padding(top = 27.dp, start = 16.dp, end = 16.dp)
-                    )
-                } else {
-                    TransactionGroupedList(
-                        groups = state.groups,
-                        onItemClick = onItemClick,
-                        modifier = Modifier.fillMaxSize(),
-                    )
+                when {
+                    state.selectedTab == TransactionHistoryTab.LIMIT ->
+                        if (state.limitOrders.isEmpty()) {
+                            TransactionHistoryEmptyState(
+                                modifier =
+                                    Modifier.fillMaxWidth()
+                                        .padding(top = 27.dp, start = 16.dp, end = 16.dp)
+                            )
+                        } else {
+                            LimitOrderList(
+                                orders = state.limitOrders,
+                                onCancelClick = onCancelLimitOrder,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
+
+                    state.groups.isEmpty() && !state.isLoading ->
+                        TransactionHistoryEmptyState(
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .padding(top = 27.dp, start = 16.dp, end = 16.dp)
+                        )
+
+                    else ->
+                        TransactionGroupedList(
+                            groups = state.groups,
+                            onItemClick = onItemClick,
+                            modifier = Modifier.fillMaxSize(),
+                        )
                 }
             }
+        }
+    }
+}
+
+/**
+ * The Limit Orders tab's list.
+ *
+ * Flat rather than date-grouped: a resting order's meaningful axis is how much time it has LEFT,
+ * not the day it was placed, and grouping days would bury the live ones under closed history.
+ */
+@Composable
+private fun LimitOrderList(
+    orders: List<LimitOrderHistoryUiModel>,
+    onCancelClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(items = orders, key = { it.id }) { order ->
+            LimitOrderCard(
+                item = order,
+                onCancelClick = onCancelClick,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }

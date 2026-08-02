@@ -41,12 +41,18 @@ internal enum class LimitPriceUnit {
  */
 @Immutable
 internal data class LimitOrderUiModel(
-    /** The large target-price number as shown, e.g. "$65,800.13" (fiat unit) or "0.07902 BTC". */
+    /**
+     * What [referenceAmountLabel]'s worth of the sell asset fetches at the target price, in the
+     * emphasized unit — e.g. "15.3171771 DOGE" (asset) or that amount's fiat value, "$2.58".
+     */
     val priceText: String = "",
-    /** e.g. "1 BTC" — the buy asset the target price is quoted per. */
+    /**
+     * e.g. "5 RUNE" — the sell amount the two figures below it are quoted for, so all three lines
+     * describe one quantity. Falls back to one whole unit before an amount is entered.
+     */
     val referenceAmountLabel: String = "",
     val referenceLogo: ImageModel? = null,
-    /** The computed equivalent of the entered price in the opposite unit, e.g. "0.07902 BTC". */
+    /** The same value as [priceText] in the other unit, e.g. "15.3171771 DOGE" next to "$2.58". */
     val secondaryPriceLabel: String = "",
     val priceUnit: LimitPriceUnit = LimitPriceUnit.Fiat,
     val selectedPreset: LimitPricePreset? = LimitPricePreset.Market,

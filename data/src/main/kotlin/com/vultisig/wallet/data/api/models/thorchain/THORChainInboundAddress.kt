@@ -16,4 +16,13 @@ data class THORChainInboundAddress(
     @SerialName("chain_lp_actions_paused") val chainLPActionsPaused: Boolean = false,
     @SerialName("gas_rate") val gasRate: String = "",
     @SerialName("gas_rate_units") val gasRateUnits: String = "",
+    /**
+     * Minimum inbound THORChain will observe on this chain, in THORChain's own 1e8 fixed point —
+     * *not* the chain's native units, on any chain. Bifrost ignores an inbound below it, so a
+     * transaction under this threshold confirms on the source chain, spends its fee, and THORChain
+     * never learns it happened. Read by the limit-order cancel path, which has to attach a dust
+     * amount that clears it. Null when THORChain publishes none, which fails the cancel closed
+     * rather than guessing.
+     */
+    @SerialName("dust_threshold") val dustThreshold: String? = null,
 )

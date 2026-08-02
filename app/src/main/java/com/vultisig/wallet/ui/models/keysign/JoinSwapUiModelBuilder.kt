@@ -637,7 +637,6 @@ constructor(
             dstToken = dstToken,
             targetPrice = targetPrice,
             expiryHours = expiryHours,
-            currency = currency,
         )
     }
 

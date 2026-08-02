@@ -168,8 +168,13 @@ constructor(
                     setBody(signedTransaction)
                 }
             if (response.status != HttpStatusCode.OK) {
-                Timber.e("Failed to broadcast transaction: ${response.bodyAsText()}")
-                throw Exception("Failed to broadcast transaction")
+                // The node's own words, not a generic failure: rejections here are specific and
+                // actionable ("insufficient fee, rejecting replacement", "dust", "min relay fee not
+                // met") and the user only ever sees the thrown message. Swallowing it turned a
+                // precise diagnosis into "Failed to broadcast transaction".
+                val reason = response.bodyAsText()
+                Timber.e("Failed to broadcast transaction: %s", reason)
+                throw Exception("Failed to broadcast transaction: $reason")
             }
             return response.bodyAsText() // Returns the transaction ID
         } catch (e: Exception) {

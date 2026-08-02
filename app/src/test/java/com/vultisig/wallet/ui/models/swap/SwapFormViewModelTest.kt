@@ -31,9 +31,11 @@ import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
 import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
+import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.ui.models.findCurrentSrc
 import com.vultisig.wallet.ui.models.firstSendSrc
@@ -56,6 +58,7 @@ import io.mockk.spyk
 import io.mockk.unmockkStatic
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -100,6 +103,8 @@ internal class SwapFormViewModelTest {
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var navigator: Navigator<Destination>
     private lateinit var fiatValueToString: FiatValueToStringMapper
+    private lateinit var convertTokenValueToFiat: ConvertTokenValueToFiatUseCase
+    private lateinit var tokenPriceRepository: TokenPriceRepository
     private lateinit var convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase
     private lateinit var swapQuoteRepository: SwapQuoteRepository
     // The recipient flow the ViewModel feeds into the quote pipeline (gated to valid addresses).
@@ -138,6 +143,8 @@ internal class SwapFormViewModelTest {
 
         fiatValueToString = mockk(relaxed = true)
         coEvery { fiatValueToString(any(), any()) } returns "$0.00"
+        convertTokenValueToFiat = mockk(relaxed = true)
+        tokenPriceRepository = mockk(relaxed = true)
 
         convertTokenAndValueToTokenValue = mockk(relaxed = true)
         every { convertTokenAndValueToTokenValue(any(), any()) } answers
@@ -275,9 +282,10 @@ internal class SwapFormViewModelTest {
                 limitSwapConfig = limitSwapConfig,
                 limitMarketPriceRepository = limitMarketPriceRepository,
                 buildLimitSwapTransactionUseCase = buildLimitSwapTransactionUseCase,
-                appCurrencyRepository = mockk(relaxed = true),
-                convertTokenValueToFiat = mockk(relaxed = true),
-                fiatValueToString = mockk(relaxed = true),
+                appCurrencyRepository = appCurrencyRepository,
+                convertTokenValueToFiat = convertTokenValueToFiat,
+                fiatValueToString = fiatValueToString,
+                tokenPriceRepository = tokenPriceRepository,
             )
             .also { createdViewModels += it }
 
@@ -3861,6 +3869,126 @@ internal class SwapFormViewModelTest {
             secondPairGate.complete(Unit)
             advanceUntilIdle()
             assertTrue(vm.uiState.value.limitOrder?.isPlaceOrderEnabled == true)
+        }
+
+    @Test
+    fun `the limit price card quotes the sell amount the user entered`() =
+        runTest(mainDispatcher) {
+            coEvery { featureFlagRepository.getFeatureFlags() } returns
+                FeatureFlagJson(isLimitSwapEnabled = true)
+            coEvery {
+                limitMarketPriceRepository.getMarketPrice(any(), any(), any(), any())
+            } returns BigDecimal("0.05")
+
+            val vm = createViewModelWithSwapTokens()
+            vm.onSelectSwapMode(SwapMode.Limit)
+            vm.onLimitPriceUnitSelected(LimitPriceUnit.Asset)
+            advanceUntilIdle()
+
+            val beforeAmount = vm.uiState.value.limitOrder!!
+            // Before an amount is entered the card falls back to one whole sell unit, so the pair
+            // still shows a price instead of the em dash placeholder.
+            assertEquals("1 ETH", beforeAmount.referenceAmountLabel)
+            assertEquals("0.05 BTC", beforeAmount.priceText)
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("3")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+
+            val withAmount = vm.uiState.value.limitOrder!!
+            // Header and value describe the SAME quantity — 3 ETH, and what those 3 ETH fetch —
+            // and the value matches the buy leg of the asset editor exactly (#5464).
+            assertEquals("3 ETH", withAmount.referenceAmountLabel)
+            assertEquals("0.15 BTC", withAmount.priceText)
+            assertEquals("0.15", withAmount.buyAmountText)
+        }
+
+    @Test
+    fun `the market probe is sized from the source's USD price, not one whole unit`() =
+        runTest(mainDispatcher) {
+            coEvery { featureFlagRepository.getFeatureFlags() } returns
+                FeatureFlagJson(isLimitSwapEnabled = true)
+            coEvery {
+                limitMarketPriceRepository.getMarketPrice(any(), any(), any(), any())
+            } returns BigDecimal("0.05")
+            coEvery { tokenPriceRepository.getCachedPrice(any(), AppCurrency.USD) } returns
+                BigDecimal("2500")
+
+            val vm = createViewModelWithSwapTokens()
+            vm.onSelectSwapMode(SwapMode.Limit)
+            advanceUntilIdle()
+
+            // The probe has to be quoted at a realistic notional. Priced at one whole unit, a
+            // cheap source's quote is dominated by the destination chain's outbound fee and the
+            // market price comes back a multiple too low — which every preset, every warning
+            // threshold and the signed LIM then inherit (#5464).
+            coVerify {
+                limitMarketPriceRepository.getMarketPrice(
+                    fromCoin = any(),
+                    toCoin = any(),
+                    sourcePrice = BigDecimal("2500"),
+                    destinationAddress = any(),
+                )
+            }
+        }
+
+    @Test
+    fun `an unpriced source still probes rather than failing the fetch`() =
+        runTest(mainDispatcher) {
+            coEvery { featureFlagRepository.getFeatureFlags() } returns
+                FeatureFlagJson(isLimitSwapEnabled = true)
+            coEvery {
+                limitMarketPriceRepository.getMarketPrice(any(), any(), any(), any())
+            } returns BigDecimal("0.05")
+            coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns null
+
+            val vm = createViewModelWithSwapTokens()
+            vm.onSelectSwapMode(SwapMode.Limit)
+            advanceUntilIdle()
+
+            // Zero is what getMarketProbeAmount reads as "no price", falling back to one whole
+            // unit — a worse probe, but still a probe. A form with no price at all is worse.
+            coVerify {
+                limitMarketPriceRepository.getMarketPrice(
+                    fromCoin = any(),
+                    toCoin = any(),
+                    sourcePrice = BigDecimal.ZERO,
+                    destinationAddress = any(),
+                )
+            }
+        }
+
+    @Test
+    fun `the fiat line prices the buy amount, so a preset moves it`() =
+        runTest(mainDispatcher) {
+            coEvery { featureFlagRepository.getFeatureFlags() } returns
+                FeatureFlagJson(isLimitSwapEnabled = true)
+            coEvery {
+                limitMarketPriceRepository.getMarketPrice(any(), any(), any(), any())
+            } returns BigDecimal("0.05")
+            // One whole BTC is worth $1,000 in this fixture, so the fiat line is readable straight
+            // off the buy amount: 2 ETH at 0.05 BTC/ETH is 0.1 BTC, i.e. $100.
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+                FiatValue(BigDecimal("1000"), "USD")
+            coEvery { fiatValueToString(any(), any(), any()) } answers
+                {
+                    "$" + (firstArg<FiatValue>().value.setScale(2, RoundingMode.HALF_UP))
+                }
+
+            val vm = createViewModelWithSwapTokens()
+            vm.onSelectSwapMode(SwapMode.Limit)
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("2")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+
+            assertEquals("$100.00", vm.uiState.value.limitOrder?.priceText)
+
+            vm.onLimitPresetSelected(LimitPricePreset.Plus10)
+            advanceUntilIdle()
+
+            // The whole point of pricing the destination: raising the target 10% raises what the
+            // order would be worth by 10%. A sell-side valuation would still read $100.00.
+            assertEquals("$110.00", vm.uiState.value.limitOrder?.priceText)
         }
 
     @Test

@@ -47,6 +47,7 @@ import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.keygen.MediatorServiceDiscoveryListener
+import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelPresentation
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
@@ -651,12 +652,21 @@ constructor(
      * before the memo-keyword heuristic — a payload carrying `SECURE+:` in `payload.memo` (BTC is
      * `isSecuredAssetEligible`) must not be flagged `isDeposit=true`.
      */
-    private fun isDepositPayload(payload: KeysignPayload): Boolean =
-        when (val specific = payload.blockChainSpecific) {
+    private fun isDepositPayload(payload: KeysignPayload): Boolean {
+        // PSBT co-signs exit first — see above.
+        if (payload.blockChainSpecific is BlockChainSpecific.BitcoinPSBT) return false
+        // A limit-order CANCEL reaches THORChain from a THORChain source as a MsgDeposit, which the
+        // specific already marks — but from every other source as an ordinary memo-bearing
+        // transfer,
+        // which nothing in the specific distinguishes from a send. Without this the co-signer gets
+        // the plain send screen: no cancel title, no pair, and no disclosure that the amount on it
+        // is dust being donated. Keyed off the MEMO, which is what THORChain itself reads to decide
+        // what the transaction is, and all a joining device has to go on.
+        if (LimitOrderCancelPresentation.isCancel(payload.memo)) return true
+        return when (val specific = payload.blockChainSpecific) {
             is BlockChainSpecific.MayaChain -> specific.isDeposit
             is BlockChainSpecific.THORChain -> specific.isDeposit
             is BlockChainSpecific.Ton -> specific.isDeposit
-            is BlockChainSpecific.BitcoinPSBT -> false
             // A joining device has no DepositTransactionRepository entry, so it recovers the
             // initiator's Cosmos deposit classification from the transmitted payload: IBC transfers
             // and staking SignDocs (issue #4939). Plain MsgSend / dApp txs stay sends.
@@ -668,6 +678,7 @@ constructor(
                 payload.coin.isSecuredAssetEligible() && (memoUpper?.contains("SECURE+:") == true)
             }
         }
+    }
 
     /**
      * Atomically assigns the three outputs every per-type builder produces. Order matches the

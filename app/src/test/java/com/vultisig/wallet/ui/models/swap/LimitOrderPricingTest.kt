@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.models.swap
 
 import java.math.BigDecimal
-import java.math.RoundingMode
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -61,22 +60,6 @@ class LimitOrderPricingTest {
             LimitOrderPricing.LimitWarning.BelowMarket,
             LimitOrderPricing.warningFor(LimitOrderPricing.applyPreset(market, 0), market),
         )
-    }
-
-    @Test
-    fun `fiat price of one buy unit inverts the target price and applies the sell USD price`() {
-        // target 0.0000152 BTC per USDC -> 1 BTC costs ~65789 USDC -> ~$65789 at $1 USDC.
-        val fiat =
-            LimitOrderPricing.fiatPricePerBuyUnit(
-                targetPrice = BigDecimal("0.0000152"),
-                sellUsdPrice = BigDecimal("1"),
-            )!!
-        assertEquals(0, BigDecimal("65789.47").compareTo(fiat.setScale(2, RoundingMode.HALF_UP)))
-    }
-
-    @Test
-    fun `fiat price is null without a sell USD price`() {
-        assertNull(LimitOrderPricing.fiatPricePerBuyUnit(BigDecimal("2"), null))
     }
 
     @Test

@@ -4,26 +4,48 @@ package com.vultisig.wallet.ui.models.transaction
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.models.FeatureFlagJson
+import com.vultisig.wallet.data.db.models.PendingLimitOrderEntity
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.LimitOrderStatus
+import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.repositories.DepositTransactionRepository
+import com.vultisig.wallet.data.repositories.FeatureFlagRepository
+import com.vultisig.wallet.data.repositories.PendingLimitOrderRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
+import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
+import com.vultisig.wallet.data.usecases.RefreshLimitOrdersUseCase
 import com.vultisig.wallet.data.usecases.RefreshPendingTransactionsUseCase
 import com.vultisig.wallet.ui.models.TransactionAssetUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryTab
 import com.vultisig.wallet.ui.models.TransactionHistoryViewModel
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel
+import com.vultisig.wallet.ui.models.limitorder.BuildLimitOrderCancelTransactionUseCase
+import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelException
+import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelFailure
+import com.vultisig.wallet.ui.models.limitorder.LimitOrderToUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapperImpl
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.UiText
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import java.math.BigInteger
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -38,6 +60,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
+import vultisig.keysign.v1.TransactionType
 
 /**
  * Unit tests for [TransactionHistoryViewModel].
@@ -59,6 +82,13 @@ internal class TransactionHistoryViewModelTest {
 
     private lateinit var transactionHistoryRepository: TransactionHistoryRepository
     private lateinit var refreshPendingTransactions: RefreshPendingTransactionsUseCase
+    private lateinit var pendingLimitOrderRepository: PendingLimitOrderRepository
+    private lateinit var refreshLimitOrders: RefreshLimitOrdersUseCase
+    private lateinit var mapLimitOrderToUiModel: LimitOrderToUiModelMapper
+    private lateinit var buildLimitOrderCancelTransaction: BuildLimitOrderCancelTransactionUseCase
+    private lateinit var depositTransactionRepository: DepositTransactionRepository
+    private lateinit var featureFlagRepository: FeatureFlagRepository
+    private lateinit var limitSwapConfig: LimitSwapConfig
     private lateinit var navigator: Navigator<Destination>
 
     /** Sets up mocks and test dispatcher before each test. */
@@ -70,6 +100,19 @@ internal class TransactionHistoryViewModelTest {
             Route.TransactionHistory(vaultId = VAULT_ID)
         transactionHistoryRepository = mockk(relaxed = true)
         refreshPendingTransactions = mockk(relaxed = true)
+        pendingLimitOrderRepository = mockk(relaxed = true)
+        every { pendingLimitOrderRepository.observeOrders(any()) } returns flowOf(emptyList())
+        refreshLimitOrders = mockk(relaxed = true)
+        mapLimitOrderToUiModel = LimitOrderToUiModelMapper(TokenValueToDecimalUiStringMapperImpl())
+        buildLimitOrderCancelTransaction = mockk(relaxed = true)
+        depositTransactionRepository = mockk(relaxed = true)
+        // Both flags ON by default so the existing cases see the Limit tab; the gate has its own
+        // tests below.
+        featureFlagRepository = mockk(relaxed = true)
+        coEvery { featureFlagRepository.getFeatureFlags() } returns
+            FeatureFlagJson(isLimitSwapEnabled = true)
+        limitSwapConfig = mockk(relaxed = true)
+        every { limitSwapConfig.isFeatureEnabled } returns flowOf(true)
         navigator = mockk(relaxed = true)
     }
 
@@ -86,6 +129,13 @@ internal class TransactionHistoryViewModelTest {
             savedStateHandle = SavedStateHandle(),
             transactionHistoryRepository = transactionHistoryRepository,
             refreshPendingTransactions = refreshPendingTransactions,
+            pendingLimitOrderRepository = pendingLimitOrderRepository,
+            refreshLimitOrders = refreshLimitOrders,
+            mapLimitOrderToUiModel = mapLimitOrderToUiModel,
+            buildLimitOrderCancelTransaction = buildLimitOrderCancelTransaction,
+            depositTransactionRepository = depositTransactionRepository,
+            featureFlagRepository = featureFlagRepository,
+            limitSwapConfig = limitSwapConfig,
             navigator = navigator,
         )
 
@@ -226,6 +276,168 @@ internal class TransactionHistoryViewModelTest {
         coVerify(atLeast = 2) { refreshPendingTransactions(VAULT_ID) }
     }
 
+    /**
+     * The cancel goes through the ordinary deposit verify → keysign flow, so a happy path is
+     * "stored, then routed to VerifyDeposit with the SAME transaction id". Routing to an id the
+     * repository never received would land the user on an empty verify screen.
+     */
+    @Test
+    fun `cancelLimitOrder stores the built transaction and routes to its verify screen`() {
+        val order = restingOrder()
+        coEvery { pendingLimitOrderRepository.getOrder(ORDER_HASH) } returns order
+        coEvery { buildLimitOrderCancelTransaction.build(VAULT_ID, order) } returns cancelTx()
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+
+        vm.cancelLimitOrder(ORDER_HASH)
+        testScope.runCurrent()
+
+        coVerify { depositTransactionRepository.addTransaction(match { it.id == CANCEL_TX_ID }) }
+        coVerify {
+            navigator.route(Route.VerifyDeposit(vaultId = VAULT_ID, transactionId = CANCEL_TX_ID))
+        }
+        vm.uiState.value.cancelError.shouldBeNull()
+    }
+
+    /**
+     * A builder refusal must surface as its own message and must NOT reach keysign. Eligibility is
+     * re-checked inside the builder against the stored record rather than the tapped card, so this
+     * is the path a card that has gone stale takes.
+     */
+    @Test
+    fun `a refused cancel surfaces an error and signs nothing`() {
+        val order = restingOrder()
+        coEvery { pendingLimitOrderRepository.getOrder(ORDER_HASH) } returns order
+        coEvery { buildLimitOrderCancelTransaction.build(VAULT_ID, order) } throws
+            LimitOrderCancelException(
+                LimitOrderCancelFailure.InsufficientBalance,
+                "vault cannot cover the cancel",
+            )
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+
+        vm.cancelLimitOrder(ORDER_HASH)
+        testScope.runCurrent()
+
+        vm.uiState.value.cancelError shouldBe
+            UiText.StringResource(R.string.limit_order_cancel_error_insufficient_balance)
+        coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
+        coVerify(exactly = 0) { navigator.route(any<Route.VerifyDeposit>()) }
+
+        vm.dismissCancelError()
+        vm.uiState.value.cancelError.shouldBeNull()
+    }
+
+    /**
+     * The asset chips render above every tab, so a LIMIT list that ignores them shows orders the
+     * user has just filtered out. Matched on EITHER leg — a pair is what an order is about.
+     */
+    @Test
+    fun `the limit tab honours an active asset chip on either leg`() {
+        every { pendingLimitOrderRepository.observeOrders(VAULT_ID) } returns
+            flowOf(
+                listOf(
+                    restingOrder(hash = "RUNE_TO_BTC"),
+                    restingOrder(
+                        hash = "RUNE_TO_ETH",
+                        targetAsset = "ETH.ETH",
+                        targetTicker = "ETH",
+                    ),
+                )
+            )
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+        vm.uiState.value.limitOrders.map { it.id } shouldBe listOf("RUNE_TO_BTC", "RUNE_TO_ETH")
+
+        vm.toggleAssetSelection(
+            TransactionAssetUiModel(ticker = "ETH", chain = "Ethereum", logo = "")
+        )
+        testScope.runCurrent()
+
+        vm.uiState.value.limitOrders.map { it.id } shouldBe listOf("RUNE_TO_ETH")
+    }
+
+    /**
+     * Placing an order needs the remote kill switch AND the local toggle, which defaults off — so
+     * an unconditional tab is a fourth, permanently empty tab for nearly everyone.
+     */
+    @Test
+    fun `the limit tab is hidden when the feature cannot be reached`() {
+        every { limitSwapConfig.isFeatureEnabled } returns flowOf(false)
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+
+        vm.uiState.value.isLimitTabVisible.shouldBeFalse()
+    }
+
+    /** Turning the feature off must never hide an order that is still resting and cancellable. */
+    @Test
+    fun `an existing order keeps the limit tab reachable with the feature off`() {
+        every { limitSwapConfig.isFeatureEnabled } returns flowOf(false)
+        every { pendingLimitOrderRepository.observeOrders(VAULT_ID) } returns
+            flowOf(listOf(restingOrder()))
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+
+        vm.uiState.value.isLimitTabVisible.shouldBeTrue()
+    }
+
+    private fun restingOrder(
+        hash: String = ORDER_HASH,
+        targetAsset: String = "BTC.BTC",
+        targetTicker: String = "BTC",
+    ) =
+        PendingLimitOrderEntity(
+            inboundTxHash = hash,
+            vaultId = VAULT_ID,
+            sourceAsset = "THOR.RUNE",
+            sourceAmount = "100000000",
+            targetAsset = targetAsset,
+            destAddr = "bc1qxy",
+            targetPrice = "0.04",
+            expiryBlocks = 14_400,
+            createdAt = 0L,
+            status = LimitOrderStatus.Pending.raw,
+            sourceChain = Chain.ThorChain.raw,
+            sourceDecimals = 8,
+            sourceAddress = "thor1abc",
+            sourceTicker = "RUNE",
+            targetTicker = targetTicker,
+            sourceAmount1e8 = "100000000",
+            tradeTarget = "4000000",
+            sourceAssetFull = "THOR.RUNE",
+            targetAssetFull = targetAsset,
+            expiryObservedAt = 1L,
+        )
+
+    private fun cancelTx(): DepositTransaction {
+        val rune = Coins.coins.getValue(Chain.ThorChain).first { it.isNativeToken }
+        return DepositTransaction(
+            id = CANCEL_TX_ID,
+            vaultId = VAULT_ID,
+            srcToken = rune,
+            srcAddress = "thor1abc",
+            srcTokenValue = TokenValue(BigInteger.ZERO, rune.ticker, rune.decimal),
+            memo = "m=<:100000000THOR.RUNE:4000000BTC.BTC:0",
+            dstAddress = "",
+            estimatedFees = TokenValue(BigInteger.ZERO, rune.ticker, rune.decimal),
+            estimateFeesFiat = "$0.00",
+            blockChainSpecific =
+                BlockChainSpecific.THORChain(
+                    accountNumber = BigInteger.ZERO,
+                    sequence = BigInteger.ZERO,
+                    fee = BigInteger.ZERO,
+                    isDeposit = true,
+                    transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+                ),
+        )
+    }
+
     private fun sendItem() =
         TransactionHistoryItemUiModel.Send(
             id = "id-1",
@@ -246,5 +458,7 @@ internal class TransactionHistoryViewModelTest {
 
     private companion object {
         const val VAULT_ID = "vault-1"
+        const val ORDER_HASH = "HASH"
+        const val CANCEL_TX_ID = "cancel-tx"
     }
 }
