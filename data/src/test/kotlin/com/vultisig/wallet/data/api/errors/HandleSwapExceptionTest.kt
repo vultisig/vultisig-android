@@ -187,4 +187,29 @@ class HandleSwapExceptionTest {
         val result = SwapException.handleSwapException("[API Gateway] Too many requests")
         assertInstanceOf(SwapException.RateLimitExceeded::class.java, result)
     }
+
+    @Test
+    fun `maya streaming dev error maps to SwapRouteNotAvailable`() {
+        // Maya's streaming path for a delisted pool (KUJI→USK, #5472) fails before the pool
+        // lookup, so it must not fall through to "try again or adjust the amount".
+        val result =
+            SwapException.handleSwapException(
+                "failed to calculate max streaming swap quantity: dev error: " +
+                    "both pools have no rune balance"
+            )
+        assertInstanceOf(SwapException.SwapRouteNotAvailable::class.java, result)
+    }
+
+    @Test
+    fun `maya max streaming quantity error maps to SwapRouteNotAvailable`() {
+        val result =
+            SwapException.handleSwapException("failed to calculate max streaming swap quantity")
+        assertInstanceOf(SwapException.SwapRouteNotAvailable::class.java, result)
+    }
+
+    @Test
+    fun `pool does not exist variant maps to SwapRouteNotAvailable`() {
+        val result = SwapException.handleSwapException("pool KUJI.KUJI doesn't exist")
+        assertInstanceOf(SwapException.SwapRouteNotAvailable::class.java, result)
+    }
 }
