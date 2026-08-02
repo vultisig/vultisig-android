@@ -184,8 +184,9 @@ constructor(
     private var lastLoadedStatsCurrency: String? = null
 
     init {
-        // Now a full-page destination (composable<TokenDetail>, not a dialog), so there's no
-        // ModalBottomSheet onExpand callback to trigger the first load from — kick it off directly.
+        // Deliberately not deferred to the sheet's onExpand: waiting for the open animation to
+        // settle left the first frame empty, and the content growing underneath it made the sheet
+        // re-derive its anchors mid-animation.
         loadData()
         viewModelScope.safeLaunch {
             val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)

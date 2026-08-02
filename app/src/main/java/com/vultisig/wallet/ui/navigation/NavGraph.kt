@@ -174,7 +174,7 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
 
         composable<Route.AddVault> { StartScreen() }
 
-        composable<TokenDetail> { TokenDetailScreen() }
+        dialog<TokenDetail> { TokenDetailScreen() }
         dialog<Route.SelectTokens> { TokenSelectionScreen() }
 
         composable<Route.SignMessage> { entry ->

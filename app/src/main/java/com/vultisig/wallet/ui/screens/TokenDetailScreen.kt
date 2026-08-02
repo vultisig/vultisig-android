@@ -3,9 +3,10 @@ package com.vultisig.wallet.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -26,10 +27,14 @@ import com.vultisig.wallet.ui.components.chart.MarketStatsSection
 import com.vultisig.wallet.ui.components.chart.PriceChartSection
 import com.vultisig.wallet.ui.components.chart.PriceExtremesSection
 import com.vultisig.wallet.ui.components.chart.TokenInfoSection
+import com.vultisig.wallet.ui.components.v2.bottomsheets.DottyBottomSheet
+import com.vultisig.wallet.ui.components.v2.buttons.DesignType
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenMetaRow
-import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChartUiModel
 import com.vultisig.wallet.ui.models.MarketStatsUiModel
@@ -56,7 +61,7 @@ internal fun TokenDetailScreen(
         onSend = viewModel::send,
         onSwap = viewModel::swap,
         onDeposit = viewModel::deposit,
-        onBack = viewModel::back,
+        onDismiss = viewModel::back,
         onBuy = viewModel::buy,
         onExplorer = { uiModel.explorerUrl.takeIf { it.isNotEmpty() }?.let(uriHandler::openUri) },
         onChartRangeSelected = viewModel::onChartRangeSelected,
@@ -69,23 +74,23 @@ internal fun TokenDetailScreen(
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
     onDeposit: () -> Unit = {},
-    onBack: () -> Unit = {},
+    onDismiss: () -> Unit = {},
     onBuy: () -> Unit = {},
     onExplorer: () -> Unit = {},
     onChartRangeSelected: (ChartRange) -> Unit = {},
 ) {
-    V3Scaffold(
-        title = uiModel.token.name,
-        onBackClick = onBack,
-        rightIcon = R.drawable.explor,
-        onRightIconClick = onExplorer,
-    ) {
+    // Partial expansion is what makes this sheet cheap to scan and swipe away again. The rest
+    // position is half the screen for every token rather than a function of how much content it
+    // has — the same trade iOS makes with a .medium detent — so a token with no chart data rests
+    // there too and drags up for the rest.
+    DottyBottomSheet(onDismiss = onDismiss, skipPartiallyExpanded = false) {
         TokenDetailsContent(
             uiModel = uiModel,
             onSend = onSend,
             onSwap = onSwap,
             onDeposit = onDeposit,
             onBuy = onBuy,
+            onExplorer = onExplorer,
             onChartRangeSelected = onChartRangeSelected,
         )
     }
@@ -98,12 +103,28 @@ internal fun TokenDetailsContent(
     onSwap: () -> Unit,
     onDeposit: () -> Unit,
     onBuy: () -> Unit,
+    onExplorer: () -> Unit,
     onChartRangeSelected: (ChartRange) -> Unit,
 ) {
+    // fillMaxWidth, not fillMaxSize: the sheet derives its anchors from the content's height, so
+    // filling the height here would pin every token to a half-height rest position even when there
+    // is nothing below the fold to scroll to.
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        modifier =
+            Modifier.fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        VsCircleButton(
+            onClick = onExplorer,
+            size = VsCircleButtonSize.Small,
+            icon = R.drawable.explor,
+            type = VsCircleButtonType.Secondary,
+            designType = DesignType.Shined,
+            modifier = Modifier.align(Alignment.End).offset(x = 8.dp, y = (-8).dp),
+        )
+
         Row(verticalAlignment = Alignment.CenterVertically) {
             ChainLogo(name = uiModel.token.name, logo = uiModel.token.tokenLogo)
             UiSpacer(size = 8.dp)
@@ -233,7 +254,7 @@ private fun TokenDetailsScreenPreview() {
         onSend = {},
         onSwap = {},
         onDeposit = {},
-        onBack = {},
+        onDismiss = {},
         onBuy = {},
         onExplorer = {},
         onChartRangeSelected = {},
