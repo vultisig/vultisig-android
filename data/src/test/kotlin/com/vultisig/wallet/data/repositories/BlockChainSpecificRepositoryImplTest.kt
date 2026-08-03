@@ -739,6 +739,30 @@ internal class BlockChainSpecificRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `Tron TRC20 fee_limit applies iOS's 30 percent energy safety multiplier`() {
+        // 65,000 energy x 1.3 x 420 sun/energy = 35,490,000 sun — pins the same value as iOS's
+        // TronServiceFeeLimitTests.testContractFeeLimit_appliesSafetyMultiplierToEnergyAtChainPrice.
+        assertEquals(
+            35_490_000L,
+            BlockChainSpecificRepositoryImpl.contractFeeLimit(
+                totalEnergyUsed = 65_000L,
+                energyPrice = 420L,
+            ),
+        )
+    }
+
+    @Test
+    fun `Tron TRC20 fee_limit safety multiplier survives truncation for energy not divisible by 10`() {
+        val bare = 65_001L * 420L
+        val withSafety =
+            BlockChainSpecificRepositoryImpl.contractFeeLimit(
+                totalEnergyUsed = 65_001L,
+                energyPrice = 420L,
+            )
+        assertTrue(withSafety > bare)
+    }
+
     private fun suiApi(referenceGasPrice: BigInteger, coins: List<SuiCoin> = emptyList()): SuiApi =
         mockk {
             coEvery { getReferenceGasPrice() } returns referenceGasPrice
