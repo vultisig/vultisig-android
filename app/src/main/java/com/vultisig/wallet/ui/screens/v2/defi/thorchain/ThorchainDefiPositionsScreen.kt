@@ -124,10 +124,13 @@ internal fun ThorchainDefiPositionScreenContent(
     val tabs = listOf(DeFiTab.BONDED, DeFiTab.STAKED, DeFiTab.LP)
 
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
+        // One scroll surface for the whole screen: the banner and tab row scroll away with the
+        // content instead of staying pinned above it, mirroring iOS (#4761).
         Column(
             modifier =
                 Modifier.fillMaxSize()
                     .background(Theme.v2.colors.backgrounds.primary)
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = CenterHorizontally,
         ) {
@@ -171,7 +174,7 @@ internal fun ThorchainDefiPositionScreenContent(
                 )
             }
 
-            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 when (state.selectedTab) {
                     DeFiTab.BONDED.displayNameRes -> {
                         if (!state.selectedPositions.hasBondPositions()) {
