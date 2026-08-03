@@ -303,8 +303,12 @@ internal class DefaultSendStrategyTest {
             }
         }
 
+    /**
+     * A native amount that overshoots the balance on its own is a real over-entry, not a fee edge —
+     * it must still be rejected rather than silently adjusted down (see the #5493 clamp below).
+     */
     @Test
-    fun `submit blocks native token send exceeding the available balance`() = runTest {
+    fun `submit blocks native token send exceeding the balance itself`() = runTest {
         mockkStatic(Dispatchers::class)
         every { Dispatchers.IO } returns mainDispatcher
         try {
@@ -312,8 +316,7 @@ internal class DefaultSendStrategyTest {
             val account =
                 Account(
                     token = ethCoin,
-                    tokenValue =
-                        TokenValue(BigInteger.valueOf(1_000_000_000_000_000_000L), ethCoin),
+                    tokenValue = TokenValue(BigInteger.valueOf(400_000_000_000_000_000L), ethCoin),
                     fiatValue = null,
                     price = null,
                 )
@@ -354,9 +357,9 @@ internal class DefaultSendStrategyTest {
                     )
                 )
             every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
-            // Only 0.4 ETH available, but the form has 0.5 ETH entered.
+            // Only 0.4 ETH held, but the form has 0.5 ETH entered.
             coEvery { getAvailableTokenBalance(any(), any()) } returns
-                TokenValue(BigInteger.valueOf(400_000_000_000_000_000L), ethCoin)
+                TokenValue(BigInteger.valueOf(399_999_999_999_979_000L), ethCoin)
 
             build(this).submit()
             advanceUntilIdle()
@@ -817,6 +820,250 @@ internal class DefaultSendStrategyTest {
                 R.string.send_error_insufficient_token_balance,
                 (lastError as UiText.FormattedText).resId,
             )
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    /**
+     * #5493: a hand-typed native amount that fits the balance but not `amount + fee` used to
+     * dead-end on "insufficient balance". It must instead be adjusted down to `balance − fee` — and
+     * the adjustment has to be visible in the amount fields, since the fiat mirror there is what
+     * Verify shows next to the signed amount.
+     */
+    @Test
+    fun `submit adjusts a hand-typed native amount down to balance minus fee`() = runTest {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            val ethCoin = ethCoin()
+            val account =
+                Account(
+                    token = ethCoin,
+                    tokenValue = TokenValue(BigInteger("1000000000000000000"), ethCoin), // 1.0 ETH
+                    fiatValue = null,
+                    price = null,
+                )
+            vaultId = "vault-1"
+            selectedAccount = account
+            addressFieldState.setTextAndPlaceCursorAtEnd("0xdest")
+            // The whole balance, typed by hand — within balance, but not once the fee is added.
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1")
+            fiatAmountFieldState.setTextAndPlaceCursorAtEnd("2000")
+            coEvery { accountValidator.validate() } returns
+                ValidatedAccount(
+                    vaultId = "vault-1",
+                    selectedAccount = account,
+                    chain = Chain.Ethereum,
+                    gasFee = TokenValue(BigInteger("1500000000000000"), ethCoin),
+                    dstAddress = "0xdest",
+                )
+            coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = any(),
+                    address = any(),
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = any(),
+                    isMaxAmountEnabled = any(),
+                    isDeposit = any(),
+                    dstAddress = any(),
+                    tokenAmountValue = any(),
+                    memo = any(),
+                    isThorchainRouterDeposit = any(),
+                )
+            } returns
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.Ethereum(
+                        maxFeePerGasWei = BigInteger.ONE,
+                        priorityFeeWei = BigInteger.ONE,
+                        nonce = BigInteger.ZERO,
+                        gasLimit = BigInteger.valueOf(21000),
+                    )
+                )
+            // Never tapped Max — this is a hand-typed amount.
+            every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+            coEvery { getAvailableTokenBalance(any(), any()) } returns
+                TokenValue(BigInteger("998500000000000000"), ethCoin)
+            coEvery { gasFeeToEstimatedFee(any()) } returns
+                EstimatedGasFee(
+                    formattedFiatValue = "$0.10",
+                    formattedTokenValue = "0.0015 ETH",
+                    tokenValue = TokenValue(BigInteger.ONE, ethCoin),
+                    fiatValue = mockk(relaxed = true),
+                )
+
+            val captured = slot<Transaction>()
+            coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this).submit()
+            advanceUntilIdle()
+
+            assertNull(lastError, "Expected no error; got $lastError")
+            assertEquals(BigInteger("998500000000000000"), captured.captured.tokenValue.value)
+            // The user must see what they are about to sign, in both token and fiat.
+            assertEquals("0.9985", tokenAmountFieldState.text.toString())
+            assertEquals("1997", fiatAmountFieldState.text.toString())
+            assertEquals(BigDecimal("1997"), captured.captured.fiatValue.value)
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    /**
+     * The #5493 clamp is native-only: a token's gas is paid in the native coin, so its balance is
+     * fully spendable and an amount equal to it must go out untouched.
+     */
+    @Test
+    fun `submit sends a hand-typed non-native amount equal to the balance unchanged`() = runTest {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            val usdtCoin = usdtCoin()
+            val account =
+                Account(
+                    token = usdtCoin,
+                    tokenValue = TokenValue(BigInteger("100000000"), usdtCoin), // 100 USDT
+                    fiatValue = null,
+                    price = null,
+                )
+            vaultId = "vault-1"
+            selectedAccount = account
+            addressFieldState.setTextAndPlaceCursorAtEnd("0xdest")
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("100")
+            coEvery { accountValidator.validate() } returns
+                ValidatedAccount(
+                    vaultId = "vault-1",
+                    selectedAccount = account,
+                    chain = Chain.Ethereum,
+                    gasFee = TokenValue(BigInteger.valueOf(21_000), ethCoin()),
+                    dstAddress = "0xdest",
+                )
+            coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            accounts.value =
+                listOf(
+                    Account(
+                        token = ethCoin(),
+                        tokenValue = TokenValue(BigInteger("1000000000000000000"), ethCoin()),
+                        fiatValue = null,
+                        price = null,
+                    )
+                )
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = any(),
+                    address = any(),
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = any(),
+                    isMaxAmountEnabled = any(),
+                    isDeposit = any(),
+                    dstAddress = any(),
+                    tokenAmountValue = any(),
+                    memo = any(),
+                    isThorchainRouterDeposit = any(),
+                )
+            } returns
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.Ethereum(
+                        maxFeePerGasWei = BigInteger.ONE,
+                        priorityFeeWei = BigInteger.ONE,
+                        nonce = BigInteger.ZERO,
+                        gasLimit = BigInteger.valueOf(65000),
+                    )
+                )
+            every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+            coEvery { getAvailableTokenBalance(any(), any()) } returns
+                TokenValue(BigInteger("100000000"), usdtCoin)
+            coEvery { gasFeeToEstimatedFee(any()) } returns
+                EstimatedGasFee(
+                    formattedFiatValue = "$0.10",
+                    formattedTokenValue = "0.0001 ETH",
+                    tokenValue = TokenValue(BigInteger.ONE, ethCoin()),
+                    fiatValue = mockk(relaxed = true),
+                )
+
+            val captured = slot<Transaction>()
+            coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this).submit()
+            advanceUntilIdle()
+
+            assertNull(lastError, "Expected no error; got $lastError")
+            assertEquals(BigInteger("100000000"), captured.captured.tokenValue.value)
+            assertEquals("100", tokenAmountFieldState.text.toString())
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    /**
+     * DeFi flows carry their own balance semantics (staked/bonded/frozen amounts) and compute their
+     * own max, so the #5493 clamp must leave them alone and let their balance check speak.
+     */
+    @Test
+    fun `submit does not adjust a defi native amount and keeps the insufficient error`() = runTest {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            val ethCoin = ethCoin()
+            val account =
+                Account(
+                    token = ethCoin,
+                    tokenValue = TokenValue(BigInteger("1000000000000000000"), ethCoin), // 1.0 ETH
+                    fiatValue = null,
+                    price = null,
+                )
+            vaultId = "vault-1"
+            selectedAccount = account
+            defiType = DeFiNavActions.ADD_LP
+            addressFieldState.setTextAndPlaceCursorAtEnd("0xdest")
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1")
+            coEvery { accountValidator.validate() } returns
+                ValidatedAccount(
+                    vaultId = "vault-1",
+                    selectedAccount = account,
+                    chain = Chain.Ethereum,
+                    gasFee = TokenValue(BigInteger("1500000000000000"), ethCoin),
+                    dstAddress = "0xdest",
+                )
+            coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = any(),
+                    address = any(),
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = any(),
+                    isMaxAmountEnabled = any(),
+                    isDeposit = any(),
+                    dstAddress = any(),
+                    tokenAmountValue = any(),
+                    memo = any(),
+                    isThorchainRouterDeposit = any(),
+                )
+            } returns
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.Ethereum(
+                        maxFeePerGasWei = BigInteger.ONE,
+                        priorityFeeWei = BigInteger.ONE,
+                        nonce = BigInteger.ZERO,
+                        gasLimit = BigInteger.valueOf(21000),
+                    )
+                )
+            every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+            coEvery { getAvailableTokenBalance(any(), any()) } returns
+                TokenValue(BigInteger("998500000000000000"), ethCoin)
+
+            build(this).submit()
+            advanceUntilIdle()
+
+            assertEquals(
+                R.string.send_error_insufficient_native_balance_with_fees,
+                (lastError as UiText.FormattedText).resId,
+            )
+            assertEquals("1", tokenAmountFieldState.text.toString())
         } finally {
             unmockkStatic(Dispatchers::class)
         }

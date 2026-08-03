@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.send.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.TerraClassicTax
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
@@ -40,6 +41,7 @@ import com.vultisig.wallet.ui.utils.asAddressInput
 import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -187,30 +189,24 @@ internal class DefaultSendStrategy(
                     val srcAddress = selectedToken.address
                     val isMaxAmount = tokenAmount.compareTo(amountManager.currentMaxAmount) == 0
 
-                    // "Max" is a one-shot snapshot: it captures the balance and gas fee at tap
-                    // time and never re-clamps if either moves before submit (a cached balance
-                    // correcting downward after network hydration, or EVM gas rising). A stale-high
-                    // snapshot then exceeds what's actually spendable and submit validation rejects
-                    // it as "insufficient" — which is why a max send can force the user to leave
-                    // some tokens behind. Re-derive the amount from the CURRENT balance and fee,
-                    // clamping DOWN only so we never send more than the user saw. Standard sends
-                    // only: DeFi flows (staking/unbond/frozen TRX) carry different balance
-                    // semantics and compute their own max.
+                    val enteredAmountInt =
+                        tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
                     val tokenAmountInt =
-                        tokenAmount.movePointRight(selectedToken.decimal).toBigInteger().let {
-                            entered ->
-                            if (isMaxAmount && defiTypeProvider() == null) {
-                                val available =
-                                    getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
-                                if (available != null && available > BigInteger.ZERO) {
-                                    entered.coerceAtMost(available)
-                                } else {
-                                    entered
-                                }
-                            } else {
-                                entered
-                            }
-                        }
+                        clampToSpendableBalance(
+                            entered = enteredAmountInt,
+                            account = selectedAccount,
+                            balance = selectedTokenValue.value,
+                            gasFee = gasFee,
+                            isMaxAmount = isMaxAmount,
+                        )
+                    if (tokenAmountInt < enteredAmountInt) {
+                        showAdjustedAmount(
+                            adjusted = tokenAmountInt,
+                            entered = enteredAmountInt,
+                            token = selectedToken,
+                            isMaxAmount = isMaxAmount,
+                        )
+                    }
 
                     if (chain == Chain.Tron) {
                         val isTronStakingOp =
@@ -452,6 +448,66 @@ internal class DefaultSendStrategy(
                     hideLoading()
                 }
             }
+    }
+
+    /**
+     * Clamps [entered] down to the balance that is spendable right now — `balance − fee − chain
+     * reserve`, per `GetAvailableTokenBalanceUseCase`. Two situations land here:
+     * - a stale "Max": the tap captures balance and gas fee once and never re-clamps if either
+     *   moves before submit (a cached balance correcting downward after network hydration, or EVM
+     *   gas rising), so the snapshot ends up above what's actually spendable;
+     * - a hand-typed native amount that fits the balance but not `amount + fee` — the send used to
+     *   dead-end on "insufficient balance" instead of adjusting to the affordable maximum.
+     *
+     * Only ever reduces, so we never send more than the user asked for. An amount that overshoots
+     * the balance on its own is left untouched for the balance checks in `submit` to reject — that
+     * is a real over-entry, not a fee edge. DeFi flows are excluded: staking/unbond/frozen TRX
+     * carry different balance semantics and compute their own max.
+     */
+    private suspend fun clampToSpendableBalance(
+        entered: BigInteger,
+        account: Account,
+        balance: BigInteger,
+        gasFee: TokenValue,
+        isMaxAmount: Boolean,
+    ): BigInteger {
+        if (defiTypeProvider() != null) return entered
+        // Non-native tokens pay gas in the native coin, so their shortfall is never fee-caused.
+        val isFeeOnlyShortfall = account.token.isNativeToken && entered <= balance
+        if (!isMaxAmount && !isFeeOnlyShortfall) return entered
+        val available = getAvailableTokenBalance(account, gasFee.value)?.value ?: return entered
+        if (available <= BigInteger.ZERO) return entered
+        return entered.coerceAtMost(available)
+    }
+
+    /**
+     * Reflects an [adjusted] amount back into the amount fields so the form — and the Verify screen
+     * built from them — shows what will actually be signed. The user must never sign an amount they
+     * weren't shown. The fiat mirror is scaled by the same ratio instead of re-fetched so it stays
+     * consistent even before AmountManager's price-driven conversion catches up.
+     */
+    private fun showAdjustedAmount(
+        adjusted: BigInteger,
+        entered: BigInteger,
+        token: Coin,
+        isMaxAmount: Boolean,
+    ) {
+        val adjustedDecimal = BigDecimal(adjusted).movePointLeft(token.decimal).stripTrailingZeros()
+        // The clamped value is still the true maximum, so re-snapshot it — otherwise the form's
+        // "100%" selection would drop just because the fee moved.
+        if (isMaxAmount) {
+            amountManager.markMax(adjustedDecimal)
+        }
+        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(adjustedDecimal.toPlainString())
+
+        val enteredFiat = fiatAmountFieldState.text.toString().toPlainBigDecimalOrNull()
+        if (enteredFiat == null || enteredFiat.signum() <= 0 || entered.signum() <= 0) return
+        val adjustedFiat =
+            enteredFiat
+                .multiply(BigDecimal(adjusted))
+                .divide(BigDecimal(entered), token.decimal, RoundingMode.DOWN)
+                .stripTrailingZeros()
+        fiatAmountFieldState.setTextAndPlaceCursorAtEnd(adjustedFiat.toPlainString())
     }
 
     private fun applyRippleDestinationTag(
