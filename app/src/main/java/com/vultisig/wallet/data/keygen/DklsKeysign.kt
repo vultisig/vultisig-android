@@ -241,12 +241,9 @@ class DKLSKeysign(
             val key = "$sessionID-$localPartyID-$messageID-${msg.hash}"
             if (cache[key] != null) {
                 println("message with key: $key has been applied before")
-                // The relay is still serving a message we applied, so our delete never took. Retry
-                // it once per attempt: repeating it on every poll would park the loop behind the
-                // relay client's own delete backoff without changing the outcome.
-                if (redeletedHashes.add(msg.hash)) {
-                    deleteMessageFromServer(msg.hash, messageID)
-                }
+                // Once per attempt: repeating a delete the relay is ignoring only parks the poll
+                // loop behind the relay client's own backoff.
+                if (redeletedHashes.add(msg.hash)) deleteMessageFromServer(msg.hash, messageID)
                 continue
             }
             println("Got message from: ${msg.from}, to: ${msg.to}, key: $key")
@@ -353,8 +350,7 @@ class DKLSKeysign(
                 error("fail to create sign session from setup message, error: $sessionResult")
             }
             processDKLSOutboundMessage(handler)
-            val isFinished =
-                poller.poll(msgHash) { msgs -> processInboundMessage(handler, msgs, msgHash) }
+            val isFinished = poller.poll(msgHash) { processInboundMessage(handler, it, msgHash) }
             if (isFinished) {
                 val sig = dklsSignSessionFinish(handler)
                 val resp = KeysignResponse()

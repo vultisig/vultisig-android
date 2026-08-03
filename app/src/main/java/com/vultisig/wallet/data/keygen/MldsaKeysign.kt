@@ -228,7 +228,7 @@ class MldsaKeysign(
                 .check("create sign session")
 
             drainOutbound(session)
-            if (poller.poll(msgHash) { msgs -> applyInboundMessages(session, msgs, msgHash) }) {
+            if (poller.poll(msgHash) { applyInboundMessages(session, it, msgHash) }) {
                 drainOutbound(session)
                 // finish can fail transiently (LIB_ABORT_PROTOCOL_PARTY_*) — retry is inside
                 val sig = finishSignSession(session)
@@ -304,12 +304,9 @@ class MldsaKeysign(
         for (msg in msgs.sortedBy { it.sequenceNo }) {
             val cacheKey = "$sessionID-$localPartyID-$messageID-${msg.hash}"
             if (cacheKey in appliedMessages) {
-                // The relay is still serving a message we applied, so our delete never took. Retry
-                // it once per attempt: repeating it on every poll would park the loop behind the
-                // relay client's own delete backoff without changing the outcome.
-                if (redeletedHashes.add(msg.hash)) {
-                    deleteMessageFromServer(msg.hash, messageID)
-                }
+                // Once per attempt: repeating a delete the relay is ignoring only parks the poll
+                // loop behind the relay client's own backoff.
+                if (redeletedHashes.add(msg.hash)) deleteMessageFromServer(msg.hash, messageID)
                 continue
             }
 

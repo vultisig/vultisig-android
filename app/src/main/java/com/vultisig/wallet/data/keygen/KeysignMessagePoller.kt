@@ -2,6 +2,10 @@ package com.vultisig.wallet.data.keygen
 
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.mediator.Message
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import timber.log.Timber
@@ -73,45 +77,39 @@ internal class KeysignMessagePoller(
         Timber.d("start pulling inbound messages")
 
         heardFromThisWindow.clear()
-        val deadlineStart = nanoTime()
-        var lastBatchNano = deadlineStart
+        val startedAt = nanoTime()
+        var lastBatchAt = startedAt
         while (true) {
             try {
                 val msgs =
                     sessionApi.getTssMessages(mediatorURL, sessionID, localPartyID, messageID)
                 if (msgs.isNotEmpty()) {
                     clearWaitingForPeers()
-                    lastBatchNano = nanoTime()
+                    lastBatchAt = nanoTime()
                     heardFromThisWindow.clear()
-                    if (applyMessages(msgs)) {
-                        return true
-                    }
+                    if (applyMessages(msgs)) return true
                 } else {
-                    delay(POLL_INTERVAL_MS)
+                    delay(POLL_INTERVAL)
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "Failed to get messages")
-                delay(POLL_INTERVAL_MS)
+                delay(POLL_INTERVAL)
             }
 
-            if (!waitingNotified && secondsSince(lastBatchNano) > PEER_SILENCE_HINT_SECONDS) {
+            if (!waitingNotified && elapsedSince(lastBatchAt) > PEER_SILENCE_HINT) {
                 waitingNotified = true
-                val silent = peersOutside(heardFromThisWindow)
-                if (silent.isNotEmpty()) {
-                    onWaitingForPeers?.invoke(silent)
-                }
+                val silent = peersNotIn(heardFromThisWindow)
+                if (silent.isNotEmpty()) onWaitingForPeers?.invoke(silent)
             }
-            if (secondsSince(deadlineStart) > TIMEOUT_SECONDS) {
-                error(timeoutMessage())
-            }
+            if (elapsedSince(startedAt) > ATTEMPT_TIMEOUT) error(timeoutMessage())
         }
     }
 
-    private fun secondsSince(nanos: Long): Double = (nanoTime() - nanos) / NANOS_PER_SECOND
+    private fun elapsedSince(nanos: Long): Duration = (nanoTime() - nanos).nanoseconds
 
-    private fun peersOutside(heard: Set<String>): List<String> =
+    private fun peersNotIn(heard: Set<String>): List<String> =
         keysignCommittee.filter { it != localPartyID && it !in heard }
 
     /**
@@ -120,19 +118,16 @@ internal class KeysignMessagePoller(
      * would send support down the wrong path.
      */
     private fun timeoutMessage(): String {
-        val absent = peersOutside(heardFromEver)
-        return if (absent.isEmpty()) {
-            "keysign timed out after ${TIMEOUT_SECONDS}s: " +
-                "all peers responded but the protocol did not complete"
-        } else {
-            "keysign timed out after ${TIMEOUT_SECONDS}s: no messages from ${absent.joinToString()}"
-        }
+        val absent = peersNotIn(heardFromEver)
+        val reason =
+            if (absent.isEmpty()) "all peers responded but the protocol did not complete"
+            else "no messages from ${absent.joinToString()}"
+        return "keysign timed out after ${ATTEMPT_TIMEOUT.inWholeSeconds}s: $reason"
     }
 
     private companion object {
-        const val POLL_INTERVAL_MS = 100L
-        const val PEER_SILENCE_HINT_SECONDS = 10
-        const val TIMEOUT_SECONDS = 60
-        const val NANOS_PER_SECOND = 1_000_000_000.0
+        val POLL_INTERVAL = 100.milliseconds
+        val PEER_SILENCE_HINT = 10.seconds
+        val ATTEMPT_TIMEOUT = 60.seconds
     }
 }

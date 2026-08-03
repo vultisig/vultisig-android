@@ -6,6 +6,9 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.currentTime
@@ -26,14 +29,14 @@ class KeysignMessagePollerTest {
 
     /** Monotonic clock the fake relay advances by one poll interval per poll. */
     private class TestClock {
-        var nanos = 0L
+        var elapsed: Duration = Duration.ZERO
             private set
 
-        val elapsedMillis: Long
-            get() = nanos / 1_000_000
+        val nanos: Long
+            get() = elapsed.inWholeNanoseconds
 
         fun tick() {
-            nanos += POLL_INTERVAL_MS * 1_000_000
+            elapsed += POLL_INTERVAL
         }
     }
 
@@ -58,7 +61,7 @@ class KeysignMessagePollerTest {
                 clock.tick()
                 // An Error, not an Exception: the poll loop tolerates exceptions by design, so a
                 // broken deadline would swallow this guard and hang the suite instead of failing.
-                if (clock.elapsedMillis > RUNAWAY_LOOP_MILLIS) {
+                if (clock.elapsed > RUNAWAY_LOOP_LIMIT) {
                     throw AssertionError("poll loop did not terminate")
                 }
                 onPoll(poll)
@@ -77,7 +80,7 @@ class KeysignMessagePollerTest {
                 }
 
             failure.message shouldContain "keysign timed out after 60s"
-            clock.elapsedMillis shouldBe TIMEOUT_MS + POLL_INTERVAL_MS
+            clock.elapsed shouldBe ATTEMPT_TIMEOUT + POLL_INTERVAL
         }
 
     @Test
@@ -91,7 +94,7 @@ class KeysignMessagePollerTest {
             }
 
         failure.message shouldContain "keysign timed out after 60s"
-        clock.elapsedMillis shouldBe TIMEOUT_MS + POLL_INTERVAL_MS
+        clock.elapsed shouldBe ATTEMPT_TIMEOUT + POLL_INTERVAL
     }
 
     @Test
@@ -106,7 +109,7 @@ class KeysignMessagePollerTest {
                 }
 
             failure.message shouldContain "keysign timed out after 60s"
-            currentTime shouldBe TIMEOUT_MS + POLL_INTERVAL_MS
+            currentTime shouldBe (ATTEMPT_TIMEOUT + POLL_INTERVAL).inWholeMilliseconds
         }
 
     @Test
@@ -141,7 +144,7 @@ class KeysignMessagePollerTest {
             val clock = TestClock()
             val sessionApi =
                 relay(clock) {
-                    if (clock.elapsedMillis < 11_000) emptyList() else listOf(peerMessage())
+                    if (clock.elapsed < SILENCE_HINT_PASSED) emptyList() else listOf(peerMessage())
                 }
 
             poller(sessionApi, clock).poll(MESSAGE_ID) { true } shouldBe true
@@ -218,10 +221,13 @@ class KeysignMessagePollerTest {
         const val LOCAL_PARTY = "deviceA"
         const val PEER = "deviceB"
         const val MESSAGE_ID = "message-1"
-        const val POLL_INTERVAL_MS = 100L
-        const val TIMEOUT_MS = 60_000L
+        val POLL_INTERVAL = 100.milliseconds
+        val ATTEMPT_TIMEOUT = 60.seconds
+
+        /** Comfortably past the 10 s silent-peer hint, so the hint has certainly fired. */
+        val SILENCE_HINT_PASSED = 11.seconds
 
         /** Fails a poll loop that never terminates instead of letting the suite hang. */
-        const val RUNAWAY_LOOP_MILLIS = 10 * TIMEOUT_MS
+        val RUNAWAY_LOOP_LIMIT = ATTEMPT_TIMEOUT * 10
     }
 }
