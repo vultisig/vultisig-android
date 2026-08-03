@@ -293,6 +293,7 @@
     <string name="keysign_sign_transaction">Assinar transação</string>
     <string name="sign_transaction">Assinar transação</string>
     <string name="keysign_password_title">Palavra-passe</string>
+    <string name="start_screen_create_new_vault">Criar novo cofre</string>
     <string name="start_screen_new">NOVO</string>
     <string name="start_screen_import_seedphrase">Importar frase-semente</string>
     <string name="start_screen_import_seedphrase_desc">Introduza-a, crie um cofre, nunca mais olhe para trás.</string>

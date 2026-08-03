@@ -292,6 +292,7 @@
     <string name="keysign_sign_transaction">Transactie ondertekenen</string>
     <string name="sign_transaction">Transactie ondertekenen</string>
     <string name="keysign_password_title">Wachtwoord</string>
+    <string name="start_screen_create_new_vault">Nieuwe kluis aanmaken</string>
     <string name="start_screen_new">NIEUW</string>
     <string name="start_screen_import_seedphrase">Seedphrase importeren</string>
     <string name="start_screen_import_seedphrase_desc">Voer het in, maak een kluis aan, kijk nooit meer om.</string>
