@@ -293,6 +293,7 @@
     <string name="keysign_sign_transaction">Firmar transacción</string>
     <string name="sign_transaction">Firmar transacción</string>
     <string name="keysign_password_title">Contraseña</string>
+    <string name="start_screen_create_new_vault">Crear nueva bóveda</string>
     <string name="start_screen_new">NUEVO</string>
     <string name="start_screen_import_seedphrase">Importar frase semilla</string>
     <string name="start_screen_import_seedphrase_desc">Ingrésala, crea una bóveda, no mires atrás.</string>

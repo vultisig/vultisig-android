@@ -293,6 +293,7 @@
     <string name="keysign_sign_transaction">Firma transazione</string>
     <string name="sign_transaction">Firma transazione</string>
     <string name="keysign_password_title">Password</string>
+    <string name="start_screen_create_new_vault">Crea nuovo vault</string>
     <string name="start_screen_new">NUOVO</string>
     <string name="start_screen_import_seedphrase">Importa seedphrase</string>
     <string name="start_screen_import_seedphrase_desc">Inseriscila, crea un vault, non guardare indietro.</string>

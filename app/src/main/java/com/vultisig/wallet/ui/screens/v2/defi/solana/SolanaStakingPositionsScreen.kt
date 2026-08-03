@@ -94,10 +94,13 @@ internal fun SolanaStakingPositionsContent(
     onWithdraw: (String) -> Unit = {},
 ) {
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
+        // One scroll surface for the whole screen: the banner and tab row scroll away with the
+        // content instead of staying pinned above it, mirroring iOS (#4761).
         Column(
             modifier =
                 Modifier.fillMaxSize()
                     .background(Theme.v2.colors.backgrounds.primary)
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = CenterHorizontally,
         ) {
@@ -118,7 +121,7 @@ internal fun SolanaStakingPositionsContent(
             UiSpacer(16.dp)
 
             Column(
-                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 SolanaTotalStakedCard(
