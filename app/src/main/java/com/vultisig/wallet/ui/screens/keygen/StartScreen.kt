@@ -171,7 +171,7 @@ private fun StartScreen(
                 UiSpacer(size = 16.dp)
 
                 VsButton(
-                    label = stringResource(R.string.referral_onboarding_get_started),
+                    label = stringResource(R.string.start_screen_create_new_vault),
                     modifier =
                         Modifier.startScreenAnimations(delay = 100)
                             .fillMaxWidth()
