@@ -45,9 +45,9 @@ import com.vultisig.wallet.ui.models.defi.TronDeFiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.TronDeFiUiState
 import com.vultisig.wallet.ui.models.defi.TronPendingWithdrawalUiModel
 import com.vultisig.wallet.ui.models.defi.TronStakingUiModel
-import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.ManagePositionsButton
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.theme.Theme
@@ -90,11 +90,6 @@ internal fun TronDeFiPositionsScreen(
         onPauseOrDispose {}
     }
 
-    RegisterChainDashboardTopBarAction(
-        icon = R.drawable.ic_shapes_plus_x_square_circle,
-        onClick = { viewModel.setPositionSelectionDialogVisibility(true) },
-    )
-
     TronDeFiPositionsScreenContent(
         state = state,
         isRefreshing = isRefreshing,
@@ -103,6 +98,7 @@ internal fun TronDeFiPositionsScreen(
             viewModel.refresh()
         },
         onTabSelected = viewModel::onTabSelected,
+        onEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(true) },
         onCancelEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(false) },
         onDonePositionClick = viewModel::onPositionSelectionDone,
         onPositionSelectionChange = viewModel::onPositionSelectionChange,
@@ -119,6 +115,7 @@ private fun TronDeFiPositionsScreenContent(
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
     onTabSelected: (DeFiTab) -> Unit = {},
+    onEditPositionClick: () -> Unit = {},
     onCancelEditPositionClick: () -> Unit = {},
     onDonePositionClick: () -> Unit = {},
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
@@ -159,10 +156,12 @@ private fun TronDeFiPositionsScreenContent(
 
                 if (state is TronDeFiUiState.Success || state is TronDeFiUiState.Loading) {
                     val isLoading = state is TronDeFiUiState.Loading
-                    // Single manage-positions control: the ChainDashboard top-bar action above. The
-                    // inline edit-chains button that used to sit here duplicated it (#4821).
                     item {
-                        Box(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             VsTabGroup(index = 0) {
                                 TRON_DEFI_TABS.forEach { tab ->
                                     tab {
@@ -174,6 +173,8 @@ private fun TronDeFiPositionsScreenContent(
                                     }
                                 }
                             }
+
+                            ManagePositionsButton(onClick = onEditPositionClick)
                         }
                     }
                 }

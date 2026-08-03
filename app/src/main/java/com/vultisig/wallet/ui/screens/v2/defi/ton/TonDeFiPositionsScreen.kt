@@ -51,8 +51,8 @@ import com.vultisig.wallet.ui.models.defi.TON_KEY
 import com.vultisig.wallet.ui.models.defi.TonDeFiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.TonDeFiUiState
 import com.vultisig.wallet.ui.models.defi.TonStakingUiModel
-import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.ManagePositionsButton
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.theme.Theme
@@ -100,11 +100,6 @@ internal fun TonDeFiPositionsScreen(
         onPauseOrDispose {}
     }
 
-    RegisterChainDashboardTopBarAction(
-        icon = R.drawable.ic_shapes_plus_x_square_circle,
-        onClick = { viewModel.setPositionSelectionDialogVisibility(true) },
-    )
-
     TonDeFiPositionsScreenContent(
         state = state,
         isRefreshing = isRefreshing,
@@ -113,6 +108,7 @@ internal fun TonDeFiPositionsScreen(
             viewModel.refresh()
         },
         onTabSelected = viewModel::onTabSelected,
+        onEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(true) },
         onCancelEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(false) },
         onDonePositionClick = viewModel::onPositionSelectionDone,
         onPositionSelectionChange = viewModel::onPositionSelectionChange,
@@ -129,6 +125,7 @@ private fun TonDeFiPositionsScreenContent(
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
     onTabSelected: (DeFiTab) -> Unit = {},
+    onEditPositionClick: () -> Unit = {},
     onCancelEditPositionClick: () -> Unit = {},
     onDonePositionClick: () -> Unit = {},
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
@@ -170,7 +167,11 @@ private fun TonDeFiPositionsScreenContent(
                 if (state is TonDeFiUiState.Success || state is TonDeFiUiState.Loading) {
                     val isLoading = state is TonDeFiUiState.Loading
                     item {
-                        Box(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             VsTabGroup(index = 0) {
                                 TON_DEFI_TABS.forEach { tab ->
                                     tab {
@@ -182,6 +183,8 @@ private fun TonDeFiPositionsScreenContent(
                                     }
                                 }
                             }
+
+                            ManagePositionsButton(onClick = onEditPositionClick)
                         }
                     }
                 }

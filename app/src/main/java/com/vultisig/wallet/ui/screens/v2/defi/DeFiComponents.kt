@@ -61,7 +61,11 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
+import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.v2.containers.CornerType
+import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
@@ -498,6 +502,26 @@ internal fun PositionsSelectionDialog(
         onCancelClick = onCancelClick,
         onPasteClick = searchTextFieldState::setTextAndPlaceCursorAtEnd,
     )
+}
+
+/**
+ * Circular house-pen button that opens the manage-positions dialog. Sits inline to the right of the
+ * positions tab group on every DeFi chain screen, matching iOS `CircularAccessoryIconButton`.
+ */
+@Composable
+internal fun ManagePositionsButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    V2Container(
+        type = ContainerType.SECONDARY,
+        cornerType = CornerType.Circular,
+        modifier = modifier.clickOnce(onClick = onClick),
+    ) {
+        UiIcon(
+            drawableResId = R.drawable.edit_chain,
+            size = 16.dp,
+            modifier = Modifier.padding(all = 12.dp),
+            tint = Theme.v2.colors.primary.accent4,
+        )
+    }
 }
 
 @Composable

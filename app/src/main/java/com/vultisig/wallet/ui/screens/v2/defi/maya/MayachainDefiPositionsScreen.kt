@@ -1,8 +1,10 @@
 package com.vultisig.wallet.ui.screens.v2.defi.maya
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -34,11 +36,11 @@ import com.vultisig.wallet.ui.models.defi.MayachainDefiPositionsUiModel
 import com.vultisig.wallet.ui.models.defi.MayachainDefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.MayachainDefiUiState
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
-import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.LpTabContent
+import com.vultisig.wallet.ui.screens.v2.defi.ManagePositionsButton
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.screens.v2.defi.StakingTabContent
@@ -69,11 +71,6 @@ internal fun MayachainDefiPositionsScreen(
     }
 
     LaunchedEffect(vaultId) { model.setData(vaultId = vaultId) }
-
-    RegisterChainDashboardTopBarAction(
-        icon = R.drawable.ic_shapes_plus_x_square_circle,
-        onClick = { model.setPositionSelectionDialogVisibility(true) },
-    )
 
     when (val s = uiState) {
         is MayachainDefiUiState.Loading -> Unit
@@ -160,9 +157,11 @@ internal fun MayachainDefiPositionsScreenContent(
 
             UiSpacer(16.dp)
 
-            // Single manage-positions control: the ChainDashboard top-bar action above. The inline
-            // edit-chains button that used to sit here duplicated it (#4821).
-            Box(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 VsTabGroup(index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }) {
                     tabs.forEach { tab ->
                         tab {
@@ -173,6 +172,8 @@ internal fun MayachainDefiPositionsScreenContent(
                         }
                     }
                 }
+
+                ManagePositionsButton(onClick = onEditPositionClick)
             }
 
             UiSpacer(16.dp)
