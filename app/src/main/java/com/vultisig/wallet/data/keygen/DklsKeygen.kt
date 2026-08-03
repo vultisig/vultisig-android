@@ -293,9 +293,8 @@ class DKLSKeygen(
         return false
     }
 
-    @Throws(Exception::class)
     private suspend fun deleteMessageFromServer(hash: String) {
-        sessionApi.deleteTssMessage(
+        sessionApi.deleteTssMessageQuietly(
             mediatorURL,
             sessionID,
             this.localPartyId,
