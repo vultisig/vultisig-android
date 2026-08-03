@@ -536,6 +536,7 @@
     <string name="keysign_password_title">密码</string>
 
     <!-- Home Screen -->
+    <string name="start_screen_create_new_vault">创建新保险库</string>
     <string name="start_screen_new">新功能</string>
     <string name="start_screen_import_seedphrase">导入助记词</string>
     <string name="start_screen_import_seedphrase_desc">输入它，创建保险库，永不回头。</string>

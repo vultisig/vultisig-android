@@ -293,6 +293,7 @@
     <string name="keysign_sign_transaction">Transaktion unterschreiben</string>
     <string name="sign_transaction">Transaktion signieren</string>
     <string name="keysign_password_title">Passwort</string>
+    <string name="start_screen_create_new_vault">Neuen Tresor erstellen</string>
     <string name="start_screen_new">NEU</string>
     <string name="start_screen_import_seedphrase">Seed-Phrase importieren</string>
     <string name="start_screen_import_seedphrase_desc">Geben Sie sie ein, erstellen Sie einen Tresor, schauen Sie nie zurück.</string>

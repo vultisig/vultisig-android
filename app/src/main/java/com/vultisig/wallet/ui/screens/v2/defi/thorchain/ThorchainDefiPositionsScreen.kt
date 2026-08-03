@@ -1,8 +1,9 @@
 package com.vultisig.wallet.ui.screens.v2.defi.thorchain
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -34,11 +36,11 @@ import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
-import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.LpTabContent
+import com.vultisig.wallet.ui.screens.v2.defi.ManagePositionsButton
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.screens.v2.defi.StakingTabContent
@@ -67,11 +69,6 @@ internal fun ThorchainDefiPositionsScreen(
     }
 
     LaunchedEffect(vaultId) { model.setData(vaultId = vaultId) }
-
-    RegisterChainDashboardTopBarAction(
-        icon = R.drawable.ic_shapes_plus_x_square_circle,
-        onClick = { model.setPositionSelectionDialogVisibility(true) },
-    )
 
     ThorchainDefiPositionScreenContent(
         state = state,
@@ -124,10 +121,13 @@ internal fun ThorchainDefiPositionScreenContent(
     val tabs = listOf(DeFiTab.BONDED, DeFiTab.STAKED, DeFiTab.LP)
 
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
+        // One scroll surface for the whole screen: the banner and tab row scroll away with the
+        // content instead of staying pinned above it, mirroring iOS (#4761).
         Column(
             modifier =
                 Modifier.fillMaxSize()
                     .background(Theme.v2.colors.backgrounds.primary)
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = CenterHorizontally,
         ) {
@@ -141,9 +141,11 @@ internal fun ThorchainDefiPositionScreenContent(
 
             UiSpacer(16.dp)
 
-            // Single manage-positions control: the ChainDashboard top-bar action above. The inline
-            // edit-chains button that used to sit here duplicated it (#4821).
-            Box(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 VsTabGroup(index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }) {
                     tabs.forEach { tab ->
                         tab {
@@ -154,6 +156,8 @@ internal fun ThorchainDefiPositionScreenContent(
                         }
                     }
                 }
+
+                ManagePositionsButton(onClick = onEditPositionClick)
             }
 
             UiSpacer(16.dp)
@@ -171,7 +175,7 @@ internal fun ThorchainDefiPositionScreenContent(
                 )
             }
 
-            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 when (state.selectedTab) {
                     DeFiTab.BONDED.displayNameRes -> {
                         if (!state.selectedPositions.hasBondPositions()) {

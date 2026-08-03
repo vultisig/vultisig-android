@@ -393,6 +393,7 @@
     <string name="keysign_sign_transaction">Sign transaction</string>
     <string name="sign_transaction">Sign Transaction</string>
     <string name="keysign_password_title">Password</string>
+    <string name="start_screen_create_new_vault">Create new Vault</string>
     <string name="start_screen_new">NEW</string>
     <string name="start_screen_import_seedphrase">Import seedphrase</string>
     <string name="start_screen_import_seedphrase_desc">Enter it, create a vault, never look back.</string>

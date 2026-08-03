@@ -45,9 +45,9 @@ import com.vultisig.wallet.ui.models.defi.TronDeFiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.TronDeFiUiState
 import com.vultisig.wallet.ui.models.defi.TronPendingWithdrawalUiModel
 import com.vultisig.wallet.ui.models.defi.TronStakingUiModel
-import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.ManagePositionsButton
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.theme.Theme
@@ -90,11 +90,6 @@ internal fun TronDeFiPositionsScreen(
         onPauseOrDispose {}
     }
 
-    RegisterChainDashboardTopBarAction(
-        icon = R.drawable.ic_shapes_plus_x_square_circle,
-        onClick = { viewModel.setPositionSelectionDialogVisibility(true) },
-    )
-
     TronDeFiPositionsScreenContent(
         state = state,
         isRefreshing = isRefreshing,
@@ -103,6 +98,7 @@ internal fun TronDeFiPositionsScreen(
             viewModel.refresh()
         },
         onTabSelected = viewModel::onTabSelected,
+        onEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(true) },
         onCancelEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(false) },
         onDonePositionClick = viewModel::onPositionSelectionDone,
         onPositionSelectionChange = viewModel::onPositionSelectionChange,
@@ -119,6 +115,7 @@ private fun TronDeFiPositionsScreenContent(
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
     onTabSelected: (DeFiTab) -> Unit = {},
+    onEditPositionClick: () -> Unit = {},
     onCancelEditPositionClick: () -> Unit = {},
     onDonePositionClick: () -> Unit = {},
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
@@ -127,10 +124,14 @@ private fun TronDeFiPositionsScreenContent(
 ) {
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)
+            // Banner and tab row are leading list items so the whole screen scrolls as one surface
+            // instead of pinning the header above the list, mirroring iOS (#4761).
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)) {
+                item {
                     when (state) {
                         is TronDeFiUiState.Loading ->
                             TronDeFiBanner(
@@ -155,105 +156,105 @@ private fun TronDeFiPositionsScreenContent(
 
                 if (state is TronDeFiUiState.Success || state is TronDeFiUiState.Loading) {
                     val isLoading = state is TronDeFiUiState.Loading
-                    // Single manage-positions control: the ChainDashboard top-bar action above. The
-                    // inline edit-chains button that used to sit here duplicated it (#4821).
-                    Box(
-                        modifier =
-                            Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp)
-                    ) {
-                        VsTabGroup(index = 0) {
-                            TRON_DEFI_TABS.forEach { tab ->
-                                tab {
-                                    VsTab(
-                                        label = stringResource(tab.displayNameRes),
-                                        isEnabled = !isLoading,
-                                        onClick = { onTabSelected(tab) },
-                                    )
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            VsTabGroup(index = 0) {
+                                TRON_DEFI_TABS.forEach { tab ->
+                                    tab {
+                                        VsTab(
+                                            label = stringResource(tab.displayNameRes),
+                                            isEnabled = !isLoading,
+                                            onClick = { onTabSelected(tab) },
+                                        )
+                                    }
                                 }
                             }
+
+                            ManagePositionsButton(
+                                onClick = onEditPositionClick,
+                                isEnabled = !isLoading,
+                            )
                         }
                     }
                 }
 
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    when (state) {
-                        is TronDeFiUiState.Loading -> {
-                            item {
-                                ResourceTwoCardsRow(
-                                    resourceUsage =
-                                        ResourceUsage(
-                                            availableBandwidth = 0L,
-                                            totalBandwidth = 0L,
-                                            availableEnergy = 0L,
-                                            totalEnergy = 0L,
-                                        ),
-                                    isLoading = true,
-                                )
-                            }
+                when (state) {
+                    is TronDeFiUiState.Loading -> {
+                        item {
+                            ResourceTwoCardsRow(
+                                resourceUsage =
+                                    ResourceUsage(
+                                        availableBandwidth = 0L,
+                                        totalBandwidth = 0L,
+                                        availableEnergy = 0L,
+                                        totalEnergy = 0L,
+                                    ),
+                                isLoading = true,
+                            )
+                        }
+                        item {
+                            TronFreezePositionCard(
+                                frozenTotalPrice = "",
+                                frozenTotalTrx = "",
+                                isBalanceVisible = false,
+                                isLoading = true,
+                                isUnfreezeEnabled = false,
+                                onClickFreeze = {},
+                                onClickUnfreeze = {},
+                            )
+                        }
+                    }
+                    is TronDeFiUiState.Error -> {
+                        item {
+                            Text(
+                                text = state.error.asString(),
+                                style = Theme.brockmann.body.m.medium,
+                                color = Theme.v2.colors.alerts.error,
+                            )
+                        }
+                    }
+                    is TronDeFiUiState.Success -> {
+                        val tronData = state.tronData
+
+                        item {
+                            ResourceTwoCardsRow(
+                                resourceUsage =
+                                    ResourceUsage(
+                                        availableBandwidth = tronData.availableBandwidth,
+                                        totalBandwidth = tronData.totalBandwidth,
+                                        availableEnergy = tronData.availableEnergy,
+                                        totalEnergy = tronData.totalEnergy,
+                                    )
+                            )
+                        }
+
+                        val isTronSelected = state.selectedPositions.contains("TRON")
+                        val pendingWithdrawals = tronData.pendingWithdrawals
+                        if (isTronSelected) {
                             item {
                                 TronFreezePositionCard(
-                                    frozenTotalPrice = "",
-                                    frozenTotalTrx = "",
-                                    isBalanceVisible = false,
-                                    isLoading = true,
-                                    isUnfreezeEnabled = false,
-                                    onClickFreeze = {},
-                                    onClickUnfreeze = {},
-                                )
-                            }
-                        }
-                        is TronDeFiUiState.Error -> {
-                            item {
-                                Text(
-                                    text = state.error.asString(),
-                                    style = Theme.brockmann.body.m.medium,
-                                    color = Theme.v2.colors.alerts.error,
-                                )
-                            }
-                        }
-                        is TronDeFiUiState.Success -> {
-                            val tronData = state.tronData
-
-                            item {
-                                ResourceTwoCardsRow(
-                                    resourceUsage =
-                                        ResourceUsage(
-                                            availableBandwidth = tronData.availableBandwidth,
-                                            totalBandwidth = tronData.totalBandwidth,
-                                            availableEnergy = tronData.availableEnergy,
-                                            totalEnergy = tronData.totalEnergy,
-                                        )
-                                )
-                            }
-
-                            val isTronSelected = state.selectedPositions.contains("TRON")
-                            val pendingWithdrawals = tronData.pendingWithdrawals
-                            if (isTronSelected) {
-                                item {
-                                    TronFreezePositionCard(
-                                        frozenTotalPrice = tronData.frozenTotalPrice,
-                                        frozenTotalTrx = tronData.frozenTotalTrx,
-                                        isBalanceVisible = state.isBalanceVisible,
-                                        isUnfreezeEnabled = tronData.hasFrozenBalance,
-                                        isFreezeEnabled = tronData.hasAvailableBalance,
-                                        onClickFreeze = onClickFreeze,
-                                        onClickUnfreeze = onClickUnfreeze,
-                                    )
-                                }
-                            } else if (pendingWithdrawals.isEmpty()) {
-                                item { NoPositionsContainer() }
-                            }
-
-                            if (pendingWithdrawals.isNotEmpty()) {
-                                TronPendingWithdrawalsCard(
-                                    withdrawals = pendingWithdrawals,
+                                    frozenTotalPrice = tronData.frozenTotalPrice,
+                                    frozenTotalTrx = tronData.frozenTotalTrx,
                                     isBalanceVisible = state.isBalanceVisible,
+                                    isUnfreezeEnabled = tronData.hasFrozenBalance,
+                                    isFreezeEnabled = tronData.hasAvailableBalance,
+                                    onClickFreeze = onClickFreeze,
+                                    onClickUnfreeze = onClickUnfreeze,
                                 )
                             }
+                        } else if (pendingWithdrawals.isEmpty()) {
+                            item { NoPositionsContainer() }
+                        }
+
+                        if (pendingWithdrawals.isNotEmpty()) {
+                            TronPendingWithdrawalsCard(
+                                withdrawals = pendingWithdrawals,
+                                isBalanceVisible = state.isBalanceVisible,
+                            )
                         }
                     }
                 }

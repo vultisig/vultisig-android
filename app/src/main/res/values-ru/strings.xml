@@ -292,6 +292,7 @@
     <string name="keysign_sign_transaction">Подписать транзакцию</string>
     <string name="sign_transaction">Подписать транзакцию</string>
     <string name="keysign_password_title">Пароль</string>
+    <string name="start_screen_create_new_vault">Создать новое хранилище</string>
     <string name="start_screen_new">НОВОЕ</string>
     <string name="start_screen_import_seedphrase">Импортировать сид-фразу</string>
     <string name="start_screen_import_seedphrase_desc">Введите её, создайте хранилище, не оглядывайтесь назад.</string>
