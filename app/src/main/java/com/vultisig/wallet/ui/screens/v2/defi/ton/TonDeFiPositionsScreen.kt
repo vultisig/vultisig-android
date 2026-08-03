@@ -51,8 +51,8 @@ import com.vultisig.wallet.ui.models.defi.TON_KEY
 import com.vultisig.wallet.ui.models.defi.TonDeFiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.TonDeFiUiState
 import com.vultisig.wallet.ui.models.defi.TonStakingUiModel
-import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.ManagePositionsButton
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.theme.Theme
@@ -100,11 +100,6 @@ internal fun TonDeFiPositionsScreen(
         onPauseOrDispose {}
     }
 
-    RegisterChainDashboardTopBarAction(
-        icon = R.drawable.ic_shapes_plus_x_square_circle,
-        onClick = { viewModel.setPositionSelectionDialogVisibility(true) },
-    )
-
     TonDeFiPositionsScreenContent(
         state = state,
         isRefreshing = isRefreshing,
@@ -113,6 +108,7 @@ internal fun TonDeFiPositionsScreen(
             viewModel.refresh()
         },
         onTabSelected = viewModel::onTabSelected,
+        onEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(true) },
         onCancelEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(false) },
         onDonePositionClick = viewModel::onPositionSelectionDone,
         onPositionSelectionChange = viewModel::onPositionSelectionChange,
@@ -129,6 +125,7 @@ private fun TonDeFiPositionsScreenContent(
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
     onTabSelected: (DeFiTab) -> Unit = {},
+    onEditPositionClick: () -> Unit = {},
     onCancelEditPositionClick: () -> Unit = {},
     onDonePositionClick: () -> Unit = {},
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
@@ -137,10 +134,14 @@ private fun TonDeFiPositionsScreenContent(
 ) {
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)
+            // Banner and tab row are leading list items so the whole screen scrolls as one surface
+            // instead of pinning the header above the list, mirroring iOS (#4761).
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)) {
+                item {
                     when (state) {
                         is TonDeFiUiState.Loading ->
                             TonDeFiBanner(
@@ -165,72 +166,73 @@ private fun TonDeFiPositionsScreenContent(
 
                 if (state is TonDeFiUiState.Success || state is TonDeFiUiState.Loading) {
                     val isLoading = state is TonDeFiUiState.Loading
-                    Box(
-                        modifier =
-                            Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp)
-                    ) {
-                        VsTabGroup(index = 0) {
-                            TON_DEFI_TABS.forEach { tab ->
-                                tab {
-                                    VsTab(
-                                        label = stringResource(tab.displayNameRes),
-                                        isEnabled = !isLoading,
-                                        onClick = { onTabSelected(tab) },
-                                    )
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            VsTabGroup(index = 0) {
+                                TON_DEFI_TABS.forEach { tab ->
+                                    tab {
+                                        VsTab(
+                                            label = stringResource(tab.displayNameRes),
+                                            isEnabled = !isLoading,
+                                            onClick = { onTabSelected(tab) },
+                                        )
+                                    }
                                 }
                             }
+
+                            ManagePositionsButton(
+                                onClick = onEditPositionClick,
+                                isEnabled = !isLoading,
+                            )
                         }
                     }
                 }
 
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    when (state) {
-                        is TonDeFiUiState.Loading -> {
+                when (state) {
+                    is TonDeFiUiState.Loading -> {
+                        item {
+                            TonStakingPositionCard(
+                                data = TonStakingUiModel(hasPosition = true),
+                                isBalanceVisible = false,
+                                isLoading = true,
+                                onClickStake = {},
+                                onClickUnstake = {},
+                            )
+                        }
+                    }
+                    is TonDeFiUiState.Error -> {
+                        item {
+                            Text(
+                                text = state.error.asString(),
+                                style = Theme.brockmann.body.m.medium,
+                                color = Theme.v2.colors.alerts.error,
+                            )
+                        }
+                    }
+                    is TonDeFiUiState.Success -> {
+                        val tonData = state.tonData
+                        val isTonSelected = state.selectedPositions.contains(TON_KEY)
+                        if (!isTonSelected) {
+                            item { NoPositionsContainer() }
+                        } else {
+                            // Always render the position card (zeroed when there's no
+                            // position),
+                            // with Unstake disabled until there is one — mirrors iOS/macOS.
                             item {
                                 TonStakingPositionCard(
-                                    data = TonStakingUiModel(hasPosition = true),
-                                    isBalanceVisible = false,
-                                    isLoading = true,
-                                    onClickStake = {},
-                                    onClickUnstake = {},
+                                    data = tonData,
+                                    isBalanceVisible = state.isBalanceVisible,
+                                    // A reload closes the ViewModel's action guard, so disable
+                                    // the buttons to match rather than let a tap silently
+                                    // no-op.
+                                    areActionsLocked = tonData.isActionLocked || state.isReloading,
+                                    onClickStake = onClickStake,
+                                    onClickUnstake = onClickUnstake,
                                 )
-                            }
-                        }
-                        is TonDeFiUiState.Error -> {
-                            item {
-                                Text(
-                                    text = state.error.asString(),
-                                    style = Theme.brockmann.body.m.medium,
-                                    color = Theme.v2.colors.alerts.error,
-                                )
-                            }
-                        }
-                        is TonDeFiUiState.Success -> {
-                            val tonData = state.tonData
-                            val isTonSelected = state.selectedPositions.contains(TON_KEY)
-                            if (!isTonSelected) {
-                                item { NoPositionsContainer() }
-                            } else {
-                                // Always render the position card (zeroed when there's no
-                                // position),
-                                // with Unstake disabled until there is one — mirrors iOS/macOS.
-                                item {
-                                    TonStakingPositionCard(
-                                        data = tonData,
-                                        isBalanceVisible = state.isBalanceVisible,
-                                        // A reload closes the ViewModel's action guard, so disable
-                                        // the buttons to match rather than let a tap silently
-                                        // no-op.
-                                        areActionsLocked =
-                                            tonData.isActionLocked || state.isReloading,
-                                        onClickStake = onClickStake,
-                                        onClickUnstake = onClickUnstake,
-                                    )
-                                }
                             }
                         }
                     }
