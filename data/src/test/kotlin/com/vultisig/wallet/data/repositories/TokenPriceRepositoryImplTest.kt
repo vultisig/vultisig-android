@@ -117,6 +117,40 @@ internal class TokenPriceRepositoryImplTest {
         assertEquals(BigDecimal("3400.0"), price)
     }
 
+    private val discoveredSuiToken =
+        Coin(
+            chain = Chain.Sui,
+            ticker = "HASUI",
+            logo = "",
+            address = "",
+            decimal = 9,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress =
+                "0xbde4ba4c2e274a60ce15c1cfff9e5c42e41654ac8b6d906a57efa4bd3c29f47d::hasui::HASUI",
+            isNativeToken = false,
+        )
+
+    @Test
+    fun `auto-discovered Sui token with no priceProviderID is priced via its contract address`() =
+        runTest {
+            coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+            coEvery { coinGeckoApi.getContractsPrice(eq(Chain.Sui), any(), any()) } returns
+                mapOf(discoveredSuiToken.contractAddress to mapOf("usd" to BigDecimal("0.42")))
+
+            repository.refresh(listOf(discoveredSuiToken))
+
+            coVerify {
+                coinGeckoApi.getContractsPrice(
+                    Chain.Sui,
+                    match { it.contains(discoveredSuiToken.contractAddress) },
+                    any(),
+                )
+            }
+            val price = repository.getPrice(discoveredSuiToken, AppCurrency.USD).first()
+            assertEquals(BigDecimal("0.42"), price)
+        }
+
     @Test
     fun `does not call contract-address lookup when priceProviderID returns a price`() = runTest {
         coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns

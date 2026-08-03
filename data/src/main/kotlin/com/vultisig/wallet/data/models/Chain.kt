@@ -457,6 +457,7 @@ fun Chain.coinGeckoAssetPlatformId(): String? =
         Chain.Robinhood -> "robinhood"
         Chain.Mantle -> "mantle"
         Chain.CronosChain -> "cronos"
+        Chain.Sui -> "sui"
         else -> null
     }
 
