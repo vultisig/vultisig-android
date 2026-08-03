@@ -184,7 +184,10 @@ private fun TonDeFiPositionsScreenContent(
                                 }
                             }
 
-                            ManagePositionsButton(onClick = onEditPositionClick)
+                            ManagePositionsButton(
+                                onClick = onEditPositionClick,
+                                isEnabled = !isLoading,
+                            )
                         }
                     }
                 }

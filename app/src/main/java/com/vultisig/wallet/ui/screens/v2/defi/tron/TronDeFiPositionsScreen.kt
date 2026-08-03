@@ -174,7 +174,10 @@ private fun TronDeFiPositionsScreenContent(
                                 }
                             }
 
-                            ManagePositionsButton(onClick = onEditPositionClick)
+                            ManagePositionsButton(
+                                onClick = onEditPositionClick,
+                                isEnabled = !isLoading,
+                            )
                         }
                     }
                 }
