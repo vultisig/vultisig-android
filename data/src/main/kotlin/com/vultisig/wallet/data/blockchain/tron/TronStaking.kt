@@ -21,19 +21,14 @@ val TRON_STAKING_MEMO_REGEX: Regex = run {
 fun tronStakingMemo(operation: TronStakingOperation, resource: TronResourceType): String =
     "${operation.memoPrefix}:${resource.name}"
 
-data class TronStakingIntent(val operation: TronStakingOperation, val resource: TronResourceType)
-
 /**
- * The staking contract TronHelper assembles for this transfer, or null when it assembles a plain
- * transfer instead. Freeze/unfreeze are the only contracts it builds without `setMemo`.
+ * True when TronHelper assembles a freeze/unfreeze contract for this transfer rather than a plain
+ * transfer — the only two it builds without `setMemo`. Mirrors that dispatch for callers that must
+ * agree with it; TronHelper itself keeps its own literal checks, since the memo grammar is a
+ * cross-device wire format that must not shift with an enum rename.
  */
-fun tronStakingIntent(coin: Coin, toAddress: String, memo: String?): TronStakingIntent? {
-    if (!coin.isNativeToken || coin.address != toAddress) return null
-    val (operation, resource) =
-        memo?.let { TRON_STAKING_MEMO_REGEX.matchEntire(it) }?.destructured ?: return null
-    // The regex alternations are generated from these two enums, so a match always resolves.
-    return TronStakingIntent(
-        operation = TronStakingOperation.entries.first { it.memoPrefix == operation },
-        resource = TronResourceType.valueOf(resource),
-    )
-}
+fun isTronStakingTransfer(coin: Coin, toAddress: String, memo: String?): Boolean =
+    coin.isNativeToken &&
+        coin.address == toAddress &&
+        memo != null &&
+        TRON_STAKING_MEMO_REGEX.matches(memo)

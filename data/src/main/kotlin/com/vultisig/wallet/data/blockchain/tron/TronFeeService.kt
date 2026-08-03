@@ -146,7 +146,7 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
      */
     private fun BlockchainTransaction.paysMemoFee(): Boolean {
         val memo = (this as? Transfer)?.memo ?: return false
-        return memo.isNotEmpty() && tronStakingIntent(coin, to, memo) == null
+        return memo.isNotEmpty() && !isTronStakingTransfer(coin, to, memo)
     }
 
     // Both transfers COIN and TRC-20 are quite deterministic in terms of bandwidth
