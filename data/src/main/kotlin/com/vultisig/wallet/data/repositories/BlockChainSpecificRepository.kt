@@ -685,7 +685,7 @@ constructor(
                                 )
 
                             val totalEnergy = triggerResult.energyUsed + triggerResult.energyPenalty
-                            totalEnergy * energyPrice
+                            contractFeeLimit(totalEnergy, energyPrice)
                         }
 
                 BlockChainSpecificAndUtxo(
@@ -736,5 +736,15 @@ constructor(
         private const val ENERGY_TO_SUN_FACTOR = 280
 
         private val THORCHAIN_ROUTER_DEPOSIT_GAS_LIMIT = BigInteger.valueOf(200_000)
+
+        // 30% headroom on top of simulated energy, covering a contract's per-call dynamic
+        // energy_factor surge between simulation and broadcast. Matches iOS's
+        // TronService.contractFeeLimit (ENERGY_SAFETY_NUMERATOR/DENOMINATOR = 13/10).
+        // https://developers.tron.network/docs/resource-model#dynamic-energy-model
+        private const val ENERGY_SAFETY_NUMERATOR = 13L
+        private const val ENERGY_SAFETY_DENOMINATOR = 10L
+
+        internal fun contractFeeLimit(totalEnergyUsed: Long, energyPrice: Long): Long =
+            (totalEnergyUsed * ENERGY_SAFETY_NUMERATOR / ENERGY_SAFETY_DENOMINATOR) * energyPrice
     }
 }
