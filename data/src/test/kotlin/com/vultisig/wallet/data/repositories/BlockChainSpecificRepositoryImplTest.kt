@@ -754,13 +754,16 @@ internal class BlockChainSpecificRepositoryImplTest {
 
     @Test
     fun `Tron TRC20 fee_limit safety multiplier survives truncation for energy not divisible by 10`() {
-        val bare = 65_001L * 420L
-        val withSafety =
+        // 65,001 x 13 / 10 = 84,501.3 truncated to 84,501, x 420 = 35,490,420 — the
+        // multiply-before-
+        // divide order must be preserved or this pins a different (smaller) value.
+        assertEquals(
+            35_490_420L,
             BlockChainSpecificRepositoryImpl.contractFeeLimit(
                 totalEnergyUsed = 65_001L,
                 energyPrice = 420L,
-            )
-        assertTrue(withSafety > bare)
+            ),
+        )
     }
 
     private fun suiApi(referenceGasPrice: BigInteger, coins: List<SuiCoin> = emptyList()): SuiApi =
