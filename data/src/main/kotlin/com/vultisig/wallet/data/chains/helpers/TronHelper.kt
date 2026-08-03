@@ -4,6 +4,9 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
+import com.vultisig.wallet.data.blockchain.tron.TronResourceType
+import com.vultisig.wallet.data.blockchain.tron.TronStakingOperation
+import com.vultisig.wallet.data.blockchain.tron.tronStakingIntent
 import com.vultisig.wallet.data.common.toByteStringOrHex
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -31,6 +34,13 @@ class TronHelper(
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Tron
                 ?: throw IllegalArgumentException("Invalid blockChainSpecific")
 
+        val staking =
+            tronStakingIntent(
+                coin = keysignPayload.coin,
+                toAddress = keysignPayload.toAddress,
+                memo = keysignPayload.memo,
+            )
+
         return when {
             keysignPayload.tronTransferContractPayload != null ->
                 buildTronTransferContractPayload(keysignPayload, tronSpecific)
@@ -38,18 +48,13 @@ class TronHelper(
                 buildTronSmartContractPayload(keysignPayload, tronSpecific)
             keysignPayload.tronTransferAssetContractPayload != null ->
                 buildTronTransferAssetSmartContractPayload(keysignPayload, tronSpecific)
-            keysignPayload.coin.isNativeToken &&
-                keysignPayload.coin.address == keysignPayload.toAddress &&
-                keysignPayload.memo != null &&
-                TRON_STAKING_MEMO_REGEX.matches(keysignPayload.memo) &&
-                keysignPayload.memo.startsWith("FREEZE:") ->
-                buildFreezeBalanceV2(keysignPayload, tronSpecific)
-            keysignPayload.coin.isNativeToken &&
-                keysignPayload.coin.address == keysignPayload.toAddress &&
-                keysignPayload.memo != null &&
-                TRON_STAKING_MEMO_REGEX.matches(keysignPayload.memo) &&
-                keysignPayload.memo.startsWith("UNFREEZE:") ->
-                buildUnfreezeBalanceV2(keysignPayload, tronSpecific)
+            staking != null ->
+                when (staking.operation) {
+                    TronStakingOperation.FREEZE ->
+                        buildFreezeBalanceV2(keysignPayload, tronSpecific, staking.resource)
+                    TronStakingOperation.UNFREEZE ->
+                        buildUnfreezeBalanceV2(keysignPayload, tronSpecific, staking.resource)
+                }
             keysignPayload.coin.isNativeToken &&
                 keysignPayload.memo != null &&
                 TRON_STAKING_MEMO_REGEX.matches(keysignPayload.memo) ->
@@ -246,18 +251,13 @@ class TronHelper(
     private fun buildFreezeBalanceV2(
         keysignPayload: KeysignPayload,
         tronSpecific: BlockChainSpecific.Tron,
+        resource: TronResourceType,
     ): ByteArray {
-        val memo = keysignPayload.memo ?: error("FREEZE memo required")
-        val resource = memo.removePrefix("FREEZE:")
-        require(resource == "BANDWIDTH" || resource == "ENERGY") {
-            "Invalid TRON resource type: $resource"
-        }
-
         val contract =
             Tron.FreezeBalanceV2Contract.newBuilder()
                 .setOwnerAddress(keysignPayload.coin.address)
                 .setFrozenBalance(keysignPayload.toAmount.toLong())
-                .setResource(resource)
+                .setResource(resource.name)
                 .build()
 
         val txBuild =
@@ -275,18 +275,13 @@ class TronHelper(
     private fun buildUnfreezeBalanceV2(
         keysignPayload: KeysignPayload,
         tronSpecific: BlockChainSpecific.Tron,
+        resource: TronResourceType,
     ): ByteArray {
-        val memo = keysignPayload.memo ?: error("UNFREEZE memo required")
-        val resource = memo.removePrefix("UNFREEZE:")
-        require(resource == "BANDWIDTH" || resource == "ENERGY") {
-            "Invalid TRON resource type: $resource"
-        }
-
         val contract =
             Tron.UnfreezeBalanceV2Contract.newBuilder()
                 .setOwnerAddress(keysignPayload.coin.address)
                 .setUnfreezeBalance(keysignPayload.toAmount.toLong())
-                .setResource(resource)
+                .setResource(resource.name)
                 .build()
 
         val txBuild =

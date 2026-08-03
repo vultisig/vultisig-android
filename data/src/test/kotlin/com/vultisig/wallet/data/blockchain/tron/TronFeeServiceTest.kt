@@ -15,6 +15,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigInteger
+import kotlin.test.assertEquals
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -58,14 +59,69 @@ class TronFeeServiceTest {
         coVerify(exactly = 1) { tronApi.getChainParameters() }
     }
 
-    private fun nativeTransfer() =
+    @Test
+    fun `freeze and unfreeze are not charged the memo fee their contract never carries`() =
+        runTest {
+            stubHealthyApi()
+
+            for (operation in TronStakingOperation.entries) {
+                for (resource in TronResourceType.entries) {
+                    val memo = tronStakingMemo(operation, resource)
+                    val fees = service.calculateFees(stakingTransfer(memo))
+
+                    assertEquals(
+                        BigInteger.ZERO,
+                        fees.amount,
+                        "$memo must cost nothing beyond the free bandwidth quota",
+                    )
+                }
+            }
+        }
+
+    @Test
+    fun `a genuine memo on a native transfer still costs the memo fee`() = runTest {
+        stubHealthyApi()
+
+        val fees = service.calculateFees(nativeTransfer(memo = "thanks for lunch"))
+
+        assertEquals(MEMO_FEE, fees.amount)
+    }
+
+    @Test
+    fun `default fees classify the staking memo the same way the live estimate does`() = runTest {
+        // FeeServiceComposite falls back to calculateDefaultFees whenever TronGrid errors, so a
+        // degraded network must not resurrect the memo fee the live path just dropped.
+        coEvery { tronApi.getAccount(any()) } returns existingAccount()
+
+        val staking =
+            service.calculateDefaultFees(
+                stakingTransfer(
+                    tronStakingMemo(TronStakingOperation.FREEZE, TronResourceType.ENERGY)
+                )
+            )
+        val memoed = service.calculateDefaultFees(nativeTransfer(memo = "thanks for lunch"))
+
+        assertEquals(MEMO_FEE, memoed.amount - staking.amount)
+    }
+
+    private fun stubHealthyApi() {
+        coEvery { tronApi.getChainParameters() } returns chainParameters()
+        // Free bandwidth covers the whole transfer and the destination is already activated, so the
+        // memo fee is the only term left that can move the total off zero.
+        coEvery { tronApi.getAccountResource(any()) } returns accountResource()
+        coEvery { tronApi.getAccount(any()) } returns existingAccount()
+    }
+
+    private fun stakingTransfer(memo: String) = nativeTransfer(to = SENDER, memo = memo)
+
+    private fun nativeTransfer(to: String = RECIPIENT, memo: String? = null) =
         Transfer(
             coin =
                 Coin(
                     chain = Chain.Tron,
                     ticker = "TRX",
                     logo = "",
-                    address = "TSenderAddressBase58",
+                    address = SENDER,
                     decimal = 6,
                     hexPublicKey = "pub",
                     priceProviderID = "",
@@ -74,7 +130,8 @@ class TronFeeServiceTest {
                 ),
             vault = VaultData(vaultHexPublicKey = "pub", vaultHexChainCode = "chain"),
             amount = BigInteger("1000000"),
-            to = "TRecipientAddressBase58",
+            to = to,
+            memo = memo,
         )
 
     private fun chainParameters() =
@@ -91,5 +148,11 @@ class TronFeeServiceTest {
 
     private fun accountResource() = TronAccountResourceJson(freeNetLimit = 5000L)
 
-    private fun existingAccount() = TronAccountJson(address = "TRecipientAddressBase58")
+    private fun existingAccount() = TronAccountJson(address = RECIPIENT)
+
+    private companion object {
+        const val SENDER = "TSenderAddressBase58"
+        const val RECIPIENT = "TRecipientAddressBase58"
+        val MEMO_FEE: BigInteger = BigInteger.valueOf(1_000_000L)
+    }
 }
