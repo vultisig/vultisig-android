@@ -3494,6 +3494,7 @@ private fun TokenDetailSheetFullPreview() {
             )
     )
 }
+
 /**
  * Vault home (#5473) with the expandable top bar. Renders the bar mid-collapse so the handover can
  * be checked: only one of the two balances may ever be legible.

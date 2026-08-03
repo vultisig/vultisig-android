@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -174,7 +175,18 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
 
         composable<Route.AddVault> { StartScreen() }
 
-        dialog<TokenDetail> { TokenDetailScreen() }
+        // A full-bleed, undimmed window: the sheet inside draws its own scrim so it can fade with
+        // the sheet, and handles back itself so it slides out instead of blinking away.
+        dialog<TokenDetail>(
+            dialogProperties =
+                DialogProperties(
+                    dismissOnBackPress = false,
+                    usePlatformDefaultWidth = false,
+                    decorFitsSystemWindows = false,
+                )
+        ) {
+            TokenDetailScreen()
+        }
         dialog<Route.SelectTokens> { TokenSelectionScreen() }
 
         composable<Route.SignMessage> { entry ->
