@@ -160,6 +160,17 @@ internal class TonStakeViewModelTest {
     }
 
     @Test
+    fun `resolved ticker is the rebranded coin symbol, not the stale TON label`() = runTest {
+        stubSpendableBalance(nanoTon = 1_000_000_000L)
+        coEvery { depositGasFeeHelper.calculateGasFee(VAULT_ID, any(), any(), any()) } returns
+            TokenValue(value = BigInteger.valueOf(50_000_000L), unit = "GRAM", decimals = 9)
+
+        val vm = createViewModel()
+
+        vm.state.value.ticker shouldBe "GRAM"
+    }
+
+    @Test
     fun `stakeable balance reserves the deposit network fee, not the larger withdraw fee`() =
         runTest {
             // 1 TON spendable, 0.05 TON deposit network fee → 0.95 TON stakeable. Reserving the

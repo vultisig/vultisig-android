@@ -20,6 +20,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -105,6 +106,15 @@ internal class TonUnstakeViewModelTest {
         state.isLoading.shouldBeFalse()
         state.hasSufficientBalance.shouldBeFalse()
         state.errorMessage.shouldNotBeNull()
+    }
+
+    @Test
+    fun `resolved ticker is the rebranded coin symbol, not the stale TON label`() = runTest {
+        stubSpendableBalance(nanoTon = 1_000_000_000L)
+
+        val state = createViewModel().state.value
+
+        state.ticker shouldBe "GRAM"
     }
 
     @Test
