@@ -247,10 +247,6 @@ class PreviewActivity : ComponentActivity() {
                     "camera_button" -> CameraButton(onClick = {})
                     "banner" -> BannerPreview()
                     "send_tx_done" -> SendTxDonePreview()
-                    "send_tx_done_untracked_before" ->
-                        SendTxDonePreview(status = TransactionStatus.Pending)
-                    "send_tx_done_untracked_after" ->
-                        SendTxDonePreview(status = TransactionStatus.Broadcasted)
                     "deposit_mint_done" -> DepositMintDonePreview()
                     "transaction_history_empty" -> TransactionHistoryEmptyState()
                     "limit_orders_tab" -> LimitOrdersTabPreview()
@@ -1437,7 +1433,7 @@ private fun tonJettonSendState(decoded: Boolean): VerifyTransactionUiModel {
 }
 
 @Composable
-private fun SendTxDonePreview(status: TransactionStatus = TransactionStatus.Broadcasted) {
+private fun SendTxDonePreview() {
     val ethCoin = Coins.Ethereum.ETH
 
     SendTxOverviewScreen(
@@ -1445,14 +1441,14 @@ private fun SendTxDonePreview(status: TransactionStatus = TransactionStatus.Broa
         showSaveToAddressBook = true,
         transactionHash = "0x1a2b3c...d4e5f6",
         transactionLink = "https://etherscan.io/tx/0x1a2b3c",
-        transactionStatus = status,
+        transactionStatus = TransactionStatus.Broadcasted,
         onComplete = {},
         onBack = {},
         onAddToAddressBook = {},
         tx =
             UiTransactionInfo(
                 type = UiTransactionInfoType.Send,
-                token = ValuedToken(token = ethCoin, value = "0.05", fiatValue = "$128.25"),
+                token = ValuedToken(token = ethCoin, value = "1.5", fiatValue = "$3,847.50"),
                 from = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
                 to = "0x9876543210FeDcBa9876543210FeDcBa98765432",
                 memo = "",
