@@ -42,6 +42,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -66,7 +67,12 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+
+// Minimum scroll distance before the hero auto-collapses, so a stray touch or overscroll bounce
+// doesn't trigger it.
+private val SCROLL_COLLAPSE_THRESHOLD = 24.dp
 
 @Composable
 internal fun TxDoneScaffold(
@@ -162,17 +168,17 @@ private fun SuccessTransaction(
 ) {
 
     val scrollState = rememberScrollState()
+    val scrollCollapseThresholdPx =
+        with(LocalDensity.current) { SCROLL_COLLAPSE_THRESHOLD.roundToPx() }
 
     // Scrolling the content collapses the pending hero, same as tapping "Transaction Details" —
     // otherwise the fixed-height hero keeps hogging the top of the viewport while the user tries
-    // to read the rows below it (#5490).
-    LaunchedEffect(scrollState) {
-        snapshotFlow { scrollState.value }
-            .collect { offset ->
-                if (offset > 0 && !isTransactionDetailVisible) {
-                    onTransactionDetailVisibleChange(true)
-                }
-            }
+    // to read the rows below it (#5490). Wait for a deliberate scroll past the threshold, not the
+    // first pixel, so a stray touch/overscroll bounce doesn't collapse it; fire once and stop.
+    LaunchedEffect(scrollState, isTransactionDetailVisible) {
+        if (isTransactionDetailVisible) return@LaunchedEffect
+        snapshotFlow { scrollState.value }.first { it > scrollCollapseThresholdPx }
+        onTransactionDetailVisibleChange(true)
     }
 
     Column(
