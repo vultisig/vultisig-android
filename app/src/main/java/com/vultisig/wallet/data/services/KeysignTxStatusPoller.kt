@@ -9,10 +9,10 @@ import javax.inject.Inject
 import kotlin.coroutines.coroutineContext
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 
 /**
@@ -20,6 +20,37 @@ import timber.log.Timber
  * and handed off to the background tx-history poller, mirroring iOS' 30-minute give-up window.
  */
 private const val SWAPKIT_FOREGROUND_TIMEOUT_MS = 30 * 60 * 1000L
+
+/**
+ * How long to wait for the status service's binding to connect. The service runs in this process,
+ * so a binding that has not connected by now never will — the start was accepted and then dropped.
+ */
+private val SERVICE_BIND_TIMEOUT = 10.seconds
+
+/**
+ * Headroom over the chain's own `maxWaitSeconds` status-poll budget. The service emits
+ * [TransactionResult.TimedOut] once it reaches that budget, so this deadline expires only when the
+ * service is bound but never polled — never on a healthy poll it would otherwise tear down.
+ */
+private val STATUS_SERVICE_GRACE = 30.seconds
+
+/**
+ * How a done-screen status poll ended. Every observed status already reached the caller through the
+ * poll's `onStatus` callback; this says who owns the transaction's status from here on.
+ */
+enum class TxStatusPollOutcome {
+    /** A terminal on-chain status was observed. */
+    Terminal,
+
+    /** No status will arrive: the status service never reported, or stopped without settling. */
+    NotTracked,
+
+    /**
+     * Polling stopped with the transaction still in flight; the background tx-history poller
+     * settles it from here.
+     */
+    HandedOff,
+}
 
 /**
  * Drives transaction-status polling for the keysign done screen. Owns the foreground status service
@@ -40,9 +71,7 @@ constructor(
 
     /**
      * Polls [txHash] on [chain] for settlement, invoking [onStatus] with each observed
-     * [TransactionResult] (starting with [TransactionResult.Pending]) and persisting it to tx
-     * history. Returns the terminal result when one is reached, or `null` when polling ends without
-     * a terminal status (SwapKit foreground-timeout handoff to the background poller).
+     * [TransactionResult] and persisting it to tx history.
      *
      * A SwapKit-routed swap ([isSwapKitSwap]) settles on its destination leg, which the
      * source-chain status service can't see — gate Success on `/track` instead (parity with the
@@ -54,7 +83,7 @@ constructor(
         chain: Chain,
         isSwapKitSwap: Boolean,
         onStatus: suspend (TransactionResult) -> Unit,
-    ): TransactionResult? =
+    ): TxStatusPollOutcome =
         if (isSwapKitSwap && swapKitTrackingService.canTrack(chain)) {
             pollSwapKit(txHash, chain, onStatus)
         } else {
@@ -64,38 +93,48 @@ constructor(
     /**
      * Default status poll for the done screen — drives the foreground
      * [TransactionStatusServiceManager] for [txHash] on [chain], emitting each observed status via
-     * [onStatus] and persisting it. Returns the first terminal status, or `null` if the service
-     * binding was rejected or no status flow is available. Tears down the foreground service on
-     * every exit path.
+     * [onStatus] and persisting it. Every way the service can fail to report — a rejected start, a
+     * binding that never connects, a vanished binder, or a bound service that never polls — yields
+     * [TxStatusPollOutcome.NotTracked] rather than waiting forever. Tears down the foreground
+     * service on every exit path.
      */
     private suspend fun pollStatusService(
         txHash: String,
         chain: Chain,
         onStatus: suspend (TransactionResult) -> Unit,
-    ): TransactionResult? {
+    ): TxStatusPollOutcome {
         try {
-            val bound = transactionStatusServiceManager.startPolling(txHash, chain)
+            // A rejected binding never connects, so serviceReady would suspend forever — and a
+            // status emitted here would be the last one the screen ever received.
+            if (!transactionStatusServiceManager.startPolling(txHash, chain)) {
+                return TxStatusPollOutcome.NotTracked
+            }
             onStatus(TransactionResult.Pending)
-            // A rejected binding never connects, so serviceReady would suspend forever.
-            if (!bound) return null
-            transactionStatusServiceManager.serviceReady
-                .filter { it } // Wait until service is ready
-                .first()
-            val statusFlow = transactionStatusServiceManager.getStatusFlow() ?: return null
-            return statusFlow
-                .onEach { statusResult ->
-                    persistStatus(
-                        txHash,
-                        chain,
-                        statusResult,
-                        "Failed to update tx history status for %s",
-                    )
-                    onStatus(statusResult)
-                }
-                .first { it.isTerminal() }
+            withTimeoutOrNull(SERVICE_BIND_TIMEOUT) {
+                transactionStatusServiceManager.serviceReady.first { it }
+            } ?: return TxStatusPollOutcome.NotTracked
+            val statusFlow =
+                transactionStatusServiceManager.getStatusFlow()
+                    ?: return TxStatusPollOutcome.NotTracked
+            val budget =
+                txStatusConfigurationProvider.getConfigurationForChain(chain).maxWaitSeconds.seconds
+            withTimeoutOrNull(budget + STATUS_SERVICE_GRACE) {
+                statusFlow
+                    .onEach { statusResult ->
+                        persistStatus(
+                            txHash,
+                            chain,
+                            statusResult,
+                            "Failed to update tx history status for %s",
+                        )
+                        onStatus(statusResult)
+                    }
+                    .first { it.isTerminal() }
+            } ?: return TxStatusPollOutcome.NotTracked
+            return TxStatusPollOutcome.Terminal
         } finally {
-            // Tear down the foreground service on every exit path (terminal, early null return,
-            // or cancellation) so it can't outlive the poll.
+            // Tear down the foreground service on every exit path (terminal, early return, or
+            // cancellation) so it can't outlive the poll.
             transactionStatusServiceManager.stopPolling()
         }
     }
@@ -105,14 +144,14 @@ constructor(
      * broadcast hash and gates Success on the destination-leg status. Runs in the caller's
      * coroutine (no foreground service): when the user leaves the screen the job is cancelled and
      * the tx-history poller ([com.vultisig.wallet.data.usecases.RefreshPendingTransactionsUseCase])
-     * takes over. On the timeout the row is left in-flight (handed off to that poller, returning
-     * `null`) rather than marked terminal.
+     * takes over. On the timeout the row is left in-flight ([TxStatusPollOutcome.HandedOff]) rather
+     * than marked terminal.
      */
     private suspend fun pollSwapKit(
         txHash: String,
         chain: Chain,
         onStatus: suspend (TransactionResult) -> Unit,
-    ): TransactionResult? {
+    ): TxStatusPollOutcome {
         onStatus(TransactionResult.Pending)
         val pollInterval =
             txStatusConfigurationProvider
@@ -124,7 +163,7 @@ constructor(
             if (System.currentTimeMillis() - startTime >= SWAPKIT_FOREGROUND_TIMEOUT_MS) {
                 // Hand off to the background tx-history poller; leave the row pending.
                 onStatus(TransactionResult.Pending)
-                return null
+                return TxStatusPollOutcome.HandedOff
             }
 
             val statusResult = swapKitTrackingService.checkSettlementStatus(txHash, chain)
@@ -138,12 +177,12 @@ constructor(
             when (statusResult) {
                 TransactionResult.Confirmed,
                 is TransactionResult.Failed,
-                is TransactionResult.Refunded -> return statusResult
+                is TransactionResult.Refunded -> return TxStatusPollOutcome.Terminal
 
                 else -> delay(pollInterval)
             }
         }
-        return null
+        return TxStatusPollOutcome.HandedOff
     }
 
     /**
