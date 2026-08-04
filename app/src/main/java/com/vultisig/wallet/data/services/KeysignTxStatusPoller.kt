@@ -29,7 +29,7 @@ enum class TxStatusPollOutcome {
     /** A terminal on-chain status was observed. */
     Terminal,
 
-    /** The status service never started: no status was observed and none ever will be. */
+    /** The status service never reported, and no further status can arrive. */
     NotTracked,
 
     /**
