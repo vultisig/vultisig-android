@@ -36,7 +36,7 @@ import com.vultisig.wallet.ui.utils.asString
 @Composable
 internal fun TonUnstakeScreen(viewModel: TonUnstakeViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
-    val ticker = state.ticker.ifEmpty { "TON" }
+    val ticker = state.ticker.ifEmpty { "GRAM" }
 
     V2Scaffold(
         title = stringResource(R.string.ton_unstake_title, ticker),

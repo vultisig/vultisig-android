@@ -53,9 +53,10 @@ import java.text.DecimalFormat
 @Composable
 internal fun TonStakeScreen(viewModel: TonStakeViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
+    val ticker = state.ticker.ifEmpty { "GRAM" }
 
     V2Scaffold(
-        title = stringResource(R.string.ton_stake_title, state.ticker.ifEmpty { "TON" }),
+        title = stringResource(R.string.ton_stake_title, ticker),
         onBackClick = viewModel::back,
     ) {
         val amountText = viewModel.amountFieldState.text.toString()
@@ -69,7 +70,7 @@ internal fun TonStakeScreen(viewModel: TonStakeViewModel = hiltViewModel()) {
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 StakingAmountCard(
-                    ticker = state.ticker.ifEmpty { "TON" },
+                    ticker = ticker,
                     amountFieldState = viewModel.amountFieldState,
                     available = state.stakeableBalance,
                     percentageSelected = state.percentageSelected,
@@ -84,7 +85,7 @@ internal fun TonStakeScreen(viewModel: TonStakeViewModel = hiltViewModel()) {
                             stringResource(
                                 R.string.ton_stake_error_min_amount,
                                 state.requiredMinStake.stripTrailingZeros().toPlainString(),
-                                state.ticker.ifEmpty { "TON" },
+                                ticker,
                             ),
                         style = Theme.brockmann.supplementary.caption,
                         color = Theme.v2.colors.alerts.error,
@@ -120,6 +121,7 @@ internal fun TonStakeScreen(viewModel: TonStakeViewModel = hiltViewModel()) {
         if (state.isShowingPicker) {
             TonPoolPickerSheet(
                 state = state,
+                ticker = ticker,
                 searchTextFieldState = viewModel.searchTextFieldState,
                 onPoolSelected = viewModel::onPoolSelected,
                 onDismiss = viewModel::closePoolPicker,
@@ -183,6 +185,7 @@ private fun TonPoolPickerField(selected: TonPoolUiModel?, onClick: () -> Unit) {
 @Composable
 private fun TonPoolPickerSheet(
     state: TonStakeUiState,
+    ticker: String,
     searchTextFieldState: androidx.compose.foundation.text.input.TextFieldState,
     onPoolSelected: (TonPoolUiModel) -> Unit,
     onDismiss: () -> Unit,
@@ -274,6 +277,7 @@ private fun TonPoolPickerSheet(
                             items(state.pools, key = { it.address }) { pool ->
                                 TonPoolRow(
                                     pool = pool,
+                                    ticker = ticker,
                                     isSelected = pool.address == state.selectedPool?.address,
                                     onClick = { onPoolSelected(pool) },
                                 )
@@ -299,7 +303,12 @@ private fun CenteredMessage(text: String) {
 }
 
 @Composable
-private fun TonPoolRow(pool: TonPoolUiModel, isSelected: Boolean, onClick: () -> Unit) {
+private fun TonPoolRow(
+    pool: TonPoolUiModel,
+    ticker: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
     val shape = RoundedCornerShape(16.dp)
     Row(
         modifier =
@@ -338,7 +347,11 @@ private fun TonPoolRow(pool: TonPoolUiModel, isSelected: Boolean, onClick: () ->
             }
             Text(
                 text =
-                    stringResource(R.string.ton_staking_min_stake, formatMinStake(pool.minStake)),
+                    stringResource(
+                        R.string.ton_staking_min_stake,
+                        formatMinStake(pool.minStake),
+                        ticker,
+                    ),
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.secondary,
                 maxLines = 1,
