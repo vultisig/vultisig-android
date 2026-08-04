@@ -58,4 +58,12 @@ internal class SearchSuiTokenUseCaseImplTest {
 
         assertNull(useCase(coinType))
     }
+
+    @Test
+    fun `RPC failure surfaces as null instead of propagating`() = runTest {
+        val coinType = "0xnothex::coin::COIN"
+        coEvery { suiApi.getCoinMetadata(coinType) } throws IllegalStateException("bad request")
+
+        assertNull(useCase(coinType))
+    }
 }

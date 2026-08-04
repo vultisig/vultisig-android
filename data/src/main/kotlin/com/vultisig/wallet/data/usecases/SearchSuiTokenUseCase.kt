@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.api.chains.SuiCoinMetadata
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -8,6 +9,8 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import java.math.BigDecimal
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
+import timber.log.Timber
 
 internal interface SearchSuiTokenUseCase : suspend (String) -> CoinAndPrice?
 
@@ -24,7 +27,7 @@ constructor(private val suiApi: SuiApi, private val tokenPriceRepository: TokenP
             )
         }
 
-        val metadata = suiApi.getCoinMetadata(coinType) ?: return null
+        val metadata = fetchMetadata(coinType) ?: return null
         val coin =
             Coin(
                 chain = Chain.Sui,
@@ -39,6 +42,22 @@ constructor(private val suiApi: SuiApi, private val tokenPriceRepository: TokenP
             )
         return CoinAndPrice(coin, BigDecimal.ZERO)
     }
+
+    /**
+     * Mirrors [SuiTokenFinder]'s handling of the same call: a bad node response or transient
+     * network failure must surface as "not found" rather than crash the custom-token screen, the
+     * same contract [SearchTerraTokenUseCase] and [SearchKujiraTokenUseCase] give their own RPC
+     * reads.
+     */
+    private suspend fun fetchMetadata(coinType: String): SuiCoinMetadata? =
+        try {
+            suiApi.getCoinMetadata(coinType)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.d(e, "Sui coin metadata fetch failed for %s", coinType)
+            null
+        }
 
     /**
      * The curated [Coins] catalog entry for [coinType], matched through
