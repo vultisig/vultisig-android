@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
@@ -25,6 +26,7 @@ constructor(
     private val searchSolToken: SearchSolTokenUseCase,
     private val searchKujiToken: SearchKujiraTokenUseCase,
     private val searchTerraToken: SearchTerraTokenUseCase,
+    private val searchSuiToken: SearchSuiTokenUseCase,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : SearchTokenUseCase {
 
@@ -44,6 +46,7 @@ constructor(
             chain.standard == SOL -> searchSolToken(address)
             chain == Chain.Kujira -> searchKujiToken(address)
             chain == Chain.Terra || chain == Chain.TerraClassic -> searchTerraToken(chain, address)
+            chain == Chain.Sui -> searchSuiToken(address)
             else -> null
         }
 
@@ -56,6 +59,7 @@ constructor(
         when (chain) {
             Chain.Terra,
             Chain.TerraClassic -> isCw20ContractAddressShape()
+            Chain.Sui -> isSuiCoinTypeShape()
             else ->
                 isNotEmpty() &&
                     chainAccountAddressRepository.isValid(chain, canonicalizedFor(chain))
@@ -78,6 +82,20 @@ constructor(
         if (!startsWith(TERRA_CONTRACT_PREFIX)) return false
         val payload = removePrefix(TERRA_CONTRACT_PREFIX)
         return payload.length in 20..80 && payload.all { it in 'a'..'z' || it in '0'..'9' }
+    }
+
+    /**
+     * Struct-tag shape check for a Sui coin type (`address::module::struct`) — the on-chain
+     * `suix_getCoinMetadata` call rejects anything malformed, so this only screens obviously wrong
+     * input before spending a network round-trip. The native SUI type is excluded: it's already on
+     * the vault by default, never a "custom" token to add.
+     */
+    private fun String.isSuiCoinTypeShape(): Boolean {
+        val segments = split("::")
+        return segments.size == 3 &&
+            segments.all { it.isNotBlank() } &&
+            segments[0].startsWith("0x") &&
+            !SuiHelper.isNativeSuiCoinType(this)
     }
 
     private fun Coin.hasSaneMetadata(): Boolean = ticker.isNotBlank() && decimal in 0..MAX_DECIMALS
