@@ -24,6 +24,7 @@ internal class SearchTokenUseCaseImplTest {
     private val searchSolToken: SearchSolTokenUseCase = mockk()
     private val searchKujiToken: SearchKujiraTokenUseCase = mockk()
     private val searchTerraToken: SearchTerraTokenUseCase = mockk()
+    private val searchSuiToken: SearchSuiTokenUseCase = mockk()
     private val appCurrencyRepository: AppCurrencyRepository = mockk {
         every { currency } returns flowOf(AppCurrency.USD)
     }
@@ -35,6 +36,7 @@ internal class SearchTokenUseCaseImplTest {
             searchSolToken = searchSolToken,
             searchKujiToken = searchKujiToken,
             searchTerraToken = searchTerraToken,
+            searchSuiToken = searchSuiToken,
             chainAccountAddressRepository = addressRepository,
         )
 
@@ -283,6 +285,41 @@ internal class SearchTokenUseCaseImplTest {
     }
 
     @Test
+    fun `valid Sui coin type delegated to Sui searcher without WalletCore`() = runTest {
+        val coinType =
+            "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN"
+        coEvery { searchSuiToken(coinType) } returns
+            CoinAndPrice(suiCoin(contract = coinType), BigDecimal.ZERO)
+
+        val result = useCase(Chain.Sui.id, "  $coinType  ")
+
+        assertEquals(BigDecimal.ZERO, result?.fiatValue?.value)
+        coVerify(exactly = 1) { searchSuiToken(coinType) }
+        verify(exactly = 0) { addressRepository.isValid(any(), any()) }
+    }
+
+    @Test
+    fun `native Sui coin type rejected without hitting the searcher`() = runTest {
+        assertNull(useCase(Chain.Sui.id, "0x2::sui::SUI"))
+
+        coVerify(exactly = 0) { searchSuiToken(any()) }
+    }
+
+    @Test
+    fun `Sui coin type missing struct segment rejected`() = runTest {
+        assertNull(useCase(Chain.Sui.id, "0x2::sui"))
+
+        coVerify(exactly = 0) { searchSuiToken(any()) }
+    }
+
+    @Test
+    fun `Sui coin type with non-hex address rejected`() = runTest {
+        assertNull(useCase(Chain.Sui.id, "notanaddress::coin::COIN"))
+
+        coVerify(exactly = 0) { searchSuiToken(any()) }
+    }
+
+    @Test
     fun `unsupported chain returns null even for valid format`() = runTest {
         stubValid(Chain.Bitcoin, "bc1qanyaddress", valid = true)
 
@@ -336,6 +373,19 @@ internal class SearchTokenUseCaseImplTest {
     private fun kujiraCoin(ticker: String = "TOKEN", contract: String): Coin =
         Coin(
             chain = Chain.Kujira,
+            ticker = ticker,
+            logo = "",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = contract,
+            isNativeToken = false,
+        )
+
+    private fun suiCoin(ticker: String = "COIN", contract: String): Coin =
+        Coin(
+            chain = Chain.Sui,
             ticker = ticker,
             logo = "",
             address = "",
