@@ -49,11 +49,14 @@ import com.vultisig.wallet.ui.utils.asString
 import java.math.BigDecimal
 import java.text.DecimalFormat
 
+/** Shown until [TonStakeViewModel]/[TonUnstakeViewModel] resolve the vault's native coin ticker. */
+internal const val TON_NATIVE_TICKER_FALLBACK = "GRAM"
+
 /** Dedicated TON nominator-pool stake screen. Mirrors iOS `TonStakeTransactionScreen`. */
 @Composable
 internal fun TonStakeScreen(viewModel: TonStakeViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
-    val ticker = state.ticker.ifEmpty { "GRAM" }
+    val ticker = state.ticker.ifEmpty { TON_NATIVE_TICKER_FALLBACK }
 
     V2Scaffold(
         title = stringResource(R.string.ton_stake_title, ticker),
