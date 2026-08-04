@@ -189,6 +189,13 @@ internal class DefaultSendStrategy(
                     val srcAddress = selectedToken.address
                     val isMaxAmount = tokenAmount.compareTo(amountManager.currentMaxAmount) == 0
 
+                    // Read the fiat mirror once, here, and carry it down to the Transaction rather
+                    // than re-reading the field past the suspension points below. AmountManager
+                    // owns that field too and blanks it whenever a price fetch fails, so a late
+                    // read can put a $0.00 estimate beside a correctly signed amount.
+                    val enteredFiat = fiatAmountFieldState.text.toString().toPlainBigDecimalOrNull()
+                    val spendableGasFee = withEvmGasSettings(gasFee)
+
                     val enteredAmountInt =
                         tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
                     val tokenAmountInt =
@@ -196,17 +203,18 @@ internal class DefaultSendStrategy(
                             entered = enteredAmountInt,
                             account = selectedAccount,
                             balance = selectedTokenValue.value,
-                            gasFee = gasFee,
+                            gasFee = spendableGasFee,
                             isMaxAmount = isMaxAmount,
                         )
-                    if (tokenAmountInt < enteredAmountInt) {
-                        showAdjustedAmount(
-                            adjusted = tokenAmountInt,
-                            entered = enteredAmountInt,
-                            token = selectedToken,
-                            isMaxAmount = isMaxAmount,
-                        )
-                    }
+                    // The fields are only rewritten once every validation below has passed — see
+                    // the showAdjustedAmount call before Verify.
+                    val isAmountAdjusted = tokenAmountInt < enteredAmountInt
+                    val fiatAmount =
+                        if (isAmountAdjusted) {
+                            scaleFiat(enteredFiat, tokenAmountInt, enteredAmountInt, selectedToken)
+                        } else {
+                            enteredFiat
+                        }
 
                     if (chain == Chain.Tron) {
                         val isTronStakingOp =
@@ -256,6 +264,7 @@ internal class DefaultSendStrategy(
                                     tokenAmountInt,
                                     memo,
                                     chain,
+                                    forceReplan = isAmountAdjusted,
                                 )
                             }
                             .let { applyRippleDestinationTag(it, destinationTag) }
@@ -268,8 +277,8 @@ internal class DefaultSendStrategy(
                                     ?.movePointRight(selectedToken.decimal)
                                     ?.toBigInteger() ?: BigInteger.ZERO
                             } else {
-                                getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
-                                    ?: BigInteger.ZERO
+                                getAvailableTokenBalance(selectedAccount, spendableGasFee.value)
+                                    ?.value ?: BigInteger.ZERO
                             }
 
                         if (tokenAmountInt > availableTokenBalance) {
@@ -417,9 +426,7 @@ internal class DefaultSendStrategy(
                                 ),
                             fiatValue =
                                 FiatValue(
-                                    value =
-                                        fiatAmountFieldState.text.toString().toBigDecimalOrNull()
-                                            ?: BigDecimal.ZERO,
+                                    value = fiatAmount ?: BigDecimal.ZERO,
                                     currency = appCurrency.value.ticker,
                                 ),
                             gasFee = gasFee,
@@ -431,6 +438,19 @@ internal class DefaultSendStrategy(
                         )
 
                     transactionRepository.addTransaction(transaction)
+
+                    // Only now, with every balance/dust/reserve check behind us, does the amount
+                    // the user sees change. Rewriting it at clamp time would strand the form on a
+                    // number they never typed whenever a later validator rejected the send — a
+                    // Cardano clamp landing under the minimum-send floor, say.
+                    if (isAmountAdjusted) {
+                        showAdjustedAmount(
+                            adjusted = tokenAmountInt,
+                            adjustedFiat = fiatAmount,
+                            token = selectedToken,
+                            isMaxAmount = isMaxAmount,
+                        )
+                    }
 
                     navigator.route(
                         Route.VerifySend(transactionId = transaction.id, vaultId = vaultId)
@@ -481,14 +501,40 @@ internal class DefaultSendStrategy(
     }
 
     /**
+     * The fee an EVM send actually reserves once Advanced Gas Settings are in play. `adjustGasFee`
+     * folds UTXO byte fees and Cardano fees back into `gasFee` but deliberately leaves
+     * `GasSettings.Eth` out, while [applyGasSettings] still patches the signed `maxFeePerGasWei`
+     * and `gasLimit` — so an amount sized on `gasFee` alone reserves less than the transaction
+     * spends and can be adjusted to a clean-looking value the chain then rejects for insufficient
+     * funds.
+     */
+    private fun withEvmGasSettings(gasFee: TokenValue): TokenValue {
+        val eth = gasSettings.value as? GasSettings.Eth ?: return gasFee
+        return gasFee.copy(value = eth.maxFeePerGasWei * eth.gasLimit)
+    }
+
+    /** Moves the fiat mirror by the same ratio the token amount was clamped by. */
+    private fun scaleFiat(
+        fiat: BigDecimal?,
+        adjusted: BigInteger,
+        entered: BigInteger,
+        token: Coin,
+    ): BigDecimal? {
+        if (fiat == null || fiat.signum() <= 0 || entered.signum() <= 0) return fiat
+        return fiat
+            .multiply(BigDecimal(adjusted))
+            .divide(BigDecimal(entered), token.decimal, RoundingMode.DOWN)
+            .stripTrailingZeros()
+    }
+
+    /**
      * Reflects an [adjusted] amount back into the amount fields so the form — and the Verify screen
      * built from them — shows what will actually be signed. The user must never sign an amount they
-     * weren't shown. The fiat mirror is scaled by the same ratio instead of re-fetched so it stays
-     * consistent even before AmountManager's price-driven conversion catches up.
+     * weren't shown. Call this only once the send is committed: see the call site in `submit`.
      */
     private fun showAdjustedAmount(
         adjusted: BigInteger,
-        entered: BigInteger,
+        adjustedFiat: BigDecimal?,
         token: Coin,
         isMaxAmount: Boolean,
     ) {
@@ -499,15 +545,9 @@ internal class DefaultSendStrategy(
             amountManager.markMax(adjustedDecimal)
         }
         tokenAmountFieldState.setTextAndPlaceCursorAtEnd(adjustedDecimal.toPlainString())
-
-        val enteredFiat = fiatAmountFieldState.text.toString().toPlainBigDecimalOrNull()
-        if (enteredFiat == null || enteredFiat.signum() <= 0 || entered.signum() <= 0) return
-        val adjustedFiat =
-            enteredFiat
-                .multiply(BigDecimal(adjusted))
-                .divide(BigDecimal(entered), token.decimal, RoundingMode.DOWN)
-                .stripTrailingZeros()
-        fiatAmountFieldState.setTextAndPlaceCursorAtEnd(adjustedFiat.toPlainString())
+        if (adjustedFiat != null) {
+            fiatAmountFieldState.setTextAndPlaceCursorAtEnd(adjustedFiat.toPlainString())
+        }
     }
 
     private fun applyRippleDestinationTag(
@@ -547,11 +587,16 @@ internal class DefaultSendStrategy(
         tokenAmountInt: BigInteger,
         memo: String?,
         chain: Chain,
+        forceReplan: Boolean,
     ): BlockChainSpecificAndUtxo {
         if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano) return specific
 
-        planBtc.value
-            ?: bitcoinPlanService
+        // GasFeeOrchestrator.collectPlanFee refills planBtc on every keystroke from the raw field,
+        // so after a clamp the cached plan still describes the pre-clamp amount — and
+        // validateBtcLikeAmount would reject the clamped amount against that stale over-fee plan.
+        // Re-plan for the amount actually being sent.
+        if (forceReplan || planBtc.value == null) {
+            bitcoinPlanService
                 .getPlan(
                     vaultId = vaultId,
                     selectedToken = selectedToken,
@@ -564,6 +609,7 @@ internal class DefaultSendStrategy(
                     planBtc.value = plan
                     planFee.value = plan.fee
                 }
+        }
 
         return chainValidationService.selectUtxosIfNeeded(
             chain = chain,

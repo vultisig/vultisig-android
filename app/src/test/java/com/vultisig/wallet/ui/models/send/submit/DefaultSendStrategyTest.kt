@@ -36,16 +36,19 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -61,6 +64,7 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Common.SigningError
 
 internal class DefaultSendStrategyTest {
 
@@ -80,6 +84,7 @@ internal class DefaultSendStrategyTest {
     private val getAvailableTokenBalance: GetAvailableTokenBalanceUseCase = mockk(relaxed = true)
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase = mockk(relaxed = true)
     private val rippleApi: RippleApi = mockk(relaxed = true)
+    private val bitcoinPlanService: BitcoinPlanService = mockk(relaxed = true)
     private val amountManager: AmountManager = mockk(relaxed = true)
     private val addressManager: AddressManager = mockk(relaxed = true)
     private val dstAddressLabelFlow = MutableStateFlow<String?>(null)
@@ -92,6 +97,8 @@ internal class DefaultSendStrategyTest {
     private var defiType: DeFiNavActions? = null
     private val accounts = MutableStateFlow<List<Account>>(emptyList())
     private val gasSettings = MutableStateFlow<GasSettings?>(null)
+    private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
+    private val planFee = MutableStateFlow<Long?>(null)
 
     @BeforeEach
     fun setUp() {
@@ -742,6 +749,10 @@ internal class DefaultSendStrategyTest {
             assertNull(lastError, "Expected no error; got $lastError")
             // Clamped down from 0.999 to the current 0.9985 available.
             assertEquals(BigInteger("998500000000000000"), captured.captured.tokenValue.value)
+            assertEquals("0.9985", tokenAmountFieldState.text.toString())
+            // Still a Max — the snapshot moves onto the adjusted value so the form's 100%
+            // selection survives the fee moving under it.
+            verify { amountManager.markMax(BigDecimal("0.9985")) }
         } finally {
             unmockkStatic(Dispatchers::class)
         }
@@ -906,6 +917,8 @@ internal class DefaultSendStrategyTest {
             assertEquals("0.9985", tokenAmountFieldState.text.toString())
             assertEquals("1997", fiatAmountFieldState.text.toString())
             assertEquals(BigDecimal("1997"), captured.captured.fiatValue.value)
+            // Not a Max, so the max snapshot must not be moved onto the adjusted value.
+            verify(exactly = 0) { amountManager.markMax(any()) }
         } finally {
             unmockkStatic(Dispatchers::class)
         }
@@ -1070,6 +1083,388 @@ internal class DefaultSendStrategyTest {
     }
 
     /**
+     * `adjustGasFee` folds UTXO byte fees and Cardano fees back into `gasFee` but leaves
+     * `GasSettings.Eth` out, while `applyGasSettings` still patches the signed maxFeePerGasWei and
+     * gasLimit. Sizing the clamp on `gasFee` alone would hand back a clean-looking amount the chain
+     * then rejects for insufficient funds, so raised Advanced Gas Settings must reserve
+     * `maxFeePerGasWei × gasLimit`.
+     */
+    @Test
+    fun `submit sizes the adjustment on raised advanced gas settings, not the stale gas fee`() =
+        runTest {
+            mockkStatic(Dispatchers::class)
+            every { Dispatchers.IO } returns mainDispatcher
+            try {
+                val ethCoin = ethCoin()
+                val account =
+                    Account(
+                        token = ethCoin,
+                        tokenValue = TokenValue(BigInteger("1000000000000000000"), ethCoin),
+                        fiatValue = null,
+                        price = null,
+                    )
+                vaultId = "vault-1"
+                selectedAccount = account
+                addressFieldState.setTextAndPlaceCursorAtEnd("0xdest")
+                tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1")
+                // Network estimate is 0.0015 ETH; gasFee never learns about the raise below.
+                val networkGasFee = TokenValue(BigInteger("1500000000000000"), ethCoin)
+                coEvery { accountValidator.validate() } returns
+                    ValidatedAccount(
+                        vaultId = "vault-1",
+                        selectedAccount = account,
+                        chain = Chain.Ethereum,
+                        gasFee = networkGasFee,
+                        dstAddress = "0xdest",
+                    )
+                coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+                coEvery {
+                    blockChainSpecificRepository.getSpecific(
+                        chain = any(),
+                        address = any(),
+                        token = any(),
+                        gasFee = any(),
+                        isSwap = any(),
+                        isMaxAmountEnabled = any(),
+                        isDeposit = any(),
+                        dstAddress = any(),
+                        tokenAmountValue = any(),
+                        memo = any(),
+                        isThorchainRouterDeposit = any(),
+                    )
+                } returns
+                    BlockChainSpecificAndUtxo(
+                        BlockChainSpecific.Ethereum(
+                            maxFeePerGasWei = BigInteger.ONE,
+                            priorityFeeWei = BigInteger.ONE,
+                            nonce = BigInteger.ZERO,
+                            gasLimit = BigInteger.valueOf(21000),
+                        )
+                    )
+                every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+                // 200 gwei cap × 21000 gas = 0.0042 ETH — nearly 3× the network estimate.
+                gasSettings.value =
+                    GasSettings.Eth(
+                        baseFee = BigInteger.valueOf(198_000_000_000L),
+                        priorityFee = BigInteger.valueOf(2_000_000_000L),
+                        gasLimit = BigInteger.valueOf(21_000),
+                    )
+                // The use case is honest about whichever fee it is handed.
+                coEvery { getAvailableTokenBalance(any(), any()) } answers
+                    {
+                        TokenValue(
+                            BigInteger("1000000000000000000") - secondArg<BigInteger>(),
+                            ethCoin,
+                        )
+                    }
+                coEvery { gasFeeToEstimatedFee(any()) } returns
+                    EstimatedGasFee(
+                        formattedFiatValue = "$0.10",
+                        formattedTokenValue = "0.0042 ETH",
+                        tokenValue = TokenValue(BigInteger.ONE, ethCoin),
+                        fiatValue = mockk(relaxed = true),
+                    )
+
+                val captured = slot<Transaction>()
+                coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+                build(this).submit()
+                advanceUntilIdle()
+
+                assertNull(lastError, "Expected no error; got $lastError")
+                // balance − (200 gwei × 21000) = 0.9958 ETH, not balance − 0.0015 = 0.9985.
+                assertEquals(BigInteger("995800000000000000"), captured.captured.tokenValue.value)
+                assertEquals("0.9958", tokenAmountFieldState.text.toString())
+            } finally {
+                unmockkStatic(Dispatchers::class)
+            }
+        }
+
+    /**
+     * The clamp runs before the Cardano/BTC/XRP validators, so an adjusted amount can still be
+     * rejected downstream. When that happens the fields must be left holding what the user actually
+     * typed — stranding the form on a number they never entered is worse than the original error.
+     */
+    @Test
+    fun `submit leaves the amount fields untouched when a post-clamp validator rejects the send`() =
+        runTest {
+            mockkStatic(Dispatchers::class)
+            every { Dispatchers.IO } returns mainDispatcher
+            try {
+                val xrpCoin = xrpCoin()
+                val account =
+                    Account(
+                        token = xrpCoin,
+                        tokenValue = TokenValue(BigInteger.valueOf(20_000_000L), xrpCoin),
+                        fiatValue = null,
+                        price = null,
+                    )
+                vaultId = "vault-1"
+                selectedAccount = account
+                addressFieldState.setTextAndPlaceCursorAtEnd("rNewDestination")
+                tokenAmountFieldState.setTextAndPlaceCursorAtEnd("20")
+                fiatAmountFieldState.setTextAndPlaceCursorAtEnd("40")
+                coEvery { accountValidator.validate() } returns
+                    ValidatedAccount(
+                        vaultId = "vault-1",
+                        selectedAccount = account,
+                        chain = Chain.Ripple,
+                        gasFee = TokenValue(BigInteger.valueOf(400L), xrpCoin),
+                        dstAddress = "rNewDestination",
+                    )
+                coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+                coEvery {
+                    blockChainSpecificRepository.getSpecific(
+                        chain = any(),
+                        address = any(),
+                        token = any(),
+                        gasFee = any(),
+                        isSwap = any(),
+                        isMaxAmountEnabled = any(),
+                        isDeposit = any(),
+                        dstAddress = any(),
+                        tokenAmountValue = any(),
+                        memo = any(),
+                        isThorchainRouterDeposit = any(),
+                    )
+                } returns
+                    BlockChainSpecificAndUtxo(
+                        BlockChainSpecific.Ripple(
+                            sequence = 1UL,
+                            lastLedgerSequence = 100UL,
+                            gas = 400UL,
+                        )
+                    )
+                every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+                // The clamp succeeds (20 → 19.9996 XRP)…
+                coEvery { getAvailableTokenBalance(any(), any()) } returns
+                    TokenValue(BigInteger.valueOf(19_999_600L), xrpCoin)
+                // …but the funded destination requires a tag (lsfRequireDestTag) and none was
+                // given, so a validator downstream of the clamp rejects the send.
+                coEvery { rippleApi.fetchAccountsInfo("rNewDestination") } returns
+                    RippleAccountInfoResponseJson(
+                        result =
+                            RippleAccountInfoResponseResultJson(
+                                accountData =
+                                    RippleAccountInfoResponseAccountDataJson(
+                                        balance = "20000000",
+                                        flags = 0x00020000L,
+                                    )
+                            )
+                    )
+
+                build(this).submit()
+                advanceUntilIdle()
+
+                assertEquals(
+                    R.string.send_error_xrp_destination_tag_required,
+                    (lastError as UiText.StringResource).resId,
+                )
+                assertEquals("20", tokenAmountFieldState.text.toString())
+                assertEquals("40", fiatAmountFieldState.text.toString())
+            } finally {
+                unmockkStatic(Dispatchers::class)
+            }
+        }
+
+    /**
+     * `GasFeeOrchestrator.collectPlanFee` refills `planBtc` on every keystroke from the raw field,
+     * so after a clamp the cached plan still describes the pre-clamp amount. Reusing it would have
+     * `validateBtcLikeAmount` check the clamped amount against a stale over-fee plan and throw
+     * `insufficient_utxos_error`, defeating the fix for hand-typed full-balance UTXO sends.
+     */
+    @Test
+    fun `submit re-plans a clamped UTXO send instead of reusing the pre-clamp plan`() {
+        try {
+            runTest {
+                mockkStatic(Dispatchers::class)
+                every { Dispatchers.IO } returns mainDispatcher
+                try {
+                    val btcCoin = btcCoin()
+                    val account =
+                        Account(
+                            token = btcCoin,
+                            tokenValue = TokenValue(BigInteger.valueOf(1_000_000L), btcCoin),
+                            fiatValue = null,
+                            price = null,
+                        )
+                    vaultId = "vault-1"
+                    selectedAccount = account
+                    addressFieldState.setTextAndPlaceCursorAtEnd("bc1qdest")
+                    tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.01")
+                    coEvery { accountValidator.validate() } returns
+                        ValidatedAccount(
+                            vaultId = "vault-1",
+                            selectedAccount = account,
+                            chain = Chain.Bitcoin,
+                            gasFee = TokenValue(BigInteger.valueOf(2_000L), btcCoin),
+                            dstAddress = "bc1qdest",
+                        )
+                    coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+                    coEvery {
+                        blockChainSpecificRepository.getSpecific(
+                            chain = any(),
+                            address = any(),
+                            token = any(),
+                            gasFee = any(),
+                            isSwap = any(),
+                            isMaxAmountEnabled = any(),
+                            isDeposit = any(),
+                            dstAddress = any(),
+                            tokenAmountValue = any(),
+                            memo = any(),
+                            isThorchainRouterDeposit = any(),
+                        )
+                    } returns
+                        BlockChainSpecificAndUtxo(
+                            BlockChainSpecific.UTXO(byteFee = BigInteger.TEN, sendMaxAmount = false)
+                        )
+                    every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+                    coEvery { getAvailableTokenBalance(any(), any()) } returns
+                        TokenValue(BigInteger.valueOf(998_000L), btcCoin)
+                    // Stale plan for the pre-clamp amount, already cached by collectPlanFee.
+                    planBtc.value = okPlan(2_000L)
+                    coEvery {
+                        bitcoinPlanService.getPlan(
+                            vaultId = any(),
+                            selectedToken = any(),
+                            dstAddress = any(),
+                            tokenAmountInt = any(),
+                            specific = any(),
+                            memo = any(),
+                        )
+                    } returns okPlan(1_800L)
+                    coEvery { gasFeeToEstimatedFee(any()) } returns
+                        EstimatedGasFee(
+                            formattedFiatValue = "$1.00",
+                            formattedTokenValue = "0.000018 BTC",
+                            tokenValue = TokenValue(BigInteger.ONE, btcCoin),
+                            fiatValue = mockk(relaxed = true),
+                        )
+
+                    val captured = slot<Transaction>()
+                    coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+                    build(this).submit()
+                    advanceUntilIdle()
+
+                    assertNull(lastError, "Expected no error; got $lastError")
+                    assertEquals(BigInteger.valueOf(998_000L), captured.captured.tokenValue.value)
+                    // Re-planned for the clamped amount rather than trusting the cached plan.
+                    coVerify {
+                        bitcoinPlanService.getPlan(
+                            vaultId = any(),
+                            selectedToken = any(),
+                            dstAddress = any(),
+                            tokenAmountInt = BigInteger.valueOf(998_000L),
+                            specific = any(),
+                            memo = any(),
+                        )
+                    }
+                } finally {
+                    unmockkStatic(Dispatchers::class)
+                }
+            }
+        } catch (e: Throwable) {
+            if (
+                e is UnsatisfiedLinkError ||
+                    e is ExceptionInInitializerError ||
+                    e is NoClassDefFoundError
+            ) {
+                assumeTrue(false, "WalletCore JNI not available: ${e.message}")
+            } else throw e
+        }
+    }
+
+    /**
+     * A clamp ratio that does not divide cleanly must still yield a bounded fiat string rather than
+     * an 18-digit tail, and the field and the persisted Transaction must agree on it.
+     */
+    @Test
+    fun `submit bounds the adjusted fiat when the clamp ratio does not divide evenly`() = runTest {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            val ethCoin = ethCoin()
+            val account =
+                Account(
+                    token = ethCoin,
+                    tokenValue = TokenValue(BigInteger("1000000000000000000"), ethCoin),
+                    fiatValue = null,
+                    price = null,
+                )
+            vaultId = "vault-1"
+            selectedAccount = account
+            addressFieldState.setTextAndPlaceCursorAtEnd("0xdest")
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1")
+            fiatAmountFieldState.setTextAndPlaceCursorAtEnd("2000")
+            coEvery { accountValidator.validate() } returns
+                ValidatedAccount(
+                    vaultId = "vault-1",
+                    selectedAccount = account,
+                    chain = Chain.Ethereum,
+                    gasFee = TokenValue(BigInteger("1500000000000001"), ethCoin),
+                    dstAddress = "0xdest",
+                )
+            coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = any(),
+                    address = any(),
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = any(),
+                    isMaxAmountEnabled = any(),
+                    isDeposit = any(),
+                    dstAddress = any(),
+                    tokenAmountValue = any(),
+                    memo = any(),
+                    isThorchainRouterDeposit = any(),
+                )
+            } returns
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.Ethereum(
+                        maxFeePerGasWei = BigInteger.ONE,
+                        priorityFeeWei = BigInteger.ONE,
+                        nonce = BigInteger.ZERO,
+                        gasLimit = BigInteger.valueOf(21000),
+                    )
+                )
+            every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+            // 998499999999999999 / 1e18 — a ratio with no clean decimal expansion.
+            coEvery { getAvailableTokenBalance(any(), any()) } returns
+                TokenValue(BigInteger("998499999999999999"), ethCoin)
+            coEvery { gasFeeToEstimatedFee(any()) } returns
+                EstimatedGasFee(
+                    formattedFiatValue = "$0.10",
+                    formattedTokenValue = "0.0015 ETH",
+                    tokenValue = TokenValue(BigInteger.ONE, ethCoin),
+                    fiatValue = mockk(relaxed = true),
+                )
+
+            val captured = slot<Transaction>()
+            coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this).submit()
+            advanceUntilIdle()
+
+            assertNull(lastError, "Expected no error; got $lastError")
+            val fiatText = fiatAmountFieldState.text.toString()
+            // Bounded to the token's own precision, and the field and the tx never disagree.
+            assertTrue(
+                (fiatText.substringAfter('.', "").length) <= ethCoin.decimal,
+                "Adjusted fiat kept an unbounded tail: $fiatText",
+            )
+            assertEquals(BigDecimal(fiatText), captured.captured.fiatValue.value)
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    private fun okPlan(fee: Long): Bitcoin.TransactionPlan =
+        Bitcoin.TransactionPlan.newBuilder().setFee(fee).setError(SigningError.OK).build()
+
+    /**
      * Arranges a straightforward ETH native-token submit that reaches transactionRepository without
      * error, returning the captured Transaction slot. [blockChainSpecific] is what getSpecific()
      * returns before any gasSettings override is applied by the strategy itself.
@@ -1129,6 +1524,19 @@ internal class DefaultSendStrategyTest {
         return captured
     }
 
+    private fun btcCoin(): Coin =
+        Coin(
+            chain = Chain.Bitcoin,
+            ticker = "BTC",
+            logo = "",
+            address = "bc1qself",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "bitcoin",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
     private fun xrpCoin(): Coin =
         Coin(
             chain = Chain.Ripple,
@@ -1180,15 +1588,15 @@ internal class DefaultSendStrategyTest {
             chainAccountAddressRepository = chainAccountAddressRepository,
             blockChainSpecificRepository = blockChainSpecificRepository,
             transactionRepository = transactionRepository,
-            bitcoinPlanService = mockk(relaxed = true),
+            bitcoinPlanService = bitcoinPlanService,
             getAvailableTokenBalance = getAvailableTokenBalance,
             gasFeeToEstimatedFee = gasFeeToEstimatedFee,
             chainValidationService = ChainValidationService(rippleApi = rippleApi),
             addressManager = addressManager,
             amountManager = amountManager,
             gasSettings = gasSettings,
-            planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null),
-            planFee = MutableStateFlow<Long?>(null),
+            planBtc = planBtc,
+            planFee = planFee,
             accounts = accounts,
             appCurrency = MutableStateFlow(AppCurrency.USD),
             vaultIdProvider = { vaultId },
