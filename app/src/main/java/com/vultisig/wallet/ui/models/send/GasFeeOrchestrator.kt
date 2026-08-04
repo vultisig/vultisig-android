@@ -92,7 +92,6 @@ internal class GasFeeOrchestrator(
         collectGasTokenBalance()
         collectGasFees()
         collectPlanFee()
-        collectMaxAmount()
         collectEstimatedFee()
         collectSpecific()
     }
@@ -291,24 +290,6 @@ internal class GasFeeOrchestrator(
         }
     }
 
-    private fun collectMaxAmount() {
-        scope.launch {
-            isMaxAmountFlow.collect { isMax ->
-                val chain = accountProvider()?.token?.chain ?: return@collect
-                // Only require to re-trigger utxo chains, due to no change output utxo and
-                // therefore less fees
-                if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                    val spec =
-                        specific.value?.blockChainSpecific as? BlockChainSpecific.UTXO
-                            ?: return@collect
-                    val updatedSpec =
-                        specific.value?.copy(blockChainSpecific = spec.copy(sendMaxAmount = isMax))
-                    specific.value = updatedSpec
-                }
-            }
-        }
-    }
-
     private fun collectEstimatedFee() {
         scope.launch {
             combine(
@@ -438,7 +419,12 @@ internal class GasFeeOrchestrator(
                                     token,
                                     gasFeeValue,
                                     isSwap = false,
-                                    isMaxAmountEnabled = false,
+                                    // Sourced live rather than combined-and-debounced: markMax()
+                                    // (AmountFractionManager) always updates this before the
+                                    // resulting text-field write that triggers this collect, and
+                                    // any user edit away from max updates it via AmountManager's
+                                    // undebounced collector before this 300ms-debounced one fires.
+                                    isMaxAmountEnabled = isMaxAmountFlow.value,
                                     isDeposit = false,
                                     dstAddress = validDstAddress,
                                     tokenAmountValue = cardanoAmount,

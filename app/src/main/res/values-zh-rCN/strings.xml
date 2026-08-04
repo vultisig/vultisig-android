@@ -357,6 +357,7 @@
 
     <!-- Insufficient UTXOs Error -->
     <string name="insufficient_utxos_error">没有足够的可用 UTXO 来覆盖所选金额。请添加更多资金或减少发送金额</string>
+    <string name="send_error_no_utxos_available">此交易暂无可用的 UTXO。请等待待处理交易确认后重试</string>
 
     <!-- Verify Transaction -->
     <string name="verify_transaction_memo_title">备注</string>

@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
+import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Common.SigningError
 
 /** Stub [RippleApi] that only answers `fetchAccountsInfo`, the sole call the tests need. */
 private class FakeRippleApi(
@@ -413,6 +415,46 @@ internal class ChainValidationServiceTest {
                     tokenAmountInt = BigInteger.valueOf(10_000L),
                     chain = Chain.Bitcoin,
                     plan = null,
+                )
+            }
+        assertEquals(
+            R.string.insufficient_utxos_error,
+            (exception.text as UiText.StringResource).resId,
+        )
+    }
+
+    @Test
+    fun `validateBtcLikeAmount - Error_missing_input_utxos throws a distinct no-utxos-available message`() {
+        val plan =
+            Bitcoin.TransactionPlan.newBuilder()
+                .setError(SigningError.Error_missing_input_utxos)
+                .build()
+        val exception =
+            assertThrows(InvalidTransactionDataException::class.java) {
+                service.validateBtcLikeAmount(
+                    tokenAmountInt = BigInteger.valueOf(10_000L),
+                    chain = Chain.Bitcoin,
+                    plan = plan,
+                )
+            }
+        assertEquals(
+            R.string.send_error_no_utxos_available,
+            (exception.text as UiText.StringResource).resId,
+        )
+    }
+
+    @Test
+    fun `validateBtcLikeAmount - Error_not_enough_utxos keeps the generic insufficient utxos message`() {
+        val plan =
+            Bitcoin.TransactionPlan.newBuilder()
+                .setError(SigningError.Error_not_enough_utxos)
+                .build()
+        val exception =
+            assertThrows(InvalidTransactionDataException::class.java) {
+                service.validateBtcLikeAmount(
+                    tokenAmountInt = BigInteger.valueOf(10_000L),
+                    chain = Chain.Bitcoin,
+                    plan = plan,
                 )
             }
         assertEquals(

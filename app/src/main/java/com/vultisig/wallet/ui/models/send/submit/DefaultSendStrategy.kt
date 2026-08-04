@@ -494,20 +494,22 @@ internal class DefaultSendStrategy(
     ): BlockChainSpecificAndUtxo {
         if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano) return specific
 
-        planBtc.value
-            ?: bitcoinPlanService
-                .getPlan(
-                    vaultId = vaultId,
-                    selectedToken = selectedToken,
-                    dstAddress = dstAddress,
-                    tokenAmountInt = tokenAmountInt,
-                    specific = specific,
-                    memo = memo,
-                )
-                .also { plan ->
-                    planBtc.value = plan
-                    planFee.value = plan.fee
-                }
+        // Always re-plan against this submit's `specific` (correct isMaxAmountEnabled, freshest
+        // amount) rather than trusting a background-collected planBtc snapshot — it may have
+        // been computed with a stale sendMaxAmount flag or a since-changed amount (#5504).
+        bitcoinPlanService
+            .getPlan(
+                vaultId = vaultId,
+                selectedToken = selectedToken,
+                dstAddress = dstAddress,
+                tokenAmountInt = tokenAmountInt,
+                specific = specific,
+                memo = memo,
+            )
+            .also { plan ->
+                planBtc.value = plan
+                planFee.value = plan.fee
+            }
 
         return chainValidationService.selectUtxosIfNeeded(
             chain = chain,

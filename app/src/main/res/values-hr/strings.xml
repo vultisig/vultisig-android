@@ -171,6 +171,7 @@
     <string name="swap_form_invalid_amount">Nevažeći iznos</string>
     <string name="send_from_invalid_amount">Nevažeći iznos</string>
     <string name="insufficient_utxos_error">Nedovoljno dostupnih UTXO-a za pokrivanje odabranog iznosa. Molimo dodajte više sredstava ili smanjite iznos koji šaljete</string>
+    <string name="send_error_no_utxos_available">Za ovu transakciju još nema dostupnih UTXO-a. Pričekajte da se transakcije na čekanju potvrde i pokušajte ponovno</string>
     <string name="send_error_insufficient_balance">Nedostatna sredstva</string>
     <string name="send_error_msca_not_deployed">MSCA račun još nije raspoređen, molimo pokušajte ponovo</string>
     <string name="send_error_insufficient_native_balance_with_fees">Nedovoljno %1$s salda</string>

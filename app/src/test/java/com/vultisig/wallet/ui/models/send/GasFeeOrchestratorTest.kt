@@ -21,13 +21,16 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.submit.BitcoinPlanService
 import com.vultisig.wallet.ui.utils.UiText
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.unmockkStatic
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +38,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -233,75 +237,53 @@ internal class GasFeeOrchestratorTest {
             assertEquals(UiText.DynamicString("1.5 ETH"), uiState.value.gasTokenBalance)
         }
 
-    // ──────── collectMaxAmount ────────
+    // ──────── collectSpecific ────────
 
     @Test
-    fun `collectMaxAmount propagates isMax to UTXO specific via sendMaxAmount`() =
+    fun `collectSpecific threads the live isMaxAmount flag into getSpecific, not a hardcoded false`() =
         runTest(mainDispatcher) {
+            // Regression for #5504: isMaxAmountEnabled used to be hardcoded false here, so a UTXO
+            // max send's specific never carried sendMaxAmount=true through to planning.
             account = btcAccount()
-            specific.value =
+            isMaxAmount.value = true
+            val flagSlot = slot<Boolean>()
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = any(),
+                    address = any(),
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = any(),
+                    isMaxAmountEnabled = capture(flagSlot),
+                    isDeposit = any(),
+                    gasLimit = any(),
+                    dstAddress = any(),
+                    tokenAmountValue = any(),
+                    memo = any(),
+                    transactionType = any(),
+                    isThorchainRouterDeposit = any(),
+                )
+            } returns
                 BlockChainSpecificAndUtxo(
-                    BlockChainSpecific.UTXO(byteFee = BigInteger("100"), sendMaxAmount = false)
+                    BlockChainSpecific.UTXO(byteFee = BigInteger("100"), sendMaxAmount = true)
                 )
             val orchestrator = build(backgroundScope)
-            orchestrator.start()
 
-            isMaxAmount.value = true
-            advanceUntilIdle()
+            // collectSpecific hops to Dispatchers.IO for the getSpecific call; route it back to
+            // the test scheduler so advanceUntilIdle() can actually drive it to completion.
+            mockkStatic(Dispatchers::class)
+            every { Dispatchers.IO } returns mainDispatcher
+            try {
+                orchestrator.start()
+                selectedToken.value = btcAccount().token
+                gasFee.value = tokenValue(100, btcAccount().token)
+                advanceTimeBy(400)
+                advanceUntilIdle()
+            } finally {
+                unmockkStatic(Dispatchers::class)
+            }
 
-            val updated = specific.value?.blockChainSpecific as? BlockChainSpecific.UTXO
-            assertEquals(true, updated?.sendMaxAmount)
-            // byteFee untouched.
-            assertEquals(BigInteger("100"), updated?.byteFee)
-        }
-
-    @Test
-    fun `collectMaxAmount is a no-op for non-UTXO chains`() =
-        runTest(mainDispatcher) {
-            account =
-                Account(
-                    token = ethCoin(isNativeToken = true),
-                    tokenValue = null,
-                    fiatValue = null,
-                    price = null,
-                )
-            // Set a non-UTXO specific so the cast inside the orchestrator returns null.
-            specific.value =
-                BlockChainSpecificAndUtxo(
-                    BlockChainSpecific.Ethereum(
-                        maxFeePerGasWei = BigInteger.ONE,
-                        priorityFeeWei = BigInteger.ONE,
-                        nonce = BigInteger.ZERO,
-                        gasLimit = BigInteger.ONE,
-                    )
-                )
-            val before = specific.value
-            val orchestrator = build(backgroundScope)
-            orchestrator.start()
-
-            isMaxAmount.value = true
-            advanceUntilIdle()
-
-            // Specific reference unchanged — the UTXO branch is the only writer here.
-            assertSame(before, specific.value)
-        }
-
-    @Test
-    fun `collectMaxAmount is a no-op when there is no selected account`() =
-        runTest(mainDispatcher) {
-            account = null
-            specific.value =
-                BlockChainSpecificAndUtxo(
-                    BlockChainSpecific.UTXO(byteFee = BigInteger("100"), sendMaxAmount = false)
-                )
-            val before = specific.value
-            val orchestrator = build(backgroundScope)
-            orchestrator.start()
-
-            isMaxAmount.value = true
-            advanceUntilIdle()
-
-            assertSame(before, specific.value)
+            assertTrue(flagSlot.captured)
         }
 
     // ──────── helpers ────────

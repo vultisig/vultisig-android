@@ -19,14 +19,17 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
+import com.vultisig.wallet.ui.models.send.submit.BitcoinPlanService
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.confirmVerified
 import io.mockk.mockk
+import io.mockk.slot
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
@@ -48,6 +51,8 @@ import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Common.SigningError
 
 internal class AmountFractionManagerTest {
 
@@ -87,6 +92,7 @@ internal class AmountFractionManagerTest {
     private val feeServiceComposite: FeeServiceComposite = mockk(relaxed = true)
     private val tokenRepository: TokenRepository = mockk(relaxed = true)
     private val amountManager: AmountManager = mockk(relaxed = true)
+    private val bitcoinPlanService: BitcoinPlanService = mockk(relaxed = true)
 
     @BeforeEach
     fun setUp() {
@@ -240,6 +246,74 @@ internal class AmountFractionManagerTest {
             // already-activated account, so the whole 100 TRX is freezable.
             assertEquals("100", awaitAmountField())
             assertEquals(BigInteger.ZERO, gasFee.value?.value)
+        }
+
+    @Test
+    fun `chooseMaxTokenAmount UTXO chain - plans a real sweep instead of subtracting the byte fee`() =
+        runTest(mainDispatcher) {
+            // Regression for #5504: balance − byteFee (byteFee is a sat/vB rate, not the total
+            // fee) used to overshoot the real spendable amount and fail at Continue with a
+            // healthy, fully-funded wallet. The real WalletCore plan's amount/fee must be used
+            // instead.
+            account = btcAccount()
+            specific.value =
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.UTXO(byteFee = BigInteger.TEN, sendMaxAmount = false)
+                )
+            val plannedSpecificSlot = slot<BlockChainSpecificAndUtxo>()
+            val plan =
+                Bitcoin.TransactionPlan.newBuilder()
+                    .setAmount(999_450L)
+                    .setFee(550L)
+                    .setError(SigningError.OK)
+                    .build()
+            coEvery {
+                bitcoinPlanService.getPlan(
+                    vaultId = any(),
+                    selectedToken = any(),
+                    dstAddress = any(),
+                    tokenAmountInt = any(),
+                    specific = capture(plannedSpecificSlot),
+                    memo = any(),
+                )
+            } returns plan
+            val manager = build(backgroundScope)
+
+            manager.chooseMaxTokenAmount()
+
+            // calculateUtxoMaxAmount hops to Dispatchers.IO, which runTest's scheduler cannot
+            // advance — await it on the real clock, as chooseMaxTokenAmount FREEZE_TRX does below.
+            // 999450 sats at 8 decimals → "0.0099945", not balance(1_000_000) − byteFee(10).
+            assertEquals("0.0099945", awaitAmountField())
+            coVerify { amountManager.markMax(BigDecimal("0.0099945")) }
+            val plannedUtxo =
+                plannedSpecificSlot.captured.blockChainSpecific as BlockChainSpecific.UTXO
+            assertEquals(true, plannedUtxo.sendMaxAmount)
+            coVerify(exactly = 0) { getAvailableTokenBalance(any(), any()) }
+        }
+
+    @Test
+    fun `chooseMaxTokenAmount UTXO chain - falls back to byte-fee math when the plan fails`() =
+        runTest(mainDispatcher) {
+            val btc = btcAccount()
+            account = btc
+            specific.value =
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.UTXO(byteFee = BigInteger.TEN, sendMaxAmount = false)
+                )
+            coEvery { bitcoinPlanService.getPlan(any(), any(), any(), any(), any(), any()) } returns
+                Bitcoin.TransactionPlan.newBuilder()
+                    .setError(SigningError.Error_missing_input_utxos)
+                    .build()
+            coEvery { getAvailableTokenBalance(any(), any()) } returns
+                TokenValue(value = BigInteger("999990"), token = btc.token)
+            val manager = build(backgroundScope)
+
+            manager.chooseMaxTokenAmount()
+
+            // Falls through into the native-token fresh-fee round trip, which hops to
+            // Dispatchers.IO — same reason chooseMaxTokenAmount FREEZE_TRX above awaits it.
+            assertEquals("0.0099999", awaitAmountField())
         }
 
     /**
@@ -415,6 +489,7 @@ internal class AmountFractionManagerTest {
             getAvailableTokenBalance = getAvailableTokenBalance,
             feeServiceComposite = feeServiceComposite,
             tokenRepository = tokenRepository,
+            bitcoinPlanService = bitcoinPlanService,
             adjustGasFee = { gas, _, _ -> gas },
             amountManager = amountManager,
         )
@@ -465,6 +540,27 @@ internal class AmountFractionManagerTest {
         return Account(
             token = token,
             tokenValue = TokenValue(value = BigInteger("0"), token = token),
+            fiatValue = null,
+            price = null,
+        )
+    }
+
+    private fun btcAccount(): Account {
+        val token =
+            Coin(
+                chain = Chain.Bitcoin,
+                ticker = "BTC",
+                logo = "",
+                address = "bc1...",
+                decimal = 8,
+                hexPublicKey = "",
+                priceProviderID = "bitcoin",
+                contractAddress = "",
+                isNativeToken = true,
+            )
+        return Account(
+            token = token,
+            tokenValue = TokenValue(value = BigInteger("1000000"), token = token),
             fiatValue = null,
             price = null,
         )

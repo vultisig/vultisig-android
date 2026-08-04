@@ -201,6 +201,7 @@
     <string name="swap_form_invalid_amount">Недопустимая сумма</string>
     <string name="send_from_invalid_amount">Недопустимая сумма</string>
     <string name="insufficient_utxos_error">Недостаточно доступных UTXO для покрытия выбранной суммы. Пожалуйста, добавьте больше средств или уменьшите отправляемую сумму</string>
+    <string name="send_error_no_utxos_available">Для этой транзакции пока нет доступных UTXO. Пожалуйста, дождитесь подтверждения ожидающих транзакций и попробуйте снова</string>
     <string name="swap_screen_invalid_vault">Транзакция, скорее всего, завершится неудачей, хранилище не удалось загрузить.</string>
     <string name="verify_transaction_memo_title">Мемо</string>
     <string name="join_keysign_wrong_reshare">Неправильный ReShare</string>

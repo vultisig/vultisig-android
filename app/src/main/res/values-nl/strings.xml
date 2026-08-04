@@ -201,6 +201,7 @@
     <string name="vault_name_too_long_error">Kluisnaam is te lang</string>
     <string name="send_from_invalid_amount">Ongeldig bedrag</string>
     <string name="insufficient_utxos_error">Onvoldoende beschikbare UTXO\'s om het geselecteerde bedrag te dekken. Voeg meer fondsen toe of verlaag het bedrag dat u verzendt</string>
+    <string name="send_error_no_utxos_available">Er zijn nog geen UTXO\'s beschikbaar voor deze transactie. Wacht tot openstaande transacties zijn bevestigd en probeer het opnieuw</string>
     <string name="swap_screen_invalid_vault">De transactie zal waarschijnlijk mislukken, de kluis kon niet worden geladen.</string>
     <string name="verify_transaction_memo_title">Memo</string>
     <string name="join_keysign_wrong_reshare">Verkeerde ReShare</string>
