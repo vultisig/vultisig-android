@@ -32,8 +32,6 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import timber.log.Timber
 import tss.KeysignResponse
 
 /**
@@ -72,12 +70,20 @@ class DKLSKeysign(
             isEncryptionGCM = true,
         )
     private val cache = mutableMapOf<String, Any>()
+    private val redeletedHashes = mutableSetOf<String>()
 
     /** Collects signatures keyed by the signed message hex string. */
     val signatures = mutableMapOf<String, KeysignResponse>()
-    private val heardFromThisAttempt = mutableSetOf<String>()
-    private val heardFromEver = mutableSetOf<String>()
-    private var waitingNotified = false
+    private val poller =
+        KeysignMessagePoller(
+            sessionApi = sessionApi,
+            mediatorURL = mediatorURL,
+            sessionID = sessionID,
+            localPartyID = localPartyID,
+            keysignCommittee = keysignCommittee,
+            onWaitingForPeers = onWaitingForPeers,
+            onPeersResumed = onPeersResumed,
+        )
 
     private fun getKeyshareString(): String? {
         for (ks in vault.keyshares) {
@@ -225,59 +231,6 @@ class DKLSKeysign(
         }
     }
 
-    private suspend fun pullInboundMessages(handle: Handle, messageID: String): Boolean {
-        Timber.d("start pulling inbound messages")
-
-        heardFromThisAttempt.clear()
-        var lastMessageNano = System.nanoTime()
-        while (true) {
-            try {
-                val msgs =
-                    sessionApi.getTssMessages(mediatorURL, sessionID, localPartyID, messageID)
-
-                if (msgs.isNotEmpty()) {
-                    if (waitingNotified) {
-                        waitingNotified = false
-                        onPeersResumed?.invoke()
-                    }
-                    lastMessageNano = System.nanoTime()
-                    heardFromThisAttempt.clear()
-                    if (processInboundMessage(handle, msgs, messageID)) {
-                        return true
-                    }
-                } else {
-                    delay(100)
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to get messages")
-            }
-
-            val silenceSecs = (System.nanoTime() - lastMessageNano) / 1_000_000_000.0
-            if (!waitingNotified && silenceSecs > 10) {
-                waitingNotified = true
-                val missingPeers =
-                    keysignCommittee.filter { it != localPartyID && it !in heardFromThisAttempt }
-                if (missingPeers.isNotEmpty()) {
-                    onWaitingForPeers?.invoke(missingPeers)
-                }
-            }
-
-            if (silenceSecs > 60) {
-                val missingPeers =
-                    keysignCommittee.filter { it != localPartyID && it !in heardFromThisAttempt }
-                val msg =
-                    if (missingPeers.isEmpty()) {
-                        "keysign timed out: all peers responded but protocol did not complete within 60s"
-                    } else {
-                        "no messages from ${missingPeers.joinToString()} in 60s"
-                    }
-                error(msg)
-            }
-        }
-    }
-
     private suspend fun processInboundMessage(
         handle: Handle,
         msgs: List<Message>,
@@ -288,11 +241,13 @@ class DKLSKeysign(
             val key = "$sessionID-$localPartyID-$messageID-${msg.hash}"
             if (cache[key] != null) {
                 println("message with key: $key has been applied before")
+                // Once per attempt: repeating a delete the relay is ignoring only parks the poll
+                // loop behind the relay client's own backoff.
+                if (redeletedHashes.add(msg.hash)) deleteMessageFromServer(msg.hash, messageID)
                 continue
             }
             println("Got message from: ${msg.from}, to: ${msg.to}, key: $key")
-            heardFromThisAttempt.add(msg.from)
-            heardFromEver.add(msg.from)
+            poller.recordPeerHeard(msg.from)
             val decryptedBody =
                 encryption.decrypt(
                     Base64.decode(msg.body),
@@ -316,15 +271,15 @@ class DKLSKeysign(
     }
 
     private suspend fun deleteMessageFromServer(hash: String, messageID: String) {
-        sessionApi.deleteTssMessage(mediatorURL, sessionID, localPartyID, hash, messageID)
+        sessionApi.deleteTssMessageQuietly(mediatorURL, sessionID, localPartyID, hash, messageID)
     }
 
     private suspend fun keysignOneMessageWithRetry(attempt: Int, messageToSign: String) {
         if (attempt == 0) {
-            heardFromEver.clear()
-            waitingNotified = false
+            poller.resetForNewMessage()
         }
         cache.clear()
+        redeletedHashes.clear()
         val msgHash = messageToSign.md5()
         val localMessenger =
             TssMessenger(
@@ -395,7 +350,7 @@ class DKLSKeysign(
                 error("fail to create sign session from setup message, error: $sessionResult")
             }
             processDKLSOutboundMessage(handler)
-            val isFinished = pullInboundMessages(handler, msgHash)
+            val isFinished = poller.poll(msgHash) { processInboundMessage(handler, it, msgHash) }
             if (isFinished) {
                 val sig = dklsSignSessionFinish(handler)
                 val resp = KeysignResponse()
@@ -422,16 +377,12 @@ class DKLSKeysign(
                     msgHash = msgHash,
                     messageToSign = messageToSign,
                     signatures = signatures,
-                ) {
-                    if (waitingNotified) {
-                        waitingNotified = false
-                        onPeersResumed?.invoke()
-                    }
-                }
+                    onRecovered = poller::clearWaitingForPeers,
+                )
             if (recovered) {
                 return
             }
-            val maxRetries = if (heardFromEver.isEmpty()) 1 else 3
+            val maxRetries = if (poller.hasHeardFromAnyPeer) 3 else 1
             if (attempt < maxRetries) {
                 keysignOneMessageWithRetry(attempt + 1, messageToSign)
             } else {
