@@ -668,6 +668,10 @@ internal class DefaultSendStrategyTest {
             assertNull(lastError, "Expected no error; got $lastError")
             // Clamped down from 123.456789 to the current 123.400000 balance.
             assertEquals(BigInteger("123400000"), captured.captured.tokenValue.value)
+            assertEquals("123.4", tokenAmountFieldState.text.toString())
+            // Still a Max — the snapshot moves onto the adjusted value so the form's 100%
+            // selection survives the balance moving under it.
+            verify { amountManager.markMax(BigDecimal("123.4")) }
         } finally {
             unmockkStatic(Dispatchers::class)
         }
