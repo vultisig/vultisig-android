@@ -3,6 +3,7 @@
 package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
@@ -22,6 +23,7 @@ import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.submit.BitcoinPlanService
 import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -46,6 +48,8 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Common.SigningError
 
 internal class GasFeeOrchestratorTest {
 
@@ -284,6 +288,60 @@ internal class GasFeeOrchestratorTest {
             }
 
             assertTrue(flagSlot.captured)
+        }
+
+    // ──────── collectPlanFee ────────
+
+    @Test
+    fun `collectPlanFee patches the plan's sendMaxAmount from the live flag even when specific is stale`() =
+        runTest(mainDispatcher) {
+            // Regression follow-up for #5504: collectPlanFee fires immediately on every
+            // amount-field change, while `specific` is only rebuilt by the 300ms-debounced
+            // collectSpecific. Right after a Max tap, `specific` can still carry the pre-Max
+            // sendMaxAmount=false for a moment — the plan (and the fee it displays) must not be
+            // built against that stale flag.
+            specific.value =
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.UTXO(byteFee = BigInteger.TEN, sendMaxAmount = false)
+                )
+            isMaxAmount.value = true
+            val plannedSpecificSlot = slot<BlockChainSpecificAndUtxo>()
+            coEvery {
+                bitcoinPlanService.getPlan(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    capture(plannedSpecificSlot),
+                    any(),
+                )
+            } returns
+                Bitcoin.TransactionPlan.newBuilder().setFee(500L).setError(SigningError.OK).build()
+            coEvery { addressParserRepository.resolveName(any(), any()) } returns "bc1dest"
+            // Set the amount/address fields before start() — combine() needs a first value from
+            // every source before it emits anything, and mutating them after start() would let
+            // the first emission race the still-empty amount field.
+            addressFieldState.setTextAndPlaceCursorAtEnd("bc1dest")
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.009")
+            val orchestrator = build(backgroundScope)
+            orchestrator.start()
+
+            selectedToken.value = btcAccount().token
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) {
+                bitcoinPlanService.getPlan(any(), any(), any(), any(), any(), any())
+            }
+            val plannedUtxo =
+                plannedSpecificSlot.captured.blockChainSpecific as BlockChainSpecific.UTXO
+            assertTrue(plannedUtxo.sendMaxAmount)
+            assertEquals(500L, planFee.value)
+            // The stale flag on `specific` itself is untouched — only the plan input is patched.
+            assertEquals(
+                false,
+                (specific.value?.blockChainSpecific as BlockChainSpecific.UTXO).sendMaxAmount,
+            )
         }
 
     // ──────── helpers ────────

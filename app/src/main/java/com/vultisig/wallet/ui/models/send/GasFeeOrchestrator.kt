@@ -268,13 +268,19 @@ internal class GasFeeOrchestrator(
                                 .movePointRight(token.decimal)
                                 .toBigInteger()
 
+                        // This flow fires immediately on every amount-field change, while
+                        // `specific` is only rebuilt by the 300ms-debounced collectSpecific — so
+                        // right after a Max tap, `specific` can still carry the pre-Max
+                        // sendMaxAmount for a moment. Patch it from the live flag instead of
+                        // trusting `specific` to have already caught up, so this plan (and the
+                        // fee it displays) can't briefly race ahead with the wrong flag (#5504).
                         val plan =
                             bitcoinPlanService.getPlan(
                                 vaultId,
                                 token,
                                 resolvedDstAddress,
                                 tokenAmountInt,
-                                specific,
+                                withLiveMaxAmountFlag(specific),
                                 memo.toString(),
                             )
 
@@ -288,6 +294,14 @@ internal class GasFeeOrchestrator(
                 }
                 .collect()
         }
+    }
+
+    /** Overrides a UTXO specific's `sendMaxAmount` with the current [isMaxAmountFlow] value. */
+    private fun withLiveMaxAmountFlag(
+        specific: BlockChainSpecificAndUtxo
+    ): BlockChainSpecificAndUtxo {
+        val utxo = specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
+        return specific.copy(blockChainSpecific = utxo.copy(sendMaxAmount = isMaxAmountFlow.value))
     }
 
     private fun collectEstimatedFee() {
