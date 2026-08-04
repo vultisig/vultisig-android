@@ -194,7 +194,7 @@ internal class DefaultSendStrategy(
                     // owns that field too and blanks it whenever a price fetch fails, so a late
                     // read can put a $0.00 estimate beside a correctly signed amount.
                     val enteredFiat = fiatAmountFieldState.text.toString().toPlainBigDecimalOrNull()
-                    val spendableGasFee = withEvmGasSettings(gasFee)
+                    val spendableGasFee = withEvmGasSettings(chain, gasFee)
 
                     val enteredAmountInt =
                         tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
@@ -508,7 +508,12 @@ internal class DefaultSendStrategy(
      * spends and can be adjusted to a clean-looking value the chain then rejects for insufficient
      * funds.
      */
-    private fun withEvmGasSettings(gasFee: TokenValue): TokenValue {
+    private fun withEvmGasSettings(chain: Chain, gasFee: TokenValue): TokenValue {
+        // saveGasSettings never clears the stored settings, so a GasSettings.Eth set on an EVM
+        // chain outlives a switch to, say, Bitcoin. Its wei-denominated product would then be read
+        // as satoshis and swallow the whole balance. The other two consumers (applyGasSettings,
+        // selectGasFeeForFeeEstimation) already gate on the chain or the spec type; do the same.
+        if (chain.standard != TokenStandard.EVM) return gasFee
         val eth = gasSettings.value as? GasSettings.Eth ?: return gasFee
         return gasFee.copy(value = eth.maxFeePerGasWei * eth.gasLimit)
     }

@@ -1461,6 +1461,110 @@ internal class DefaultSendStrategyTest {
         }
     }
 
+    /**
+     * `saveGasSettings` never clears what it stored, so a `GasSettings.Eth` set on an EVM chain
+     * survives a switch to a non-EVM one. Its wei-denominated `maxFeePerGasWei × gasLimit` read as
+     * satoshis would swallow the entire balance and fail every BTC send as "insufficient".
+     */
+    @Test
+    fun `submit ignores stale EVM gas settings on a non-EVM chain`() {
+        try {
+            runTest {
+                mockkStatic(Dispatchers::class)
+                every { Dispatchers.IO } returns mainDispatcher
+                try {
+                    val btcCoin = btcCoin()
+                    val account =
+                        Account(
+                            token = btcCoin,
+                            tokenValue = TokenValue(BigInteger.valueOf(1_000_000L), btcCoin),
+                            fiatValue = null,
+                            price = null,
+                        )
+                    vaultId = "vault-1"
+                    selectedAccount = account
+                    addressFieldState.setTextAndPlaceCursorAtEnd("bc1qdest")
+                    tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.005")
+                    coEvery { accountValidator.validate() } returns
+                        ValidatedAccount(
+                            vaultId = "vault-1",
+                            selectedAccount = account,
+                            chain = Chain.Bitcoin,
+                            gasFee = TokenValue(BigInteger.valueOf(2_000L), btcCoin),
+                            dstAddress = "bc1qdest",
+                        )
+                    coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+                    coEvery {
+                        blockChainSpecificRepository.getSpecific(
+                            chain = any(),
+                            address = any(),
+                            token = any(),
+                            gasFee = any(),
+                            isSwap = any(),
+                            isMaxAmountEnabled = any(),
+                            isDeposit = any(),
+                            dstAddress = any(),
+                            tokenAmountValue = any(),
+                            memo = any(),
+                            isThorchainRouterDeposit = any(),
+                        )
+                    } returns
+                        BlockChainSpecificAndUtxo(
+                            BlockChainSpecific.UTXO(byteFee = BigInteger.TEN, sendMaxAmount = false)
+                        )
+                    every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+                    // Left over from an earlier Ethereum send: 0.0042 ETH worth of wei.
+                    gasSettings.value =
+                        GasSettings.Eth(
+                            baseFee = BigInteger.valueOf(198_000_000_000L),
+                            priorityFee = BigInteger.valueOf(2_000_000_000L),
+                            gasLimit = BigInteger.valueOf(21_000),
+                        )
+                    // Honest about whichever fee it is handed — a wei-scale one zeroes the balance.
+                    coEvery { getAvailableTokenBalance(any(), any()) } answers
+                        {
+                            TokenValue(
+                                (BigInteger.valueOf(1_000_000L) - secondArg<BigInteger>())
+                                    .coerceAtLeast(BigInteger.ZERO),
+                                btcCoin,
+                            )
+                        }
+                    // collectPlanFee fills both together; no clamp here, so neither is refreshed.
+                    planBtc.value = okPlan(2_000L)
+                    planFee.value = 2_000L
+                    coEvery { gasFeeToEstimatedFee(any()) } returns
+                        EstimatedGasFee(
+                            formattedFiatValue = "$1.00",
+                            formattedTokenValue = "0.00002 BTC",
+                            tokenValue = TokenValue(BigInteger.ONE, btcCoin),
+                            fiatValue = mockk(relaxed = true),
+                        )
+
+                    val captured = slot<Transaction>()
+                    coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+                    build(this).submit()
+                    advanceUntilIdle()
+
+                    assertNull(lastError, "Expected no error; got $lastError")
+                    // Untouched: 0.005 BTC, sized against the 2000 sat fee, not the EVM leftovers.
+                    assertEquals(BigInteger.valueOf(500_000L), captured.captured.tokenValue.value)
+                    assertEquals("0.005", tokenAmountFieldState.text.toString())
+                } finally {
+                    unmockkStatic(Dispatchers::class)
+                }
+            }
+        } catch (e: Throwable) {
+            if (
+                e is UnsatisfiedLinkError ||
+                    e is ExceptionInInitializerError ||
+                    e is NoClassDefFoundError
+            ) {
+                assumeTrue(false, "WalletCore JNI not available: ${e.message}")
+            } else throw e
+        }
+    }
+
     private fun okPlan(fee: Long): Bitcoin.TransactionPlan =
         Bitcoin.TransactionPlan.newBuilder().setFee(fee).setError(SigningError.OK).build()
 
