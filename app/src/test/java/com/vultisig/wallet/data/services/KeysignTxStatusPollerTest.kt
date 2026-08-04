@@ -64,6 +64,36 @@ internal class KeysignTxStatusPollerTest {
         verify { serviceManager.stopPolling() }
     }
 
+    // The system can accept the start and then drop it, so onServiceConnected never fires. Waiting
+    // on serviceReady would then hold the screen on "Pending" for the rest of the session.
+    @Test
+    fun `a binding that never connects is untracked`() = runTest {
+        every { serviceManager.startPolling(txHash, Chain.Ethereum) } returns true
+        every { serviceManager.serviceReady } returns MutableStateFlow(false)
+        val observed = mutableListOf<TransactionResult>()
+
+        val outcome = poll(observed)
+
+        outcome shouldBe TxStatusPollOutcome.NotTracked
+        observed shouldBe listOf(TransactionResult.Pending)
+        verify { serviceManager.stopPolling() }
+    }
+
+    // A service whose own startForeground threw never starts its poll job, so its status flow sits
+    // on its initial Pending forever — indistinguishable from a slow chain until the budget lapses.
+    @Test
+    fun `a bound service that never reports is untracked once the poll budget lapses`() = runTest {
+        every { serviceManager.startPolling(txHash, Chain.Ethereum) } returns true
+        every { serviceManager.getStatusFlow() } returns MutableStateFlow(TransactionResult.Pending)
+        val observed = mutableListOf<TransactionResult>()
+
+        val outcome = poll(observed)
+
+        outcome shouldBe TxStatusPollOutcome.NotTracked
+        observed shouldBe listOf(TransactionResult.Pending, TransactionResult.Pending)
+        verify { serviceManager.stopPolling() }
+    }
+
     // The binder can be gone by the time the service reports ready (disconnect, concurrent stop):
     // same outcome, the transaction has no watcher.
     @Test

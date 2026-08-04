@@ -9,10 +9,10 @@ import javax.inject.Inject
 import kotlin.coroutines.coroutineContext
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 
 /**
@@ -22,6 +22,19 @@ import timber.log.Timber
 private const val SWAPKIT_FOREGROUND_TIMEOUT_MS = 30 * 60 * 1000L
 
 /**
+ * How long to wait for the status service's binding to connect. The service runs in this process,
+ * so a binding that has not connected by now never will — the start was accepted and then dropped.
+ */
+private val SERVICE_BIND_TIMEOUT = 10.seconds
+
+/**
+ * Headroom over the chain's own `maxWaitSeconds` status-poll budget. The service emits
+ * [TransactionResult.TimedOut] once it reaches that budget, so this deadline expires only when the
+ * service is bound but never polled — never on a healthy poll it would otherwise tear down.
+ */
+private val STATUS_SERVICE_GRACE = 30.seconds
+
+/**
  * How a done-screen status poll ended. Every observed status already reached the caller through the
  * poll's `onStatus` callback; this says who owns the transaction's status from here on.
  */
@@ -29,7 +42,7 @@ enum class TxStatusPollOutcome {
     /** A terminal on-chain status was observed. */
     Terminal,
 
-    /** The status service never reported, and no further status can arrive. */
+    /** No status will arrive: the status service never reported, or stopped without settling. */
     NotTracked,
 
     /**
@@ -80,8 +93,9 @@ constructor(
     /**
      * Default status poll for the done screen — drives the foreground
      * [TransactionStatusServiceManager] for [txHash] on [chain], emitting each observed status via
-     * [onStatus] and persisting it. A rejected binding or a vanished binder yields
-     * [TxStatusPollOutcome.NotTracked]: no further status can arrive. Tears down the foreground
+     * [onStatus] and persisting it. Every way the service can fail to report — a rejected start, a
+     * binding that never connects, a vanished binder, or a bound service that never polls — yields
+     * [TxStatusPollOutcome.NotTracked] rather than waiting forever. Tears down the foreground
      * service on every exit path.
      */
     private suspend fun pollStatusService(
@@ -96,23 +110,27 @@ constructor(
                 return TxStatusPollOutcome.NotTracked
             }
             onStatus(TransactionResult.Pending)
-            transactionStatusServiceManager.serviceReady
-                .filter { it } // Wait until service is ready
-                .first()
+            withTimeoutOrNull(SERVICE_BIND_TIMEOUT) {
+                transactionStatusServiceManager.serviceReady.first { it }
+            } ?: return TxStatusPollOutcome.NotTracked
             val statusFlow =
                 transactionStatusServiceManager.getStatusFlow()
                     ?: return TxStatusPollOutcome.NotTracked
-            statusFlow
-                .onEach { statusResult ->
-                    persistStatus(
-                        txHash,
-                        chain,
-                        statusResult,
-                        "Failed to update tx history status for %s",
-                    )
-                    onStatus(statusResult)
-                }
-                .first { it.isTerminal() }
+            val budget =
+                txStatusConfigurationProvider.getConfigurationForChain(chain).maxWaitSeconds.seconds
+            withTimeoutOrNull(budget + STATUS_SERVICE_GRACE) {
+                statusFlow
+                    .onEach { statusResult ->
+                        persistStatus(
+                            txHash,
+                            chain,
+                            statusResult,
+                            "Failed to update tx history status for %s",
+                        )
+                        onStatus(statusResult)
+                    }
+                    .first { it.isTerminal() }
+            } ?: return TxStatusPollOutcome.NotTracked
             return TxStatusPollOutcome.Terminal
         } finally {
             // Tear down the foreground service on every exit path (terminal, early return, or
