@@ -151,18 +151,7 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
 
         if (plan?.error != SigningError.OK) {
             Timber.e("BTC-like transaction plan error: %s", plan?.error)
-            // Dust and zero-amount are already rejected earlier (the dust check above, and the
-            // blank/zero-amount guard before submit ever reaches here), so the only SigningErrors
-            // that realistically land here are "no spendable UTXOs" and "selected UTXOs don't
-            // cover amount + fee" — give those their own distinct message instead of collapsing
-            // every plan failure into one string (#5504).
-            val errorRes =
-                if (plan?.error == SigningError.Error_missing_input_utxos) {
-                    R.string.send_error_no_utxos_available
-                } else {
-                    R.string.insufficient_utxos_error
-                }
-            throw InvalidTransactionDataException(errorRes.asUiText())
+            throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
         }
     }
 

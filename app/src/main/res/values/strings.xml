@@ -282,7 +282,6 @@
     <string name="swap_form_invalid_amount">Invalid amount</string>
     <string name="send_from_invalid_amount">Invalid amount</string>
     <string name="insufficient_utxos_error">Not enough available UTXOs to cover the selected amount. Please add more funds or reduce the amount you\'re sending</string>
-    <string name="send_error_no_utxos_available">No UTXOs available for this transaction yet. Please wait for pending transactions to confirm and try again</string>
     <string name="verify_transaction_memo_title">Memo</string>
     <string name="join_keysign_wrong_reshare">Wrong ReShare</string>
     <string name="swap_screen_provider_title">Provider</string>

@@ -278,7 +278,6 @@
     <string name="swap_form_invalid_amount">잘못된 금액</string>
     <string name="send_from_invalid_amount">잘못된 금액</string>
     <string name="insufficient_utxos_error">선택한 금액을 처리하기에 사용 가능한 UTXO가 부족합니다. 자금을 추가하거나 보내는 금액을 줄여주세요</string>
-    <string name="send_error_no_utxos_available">이 거래에 사용할 수 있는 UTXO가 아직 없습니다. 보류 중인 거래가 확인될 때까지 기다린 후 다시 시도해주세요</string>
     <string name="verify_transaction_memo_title">메모</string>
     <string name="join_keysign_wrong_reshare">잘못된 재공유</string>
     <string name="swap_screen_provider_title">제공자</string>

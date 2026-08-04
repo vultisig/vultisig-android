@@ -83,7 +83,6 @@
     <string name="swap_form_invalid_amount">Monto invalido</string>
     <string name="send_from_invalid_amount">Monto invalido</string>
     <string name="insufficient_utxos_error">No hay suficientes UTXOs disponibles para cubrir el monto seleccionado. Por favor, agregue más fondos o reduzca el monto que está enviando</string>
-    <string name="send_error_no_utxos_available">Aún no hay UTXOs disponibles para esta transacción. Por favor, espere a que se confirmen las transacciones pendientes e inténtelo de nuevo</string>
     <string name="send_screen_title">Enviar</string>
     <string name="bond_screen_title">Vincular</string>
     <string name="transaction_type_button_send">Enviar</string>
