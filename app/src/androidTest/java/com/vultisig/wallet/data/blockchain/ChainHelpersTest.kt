@@ -13,12 +13,14 @@ import TransactionData
 import TriggerSmartContractPayload
 import android.content.Context
 import androidx.test.platform.app.InstrumentationRegistry
+import com.vultisig.wallet.data.chains.helpers.BittensorHelper
 import com.vultisig.wallet.data.chains.helpers.CardanoHelper
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper.Companion.ATOM_DENOM
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
+import com.vultisig.wallet.data.chains.helpers.QBTCTransactionHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
@@ -387,6 +389,47 @@ class ChainHelpersTest {
         assertEquals(staticHash, relayedEqualToStaticHash)
     }
 
+    /**
+     * One send per Cosmos-family chain not otherwise covered by [sendCosmosTest]/ [sendKUJIRATest],
+     * plus one genuine IBC transfer (`transaction_type` 3, routed through [CosmosHelper]'s
+     * `TRANSACTION_TYPE_IBC_TRANSFER` branch rather than a plain send whose memo merely looks like
+     * IBC routing info). Regression coverage for issue #5421 item 5.
+     */
+    @Test
+    fun sendCosmosChainMatrixTest() {
+        val transactions: List<TransactionData> = loadTransactionData(COSMOS_CHAIN_MATRIX_JSON_FILE)
+
+        transactions.forEach { transaction ->
+            val payload = transaction.keysignPayload.toInternalKeySignPayload()
+            val chain = payload.coin.chain
+            val helper =
+                CosmosHelper(chain.coinType, chain.feeUnit, CosmosHelper.getChainGasLimit(chain))
+            val preImageHashes = helper.getPreSignedImageHash(payload)
+
+            assertEquals(preImageHashes, transaction.expectedImageHash)
+        }
+    }
+
+    /**
+     * QBTC signs with ML-DSA (post-quantum) and its `TxRaw`/`SignDoc`/`AuthInfo` are hand-built
+     * with a manual protobuf wire-format encoder in [QBTCTransactionHelper] — no WalletCore
+     * `TransactionCompiler` involved at all. Together with [sendBittensorTest], this is the other
+     * hand-rolled path issue #5421 flags as highest-risk for cross-platform divergence. Regression
+     * coverage for issue #5421 item 6.
+     */
+    @Test
+    fun sendQBTCTest() {
+        val transactions: List<TransactionData> = loadTransactionData(QBTC_JSON_FILE)
+        val helper = QBTCTransactionHelper()
+
+        transactions.forEach { transaction ->
+            val preImageHashes =
+                helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
+
+            assertEquals(preImageHashes, transaction.expectedImageHash)
+        }
+    }
+
     @Test
     fun sendSolana() {
         val transactions: List<TransactionData> = loadTransactionData(SOLANA_JSON_FILE)
@@ -404,6 +447,26 @@ class ChainHelpersTest {
     fun sendPolkadot() {
         val transactions: List<TransactionData> = loadTransactionData(DOT_JSON_FILE)
         val helper = PolkadotHelper(HEX_PUBLIC_KEY)
+
+        transactions.forEach { transaction ->
+            val preImageHashes =
+                helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
+
+            assertEquals(preImageHashes, transaction.expectedImageHash)
+        }
+    }
+
+    /**
+     * Bittensor bypasses TW Core's `TransactionCompiler` entirely (hand-rolled SCALE-encoded
+     * extrinsic — see [BittensorHelper]'s class doc: TW Core doesn't support the CheckMetadataHash
+     * signed extension Bittensor requires), so it is exactly the class of hand-rolled signing path
+     * issue #5421 identifies as most likely to diverge across platforms. Regression coverage for
+     * issue #5421 item 6.
+     */
+    @Test
+    fun sendBittensorTest() {
+        val transactions: List<TransactionData> = loadTransactionData(BITTENSOR_JSON_FILE)
+        val helper = BittensorHelper(HEX_PUBLIC_KEY_EDDSA)
 
         transactions.forEach { transaction ->
             val preImageHashes =
@@ -935,6 +998,7 @@ class ChainHelpersTest {
         private const val EVM_CHAIN_MATRIX_JSON_FILE = "evm-chain-matrix.json"
         private const val TCY_JSON_FILE = "tcy.json"
         private const val COSMOS_JSON_FILE = "cosmos.json"
+        private const val COSMOS_CHAIN_MATRIX_JSON_FILE = "cosmos-chain-matrix.json"
         private const val XRP_JSON_FILE = "xrp.json"
         private const val TON_JSON_FILE = "ton.json"
         private const val SOLANA_JSON_FILE = "solana.json"
@@ -944,6 +1008,8 @@ class ChainHelpersTest {
         private const val UTXO_JSON_FILE = "utxo.json"
         private const val POL_JSON_FILE = "pol.json"
         private const val DOT_JSON_FILE = "dot.json"
+        private const val BITTENSOR_JSON_FILE = "bittensor.json"
+        private const val QBTC_JSON_FILE = "qbtc.json"
         private const val SUI_JSON_FILE = "sui.json"
         private const val TRON_JSON_FILE = "tron.json"
         private const val KUJIRA_JSON_FILE = "kujira.json"
@@ -969,6 +1035,7 @@ class ChainHelpersTest {
                 EVM_CHAIN_MATRIX_JSON_FILE to "sendEvmChainMatrixTest",
                 TCY_JSON_FILE to "sendTCYTest",
                 COSMOS_JSON_FILE to "sendCosmosTest",
+                COSMOS_CHAIN_MATRIX_JSON_FILE to "sendCosmosChainMatrixTest",
                 XRP_JSON_FILE to "sendXRPTest",
                 TON_JSON_FILE to "sendTONTest",
                 SOLANA_JSON_FILE to "sendSolana",
@@ -978,6 +1045,8 @@ class ChainHelpersTest {
                 UTXO_JSON_FILE to "sendUTXO",
                 POL_JSON_FILE to "sendPOLTest",
                 DOT_JSON_FILE to "sendPolkadot",
+                BITTENSOR_JSON_FILE to "sendBittensorTest",
+                QBTC_JSON_FILE to "sendQBTCTest",
                 SUI_JSON_FILE to "sendSUI",
                 TRON_JSON_FILE to "sendTronTest",
                 KUJIRA_JSON_FILE to "sendKUJIRATest",
@@ -988,7 +1057,15 @@ class ChainHelpersTest {
                 ARB_SWAP_JSON_FILE to "oneInchArbitrumSwapTest",
             )
 
-        private const val EXPECTED_CASE_COUNT = 77
+        // +5: cosmos-chain-matrix.json (issue #5421 item 5, Osmosis/Dydx/Noble/Akash + one IBC
+        // transfer). +2: utxo.json's new Dash/Zcash cases (item 4). +1: bittensor.json (item 6).
+        // +1: qbtc.json (item 6). +1: thorchainswap.json's new limit-order case (item 7).
+        // Every new expected_image_hash here was captured by actually running this repo's Kotlin
+        // signer (connectedDebugAndroidTest on a real device/emulator) — not hand-authored. Per
+        // #5421's rule, a hash needs agreement from at least two of the three real signers
+        // (Kotlin/Swift/TS) before it's ground truth; only the Kotlin side has run so far, so
+        // these are pending Swift/TS corroboration.
+        private const val EXPECTED_CASE_COUNT = 87
 
         private const val HEX_PUBLIC_KEY =
             "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b"
