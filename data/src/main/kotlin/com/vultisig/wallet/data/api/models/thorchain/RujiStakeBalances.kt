@@ -23,5 +23,10 @@ data class RujiStakeBalances(
     val autoCompoundShares: BigInteger? = BigInteger.ZERO,
     val rewardsAmount: BigInteger = BigInteger.ZERO,
     val rewardsTicker: String = "USDC",
-    val apr: Double = 0.0,
+    /**
+     * The bonded position's fractional annual rate (`0.0116` for 1.16%), or null when the pool
+     * publishes none. Never zero for a missing rate — that would assert the position earns nothing
+     * rather than hide the row.
+     */
+    val apr: Double? = null,
 )
