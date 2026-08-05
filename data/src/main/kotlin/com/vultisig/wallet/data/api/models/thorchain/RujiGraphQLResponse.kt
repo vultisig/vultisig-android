@@ -79,7 +79,11 @@ data class StakingV2(
 @Serializable
 data class Apr(
     val value: String? = null,
-    /** `AVAILABLE` | `NOT_APPLICABLE` | `SOON`. Anything but `AVAILABLE` publishes no rate. */
+    /**
+     * `AVAILABLE` | `NOT_APPLICABLE` | `SOON`. Anything but `AVAILABLE` publishes no rate, and so
+     * does an absent status: the schema declares this field non-null, so a response without one is
+     * not qualifying the rate it carries.
+     */
     val status: String? = null,
 ) {
     /**
@@ -87,12 +91,18 @@ data class Apr(
      *
      * Null rather than zero on every failure — an absent rate hides the APR row, where a zero would
      * assert the position earns nothing.
+     *
+     * The scalar is an integer, so it is parsed as one: a decimal or exponent string is a value
+     * this field is not defined to carry, and scaling it anyway would render a confidently wrong
+     * percentage. The finite check catches a digit string too long for a `Double`.
      */
     val fractionalRate: Double?
         get() {
-            if (status != null && status != APR_STATUS_AVAILABLE) return null
-            val raw = value?.toBigDecimalOrNull() ?: return null
-            return raw.movePointLeft(APR_DECIMALS).toDouble()
+            if (status != APR_STATUS_AVAILABLE) return null
+            val raw = value?.toBigIntegerOrNull() ?: return null
+            return raw.toBigDecimal().movePointLeft(APR_DECIMALS).toDouble().takeIf {
+                it.isFinite()
+            }
         }
 
     private companion object {

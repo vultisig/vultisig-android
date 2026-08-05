@@ -624,8 +624,25 @@ class ThorChainApiImplTest {
         }
 
     @Test
-    fun `getRujiStakeBalance reads the APR of a pool that omits its status`() = runBlocking {
-        // The field is optional in the schema; absent means unqualified, not unavailable.
+    fun `getRujiStakeBalance keeps the balances when the APR carries no value`() = runBlocking {
+        // status without value: the schema makes the scalar nullable, so an AVAILABLE pool can
+        // still publish nothing. Hide the row, keep the card.
+        val api =
+            newRujiApi(
+                stakeBody = rujiStakeBody(bondedAmount = "7875733", apr = aprJson(value = null)),
+                balancesBody = """{"balances":[]}""",
+            )
+
+        val result = api.getRujiStakeBalance("thor1abc")
+
+        assertNull(result.apr)
+        assertEquals(BigInteger("7875733"), result.stakeAmount)
+    }
+
+    @Test
+    fun `getRujiStakeBalance publishes no APR when the pool omits its status`() = runBlocking {
+        // The schema declares status non-null, so a response without one is not qualifying its
+        // rate as live — publishing it anyway would show a placeholder as a real yield.
         val api =
             newRujiApi(
                 stakeBody =
@@ -638,7 +655,40 @@ class ThorChainApiImplTest {
 
         val result = api.getRujiStakeBalance("thor1abc")
 
-        assertEquals(0.011623890337, result.apr!!, 1e-15)
+        assertNull(result.apr)
+    }
+
+    @Test
+    fun `getRujiStakeBalance publishes no APR for a rate that is not an integer`() = runBlocking {
+        // The scalar is integer-only. "1162.389" parses as a BigDecimal and scales to a finite
+        // 1.16e-9 — a confidently wrong 0.0000001%, worse than no rate at all.
+        val api =
+            newRujiApi(
+                stakeBody = rujiStakeBody(bondedAmount = "7875733", apr = aprJson("1162.389")),
+                balancesBody = """{"balances":[]}""",
+            )
+
+        val result = api.getRujiStakeBalance("thor1abc")
+
+        assertNull(result.apr)
+        assertEquals(BigInteger("7875733"), result.stakeAmount)
+    }
+
+    @Test
+    fun `getRujiStakeBalance keeps the card when the APR overflows a double`() = runBlocking {
+        // A digit string past Double range scales to Infinity, not null, and would reach
+        // formatPercentage() as "∞%". The whole read must survive it too.
+        val api =
+            newRujiApi(
+                stakeBody =
+                    rujiStakeBody(bondedAmount = "7875733", apr = aprJson("1" + "0".repeat(400))),
+                balancesBody = """{"balances":[]}""",
+            )
+
+        val result = api.getRujiStakeBalance("thor1abc")
+
+        assertNull(result.apr)
+        assertEquals(BigInteger("7875733"), result.stakeAmount)
     }
 
     @Test
