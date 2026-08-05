@@ -112,8 +112,8 @@ internal fun ExpandingBottomSheet(
     // effect, and every effect runs after this composition, so clearing it from one of those means
     // the window is added, dimmed and drawn over the screen for a frame or two first: the black
     // flash that precedes the sheet.
-    val dialogWindow = (LocalView.current.parent as? DialogWindowProvider)?.window
-    remember(dialogWindow) { dialogWindow?.setDimAmount(0f) }
+    val view = LocalView.current
+    remember(view) { (view.parent as? DialogWindowProvider)?.window?.apply { setDimAmount(0f) } }
 
     LaunchedEffect(windowHeight, restHeight, expandedTop, cutEdgeFade) {
         if (windowHeight <= 0) return@LaunchedEffect
@@ -123,6 +123,11 @@ internal fun ExpandingBottomSheet(
         // that has to be readable to clear the fade within a third; it never lets the sheet open
         // taller than that just because there is more to show.
         val visibleAtRest = maxOf(hiddenOffset * RestFraction, restHeight + cutEdgeFade)
+        // Where the sheet is headed has to be read before the rewind below moves it away from its
+        // anchor: read afterwards, it is whichever anchor happens to be nearest the old offset, and
+        // once the resting place climbs past the halfway mark of the window that is the bottom of
+        // the screen — so the sheet would leave rather than grow.
+        val target = state.targetValue
         val offsetBeforeUpdate = state.offset
         state.updateAnchors(
             newAnchors =
@@ -136,7 +141,7 @@ internal fun ExpandingBottomSheet(
             // the sheet is still sliding in: the content measures a frame later and moves the rest
             // anchor, and at that moment the nearest anchor is still Hidden — which would abort the
             // entrance and dismiss the sheet before it ever appeared.
-            newTarget = state.targetValue,
+            newTarget = target,
         )
 
         // A sheet already parked on an anchor is moved there by a write with no animation behind
@@ -149,7 +154,7 @@ internal fun ExpandingBottomSheet(
         val offsetAfterUpdate = state.offset
         if (!offsetBeforeUpdate.isNaN() && offsetAfterUpdate != offsetBeforeUpdate) {
             state.dispatchRawDelta(offsetBeforeUpdate - offsetAfterUpdate)
-            state.anchoredDrag(state.targetValue) { anchors, latestTarget ->
+            state.anchoredDrag(target) { anchors, latestTarget ->
                 animate(
                     initialValue = offsetBeforeUpdate,
                     targetValue = anchors.positionOf(latestTarget),

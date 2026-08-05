@@ -10,7 +10,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -39,9 +41,13 @@ class ExpandingBottomSheetTest {
         }
         compose.waitForIdle()
         val settledEdge = sheetEdge()
+        val windowHeight = compose.onRoot().fetchSemanticsNode().size.height
 
         compose.mainClock.autoAdvance = false
-        restHeight = TallRestHeight
+        // Taken from the window rather than fixed, so that the sheet's new resting place is further
+        // from where it sits than the bottom of the screen is on every device the test runs on —
+        // the geometry where growing and leaving are told apart.
+        restHeight = (windowHeight * TallRestFraction).roundToInt()
 
         val edges =
             List(FramesSampled) {
@@ -83,7 +89,7 @@ private const val ContentTag = "expanding-sheet-content"
 // Short enough that a third of any phone window is the taller of the two and sets the anchor, then
 // tall enough that the content does instead — so the resting anchor is guaranteed to move.
 private const val ShortRestHeight = 200
-private const val TallRestHeight = 1_200
+private const val TallRestFraction = 0.75f
 
 private val LongContentHeight = 2_000.dp
 private const val FramesSampled = 6
