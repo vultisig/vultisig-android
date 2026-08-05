@@ -209,9 +209,14 @@ class MldsaKeygen(
         return false
     }
 
-    @Throws(Exception::class)
     private suspend fun deleteMessageFromServer(hash: String) {
-        sessionApi.deleteTssMessage(mediatorURL, sessionID, localPartyId, hash, activeMessageId)
+        sessionApi.deleteTssMessageQuietly(
+            mediatorURL,
+            sessionID,
+            localPartyId,
+            hash,
+            activeMessageId,
+        )
     }
 
     @Throws(Exception::class)

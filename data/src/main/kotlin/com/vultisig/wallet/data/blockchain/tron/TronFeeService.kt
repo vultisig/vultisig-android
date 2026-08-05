@@ -53,7 +53,7 @@ import wallet.core.jni.Base58
  *         - Energy is specifically required for smart contract execution.
  *     - Unlike bandwidth, there is no daily free quota for energy; only staking provides it.
  * 3. Memo Fee
- *     - If a transaction includes a memo, a flat fee applies.
+ *     - If the signed transaction carries a memo (`raw_data.data`), a flat fee applies.
  *     - Default memo fee: 1 TRX (1,000,000 SUN).
  * 4. Account Activation Fee
  *     - Sending TRX to a new account requires paying an activation fee.
@@ -86,7 +86,6 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
             val coin = transaction.coin
             val fromAddress = transaction.coin.address
             val toAddress = transaction.to
-            val memo = transaction.memo
 
             val srcAccountDeferred = async { tronApi.getAccountResource(fromAddress) }
             val dstAccountDeferred = async { tronApi.getAccount(toAddress) }
@@ -98,7 +97,7 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
                 calculateNativeTrxFee(
                     srcAccount = srcAccount,
                     dstAccount = dstAccount,
-                    hasMemo = !memo.isNullOrEmpty(),
+                    hasMemo = transaction.paysMemoFee(),
                 )
             } else {
                 calculateTrc20Fee(
@@ -139,6 +138,16 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
     }
 
     private fun TronAccountJson?.isNewAccount(): Boolean = this == null || address.isEmpty()
+
+    /**
+     * Tron burns the memo fee only for a non-empty `raw_data.data`, so the staking routing signal
+     * parked in the memo field — which never reaches the signed contract — must not be priced as
+     * one.
+     */
+    private fun BlockchainTransaction.paysMemoFee(): Boolean {
+        val memo = (this as? Transfer)?.memo ?: return false
+        return memo.isNotEmpty() && !isTronStakingTransfer(coin, to, memo)
+    }
 
     // Both transfers COIN and TRC-20 are quite deterministic in terms of bandwidth
     // Bandwidth represents the transaction size in bytes, 250-300 for COIN and around 350 for
@@ -327,7 +336,7 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): TronFees {
         val toAddress = transaction.to
         val isNativeCoin = transaction.coin.isNativeToken
-        val hasMemo = (transaction as? Transfer)?.memo?.isNotEmpty() == true
+        val hasMemo = transaction.paysMemoFee()
         val isTokenTransfer = !transaction.coin.isNativeToken
 
         val isNewAccount =

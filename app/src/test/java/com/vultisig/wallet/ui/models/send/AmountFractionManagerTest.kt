@@ -3,7 +3,17 @@
 package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import com.vultisig.wallet.data.api.TronApi
+import com.vultisig.wallet.data.api.models.TronAccountJson
+import com.vultisig.wallet.data.api.models.TronAccountResourceJson
+import com.vultisig.wallet.data.api.models.TronChainParameterJson
+import com.vultisig.wallet.data.api.models.TronChainParametersJson
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.tron.TronFeeService
+import com.vultisig.wallet.data.blockchain.tron.TronResourceType
+import com.vultisig.wallet.data.blockchain.tron.TronStakingOperation
+import com.vultisig.wallet.data.blockchain.tron.tronStakingMemo
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -25,6 +35,7 @@ import kotlin.test.assertNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -32,6 +43,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -53,6 +66,22 @@ internal class AmountFractionManagerTest {
     private var vault: Vault? = vault()
     private var account: Account? = null
     private var tronFrozen: BigDecimal? = null
+
+    private val tronApi: TronApi =
+        mockk(relaxed = true) {
+            coEvery { getChainParameters() } returns
+                TronChainParametersJson(
+                    listOf(
+                        TronChainParameterJson("getTransactionFee", 1000L),
+                        TronChainParameterJson("getCreateAccountFee", 100000L),
+                        TronChainParameterJson("getCreateNewAccountFeeInSystemContract", 1000000L),
+                        TronChainParameterJson("getMemoFee", 1000000L),
+                    )
+                )
+            coEvery { getAccountResource(any()) } returns
+                TronAccountResourceJson(freeNetLimit = 5_000L)
+            coEvery { getAccount(any()) } returns TronAccountJson(address = "T...")
+        }
 
     private val getAvailableTokenBalance: GetAvailableTokenBalanceUseCase = mockk(relaxed = true)
     private val feeServiceComposite: FeeServiceComposite = mockk(relaxed = true)
@@ -177,6 +206,56 @@ internal class AmountFractionManagerTest {
             coVerify { amountManager.markMax(BigDecimal("12.5")) }
             coVerify(exactly = 0) { feeServiceComposite.calculateFees(any()) }
             coVerify(exactly = 0) { tokenRepository.getNativeToken(any()) }
+        }
+
+    @Test
+    fun `chooseMaxTokenAmount FREEZE_TRX - reserves the real fee, not the staking memo's`() =
+        runTest(mainDispatcher) {
+            // End-to-end over the real TronFeeService: the freeze form parks its routing signal in
+            // the memo field, which used to buy a ~1 TRX memo fee the chain never charges and which
+            // was then reserved out of the freezable balance (issue #5481).
+            defiType = DeFiNavActions.FREEZE_TRX
+            val trx = trxAccount().let { it.copy(tokenValue = TokenValue(BALANCE, it.token)) }
+            account = trx
+            addressFieldState.setTextAndPlaceCursorAtEnd(trx.token.address)
+            memoFieldState.setTextAndPlaceCursorAtEnd(
+                tronStakingMemo(TronStakingOperation.FREEZE, TronResourceType.BANDWIDTH)
+            )
+            // Seed the stale phantom so the assertions below fail if the recompute reinstates it.
+            gasFee.value = TokenValue(value = BigInteger("1000000"), token = trx.token)
+            coEvery { feeServiceComposite.calculateFees(any()) } coAnswers
+                {
+                    TronFeeService(tronApi).calculateFees(firstArg())
+                }
+            // Mirrors GetAvailableTokenBalanceUseCase for a native coin: balance minus the fee.
+            coEvery { getAvailableTokenBalance(any(), any()) } answers
+                {
+                    TokenValue(BALANCE - secondArg<BigInteger>(), trx.token)
+                }
+            val manager = build(backgroundScope)
+
+            manager.chooseMaxTokenAmount()
+
+            // Free bandwidth covers the transfer and the destination is the sender's own,
+            // already-activated account, so the whole 100 TRX is freezable.
+            assertEquals("100", awaitAmountField())
+            assertEquals(BigInteger.ZERO, gasFee.value?.value)
+        }
+
+    /**
+     * The percentage recompute hops to [Dispatchers.IO], which [runTest]'s scheduler cannot
+     * advance, so wait on the real clock for the amount it finally writes.
+     */
+    private suspend fun awaitAmountField(): String =
+        withContext(Dispatchers.Default) {
+            withTimeout(10_000) {
+                var text = tokenAmountFieldState.text.toString()
+                while (text.isEmpty()) {
+                    delay(10)
+                    text = tokenAmountFieldState.text.toString()
+                }
+                text
+            }
         }
 
     // ──────── choosePercentageAmount ────────
@@ -410,6 +489,11 @@ internal class AmountFractionManagerTest {
             fiatValue = null,
             price = null,
         )
+    }
+
+    private companion object {
+        /** 100 TRX, in sun. */
+        val BALANCE: BigInteger = BigInteger("100000000")
     }
 
     private fun usdcSolanaAccount(): Account {

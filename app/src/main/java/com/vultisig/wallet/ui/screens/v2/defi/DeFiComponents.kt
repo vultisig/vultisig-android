@@ -604,6 +604,7 @@ internal fun HeaderDeFiWidget(
     onClickAction: () -> Unit,
     totalAmount: String,
     totalPrice: String = "",
+    apy: String? = null,
     isLoading: Boolean = false,
     isBalanceVisible: Boolean = true,
     buttonState: VsButtonState = VsButtonState.Enabled,
@@ -666,9 +667,11 @@ internal fun HeaderDeFiWidget(
 
         UiSpacer(16.dp)
 
-        ApyApproxWithHint()
+        if (apy != null) {
+            ApyApproxWithHint(apy = apy)
 
-        UiSpacer(16.dp)
+            UiSpacer(16.dp)
+        }
 
         VsButton(
             label = buttonText,
@@ -681,8 +684,8 @@ internal fun HeaderDeFiWidget(
 
 @Composable
 private fun ApyApprox(
+    apy: String,
     modifier: Modifier = Modifier,
-    apy: String = "1%",
     onMoreInfoClick: (() -> Unit)? = null,
     onMoreInfoIconModifier: Modifier = Modifier,
 ) {
@@ -709,7 +712,7 @@ private fun ApyApprox(
 }
 
 @Composable
-private fun ApyApproxWithHint(modifier: Modifier = Modifier, apy: String = "1%") {
+private fun ApyApproxWithHint(apy: String, modifier: Modifier = Modifier) {
     var showHint by remember { mutableStateOf(false) }
     var iconPosition by remember { mutableStateOf(Offset.Zero) }
     var boxCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
@@ -755,6 +758,7 @@ internal fun HeaderDeFiWidget(
     onClickSecondAction: () -> Unit,
     totalAmount: String,
     totalPrice: String = "",
+    apy: String? = null,
     isLoading: Boolean = false,
     isBalanceVisible: Boolean = true,
     isSecondActionEnabled: Boolean = true,
@@ -817,9 +821,11 @@ internal fun HeaderDeFiWidget(
 
         UiSpacer(16.dp)
 
-        ApyApproxWithHint()
+        if (apy != null) {
+            ApyApproxWithHint(apy = apy)
 
-        UiSpacer(16.dp)
+            UiSpacer(16.dp)
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -1012,6 +1018,7 @@ private fun HeaderDeFiWidgetTwoActionsPreview() {
             onClickFirstAction = {},
             onClickSecondAction = {},
             totalAmount = "0.7031 USDC",
+            apy = "1%",
         )
     }
 }

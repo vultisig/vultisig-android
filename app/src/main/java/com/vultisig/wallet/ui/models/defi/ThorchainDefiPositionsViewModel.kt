@@ -957,6 +957,10 @@ constructor(
     private suspend fun priceFor(coin: Coin, currency: AppCurrency): BigDecimal =
         try {
             tokenPriceRepository.getCachedPrice(tokenId = coin.id, appCurrency = currency)
+                ?: coin.priceProviderID
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { tokenPriceRepository.getPriceByPriceProviderId(it) }
+                    ?.takeIf { it > BigDecimal.ZERO }
                 ?: tokenPriceRepository.getPriceByContactAddress(
                     coin.chain.id,
                     coin.contractAddress,

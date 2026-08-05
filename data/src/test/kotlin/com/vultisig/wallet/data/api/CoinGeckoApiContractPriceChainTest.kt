@@ -38,6 +38,27 @@ class CoinGeckoApiContractPriceChainTest {
     }
 
     @Test
+    fun `getContractsPrice resolves Sui to the sui CoinGecko platform id`() = runTest {
+        lateinit var requestedUrl: String
+        val engine = MockEngine { request ->
+            requestedUrl = request.url.toString()
+            respond(content = "{}", status = HttpStatusCode.OK)
+        }
+        val api = CoinGeckoApiImpl(HttpClient(engine) { install(ContentNegotiation) { json() } })
+
+        api.getContractsPrice(
+            Chain.Sui,
+            listOf(
+                "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC"
+            ),
+            listOf("usd"),
+        )
+
+        assertContains(requestedUrl, "/token_price/sui")
+        assertContains(requestedUrl, "vs_currencies=usd")
+    }
+
+    @Test
     fun `getContractsPrice still degrades to an empty map for a chain without a mapping`() =
         runTest {
             var requestAttempted = false

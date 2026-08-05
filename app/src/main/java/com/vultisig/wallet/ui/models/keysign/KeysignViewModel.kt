@@ -41,6 +41,7 @@ import com.vultisig.wallet.data.repositories.PendingLimitOrderRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.services.KeysignTxStatusPoller
+import com.vultisig.wallet.data.services.TxStatusPollOutcome
 import com.vultisig.wallet.data.swap.limit.LimitSwapCancelMemo
 import com.vultisig.wallet.data.swap.limit.LimitSwapMemo
 import com.vultisig.wallet.data.swap.limit.findOrderAddressedByCancelMemo
@@ -1039,7 +1040,7 @@ constructor(
         pollingTxStatusJob?.cancel()
         pollingTxStatusJob =
             viewModelScope.safeLaunch {
-                val terminal =
+                val outcome =
                     txStatusPoller.poll(txHash, chain, isSwapKitSwap = isSwapKitSwap()) { result ->
                         _state.update {
                             it.copy(
@@ -1050,7 +1051,21 @@ constructor(
                             )
                         }
                     }
-                if (terminal != null) tryUpdateEvmActualFee(txHash, chain)
+                when (outcome) {
+                    TxStatusPollOutcome.Terminal -> tryUpdateEvmActualFee(txHash, chain)
+                    // The done screen has no watcher left, so it must not keep advertising a
+                    // status that can never advance — land where a broadcast with nothing to poll
+                    // lands. The history row is still settled by the tx-history poller (#5510).
+                    TxStatusPollOutcome.NotTracked ->
+                        _state.update {
+                            it.copy(
+                                signingState =
+                                    KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+                            )
+                        }
+                    // Still settling: the last observed status is real and must stand.
+                    TxStatusPollOutcome.HandedOff -> Unit
+                }
             }
     }
 

@@ -10,11 +10,15 @@ import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
+import com.vultisig.wallet.data.services.KeysignTxStatusPoller
+import com.vultisig.wallet.data.services.TxStatusPollOutcome
 import com.vultisig.wallet.data.usecases.KeysignBroadcastResult
+import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -50,6 +54,7 @@ internal class KeysignViewModelApplyBroadcastResultTest {
     private lateinit var txStatusConfigurationProvider: TxStatusConfigurationProvider
     private lateinit var transactionHistoryRepository: TransactionHistoryRepository
     private lateinit var explorerLinkRepository: ExplorerLinkRepository
+    private lateinit var txStatusPoller: KeysignTxStatusPoller
 
     @BeforeEach
     fun setUp() {
@@ -57,6 +62,7 @@ internal class KeysignViewModelApplyBroadcastResultTest {
         txStatusConfigurationProvider = mockk(relaxed = true)
         transactionHistoryRepository = mockk(relaxed = true)
         explorerLinkRepository = mockk(relaxed = true)
+        txStatusPoller = mockk(relaxed = true)
     }
 
     @AfterEach
@@ -149,6 +155,67 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             genericData.captured.explorerUrl shouldBe "https://etherscan.io/tx/0xhash2"
         }
 
+    // The status service can be refused (backgrounded app, API 31+), and nothing else will ever
+    // report on the transaction — so the done screen must not keep showing the "Pending" the poller
+    // emitted on its way out (issue #5510).
+    @Test
+    fun `a transaction nothing tracks reaches the terminal broadcasted state`() =
+        runTest(testDispatcher) {
+            val vm = createPollingViewModel { TxStatusPollOutcome.NotTracked }
+
+            vm.applyBroadcastResult(broadcasted(txHash = "0xhash"))
+
+            vm.state.value.signingState shouldBe
+                KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+        }
+
+    // "There is nothing to poll" and "the poller never started" are the same thing to the user — a
+    // clean broadcast with no watcher — so both must land on the same status.
+    @Test
+    fun `an untracked transaction lands where an unpollable one lands`() =
+        runTest(testDispatcher) {
+            val untracked = createPollingViewModel { TxStatusPollOutcome.NotTracked }
+            untracked.applyBroadcastResult(broadcasted(txHash = "0xhash"))
+
+            every { txStatusConfigurationProvider.supportTxStatus(any()) } returns false
+            val unpollable = createViewModel()
+            unpollable.applyBroadcastResult(broadcasted(txHash = "0xhash"))
+
+            untracked.state.value.signingState shouldBe unpollable.state.value.signingState
+        }
+
+    // A SwapKit swap whose foreground budget ran out is genuinely still settling; claiming
+    // "Transaction successful" would assert an outcome the app never observed.
+    @Test
+    fun `a handed-off transaction keeps the last observed status`() =
+        runTest(testDispatcher) {
+            val vm = createPollingViewModel { onStatus ->
+                onStatus(TransactionResult.Pending)
+                TxStatusPollOutcome.HandedOff
+            }
+
+            vm.applyBroadcastResult(broadcasted(txHash = "0xhash"))
+
+            vm.state.value.signingState shouldBe
+                KeysignState.KeysignFinished(TransactionStatus.Pending)
+        }
+
+    // The settled status the poller observed must survive: the untracked fallback may not overwrite
+    // a real on-chain result.
+    @Test
+    fun `a settled transaction keeps the observed terminal status`() =
+        runTest(testDispatcher) {
+            val vm = createPollingViewModel { onStatus ->
+                onStatus(TransactionResult.Confirmed)
+                TxStatusPollOutcome.Terminal
+            }
+
+            vm.applyBroadcastResult(broadcasted(txHash = "0xhash"))
+
+            vm.state.value.signingState shouldBe
+                KeysignState.KeysignFinished(TransactionStatus.Confirmed)
+        }
+
     private fun broadcasted(txHash: String?, additionalTxHashes: List<String> = emptyList()) =
         KeysignBroadcastResult.Broadcasted(
             chain = Chain.Ethereum,
@@ -159,6 +226,19 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             approveTxLink = "",
             additionalTxHashes = additionalTxHashes,
         )
+
+    /** A ViewModel on a status-polling chain whose poll body is [poll]. */
+    private fun createPollingViewModel(
+        poll: suspend (onStatus: suspend (TransactionResult) -> Unit) -> TxStatusPollOutcome
+    ): KeysignViewModel {
+        val onStatus = slot<suspend (TransactionResult) -> Unit>()
+        every { txStatusConfigurationProvider.supportTxStatus(any()) } returns true
+        coEvery { txStatusPoller.poll(any(), any(), any(), capture(onStatus)) } coAnswers
+            {
+                poll(onStatus.captured)
+            }
+        return createViewModel()
+    }
 
     private fun createViewModel(transactionHistoryData: TransactionHistoryData? = null) =
         KeysignViewModel(
@@ -185,7 +265,7 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             pullTssMessages = mockk(relaxed = true),
             addressBookRepository = mockk(relaxed = true),
             txStatusConfigurationProvider = txStatusConfigurationProvider,
-            txStatusPoller = mockk(relaxed = true),
+            txStatusPoller = txStatusPoller,
             vaultRepository = mockk(relaxed = true),
             chainAccountAddressRepository = mockk(relaxed = true),
             transactionHistoryRepository = transactionHistoryRepository,
