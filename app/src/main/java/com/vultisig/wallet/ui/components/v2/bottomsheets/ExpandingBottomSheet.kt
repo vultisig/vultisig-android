@@ -65,10 +65,11 @@ internal enum class ExpandingSheetValue {
 /**
  * A bottom sheet that opens short and grows into a full screen as the reader scrolls.
  *
- * It rests tall enough to show [restHeight] pixels of its content, so a glance costs nothing.
- * Scrolling up spends its distance on expanding the sheet before the content moves at all, and once
- * expanded the reverse holds: scrolling back to the top and continuing to pull collapses the sheet
- * and then dismisses it, so there is never a "drag it back, then tap outside" dance to leave.
+ * It rests at a third of the window — or at [restHeight] pixels where a third is too short to show
+ * the part of the content that has to be readable — so a glance costs nothing. Scrolling up spends
+ * its distance on expanding the sheet before the content moves at all, and once expanded the
+ * reverse holds: scrolling back to the top and continuing to pull collapses the sheet and then
+ * dismisses it, so there is never a "drag it back, then tap outside" dance to leave.
  *
  * The sheet owns its scrolling so the two gestures can be handed off cleanly — [content] supplies a
  * plain column, not a scrollable one.
@@ -91,20 +92,26 @@ internal fun ExpandingBottomSheet(
     var windowHeight by remember { mutableIntStateOf(0) }
     var contentHeight by remember { mutableIntStateOf(0) }
 
+    val density = LocalDensity.current
+
     // Expanded stops below the status bar rather than under it, so the clock never overlaps the
     // sheet's own header and the rounded top edge stays visible at every anchor.
-    val expandedTop = WindowInsets.statusBars.getTop(LocalDensity.current)
+    val expandedTop = WindowInsets.statusBars.getTop(density)
+    val cutEdgeFade = with(density) { CutEdgeFadeHeight.toPx() }
 
     // The host window dims on its own when this sheet is a navigation dialog destination, which
     // would sit under the scrim below and stay at full strength while the sheet slides away.
     val view = LocalView.current
     LaunchedEffect(view) { (view.parent as? DialogWindowProvider)?.window?.setDimAmount(0f) }
 
-    LaunchedEffect(windowHeight, restHeight, expandedTop) {
+    LaunchedEffect(windowHeight, restHeight, expandedTop, cutEdgeFade) {
         if (windowHeight <= 0) return@LaunchedEffect
         val hiddenOffset = windowHeight.toFloat()
-        val visibleAtRest =
-            if (restHeight > 0) restHeight.toFloat() else hiddenOffset * FallbackRestFraction
+        // A third of the window is the resting height the design asks for. The measured content
+        // only ever raises it, on a screen too short — or a font scale too large — for the part
+        // that has to be readable to clear the fade within a third; it never lets the sheet open
+        // taller than that just because there is more to show.
+        val visibleAtRest = maxOf(hiddenOffset * RestFraction, restHeight + cutEdgeFade)
         state.updateAnchors(
             newAnchors =
                 DraggableAnchors {
@@ -335,5 +342,5 @@ private fun ContentDrawScope.drawCutEdgeFade(
 }
 
 private const val ScrimAlpha = 0.32f
-private const val FallbackRestFraction = 1f / 3f
-private val CutEdgeFadeHeight = 96.dp
+private const val RestFraction = 1f / 3f
+private val CutEdgeFadeHeight = 48.dp

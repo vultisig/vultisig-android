@@ -86,9 +86,10 @@ internal fun TokenDetailScreen(
     onExplorer: () -> Unit = {},
     onChartRangeSelected: (ChartRange) -> Unit = {},
 ) {
-    // The sheet opens only as tall as the balance, the actions and the price row, which is what
-    // makes it cheap to glance at and swipe away again. Everything the chart added lives below that
-    // fold and is what scrolling expands the sheet to reach.
+    // The sheet opens on the balance and the actions and nothing else, which is what keeps it to
+    // the third of the screen the design asks for and cheap to glance at and swipe away again.
+    // Everything below that fold — the price row, the chart, the stats — is what scrolling expands
+    // the sheet to reach.
     var restHeight by remember { mutableIntStateOf(0) }
 
     ExpandingBottomSheet(onDismiss = onDismiss, restHeight = restHeight) {
@@ -127,13 +128,11 @@ internal fun TokenDetailsContent(
     ) {
         Column(
             // What the sheet must show before the reader does anything. Its own top padding is
-            // added back — the sheet measures its resting height from its top edge — along with as
-            // much again below, so the price row ends clear of the cut instead of flush against it.
+            // added back, since the sheet measures its resting height from its top edge; the sheet
+            // keeps this block clear of the fade at its bottom edge on its own.
             modifier =
                 Modifier.fillMaxWidth().onSizeChanged { size ->
-                    onRestHeightMeasured(
-                        size.height + with(density) { (ContentPadding * 2).roundToPx() }
-                    )
+                    onRestHeightMeasured(size.height + with(density) { ContentPadding.roundToPx() })
                 },
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -212,21 +211,21 @@ internal fun TokenDetailsContent(
                     )
                 }
             }
+        }
 
-            UiSpacer(size = 40.dp)
+        UiSpacer(size = 40.dp)
 
-            TopShineContainer(backgroundColor = Theme.v2.colors.backgrounds.surface1) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    TokenMetaRow(
-                        key = stringResource(R.string.token_details_bottom_sheet_price),
-                        value = uiModel.token.price,
-                    )
-                    UiHorizontalDivider(modifier = Modifier.fillMaxWidth())
-                    TokenMetaRow(
-                        key = stringResource(R.string.token_details_bottom_sheet_network),
-                        value = uiModel.token.network,
-                    )
-                }
+        TopShineContainer(backgroundColor = Theme.v2.colors.backgrounds.surface1) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                TokenMetaRow(
+                    key = stringResource(R.string.token_details_bottom_sheet_price),
+                    value = uiModel.token.price,
+                )
+                UiHorizontalDivider(modifier = Modifier.fillMaxWidth())
+                TokenMetaRow(
+                    key = stringResource(R.string.token_details_bottom_sheet_network),
+                    value = uiModel.token.network,
+                )
             }
         }
 
