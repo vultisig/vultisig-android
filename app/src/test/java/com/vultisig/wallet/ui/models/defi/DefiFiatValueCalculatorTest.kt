@@ -63,6 +63,8 @@ internal class DefiFiatValueCalculatorTest {
     @Test
     fun `falls back to the contract address when nothing is cached`() = runTest {
         coEvery { tokenPriceRepository.getCachedPrice(RUNE.id, AppCurrency.USD) } returns null
+        coEvery { tokenPriceRepository.getPriceByPriceProviderId(RUNE.priceProviderID) } returns
+            BigDecimal.ZERO
         coEvery {
             tokenPriceRepository.getPriceByContactAddress(RUNE.chain.id, RUNE.contractAddress)
         } returns BigDecimal("3")
@@ -71,6 +73,38 @@ internal class DefiFiatValueCalculatorTest {
 
         assertEquals(BigDecimal("6.00"), fiat.value)
     }
+
+    /**
+     * THORChain has no CoinGecko asset-platform id and no LI.FI chain id, so the contract route can
+     * only return zero for an `x/…` denom — RUJI has to resolve through its CoinGecko id instead.
+     */
+    @Test
+    fun `an uncached coin resolves through its price provider id before the contract address`() =
+        runTest {
+            coEvery { tokenPriceRepository.getCachedPrice(RUJI.id, AppCurrency.USD) } returns null
+            coEvery { tokenPriceRepository.getPriceByPriceProviderId(RUJI.priceProviderID) } returns
+                BigDecimal("0.18")
+
+            val fiat = calculator.createFiatValue(BigDecimal("2"), RUJI, AppCurrency.USD)
+
+            assertEquals(BigDecimal("0.36"), fiat.value)
+            coVerify(exactly = 0) { tokenPriceRepository.getPriceByContactAddress(any(), any()) }
+        }
+
+    @Test
+    fun `a price provider id that resolves to nothing still falls through to the contract`() =
+        runTest {
+            coEvery { tokenPriceRepository.getCachedPrice(RUJI.id, AppCurrency.USD) } returns null
+            coEvery { tokenPriceRepository.getPriceByPriceProviderId(RUJI.priceProviderID) } returns
+                BigDecimal.ZERO
+            coEvery {
+                tokenPriceRepository.getPriceByContactAddress(RUJI.chain.id, RUJI.contractAddress)
+            } returns BigDecimal("0.5")
+
+            val fiat = calculator.createFiatValue(BigDecimal("2"), RUJI, AppCurrency.USD)
+
+            assertEquals(BigDecimal("1.00"), fiat.value)
+        }
 
     @Test
     fun `a failed price lookup yields zero rather than propagating`() = runTest {
@@ -132,6 +166,7 @@ internal class DefiFiatValueCalculatorTest {
 
     private companion object {
         val RUNE = Coins.ThorChain.RUNE
+        val RUJI = Coins.ThorChain.RUJI
         const val CONTRACT = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
     }
 }

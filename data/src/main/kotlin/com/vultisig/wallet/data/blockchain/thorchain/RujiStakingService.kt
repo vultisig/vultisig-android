@@ -100,7 +100,7 @@ constructor(
                     id = Coins.ThorChain.RUJI.generateId(),
                     coin = Coins.ThorChain.RUJI,
                     stakeAmount = rujiStakeInfo.stakeAmount,
-                    apr = null,
+                    apr = rujiStakeInfo.apr,
                     estimatedRewards = null, // Not available for Ruji
                     nextPayoutDate = null, // Not available for Ruji
                     rewards = rujiStakeInfo.rewardsAmount.toBigDecimal(),
