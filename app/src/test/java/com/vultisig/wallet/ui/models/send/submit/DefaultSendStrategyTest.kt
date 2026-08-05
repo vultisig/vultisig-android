@@ -402,6 +402,94 @@ internal class DefaultSendStrategyTest {
             assertEquals(freshPlan, planBtcFlow.value)
         }
 
+    /**
+     * Regression for #5504: `sendMaxAmount=true` tells WalletCore's planner to sweep the real
+     * balance-minus-fee itself, ignoring the requested amount. The staged Transaction must reflect
+     * what the plan actually signs, not the approximate byteFee-based estimate that produced the
+     * requested amount — otherwise the Verify screen shows a number the broadcast transaction
+     * doesn't match.
+     */
+    @Test
+    fun `submit stages the plan's real sweep amount for a Max BTC send, not the approximate one`() =
+        runTest {
+            val btcCoin = btcCoin()
+            val account =
+                Account(
+                    token = btcCoin,
+                    tokenValue = TokenValue(BigInteger.valueOf(1_000_000L), btcCoin),
+                    fiatValue = null,
+                    price = null,
+                )
+            vaultId = "vault-1"
+            selectedAccount = account
+            addressFieldState.setTextAndPlaceCursorAtEnd("bc1dest")
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.01")
+            coEvery { accountValidator.validate() } returns
+                ValidatedAccount(
+                    vaultId = "vault-1",
+                    selectedAccount = account,
+                    chain = Chain.Bitcoin,
+                    gasFee = TokenValue(BigInteger.TEN, btcCoin),
+                    dstAddress = "bc1dest",
+                )
+            coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = any(),
+                    address = any(),
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = any(),
+                    isMaxAmountEnabled = any(),
+                    isDeposit = any(),
+                    dstAddress = any(),
+                    tokenAmountValue = any(),
+                    memo = any(),
+                    isThorchainRouterDeposit = any(),
+                )
+            } returns
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.UTXO(byteFee = BigInteger.TEN, sendMaxAmount = true)
+                )
+            // The estimate that put "0.01" in the amount field in the first place.
+            every { amountManager.currentMaxAmount } returns BigDecimal("0.01")
+            coEvery { getAvailableTokenBalance(any(), any()) } returns
+                TokenValue(BigInteger.valueOf(1_000_000L), btcCoin)
+            coEvery { gasFeeToEstimatedFee(any()) } returns
+                EstimatedGasFee(
+                    formattedFiatValue = "$0.10",
+                    formattedTokenValue = "0.0000001 BTC",
+                    tokenValue = TokenValue(BigInteger.ONE, btcCoin),
+                    fiatValue = mockk(relaxed = true),
+                )
+            val captured = slot<Transaction>()
+            coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            // WalletCore's own precise sweep — deliberately different from the "0.01" estimate.
+            val realSweepPlan =
+                Bitcoin.TransactionPlan.newBuilder()
+                    .setAmount(994_500L)
+                    .setFee(550L)
+                    .setError(SigningError.OK)
+                    .build()
+            val bitcoinPlanServiceMock: BitcoinPlanService = mockk()
+            coEvery {
+                bitcoinPlanServiceMock.getPlan(any(), any(), any(), any(), any(), any())
+            } returns realSweepPlan
+
+            mockkStatic(Dispatchers::class)
+            every { Dispatchers.IO } returns mainDispatcher
+            try {
+                build(this, bitcoinPlanService = bitcoinPlanServiceMock).submit()
+                advanceUntilIdle()
+            } finally {
+                unmockkStatic(Dispatchers::class)
+            }
+
+            assertNull(lastError, "Expected no error; got $lastError")
+            assertEquals(BigInteger.valueOf(994_500L), captured.captured.tokenValue.value)
+        }
+
     @Test
     fun `submit blocks native token send exceeding the available balance`() = runTest {
         mockkStatic(Dispatchers::class)
