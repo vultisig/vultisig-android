@@ -30,6 +30,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.MAYA_BOND_CACAO_KEY
 import com.vultisig.wallet.ui.screens.v2.defi.MAYA_STAKE_CACAO_KEY
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -42,6 +43,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -283,9 +286,9 @@ internal class MayachainDefiPositionsViewModelTest {
 
         // Nothing bonded or staked, so the header is the LP position's own $0.40.
         val data = successData(vm)
-        assertEquals("$0.40", data.lp.positions.single().totalPriceLp)
-        assertEquals("$0.40", data.totalAmountPrice)
-        assertFalse(data.isTotalAmountLoading)
+        data.lp.positions.single().totalPriceLp shouldBe "$0.40"
+        data.totalAmountPrice shouldBe "$0.40"
+        data.isTotalAmountLoading shouldBe false
     }
 
     @Test
@@ -297,8 +300,8 @@ internal class MayachainDefiPositionsViewModelTest {
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
         val position = successData(vm).staking.positions.single()
-        assertFalse(position.isLoading)
-        assertEquals("$0.00", position.stakedFiatDisplay)
+        position.isLoading shouldBe false
+        position.stakedFiatDisplay shouldBe "$0.00"
     }
 
     @Test
@@ -309,9 +312,77 @@ internal class MayachainDefiPositionsViewModelTest {
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
         val data = successData(vm)
-        assertFalse(data.bonded.isLoading)
-        assertFalse(data.isTotalAmountLoading)
-        assertEquals("$0.00", data.bonded.totalBondedPrice)
+        data.bonded.isLoading shouldBe false
+        data.isTotalAmountLoading shouldBe false
+        data.bonded.totalBondedPrice shouldBe "$0.00"
+    }
+
+    @Test
+    fun `a vault without CACAO prices the bond card at zero rather than unavailable`() = runTest {
+        // Nothing bonded is a real zero, not a price we failed to resolve, so the card has to say
+        // so. Clearing the spinner alone left it on the unavailable dash.
+        coEvery { vaultRepository.get(VAULT_ID) } returns VAULT.copy(coins = listOf(BTC_COIN))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val data = successData(vm)
+        data.bonded.isLoading shouldBe false
+        data.bonded.totalBondedPrice shouldBe "$0.00"
+        data.isTotalAmountLoading shouldBe false
+    }
+
+    @Test
+    fun `a bond load that throws before the flow starts still prices the card`() = runTest {
+        // The outer catch wraps the vault lookup. It used to clear the spinner without filling the
+        // price, which is the same blank-line bug as the in-flow failure below.
+        coEvery { vaultRepository.get(VAULT_ID) } throws RuntimeException("db closed")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val data = successData(vm)
+        data.bonded.isLoading shouldBe false
+        data.bonded.totalBondedPrice shouldBe "$0.00"
+        data.isTotalAmountLoading shouldBe false
+    }
+
+    @Test
+    fun `the header total waits for every leg instead of settling on the seeded zeros`() = runTest {
+        // The legs are seeded flows; combining them unconditionally published $0.00 with the
+        // spinner already off, before bond, stake or LP had loaded anything.
+        selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+        givenLpPool(liquidityUnits = "100", units = "1000")
+        val heldBond = MutableStateFlow<List<BondedNodePosition>?>(null)
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+            heldBond.filterNotNull()
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        // Bond has not reported yet, so the total must still be pending.
+        successData(vm).isTotalAmountLoading shouldBe true
+        successData(vm).totalAmountPrice shouldBe null
+
+        heldBond.value = listOf(bondedNode(HUNDRED_CACAO))
+
+        val settled = successData(vm)
+        settled.isTotalAmountLoading shouldBe false
+        // 100 CACAO at 2, plus the LP position's 0.40.
+        settled.totalAmountPrice shouldBe "$200.40"
+    }
+
+    @Test
+    fun `a failed LP load leaves the placeholder priced at zero, not unavailable`() = runTest {
+        // The placeholder used to snapshot a zero that was still being resolved on another
+        // coroutine, then a failed load froze that null in as the terminal state.
+        selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+        givenLpPool(liquidityUnits = "100", units = "1000")
+        coEvery { mayachainBondRepository.getLpPoolStats() } throws RuntimeException("midgard down")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val data = successData(vm)
+        data.lp.isLoading shouldBe false
+        data.lp.positions.single().totalPriceLp shouldBe "$0.00"
+        data.isTotalAmountLoading shouldBe false
     }
 
     @Test

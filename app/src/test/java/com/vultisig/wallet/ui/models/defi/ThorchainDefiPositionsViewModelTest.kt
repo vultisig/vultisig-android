@@ -29,6 +29,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.utils.UiText
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -41,11 +42,13 @@ import java.text.NumberFormat
 import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -442,9 +445,9 @@ internal class ThorchainDefiPositionsViewModelTest {
 
         // 3 RUNE at 2. The BTC side prices to zero — the vault holds no BTC coin, so it falls
         // through to the contract lookup, which this test leaves unstubbed.
-        assertEquals(BigDecimal("6.00"), vm.totalValueLpFiat.value)
-        assertEquals("$6.00", vm.state.value.lp.positions.single().totalPriceLp)
-        assertEquals("$6.00", vm.state.value.totalAmountPrice)
+        vm.totalValueLpFiat.value shouldBe BigDecimal("6.00")
+        vm.state.value.lp.positions.single().totalPriceLp shouldBe "$6.00"
+        vm.state.value.totalAmountPrice shouldBe "$6.00"
     }
 
     @Test
@@ -458,10 +461,10 @@ internal class ThorchainDefiPositionsViewModelTest {
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
         val state = vm.state.value
-        assertFalse(state.bonded.isLoading)
-        assertFalse(state.isTotalAmountLoading)
-        assertEquals("$0.00", state.bonded.totalBondedPrice)
-        assertEquals("$0.00", state.totalAmountPrice)
+        state.bonded.isLoading shouldBe false
+        state.isTotalAmountLoading shouldBe false
+        state.bonded.totalBondedPrice shouldBe "$0.00"
+        state.totalAmountPrice shouldBe "$0.00"
     }
 
     @Test
@@ -475,11 +478,11 @@ internal class ThorchainDefiPositionsViewModelTest {
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
         val positions = vm.state.value.staking.positions
-        assertTrue(positions.isNotEmpty())
+        positions.isNotEmpty() shouldBe true
         positions.forEach { position ->
-            assertFalse(position.isLoading)
-            assertEquals("0 ${position.coin.ticker}", position.stakedAmountDisplay)
-            assertEquals("$0.00", position.stakedFiatDisplay)
+            position.isLoading shouldBe false
+            position.stakedAmountDisplay shouldBe "0 ${position.coin.ticker}"
+            position.stakedFiatDisplay shouldBe "$0.00"
         }
     }
 
@@ -492,23 +495,105 @@ internal class ThorchainDefiPositionsViewModelTest {
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
         val state = vm.state.value
-        assertFalse(state.isTotalAmountLoading)
-        assertEquals("$0.00", state.totalAmountPrice)
+        state.isTotalAmountLoading shouldBe false
+        state.totalAmountPrice shouldBe "$0.00"
     }
 
     @Test
     fun `the zero balance is formatted in the users currency, not hardcoded dollars`() = runTest {
-        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
-            NumberFormat.getCurrencyInstance(Locale.GERMANY)
+        val germanFormat = NumberFormat.getCurrencyInstance(Locale.GERMANY)
+        coEvery { appCurrencyRepository.getCurrencyFormat() } returns germanFormat
         selectPositions("RUJI")
         coEvery { rujiStakingService.getStakingDetails(any(), any()) } returns
             flow { throw RuntimeException("thornode down") }
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
-        val fiat = vm.state.value.staking.positions.first().stakedFiatDisplay
-        assertNotNull(fiat)
-        assertFalse(fiat.contains("$"), "expected a euro-formatted zero but was $fiat")
+        // Compare against the locale's own zero rather than merely asserting the absence of "$":
+        // the unavailable dash would pass that weaker check while meaning the opposite.
+        vm.state.value.staking.positions.first().stakedFiatDisplay shouldBe
+            germanFormat.format(BigDecimal.ZERO)
+    }
+
+    @Test
+    fun `a bond load that throws before the flow starts still settles the header`() = runTest {
+        // The outer catch wraps the vault lookup. It used to drop the total-loading flag straight
+        // into the UI state without reporting the leg, so the price pipeline never ran again and
+        // the header sat on a permanent dash with no spinner to explain it.
+        selectPositions("RUNE")
+        coEvery { vaultRepository.get(VAULT_ID) } throws RuntimeException("db closed")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val state = vm.state.value
+        state.bonded.isLoading shouldBe false
+        state.bonded.totalBondedPrice shouldBe "$0.00"
+        state.isTotalAmountLoading shouldBe false
+        state.totalAmountPrice shouldBe "$0.00"
+    }
+
+    @Test
+    fun `the header total waits for the LP leg before settling`() = runTest {
+        // LP joined the total but never gated it, so the header settled on bond and stake alone
+        // and then jumped once the LP value landed. Holding the pool fetch keeps the LP tab parked
+        // before it can report, which is exactly the window the old code published a total in.
+        selectPositions("RUNE", BTC_POOL)
+        val heldPools = MutableStateFlow<List<ThorChainPoolStatsJson>?>(null)
+        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } coAnswers
+            {
+                heldPools.filterNotNull().first()
+            }
+        coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
+            listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "0"))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        // Bond has already reported an empty node list; LP has not reported at all.
+        vm.state.value.isTotalAmountLoading shouldBe true
+        vm.state.value.totalAmountPrice shouldBe null
+
+        heldPools.value = listOf(poolStats(BTC_POOL))
+
+        vm.state.value.isTotalAmountLoading shouldBe false
+        vm.state.value.totalAmountPrice shouldBe "$6.00"
+    }
+
+    @Test
+    fun `a failed RUJI load resets its leg instead of keeping the previous total`() = runTest {
+        // The .catch settled the cards but left the RUJI raw total untouched, so a refresh that
+        // failed kept pricing the header off the amount from the run before it.
+        selectPositions("RUJI")
+        coEvery { rujiStakingService.getStakingDetails(any(), any()) } returns
+            flowOf(listOf(stakingDetails(Coins.ThorChain.RUJI, BigInteger("100000000"))))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        vm.state.value.totalAmountPrice shouldBe "$2.00"
+
+        coEvery { rujiStakingService.getStakingDetails(any(), any()) } returns
+            flow { throw RuntimeException("thornode down") }
+        vm.setData(VAULT_ID)
+
+        vm.totalValueRujiStake.value shouldBe BigInteger.ZERO
+        vm.state.value.isTotalAmountLoading shouldBe false
+        vm.state.value.totalAmountPrice shouldBe "$0.00"
+    }
+
+    @Test
+    fun `a failed LP load leaves the placeholder priced at zero, not unavailable`() = runTest {
+        // The placeholder used to snapshot a zero still being resolved on another coroutine, and a
+        // failed load then froze that null in as the terminal state.
+        selectPositions(BTC_POOL)
+        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+            listOf(poolStats(BTC_POOL))
+        coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } throws
+            RuntimeException("midgard down")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val state = vm.state.value
+        state.lp.isLoading shouldBe false
+        state.lp.positions.single().totalPriceLp shouldBe "$0.00"
+        state.isTotalAmountLoading shouldBe false
     }
 
     @Test
