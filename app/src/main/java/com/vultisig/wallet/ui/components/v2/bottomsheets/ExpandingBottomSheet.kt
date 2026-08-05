@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.components.v2.bottomsheets
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.animate
 import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
@@ -45,10 +46,15 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindowProvider
+import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.drop
@@ -112,6 +118,7 @@ internal fun ExpandingBottomSheet(
         // that has to be readable to clear the fade within a third; it never lets the sheet open
         // taller than that just because there is more to show.
         val visibleAtRest = maxOf(hiddenOffset * RestFraction, restHeight + cutEdgeFade)
+        val offsetBeforeUpdate = state.offset
         state.updateAnchors(
             newAnchors =
                 DraggableAnchors {
@@ -126,6 +133,27 @@ internal fun ExpandingBottomSheet(
             // entrance and dismiss the sheet before it ever appeared.
             newTarget = state.targetValue,
         )
+
+        // A sheet already parked on an anchor is moved there by a write with no animation behind
+        // it, so a balance that loads late and wraps to a second line grows the resting height
+        // under a sheet the reader is looking at and its edge jumps. That write only lands when
+        // nothing else holds the sheet — an entrance, a drag or a fling keeps its own animation and
+        // leaves the offset alone — so an offset that moved here is precisely the case worth
+        // animating. Undoing it is synchronous and runs before this frame is laid out, so the jump
+        // is never drawn; the sheet then travels the distance.
+        val offsetAfterUpdate = state.offset
+        if (!offsetBeforeUpdate.isNaN() && offsetAfterUpdate != offsetBeforeUpdate) {
+            state.dispatchRawDelta(offsetBeforeUpdate - offsetAfterUpdate)
+            state.anchoredDrag(state.targetValue) { anchors, latestTarget ->
+                animate(
+                    initialValue = offsetBeforeUpdate,
+                    targetValue = anchors.positionOf(latestTarget),
+                    animationSpec = AnchoredDraggableDefaults.SnapAnimationSpec,
+                ) { value, _ ->
+                    dragTo(value)
+                }
+            }
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -146,6 +174,8 @@ internal fun ExpandingBottomSheet(
 
     BackHandler { hide() }
 
+    val closeSheet = stringResource(R.string.close_sheet_content_description)
+
     Box(modifier = Modifier.fillMaxSize().onSizeChanged { windowHeight = it.height }) {
         Box(
             modifier =
@@ -157,6 +187,16 @@ internal fun ExpandingBottomSheet(
                         )
                     }
                     .pointerInput(Unit) { detectTapGestures { hide() } }
+                    // A tap detector answers a finger and nothing else, so the scrim needs to say
+                    // what it is and carry the same dismissal as an action for a reader that
+                    // dispatches one instead of touching the screen.
+                    .semantics {
+                        contentDescription = closeSheet
+                        onClick {
+                            hide()
+                            true
+                        }
+                    }
         )
 
         Box(

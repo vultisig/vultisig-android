@@ -213,6 +213,7 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import java.math.BigDecimal
 import kotlin.math.sin
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.delay
 
 @EntryPoint
@@ -3435,6 +3436,14 @@ private fun TokenDetailSheetLoadingPreview() {
     TokenDetailScreen(uiModel = uiModel)
 }
 
+// A day of half-hourly candles, which is what the 24H range the chart opens on holds. The instant
+// is fixed rather than taken from the clock so two captures of this preview are comparable down to
+// the date the chart prints when a point is scrubbed; which day it is doesn't matter beyond being
+// a plausible one, and this one is 2025-07-08T20:00Z.
+private const val CHART_FIRST_POINT_MILLIS = 1_752_000_000_000L
+private val CHART_POINT_INTERVAL = 30.minutes
+private const val CHART_POINT_COUNT = 48
+
 /**
  * The token detail sheet with every section a charted coin renders — chart, market stats, price
  * extremes and token info. That is the content that outgrows the screen, so this is the preview
@@ -3443,10 +3452,11 @@ private fun TokenDetailSheetLoadingPreview() {
 @Composable
 private fun TokenDetailSheetFullPreview() {
     val points =
-        List(48) { index ->
+        List(CHART_POINT_COUNT) { index ->
             val price = 73.5 + sin(index / 5.0) * 6.0 + index * 0.12
             ChartPointUiModel(
-                timestampMillis = 1_752_000_000_000L + index * 1_800_000L,
+                timestampMillis =
+                    CHART_FIRST_POINT_MILLIS + index * CHART_POINT_INTERVAL.inWholeMilliseconds,
                 price = price,
                 priceText = "$${"%.2f".format(price)}",
             )

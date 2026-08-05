@@ -762,6 +762,7 @@
     <string name="token_details_bottom_sheet_network">Mreža</string>
     <!-- Price chart + market data — issue #5428 -->
     <string name="price_chart_content_description">Grafikon cijena, promjena %1$s</string>
+    <string name="close_sheet_content_description">Zatvori</string>
     <string name="price_chart_retry_hint">Nije moguće učitati grafikon. Dodirni za ponovni pokušaj.</string>
     <string name="token_details_market_stats_title">Tržišna statistika</string>
     <string name="token_details_price_extremes_title">Ekstremi cijene</string>
