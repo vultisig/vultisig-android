@@ -64,7 +64,7 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
             TransactionHistoryEntity::class,
             PendingLimitOrderEntity::class,
         ],
-    version = 40,
+    version = 41,
     exportSchema = false,
 )
 @TypeConverters(
