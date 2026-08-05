@@ -204,6 +204,7 @@ data class MayachainSpecific(
 data class UtxoSpecific(
     @SerialName("byte_fee") val byteFee: String,
     @SerialName("send_max_amount") val sendMaxAmount: Boolean = false,
+    @SerialName("zcash_branch_id") val zcashBranchId: String? = null,
 )
 
 @Serializable
