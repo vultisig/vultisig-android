@@ -57,9 +57,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -149,9 +152,13 @@ constructor(
     // silently jumps as the rest land. Every terminal path in a leg must therefore assign here.
     private val _totalBondedRaw = MutableStateFlow<BigInteger?>(null)
     private val _totalStakingRaw = MutableStateFlow<BigInteger?>(null)
-    // LP is priced from two assets per pool, so it joins the total already converted to fiat.
-    private val _totalLpFiat = MutableStateFlow<BigDecimal?>(null)
+    // LP is priced from two assets per pool, so it joins the total already converted to fiat. It
+    // therefore carries the currency it was priced in: the raw legs re-convert on every total, but
+    // a bare LP magnitude would just be relabelled with whatever currency is active now, silently
+    // mixing two currencies into one sum.
+    private val _totalLpFiat = MutableStateFlow<FiatValue?>(null)
 
+    private var currencyJob: Job? = null
     private var observeTotalRawJob: Job? = null
     private var savedPositionsJob: Job? = null
     private var lpDialogJob: Job? = null
@@ -183,7 +190,36 @@ constructor(
         lpDialogJob = loadLpPositionsForDialog()
         observeTotalRawJob?.cancel()
         observeTotalRawJob = observeTotalRaw()
+        currencyJob?.cancel()
+        currencyJob = observeCurrencyChanges()
     }
+
+    /**
+     * Reports the LP leg together with the currency it was priced in, so a later total can tell a
+     * fresh value from one left over from a previous currency.
+     */
+    private suspend fun reportLpFiat(value: BigDecimal) {
+        val currency = appCurrencyRepository.currency.first()
+        _totalLpFiat.value = FiatValue(value, currency.ticker)
+    }
+
+    /**
+     * Re-prices LP when the user switches currency. The bond and staking legs are held as raw chain
+     * amounts and convert afresh on every total, but LP is stored already converted and cannot be
+     * re-based — so it drops back to unreported and reloads, which parks the header on its spinner
+     * rather than on a figure mixing two currencies.
+     */
+    private fun observeCurrencyChanges(): Job =
+        viewModelScope.launch {
+            appCurrencyRepository.currency
+                .map { it.ticker }
+                .distinctUntilChanged()
+                .drop(1)
+                .collect {
+                    _totalLpFiat.value = null
+                    reloadLpTab()
+                }
+        }
 
     private fun observeTotalRaw(): Job =
         viewModelScope.launch {
@@ -245,7 +281,7 @@ constructor(
                 // The tab keeps its own loading state; the header total is a separate concern.
                 // reloadLpTab parks the LP leg unreported while it waits for this dataset, so
                 // report it as zero here or the total would never see all three legs.
-                _totalLpFiat.value = BigDecimal.ZERO
+                reportLpFiat(BigDecimal.ZERO)
             }
         }
 
@@ -433,9 +469,16 @@ constructor(
      * [MayachainDefiPositionsUiModel.isTotalAmountLoading] — a leg settling its own card must not
      * stop the header spinner, because the other legs may still be in flight.
      */
-    private suspend fun updateTotalFiatValue(totalRaw: BigInteger, lpFiat: BigDecimal) {
+    private suspend fun updateTotalFiatValue(totalRaw: BigInteger, lpFiat: FiatValue) {
         try {
             val currency = appCurrencyRepository.currency.first()
+            if (lpFiat.currency != currency.ticker) {
+                // The currency changed after LP was priced. The raw legs re-convert on every run,
+                // but LP is stored already converted, so adding it now would sum two currencies.
+                // observeCurrencyChanges has already dropped the leg and asked for a re-price;
+                // leave the header on its previous value until that lands.
+                return
+            }
             val totalInCacao = totalRaw.toValue(10)
             val fiatValue =
                 fiatValueCalculator.createFiatValue(totalInCacao, Coins.MayaChain.CACAO, currency)
@@ -443,7 +486,7 @@ constructor(
                 withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
             updateModel {
                 it.copy(
-                    totalAmountPrice = currencyFormat.format(fiatValue.value.add(lpFiat)),
+                    totalAmountPrice = currencyFormat.format(fiatValue.value.add(lpFiat.value)),
                     isTotalAmountLoading = false,
                 )
             }
@@ -508,8 +551,8 @@ constructor(
 
         if (selectedLpKeys.isEmpty()) {
             loadLpJob?.cancel()
-            _totalLpFiat.value = BigDecimal.ZERO
             updateModel { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
+            loadLpJob = viewModelScope.launch { reportLpFiat(BigDecimal.ZERO) }
             return
         }
 
@@ -520,8 +563,8 @@ constructor(
 
         if (selectedPools.isEmpty()) {
             loadLpJob?.cancel()
-            _totalLpFiat.value = BigDecimal.ZERO
             updateModel { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
+            loadLpJob = viewModelScope.launch { reportLpFiat(BigDecimal.ZERO) }
             return
         }
 
@@ -532,7 +575,7 @@ constructor(
             viewModelScope.safeLaunch(
                 onError = { e ->
                     Timber.e(e, "Failed to load Maya LP positions")
-                    _totalLpFiat.value = BigDecimal.ZERO
+                    reportLpFiat(BigDecimal.ZERO)
                     updateModel { it.copy(lp = it.lp.copy(isLoading = false)) }
                 }
             ) {
@@ -567,7 +610,7 @@ constructor(
 
                 if (cacaoCoin == null) {
                     Timber.e("Vault does not have CACAO coin for LP positions")
-                    _totalLpFiat.value = BigDecimal.ZERO
+                    reportLpFiat(BigDecimal.ZERO)
                     updateModel {
                         it.copy(
                             lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
@@ -578,7 +621,7 @@ constructor(
 
                 if (!chainAccountAddressRepository.isValid(Chain.MayaChain, cacaoCoin.address)) {
                     Timber.e("CACAO coin address failed MayaChain validation")
-                    _totalLpFiat.value = BigDecimal.ZERO
+                    reportLpFiat(BigDecimal.ZERO)
                     updateModel {
                         it.copy(
                             lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
@@ -717,9 +760,12 @@ constructor(
                     }
 
                 _totalLpFiat.value =
-                    lpPositions.fold(BigDecimal.ZERO) { acc, position ->
-                        acc + position.totalFiatValue
-                    }
+                    FiatValue(
+                        lpPositions.fold(BigDecimal.ZERO) { acc, position ->
+                            acc + position.totalFiatValue
+                        },
+                        currency.ticker,
+                    )
                 updateModel {
                     it.copy(lp = LpTabUiModel(isLoading = false, positions = lpPositions))
                 }

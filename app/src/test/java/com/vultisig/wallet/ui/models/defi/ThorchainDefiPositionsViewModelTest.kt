@@ -12,9 +12,11 @@ import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.ThorChainLpPosition
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.DefiPositionsRepository
@@ -445,7 +447,7 @@ internal class ThorchainDefiPositionsViewModelTest {
 
         // 3 RUNE at 2. The BTC side prices to zero — the vault holds no BTC coin, so it falls
         // through to the contract lookup, which this test leaves unstubbed.
-        vm.totalValueLpFiat.value shouldBe BigDecimal("6.00")
+        vm.totalValueLpFiat.value shouldBe FiatValue(BigDecimal("6.00"), AppCurrencyUsd.ticker)
         vm.state.value.lp.positions.single().totalPriceLp shouldBe "$6.00"
         vm.state.value.totalAmountPrice shouldBe "$6.00"
     }
@@ -594,6 +596,31 @@ internal class ThorchainDefiPositionsViewModelTest {
         state.lp.isLoading shouldBe false
         state.lp.positions.single().totalPriceLp shouldBe "$0.00"
         state.isTotalAmountLoading shouldBe false
+    }
+
+    @Test
+    fun `switching currency re-prices LP instead of relabelling the old magnitude`() = runTest {
+        // LP is stored already converted, so it cannot be re-based the way the raw legs are. The
+        // total used to stamp the new currency's ticker onto the old magnitude, summing EUR-priced
+        // bond against USD-priced LP under one symbol.
+        selectPositions("RUNE", BTC_POOL)
+        val currency = MutableStateFlow(AppCurrencyUsd)
+        coEvery { appCurrencyRepository.currency } returns currency
+        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+            listOf(poolStats(BTC_POOL))
+        coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
+            listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "0"))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        vm.totalValueLpFiat.value shouldBe FiatValue(BigDecimal("6.00"), AppCurrencyUsd.ticker)
+
+        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+            NumberFormat.getCurrencyInstance(Locale.GERMANY)
+        currency.value = AppCurrency.EUR
+
+        // Re-priced under the new currency, not relabelled: the leg's own ticker has to move too.
+        vm.totalValueLpFiat.value?.currency shouldBe AppCurrency.EUR.ticker
+        vm.state.value.isTotalAmountLoading shouldBe false
     }
 
     @Test

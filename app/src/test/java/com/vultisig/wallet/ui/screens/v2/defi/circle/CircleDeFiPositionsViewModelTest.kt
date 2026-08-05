@@ -25,6 +25,8 @@ import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
+import java.text.NumberFormat
+import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -144,6 +146,21 @@ internal class CircleDeFiPositionsViewModelTest {
         assertEquals(SnackbarType.Error, type)
         coVerify(exactly = 0) { circleApi.createScAccount(any()) }
         coVerify(exactly = 0) { scaCircleAccountRepository.saveAccount(any(), any()) }
+    }
+
+    @Test
+    fun `a user with no Circle account yet sees a real zero, not the unavailable dash`() = runTest {
+        // The no-account branch settled the spinner but never set a price, so once the hardcoded
+        // "$0.00" default was removed every brand-new user landed on the unavailable marker.
+        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+            NumberFormat.getCurrencyInstance(Locale.US)
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val state = vm.state.value
+        assertFalse(state.isTotalAmountLoading)
+        assertEquals("$0.00", state.totalAmountPrice)
+        assertEquals("$0.00", state.circleDefi.totalDepositCurrency)
     }
 
     /**

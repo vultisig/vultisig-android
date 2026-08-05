@@ -386,6 +386,28 @@ internal class MayachainDefiPositionsViewModelTest {
     }
 
     @Test
+    fun `switching currency re-prices LP instead of relabelling the old magnitude`() = runTest {
+        // LP is stored already converted, so it cannot be re-based the way the raw legs are. The
+        // total used to add that stale magnitude straight into a sum priced in the new currency.
+        selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+        givenLpPool(liquidityUnits = "100", units = "1000")
+        val currency = MutableStateFlow(AppCurrency.USD)
+        coEvery { appCurrencyRepository.currency } returns currency
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        successData(vm).totalAmountPrice shouldBe "$0.40"
+
+        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+            NumberFormat.getCurrencyInstance(Locale.GERMANY)
+        currency.value = AppCurrency.EUR
+
+        // Re-priced under the new currency rather than carrying the old number across.
+        val settled = successData(vm)
+        settled.isTotalAmountLoading shouldBe false
+        settled.totalAmountPrice?.contains("$") shouldBe false
+    }
+
+    @Test
     fun `the LP tab stays empty while only the static Maya keys are selected`() = runTest {
         givenLpPool(liquidityUnits = "100", units = "1000")
 

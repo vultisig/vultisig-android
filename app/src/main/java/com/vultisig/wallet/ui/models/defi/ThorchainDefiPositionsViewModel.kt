@@ -68,9 +68,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -109,7 +112,7 @@ data class TotalDefiValue(
     val defaultStakeValues: StakeDefaultValues = StakeDefaultValues(),
     val rujiStakeAmount: BigInteger = BigInteger.ZERO,
     val tcyStakeAmount: BigInteger = BigInteger.ZERO,
-    val lpFiatValue: BigDecimal = BigDecimal.ZERO,
+    val lpFiatValue: FiatValue,
 )
 
 @HiltViewModel
@@ -149,14 +152,17 @@ constructor(
     private val _totalValueRujiStake = MutableStateFlow<BigInteger?>(null)
     private val _totalValueTCYStake = MutableStateFlow<BigInteger?>(null)
     // LP is priced per pool from two different assets, so it joins the total already converted to
-    // fiat rather than as a raw chain amount like the other legs.
-    private val _totalValueLpFiat = MutableStateFlow<BigDecimal?>(null)
+    // fiat rather than as a raw chain amount like the other legs. It therefore carries the currency
+    // it was priced in: the raw legs re-convert on every total, but a bare LP magnitude would just
+    // be relabelled with whatever currency is active now, silently mixing two currencies into one
+    // sum. A mismatch means the leg is stale and has to be re-priced before it can be added.
+    private val _totalValueLpFiat = MutableStateFlow<FiatValue?>(null)
 
     val totalValueBond: StateFlow<BigInteger?> = _totalValueBond
     val totalValueDefaultStake: StateFlow<StakeDefaultValues?> = _totalValueDefaultStake
     val totalValueRujiStake: StateFlow<BigInteger?> = _totalValueRujiStake
     val totalValueTCYStake: StateFlow<BigInteger?> = _totalValueTCYStake
-    val totalValueLpFiat: StateFlow<BigDecimal?> = _totalValueLpFiat
+    val totalValueLpFiat: StateFlow<FiatValue?> = _totalValueLpFiat
 
     // Cached "available" pool list shared by the Manage-Positions dialog and the LP tab loader so
     // cold start makes a single getPoolStats call instead of two. `null` means "not loaded yet"
@@ -164,6 +170,7 @@ constructor(
     // available", but Midgard never returns that in practice.
     private val availablePools = MutableStateFlow<List<ThorChainPoolStatsJson>?>(null)
 
+    private var currencyJob: Job? = null
     private var lpDialogJob: Job? = null
     private var loadLpJob: Job? = null
     private var loadBondedNodesJob: Job? = null
@@ -179,6 +186,8 @@ constructor(
         lpDialogJob = loadLpPositionsForDialog()
         loadSavedPositions()
         loadTotalValue()
+        currencyJob?.cancel()
+        currencyJob = observeCurrencyChanges()
     }
 
     private fun loadLpPositionsForDialog(): Job =
@@ -207,7 +216,7 @@ constructor(
                 // is a separate concern: reloadLpTab parks the LP leg unreported while it waits for
                 // this dataset, so report it as zero here or the total would never see all five
                 // legs and would spin forever.
-                _totalValueLpFiat.value = BigDecimal.ZERO
+                reportLpFiat(BigDecimal.ZERO)
             }
         }
 
@@ -286,7 +295,14 @@ constructor(
                     fiatValueCalculator.createFiatValue(decimalAmount, position.coin, currency)
                 }
 
-            val lpFiatValue = FiatValue(totalValue.lpFiatValue, currency.ticker)
+            val lpFiatValue = totalValue.lpFiatValue
+            if (lpFiatValue.currency != currency.ticker) {
+                // The currency changed after LP was priced. The raw legs re-convert on every run,
+                // but LP is stored already converted, so adding it now would sum two currencies.
+                // observeCurrencyChanges has already dropped the leg and asked for a re-price;
+                // leave the header on its previous value until that lands.
+                return
+            }
 
             val totalFiatValue =
                 listOf(runeFiatValue, rujiFiatValue, tcyFiatValue, lpFiatValue)
@@ -338,6 +354,33 @@ constructor(
             if (e is CancellationException) throw e
             Timber.e(e, "Failed to format zero balance")
             null
+        }
+
+    /**
+     * Reports the LP leg together with the currency it was priced in, so a later total can tell a
+     * fresh value from one left over from a previous currency.
+     */
+    private suspend fun reportLpFiat(value: BigDecimal) {
+        val currency = appCurrencyRepository.currency.first()
+        _totalValueLpFiat.value = FiatValue(value, currency.ticker)
+    }
+
+    /**
+     * Re-prices LP when the user switches currency. The bond and staking legs are held as raw chain
+     * amounts and convert afresh on every total, but LP is stored already converted and cannot be
+     * re-based — so it drops back to unreported and reloads, which parks the header on its spinner
+     * rather than on a figure mixing two currencies.
+     */
+    private fun observeCurrencyChanges(): Job =
+        viewModelScope.launch {
+            appCurrencyRepository.currency
+                .map { it.ticker }
+                .distinctUntilChanged()
+                .drop(1)
+                .collect {
+                    _totalValueLpFiat.value = null
+                    reloadLpTab()
+                }
         }
 
     /**
@@ -858,8 +901,8 @@ constructor(
 
         if (selectedPools.isEmpty()) {
             loadLpJob?.cancel()
-            _totalValueLpFiat.value = BigDecimal.ZERO
             state.update { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
+            loadLpJob = viewModelScope.launch { reportLpFiat(BigDecimal.ZERO) }
             return
         }
 
@@ -889,7 +932,7 @@ constructor(
 
                     if (runeCoin == null) {
                         Timber.e("Vault does not have RUNE coin for LP positions")
-                        _totalValueLpFiat.value = BigDecimal.ZERO
+                        reportLpFiat(BigDecimal.ZERO)
                         state.update {
                             it.copy(lp = LpTabUiModel(isLoading = false, positions = placeholders))
                         }
@@ -941,16 +984,19 @@ constructor(
                         }
 
                     _totalValueLpFiat.value =
-                        merged.fold(BigDecimal.ZERO) { acc, position ->
-                            acc + position.totalFiatValue
-                        }
+                        FiatValue(
+                            merged.fold(BigDecimal.ZERO) { acc, position ->
+                                acc + position.totalFiatValue
+                            },
+                            currency.ticker,
+                        )
                     state.update {
                         it.copy(lp = LpTabUiModel(isLoading = false, positions = merged))
                     }
                 } catch (e: Throwable) {
                     if (e is CancellationException) throw e
                     Timber.e(e, "Failed to load THORChain LP positions")
-                    _totalValueLpFiat.value = BigDecimal.ZERO
+                    reportLpFiat(BigDecimal.ZERO)
                     state.update {
                         it.copy(lp = LpTabUiModel(isLoading = false, positions = placeholders))
                     }
