@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
@@ -34,11 +35,14 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -63,7 +67,12 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+
+// Minimum scroll distance before the hero auto-collapses, so a stray touch or overscroll bounce
+// doesn't trigger it.
+private val SCROLL_COLLAPSE_THRESHOLD = 24.dp
 
 @Composable
 internal fun TxDoneScaffold(
@@ -126,6 +135,7 @@ internal fun TxDoneScaffold(
             }
             AnimatedVisibility(
                 visibleState = bottomBarVisibility,
+                modifier = Modifier.navigationBarsPadding(),
                 enter =
                     fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 120)) +
                         slideInVertically(
@@ -157,11 +167,22 @@ private fun SuccessTransaction(
     successTitle: String? = null,
 ) {
 
+    val scrollState = rememberScrollState()
+    val scrollCollapseThresholdPx =
+        with(LocalDensity.current) { SCROLL_COLLAPSE_THRESHOLD.roundToPx() }
+
+    // Scrolling the content collapses the pending hero, same as tapping "Transaction Details" —
+    // otherwise the fixed-height hero keeps hogging the top of the viewport while the user tries
+    // to read the rows below it (#5490). Wait for a deliberate scroll past the threshold, not the
+    // first pixel, so a stray touch/overscroll bounce doesn't collapse it; fire once and stop.
+    LaunchedEffect(scrollState, isTransactionDetailVisible) {
+        if (isTransactionDetailVisible) return@LaunchedEffect
+        snapshotFlow { scrollState.value }.first { it > scrollCollapseThresholdPx }
+        onTransactionDetailVisibleChange(true)
+    }
+
     Column(
-        modifier =
-            modifier
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier = modifier.verticalScroll(scrollState).padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         AnimatedVisibility(isTransactionDetailVisible.not()) {
             Column {

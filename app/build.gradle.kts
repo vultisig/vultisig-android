@@ -134,6 +134,7 @@ dependencies {
     implementation(libs.wallet.core)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.coil)
+    implementation(libs.coil.svg)
     implementation(libs.play.update)
     implementation(libs.play.review)
     implementation(libs.androidx.work.ktx)

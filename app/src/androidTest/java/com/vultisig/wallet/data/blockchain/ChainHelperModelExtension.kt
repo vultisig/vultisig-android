@@ -179,7 +179,7 @@ fun BlockchainSpecific.toBlockChainSpecific(
                         baseDenom = cosmosSpecific.ibcDenomTrace?.baseDenom ?: "",
                         latestBlock = cosmosSpecific.ibcDenomTrace?.height ?: "",
                     ),
-                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+                transactionType = getTransactionType(cosmosSpecific.transactionType),
             )
         }
 
@@ -264,6 +264,7 @@ fun BlockchainSpecific.toBlockChainSpecific(
                 BlockChainSpecific.UTXO(
                     byteFee = utxoSpecific.byteFee.toBigInteger(),
                     sendMaxAmount = utxoSpecific.sendMaxAmount,
+                    zcashBranchId = utxoSpecific.zcashBranchId,
                 )
             }
         }

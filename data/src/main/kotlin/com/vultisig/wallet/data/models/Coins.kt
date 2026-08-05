@@ -3982,7 +3982,9 @@ object Coins {
                 address = "",
                 decimal = 8,
                 hexPublicKey = "",
-                priceProviderID = "ruji",
+                // CoinGecko indexes this as `rujira`, not `ruji` — the latter resolves to nothing
+                // and left every RUJI amount at $0.00. Matches iOS.
+                priceProviderID = "rujira",
                 contractAddress = "x/ruji",
                 isNativeToken = false,
             )
@@ -4075,7 +4077,7 @@ object Coins {
                 address = "",
                 decimal = 8,
                 hexPublicKey = "",
-                priceProviderID = "ruji",
+                priceProviderID = "rujira",
                 contractAddress = "x/staking-x/ruji",
                 isNativeToken = false,
             )
