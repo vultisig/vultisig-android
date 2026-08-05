@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.send.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshots.Snapshot
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.TerraClassicTax
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
@@ -29,6 +30,7 @@ import com.vultisig.wallet.ui.models.send.GasSettings
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendFocusField
 import com.vultisig.wallet.ui.models.send.SendSections
+import com.vultisig.wallet.ui.models.send.evmSettingsFor
 import com.vultisig.wallet.ui.models.send.memoLengthErrorOrNull
 import com.vultisig.wallet.ui.models.send.selectGasFeeForFeeEstimation
 import com.vultisig.wallet.ui.models.send.toPlainBigDecimalOrNull
@@ -106,6 +108,15 @@ internal class DefaultSendStrategy(
             scope.launch {
                 showLoading()
                 try {
+                    // Snapshot both amount fields before the first suspension point. AmountManager
+                    // owns these fields and blanks the fiat mirror whenever a price fetch fails,
+                    // and validate() suspends for a while — awaitGasFee waits up to five seconds
+                    // for an unloaded fee, resolveName goes to the network for an ENS/THORName. A
+                    // read taken after that wait can pair a $0.00 estimate with a correctly signed
+                    // amount; taken here, the two sides are the pair the user actually saw.
+                    val enteredTokenText = tokenAmountFieldState.text.toString()
+                    val enteredFiatText = fiatAmountFieldState.text.toString()
+
                     val validated = accountValidator.validate()
                     val vaultId = validated.vaultId
                     val chain = validated.chain
@@ -178,8 +189,7 @@ internal class DefaultSendStrategy(
 
                     val selectedToken = selectedAccount.token
 
-                    val tokenAmount =
-                        tokenAmountFieldState.text.toString().toPlainBigDecimalOrNull()
+                    val tokenAmount = enteredTokenText.toPlainBigDecimalOrNull()
                     if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_no_amount)
@@ -189,11 +199,10 @@ internal class DefaultSendStrategy(
                     val srcAddress = selectedToken.address
                     val isMaxAmount = tokenAmount.compareTo(amountManager.currentMaxAmount) == 0
 
-                    // Read the fiat mirror once, here, and carry it down to the Transaction rather
-                    // than re-reading the field past the suspension points below. AmountManager
-                    // owns that field too and blanks it whenever a price fetch fails, so a late
-                    // read can put a $0.00 estimate beside a correctly signed amount.
-                    val enteredFiat = fiatAmountFieldState.text.toString().toPlainBigDecimalOrNull()
+                    // Parsed from the pre-validate snapshot, never re-read from the field: the
+                    // suspension points between there and the Transaction below are exactly where
+                    // a failed price fetch would blank it.
+                    val enteredFiat = enteredFiatText.toPlainBigDecimalOrNull()
                     val spendableGasFee = withEvmGasSettings(chain, gasFee)
 
                     val enteredAmountInt =
@@ -381,7 +390,12 @@ internal class DefaultSendStrategy(
                                     listOf(selectedToken.ticker),
                                 )
                             )
-                        } else if (nativeTokenValue < gasFee.value) {
+                        } else if (nativeTokenValue < spendableGasFee.value) {
+                            // Gate on the fee this send actually pays, not the base gas fee:
+                            // raised Advanced Gas Settings are what an ERC-20 transfer reserves,
+                            // so checking the unraised value would let a native balance that
+                            // cannot cover them through to a full MPC keysign that only fails at
+                            // broadcast.
                             throw InvalidTransactionDataException(
                                 UiText.FormattedText(
                                     R.string.insufficient_native_token,
@@ -391,7 +405,7 @@ internal class DefaultSendStrategy(
                         }
                     }
 
-                    val evmGasSettings = gasSettings.value as? GasSettings.Eth
+                    val evmGasSettings = gasSettings.value.evmSettingsFor(chain)
                     val totalGasAndFee =
                         gasFeeToEstimatedFee(
                             GasFeeParams(
@@ -509,12 +523,11 @@ internal class DefaultSendStrategy(
      * funds.
      */
     private fun withEvmGasSettings(chain: Chain, gasFee: TokenValue): TokenValue {
-        // saveGasSettings never clears the stored settings, so a GasSettings.Eth set on an EVM
-        // chain outlives a switch to, say, Bitcoin. Its wei-denominated product would then be read
-        // as satoshis and swallow the whole balance. The other two consumers (applyGasSettings,
-        // selectGasFeeForFeeEstimation) already gate on the chain or the spec type; do the same.
-        if (chain.standard != TokenStandard.EVM) return gasFee
-        val eth = gasSettings.value as? GasSettings.Eth ?: return gasFee
+        // Resolved through evmSettingsFor so a GasSettings.Eth left over from an EVM chain can't
+        // be read here on, say, Bitcoin — its wei-denominated product would land as satoshis and
+        // swallow the whole balance. applyGasSettings is safe on its own: it gates on the spec
+        // type, which only an EVM chain produces.
+        val eth = gasSettings.value.evmSettingsFor(chain) ?: return gasFee
         return gasFee.copy(value = eth.maxFeePerGasWei * eth.gasLimit)
     }
 
@@ -549,9 +562,22 @@ internal class DefaultSendStrategy(
         if (isMaxAmount) {
             amountManager.markMax(adjustedDecimal)
         }
-        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(adjustedDecimal.toPlainString())
-        if (adjustedFiat != null) {
-            fiatAmountFieldState.setTextAndPlaceCursorAtEnd(adjustedFiat.toPlainString())
+        val adjustedText = adjustedDecimal.toPlainString()
+        val adjustedFiatText = adjustedFiat?.toPlainString()
+        // These fields are AmountManager's too, and its conversion collector would otherwise read
+        // the writes below as typing: it re-fetches the price and blanks the fiat mirror when that
+        // fails, so a resubmit without retyping could persist a $0.00 estimate. Hand it the pair
+        // first so the settled state matches its caches.
+        amountManager.markProgrammaticAmount(adjustedText, adjustedFiatText)
+        // Both fields move in one atomic apply. Written separately, `textAsFlow` (a snapshotFlow)
+        // exposes the half-updated pair, and the collector reads the not-yet-written side as a
+        // cleared field — clearing its counterpart in turn, which empties the very amount we are
+        // trying to show.
+        Snapshot.withMutableSnapshot {
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(adjustedText)
+            if (adjustedFiatText != null) {
+                fiatAmountFieldState.setTextAndPlaceCursorAtEnd(adjustedFiatText)
+            }
         }
     }
 

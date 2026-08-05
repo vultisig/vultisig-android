@@ -1569,6 +1569,105 @@ internal class DefaultSendStrategyTest {
         }
     }
 
+    /**
+     * The motivating case for deferring the field write: a balance so close to the fee that
+     * `balance − fee` lands under Cardano's 1.4 ADA minimum-send floor. The clamp succeeds,
+     * `validateCardanoUTXORequirements` then rejects it, and the fields must still hold what the
+     * user typed rather than an amount the send never accepted.
+     */
+    @Test
+    fun `submit surfaces the Cardano minimum-send floor on a clamped amount and keeps the typed fields`() {
+        try {
+            runTest {
+                mockkStatic(Dispatchers::class)
+                every { Dispatchers.IO } returns mainDispatcher
+                try {
+                    val adaCoin = adaCoin()
+                    // 1.5 ADA held, 1.45 ADA fee — the clamp lands at 0.05 ADA.
+                    val account =
+                        Account(
+                            token = adaCoin,
+                            tokenValue = TokenValue(BigInteger.valueOf(1_500_000L), adaCoin),
+                            fiatValue = null,
+                            price = null,
+                        )
+                    vaultId = "vault-1"
+                    selectedAccount = account
+                    addressFieldState.setTextAndPlaceCursorAtEnd("addr1dest")
+                    tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1.5")
+                    fiatAmountFieldState.setTextAndPlaceCursorAtEnd("0.6")
+                    coEvery { accountValidator.validate() } returns
+                        ValidatedAccount(
+                            vaultId = "vault-1",
+                            selectedAccount = account,
+                            chain = Chain.Cardano,
+                            gasFee = TokenValue(BigInteger.valueOf(1_450_000L), adaCoin),
+                            dstAddress = "addr1dest",
+                        )
+                    coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+                    coEvery {
+                        blockChainSpecificRepository.getSpecific(
+                            chain = any(),
+                            address = any(),
+                            token = any(),
+                            gasFee = any(),
+                            isSwap = any(),
+                            isMaxAmountEnabled = any(),
+                            isDeposit = any(),
+                            dstAddress = any(),
+                            tokenAmountValue = any(),
+                            memo = any(),
+                            isThorchainRouterDeposit = any(),
+                        )
+                    } returns
+                        BlockChainSpecificAndUtxo(
+                            BlockChainSpecific.Cardano(
+                                byteFee = 1_450_000L,
+                                sendMaxAmount = false,
+                                ttl = 1_000UL,
+                            )
+                        )
+                    every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+                    coEvery { getAvailableTokenBalance(any(), any()) } returns
+                        TokenValue(BigInteger.valueOf(50_000L), adaCoin)
+
+                    build(this).submit()
+                    advanceUntilIdle()
+
+                    assertEquals(
+                        R.string.minimum_send_amount_is_ada,
+                        (lastError as UiText.FormattedText).resId,
+                    )
+                    assertEquals("1.5", tokenAmountFieldState.text.toString())
+                    assertEquals("0.6", fiatAmountFieldState.text.toString())
+                } finally {
+                    unmockkStatic(Dispatchers::class)
+                }
+            }
+        } catch (e: Throwable) {
+            if (
+                e is UnsatisfiedLinkError ||
+                    e is ExceptionInInitializerError ||
+                    e is NoClassDefFoundError
+            ) {
+                assumeTrue(false, "WalletCore JNI not available: ${e.message}")
+            } else throw e
+        }
+    }
+
+    private fun adaCoin(): Coin =
+        Coin(
+            chain = Chain.Cardano,
+            ticker = "ADA",
+            logo = "",
+            address = "addr1self",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "cardano",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
     private fun okPlan(fee: Long): Bitcoin.TransactionPlan =
         Bitcoin.TransactionPlan.newBuilder().setFee(fee).setError(SigningError.OK).build()
 
