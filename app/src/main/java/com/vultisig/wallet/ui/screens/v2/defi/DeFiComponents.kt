@@ -61,7 +61,11 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
+import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.v2.containers.CornerType
+import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
@@ -500,6 +504,35 @@ internal fun PositionsSelectionDialog(
     )
 }
 
+/**
+ * Circular house-pen button that opens the manage-positions dialog. Sits inline to the right of the
+ * positions tab group on every DeFi chain screen, matching iOS `CircularAccessoryIconButton`.
+ *
+ * [isEnabled] takes the same disabled tint as [VsTab] so a screen that disables its tabs while
+ * loading can disable this alongside them rather than leaving a control that looks live.
+ */
+@Composable
+internal fun ManagePositionsButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isEnabled: Boolean = true,
+) {
+    V2Container(
+        type = ContainerType.SECONDARY,
+        cornerType = CornerType.Circular,
+        modifier = modifier.clickOnce(enabled = isEnabled, onClick = onClick),
+    ) {
+        UiIcon(
+            drawableResId = R.drawable.edit_chain,
+            size = 16.dp,
+            modifier = Modifier.padding(all = 12.dp),
+            tint =
+                if (isEnabled) Theme.v2.colors.primary.accent4
+                else Theme.v2.colors.text.button.disabled,
+        )
+    }
+}
+
 @Composable
 internal fun NoPositionsContainer(onManagePositionsClick: () -> Unit = {}) {
     NotEnabledContainer(
@@ -571,6 +604,7 @@ internal fun HeaderDeFiWidget(
     onClickAction: () -> Unit,
     totalAmount: String,
     totalPrice: String = "",
+    apy: String? = null,
     isLoading: Boolean = false,
     isBalanceVisible: Boolean = true,
     buttonState: VsButtonState = VsButtonState.Enabled,
@@ -633,9 +667,11 @@ internal fun HeaderDeFiWidget(
 
         UiSpacer(16.dp)
 
-        ApyApproxWithHint()
+        if (apy != null) {
+            ApyApproxWithHint(apy = apy)
 
-        UiSpacer(16.dp)
+            UiSpacer(16.dp)
+        }
 
         VsButton(
             label = buttonText,
@@ -648,8 +684,8 @@ internal fun HeaderDeFiWidget(
 
 @Composable
 private fun ApyApprox(
+    apy: String,
     modifier: Modifier = Modifier,
-    apy: String = "1%",
     onMoreInfoClick: (() -> Unit)? = null,
     onMoreInfoIconModifier: Modifier = Modifier,
 ) {
@@ -676,7 +712,7 @@ private fun ApyApprox(
 }
 
 @Composable
-private fun ApyApproxWithHint(modifier: Modifier = Modifier, apy: String = "1%") {
+private fun ApyApproxWithHint(apy: String, modifier: Modifier = Modifier) {
     var showHint by remember { mutableStateOf(false) }
     var iconPosition by remember { mutableStateOf(Offset.Zero) }
     var boxCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
@@ -722,6 +758,7 @@ internal fun HeaderDeFiWidget(
     onClickSecondAction: () -> Unit,
     totalAmount: String,
     totalPrice: String = "",
+    apy: String? = null,
     isLoading: Boolean = false,
     isBalanceVisible: Boolean = true,
     isSecondActionEnabled: Boolean = true,
@@ -784,9 +821,11 @@ internal fun HeaderDeFiWidget(
 
         UiSpacer(16.dp)
 
-        ApyApproxWithHint()
+        if (apy != null) {
+            ApyApproxWithHint(apy = apy)
 
-        UiSpacer(16.dp)
+            UiSpacer(16.dp)
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -979,6 +1018,7 @@ private fun HeaderDeFiWidgetTwoActionsPreview() {
             onClickFirstAction = {},
             onClickSecondAction = {},
             totalAmount = "0.7031 USDC",
+            apy = "1%",
         )
     }
 }

@@ -88,7 +88,7 @@ internal fun SendTxOverviewScreen(
                         text = stringResource(R.string.dapp_unverified_function_done_caution),
                         variant = BannerVariant.Warning,
                         modifier =
-                            Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 4.dp),
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
                     )
                 }
                 VsButton(
@@ -96,7 +96,7 @@ internal fun SendTxOverviewScreen(
                     variant = VsButtonVariant.Primary,
                     size = VsButtonSize.Medium,
                     modifier =
-                        Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                     onClick = onComplete,
                 )
             }

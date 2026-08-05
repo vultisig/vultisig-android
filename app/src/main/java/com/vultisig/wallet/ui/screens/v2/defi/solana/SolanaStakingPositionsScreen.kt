@@ -40,7 +40,6 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
@@ -50,6 +49,7 @@ import com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsViewMod
 import com.vultisig.wallet.ui.screens.cosmosstaking.ValidatorAvatar
 import com.vultisig.wallet.ui.screens.v2.defi.ActionButton
 import com.vultisig.wallet.ui.screens.v2.defi.ApyInfoItem
+import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
 import com.vultisig.wallet.ui.screens.v2.defi.InfoItem
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
@@ -94,10 +94,13 @@ internal fun SolanaStakingPositionsContent(
     onWithdraw: (String) -> Unit = {},
 ) {
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
+        // One scroll surface for the whole screen: the banner and tab row scroll away with the
+        // content instead of staying pinned above it, mirroring iOS (#4761).
         Column(
             modifier =
                 Modifier.fillMaxSize()
                     .background(Theme.v2.colors.backgrounds.primary)
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = CenterHorizontally,
         ) {
@@ -118,15 +121,18 @@ internal fun SolanaStakingPositionsContent(
             UiSpacer(16.dp)
 
             Column(
-                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                SolanaTotalStakedCard(
+                HeaderDeFiWidget(
+                    title = stringResource(R.string.solana_staking_total_staked_sol),
+                    iconRes = R.drawable.solana,
+                    buttonText = stringResource(R.string.solana_delegate_new_validator),
+                    onClickAction = onStake,
                     totalAmount = state.totalStakedSolDisplay,
                     totalPrice = state.totalStakedFiatDisplay,
                     isLoading = state.isLoading,
                     isBalanceVisible = state.isBalanceVisible,
-                    onDelegate = onStake,
                 )
 
                 if (state.positions.isNotEmpty()) {
@@ -404,78 +410,6 @@ private fun SolanaHeaderBanner(totalValue: String, isLoading: Boolean, isBalance
                 )
             }
         }
-    }
-}
-
-/**
- * "Total Staked SOL" summary card + primary CTA. Mirrors the shared
- * [com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget] but omits its baked-in `APY (approx.)
- * 1%` row (there is no chain-wide APY for Solana native staking — APY is per stake account and
- * shown on each row), matching the iOS layout.
- */
-@Composable
-private fun SolanaTotalStakedCard(
-    totalAmount: String,
-    totalPrice: String,
-    isLoading: Boolean,
-    isBalanceVisible: Boolean,
-    onDelegate: () -> Unit,
-) {
-    Column(
-        modifier =
-            Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Theme.v2.colors.backgrounds.secondary)
-                .border(
-                    width = 1.dp,
-                    color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
-                )
-                .padding(16.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(R.drawable.solana),
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-            )
-            UiSpacer(12.dp)
-            Column {
-                Text(
-                    text = stringResource(R.string.solana_staking_total_staked_sol),
-                    style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.tertiary,
-                )
-                UiSpacer(4.dp)
-                if (isLoading) {
-                    UiPlaceholderLoader(modifier = Modifier.size(width = 120.dp, height = 28.dp))
-                } else {
-                    Text(
-                        text = if (isBalanceVisible) totalAmount else HIDE_BALANCE_CHARS,
-                        style = Theme.brockmann.headings.title1,
-                        color = Theme.v2.colors.text.primary,
-                    )
-                    if (totalPrice.isNotEmpty()) {
-                        UiSpacer(4.dp)
-                        Text(
-                            text = if (isBalanceVisible) totalPrice else HIDE_BALANCE_CHARS,
-                            style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.v2.colors.text.tertiary,
-                        )
-                    }
-                }
-            }
-        }
-
-        UiSpacer(16.dp)
-        UiHorizontalDivider(color = Theme.v2.colors.border.light)
-        UiSpacer(16.dp)
-
-        VsButton(
-            label = stringResource(R.string.solana_delegate_new_validator),
-            modifier = Modifier.fillMaxWidth(),
-            onClick = onDelegate,
-        )
     }
 }
 

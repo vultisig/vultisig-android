@@ -59,10 +59,10 @@ import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsViewMod
 import com.vultisig.wallet.ui.models.governance.GovernanceUiState
 import com.vultisig.wallet.ui.models.governance.GovernanceViewModel
 import com.vultisig.wallet.ui.models.governance.ProposalUi
-import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.governance.GovernanceVoteSheet
 import com.vultisig.wallet.ui.screens.governance.governanceProposalItems
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.ManagePositionsButton
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.theme.Theme
@@ -116,13 +116,6 @@ internal fun CosmosStakingPositionsScreen(
     // delegate / undelegate / redelegate / claim — so Total Staked and the positions reflect the tx
     // without a manual pull. The first resume is a no-op in the VM (#4815).
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onScreenResumed() }
-
-    if (!governanceActive) {
-        RegisterChainDashboardTopBarAction(
-            icon = R.drawable.ic_shapes_plus_x_square_circle,
-            onClick = { viewModel.setPositionSelectionDialogVisibility(true) },
-        )
-    }
 
     CosmosStakingPositionsContent(
         state = state,
@@ -217,34 +210,44 @@ internal fun CosmosStakingPositionsContent(
                         )
                     }
 
-                    // Single manage-positions control: the ChainDashboard top-bar action above. The
-                    // inline edit-chains button that used to sit here duplicated it (#4821).
                     item {
-                        if (governanceState != null) {
-                            VsTabGroup(index = if (isGovernanceTab) 1 else 0) {
-                                tab {
-                                    VsTab(
-                                        label = stringResource(DeFiTab.STAKED.displayNameRes),
-                                        onClick = onStakedTabClick,
-                                    )
-                                }
-                                tab {
-                                    VsTab(
-                                        label = stringResource(R.string.governance),
-                                        onClick = onGovernanceTabClick,
-                                    )
-                                }
-                            }
-                        } else {
-                            VsTabGroup(index = 0) {
-                                COSMOS_STAKING_TABS.forEach { tab ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (governanceState != null) {
+                                VsTabGroup(index = if (isGovernanceTab) 1 else 0) {
                                     tab {
                                         VsTab(
-                                            label = stringResource(tab.displayNameRes),
-                                            onClick = {},
+                                            label = stringResource(DeFiTab.STAKED.displayNameRes),
+                                            onClick = onStakedTabClick,
+                                        )
+                                    }
+                                    tab {
+                                        VsTab(
+                                            label = stringResource(R.string.governance),
+                                            onClick = onGovernanceTabClick,
                                         )
                                     }
                                 }
+                            } else {
+                                VsTabGroup(index = 0) {
+                                    COSMOS_STAKING_TABS.forEach { tab ->
+                                        tab {
+                                            VsTab(
+                                                label = stringResource(tab.displayNameRes),
+                                                onClick = {},
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Manage positions edits staking positions only — the governance tab
+                            // has nothing to select.
+                            if (!isGovernanceTab) {
+                                ManagePositionsButton(onClick = onManagePositions)
                             }
                         }
                     }

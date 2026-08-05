@@ -293,6 +293,7 @@
     <string name="keysign_sign_transaction">Transaktion unterschreiben</string>
     <string name="sign_transaction">Transaktion signieren</string>
     <string name="keysign_password_title">Passwort</string>
+    <string name="start_screen_create_new_vault">Neuen Tresor erstellen</string>
     <string name="start_screen_new">NEU</string>
     <string name="start_screen_import_seedphrase">Seed-Phrase importieren</string>
     <string name="start_screen_import_seedphrase_desc">Geben Sie sie ein, erstellen Sie einen Tresor, schauen Sie nie zurück.</string>
@@ -926,7 +927,7 @@
     <string name="error_invalid_chain">Die Blockchain ist ungültig</string>
     <string name="ton_stake_error_unsupported_pool">Dieser Staking-Pool wird nicht unterstützt</string>
     <string name="ton_stake_error_min_amount">Mindest-Stake für diesen Pool beträgt %1$s %2$s</string>
-    <string name="ton_defi_error_ton_not_in_vault">TON ist nicht in diesem Tresor</string>
+    <string name="ton_defi_error_ton_not_in_vault">GRAM ist nicht in diesem Tresor</string>
     <string name="ton_defi_pending_withdrawal">Ausstehende Auszahlung</string>
     <string name="ton_defi_unlock_ready">Bereit zur Auszahlung</string>
     <string name="ton_defi_unlocks_in_days">Freigabe in %1$d T %2$d Std</string>
@@ -937,7 +938,7 @@
     <string name="ton_staking_pool_header">Pool</string>
     <string name="ton_staking_apy_header">APY</string>
     <string name="ton_staking_no_pools_found">Keine Staking-Pools gefunden</string>
-    <string name="ton_staking_min_stake">Min. %1$s TON</string>
+    <string name="ton_staking_min_stake">Min. %1$s %2$s</string>
     <string name="ton_staking_apy_value">%1$s%%</string>
     <string name="ton_stake_title">Staken %1$s</string>
     <string name="ton_unstake_title">Unstaken %1$s</string>

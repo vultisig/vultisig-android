@@ -26,6 +26,7 @@ constructor(private val tokenPriceRepository: TokenPriceRepository) {
     suspend fun createFiatValue(amount: BigDecimal, coin: Coin, currency: AppCurrency): FiatValue =
         convert(amount, currency) {
             tokenPriceRepository.getCachedPrice(tokenId = coin.id, appCurrency = currency)
+                ?: priceByProviderId(coin)
                 ?: tokenPriceRepository.getPriceByContactAddress(
                     coin.chain.id,
                     coin.contractAddress,
@@ -49,6 +50,18 @@ constructor(private val tokenPriceRepository: TokenPriceRepository) {
                 appCurrency = currency,
             ) ?: tokenPriceRepository.getPriceByContactAddress(chain.id, contractAddress)
         }
+
+    /**
+     * The CoinGecko-id route, tried before the contract-address one. THORChain has neither a
+     * CoinGecko asset-platform id nor a LI.FI chain id, so the contract route can only ever return
+     * zero for `x/…` denoms like RUJI — a position whose coin carries a price-provider id must go
+     * through it or the card renders $0.00.
+     */
+    private suspend fun priceByProviderId(coin: Coin): BigDecimal? =
+        coin.priceProviderID
+            .takeIf { it.isNotEmpty() }
+            ?.let { tokenPriceRepository.getPriceByPriceProviderId(it) }
+            ?.takeIf { it > BigDecimal.ZERO }
 
     private suspend fun convert(
         amount: BigDecimal,

@@ -34,7 +34,6 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import timber.log.Timber
 import tss.KeysignResponse
 
@@ -64,9 +63,17 @@ class MldsaKeysign(
     private var messenger: TssMessenger? = null
     /** Deduplicates already-applied inbound messages by composite key. */
     private val appliedMessages = mutableSetOf<String>()
-    private val heardFromThisAttempt = mutableSetOf<String>()
-    private val heardFromEver = mutableSetOf<String>()
-    private var waitingNotified = false
+    private val redeletedHashes = mutableSetOf<String>()
+    private val poller =
+        KeysignMessagePoller(
+            sessionApi = sessionApi,
+            mediatorURL = mediatorURL,
+            sessionID = sessionID,
+            localPartyID = localPartyID,
+            keysignCommittee = keysignCommittee,
+            onWaitingForPeers = onWaitingForPeers,
+            onPeersResumed = onPeersResumed,
+        )
 
     /** Collects signatures keyed by the signed message hex string. */
     val signatures = mutableMapOf<String, KeysignResponse>()
@@ -85,10 +92,10 @@ class MldsaKeysign(
      */
     private suspend fun keysignOneMessage(attempt: Int, messageToSign: String) {
         if (attempt == 0) {
-            heardFromEver.clear()
-            waitingNotified = false
+            poller.resetForNewMessage()
         }
         appliedMessages.clear()
+        redeletedHashes.clear()
         val msgHash = messageToSign.md5()
 
         messenger =
@@ -130,16 +137,12 @@ class MldsaKeysign(
                     msgHash = msgHash,
                     messageToSign = messageToSign,
                     signatures = signatures,
-                ) {
-                    if (waitingNotified) {
-                        waitingNotified = false
-                        onPeersResumed?.invoke()
-                    }
-                }
+                    onRecovered = poller::clearWaitingForPeers,
+                )
             if (recovered) {
                 return
             }
-            val maxRetries = if (heardFromEver.isEmpty()) 1 else MAX_PROTOCOL_RETRIES
+            val maxRetries = if (poller.hasHeardFromAnyPeer) MAX_PROTOCOL_RETRIES else 1
             if (attempt < maxRetries) {
                 keysignOneMessage(attempt + 1, messageToSign)
             } else {
@@ -225,7 +228,7 @@ class MldsaKeysign(
                 .check("create sign session")
 
             drainOutbound(session)
-            if (pollInbound(session, msgHash)) {
+            if (poller.poll(msgHash) { applyInboundMessages(session, it, msgHash) }) {
                 drainOutbound(session)
                 // finish can fail transiently (LIB_ABORT_PROTOCOL_PARTY_*) — retry is inside
                 val sig = finishSignSession(session)
@@ -289,62 +292,6 @@ class MldsaKeysign(
     }
 
     /**
-     * Polls the mediator for inbound messages until the protocol completes or 60 s of silence
-     * elapses. Notifies [onWaitingForPeers] after 10 s of silence and [onPeersResumed] when
-     * messages resume.
-     *
-     * @return `true` when the signing protocol has finished successfully.
-     */
-    private suspend fun pollInbound(handle: Handle, messageID: String): Boolean {
-        heardFromThisAttempt.clear()
-        var lastMessageNano = System.nanoTime()
-
-        while (true) {
-            try {
-                val msgs =
-                    sessionApi.getTssMessages(mediatorURL, sessionID, localPartyID, messageID)
-                if (msgs.isNotEmpty()) {
-                    if (waitingNotified) {
-                        waitingNotified = false
-                        onPeersResumed?.invoke()
-                    }
-                    lastMessageNano = System.nanoTime()
-                    heardFromThisAttempt.clear()
-                    if (applyInboundMessages(handle, msgs, messageID)) return true
-                } else {
-                    delay(POLL_INTERVAL_MS)
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to get messages")
-                delay(POLL_INTERVAL_MS)
-            }
-
-            val silenceSecs = (System.nanoTime() - lastMessageNano) / 1_000_000_000.0
-            if (!waitingNotified && silenceSecs > 10) {
-                waitingNotified = true
-                val missingPeers =
-                    keysignCommittee.filter { it != localPartyID && it !in heardFromThisAttempt }
-                if (missingPeers.isNotEmpty()) {
-                    onWaitingForPeers?.invoke(missingPeers)
-                }
-            }
-            if (silenceSecs > 60) {
-                val missingPeers =
-                    keysignCommittee.filter { it != localPartyID && it !in heardFromThisAttempt }
-                val msg =
-                    if (missingPeers.isEmpty()) {
-                        "keysign timed out: all peers responded but protocol did not complete within 60s"
-                    } else {
-                        "no messages from ${missingPeers.joinToString()} in 60s"
-                    }
-                error(msg)
-            }
-        }
-    }
-
-    /**
      * Decrypts and applies each inbound message to the session.
      *
      * @return `true` when the native library signals that signing is complete.
@@ -356,11 +303,15 @@ class MldsaKeysign(
     ): Boolean {
         for (msg in msgs.sortedBy { it.sequenceNo }) {
             val cacheKey = "$sessionID-$localPartyID-$messageID-${msg.hash}"
-            if (!appliedMessages.add(cacheKey)) continue
+            if (cacheKey in appliedMessages) {
+                // Once per attempt: repeating a delete the relay is ignoring only parks the poll
+                // loop behind the relay client's own backoff.
+                if (redeletedHashes.add(msg.hash)) deleteMessageFromServer(msg.hash, messageID)
+                continue
+            }
 
             Timber.d("Got message from: %s, to: %s, key: %s", msg.from, msg.to, cacheKey)
-            heardFromThisAttempt.add(msg.from)
-            heardFromEver.add(msg.from)
+            poller.recordPeerHeard(msg.from)
 
             val decrypted =
                 encryption.decrypt(
@@ -377,6 +328,7 @@ class MldsaKeysign(
                 )
                 .check("apply inbound message")
 
+            appliedMessages += cacheKey
             deleteMessageFromServer(msg.hash, messageID)
             drainOutbound(handle)
 
@@ -386,7 +338,7 @@ class MldsaKeysign(
     }
 
     private suspend fun deleteMessageFromServer(hash: String, messageID: String) {
-        sessionApi.deleteTssMessage(mediatorURL, sessionID, localPartyID, hash, messageID)
+        sessionApi.deleteTssMessageQuietly(mediatorURL, sessionID, localPartyID, hash, messageID)
     }
 
     /** Finds the MLDSA keyshare matching [publicKeyMldsa] in the vault. */
@@ -472,6 +424,5 @@ class MldsaKeysign(
         internal const val FINISH_RETRY_DELAY_MS = 1000L
 
         private const val MAX_PROTOCOL_RETRIES = 3
-        private const val POLL_INTERVAL_MS = 100L
     }
 }

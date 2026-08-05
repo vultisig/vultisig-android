@@ -393,6 +393,7 @@
     <string name="keysign_sign_transaction">Sign transaction</string>
     <string name="sign_transaction">Sign Transaction</string>
     <string name="keysign_password_title">Password</string>
+    <string name="start_screen_create_new_vault">Create new Vault</string>
     <string name="start_screen_new">NEW</string>
     <string name="start_screen_import_seedphrase">Import seedphrase</string>
     <string name="start_screen_import_seedphrase_desc">Enter it, create a vault, never look back.</string>
@@ -502,7 +503,7 @@
     <string name="ton_stake_error_unsupported_pool">This staking pool isn\'t supported</string>
     <string name="ton_stake_error_min_amount">Minimum stake for this pool is %1$s %2$s</string>
     <string name="ton" translatable="false">TON</string>
-    <string name="ton_defi_error_ton_not_in_vault">TON isn\'t in this vault</string>
+    <string name="ton_defi_error_ton_not_in_vault">GRAM isn\'t in this vault</string>
     <string name="ton_defi_pending_withdrawal">Pending withdrawal</string>
     <string name="ton_defi_unlock_ready">Ready to withdraw</string>
     <string name="ton_defi_unlocks_in_days">Unlocks in %1$dd %2$dh</string>
@@ -513,7 +514,7 @@
     <string name="ton_staking_pool_header">Pool</string>
     <string name="ton_staking_apy_header">APY</string>
     <string name="ton_staking_no_pools_found">No staking pools found</string>
-    <string name="ton_staking_min_stake">Min %1$s TON</string>
+    <string name="ton_staking_min_stake">Min %1$s %2$s</string>
     <string name="ton_staking_apy_value">%1$s%%</string>
     <string name="ton_stake_title">Stake %1$s</string>
     <string name="ton_unstake_title">Unstake %1$s</string>

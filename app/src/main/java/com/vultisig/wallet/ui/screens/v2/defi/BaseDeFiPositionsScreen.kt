@@ -19,12 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
@@ -47,10 +42,13 @@ fun BaseDeFiPositionsScreenContent(
     tabContent: @Composable () -> Unit = {},
 ) {
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
+        // One scroll surface for the whole screen: the banner and tab row scroll away with the
+        // content instead of staying pinned above it, mirroring iOS (#4761).
         Column(
             modifier =
                 Modifier.fillMaxSize()
                     .background(Theme.v2.colors.backgrounds.primary)
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = CenterHorizontally,
         ) {
@@ -86,25 +84,14 @@ fun BaseDeFiPositionsScreenContent(
                 }
 
                 if (state.supportEditChains) {
-                    V2Container(
-                        type = ContainerType.SECONDARY,
-                        cornerType = CornerType.Circular,
-                        modifier = Modifier.clickOnce(onClick = onEditChains),
-                    ) {
-                        UiIcon(
-                            drawableResId = R.drawable.edit_chain,
-                            size = 16.dp,
-                            modifier = Modifier.padding(all = 12.dp),
-                            tint = Theme.v2.colors.primary.accent4,
-                        )
-                    }
+                    ManagePositionsButton(onClick = onEditChains)
                 }
             }
 
             UiSpacer(16.dp)
 
             Column(
-                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 tabContent()

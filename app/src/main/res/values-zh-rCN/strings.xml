@@ -536,6 +536,7 @@
     <string name="keysign_password_title">密码</string>
 
     <!-- Home Screen -->
+    <string name="start_screen_create_new_vault">创建新保险库</string>
     <string name="start_screen_new">新功能</string>
     <string name="start_screen_import_seedphrase">导入助记词</string>
     <string name="start_screen_import_seedphrase_desc">输入它，创建保险库，永不回头。</string>
@@ -1255,7 +1256,7 @@
     <string name="error_invalid_chain">链无效</string>
     <string name="ton_stake_error_unsupported_pool">不支持此质押池</string>
     <string name="ton_stake_error_min_amount">此质押池的最低质押金额为 %1$s %2$s</string>
-    <string name="ton_defi_error_ton_not_in_vault">此保险库中没有 TON</string>
+    <string name="ton_defi_error_ton_not_in_vault">此保险库中没有 GRAM</string>
     <string name="ton_defi_pending_withdrawal">待提取</string>
     <string name="ton_defi_unlock_ready">可提取</string>
     <string name="ton_defi_unlocks_in_days">%1$d 天 %2$d 小时后解锁</string>
@@ -1266,7 +1267,7 @@
     <string name="ton_staking_pool_header">质押池</string>
     <string name="ton_staking_apy_header">年化收益率</string>
     <string name="ton_staking_no_pools_found">未找到质押池</string>
-    <string name="ton_staking_min_stake">最低 %1$s TON</string>
+    <string name="ton_staking_min_stake">最低 %1$s %2$s</string>
     <string name="ton_staking_apy_value">%1$s%%</string>
     <string name="ton_stake_title">质押 %1$s</string>
     <string name="ton_unstake_title">解除质押 %1$s</string>

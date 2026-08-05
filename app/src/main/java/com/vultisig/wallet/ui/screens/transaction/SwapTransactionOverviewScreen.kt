@@ -246,7 +246,7 @@ internal fun SwapTransactionOverviewScreen(
         bottomBarContent = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
                 if (!progressLink.isNullOrBlank()) {
                     val uriHandler = VsUriHandler()

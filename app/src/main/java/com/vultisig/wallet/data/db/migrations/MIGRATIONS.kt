@@ -1028,3 +1028,21 @@ internal val MIGRATION_39_40 =
                 .forEach(db::execSQL)
         }
     }
+
+// RUJI and sRUJI shipped with `ruji` as their price-provider id, which CoinGecko does not resolve
+// to anything — it indexes the token as `rujira`. Coins are persisted per vault at the time they
+// are added, so correcting the static definitions alone leaves every already-added RUJI stuck at
+// $0.00 until the user removes and re-adds it. Rewrite the stored id in place instead.
+internal val MIGRATION_40_41 =
+    object : Migration(40, 41) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            UPDATE coin
+            SET priceProviderId = 'rujira'
+            WHERE priceProviderId = 'ruji'
+            """
+                    .trimIndent()
+            )
+        }
+    }

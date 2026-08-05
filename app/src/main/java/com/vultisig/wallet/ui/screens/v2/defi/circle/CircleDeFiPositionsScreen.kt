@@ -19,6 +19,12 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 /**
+ * Circle publishes no APY feed, so the yield is a fixed product term rather than a fetched value —
+ * matching iOS `CircleYieldProvider.staticApyText`.
+ */
+private const val CIRCLE_STATIC_APY = "1%"
+
+/**
  * Entry point for the Circle USDC DeFi positions screen; wires ViewModel state and pull-to-refresh.
  */
 @Composable
@@ -109,6 +115,7 @@ private fun CircleContentDepositTab(
             onClickAction = onClickWithdraw,
             totalAmount = state.totalDeposit,
             totalPrice = state.totalDepositCurrency,
+            apy = CIRCLE_STATIC_APY,
             isLoading = state.isLoading,
             isBalanceVisible = isBalanceVisible,
         )
@@ -120,6 +127,7 @@ private fun CircleContentDepositTab(
             onClickAction = onCreateAccount,
             totalAmount = state.totalDeposit,
             totalPrice = state.totalDepositCurrency,
+            apy = CIRCLE_STATIC_APY,
             isLoading = state.isLoading,
             isBalanceVisible = isBalanceVisible,
             // New Circle deposits are disabled, so opening a new account is also gated off.
