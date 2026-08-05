@@ -1,6 +1,8 @@
 package com.vultisig.wallet.ui.models.send.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshots.Snapshot
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.TerraClassicTax
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
@@ -28,6 +30,7 @@ import com.vultisig.wallet.ui.models.send.GasSettings
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendFocusField
 import com.vultisig.wallet.ui.models.send.SendSections
+import com.vultisig.wallet.ui.models.send.evmSettingsFor
 import com.vultisig.wallet.ui.models.send.memoLengthErrorOrNull
 import com.vultisig.wallet.ui.models.send.selectGasFeeForFeeEstimation
 import com.vultisig.wallet.ui.models.send.toPlainBigDecimalOrNull
@@ -40,6 +43,7 @@ import com.vultisig.wallet.ui.utils.asAddressInput
 import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -105,6 +109,15 @@ internal class DefaultSendStrategy(
             scope.launch {
                 showLoading()
                 try {
+                    // Snapshot both amount fields before the first suspension point. AmountManager
+                    // owns these fields and blanks the fiat mirror whenever a price fetch fails,
+                    // and validate() suspends for a while — awaitGasFee waits up to five seconds
+                    // for an unloaded fee, resolveName goes to the network for an ENS/THORName. A
+                    // read taken after that wait can pair a $0.00 estimate with a correctly signed
+                    // amount; taken here, the two sides are the pair the user actually saw.
+                    val enteredTokenText = tokenAmountFieldState.text.toString()
+                    val enteredFiatText = fiatAmountFieldState.text.toString()
+
                     val validated = accountValidator.validate()
                     val vaultId = validated.vaultId
                     val chain = validated.chain
@@ -177,8 +190,7 @@ internal class DefaultSendStrategy(
 
                     val selectedToken = selectedAccount.token
 
-                    val tokenAmount =
-                        tokenAmountFieldState.text.toString().toPlainBigDecimalOrNull()
+                    val tokenAmount = enteredTokenText.toPlainBigDecimalOrNull()
                     if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_no_amount)
@@ -188,29 +200,30 @@ internal class DefaultSendStrategy(
                     val srcAddress = selectedToken.address
                     val isMaxAmount = tokenAmount.compareTo(amountManager.currentMaxAmount) == 0
 
-                    // "Max" is a one-shot snapshot: it captures the balance and gas fee at tap
-                    // time and never re-clamps if either moves before submit (a cached balance
-                    // correcting downward after network hydration, or EVM gas rising). A stale-high
-                    // snapshot then exceeds what's actually spendable and submit validation rejects
-                    // it as "insufficient" — which is why a max send can force the user to leave
-                    // some tokens behind. Re-derive the amount from the CURRENT balance and fee,
-                    // clamping DOWN only so we never send more than the user saw. Standard sends
-                    // only: DeFi flows (staking/unbond/frozen TRX) carry different balance
-                    // semantics and compute their own max.
+                    // Parsed from the pre-validate snapshot, never re-read from the field: the
+                    // suspension points between there and the Transaction below are exactly where
+                    // a failed price fetch would blank it.
+                    val enteredFiat = enteredFiatText.toPlainBigDecimalOrNull()
+                    val spendableGasFee = withEvmGasSettings(chain, gasFee)
+
+                    val enteredAmountInt =
+                        tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
                     val tokenAmountInt =
-                        tokenAmount.movePointRight(selectedToken.decimal).toBigInteger().let {
-                            entered ->
-                            if (isMaxAmount && defiTypeProvider() == null) {
-                                val available =
-                                    getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
-                                if (available != null && available > BigInteger.ZERO) {
-                                    entered.coerceAtMost(available)
-                                } else {
-                                    entered
-                                }
-                            } else {
-                                entered
-                            }
+                        clampToSpendableBalance(
+                            entered = enteredAmountInt,
+                            account = selectedAccount,
+                            balance = selectedTokenValue.value,
+                            gasFee = spendableGasFee,
+                            isMaxAmount = isMaxAmount,
+                        )
+                    // The fields are only rewritten once every validation below has passed — see
+                    // the showAdjustedAmount call before Verify.
+                    val isAmountAdjusted = tokenAmountInt < enteredAmountInt
+                    val fiatAmount =
+                        if (isAmountAdjusted) {
+                            scaleFiat(enteredFiat, tokenAmountInt, enteredAmountInt, selectedToken)
+                        } else {
+                            enteredFiat
                         }
 
                     if (chain == Chain.Tron) {
@@ -285,8 +298,8 @@ internal class DefaultSendStrategy(
                                     ?.movePointRight(selectedToken.decimal)
                                     ?.toBigInteger() ?: BigInteger.ZERO
                             } else {
-                                getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
-                                    ?: BigInteger.ZERO
+                                getAvailableTokenBalance(selectedAccount, spendableGasFee.value)
+                                    ?.value ?: BigInteger.ZERO
                             }
 
                         if (tokenAmountInt > availableTokenBalance) {
@@ -389,7 +402,12 @@ internal class DefaultSendStrategy(
                                     listOf(selectedToken.ticker),
                                 )
                             )
-                        } else if (nativeTokenValue < gasFee.value) {
+                        } else if (nativeTokenValue < spendableGasFee.value) {
+                            // Gate on the fee this send actually pays, not the base gas fee:
+                            // raised Advanced Gas Settings are what an ERC-20 transfer reserves,
+                            // so checking the unraised value would let a native balance that
+                            // cannot cover them through to a full MPC keysign that only fails at
+                            // broadcast.
                             throw InvalidTransactionDataException(
                                 UiText.FormattedText(
                                     R.string.insufficient_native_token,
@@ -399,7 +417,7 @@ internal class DefaultSendStrategy(
                         }
                     }
 
-                    val evmGasSettings = gasSettings.value as? GasSettings.Eth
+                    val evmGasSettings = gasSettings.value.evmSettingsFor(chain)
                     val totalGasAndFee =
                         gasFeeToEstimatedFee(
                             GasFeeParams(
@@ -434,9 +452,7 @@ internal class DefaultSendStrategy(
                                 ),
                             fiatValue =
                                 FiatValue(
-                                    value =
-                                        fiatAmountFieldState.text.toString().toBigDecimalOrNull()
-                                            ?: BigDecimal.ZERO,
+                                    value = fiatAmount ?: BigDecimal.ZERO,
                                     currency = appCurrency.value.ticker,
                                 ),
                             gasFee = gasFee,
@@ -448,6 +464,19 @@ internal class DefaultSendStrategy(
                         )
 
                     transactionRepository.addTransaction(transaction)
+
+                    // Only now, with every balance/dust/reserve check behind us, does the amount
+                    // the user sees change. Rewriting it at clamp time would strand the form on a
+                    // number they never typed whenever a later validator rejected the send — a
+                    // Cardano clamp landing under the minimum-send floor, say.
+                    if (isAmountAdjusted) {
+                        showAdjustedAmount(
+                            adjusted = tokenAmountInt,
+                            adjustedFiat = fiatAmount,
+                            token = selectedToken,
+                            isMaxAmount = isMaxAmount,
+                        )
+                    }
 
                     navigator.route(
                         Route.VerifySend(transactionId = transaction.id, vaultId = vaultId)
@@ -465,6 +494,103 @@ internal class DefaultSendStrategy(
                     hideLoading()
                 }
             }
+    }
+
+    /**
+     * Clamps [entered] down to the balance that is spendable right now — `balance − fee − chain
+     * reserve`, per `GetAvailableTokenBalanceUseCase`. Two situations land here:
+     * - a stale "Max": the tap captures balance and gas fee once and never re-clamps if either
+     *   moves before submit (a cached balance correcting downward after network hydration, or EVM
+     *   gas rising), so the snapshot ends up above what's actually spendable;
+     * - a hand-typed native amount that fits the balance but not `amount + fee` — the send used to
+     *   dead-end on "insufficient balance" instead of adjusting to the affordable maximum.
+     *
+     * Only ever reduces, so we never send more than the user asked for. An amount that overshoots
+     * the balance on its own is left untouched for the balance checks in `submit` to reject — that
+     * is a real over-entry, not a fee edge. DeFi flows are excluded: staking/unbond/frozen TRX
+     * carry different balance semantics and compute their own max.
+     */
+    private suspend fun clampToSpendableBalance(
+        entered: BigInteger,
+        account: Account,
+        balance: BigInteger,
+        gasFee: TokenValue,
+        isMaxAmount: Boolean,
+    ): BigInteger {
+        if (defiTypeProvider() != null) return entered
+        // Non-native tokens pay gas in the native coin, so their shortfall is never fee-caused.
+        val isFeeOnlyShortfall = account.token.isNativeToken && entered <= balance
+        if (!isMaxAmount && !isFeeOnlyShortfall) return entered
+        val available = getAvailableTokenBalance(account, gasFee.value)?.value ?: return entered
+        if (available <= BigInteger.ZERO) return entered
+        return entered.coerceAtMost(available)
+    }
+
+    /**
+     * The fee an EVM send actually reserves once Advanced Gas Settings are in play. `adjustGasFee`
+     * folds UTXO byte fees and Cardano fees back into `gasFee` but deliberately leaves
+     * `GasSettings.Eth` out, while [applyGasSettings] still patches the signed `maxFeePerGasWei`
+     * and `gasLimit` — so an amount sized on `gasFee` alone reserves less than the transaction
+     * spends and can be adjusted to a clean-looking value the chain then rejects for insufficient
+     * funds.
+     */
+    private fun withEvmGasSettings(chain: Chain, gasFee: TokenValue): TokenValue {
+        // Resolved through evmSettingsFor so a GasSettings.Eth left over from an EVM chain can't
+        // be read here on, say, Bitcoin — its wei-denominated product would land as satoshis and
+        // swallow the whole balance. applyGasSettings is safe on its own: it gates on the spec
+        // type, which only an EVM chain produces.
+        val eth = gasSettings.value.evmSettingsFor(chain) ?: return gasFee
+        return gasFee.copy(value = eth.maxFeePerGasWei * eth.gasLimit)
+    }
+
+    /** Moves the fiat mirror by the same ratio the token amount was clamped by. */
+    private fun scaleFiat(
+        fiat: BigDecimal?,
+        adjusted: BigInteger,
+        entered: BigInteger,
+        token: Coin,
+    ): BigDecimal? {
+        if (fiat == null || fiat.signum() <= 0 || entered.signum() <= 0) return fiat
+        return fiat
+            .multiply(BigDecimal(adjusted))
+            .divide(BigDecimal(entered), token.decimal, RoundingMode.DOWN)
+            .stripTrailingZeros()
+    }
+
+    /**
+     * Reflects an [adjusted] amount back into the amount fields so the form — and the Verify screen
+     * built from them — shows what will actually be signed. The user must never sign an amount they
+     * weren't shown. Call this only once the send is committed: see the call site in `submit`.
+     */
+    private fun showAdjustedAmount(
+        adjusted: BigInteger,
+        adjustedFiat: BigDecimal?,
+        token: Coin,
+        isMaxAmount: Boolean,
+    ) {
+        val adjustedDecimal = BigDecimal(adjusted).movePointLeft(token.decimal).stripTrailingZeros()
+        // The clamped value is still the true maximum, so re-snapshot it — otherwise the form's
+        // "100%" selection would drop just because the fee moved.
+        if (isMaxAmount) {
+            amountManager.markMax(adjustedDecimal)
+        }
+        val adjustedText = adjustedDecimal.toPlainString()
+        val adjustedFiatText = adjustedFiat?.toPlainString()
+        // These fields are AmountManager's too, and its conversion collector would otherwise read
+        // the writes below as typing: it re-fetches the price and blanks the fiat mirror when that
+        // fails, so a resubmit without retyping could persist a $0.00 estimate. Hand it the pair
+        // first so the settled state matches its caches.
+        amountManager.markProgrammaticAmount(adjustedText, adjustedFiatText)
+        // Both fields move in one atomic apply. Written separately, `textAsFlow` (a snapshotFlow)
+        // exposes the half-updated pair, and the collector reads the not-yet-written side as a
+        // cleared field — clearing its counterpart in turn, which empties the very amount we are
+        // trying to show.
+        Snapshot.withMutableSnapshot {
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(adjustedText)
+            if (adjustedFiatText != null) {
+                fiatAmountFieldState.setTextAndPlaceCursorAtEnd(adjustedFiatText)
+            }
+        }
     }
 
     private fun applyRippleDestinationTag(
@@ -517,7 +643,11 @@ internal class DefaultSendStrategy(
 
         // Always re-plan against this submit's `specific` (correct isMaxAmountEnabled, freshest
         // amount) rather than trusting a background-collected planBtc snapshot — it may have
-        // been computed with a stale sendMaxAmount flag or a since-changed amount (#5504).
+        // been computed with a stale sendMaxAmount flag or a since-changed amount (#5504). This
+        // also covers a clamped amount (#5509): GasFeeOrchestrator.collectPlanFee refills planBtc
+        // on every keystroke from the raw field, so after a clamp the cached plan still describes
+        // the pre-clamp amount — re-planning unconditionally means validateBtcLikeAmount never sees
+        // that stale, over-fee plan.
         val plan =
             bitcoinPlanService.getPlan(
                 vaultId = vaultId,

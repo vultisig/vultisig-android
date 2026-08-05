@@ -254,6 +254,49 @@ internal class AmountManagerTest {
             coVerify(exactly = 0) { tokenPriceRepository.getPrice(any(), any()) }
         }
 
+    /**
+     * A submit-time clamp writes both fields itself. Left to the conversion collector, that write
+     * reads as typing and re-runs the price fetch — which blanks the fiat mirror when it fails, so
+     * a resubmit without retyping would carry a $0.00 estimate beside a correct amount.
+     */
+    @Test
+    fun `markProgrammaticAmount keeps a failed price fetch from blanking the written fiat`() =
+        runTest(mainDispatcher) {
+            every { tokenPriceRepository.getPrice(any(), any()) } throws RuntimeException("network")
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = ethToken()
+
+            manager.markProgrammaticAmount("0.9985", "1997")
+            // One atomic apply, as DefaultSendStrategy.showAdjustedAmount does it — writing the
+            // two fields separately exposes a half-updated pair that the collector reads as a
+            // cleared field, and it then clears the counterpart.
+            Snapshot.withMutableSnapshot {
+                tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.9985")
+                fiatAmountFieldState.setTextAndPlaceCursorAtEnd("1997")
+            }
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+
+            assertEquals("0.9985", tokenAmountFieldState.text.toString())
+            assertEquals("1997", fiatAmountFieldState.text.toString())
+            coVerify(exactly = 0) { tokenPriceRepository.getPrice(any(), any()) }
+        }
+
+    @Test
+    fun `markProgrammaticAmount re-derives isMaxAmount against the max snapshot`() =
+        runTest(mainDispatcher) {
+            val manager = build(backgroundScope)
+            manager.markMax(BigDecimal("0.9985"))
+
+            manager.markProgrammaticAmount("0.9985", null)
+            assertTrue(manager.isMaxAmount.value)
+
+            // A clamp that lands below the snapshot is no longer the maximum.
+            manager.markProgrammaticAmount("0.5", null)
+            assertFalse(manager.isMaxAmount.value)
+        }
+
     @Test
     fun `resetUserInputCache lets a token switch re-run conversion on the same amount`() =
         runTest(mainDispatcher) {

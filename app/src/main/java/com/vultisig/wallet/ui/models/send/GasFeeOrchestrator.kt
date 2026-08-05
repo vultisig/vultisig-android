@@ -314,7 +314,7 @@ internal class GasFeeOrchestrator(
                     estimateTrigger,
                 ) { token, gasFee, gasSettings, planFee, _ ->
                     val chain = token.chain
-                    val evmGasSettings = gasSettings as? GasSettings.Eth
+                    val evmGasSettings = gasSettings.evmSettingsFor(chain)
                     try {
                         val estimatedFee =
                             gasFeeToEstimatedFee(
