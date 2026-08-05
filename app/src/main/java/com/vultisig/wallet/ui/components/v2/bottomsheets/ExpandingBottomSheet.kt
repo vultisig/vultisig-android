@@ -105,10 +105,15 @@ internal fun ExpandingBottomSheet(
     val expandedTop = WindowInsets.statusBars.getTop(density)
     val cutEdgeFade = with(density) { CutEdgeFadeHeight.toPx() }
 
-    // The host window dims on its own when this sheet is a navigation dialog destination, which
-    // would sit under the scrim below and stay at full strength while the sheet slides away.
-    val view = LocalView.current
-    LaunchedEffect(view) { (view.parent as? DialogWindowProvider)?.window?.setDimAmount(0f) }
+    // A dialog destination that doesn't fit its decor to the system windows is themed with
+    // FloatingDialogWindowTheme, which turns the platform's own dim on. It would sit under the
+    // scrim below and stay at full strength while the sheet slides away, so it is cleared here —
+    // during composition, which is the only moment early enough. The dialog is shown from an
+    // effect, and every effect runs after this composition, so clearing it from one of those means
+    // the window is added, dimmed and drawn over the screen for a frame or two first: the black
+    // flash that precedes the sheet.
+    val dialogWindow = (LocalView.current.parent as? DialogWindowProvider)?.window
+    remember(dialogWindow) { dialogWindow?.setDimAmount(0f) }
 
     LaunchedEffect(windowHeight, restHeight, expandedTop, cutEdgeFade) {
         if (windowHeight <= 0) return@LaunchedEffect
