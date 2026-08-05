@@ -42,6 +42,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -269,6 +270,48 @@ internal class MayachainDefiPositionsViewModelTest {
         assertEquals("$5.00", position.totalPriceLp)
         // Nothing to withdraw without liquidity units.
         assertFalse(position.canRemove)
+    }
+
+    @Test
+    fun `LP value counts toward the header total`() = runTest {
+        // The total summed bond and stake only, so a holder whose value sat in LP saw a header
+        // that disagreed with the cards underneath it.
+        selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+        givenLpPool(liquidityUnits = "100", units = "1000")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        // Nothing bonded or staked, so the header is the LP position's own $0.40.
+        val data = successData(vm)
+        assertEquals("$0.40", data.lp.positions.single().totalPriceLp)
+        assertEquals("$0.40", data.totalAmountPrice)
+        assertFalse(data.isTotalAmountLoading)
+    }
+
+    @Test
+    fun `a failed staking load leaves the CACAO card priced at zero rather than blank`() = runTest {
+        // Clearing the spinner alone left the card with no fiat line at all, which the tab hid.
+        coEvery { mayaCacaoStakingService.getStakingDetails(CACAO_ADDRESS) } returns
+            flow { throw RuntimeException("maya node down") }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val position = successData(vm).staking.positions.single()
+        assertFalse(position.isLoading)
+        assertEquals("$0.00", position.stakedFiatDisplay)
+    }
+
+    @Test
+    fun `a failed bond load settles the header total instead of stranding it`() = runTest {
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+            flow { throw RuntimeException("maya node down") }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val data = successData(vm)
+        assertFalse(data.bonded.isLoading)
+        assertFalse(data.isTotalAmountLoading)
+        assertEquals("$0.00", data.bonded.totalBondedPrice)
     }
 
     @Test

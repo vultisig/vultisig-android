@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.ThorChainLpPosition
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
@@ -40,10 +41,12 @@ import java.text.NumberFormat
 import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -426,6 +429,89 @@ internal class ThorchainDefiPositionsViewModelTest {
     }
 
     @Test
+    fun `LP value counts toward the header total`() = runTest {
+        // A vault holding only LP used to read $0.00 in the header while the LP cards below it
+        // showed real money: the total summed bond and stake but never LP.
+        selectPositions(BTC_POOL)
+        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+            listOf(poolStats(BTC_POOL))
+        coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
+            listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "100000000"))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        // 3 RUNE at 2. The BTC side prices to zero — the vault holds no BTC coin, so it falls
+        // through to the contract lookup, which this test leaves unstubbed.
+        assertEquals(BigDecimal("6.00"), vm.totalValueLpFiat.value)
+        assertEquals("$6.00", vm.state.value.lp.positions.single().totalPriceLp)
+        assertEquals("$6.00", vm.state.value.totalAmountPrice)
+    }
+
+    @Test
+    fun `a failed bond load settles the header total instead of stranding it`() = runTest {
+        // The bonded .catch cleared only the tab's own spinner, so the total-loading flag stayed
+        // set and the header never rendered a value at all.
+        selectPositions("RUNE")
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
+            flow { throw RuntimeException("thornode down") }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val state = vm.state.value
+        assertFalse(state.bonded.isLoading)
+        assertFalse(state.isTotalAmountLoading)
+        assertEquals("$0.00", state.bonded.totalBondedPrice)
+        assertEquals("$0.00", state.totalAmountPrice)
+    }
+
+    @Test
+    fun `a failed staking load leaves the card priced at zero rather than blank`() = runTest {
+        // Cards used to be seeded with a bare ticker and no fiat, so a failed load rendered as a
+        // lone "RUJI" with the dollar line hidden entirely.
+        selectPositions("RUJI")
+        coEvery { rujiStakingService.getStakingDetails(any(), any()) } returns
+            flow { throw RuntimeException("thornode down") }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val positions = vm.state.value.staking.positions
+        assertTrue(positions.isNotEmpty())
+        positions.forEach { position ->
+            assertFalse(position.isLoading)
+            assertEquals("0 ${position.coin.ticker}", position.stakedAmountDisplay)
+            assertEquals("$0.00", position.stakedFiatDisplay)
+        }
+    }
+
+    @Test
+    fun `a vault without RUNE settles the header total rather than shimmering forever`() = runTest {
+        // Both legs bail out early here, and neither used to release the total-loading flag.
+        selectPositions("RUNE", "RUJI")
+        coEvery { vaultRepository.get(VAULT_ID) } returns VAULT.copy(coins = listOf(RUJI_COIN))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val state = vm.state.value
+        assertFalse(state.isTotalAmountLoading)
+        assertEquals("$0.00", state.totalAmountPrice)
+    }
+
+    @Test
+    fun `the zero balance is formatted in the users currency, not hardcoded dollars`() = runTest {
+        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+            NumberFormat.getCurrencyInstance(Locale.GERMANY)
+        selectPositions("RUJI")
+        coEvery { rujiStakingService.getStakingDetails(any(), any()) } returns
+            flow { throw RuntimeException("thornode down") }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val fiat = vm.state.value.staking.positions.first().stakedFiatDisplay
+        assertNotNull(fiat)
+        assertFalse(fiat.contains("$"), "expected a euro-formatted zero but was $fiat")
+    }
+
+    @Test
     fun `unbond carries the raw bonded amount resolved from the live node list`() = runTest {
         selectPositions("RUNE")
         coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
@@ -670,6 +756,15 @@ internal class ThorchainDefiPositionsViewModelTest {
 
     private fun poolStats(asset: String) =
         ThorChainPoolStatsJson(asset = asset, status = "available")
+
+    private fun lpPosition(pool: String, runeRedeem: String, assetRedeem: String) =
+        ThorChainLpPosition(
+            pool = pool,
+            units = BigInteger("1"),
+            runeRedeemValue = BigInteger(runeRedeem),
+            assetRedeemValue = BigInteger(assetRedeem),
+            annualPercentageRate = null,
+        )
 
     private fun createViewModel(): ThorchainDefiPositionsViewModel =
         ThorchainDefiPositionsViewModel(

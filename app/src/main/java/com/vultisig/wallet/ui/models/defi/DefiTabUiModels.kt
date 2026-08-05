@@ -13,11 +13,15 @@ import java.math.BigDecimal
  * UI models for the Bonded / Staking / LP tabs, shared by every DeFi positions screen. They used to
  * live inside ThorchainDefiPositionsViewModel.kt, which made them look Thorchain-specific even
  * though the Maya screen renders the same tabs from the same types.
+ *
+ * Fiat fields are nullable on purpose. `null` means "we could not resolve a price", which the UI
+ * renders as an explicit unavailable marker; a resolved price is always a formatted string, so a
+ * genuine zero balance stays distinguishable from a pricing failure. Neither is ever hidden.
  */
 internal data class BondedTabUiModel(
     val isLoading: Boolean = false,
     val totalBondedAmount: String = "0 ${Chain.ThorChain.coinType.symbol}",
-    val totalBondedPrice: String = "",
+    val totalBondedPrice: String? = null,
     val nodes: List<BondedNodeUiModel> = emptyList(),
 )
 
@@ -30,7 +34,10 @@ internal data class LpTabUiModel(
 
 internal data class LpPositionUiModel(
     val titleLp: String,
-    val totalPriceLp: String,
+    val totalPriceLp: String? = null,
+    // The unformatted value behind totalPriceLp. The header total sums LP alongside the bond and
+    // stake legs, and re-parsing a localised currency string to get there would be lossy.
+    val totalFiatValue: BigDecimal = BigDecimal.ZERO,
     val icon: ImageModel,
     val assetTicker: String,
     val apr: String?,
@@ -45,7 +52,7 @@ internal data class StakePositionUiModel(
     val stakeAssetHeader: UiText,
     val stakeAmount: BigDecimal = BigDecimal.ZERO,
     val stakedAmountDisplay: String,
-    val stakedFiatDisplay: String = "",
+    val stakedFiatDisplay: String? = null,
     val apy: String?,
     val isLoading: Boolean = false,
     val supportsMint: Boolean = false,

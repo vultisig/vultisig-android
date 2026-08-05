@@ -80,7 +80,6 @@ constructor(
     private val _state =
         MutableStateFlow(
             DefiUiModel(
-                totalAmountPrice = "$0.00",
                 isTotalAmountLoading = true,
                 isBalanceVisible = true,
                 supportEditChains = false,

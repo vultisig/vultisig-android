@@ -83,7 +83,7 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun BalanceBanner(
     title: String,
     isLoading: Boolean,
-    totalValue: String,
+    totalValue: String?,
     image: Int,
     isBalanceVisible: Boolean = true,
 ) {
@@ -113,7 +113,9 @@ internal fun BalanceBanner(
                 UiPlaceholderLoader(modifier = Modifier.size(width = 150.dp, height = 32.dp))
             } else {
                 Text(
-                    text = if (isBalanceVisible) totalValue else HIDE_BALANCE_CHARS,
+                    text =
+                        if (isBalanceVisible) totalValue ?: FIAT_VALUE_UNAVAILABLE
+                        else HIDE_BALANCE_CHARS,
                     color = Theme.v2.colors.text.primary,
                     style = Theme.satoshi.price.title1,
                 )
@@ -123,6 +125,13 @@ internal fun BalanceBanner(
 }
 
 private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
+
+/**
+ * Stands in for a fiat value that could not be priced. Rendering it keeps the row in place, so a
+ * pricing failure reads as "no price" rather than as a missing dollar value — the row used to be
+ * hidden outright, which looked identical to the value having been dropped.
+ */
+internal const val FIAT_VALUE_UNAVAILABLE = "—"
 
 private val ActionButtonBevelTopColor = Color.White.copy(alpha = 0.10f)
 private val ActionButtonBevelBottomColor = Color(0xFF0F1C3E)
@@ -603,7 +612,7 @@ internal fun HeaderDeFiWidget(
     buttonText: String,
     onClickAction: () -> Unit,
     totalAmount: String,
-    totalPrice: String = "",
+    totalPrice: String? = null,
     apy: String? = null,
     isLoading: Boolean = false,
     isBalanceVisible: Boolean = true,
@@ -648,15 +657,15 @@ internal fun HeaderDeFiWidget(
                         color = Theme.v2.colors.text.primary,
                     )
 
-                    if (totalPrice.isNotEmpty()) {
-                        UiSpacer(4.dp)
+                    UiSpacer(4.dp)
 
-                        Text(
-                            text = if (isBalanceVisible) totalPrice else HIDE_BALANCE_CHARS,
-                            style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.v2.colors.text.tertiary,
-                        )
-                    }
+                    Text(
+                        text =
+                            if (isBalanceVisible) totalPrice ?: FIAT_VALUE_UNAVAILABLE
+                            else HIDE_BALANCE_CHARS,
+                        style = Theme.brockmann.supplementary.footnote,
+                        color = Theme.v2.colors.text.tertiary,
+                    )
                 }
             }
         }
@@ -757,7 +766,7 @@ internal fun HeaderDeFiWidget(
     onClickFirstAction: () -> Unit,
     onClickSecondAction: () -> Unit,
     totalAmount: String,
-    totalPrice: String = "",
+    totalPrice: String? = null,
     apy: String? = null,
     isLoading: Boolean = false,
     isBalanceVisible: Boolean = true,
@@ -802,15 +811,15 @@ internal fun HeaderDeFiWidget(
                         color = Theme.v2.colors.text.primary,
                     )
 
-                    if (totalPrice.isNotEmpty()) {
-                        UiSpacer(4.dp)
+                    UiSpacer(4.dp)
 
-                        Text(
-                            text = if (isBalanceVisible) totalPrice else HIDE_BALANCE_CHARS,
-                            style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.v2.colors.text.tertiary,
-                        )
-                    }
+                    Text(
+                        text =
+                            if (isBalanceVisible) totalPrice ?: FIAT_VALUE_UNAVAILABLE
+                            else HIDE_BALANCE_CHARS,
+                        style = Theme.brockmann.supplementary.footnote,
+                        color = Theme.v2.colors.text.tertiary,
+                    )
                 }
             }
         }
@@ -1018,6 +1027,7 @@ private fun HeaderDeFiWidgetTwoActionsPreview() {
             onClickFirstAction = {},
             onClickSecondAction = {},
             totalAmount = "0.7031 USDC",
+            totalPrice = "$0.70",
             apy = "1%",
         )
     }
