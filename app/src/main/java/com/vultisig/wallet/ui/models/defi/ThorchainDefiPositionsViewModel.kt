@@ -1269,6 +1269,11 @@ constructor(
 
             loadedTabs.clear()
 
+            // Same reload set as a currency switch, so the header owes the same honesty: legs keep
+            // their pre-selection values, and without this a newly added pool would leave the total
+            // reading as settled — and short by that pool — until its fetch lands.
+            resetTotalsToPending()
+
             bondedNodesRefreshTrigger.value++
 
             loadBondedNodes()

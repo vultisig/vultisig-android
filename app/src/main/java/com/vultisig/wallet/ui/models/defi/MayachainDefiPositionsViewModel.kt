@@ -285,6 +285,14 @@ constructor(
                 updateModel {
                     it.copy(selectedPositions = positions, tempSelectedPositions = positions)
                 }
+
+                // Every onPositionSelectionDone write re-runs this collector, so it reloads all
+                // three legs for the same reason a currency switch does and owes the header the
+                // same honesty: legs keep their pre-selection values, and without this a newly
+                // added pool would leave the total reading as settled — and short by that pool —
+                // until its fetch lands.
+                resetTotalsToPending()
+
                 reloadLpTab()
 
                 loadBondedJob?.cancel()

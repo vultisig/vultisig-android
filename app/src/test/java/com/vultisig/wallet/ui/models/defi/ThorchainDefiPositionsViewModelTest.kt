@@ -1043,6 +1043,50 @@ internal class ThorchainDefiPositionsViewModelTest {
     }
 
     @Test
+    fun `adding a pool parks the header on its spinner, not on the pre-add total`() = runTest {
+        // Confirming the dialog reloads every leg exactly as a currency switch does, but left the
+        // legs holding their pre-selection values, so the header read as a settled total — short by
+        // the pool just added — for the whole refetch.
+        selectPositions("RUNE", BTC_POOL)
+        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+            listOf(poolStats(BTC_POOL), poolStats(ETH_POOL))
+        val bothPools =
+            ThorChainLpPositions(
+                listOf(
+                    lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "0"),
+                    lpPosition(ETH_POOL, runeRedeem = "300000000", assetRedeem = "0"),
+                )
+            )
+        val heldPositions =
+            MutableStateFlow<ThorChainLpPositions?>(
+                ThorChainLpPositions(
+                    listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "0"))
+                )
+            )
+        coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } coAnswers
+            {
+                heldPositions.filterNotNull().first()
+            }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        vm.state.value.totalAmountPrice shouldBe "$6.00"
+
+        // Hold the refetch so the add can be observed mid-flight.
+        heldPositions.value = null
+        vm.setPositionSelectionDialogVisibility(true)
+        vm.onPositionSelectionChange(ETH_POOL, isSelected = true)
+        vm.onPositionSelectionDone()
+
+        vm.state.value.totalAmountPrice shouldBe null
+        vm.state.value.isTotalAmountLoading shouldBe true
+
+        heldPositions.value = bothPools
+
+        vm.state.value.isTotalAmountLoading shouldBe false
+        vm.state.value.totalAmountPrice shouldBe "$12.00"
+    }
+
+    @Test
     fun `switching tabs only changes the selected tab`() = runTest {
         selectPositions("RUNE")
         val vm = createViewModel().also { it.setData(VAULT_ID) }

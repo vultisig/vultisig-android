@@ -682,6 +682,44 @@ internal class MayachainDefiPositionsViewModelTest {
         assertEquals(expected, data.selectedPositions)
     }
 
+    @Test
+    fun `adding a pool parks the header on its spinner, not on the pre-add total`() = runTest {
+        // Confirming the dialog writes the selection, and the saved-positions collector reloads
+        // every leg for it — but left the legs holding their pre-selection values, so the header
+        // read as a settled total, short by the pool just added, for the whole refetch.
+        val saved = MutableStateFlow(setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY))
+        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns saved
+        coEvery { defiPositionsRepository.saveSelectedPositions(VAULT_ID, any()) } answers
+            {
+                saved.value = secondArg<List<String>>().toSet()
+            }
+        givenLpPool(liquidityUnits = "100", units = "1000")
+        val loadedMemberDetails = memberDetails(liquidityUnits = "100")
+        val heldMemberDetails = MutableStateFlow<MayaMemberDetails?>(loadedMemberDetails)
+        coEvery { mayachainBondRepository.getMemberDetails(CACAO_ADDRESS) } coAnswers
+            {
+                heldMemberDetails.filterNotNull().first()
+            }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        successData(vm).totalAmountPrice shouldBe "$0.00"
+
+        // Hold the new pool's fetch so the add can be observed mid-flight.
+        heldMemberDetails.value = null
+        vm.setPositionSelectionDialogVisibility(true)
+        vm.onPositionSelectionChange(BTC_POOL, selected = true)
+        vm.onPositionSelectionDone()
+
+        successData(vm).totalAmountPrice shouldBe null
+        successData(vm).isTotalAmountLoading shouldBe true
+
+        heldMemberDetails.value = loadedMemberDetails
+
+        val settled = successData(vm)
+        settled.isTotalAmountLoading shouldBe false
+        settled.totalAmountPrice shouldBe "$0.40"
+    }
+
     private fun selectPositions(vararg keys: String) {
         coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns
             flowOf(keys.toSet())
