@@ -139,10 +139,48 @@ internal class RujiStakingServiceTest {
             Unit
         }
 
+    @Test
+    fun `carries the pool APR onto the bonded position`() = runTest {
+        // The rate was fetched but dropped here, so the card rendered without it (#5498).
+        givenBalances(
+            bonded = BigInteger("7875733"),
+            autoCompound = BigInteger.ZERO,
+            apr = 0.011623890337,
+        )
+
+        val positions = service.getStakingDetailsFromNetwork(ADDRESS)
+
+        assertEquals(0.011623890337, positions.aprForCoin(Coins.ThorChain.RUJI.id))
+    }
+
+    @Test
+    fun `leaves the auto-compounding position without an APR of its own`() = runTest {
+        // Its revenue is reinvested into its own amount rather than published as a separate rate.
+        givenBalances(
+            bonded = BigInteger.ZERO,
+            autoCompound = BigInteger("1406486651509"),
+            apr = 0.011623890337,
+        )
+
+        val positions = service.getStakingDetailsFromNetwork(ADDRESS)
+
+        assertEquals(null, positions.aprForCoin(Coins.ThorChain.sRUJI.id))
+    }
+
+    @Test
+    fun `reports no APR when the pool publishes none`() = runTest {
+        givenBalances(bonded = BigInteger("7875733"), autoCompound = BigInteger.ZERO, apr = null)
+
+        val positions = service.getStakingDetailsFromNetwork(ADDRESS)
+
+        assertEquals(null, positions.aprForCoin(Coins.ThorChain.RUJI.id))
+    }
+
     private fun givenBalances(
         bonded: BigInteger,
         autoCompound: BigInteger,
         rewards: BigInteger = BigInteger.ZERO,
+        apr: Double? = null,
     ) {
         coEvery { thorChainApi.getRujiStakeBalance(ADDRESS) } returns
             RujiStakeBalances(
@@ -151,6 +189,7 @@ internal class RujiStakingServiceTest {
                 autoCompoundAmount = autoCompound,
                 autoCompoundShares = autoCompound,
                 rewardsAmount = rewards,
+                apr = apr,
             )
     }
 
@@ -169,6 +208,10 @@ internal class RujiStakingServiceTest {
     private fun List<com.vultisig.wallet.data.blockchain.model.StakingDetails>.forCoin(
         coinId: String
     ): BigInteger = single { it.coin.id == coinId }.stakeAmount
+
+    private fun List<com.vultisig.wallet.data.blockchain.model.StakingDetails>.aprForCoin(
+        coinId: String
+    ): Double? = single { it.coin.id == coinId }.apr
 
     private companion object {
         const val ADDRESS = "thor1abc"

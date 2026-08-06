@@ -503,8 +503,11 @@ constructor(
         val stakeTicker = stake?.bonded?.asset?.metadata?.symbol ?: RUJI_STAKE_SYMBOL
         val rewardsAmount = stake?.pendingRevenue?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
         val rewardsTicker = stake?.pendingRevenue?.asset?.metadata?.symbol ?: DEFAULT_REWARDS_TICKER
-        val apr =
-            runCatching { (stake?.pool?.summary?.apr?.value ?: "0.0").toDouble() }.getOrDefault(0.0)
+        // Lenient like the revenue above and for the same reason: the rate decorates an otherwise
+        // complete card, so an unpublished or unreadable one must not take the balances down with
+        // it. Absent rather than zero, so the row hides instead of claiming the position earns
+        // nothing — see [Apr.fractionalRate] for the 12-decimal scaling.
+        val apr = stake?.pool?.summary?.apr?.fractionalRate
 
         return RujiStakeBalances(
             stakeAmount = bondedAmount,
@@ -829,6 +832,7 @@ constructor(
                   summary {
                     apr {
                       value
+                      status
                     }
                   }
                 }

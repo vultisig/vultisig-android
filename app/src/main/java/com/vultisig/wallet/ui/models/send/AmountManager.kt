@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshotFlow
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Coin
@@ -62,6 +63,28 @@ internal class AmountManager(
     }
 
     /**
+     * Pre-arms the conversion caches for an amount the app itself is about to write into the fields
+     * — a submit-time clamp, not a keystroke. Without it [collectConversion] reads that write as
+     * fresh user input and re-runs the price conversion, which blanks the fiat mirror whenever the
+     * fetch fails, leaving a resubmit one Back-tap away from persisting a $0.00 estimate beside a
+     * correct amount.
+     *
+     * Call it immediately before writing the fields: the writes are synchronous, so the collector
+     * only ever resumes on the final pair. Pass null for [fiatAmount] to leave the fiat field (and
+     * its cache) alone.
+     */
+    fun markProgrammaticAmount(tokenAmount: String, fiatAmount: String?) {
+        lastTokenValueUserInput = tokenAmount
+        if (fiatAmount != null) {
+            lastFiatValueUserInput = fiatAmount
+        }
+        // The suppressed handleTokenInput would have re-derived this; keep it in step.
+        _isMaxAmount.value =
+            tokenAmount.toPlainBigDecimalOrNull()?.compareTo(maxAmount) == 0 &&
+                maxAmount > BigDecimal.ZERO
+    }
+
+    /**
      * Reset the bidirectional cache and the max snapshot. Called when the selected token changes —
      * keeping the prior token's max value would let `isMax` flip on a coincidental amount match
      * after the switch.
@@ -94,11 +117,16 @@ internal class AmountManager(
     private suspend fun collectConversion() {
         combine(
                 selectedToken.filterNotNull(),
-                tokenAmountFieldState.textAsFlow(),
-                fiatAmountFieldState.textAsFlow(),
-            ) { token, tokenField, fiatField ->
-                val tokenString = tokenField.toString()
-                val fiatString = fiatField.toString()
+                // Both fields are read in ONE snapshotFlow rather than combined as two. Combining
+                // them delivers each field's change as its own emission, so a caller writing both
+                // — the submit-time clamp — is observed once with the second field still holding
+                // its old text. That half-updated pair reads as "the user cleared this field", and
+                // the handler below clears its counterpart in response, emptying the amount the
+                // write was trying to show. One flow always reports a consistent pair.
+                snapshotFlow {
+                    tokenAmountFieldState.text.toString() to fiatAmountFieldState.text.toString()
+                },
+            ) { token, (tokenString, fiatString) ->
                 when {
                     lastTokenValueUserInput != tokenString -> handleTokenInput(token, tokenString)
                     lastFiatValueUserInput != fiatString -> handleFiatInput(token, fiatString)

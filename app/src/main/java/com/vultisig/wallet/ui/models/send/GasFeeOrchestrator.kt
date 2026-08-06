@@ -92,7 +92,6 @@ internal class GasFeeOrchestrator(
         collectGasTokenBalance()
         collectGasFees()
         collectPlanFee()
-        collectMaxAmount()
         collectEstimatedFee()
         collectSpecific()
     }
@@ -168,12 +167,24 @@ internal class GasFeeOrchestrator(
                                     .toBigDecimalOrNull()
                                     ?.movePointRight(token.decimal)
                                     ?.toBigInteger()
-                                    // TRON freeze/unfreeze pays a fixed, amount-independent fee, so
-                                    // compute it with a zero amount on entry instead of waiting for
-                                    // the user to type — otherwise the fee row shimmers forever.
-                                    // Every other flow keeps its amount-dependent fee.
-                                    ?: if (uiState.value.tronResourceType != null) BigInteger.ZERO
-                                    else return@mapNotNull null
+                                    // TRON freeze/unfreeze pays a fixed fee; UtxoFeeService's
+                                    // byteFee is a network-stats lookup that ignores the amount too
+                                    // (Cardano's fee is size-derived, so it's excluded). Compute
+                                    // both on a zero amount instead of waiting for the user to type
+                                    // — else gasFee, and collectSpecific behind its
+                                    // filterNotNull(), never populate before an amount exists, so a
+                                    // Max tap as the first action always raced an empty `specific`
+                                    // and fell back to the imprecise math (#5504). Every other flow
+                                    // keeps its amount-dependent fee.
+                                    ?: if (
+                                        uiState.value.tronResourceType != null ||
+                                            (token.chain.standard == TokenStandard.UTXO &&
+                                                token.chain != Chain.Cardano)
+                                    ) {
+                                        BigInteger.ZERO
+                                    } else {
+                                        return@mapNotNull null
+                                    }
 
                             // A valid amount is present and we're about to (re)compute the fee:
                             // show the shimmer and re-disable Continue. This lives inside the
@@ -269,13 +280,19 @@ internal class GasFeeOrchestrator(
                                 .movePointRight(token.decimal)
                                 .toBigInteger()
 
+                        // This flow fires immediately on every amount-field change, while
+                        // `specific` is only rebuilt by the 300ms-debounced collectSpecific — so
+                        // right after a Max tap, `specific` can still carry the pre-Max
+                        // sendMaxAmount for a moment. Patch it from the live flag instead of
+                        // trusting `specific` to have already caught up, so this plan (and the
+                        // fee it displays) can't briefly race ahead with the wrong flag (#5504).
                         val plan =
                             bitcoinPlanService.getPlan(
                                 vaultId,
                                 token,
                                 resolvedDstAddress,
                                 tokenAmountInt,
-                                specific,
+                                withLiveMaxAmountFlag(specific),
                                 memo.toString(),
                             )
 
@@ -291,22 +308,12 @@ internal class GasFeeOrchestrator(
         }
     }
 
-    private fun collectMaxAmount() {
-        scope.launch {
-            isMaxAmountFlow.collect { isMax ->
-                val chain = accountProvider()?.token?.chain ?: return@collect
-                // Only require to re-trigger utxo chains, due to no change output utxo and
-                // therefore less fees
-                if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                    val spec =
-                        specific.value?.blockChainSpecific as? BlockChainSpecific.UTXO
-                            ?: return@collect
-                    val updatedSpec =
-                        specific.value?.copy(blockChainSpecific = spec.copy(sendMaxAmount = isMax))
-                    specific.value = updatedSpec
-                }
-            }
-        }
+    /** Overrides a UTXO specific's `sendMaxAmount` with the current [isMaxAmountFlow] value. */
+    private fun withLiveMaxAmountFlag(
+        specific: BlockChainSpecificAndUtxo
+    ): BlockChainSpecificAndUtxo {
+        val utxo = specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
+        return specific.copy(blockChainSpecific = utxo.copy(sendMaxAmount = isMaxAmountFlow.value))
     }
 
     private fun collectEstimatedFee() {
@@ -319,7 +326,7 @@ internal class GasFeeOrchestrator(
                     estimateTrigger,
                 ) { token, gasFee, gasSettings, planFee, _ ->
                     val chain = token.chain
-                    val evmGasSettings = gasSettings as? GasSettings.Eth
+                    val evmGasSettings = gasSettings.evmSettingsFor(chain)
                     try {
                         val estimatedFee =
                             gasFeeToEstimatedFee(
@@ -438,7 +445,12 @@ internal class GasFeeOrchestrator(
                                     token,
                                     gasFeeValue,
                                     isSwap = false,
-                                    isMaxAmountEnabled = false,
+                                    // Sourced live rather than combined-and-debounced: markMax()
+                                    // (AmountFractionManager) always updates this before the
+                                    // resulting text-field write that triggers this collect, and
+                                    // any user edit away from max updates it via AmountManager's
+                                    // undebounced collector before this 300ms-debounced one fires.
+                                    isMaxAmountEnabled = isMaxAmountFlow.value,
                                     isDeposit = false,
                                     dstAddress = validDstAddress,
                                     tokenAmountValue = cardanoAmount,

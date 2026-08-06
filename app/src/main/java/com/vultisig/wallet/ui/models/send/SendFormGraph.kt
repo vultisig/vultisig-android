@@ -285,6 +285,7 @@ internal class SendFormGraph(
             getAvailableTokenBalance = getAvailableTokenBalance,
             feeServiceComposite = feeServiceComposite,
             tokenRepository = tokenRepository,
+            bitcoinPlanService = bitcoinPlanService,
             adjustGasFee = ::adjustGasFee,
             amountManager = amountManager,
         )

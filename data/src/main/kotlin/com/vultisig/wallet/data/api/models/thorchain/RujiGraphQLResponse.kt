@@ -69,5 +69,44 @@ data class StakingV2(
 /** Pool-level summary statistics, including APR. */
 @Serializable data class Summary(val apr: Apr? = null)
 
-/** Annual percentage rate value for a staking pool. */
-@Serializable data class Apr(val value: String? = null)
+/**
+ * A staking pool's annual percentage rate.
+ *
+ * [value] is a Rujira bigint scalar, not a percentage: decimal quantities are carried at 12 decimal
+ * places, so `"11623890337"` is a fractional rate of `0.011623890337` — 1.16%. Reading it as a bare
+ * double would render that as 11623890337.00%.
+ */
+@Serializable
+data class Apr(
+    val value: String? = null,
+    /**
+     * `AVAILABLE` | `NOT_APPLICABLE` | `SOON`. Anything but `AVAILABLE` publishes no rate, and so
+     * does an absent status: the schema declares this field non-null, so a response without one is
+     * not qualifying the rate it carries.
+     */
+    val status: String? = null,
+) {
+    /**
+     * The fractional rate (`0.0116` for 1.16%), or null when the pool publishes no usable one.
+     *
+     * Null rather than zero on every failure — an absent rate hides the APR row, where a zero would
+     * assert the position earns nothing.
+     *
+     * The scalar is an integer, so it is parsed as one: a decimal or exponent string is a value
+     * this field is not defined to carry, and scaling it anyway would render a confidently wrong
+     * percentage. The finite check catches a digit string too long for a `Double`.
+     */
+    val fractionalRate: Double?
+        get() {
+            if (status != APR_STATUS_AVAILABLE) return null
+            val raw = value?.toBigIntegerOrNull() ?: return null
+            return raw.toBigDecimal().movePointLeft(APR_DECIMALS).toDouble().takeIf {
+                it.isFinite()
+            }
+        }
+
+    private companion object {
+        const val APR_STATUS_AVAILABLE = "AVAILABLE"
+        const val APR_DECIMALS = 12
+    }
+}
