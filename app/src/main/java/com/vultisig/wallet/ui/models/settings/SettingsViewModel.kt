@@ -21,6 +21,7 @@ import com.vultisig.wallet.ui.models.settings.SettingsItem.Faq
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Github
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Language
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Notifications
+import com.vultisig.wallet.ui.models.settings.SettingsItem.PasscodeEncryption
 import com.vultisig.wallet.ui.models.settings.SettingsItem.PreventScreenshots
 import com.vultisig.wallet.ui.models.settings.SettingsItem.PrivacyPolicy
 import com.vultisig.wallet.ui.models.settings.SettingsItem.ReferralCode
@@ -201,6 +202,15 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
             )
         )
 
+    data object PasscodeEncryption :
+        SettingsItem(
+            SettingsItemUiModel(
+                title = UiText.StringResource(R.string.passcode_settings_title),
+                leadingIcon = R.drawable.lock,
+                trailingIcon = R.drawable.ic_small_caret_right,
+            )
+        )
+
     data class PreventScreenshots(val isEnabled: Boolean = false) :
         SettingsItem(
             SettingsItemUiModel(
@@ -264,7 +274,7 @@ constructor(
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.settings_screen_privacy),
-                        items = listOf(PreventScreenshots()),
+                        items = listOf(PasscodeEncryption, PreventScreenshots()),
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.support),
@@ -335,6 +345,10 @@ constructor(
 
             Notifications -> {
                 viewModelScope.launch { navigator.route(Route.NotificationSettings) }
+            }
+
+            PasscodeEncryption -> {
+                viewModelScope.launch { navigator.route(Route.PasscodeSettings) }
             }
 
             VultisigWebsite -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT_WEBSITE))

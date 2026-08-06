@@ -93,6 +93,9 @@ import com.vultisig.wallet.ui.screens.onboarding.OnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.OnboardingSummaryScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupOnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupSummaryScreen
+import com.vultisig.wallet.ui.screens.passcode.AutoLockSettingScreen
+import com.vultisig.wallet.ui.screens.passcode.PasscodeEntryScreen
+import com.vultisig.wallet.ui.screens.passcode.PasscodeSettingsScreen
 import com.vultisig.wallet.ui.screens.peer.KeygenPeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimScreen
 import com.vultisig.wallet.ui.screens.qbtc.QuantumSecurityIntroScreen
@@ -267,6 +270,12 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         composable<Route.CurrencyUnitSetting> {
             CurrencyUnitSettingScreen(navController = navController)
         }
+
+        composable<Route.PasscodeSettings> { PasscodeSettingsScreen(navController = navController) }
+
+        composable<Route.AutoLockSetting> { AutoLockSettingScreen(navController = navController) }
+
+        composable<Route.PasscodeEntry> { PasscodeEntryScreen(navController = navController) }
 
         composable<Route.ConfirmDelete> { ConfirmDeleteScreen(navController) }
 

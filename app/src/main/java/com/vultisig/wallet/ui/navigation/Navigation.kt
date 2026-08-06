@@ -574,6 +574,20 @@ internal sealed class Route {
 
     @Serializable data object CurrencyUnitSetting
 
+    @Serializable data object PasscodeSettings
+
+    @Serializable data object AutoLockSetting
+
+    /** Passcode prompt, in the shape the [action] requires. */
+    @Serializable data class PasscodeEntry(val action: PasscodeEntryAction)
+
+    @Serializable
+    enum class PasscodeEntryAction {
+        Set,
+        Change,
+        Disable,
+    }
+
     @Serializable data class ConfirmDelete(val vaultId: String)
 
     @Serializable data class ReshareStartScreen(val vaultId: String)
