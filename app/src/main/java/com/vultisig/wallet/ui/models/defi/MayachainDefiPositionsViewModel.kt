@@ -119,6 +119,10 @@ internal data class MayachainDefiPositionsUiModel(
     val bondPositionsDialog: List<PositionUiModelDialog> = MAYA_BOND_POSITIONS_DIALOG,
     val stakingPositionsDialog: List<PositionUiModelDialog> = MAYA_STAKE_POSITIONS_DIALOG,
     val lpPositionsDialog: List<PositionUiModelDialog> = emptyList(),
+    // Flips true once the pool fetch returns, whatever it returns. An empty [lpPositionsDialog]
+    // cannot stand in for this: "not fetched yet" and "fetched, no pools available" would look
+    // identical, and the LP leg would sit unreported forever on the second one.
+    val lpDialogLoaded: Boolean = false,
     val selectedPositions: List<String> = MAYA_DEFAULT_SELECTED_POSITIONS,
     val tempSelectedPositions: List<String> = MAYA_DEFAULT_SELECTED_POSITIONS,
 )
@@ -152,11 +156,10 @@ constructor(
     // silently jumps as the rest land. Every terminal path in a leg must therefore assign here.
     private val _totalBondedRaw = MutableStateFlow<BigInteger?>(null)
     private val _totalStakingRaw = MutableStateFlow<BigInteger?>(null)
-    // LP is priced from two assets per pool, so it joins the total already converted to fiat. It
-    // therefore carries the currency it was priced in: the raw legs re-convert on every total, but
-    // a bare LP magnitude would just be relabelled with whatever currency is active now, silently
-    // mixing two currencies into one sum.
-    private val _totalLpFiat = MutableStateFlow<FiatValue?>(null)
+    // LP is priced from two assets per pool, so it joins the total already converted to fiat rather
+    // than as a raw chain amount like the other legs — see [LpLegTotal] for why it carries a
+    // currency and why an unpriceable load reports as unavailable rather than as zero.
+    private val _totalLpFiat = MutableStateFlow<LpLegTotal?>(null)
 
     private var currencyJob: Job? = null
     private var observeTotalRawJob: Job? = null
@@ -200,14 +203,17 @@ constructor(
      */
     private suspend fun reportLpFiat(value: BigDecimal) {
         val currency = appCurrencyRepository.currency.first()
-        _totalLpFiat.value = FiatValue(value, currency.ticker)
+        _totalLpFiat.value = LpLegTotal.Priced(FiatValue(value, currency.ticker))
     }
 
     /**
-     * Re-prices LP when the user switches currency. The bond and staking legs are held as raw chain
-     * amounts and convert afresh on every total, but LP is stored already converted and cannot be
-     * re-based — so it drops back to unreported and reloads, which parks the header on its spinner
-     * rather than on a figure mixing two currencies.
+     * Re-prices every leg and every card when the user switches currency.
+     *
+     * Nothing re-converts on its own: the card fiat strings are formatted once at load time from
+     * one-shot flows, and LP joins the total already converted, so a switch that only touched the
+     * header would leave the Bonded and CACAO Staking cards reading in the currency the user just
+     * left. Reloading is also what re-prices LP, which cannot be re-based from the stored
+     * magnitude.
      */
     private fun observeCurrencyChanges(): Job =
         viewModelScope.launch {
@@ -216,10 +222,30 @@ constructor(
                 .distinctUntilChanged()
                 .drop(1)
                 .collect {
-                    _totalLpFiat.value = null
+                    resetTotalsToPending()
+
+                    bondedNodesRefreshTrigger.value++
+                    loadBondedJob?.cancel()
+                    loadBondedJob = launch { loadBondedNodes() }
+                    loadStakingJob?.cancel()
+                    loadStakingJob = launch { loadStakingPosition() }
                     reloadLpTab()
                 }
         }
+
+    /**
+     * Drops every leg back to unreported and puts the header back on its spinner.
+     *
+     * Legs keep their last value across a reload, so without this the header would go on showing a
+     * settled total — in the old currency — for as long as the refetch takes. Clearing the value
+     * and the legs together is what makes the spinner honest.
+     */
+    private fun resetTotalsToPending() {
+        _totalBondedRaw.value = null
+        _totalStakingRaw.value = null
+        _totalLpFiat.value = null
+        updateModel { it.copy(totalAmountPrice = null, isTotalAmountLoading = true) }
+    }
 
     private fun observeTotalRaw(): Job =
         viewModelScope.launch {
@@ -273,7 +299,7 @@ constructor(
             try {
                 val pools = withContext(ioDispatcher) { mayachainBondRepository.getMayaNodePools() }
                 val lpPositions = pools.map { pool -> pool.toPositionDialogModel() }
-                updateModel { it.copy(lpPositionsDialog = lpPositions) }
+                updateModel { it.copy(lpPositionsDialog = lpPositions, lpDialogLoaded = true) }
                 reloadLpTab()
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
@@ -469,14 +495,25 @@ constructor(
      * [MayachainDefiPositionsUiModel.isTotalAmountLoading] — a leg settling its own card must not
      * stop the header spinner, because the other legs may still be in flight.
      */
-    private suspend fun updateTotalFiatValue(totalRaw: BigInteger, lpFiat: FiatValue) {
+    private suspend fun updateTotalFiatValue(totalRaw: BigInteger, lpLeg: LpLegTotal) {
         try {
+            if (lpLeg is LpLegTotal.Unavailable) {
+                // The LP positions couldn't be priced, and they read as zero when they can't. A sum
+                // including them would understate the real total while looking just as settled as a
+                // correct one, so say the total is unavailable instead of quietly getting it wrong.
+                updateModel { it.copy(totalAmountPrice = null, isTotalAmountLoading = false) }
+                return
+            }
+
+            val lpFiat = (lpLeg as LpLegTotal.Priced).fiatValue
             val currency = appCurrencyRepository.currency.first()
             if (lpFiat.currency != currency.ticker) {
                 // The currency changed after LP was priced. The raw legs re-convert on every run,
                 // but LP is stored already converted, so adding it now would sum two currencies.
-                // observeCurrencyChanges has already dropped the leg and asked for a re-price;
-                // leave the header on its previous value until that lands.
+                // observeCurrencyChanges has already dropped the leg and asked for a re-price, so
+                // park the header on its spinner: keeping the old figure on screen would show a
+                // total in the currency the user just navigated away from.
+                updateModel { it.copy(totalAmountPrice = null, isTotalAmountLoading = true) }
                 return
             }
             val totalInCacao = totalRaw.toValue(10)
@@ -556,7 +593,10 @@ constructor(
             return
         }
 
-        if (model.lpPositionsDialog.isEmpty()) {
+        // Wait for the pool fetch, not for a non-empty list: a chain that legitimately reports no
+        // pools would otherwise park the LP leg here for good and strand the header on its spinner,
+        // pull-to-refresh included. loadLpPositionsForDialog calls back here once it settles.
+        if (!model.lpDialogLoaded) {
             updateModel { it.copy(lp = it.lp.copy(isLoading = true)) }
             return
         }
@@ -630,7 +670,7 @@ constructor(
                     return@safeLaunch
                 }
 
-                val (memberDetails, poolStats) =
+                val (loadedMemberDetails, poolStats) =
                     withContext(ioDispatcher) {
                         coroutineScope {
                             val memberDeferred = async {
@@ -639,7 +679,10 @@ constructor(
                                 } catch (e: Exception) {
                                     if (e is CancellationException) throw e
                                     Timber.e(e, "Failed to fetch Maya member details")
-                                    MayaMemberDetails()
+                                    // Null rather than an empty MayaMemberDetails: an empty one
+                                    // reads as "this vault holds no liquidity anywhere", which is a
+                                    // claim a failed request has no business making.
+                                    null
                                 }
                             }
                             val statsDeferred = async {
@@ -654,6 +697,12 @@ constructor(
                             Pair(memberDeferred.await(), statsDeferred.await())
                         }
                     }
+
+                // Losing the pool stats is survivable — the share calculation below falls back to
+                // the amounts the user added, which still values the position. Losing the member
+                // details is not: every selected pool would read as zero liquidity.
+                val memberDetails = loadedMemberDetails ?: MayaMemberDetails()
+                val isPriceable = loadedMemberDetails != null
 
                 val memberPoolMap = memberDetails.pools.associateBy { it.pool }
                 val poolStatsMap = poolStats.associateBy { it.asset }
@@ -746,7 +795,9 @@ constructor(
 
                         LpPositionUiModel(
                             titleLp = "${pool.ticker} Pool",
-                            totalPriceLp = currencyFormat.format(totalFiatValue.value),
+                            totalPriceLp =
+                                if (isPriceable) currencyFormat.format(totalFiatValue.value)
+                                else null,
                             totalFiatValue = totalFiatValue.value,
                             icon = pool.logo,
                             assetTicker = assetCoinTicker,
@@ -760,12 +811,20 @@ constructor(
                     }
 
                 _totalLpFiat.value =
-                    FiatValue(
-                        lpPositions.fold(BigDecimal.ZERO) { acc, position ->
-                            acc + position.totalFiatValue
-                        },
-                        currency.ticker,
-                    )
+                    if (isPriceable) {
+                        LpLegTotal.Priced(
+                            FiatValue(
+                                lpPositions.fold(BigDecimal.ZERO) { acc, position ->
+                                    acc + position.totalFiatValue
+                                },
+                                currency.ticker,
+                            )
+                        )
+                    } else {
+                        // Every position folded in as zero above, so this sum would understate the
+                        // header total rather than admit a value is missing.
+                        LpLegTotal.Unavailable
+                    }
                 updateModel {
                     it.copy(lp = LpTabUiModel(isLoading = false, positions = lpPositions))
                 }

@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.defi
 
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.utils.symbol
@@ -18,6 +19,26 @@ import java.math.BigDecimal
  * renders as an explicit unavailable marker; a resolved price is always a formatted string, so a
  * genuine zero balance stays distinguishable from a pricing failure. Neither is ever hidden.
  */
+/**
+ * What the LP tab contributes to the header total, on the DeFi screens that sum several legs into
+ * one figure.
+ *
+ * LP joins the total already converted to fiat rather than as a raw chain amount, so [Priced]
+ * carries the currency it was priced in — the raw legs re-convert on every total, but a bare LP
+ * magnitude would just be relabelled with whatever currency is active now, mixing two currencies
+ * into one sum.
+ *
+ * [Unavailable] is a *reported* state, not a pending one. A pool whose fetch failed reads as zero
+ * liquidity, so adding it in would understate the total with nothing on screen to say so; the
+ * header shows the unavailable marker instead of a confident wrong number. `null` — the absence of
+ * either — still means "this leg has not reported yet".
+ */
+internal sealed interface LpLegTotal {
+    data class Priced(val fiatValue: FiatValue) : LpLegTotal
+
+    data object Unavailable : LpLegTotal
+}
+
 internal data class BondedTabUiModel(
     val isLoading: Boolean = false,
     val totalBondedAmount: String = "0 ${Chain.ThorChain.coinType.symbol}",

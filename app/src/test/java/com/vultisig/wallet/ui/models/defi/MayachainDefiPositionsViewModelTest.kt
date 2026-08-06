@@ -45,6 +45,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -397,15 +398,121 @@ internal class MayachainDefiPositionsViewModelTest {
         val vm = createViewModel().also { it.setData(VAULT_ID) }
         successData(vm).totalAmountPrice shouldBe "$0.40"
 
+        // A different EUR price on purpose: with both currencies priced the same, a magnitude
+        // carried across unchanged and one genuinely re-converted are the same number, and only
+        // the formatter would be left to assert on — which relabelling passes just as well.
+        coEvery { tokenPriceRepository.getCachedPrice(any(), AppCurrency.EUR) } returns
+            BigDecimal("3")
         coEvery { appCurrencyRepository.getCurrencyFormat() } returns
             NumberFormat.getCurrencyInstance(Locale.GERMANY)
         currency.value = AppCurrency.EUR
 
-        // Re-priced under the new currency rather than carrying the old number across.
+        // Re-priced under the new currency rather than carrying the old number across: the same
+        // 0.1 CACAO + 0.1 BTC at 3 apiece, not the 0.40 they were worth in USD.
         val settled = successData(vm)
         settled.isTotalAmountLoading shouldBe false
-        settled.totalAmountPrice?.contains("$") shouldBe false
+        settled.totalAmountPrice shouldBe germanFormat.format(BigDecimal("0.60"))
     }
+
+    @Test
+    fun `switching currency parks the header on its spinner, not on the old total`() = runTest {
+        // Dropping the LP leg stops the combine from emitting, so the header simply kept its
+        // settled prior-currency figure — no spinner, no sign anything was in flight — for the
+        // whole refetch.
+        selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+        givenLpPool(liquidityUnits = "100", units = "1000")
+        val currency = MutableStateFlow(AppCurrency.USD)
+        coEvery { appCurrencyRepository.currency } returns currency
+        val loadedMemberDetails = memberDetails(liquidityUnits = "100")
+        val heldMemberDetails = MutableStateFlow<MayaMemberDetails?>(loadedMemberDetails)
+        coEvery { mayachainBondRepository.getMemberDetails(CACAO_ADDRESS) } coAnswers
+            {
+                heldMemberDetails.filterNotNull().first()
+            }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        successData(vm).totalAmountPrice shouldBe "$0.40"
+
+        // Hold the re-price so the switch can be observed mid-flight.
+        heldMemberDetails.value = null
+        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+            NumberFormat.getCurrencyInstance(Locale.GERMANY)
+        currency.value = AppCurrency.EUR
+
+        successData(vm).totalAmountPrice shouldBe null
+        successData(vm).isTotalAmountLoading shouldBe true
+
+        heldMemberDetails.value = loadedMemberDetails
+
+        val settled = successData(vm)
+        settled.isTotalAmountLoading shouldBe false
+        settled.totalAmountPrice shouldBe germanFormat.format(BigDecimal("0.40"))
+    }
+
+    @Test
+    fun `switching currency re-prices the bonded and staking cards, not just the header`() =
+        runTest {
+            // Card fiat strings are formatted once per load from one-shot flows, so nothing
+            // re-converts on its own. The header moved to the new currency while Bonded and CACAO
+            // Staking kept showing the old one.
+            selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY)
+            val currency = MutableStateFlow(AppCurrency.USD)
+            coEvery { appCurrencyRepository.currency } returns currency
+            coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+                flowOf(listOf(bondedNode(HUNDRED_CACAO)))
+            coEvery { mayaCacaoStakingService.getStakingDetails(any()) } returns
+                flowOf(MayaCacaoStakingDetails(HUNDRED_CACAO, apr = null, canUnstake = false))
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+            successData(vm).bonded.totalBondedPrice shouldBe "$200.00"
+
+            // A different EUR price, so re-converting and merely re-formatting produce different
+            // numbers.
+            coEvery { tokenPriceRepository.getCachedPrice(any(), AppCurrency.EUR) } returns
+                BigDecimal("3")
+            coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+                NumberFormat.getCurrencyInstance(Locale.GERMANY)
+            currency.value = AppCurrency.EUR
+
+            val expected = germanFormat.format(BigDecimal("300.00"))
+            val settled = successData(vm)
+            settled.bonded.totalBondedPrice shouldBe expected
+            settled.staking.positions.single().stakedFiatDisplay shouldBe expected
+        }
+
+    @Test
+    fun `a chain reporting no LP pools still settles the header`() = runTest {
+        // reloadLpTab used to wait on a non-empty dialog list, which cannot tell "not fetched yet"
+        // from "fetched, no pools". With an LP key persisted, the leg never reported and the
+        // header spun forever — pull-to-refresh included.
+        selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+        coEvery { mayachainBondRepository.getMayaNodePools() } returns emptyList()
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val data = successData(vm)
+        data.isTotalAmountLoading shouldBe false
+        data.totalAmountPrice shouldBe "$0.00"
+    }
+
+    @Test
+    fun `member details that fail to load make the header unavailable rather than zero`() =
+        runTest {
+            // The failure fell back to an empty MayaMemberDetails, which reads as "holds no
+            // liquidity". Every selected pool then folded into the header total as zero, giving a
+            // confident figure that understated what the vault holds.
+            selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+            givenLpPool(liquidityUnits = "100", units = "1000")
+            coEvery { mayachainBondRepository.getMemberDetails(CACAO_ADDRESS) } throws
+                RuntimeException("midgard down")
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+            val data = successData(vm)
+            data.isTotalAmountLoading shouldBe false
+            data.totalAmountPrice shouldBe null
+            data.lp.positions.single().totalPriceLp shouldBe null
+        }
 
     @Test
     fun `the LP tab stays empty while only the static Maya keys are selected`() = runTest {
@@ -513,6 +620,19 @@ internal class MayachainDefiPositionsViewModelTest {
             flowOf(keys.toSet())
     }
 
+    private fun memberDetails(liquidityUnits: String) =
+        MayaMemberDetails(
+            pools =
+                listOf(
+                    MayaMemberPool(
+                        pool = BTC_POOL,
+                        assetAdded = "0",
+                        cacaoAdded = "0",
+                        liquidityUnits = liquidityUnits,
+                    )
+                )
+        )
+
     private fun givenLpPool(
         liquidityUnits: String,
         units: String,
@@ -585,6 +705,8 @@ internal class MayachainDefiPositionsViewModelTest {
         const val CACAO_ADDRESS = "maya1cacaoaddress"
         const val NODE_ADDRESS = "maya1qwertyuiopasdfgh"
         const val BTC_POOL = "BTC.BTC"
+
+        val germanFormat: NumberFormat = NumberFormat.getCurrencyInstance(Locale.GERMANY)
 
         val HUNDRED_CACAO: BigInteger = BigInteger("1000000000000")
         val FIFTY_CACAO: BigInteger = BigInteger("500000000000")

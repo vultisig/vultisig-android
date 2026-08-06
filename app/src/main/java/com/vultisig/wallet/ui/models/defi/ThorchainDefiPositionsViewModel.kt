@@ -107,12 +107,12 @@ internal data class ThorchainDefiPositionsUiModel(
 )
 
 /** A complete set of leg values: only built once every leg has reported. */
-data class TotalDefiValue(
+internal data class TotalDefiValue(
     val bondAmount: BigInteger = BigInteger.ZERO,
     val defaultStakeValues: StakeDefaultValues = StakeDefaultValues(),
     val rujiStakeAmount: BigInteger = BigInteger.ZERO,
     val tcyStakeAmount: BigInteger = BigInteger.ZERO,
-    val lpFiatValue: FiatValue,
+    val lpFiatValue: LpLegTotal,
 )
 
 @HiltViewModel
@@ -152,17 +152,15 @@ constructor(
     private val _totalValueRujiStake = MutableStateFlow<BigInteger?>(null)
     private val _totalValueTCYStake = MutableStateFlow<BigInteger?>(null)
     // LP is priced per pool from two different assets, so it joins the total already converted to
-    // fiat rather than as a raw chain amount like the other legs. It therefore carries the currency
-    // it was priced in: the raw legs re-convert on every total, but a bare LP magnitude would just
-    // be relabelled with whatever currency is active now, silently mixing two currencies into one
-    // sum. A mismatch means the leg is stale and has to be re-priced before it can be added.
-    private val _totalValueLpFiat = MutableStateFlow<FiatValue?>(null)
+    // fiat rather than as a raw chain amount like the other legs — see [LpLegTotal] for why it
+    // carries a currency and why a failed pool reports as unavailable rather than as zero.
+    private val _totalValueLpFiat = MutableStateFlow<LpLegTotal?>(null)
 
     val totalValueBond: StateFlow<BigInteger?> = _totalValueBond
     val totalValueDefaultStake: StateFlow<StakeDefaultValues?> = _totalValueDefaultStake
     val totalValueRujiStake: StateFlow<BigInteger?> = _totalValueRujiStake
     val totalValueTCYStake: StateFlow<BigInteger?> = _totalValueTCYStake
-    val totalValueLpFiat: StateFlow<FiatValue?> = _totalValueLpFiat
+    val totalValueLpFiat: StateFlow<LpLegTotal?> = _totalValueLpFiat
 
     // Cached "available" pool list shared by the Manage-Positions dialog and the LP tab loader so
     // cold start makes a single getPoolStats call instead of two. `null` means "not loaded yet"
@@ -295,12 +293,22 @@ constructor(
                     fiatValueCalculator.createFiatValue(decimalAmount, position.coin, currency)
                 }
 
-            val lpFiatValue = totalValue.lpFiatValue
+            if (totalValue.lpFiatValue is LpLegTotal.Unavailable) {
+                // A pool we were asked to price failed to load. Its positions read as zero, so a
+                // sum including it would understate the real total while looking just as settled as
+                // a correct one. Say the total is unavailable instead of quietly getting it wrong.
+                state.update { it.copy(totalAmountPrice = null, isTotalAmountLoading = false) }
+                return
+            }
+
+            val lpFiatValue = (totalValue.lpFiatValue as LpLegTotal.Priced).fiatValue
             if (lpFiatValue.currency != currency.ticker) {
                 // The currency changed after LP was priced. The raw legs re-convert on every run,
                 // but LP is stored already converted, so adding it now would sum two currencies.
-                // observeCurrencyChanges has already dropped the leg and asked for a re-price;
-                // leave the header on its previous value until that lands.
+                // observeCurrencyChanges has already dropped the leg and asked for a re-price, so
+                // park the header on its spinner: keeping the old figure on screen would show a
+                // total in the currency the user just navigated away from.
+                state.update { it.copy(totalAmountPrice = null, isTotalAmountLoading = true) }
                 return
             }
 
@@ -362,14 +370,16 @@ constructor(
      */
     private suspend fun reportLpFiat(value: BigDecimal) {
         val currency = appCurrencyRepository.currency.first()
-        _totalValueLpFiat.value = FiatValue(value, currency.ticker)
+        _totalValueLpFiat.value = LpLegTotal.Priced(FiatValue(value, currency.ticker))
     }
 
     /**
-     * Re-prices LP when the user switches currency. The bond and staking legs are held as raw chain
-     * amounts and convert afresh on every total, but LP is stored already converted and cannot be
-     * re-based — so it drops back to unreported and reloads, which parks the header on its spinner
-     * rather than on a figure mixing two currencies.
+     * Re-prices every leg and every card when the user switches currency.
+     *
+     * Nothing re-converts on its own: the card fiat strings are formatted once at load time from
+     * one-shot flows, and LP joins the total already converted, so a switch that only touched the
+     * header would leave the Bonded and Staking cards reading in the currency the user just left.
+     * Reloading is also what re-prices LP, which cannot be re-based from the stored magnitude.
      */
     private fun observeCurrencyChanges(): Job =
         viewModelScope.launch {
@@ -378,10 +388,30 @@ constructor(
                 .distinctUntilChanged()
                 .drop(1)
                 .collect {
-                    _totalValueLpFiat.value = null
+                    resetTotalsToPending()
+
+                    bondedNodesRefreshTrigger.value++
+                    loadBondedNodes()
+                    loadStakingPositions()
                     reloadLpTab()
                 }
         }
+
+    /**
+     * Drops every leg back to unreported and puts the header back on its spinner.
+     *
+     * Legs keep their last value across a reload, so without this the header would go on showing a
+     * settled total — in the old currency — for as long as the refetch takes. Clearing the value
+     * and the legs together is what makes the spinner honest.
+     */
+    private fun resetTotalsToPending() {
+        _totalValueBond.value = null
+        _totalValueDefaultStake.value = null
+        _totalValueRujiStake.value = null
+        _totalValueTCYStake.value = null
+        _totalValueLpFiat.value = null
+        state.update { it.copy(totalAmountPrice = null, isTotalAmountLoading = true) }
+    }
 
     /**
      * Reports every staking leg as zero. Used where no staking source will run at all — nothing
@@ -953,7 +983,7 @@ constructor(
                             }
                             .toMap()
 
-                    val allPositions =
+                    val lpPositions =
                         withContext(ioDispatcher) {
                             getThorChainLpPositionsUseCase(
                                 runeAddress = runeCoin.address,
@@ -961,7 +991,11 @@ constructor(
                                 availablePools = pools,
                             )
                         }
-                    val positionsByPool = allPositions.associateBy { it.pool }
+                    val positionsByPool = lpPositions.positions.associateBy { it.pool }
+                    // The use case queries every available pool, so only failures among the pools
+                    // the user actually selected can affect what this screen shows.
+                    val failedSelectedPools =
+                        selectedPools.filter { it.positionKey in lpPositions.failedPools }
 
                     val currency = appCurrencyRepository.currency.first()
                     val currencyFormat =
@@ -971,25 +1005,37 @@ constructor(
                     val merged =
                         selectedPools.map { dialogPool ->
                             val realPosition = positionsByPool[dialogPool.positionKey]
-                            if (realPosition != null) {
-                                realPosition.toUiModel(
-                                    vault.coins,
-                                    runePrice,
-                                    currency,
-                                    currencyFormat,
-                                )
-                            } else {
-                                dialogPool.toPlaceholderUiModel(zero)
+                            when {
+                                realPosition != null ->
+                                    realPosition.toUiModel(
+                                        vault.coins,
+                                        runePrice,
+                                        currency,
+                                        currencyFormat,
+                                    )
+                                // This pool's lookup errored, so we don't know what it holds. A
+                                // zero here would be a claim we can't make.
+                                dialogPool in failedSelectedPools ->
+                                    dialogPool.toPlaceholderUiModel(null)
+                                else -> dialogPool.toPlaceholderUiModel(zero)
                             }
                         }
 
                     _totalValueLpFiat.value =
-                        FiatValue(
-                            merged.fold(BigDecimal.ZERO) { acc, position ->
-                                acc + position.totalFiatValue
-                            },
-                            currency.ticker,
-                        )
+                        if (failedSelectedPools.isEmpty()) {
+                            LpLegTotal.Priced(
+                                FiatValue(
+                                    merged.fold(BigDecimal.ZERO) { acc, position ->
+                                        acc + position.totalFiatValue
+                                    },
+                                    currency.ticker,
+                                )
+                            )
+                        } else {
+                            // Those pools contribute zero to the fold above, which would quietly
+                            // understate the header total rather than admit a value is missing.
+                            LpLegTotal.Unavailable
+                        }
                     state.update {
                         it.copy(lp = LpTabUiModel(isLoading = false, positions = merged))
                     }

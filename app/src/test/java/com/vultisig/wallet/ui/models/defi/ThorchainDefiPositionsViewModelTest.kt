@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
+import com.vultisig.wallet.data.usecases.ThorChainLpPositions
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.decimals
 import com.vultisig.wallet.data.utils.symbol
@@ -120,7 +121,8 @@ internal class ThorchainDefiPositionsViewModelTest {
         coEvery { tcyStakingService.getStakingDetails(any(), any()) } returns flowOf()
         coEvery { defaultStakingPositionService.getStakingDetails(any(), any()) } returns flowOf()
         coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns emptyList()
-        coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns emptyList()
+        coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
+            ThorChainLpPositions()
     }
 
     @AfterEach
@@ -441,13 +443,16 @@ internal class ThorchainDefiPositionsViewModelTest {
         coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
             listOf(poolStats(BTC_POOL))
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
-            listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "100000000"))
+            ThorChainLpPositions(
+                listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "100000000"))
+            )
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
         // 3 RUNE at 2. The BTC side prices to zero — the vault holds no BTC coin, so it falls
         // through to the contract lookup, which this test leaves unstubbed.
-        vm.totalValueLpFiat.value shouldBe FiatValue(BigDecimal("6.00"), AppCurrencyUsd.ticker)
+        vm.totalValueLpFiat.value shouldBe
+            LpLegTotal.Priced(FiatValue(BigDecimal("6.00"), AppCurrencyUsd.ticker))
         vm.state.value.lp.positions.single().totalPriceLp shouldBe "$6.00"
         vm.state.value.totalAmountPrice shouldBe "$6.00"
     }
@@ -546,7 +551,9 @@ internal class ThorchainDefiPositionsViewModelTest {
                 heldPools.filterNotNull().first()
             }
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
-            listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "0"))
+            ThorChainLpPositions(
+                listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "0"))
+            )
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
@@ -609,18 +616,141 @@ internal class ThorchainDefiPositionsViewModelTest {
         coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
             listOf(poolStats(BTC_POOL))
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
-            listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "0"))
+            ThorChainLpPositions(
+                listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "0"))
+            )
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
-        vm.totalValueLpFiat.value shouldBe FiatValue(BigDecimal("6.00"), AppCurrencyUsd.ticker)
+        vm.totalValueLpFiat.value shouldBe
+            LpLegTotal.Priced(FiatValue(BigDecimal("6.00"), AppCurrencyUsd.ticker))
 
+        // A different EUR price on purpose: with both currencies priced the same, a magnitude
+        // carried across unchanged and one genuinely re-converted are the same number, and the
+        // regression this test is named for would slip through a formatter-only assertion.
+        coEvery { tokenPriceRepository.getCachedPrice(any(), AppCurrency.EUR) } returns
+            BigDecimal("3")
         coEvery { appCurrencyRepository.getCurrencyFormat() } returns
             NumberFormat.getCurrencyInstance(Locale.GERMANY)
         currency.value = AppCurrency.EUR
 
-        // Re-priced under the new currency, not relabelled: the leg's own ticker has to move too.
-        vm.totalValueLpFiat.value?.currency shouldBe AppCurrency.EUR.ticker
+        // 3 RUNE at the EUR price of 3, not the 6.00 it was worth in USD.
+        vm.totalValueLpFiat.value shouldBe
+            LpLegTotal.Priced(FiatValue(BigDecimal("9.00"), AppCurrency.EUR.ticker))
         vm.state.value.isTotalAmountLoading shouldBe false
+        vm.state.value.totalAmountPrice shouldBe germanFormat.format(BigDecimal("9.00"))
+    }
+
+    @Test
+    fun `switching currency parks the header on its spinner, not on the old total`() = runTest {
+        // Dropping the LP leg stops the combine from emitting, so the header simply kept its
+        // settled prior-currency figure — no spinner, no sign anything was in flight — for the
+        // whole refetch.
+        selectPositions("RUNE", BTC_POOL)
+        val currency = MutableStateFlow(AppCurrencyUsd)
+        coEvery { appCurrencyRepository.currency } returns currency
+        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+            listOf(poolStats(BTC_POOL))
+        val heldPositions =
+            MutableStateFlow<ThorChainLpPositions?>(
+                ThorChainLpPositions(
+                    listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "0"))
+                )
+            )
+        coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } coAnswers
+            {
+                heldPositions.filterNotNull().first()
+            }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        vm.state.value.totalAmountPrice shouldBe "$6.00"
+
+        // Hold the re-price so the switch can be observed mid-flight.
+        heldPositions.value = null
+        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+            NumberFormat.getCurrencyInstance(Locale.GERMANY)
+        currency.value = AppCurrency.EUR
+
+        vm.state.value.totalAmountPrice shouldBe null
+        vm.state.value.isTotalAmountLoading shouldBe true
+
+        heldPositions.value =
+            ThorChainLpPositions(
+                listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "0"))
+            )
+
+        vm.state.value.isTotalAmountLoading shouldBe false
+        vm.state.value.totalAmountPrice shouldBe germanFormat.format(BigDecimal("6.00"))
+    }
+
+    @Test
+    fun `switching currency re-prices the bonded and staking cards, not just the header`() =
+        runTest {
+            // Card fiat strings are formatted once per load from one-shot flows, so nothing
+            // re-converts on its own. The header moved to the new currency while Bonded and
+            // Staking kept showing the old one.
+            selectPositions("RUNE", "TCY")
+            val currency = MutableStateFlow(AppCurrencyUsd)
+            coEvery { appCurrencyRepository.currency } returns currency
+            coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
+                flowOf(listOf(bondedNode(BigInteger("100000000"))))
+            coEvery { tcyStakingService.getStakingDetails(any(), any()) } returns
+                flowOf(stakingDetails(Coins.ThorChain.TCY, BigInteger("100000000")))
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+            vm.state.value.bonded.totalBondedPrice shouldBe "$2.00"
+
+            // A different EUR price, so re-converting and merely re-formatting produce different
+            // numbers.
+            coEvery { tokenPriceRepository.getCachedPrice(any(), AppCurrency.EUR) } returns
+                BigDecimal("3")
+            coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+                NumberFormat.getCurrencyInstance(Locale.GERMANY)
+            currency.value = AppCurrency.EUR
+
+            val expected = germanFormat.format(BigDecimal("3.00"))
+            vm.state.value.bonded.totalBondedPrice shouldBe expected
+            vm.state.value.staking.positions
+                .single { it.coin.id == Coins.ThorChain.TCY.id }
+                .stakedFiatDisplay shouldBe expected
+        }
+
+    @Test
+    fun `a pool that failed to load makes the header unavailable rather than understated`() =
+        runTest {
+            // The per-pool failure is swallowed inside the use case, so the pool reads as zero
+            // liquidity. Folding that in produced a header total that looked as settled as a
+            // correct one while silently understating what the vault holds.
+            selectPositions("RUNE", BTC_POOL)
+            coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+                listOf(poolStats(BTC_POOL))
+            coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
+                ThorChainLpPositions(positions = emptyList(), failedPools = setOf(BTC_POOL))
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+            val state = vm.state.value
+            state.isTotalAmountLoading shouldBe false
+            state.totalAmountPrice shouldBe null
+            state.lp.positions.single().totalPriceLp shouldBe null
+        }
+
+    @Test
+    fun `a failure in a pool the user did not select leaves the total priced`() = runTest {
+        // The use case queries every available pool, so an unrelated pool erroring must not blank
+        // a total the user's own positions priced perfectly well.
+        selectPositions("RUNE", BTC_POOL)
+        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+            listOf(poolStats(BTC_POOL), poolStats(ETH_POOL))
+        coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
+            ThorChainLpPositions(
+                positions =
+                    listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "0")),
+                failedPools = setOf(ETH_POOL),
+            )
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.state.value.totalAmountPrice shouldBe "$6.00"
     }
 
     @Test
@@ -902,8 +1032,11 @@ internal class ThorchainDefiPositionsViewModelTest {
         const val RUJI_ADDRESS = "thor1rujiaddress"
         const val NODE_ADDRESS = "thor1nodeaddress"
         const val BTC_POOL = "BTC.BTC"
+        const val ETH_POOL = "ETH.ETH"
 
         val AppCurrencyUsd = com.vultisig.wallet.data.models.settings.AppCurrency.USD
+
+        val germanFormat: NumberFormat = NumberFormat.getCurrencyInstance(Locale.GERMANY)
 
         val RUJI_ID = Coins.ThorChain.RUJI.id
         val TCY_ID = Coins.ThorChain.TCY.id
