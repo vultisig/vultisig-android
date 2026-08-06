@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,16 +48,24 @@ internal fun PasscodeLockScreen(model: PasscodeLockViewModel = hiltViewModel()) 
 internal fun PasscodeLockScreen(state: PasscodeLockUiModel, textFieldState: TextFieldState) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary).glow(),
+        modifier =
+            Modifier.fillMaxSize()
+                .background(Theme.v2.colors.backgrounds.primary)
+                .glow()
+                // The numeric keypad opens the moment this screen appears and covers roughly a
+                // third of the display. Insetting by it shrinks the centring box to what is
+                // actually visible, so the prompt re-centres above the keyboard instead of staying
+                // put and being half-covered.
+                .imePadding(),
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier =
                 Modifier.widthIn(max = CONTENT_MAX_WIDTH)
                     .padding(horizontal = 16.dp)
-                    // The design sits the block slightly above true centre so the keyboard does not
-                    // crowd it once it opens.
-                    .padding(bottom = 56.dp),
+                    // Figma centres the block 28dp above the frame's midpoint; doubling that as
+                    // bottom padding shifts the centred content up by exactly that much.
+                    .padding(bottom = FIGMA_CENTRE_OFFSET * 2),
         ) {
             Text(
                 text = stringResource(R.string.passcode_lock_title),
@@ -151,6 +160,9 @@ private fun Modifier.glow(): Modifier = drawWithCache {
 }
 
 private val CONTENT_MAX_WIDTH = 360.dp
+
+/** Figma seats the content block this far above the frame's vertical midpoint. */
+private val FIGMA_CENTRE_OFFSET = 28.dp
 private val CardShape = RoundedCornerShape(12.dp)
 
 /** Figma tints the card with 10% of the normal border blue; there is no background token for it. */

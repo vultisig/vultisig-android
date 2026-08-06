@@ -143,6 +143,9 @@ import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VultTierGateUiModel
 import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesUiState
+import com.vultisig.wallet.ui.models.passcode.PasscodeLockError
+import com.vultisig.wallet.ui.models.passcode.PasscodeLockUiModel
+import com.vultisig.wallet.ui.screens.passcode.PasscodeLockScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
@@ -229,6 +232,24 @@ class PreviewActivity : ComponentActivity() {
         setContent {
             OnBoardingComposeTheme {
                 when (screen) {
+                    "passcode_lock" ->
+                        PasscodeLockScreen(
+                            state = PasscodeLockUiModel(),
+                            textFieldState = TextFieldState(),
+                        )
+                    "passcode_lock_filled" ->
+                        PasscodeLockScreen(
+                            state = PasscodeLockUiModel(),
+                            textFieldState = TextFieldState("12"),
+                        )
+                    "passcode_lock_error" ->
+                        PasscodeLockScreen(
+                            state =
+                                PasscodeLockUiModel(
+                                    error = PasscodeLockError.Wrong(remainingAttempts = 2)
+                                ),
+                            textFieldState = TextFieldState(),
+                        )
                     "limit_swap_form" -> LimitSwapFormPreview()
                     "limit_swap_form_assets" ->
                         LimitSwapFormPreview(expandedSection = LimitFormSection.Asset)

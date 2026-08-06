@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.passcode.PASSCODE_LENGTH
 import com.vultisig.wallet.data.passcode.PasscodeRepository
+import com.vultisig.wallet.data.passcode.PasscodeState
 import com.vultisig.wallet.data.passcode.PasscodeUnlockResult
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -58,8 +59,10 @@ constructor(private val passcodeRepository: PasscodeRepository) : ViewModel() {
         viewModelScope.launch {
             textFieldState.textAsFlow().collect { text ->
                 // Clear a stale error as soon as the user starts over, so the screen does not keep
-                // accusing them while they type the next attempt.
-                if (state.value.error is PasscodeLockError.Wrong) {
+                // accusing them while they type the next attempt. Only a non-empty field counts as
+                // starting over: emptying it is how this view model reacts to a wrong passcode, and
+                // treating that as a fresh start would wipe the error in the frame it appears.
+                if (text.isNotEmpty() && state.value.error is PasscodeLockError.Wrong) {
                     state.update { it.copy(error = null) }
                 }
                 if (text.length == PASSCODE_LENGTH) {
@@ -67,6 +70,28 @@ constructor(private val passcodeRepository: PasscodeRepository) : ViewModel() {
                 }
             }
         }
+
+        // This view model outlives any single lock, because the guard hosts it outside the nav
+        // graph and it is therefore scoped to the activity. Without this, a half-typed or rejected
+        // attempt is still sitting in the field the next time the app locks, so the user returns to
+        // pre-filled cells and a stale error rather than a clean prompt.
+        viewModelScope.launch {
+            passcodeRepository.state.collect { passcodeState ->
+                if (passcodeState == PasscodeState.Locked) {
+                    reset()
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns the prompt to its blank state, abandoning anything left over from a previous lock.
+     */
+    private fun reset() {
+        verifyJob?.cancel()
+        countdownJob?.cancel()
+        textFieldState.clearText()
+        state.value = PasscodeLockUiModel()
     }
 
     private fun verify(passcode: String) {
