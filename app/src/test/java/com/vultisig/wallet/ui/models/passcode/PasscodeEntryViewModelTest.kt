@@ -129,6 +129,34 @@ internal class PasscodeEntryViewModelTest {
     }
 
     @Test
+    fun `a wrong current passcode still shows its error after the field self-clears`() = runTest {
+        // Rejecting a passcode empties the field, and that empty is another emission from the same
+        // flow. Treating it as the user starting over erases the error before it is ever seen.
+        coEvery { passcodeRepository.unlock(any()) } returns PasscodeUnlockResult.Wrong(4)
+        val model = viewModel(PasscodeEntryAction.Change)
+        advanceUntilIdle()
+
+        type(model.textFieldState, "00000")
+        Snapshot.sendApplyNotifications()
+        advanceUntilIdle()
+
+        assertEquals(PasscodeEntryError.Wrong(4), model.state.value.error)
+    }
+
+    @Test
+    fun `a mismatch keeps its message after the field self-clears`() = runTest {
+        val model = viewModel(PasscodeEntryAction.Set)
+        advanceUntilIdle()
+        type(model.textFieldState, "12345")
+
+        type(model.textFieldState, "54321")
+        Snapshot.sendApplyNotifications()
+        advanceUntilIdle()
+
+        assertEquals(PasscodeEntryError.Mismatch, model.state.value.error)
+    }
+
+    @Test
     fun `a wrong current passcode does not advance`() = runTest {
         coEvery { passcodeRepository.unlock(any()) } returns PasscodeUnlockResult.Wrong(4)
         val model = viewModel(PasscodeEntryAction.Change)

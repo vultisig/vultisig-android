@@ -92,7 +92,10 @@ constructor(
     init {
         viewModelScope.launch {
             textFieldState.textAsFlow().collect { text ->
-                if (state.value.error !is PasscodeEntryError.LockedOut) {
+                // Only a non-empty field counts as the user starting over. Every failure path here
+                // clears the field, and that clear is itself an emission — treating it as a fresh
+                // start would wipe the error in the same frame it was set, so nothing is shown.
+                if (text.isNotEmpty() && state.value.error !is PasscodeEntryError.LockedOut) {
                     state.update { it.copy(error = null) }
                 }
                 if (text.length == PASSCODE_LENGTH) {

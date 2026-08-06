@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
@@ -52,7 +53,9 @@ private fun PasscodeEntryScreen(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+            // Same reason as the lock screen: the numeric keypad opens with the screen and covers
+            // a third of it, so the block has to centre in what is left rather than in the window.
+            modifier = Modifier.fillMaxSize().imePadding().padding(horizontal = 16.dp),
         ) {
             Text(
                 text = stringResource(state.step.headlineRes()),
