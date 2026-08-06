@@ -12,9 +12,11 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getPubKeyByChain
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
+import com.vultisig.wallet.ui.models.send.submit.BitcoinPlanService
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.utils.asAddressInput
 import java.math.BigDecimal
@@ -33,6 +35,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import wallet.core.jni.proto.Common.SigningError
 
 internal class AmountFractionManager(
     private val scope: CoroutineScope,
@@ -50,6 +53,7 @@ internal class AmountFractionManager(
     private val getAvailableTokenBalance: GetAvailableTokenBalanceUseCase,
     private val feeServiceComposite: FeeServiceComposite,
     private val tokenRepository: TokenRepository,
+    private val bitcoinPlanService: BitcoinPlanService,
     private val adjustGasFee: (TokenValue, GasSettings?, BlockChainSpecificAndUtxo?) -> TokenValue,
     private val amountManager: AmountManager,
 ) {
@@ -146,6 +150,23 @@ internal class AmountFractionManager(
             return frozenTrxFraction(percentage, token.decimal)
         }
 
+        val chain = token.chain
+        // UTXO max can't be derived from balance − byteFee (the byte fee is a sat/vB rate, not
+        // the transaction's total fee) — that consistently under-reserves and produces an amount
+        // WalletCore's own coin selector then rejects as "not enough UTXOs". Ask WalletCore to
+        // plan the real sweep instead and trust its amount/fee. Percentages < 100% keep the
+        // approximate byteFee math below: there's slack, so an imprecise fee never breaks them.
+        if (
+            isMax &&
+                defiType == null &&
+                chain.standard == TokenStandard.UTXO &&
+                chain != Chain.Cardano
+        ) {
+            calculateUtxoMaxAmount(vault, selectedAccount)?.let {
+                return it
+            }
+        }
+
         var amount =
             if (gasFee.value != null) {
                 fetchPercentageOfAvailableBalance(percentage)
@@ -180,8 +201,6 @@ internal class AmountFractionManager(
         ) {
             return amount
         }
-
-        val chain = token.chain
 
         // Skip the fresh-fee round-trip when it cannot change the percentage amount:
         //   - Most non-native tokens pay chain gas in the native coin (see
@@ -238,6 +257,43 @@ internal class AmountFractionManager(
         }
 
         return amount
+    }
+
+    /**
+     * Plans a real max-sweep for UTXO chains via WalletCore instead of approximating with balance −
+     * byteFee (the byteFee is a sat/vB rate, not the transaction's total fee — see
+     * [calculatePercentageWithAccurateFee]). Returns null to fall back to the approximate math when
+     * the spend can't yet be planned (e.g. `specific` hasn't loaded, or a blank destination makes
+     * WalletCore reject the plan) — callers retry once the missing input arrives.
+     */
+    private suspend fun calculateUtxoMaxAmount(vault: Vault, account: Account): BigDecimal? {
+        val token = account.token
+        val balance = account.tokenValue?.value ?: return null
+        val spec = specific.value ?: return null
+        val utxoSpecific = spec.blockChainSpecific as? BlockChainSpecific.UTXO ?: return null
+        val maxSpecific = spec.copy(blockChainSpecific = utxoSpecific.copy(sendMaxAmount = true))
+
+        return try {
+            val plan =
+                withContext(Dispatchers.IO) {
+                    bitcoinPlanService.getPlan(
+                        vaultId = vault.id,
+                        selectedToken = token,
+                        dstAddress = addressFieldState.text.asAddressInput(),
+                        tokenAmountInt = balance,
+                        specific = maxSpecific,
+                        memo = memoFieldState.text.toString().takeIf { it.isNotBlank() },
+                    )
+                }
+            if (plan.error != SigningError.OK) return null
+            TokenValue.createDecimal(BigInteger.valueOf(plan.amount), token.decimal)
+                .stripTrailingZeros()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to plan UTXO max amount")
+            null
+        }
     }
 
     private suspend fun fetchPercentageOfAvailableBalance(percentage: Float): BigDecimal {

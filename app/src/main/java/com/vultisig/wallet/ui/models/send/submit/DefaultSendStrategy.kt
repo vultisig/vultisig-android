@@ -54,6 +54,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Common.SigningError
 
 internal class DefaultSendStrategy(
     private val scope: CoroutineScope,
@@ -242,7 +243,7 @@ internal class DefaultSendStrategy(
                             !selectedToken.isNativeToken &&
                             selectedToken.chain.standard == TokenStandard.EVM
 
-                    val specific =
+                    val (specificAfterPlan, btcPlan) =
                         withContext(Dispatchers.IO) {
                                 blockChainSpecificRepository.getSpecific(
                                     chain = chain,
@@ -273,10 +274,21 @@ internal class DefaultSendStrategy(
                                     tokenAmountInt,
                                     memo,
                                     chain,
-                                    forceReplan = isAmountAdjusted,
                                 )
                             }
-                            .let { applyRippleDestinationTag(it, destinationTag) }
+                    val specific = applyRippleDestinationTag(specificAfterPlan, destinationTag)
+
+                    // sendMaxAmount=true tells WalletCore's planner to sweep the real
+                    // balance-minus-fee itself, ignoring the requested amount — so for a Max UTXO
+                    // send, tokenAmountInt (built from the approximate fee estimate above) can
+                    // differ from what the plan actually signs. Stage the plan's own amount so the
+                    // Verify screen shows the amount that will really be sent, not the estimate.
+                    val stagedAmountInt =
+                        if (isMaxAmount && btcPlan != null && btcPlan.error == SigningError.OK) {
+                            BigInteger.valueOf(btcPlan.amount)
+                        } else {
+                            tokenAmountInt
+                        }
 
                     if (selectedToken.isNativeToken) {
                         val defiType = defiTypeProvider()
@@ -416,7 +428,7 @@ internal class DefaultSendStrategy(
                                     selectGasFeeForFeeEstimation(
                                         chain = chain,
                                         gasFee = gasFee,
-                                        planFee = planFee.value,
+                                        planFee = btcPlan?.fee ?: planFee.value,
                                         evmGasSettings = evmGasSettings,
                                     ),
                                 selectedToken = selectedToken,
@@ -434,7 +446,7 @@ internal class DefaultSendStrategy(
                             dstLabel = dstLabel,
                             tokenValue =
                                 TokenValue(
-                                    value = tokenAmountInt,
+                                    value = stagedAmountInt,
                                     unit = selectedTokenValue.unit,
                                     decimals = selectedToken.decimal,
                                 ),
@@ -610,6 +622,14 @@ internal class DefaultSendStrategy(
         }
     }
 
+    /**
+     * Returns the freshly-planned specific together with the plan itself, so the caller can use the
+     * plan's own amount/fee directly instead of reading them back from the shared
+     * `planBtc`/`planFee` flows — those are also written by `GasFeeOrchestrator`'s background
+     * collector, which can interleave during a real dispatcher hop (e.g. the Ripple validation's
+     * `withContext(Dispatchers.IO)` a few lines below this call) and clobber them before submit
+     * gets a chance to read them back.
+     */
     private suspend fun applyBitcoinPlan(
         specific: BlockChainSpecificAndUtxo,
         vaultId: String,
@@ -618,34 +638,35 @@ internal class DefaultSendStrategy(
         tokenAmountInt: BigInteger,
         memo: String?,
         chain: Chain,
-        forceReplan: Boolean,
-    ): BlockChainSpecificAndUtxo {
-        if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano) return specific
+    ): Pair<BlockChainSpecificAndUtxo, Bitcoin.TransactionPlan?> {
+        if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano) return specific to null
 
-        // GasFeeOrchestrator.collectPlanFee refills planBtc on every keystroke from the raw field,
-        // so after a clamp the cached plan still describes the pre-clamp amount — and
-        // validateBtcLikeAmount would reject the clamped amount against that stale over-fee plan.
-        // Re-plan for the amount actually being sent.
-        if (forceReplan || planBtc.value == null) {
-            bitcoinPlanService
-                .getPlan(
-                    vaultId = vaultId,
-                    selectedToken = selectedToken,
-                    dstAddress = dstAddress,
-                    tokenAmountInt = tokenAmountInt,
-                    specific = specific,
-                    memo = memo,
-                )
-                .also { plan ->
-                    planBtc.value = plan
-                    planFee.value = plan.fee
-                }
-        }
+        // Always re-plan against this submit's `specific` (correct isMaxAmountEnabled, freshest
+        // amount) rather than trusting a background-collected planBtc snapshot — it may have
+        // been computed with a stale sendMaxAmount flag or a since-changed amount (#5504). This
+        // also covers a clamped amount (#5509): GasFeeOrchestrator.collectPlanFee refills planBtc
+        // on every keystroke from the raw field, so after a clamp the cached plan still describes
+        // the pre-clamp amount — re-planning unconditionally means validateBtcLikeAmount never sees
+        // that stale, over-fee plan.
+        val plan =
+            bitcoinPlanService.getPlan(
+                vaultId = vaultId,
+                selectedToken = selectedToken,
+                dstAddress = dstAddress,
+                tokenAmountInt = tokenAmountInt,
+                specific = specific,
+                memo = memo,
+            )
+        planBtc.value = plan
+        planFee.value = plan.fee
 
-        return chainValidationService.selectUtxosIfNeeded(
-            chain = chain,
-            specific = specific,
-            plan = planBtc.value,
-        )
+        val updatedSpecific =
+            chainValidationService.selectUtxosIfNeeded(
+                chain = chain,
+                specific = specific,
+                plan = plan,
+            )
+
+        return updatedSpecific to plan
     }
 }

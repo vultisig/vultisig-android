@@ -3,7 +3,9 @@
 package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.model.BasicFee
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -21,13 +23,17 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.submit.BitcoinPlanService
 import com.vultisig.wallet.ui.utils.UiText
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.unmockkStatic
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +41,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -42,6 +49,8 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Common.SigningError
 
 internal class GasFeeOrchestratorTest {
 
@@ -233,75 +242,142 @@ internal class GasFeeOrchestratorTest {
             assertEquals(UiText.DynamicString("1.5 ETH"), uiState.value.gasTokenBalance)
         }
 
-    // ──────── collectMaxAmount ────────
+    // ──────── collectGasFees ────────
 
     @Test
-    fun `collectMaxAmount propagates isMax to UTXO specific via sendMaxAmount`() =
+    fun `collectGasFees computes a UTXO byte fee on load, without waiting for a typed amount`() =
         runTest(mainDispatcher) {
+            // Regression for #5504: UtxoFeeService's byte fee is a pure network-stats lookup that
+            // never looks at the amount, but the shared mapNotNull gate used to skip every UTXO
+            // estimate until an amount existed — so gasFee (and therefore collectSpecific, which
+            // requires gasFee.filterNotNull() before it runs at all) never populated before *some*
+            // amount was typed. A Max tap as the very first action on a fresh screen then always
+            // raced an empty `specific` and fell back to the imprecise byte-fee-only math.
+            vault = vault()
             account = btcAccount()
-            specific.value =
-                BlockChainSpecificAndUtxo(
-                    BlockChainSpecific.UTXO(byteFee = BigInteger("100"), sendMaxAmount = false)
-                )
+            val btcCoin = btcAccount().token
+            coEvery { feeServiceComposite.calculateFees(any()) } returns BasicFee(BigInteger("2"))
+            coEvery { tokenRepository.getNativeToken(any()) } returns btcCoin
             val orchestrator = build(backgroundScope)
-            orchestrator.start()
 
-            isMaxAmount.value = true
-            advanceUntilIdle()
+            // collectGasFees hops to Dispatchers.IO for the fee/native-token calls; route it back
+            // to the test scheduler so advanceUntilIdle() can actually drive it to completion.
+            mockkStatic(Dispatchers::class)
+            every { Dispatchers.IO } returns mainDispatcher
+            try {
+                orchestrator.start()
+                selectedToken.value = btcCoin
+                // Amount field is left blank — the whole point of this test.
+                advanceTimeBy(400)
+                advanceUntilIdle()
+            } finally {
+                unmockkStatic(Dispatchers::class)
+            }
 
-            val updated = specific.value?.blockChainSpecific as? BlockChainSpecific.UTXO
-            assertEquals(true, updated?.sendMaxAmount)
-            // byteFee untouched.
-            assertEquals(BigInteger("100"), updated?.byteFee)
+            assertEquals(BigInteger("2"), gasFee.value?.value)
         }
 
+    // ──────── collectSpecific ────────
+
     @Test
-    fun `collectMaxAmount is a no-op for non-UTXO chains`() =
+    fun `collectSpecific threads the live isMaxAmount flag into getSpecific, not a hardcoded false`() =
         runTest(mainDispatcher) {
-            account =
-                Account(
-                    token = ethCoin(isNativeToken = true),
-                    tokenValue = null,
-                    fiatValue = null,
-                    price = null,
-                )
-            // Set a non-UTXO specific so the cast inside the orchestrator returns null.
-            specific.value =
-                BlockChainSpecificAndUtxo(
-                    BlockChainSpecific.Ethereum(
-                        maxFeePerGasWei = BigInteger.ONE,
-                        priorityFeeWei = BigInteger.ONE,
-                        nonce = BigInteger.ZERO,
-                        gasLimit = BigInteger.ONE,
-                    )
-                )
-            val before = specific.value
-            val orchestrator = build(backgroundScope)
-            orchestrator.start()
-
+            // Regression for #5504: isMaxAmountEnabled used to be hardcoded false here, so a UTXO
+            // max send's specific never carried sendMaxAmount=true through to planning.
+            account = btcAccount()
             isMaxAmount.value = true
-            advanceUntilIdle()
+            val flagSlot = slot<Boolean>()
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = any(),
+                    address = any(),
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = any(),
+                    isMaxAmountEnabled = capture(flagSlot),
+                    isDeposit = any(),
+                    gasLimit = any(),
+                    dstAddress = any(),
+                    tokenAmountValue = any(),
+                    memo = any(),
+                    transactionType = any(),
+                    isThorchainRouterDeposit = any(),
+                )
+            } returns
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.UTXO(byteFee = BigInteger("100"), sendMaxAmount = true)
+                )
+            val orchestrator = build(backgroundScope)
 
-            // Specific reference unchanged — the UTXO branch is the only writer here.
-            assertSame(before, specific.value)
+            // collectSpecific hops to Dispatchers.IO for the getSpecific call; route it back to
+            // the test scheduler so advanceUntilIdle() can actually drive it to completion.
+            mockkStatic(Dispatchers::class)
+            every { Dispatchers.IO } returns mainDispatcher
+            try {
+                orchestrator.start()
+                selectedToken.value = btcAccount().token
+                gasFee.value = tokenValue(100, btcAccount().token)
+                advanceTimeBy(400)
+                advanceUntilIdle()
+            } finally {
+                unmockkStatic(Dispatchers::class)
+            }
+
+            assertTrue(flagSlot.captured)
         }
 
+    // ──────── collectPlanFee ────────
+
     @Test
-    fun `collectMaxAmount is a no-op when there is no selected account`() =
+    fun `collectPlanFee patches the plan's sendMaxAmount from the live flag even when specific is stale`() =
         runTest(mainDispatcher) {
-            account = null
+            // Regression follow-up for #5504: collectPlanFee fires immediately on every
+            // amount-field change, while `specific` is only rebuilt by the 300ms-debounced
+            // collectSpecific. Right after a Max tap, `specific` can still carry the pre-Max
+            // sendMaxAmount=false for a moment — the plan (and the fee it displays) must not be
+            // built against that stale flag.
             specific.value =
                 BlockChainSpecificAndUtxo(
-                    BlockChainSpecific.UTXO(byteFee = BigInteger("100"), sendMaxAmount = false)
+                    BlockChainSpecific.UTXO(byteFee = BigInteger.TEN, sendMaxAmount = false)
                 )
-            val before = specific.value
+            isMaxAmount.value = true
+            val plannedSpecificSlot = slot<BlockChainSpecificAndUtxo>()
+            coEvery {
+                bitcoinPlanService.getPlan(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    capture(plannedSpecificSlot),
+                    any(),
+                )
+            } returns
+                Bitcoin.TransactionPlan.newBuilder().setFee(500L).setError(SigningError.OK).build()
+            coEvery { addressParserRepository.resolveName(any(), any()) } returns "bc1dest"
+            // Set the amount/address fields before start() — combine() needs a first value from
+            // every source before it emits anything, and mutating them after start() would let
+            // the first emission race the still-empty amount field.
+            addressFieldState.setTextAndPlaceCursorAtEnd("bc1dest")
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.009")
             val orchestrator = build(backgroundScope)
             orchestrator.start()
 
-            isMaxAmount.value = true
+            selectedToken.value = btcAccount().token
+            advanceTimeBy(400)
             advanceUntilIdle()
 
-            assertSame(before, specific.value)
+            coVerify(exactly = 1) {
+                bitcoinPlanService.getPlan(any(), any(), any(), any(), any(), any())
+            }
+            val plannedUtxo =
+                plannedSpecificSlot.captured.blockChainSpecific as BlockChainSpecific.UTXO
+            assertTrue(plannedUtxo.sendMaxAmount)
+            assertEquals(500L, planFee.value)
+            // The stale flag on `specific` itself is untouched — only the plan input is patched.
+            assertEquals(
+                false,
+                (specific.value?.blockChainSpecific as BlockChainSpecific.UTXO).sendMaxAmount,
+            )
         }
 
     // ──────── helpers ────────
@@ -367,4 +443,13 @@ internal class GasFeeOrchestratorTest {
 
     private fun tokenValue(value: Long, coin: Coin): TokenValue =
         TokenValue(value = BigInteger.valueOf(value), token = coin)
+
+    private fun vault(): Vault =
+        Vault(
+            id = "vault-id",
+            name = "test",
+            hexChainCode = "00",
+            pubKeyECDSA = "",
+            pubKeyEDDSA = "",
+        )
 }

@@ -311,6 +311,191 @@ internal class DefaultSendStrategyTest {
         }
 
     /**
+     * Regression for #5504: submit reused `planBtc.value` via an elvis short-circuit whenever it
+     * was already non-null, so a background-collected plan computed against a stale specific (a
+     * wrong sendMaxAmount, or a since-changed amount) never got re-planned at submit time — even
+     * though submit's own `specific` here already carries the corrected flag/amount. Submit must
+     * always re-plan.
+     */
+    @Test
+    fun `submit always re-plans the BTC transaction, even when planBtc already holds a cached plan`() =
+        runTest {
+            val btcCoin = btcCoin()
+            val account =
+                Account(
+                    token = btcCoin,
+                    tokenValue = TokenValue(BigInteger.valueOf(1_000_000L), btcCoin),
+                    fiatValue = null,
+                    price = null,
+                )
+            vaultId = "vault-1"
+            selectedAccount = account
+            addressFieldState.setTextAndPlaceCursorAtEnd("bc1dest")
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.0099945")
+            coEvery { accountValidator.validate() } returns
+                ValidatedAccount(
+                    vaultId = "vault-1",
+                    selectedAccount = account,
+                    chain = Chain.Bitcoin,
+                    gasFee = TokenValue(BigInteger.TEN, btcCoin),
+                    dstAddress = "bc1dest",
+                )
+            coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = any(),
+                    address = any(),
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = any(),
+                    isMaxAmountEnabled = any(),
+                    isDeposit = any(),
+                    dstAddress = any(),
+                    tokenAmountValue = any(),
+                    memo = any(),
+                    isThorchainRouterDeposit = any(),
+                )
+            } returns
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.UTXO(byteFee = BigInteger.TEN, sendMaxAmount = false)
+                )
+            every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+            coEvery { getAvailableTokenBalance(any(), any()) } returns
+                TokenValue(BigInteger.valueOf(1_000_000L), btcCoin)
+            coEvery { gasFeeToEstimatedFee(any()) } returns
+                EstimatedGasFee(
+                    formattedFiatValue = "$0.10",
+                    formattedTokenValue = "0.0000001 BTC",
+                    tokenValue = TokenValue(BigInteger.ONE, btcCoin),
+                    fiatValue = mockk(relaxed = true),
+                )
+            coEvery { transactionRepository.addTransaction(any()) } returns Unit
+
+            val freshPlan =
+                Bitcoin.TransactionPlan.newBuilder()
+                    .setAmount(994_500L)
+                    .setFee(550L)
+                    .setError(SigningError.OK)
+                    .build()
+            val bitcoinPlanServiceMock: BitcoinPlanService = mockk()
+            coEvery {
+                bitcoinPlanServiceMock.getPlan(any(), any(), any(), any(), any(), any())
+            } returns freshPlan
+
+            // A stale, already-failing plan sits cached in planBtc from an earlier background
+            // recompute — the old elvis short-circuit would reuse this instead of re-planning.
+            val stalePlan =
+                Bitcoin.TransactionPlan.newBuilder()
+                    .setError(SigningError.Error_not_enough_utxos)
+                    .build()
+            val planBtcFlow = MutableStateFlow<Bitcoin.TransactionPlan?>(stalePlan)
+
+            mockkStatic(Dispatchers::class)
+            every { Dispatchers.IO } returns mainDispatcher
+            try {
+                build(this, bitcoinPlanService = bitcoinPlanServiceMock, planBtc = planBtcFlow)
+                    .submit()
+                advanceUntilIdle()
+            } finally {
+                unmockkStatic(Dispatchers::class)
+            }
+
+            coVerify(exactly = 1) {
+                bitcoinPlanServiceMock.getPlan(any(), any(), any(), any(), any(), any())
+            }
+            assertNull(lastError, "Expected no error; got $lastError")
+            assertEquals(freshPlan, planBtcFlow.value)
+        }
+
+    /**
+     * Regression for #5504: `sendMaxAmount=true` tells WalletCore's planner to sweep the real
+     * balance-minus-fee itself, ignoring the requested amount. The staged Transaction must reflect
+     * what the plan actually signs, not the approximate byteFee-based estimate that produced the
+     * requested amount — otherwise the Verify screen shows a number the broadcast transaction
+     * doesn't match.
+     */
+    @Test
+    fun `submit stages the plan's real sweep amount for a Max BTC send, not the approximate one`() =
+        runTest {
+            val btcCoin = btcCoin()
+            val account =
+                Account(
+                    token = btcCoin,
+                    tokenValue = TokenValue(BigInteger.valueOf(1_000_000L), btcCoin),
+                    fiatValue = null,
+                    price = null,
+                )
+            vaultId = "vault-1"
+            selectedAccount = account
+            addressFieldState.setTextAndPlaceCursorAtEnd("bc1dest")
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.01")
+            coEvery { accountValidator.validate() } returns
+                ValidatedAccount(
+                    vaultId = "vault-1",
+                    selectedAccount = account,
+                    chain = Chain.Bitcoin,
+                    gasFee = TokenValue(BigInteger.TEN, btcCoin),
+                    dstAddress = "bc1dest",
+                )
+            coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = any(),
+                    address = any(),
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = any(),
+                    isMaxAmountEnabled = any(),
+                    isDeposit = any(),
+                    dstAddress = any(),
+                    tokenAmountValue = any(),
+                    memo = any(),
+                    isThorchainRouterDeposit = any(),
+                )
+            } returns
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.UTXO(byteFee = BigInteger.TEN, sendMaxAmount = true)
+                )
+            // The estimate that put "0.01" in the amount field in the first place.
+            every { amountManager.currentMaxAmount } returns BigDecimal("0.01")
+            coEvery { getAvailableTokenBalance(any(), any()) } returns
+                TokenValue(BigInteger.valueOf(1_000_000L), btcCoin)
+            coEvery { gasFeeToEstimatedFee(any()) } returns
+                EstimatedGasFee(
+                    formattedFiatValue = "$0.10",
+                    formattedTokenValue = "0.0000001 BTC",
+                    tokenValue = TokenValue(BigInteger.ONE, btcCoin),
+                    fiatValue = mockk(relaxed = true),
+                )
+            val captured = slot<Transaction>()
+            coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            // WalletCore's own precise sweep — deliberately different from the "0.01" estimate.
+            val realSweepPlan =
+                Bitcoin.TransactionPlan.newBuilder()
+                    .setAmount(994_500L)
+                    .setFee(550L)
+                    .setError(SigningError.OK)
+                    .build()
+            val bitcoinPlanServiceMock: BitcoinPlanService = mockk()
+            coEvery {
+                bitcoinPlanServiceMock.getPlan(any(), any(), any(), any(), any(), any())
+            } returns realSweepPlan
+
+            mockkStatic(Dispatchers::class)
+            every { Dispatchers.IO } returns mainDispatcher
+            try {
+                build(this, bitcoinPlanService = bitcoinPlanServiceMock).submit()
+                advanceUntilIdle()
+            } finally {
+                unmockkStatic(Dispatchers::class)
+            }
+
+            assertNull(lastError, "Expected no error; got $lastError")
+            assertEquals(BigInteger.valueOf(994_500L), captured.captured.tokenValue.value)
+        }
+
+    /**
      * A native amount that overshoots the balance on its own is a real over-entry, not a fee edge —
      * it must still be rejected rather than silently adjusted down (see the #5493 clamp below).
      */
@@ -1533,9 +1718,22 @@ internal class DefaultSendStrategyTest {
                                 btcCoin,
                             )
                         }
-                    // collectPlanFee fills both together; no clamp here, so neither is refreshed.
+                    // collectPlanFee fills both together before submit ever runs.
                     planBtc.value = okPlan(2_000L)
                     planFee.value = 2_000L
+                    // Submit always re-plans (#5504), so even this no-clamp case calls getPlan —
+                    // stub it to mirror the already-cached plan since nothing here should change
+                    // it.
+                    coEvery {
+                        bitcoinPlanService.getPlan(
+                            vaultId = any(),
+                            selectedToken = any(),
+                            dstAddress = any(),
+                            tokenAmountInt = any(),
+                            specific = any(),
+                            memo = any(),
+                        )
+                    } returns okPlan(2_000L)
                     coEvery { gasFeeToEstimatedFee(any()) } returns
                         EstimatedGasFee(
                             formattedFiatValue = "$1.00",
@@ -1783,7 +1981,11 @@ internal class DefaultSendStrategyTest {
             isNativeToken = true,
         )
 
-    private fun build(scope: CoroutineScope) =
+    private fun build(
+        scope: CoroutineScope,
+        bitcoinPlanService: BitcoinPlanService = this.bitcoinPlanService,
+        planBtc: MutableStateFlow<Bitcoin.TransactionPlan?> = this.planBtc,
+    ) =
         DefaultSendStrategy(
             scope = scope,
             addressFieldState = addressFieldState,
