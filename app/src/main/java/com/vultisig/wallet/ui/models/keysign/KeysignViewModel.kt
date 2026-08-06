@@ -109,8 +109,8 @@ internal fun resolveKeysignChain(
     customMessagePayload: CustomMessagePayload?,
 ): Chain? =
     keysignPayload?.coin?.chain
-        ?: customMessagePayload?.chain?.let { raw ->
-            runCatching { Chain.fromRaw(raw) }.getOrNull()
+        ?: customMessagePayload?.let { payload ->
+            runCatching { Chain.fromRaw(payload.chain.orEmpty()) }.getOrDefault(Chain.Ethereum)
         }
 
 /** UI state for an in-progress or completed keysign session. */
