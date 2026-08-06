@@ -273,33 +273,38 @@ constructor(
 
     private fun loadSavedPositions(): Job =
         viewModelScope.launch {
-            defiPositionsRepository.getSelectedPositions(vaultId).collect { saved ->
-                val hasMayaPositions =
-                    saved.any { it in MAYA_STATIC_POSITION_KEYS || it.contains(".") }
-                val positions =
-                    if (hasMayaPositions) {
-                        saved.toList()
-                    } else {
-                        MAYA_DEFAULT_SELECTED_POSITIONS
-                    }
-                updateModel {
-                    it.copy(selectedPositions = positions, tempSelectedPositions = positions)
+            defiPositionsRepository
+                .getSelectedPositions(vaultId)
+                .map { saved ->
+                    val hasMayaPositions =
+                        saved.any { it in MAYA_STATIC_POSITION_KEYS || it.contains(".") }
+                    if (hasMayaPositions) saved.toList() else MAYA_DEFAULT_SELECTED_POSITIONS
                 }
+                // The store re-emits for writes that leave this vault's selection alone — the
+                // first-ever save flips the key from absent to present, which it cannot read as
+                // unchanged — and a reload for one of those would blank a settled header for
+                // nothing. Compared as sets: only membership decides what gets loaded, and a stored
+                // set can come back in a different order than the default list.
+                .distinctUntilChanged { old, new -> old.toSet() == new.toSet() }
+                .collect { positions ->
+                    updateModel {
+                        it.copy(selectedPositions = positions, tempSelectedPositions = positions)
+                    }
 
-                // Every onPositionSelectionDone write re-runs this collector, so it reloads all
-                // three legs for the same reason a currency switch does and owes the header the
-                // same honesty: legs keep their pre-selection values, and without this a newly
-                // added pool would leave the total reading as settled — and short by that pool —
-                // until its fetch lands.
-                resetTotalsToPending()
+                    // Every selection change re-runs this collector, so it reloads all three legs
+                    // for the same reason a currency switch does and owes the header the same
+                    // honesty: legs keep their pre-selection values, and without this a newly added
+                    // pool would leave the total reading as settled — and short by that pool —
+                    // until its fetch lands.
+                    resetTotalsToPending()
 
-                reloadLpTab()
+                    reloadLpTab()
 
-                loadBondedJob?.cancel()
-                loadBondedJob = launch { loadBondedNodes() }
-                loadStakingJob?.cancel()
-                loadStakingJob = launch { loadStakingPosition() }
-            }
+                    loadBondedJob?.cancel()
+                    loadBondedJob = launch { loadBondedNodes() }
+                    loadStakingJob?.cancel()
+                    loadStakingJob = launch { loadStakingPosition() }
+                }
         }
 
     private fun loadLpPositionsForDialog(): Job =
@@ -883,6 +888,14 @@ constructor(
     fun onPositionSelectionDone() {
         viewModelScope.launch {
             val selectedPositions = currentModel.tempSelectedPositions
+
+            // A Done that changed nothing has nothing to persist. Writing anyway would also clobber
+            // the stored selection this screen only reads through its Maya defaults.
+            if (selectedPositions.toSet() == currentModel.selectedPositions.toSet()) {
+                updateModel { it.copy(showPositionSelectionDialog = false) }
+                return@launch
+            }
+
             defiPositionsRepository.saveSelectedPositions(vaultId, selectedPositions)
             updateModel {
                 it.copy(showPositionSelectionDialog = false, selectedPositions = selectedPositions)

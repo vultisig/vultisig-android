@@ -720,6 +720,55 @@ internal class MayachainDefiPositionsViewModelTest {
         settled.totalAmountPrice shouldBe "$0.40"
     }
 
+    @Test
+    fun `confirming a selection nothing changed in writes nothing`() = runTest {
+        // Done is reachable without touching a checkbox. Writing anyway would clobber the stored
+        // selection this screen only ever reads through its Maya defaults, and the write would come
+        // back through the collector as a reload of all three legs.
+        val saved = MutableStateFlow(setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY))
+        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns saved
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        val settled = successData(vm)
+        settled.isTotalAmountLoading shouldBe false
+
+        vm.setPositionSelectionDialogVisibility(true)
+        vm.onPositionSelectionDone()
+
+        coVerify(exactly = 0) { defiPositionsRepository.saveSelectedPositions(VAULT_ID, any()) }
+        val data = successData(vm)
+        assertFalse(data.showPositionSelectionDialog)
+        data.isTotalAmountLoading shouldBe false
+        data.totalAmountPrice shouldBe settled.totalAmountPrice
+    }
+
+    @Test
+    fun `a store emission that leaves the selection alone keeps the header settled`() = runTest {
+        // A vault's first-ever save flips the key from absent to present, which the store cannot
+        // read as unchanged even though both sides map to the same Maya defaults — and the stored
+        // set need not come back in the order the default list has.
+        val saved = MutableStateFlow(setOf("RUNE", "TCY"))
+        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns saved
+        val heldStaking =
+            MutableStateFlow<MayaCacaoStakingDetails?>(
+                MayaCacaoStakingDetails(BigInteger.ZERO, apr = null, canUnstake = false)
+            )
+        coEvery { mayaCacaoStakingService.getStakingDetails(any()) } returns
+            heldStaking.filterNotNull()
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        val settled = successData(vm)
+        settled.isTotalAmountLoading shouldBe false
+
+        // Hold the staking leg: a reload would leave the header on its spinner here.
+        heldStaking.value = null
+        saved.value = setOf(MAYA_STAKE_CACAO_KEY, MAYA_BOND_CACAO_KEY)
+
+        val data = successData(vm)
+        data.isTotalAmountLoading shouldBe false
+        data.totalAmountPrice shouldBe settled.totalAmountPrice
+        assertEquals(settled.selectedPositions, data.selectedPositions)
+    }
+
     private fun selectPositions(vararg keys: String) {
         coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns
             flowOf(keys.toSet())

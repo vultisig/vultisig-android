@@ -1087,6 +1087,38 @@ internal class ThorchainDefiPositionsViewModelTest {
     }
 
     @Test
+    fun `confirming a selection nothing changed in leaves the header settled`() = runTest {
+        // Done is reachable without touching a checkbox, and reloading for it would blank a settled
+        // header to a spinner and refetch all three legs for an identical selection.
+        selectPositions("RUNE", BTC_POOL)
+        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+            listOf(poolStats(BTC_POOL))
+        val heldPositions =
+            MutableStateFlow<ThorChainLpPositions?>(
+                ThorChainLpPositions(
+                    listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "0"))
+                )
+            )
+        coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } coAnswers
+            {
+                heldPositions.filterNotNull().first()
+            }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        vm.state.value.totalAmountPrice shouldBe "$6.00"
+
+        // Hold the refetch: a reload would leave the header on its spinner here.
+        heldPositions.value = null
+        vm.setPositionSelectionDialogVisibility(true)
+        vm.onPositionSelectionDone()
+
+        assertFalse(vm.state.value.showPositionSelectionDialog)
+        vm.state.value.isTotalAmountLoading shouldBe false
+        vm.state.value.totalAmountPrice shouldBe "$6.00"
+        coVerify(exactly = 0) { defiPositionsRepository.saveSelectedPositions(VAULT_ID, any()) }
+    }
+
+    @Test
     fun `switching tabs only changes the selected tab`() = runTest {
         selectPositions("RUNE")
         val vm = createViewModel().also { it.setData(VAULT_ID) }

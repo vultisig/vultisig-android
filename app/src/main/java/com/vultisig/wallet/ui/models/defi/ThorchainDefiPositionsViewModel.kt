@@ -1257,6 +1257,13 @@ constructor(
         viewModelScope.launch {
             val selectedPositions = state.value.tempSelectedPositions
 
+            // A Done that changed nothing has nothing to persist and nothing to refetch. Compared
+            // as sets because only membership decides what gets loaded.
+            if (selectedPositions.toSet() == state.value.selectedPositions.toSet()) {
+                state.update { it.copy(showPositionSelectionDialog = false) }
+                return@launch
+            }
+
             launch {
                 withContext(ioDispatcher) {
                     defiPositionsRepository.saveSelectedPositions(vaultId, selectedPositions)
