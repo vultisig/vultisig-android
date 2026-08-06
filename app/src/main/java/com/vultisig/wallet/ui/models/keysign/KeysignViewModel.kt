@@ -104,6 +104,15 @@ import vultisig.keysign.v1.CustomMessagePayload
 
 private const val DEFAULT_ETHEREUM_DERIVATION_PATH = "m/44'/60'/0'/0/0"
 
+internal fun resolveKeysignChain(
+    keysignPayload: KeysignPayload?,
+    customMessagePayload: CustomMessagePayload?,
+): Chain? =
+    keysignPayload?.coin?.chain
+        ?: customMessagePayload?.chain?.let { raw ->
+            runCatching { Chain.fromRaw(raw) }.getOrNull()
+        }
+
 /** UI state for an in-progress or completed keysign session. */
 internal sealed class KeysignState {
     /** Initial state while the native signing instance is being constructed. */
@@ -527,7 +536,7 @@ constructor(
      * signing (chainPath = "").
      */
     private suspend fun startKeysignKeyImport() {
-        val chain = keysignPayload?.coin?.chain
+        val chain = resolveKeysignChain(keysignPayload, customMessagePayload)
         startKeysignCore(
             ecdsaPublicKeyOverride =
                 if (chain != null) vault.getEcdsaSigningKey(chain).publicKey else vault.pubKeyECDSA,
