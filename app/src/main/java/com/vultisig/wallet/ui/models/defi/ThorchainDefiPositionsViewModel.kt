@@ -61,6 +61,7 @@ import java.math.RoundingMode
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -172,6 +173,7 @@ constructor(
     private var lpDialogJob: Job? = null
     private var loadLpJob: Job? = null
     private var loadBondedNodesJob: Job? = null
+    private var loadStakingPositionsJob: Job? = null
 
     // Latest bonded nodes, kept so onClickUnBond can resolve the selected node's raw bonded amount
     // (the UI model only carries the formatted string). Read/written on the main dispatcher.
@@ -293,15 +295,22 @@ constructor(
                     fiatValueCalculator.createFiatValue(decimalAmount, position.coin, currency)
                 }
 
-            if (totalValue.lpFiatValue is LpLegTotal.Unavailable) {
-                // A pool we were asked to price failed to load. Its positions read as zero, so a
-                // sum including it would understate the real total while looking just as settled as
-                // a correct one. Say the total is unavailable instead of quietly getting it wrong.
-                state.update { it.copy(totalAmountPrice = null, isTotalAmountLoading = false) }
-                return
-            }
+            val lpFiatValue =
+                when (val lpLeg = totalValue.lpFiatValue) {
+                    // A pool we were asked to price failed to load. Its positions read as zero, so
+                    // a sum including it would understate the real total while looking just as
+                    // settled as a correct one. Say the total is unavailable instead of quietly
+                    // getting it wrong.
+                    LpLegTotal.Unavailable -> {
+                        state.update {
+                            it.copy(totalAmountPrice = null, isTotalAmountLoading = false)
+                        }
+                        return
+                    }
 
-            val lpFiatValue = (totalValue.lpFiatValue as LpLegTotal.Priced).fiatValue
+                    is LpLegTotal.Priced -> lpLeg.fiatValue
+                }
+
             if (lpFiatValue.currency != currency.ticker) {
                 // The currency changed after LP was priced. The raw legs re-convert on every run,
                 // but LP is stored already converted, so adding it now would sum two currencies.
@@ -473,7 +482,7 @@ constructor(
 
             loadBondedNodes()
 
-            launch { loadStakingPositions() }
+            loadStakingPositions()
 
             reloadLpTab()
         }
@@ -523,11 +532,16 @@ constructor(
 
                     bondedNodesRefreshTrigger
                         .flatMapLatest {
-                            bondUseCase.getActiveNodes(vaultId, address).onCompletion {
+                            bondUseCase.getActiveNodes(vaultId, address).onCompletion { cause ->
                                 // A source that finishes without ever emitting is done, not
                                 // pending. Report it, or the header total waits on a leg that is
-                                // never going to arrive.
-                                _totalValueBond.compareAndSet(null, BigInteger.ZERO)
+                                // never going to arrive. Cancellation means flatMapLatest dropped
+                                // this collector for a newer trigger, and settling the leg for a
+                                // run that has been replaced understates the total until the
+                                // replacement lands.
+                                if (cause !is CancellationException) {
+                                    _totalValueBond.compareAndSet(null, BigInteger.ZERO)
+                                }
                             }
                         }
                         .catch { t ->
@@ -607,74 +621,83 @@ constructor(
     private fun loadStakingPositions() {
         loadedTabs.add(DeFiTab.STAKED.displayNameRes)
 
-        viewModelScope.launch {
-            val selectedPositions = state.value.selectedPositions
+        // Cancel the in-flight load before starting another, the way loadBondedNodes does. A
+        // currency switch relaunches both; without this the two staking loads run side by side and
+        // the slower older one lands last, leaving the cards priced in the currency just left.
+        loadStakingPositionsJob?.cancel()
+        loadStakingPositionsJob =
+            viewModelScope.launch {
+                val selectedPositions = state.value.selectedPositions
 
-            // Initial Loading Status
-            if (!selectedPositions.hasStakingPositions()) {
-                settleStakingTotals()
-
-                state.update { it.copy(staking = emptyStakingTabUiModel()) }
-                return@launch
-            }
-            val zero = zeroFiat()
-            val defaultLoadingPositions =
-                loadDefaultStakingPositions()
-                    .filter { position -> selectedPositions.contains(position.selectionKey()) }
-                    .map { positionUiModel ->
-                        positionUiModel.copy(isLoading = true, stakedFiatDisplay = zero)
-                    }
-            state.update {
-                it.copy(staking = StakingTabUiModel(positions = defaultLoadingPositions))
-            }
-
-            try {
-                val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
-
-                // THORChain hosts several coins (RUNE, RUJI, TCY…); staking is held against the
-                // RUNE account, so match the ticker explicitly rather than the first chain coin.
-                val runeCoin =
-                    vault?.coins?.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
-
-                if (runeCoin == null) {
-                    Timber.e("Vault does not have RUNE coin")
-
+                // Initial Loading Status
+                if (!selectedPositions.hasStakingPositions()) {
                     settleStakingTotals()
-                    settleStakingPositions { true }
+
+                    state.update { it.copy(staking = emptyStakingTabUiModel()) }
                     return@launch
                 }
-
-                val address = runeCoin.address
-                val coinsToLoad =
-                    thorchainSupportStakingDeFi
-                        .filter { coin -> selectedPositions.contains(coin.ticker) }
-                        .map { coin -> coin.id }
-
-                // A staking source that isn't selected still has to report, or the header total
-                // would wait on a leg that is never going to load.
-                if (coinsToLoad.contains(Coins.ThorChain.RUJI.id)) {
-                    createRujiStakePosition(address, vaultId)
-                } else {
-                    _totalValueRujiStake.update { BigInteger.ZERO }
-                }
-                if (coinsToLoad.contains(Coins.ThorChain.TCY.id)) {
-                    createTCYStakePosition(address, vaultId)
-                } else {
-                    _totalValueTCYStake.update { BigInteger.ZERO }
+                val zero = zeroFiat()
+                val defaultLoadingPositions =
+                    loadDefaultStakingPositions()
+                        .filter { position -> selectedPositions.contains(position.selectionKey()) }
+                        .map { positionUiModel ->
+                            positionUiModel.copy(isLoading = true, stakedFiatDisplay = zero)
+                        }
+                state.update {
+                    it.copy(staking = StakingTabUiModel(positions = defaultLoadingPositions))
                 }
 
-                createGenericStakePosition(address, vaultId, coinsToLoad)
-            } catch (t: Throwable) {
-                if (t is kotlinx.coroutines.CancellationException) throw t
-                Timber.e(t, "Failed to load staking positions")
-                settleStakingTotals()
-                settleStakingPositions { true }
+                try {
+                    val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
+
+                    // THORChain hosts several coins (RUNE, RUJI, TCY…); staking is held against the
+                    // RUNE account, so match the ticker explicitly rather than the first chain
+                    // coin.
+                    val runeCoin =
+                        vault?.coins?.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
+
+                    if (runeCoin == null) {
+                        Timber.e("Vault does not have RUNE coin")
+
+                        settleStakingTotals()
+                        settleStakingPositions { true }
+                        return@launch
+                    }
+
+                    val address = runeCoin.address
+                    val coinsToLoad =
+                        thorchainSupportStakingDeFi
+                            .filter { coin -> selectedPositions.contains(coin.ticker) }
+                            .map { coin -> coin.id }
+
+                    // A staking source that isn't selected still has to report, or the header total
+                    // would wait on a leg that is never going to load.
+                    if (coinsToLoad.contains(Coins.ThorChain.RUJI.id)) {
+                        createRujiStakePosition(address, vaultId)
+                    } else {
+                        _totalValueRujiStake.update { BigInteger.ZERO }
+                    }
+                    if (coinsToLoad.contains(Coins.ThorChain.TCY.id)) {
+                        createTCYStakePosition(address, vaultId)
+                    } else {
+                        _totalValueTCYStake.update { BigInteger.ZERO }
+                    }
+
+                    createGenericStakePosition(address, vaultId, coinsToLoad)
+                } catch (t: Throwable) {
+                    if (t is CancellationException) throw t
+                    Timber.e(t, "Failed to load staking positions")
+                    settleStakingTotals()
+                    settleStakingPositions { true }
+                }
             }
-        }
     }
 
-    private fun createRujiStakePosition(address: String, vaultId: String) {
-        viewModelScope.launch {
+    // The three sources launch into the caller's scope rather than viewModelScope so they are
+    // children of the load that started them: cancelling that load has to reach the collectors it
+    // spawned, or a superseded run keeps writing cards and legs after its parent is gone.
+    private fun CoroutineScope.createRujiStakePosition(address: String, vaultId: String) {
+        launch {
             rujiStakingService
                 .getStakingDetails(address, vaultId)
                 .catch { t ->
@@ -685,7 +708,15 @@ constructor(
                     _totalValueRujiStake.update { BigInteger.ZERO }
                     settleStakingPositions { it.coin.id in RUJI_POSITION_COIN_IDS }
                 }
-                .onCompletion { _totalValueRujiStake.compareAndSet(null, BigInteger.ZERO) }
+                // A source that finishes without ever emitting is done, not pending, and has to
+                // report or the header waits forever. Cancellation is the exception: this load has
+                // been superseded, and settling the leg on its way out would hand the replacement's
+                // still-pending leg a zero it never reported.
+                .onCompletion { cause ->
+                    if (cause !is CancellationException) {
+                        _totalValueRujiStake.compareAndSet(null, BigInteger.ZERO)
+                    }
+                }
                 .collect { detailsList ->
                     for (details in detailsList) {
                         updateExistingPosition(rujiPositionUiModel(details))
@@ -743,8 +774,8 @@ constructor(
         )
     }
 
-    private fun createTCYStakePosition(address: String, vaultId: String) {
-        viewModelScope.launch {
+    private fun CoroutineScope.createTCYStakePosition(address: String, vaultId: String) {
+        launch {
             tcyStakingService
                 .getStakingDetails(address = address, vaultId = vaultId)
                 .catch { t ->
@@ -752,7 +783,11 @@ constructor(
                     _totalValueTCYStake.update { BigInteger.ZERO }
                     settleStakingPositions { it.coin.id == Coins.ThorChain.TCY.id }
                 }
-                .onCompletion { _totalValueTCYStake.compareAndSet(null, BigInteger.ZERO) }
+                .onCompletion { cause ->
+                    if (cause !is CancellationException) {
+                        _totalValueTCYStake.compareAndSet(null, BigInteger.ZERO)
+                    }
+                }
                 .collect { position ->
                     val stakedAmount = Chain.ThorChain.coinType.toValue(position.stakeAmount)
                     val formattedAmount = "${stakedAmount.toPlainString()} TCY"
@@ -782,12 +817,12 @@ constructor(
         }
     }
 
-    private fun createGenericStakePosition(
+    private fun CoroutineScope.createGenericStakePosition(
         address: String,
         vaultId: String,
         coinsToLoad: List<String>,
     ) {
-        viewModelScope.launch {
+        launch {
             defaultStakingPositionService
                 .getStakingDetails(address, vaultId)
                 .catch { t ->
@@ -799,7 +834,11 @@ constructor(
                             it.coin.id == Coins.ThorChain.sTCY.id
                     }
                 }
-                .onCompletion { _totalValueDefaultStake.compareAndSet(null, StakeDefaultValues()) }
+                .onCompletion { cause ->
+                    if (cause !is CancellationException) {
+                        _totalValueDefaultStake.compareAndSet(null, StakeDefaultValues())
+                    }
+                }
                 .collect { defaultPositions ->
                     val loadedPositions = defaultPositions.filter { it.coin.id in coinsToLoad }
 
@@ -1234,7 +1273,7 @@ constructor(
 
             loadBondedNodes()
 
-            launch { loadStakingPositions() }
+            loadStakingPositions()
 
             // If a previous getPoolStats fetch failed, retry now so the user isn't soft-locked.
             ensureAvailablePoolsLoaded()

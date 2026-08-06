@@ -49,6 +49,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -712,6 +713,111 @@ internal class ThorchainDefiPositionsViewModelTest {
             vm.state.value.staking.positions
                 .single { it.coin.id == Coins.ThorChain.TCY.id }
                 .stakedFiatDisplay shouldBe expected
+        }
+
+    @Test
+    fun `a superseded staking load cannot overwrite the load that replaced it`() = runTest {
+        // loadStakingPositions launched untracked, so a currency switch left two loads running at
+        // once. The older one had no idea it had been replaced, and wrote its cards and its leg
+        // whenever its fetch happened to land — after the newer one, if it was the slower of them.
+        selectPositions("TCY")
+        val currency = MutableStateFlow(AppCurrencyUsd)
+        coEvery { appCurrencyRepository.currency } returns currency
+
+        val supersededLoad = MutableStateFlow<StakingDetails?>(null)
+        var loads = 0
+        coEvery { tcyStakingService.getStakingDetails(any(), any()) } coAnswers
+            {
+                if (loads++ == 0) {
+                    flow { emit(supersededLoad.filterNotNull().first()) }
+                } else {
+                    flowOf(stakingDetails(Coins.ThorChain.TCY, BigInteger("200000000")))
+                }
+            }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        coEvery { tokenPriceRepository.getCachedPrice(any(), AppCurrency.EUR) } returns
+            BigDecimal("3")
+        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+            NumberFormat.getCurrencyInstance(Locale.GERMANY)
+        currency.value = AppCurrency.EUR
+
+        vm.totalValueTCYStake.value shouldBe BigInteger("200000000")
+        vm.state.value.totalAmountPrice shouldBe germanFormat.format(BigDecimal("6.00"))
+
+        // The first load's fetch lands at last, carrying the amount it read before the switch.
+        supersededLoad.value = stakingDetails(Coins.ThorChain.TCY, BigInteger("100000000"))
+
+        vm.totalValueTCYStake.value shouldBe BigInteger("200000000")
+        vm.state.value.totalAmountPrice shouldBe germanFormat.format(BigDecimal("6.00"))
+    }
+
+    @Test
+    fun `a superseded staking load leaves its leg to the load that replaced it`() = runTest {
+        // Cancelling the old load is only half of it: onCompletion runs on the way out too, and
+        // reporting zero there hands the replacement's still-pending leg a value it never sent,
+        // settling the header on a total with the staking amount missing from it.
+        selectPositions("TCY")
+        val currency = MutableStateFlow(AppCurrencyUsd)
+        coEvery { appCurrencyRepository.currency } returns currency
+
+        val replacementLoad = MutableStateFlow<StakingDetails?>(null)
+        var loads = 0
+        coEvery { tcyStakingService.getStakingDetails(any(), any()) } coAnswers
+            {
+                if (loads++ == 0) {
+                    flow<StakingDetails> { awaitCancellation() }
+                } else {
+                    flow { emit(replacementLoad.filterNotNull().first()) }
+                }
+            }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+            NumberFormat.getCurrencyInstance(Locale.GERMANY)
+        currency.value = AppCurrency.EUR
+
+        vm.totalValueTCYStake.value shouldBe null
+        vm.state.value.isTotalAmountLoading shouldBe true
+        vm.state.value.totalAmountPrice shouldBe null
+
+        replacementLoad.value = stakingDetails(Coins.ThorChain.TCY, BigInteger("100000000"))
+
+        vm.totalValueTCYStake.value shouldBe BigInteger("100000000")
+        vm.state.value.isTotalAmountLoading shouldBe false
+    }
+
+    @Test
+    fun `a bonded collector dropped for a newer refresh leaves its leg to that refresh`() =
+        runTest {
+            // Same shape on the bonded side, where flatMapLatest is what does the dropping: the
+            // collector it discards used to report zero on its way out, understating the header
+            // for as long as the refresh that replaced it took to arrive.
+            selectPositions("RUNE")
+            val currency = MutableStateFlow(AppCurrencyUsd)
+            coEvery { appCurrencyRepository.currency } returns currency
+
+            var collections = 0
+            coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
+                flow {
+                    if (collections++ == 0) {
+                        emit(listOf(bondedNode(BigInteger("100000000"))))
+                    }
+                    // getActiveNodes stays open on a live feed; being dropped is how it ends.
+                    awaitCancellation()
+                }
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+            vm.state.value.totalAmountPrice shouldBe "$2.00"
+
+            coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+                NumberFormat.getCurrencyInstance(Locale.GERMANY)
+            currency.value = AppCurrency.EUR
+
+            vm.state.value.isTotalAmountLoading shouldBe true
+            vm.state.value.totalAmountPrice shouldBe null
         }
 
     @Test

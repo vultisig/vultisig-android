@@ -43,6 +43,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -413,6 +414,72 @@ internal class MayachainDefiPositionsViewModelTest {
         settled.isTotalAmountLoading shouldBe false
         settled.totalAmountPrice shouldBe germanFormat.format(BigDecimal("0.60"))
     }
+
+    @Test
+    fun `a superseded staking load leaves its leg to the load that replaced it`() = runTest {
+        // A currency switch cancels the staking load and starts another, but onCompletion runs on
+        // the way out of a cancelled collector too. Reporting zero there hands the replacement's
+        // still-pending leg a value it never sent, settling the header on a total with the staked
+        // amount missing from it.
+        selectPositions(MAYA_STAKE_CACAO_KEY)
+        val currency = MutableStateFlow(AppCurrency.USD)
+        coEvery { appCurrencyRepository.currency } returns currency
+
+        val replacementLoad = MutableStateFlow<MayaCacaoStakingDetails?>(null)
+        var loads = 0
+        coEvery { mayaCacaoStakingService.getStakingDetails(CACAO_ADDRESS) } coAnswers
+            {
+                if (loads++ == 0) {
+                    flow { awaitCancellation() }
+                } else {
+                    flow { emit(replacementLoad.filterNotNull().first()) }
+                }
+            }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+            NumberFormat.getCurrencyInstance(Locale.GERMANY)
+        currency.value = AppCurrency.EUR
+
+        successData(vm).isTotalAmountLoading shouldBe true
+        successData(vm).totalAmountPrice shouldBe null
+
+        replacementLoad.value = MayaCacaoStakingDetails(FIFTY_CACAO, apr = null, canUnstake = false)
+
+        val settled = successData(vm)
+        settled.isTotalAmountLoading shouldBe false
+        settled.totalAmountPrice shouldBe germanFormat.format(BigDecimal("100.00"))
+    }
+
+    @Test
+    fun `a bonded collector dropped for a newer refresh leaves its leg to that refresh`() =
+        runTest {
+            // Same shape on the bonded side, where flatMapLatest is what does the dropping.
+            selectPositions(MAYA_BOND_CACAO_KEY)
+            val currency = MutableStateFlow(AppCurrency.USD)
+            coEvery { appCurrencyRepository.currency } returns currency
+
+            var collections = 0
+            coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+                flow {
+                    if (collections++ == 0) {
+                        emit(listOf(bondedNode(amount = HUNDRED_CACAO)))
+                    }
+                    // getActiveNodes stays open on a live feed; being dropped is how it ends.
+                    awaitCancellation()
+                }
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+            successData(vm).totalAmountPrice shouldBe "$200.00"
+
+            coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+                NumberFormat.getCurrencyInstance(Locale.GERMANY)
+            currency.value = AppCurrency.EUR
+
+            successData(vm).isTotalAmountLoading shouldBe true
+            successData(vm).totalAmountPrice shouldBe null
+        }
 
     @Test
     fun `switching currency parks the header on its spinner, not on the old total`() = runTest {

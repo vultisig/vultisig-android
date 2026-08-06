@@ -336,10 +336,15 @@ constructor(
 
             bondedNodesRefreshTrigger
                 .flatMapLatest {
-                    bondUseCase.getActiveNodes(vaultId, cacaoCoin.address).onCompletion {
+                    bondUseCase.getActiveNodes(vaultId, cacaoCoin.address).onCompletion { cause ->
                         // A source that finishes without ever emitting is done, not pending.
                         // Report it, or the header total waits on a leg that will never arrive.
-                        _totalBondedRaw.compareAndSet(null, BigInteger.ZERO)
+                        // Cancellation is the exception: flatMapLatest dropped this collector for
+                        // a newer trigger, and reporting on behalf of a run that has been replaced
+                        // understates the total until the replacement lands.
+                        if (cause !is CancellationException) {
+                            _totalBondedRaw.compareAndSet(null, BigInteger.ZERO)
+                        }
                     }
                 }
                 .catch { t ->
@@ -439,7 +444,14 @@ constructor(
                     _totalStakingRaw.value = BigInteger.ZERO
                     settleStakingPosition(loadingPosition)
                 }
-                .onCompletion { _totalStakingRaw.compareAndSet(null, BigInteger.ZERO) }
+                // Same on the way out of a cancelled load: the switch that cancelled it has already
+                // started the replacement, and settling the leg here would report a zero on that
+                // replacement's behalf while its own fetch is still in flight.
+                .onCompletion { cause ->
+                    if (cause !is CancellationException) {
+                        _totalStakingRaw.compareAndSet(null, BigInteger.ZERO)
+                    }
+                }
                 .collect { details ->
                     _totalStakingRaw.value = details.stakeAmount
                     val stakeAmount = details.stakeAmount.toValue(10)
@@ -497,15 +509,22 @@ constructor(
      */
     private suspend fun updateTotalFiatValue(totalRaw: BigInteger, lpLeg: LpLegTotal) {
         try {
-            if (lpLeg is LpLegTotal.Unavailable) {
-                // The LP positions couldn't be priced, and they read as zero when they can't. A sum
-                // including them would understate the real total while looking just as settled as a
-                // correct one, so say the total is unavailable instead of quietly getting it wrong.
-                updateModel { it.copy(totalAmountPrice = null, isTotalAmountLoading = false) }
-                return
-            }
+            val lpFiat =
+                when (lpLeg) {
+                    // The LP positions couldn't be priced, and they read as zero when they can't. A
+                    // sum including them would understate the real total while looking just as
+                    // settled as a correct one, so say the total is unavailable instead of quietly
+                    // getting it wrong.
+                    LpLegTotal.Unavailable -> {
+                        updateModel {
+                            it.copy(totalAmountPrice = null, isTotalAmountLoading = false)
+                        }
+                        return
+                    }
 
-            val lpFiat = (lpLeg as LpLegTotal.Priced).fiatValue
+                    is LpLegTotal.Priced -> lpLeg.fiatValue
+                }
+
             val currency = appCurrencyRepository.currency.first()
             if (lpFiat.currency != currency.ticker) {
                 // The currency changed after LP was priced. The raw legs re-convert on every run,
