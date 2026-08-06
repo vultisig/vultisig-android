@@ -3,7 +3,7 @@ package com.vultisig.wallet.ui.components.chart
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -206,11 +206,14 @@ private fun PriceChartCanvas(
                             // Keyed on Unit (not points) so a mid-scrub data refresh (e.g. a
                             // currency switch) doesn't cancel the running drag gesture.
                             .pointerInput(Unit) {
-                                detectDragGestures(
+                                // Horizontal-only: an omnidirectional detector claims the pointer
+                                // on vertical slop too, which would swallow the drags that scroll
+                                // this screen and move the sheet it is presented in.
+                                detectHorizontalDragGestures(
                                     onDragStart = { offset ->
                                         updateScrub(offset.x, size.width.toFloat())
                                     },
-                                    onDrag = { change, _ ->
+                                    onHorizontalDrag = { change, _ ->
                                         change.consume()
                                         updateScrub(change.position.x, size.width.toFloat())
                                     },

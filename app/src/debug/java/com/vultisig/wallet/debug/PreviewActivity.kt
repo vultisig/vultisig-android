@@ -86,8 +86,13 @@ import com.vultisig.wallet.ui.models.ChainSelectionUiModel
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.ChainUiModel
+import com.vultisig.wallet.ui.models.ChartPointUiModel
+import com.vultisig.wallet.ui.models.ChartUiModel
 import com.vultisig.wallet.ui.models.DeviceMeta
+import com.vultisig.wallet.ui.models.MarketStatsUiModel
+import com.vultisig.wallet.ui.models.PriceExtremesUiModel
 import com.vultisig.wallet.ui.models.TokenDetailUiModel
+import com.vultisig.wallet.ui.models.TokenInfoUiModel
 import com.vultisig.wallet.ui.models.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.TokenUiModel
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
@@ -212,6 +217,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import java.math.BigDecimal
+import kotlin.math.sin
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.delay
 
 @EntryPoint
@@ -249,6 +256,7 @@ class PreviewActivity : ComponentActivity() {
                         )
                     "asset_action_button" -> AssetActionButtonPreview()
                     "token_detail_sheet_loading" -> TokenDetailSheetLoadingPreview()
+                    "token_detail_sheet_full" -> TokenDetailSheetFullPreview()
                     "camera_button" -> CameraButton(onClick = {})
                     "banner" -> BannerPreview()
                     "send_tx_done" -> SendTxDonePreview()
@@ -3519,6 +3527,75 @@ private fun TokenDetailSheetLoadingPreview() {
     Box(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary))
 
     TokenDetailScreen(uiModel = uiModel)
+}
+
+// A day of half-hourly candles, which is what the 24H range the chart opens on holds. The instant
+// is fixed rather than taken from the clock so two captures of this preview are comparable down to
+// the date the chart prints when a point is scrubbed; which day it is doesn't matter beyond being
+// a plausible one, and this one is 2025-07-08T20:00Z.
+private const val CHART_FIRST_POINT_MILLIS = 1_752_000_000_000L
+private val CHART_POINT_INTERVAL = 30.minutes
+private const val CHART_POINT_COUNT = 48
+
+/**
+ * The token detail sheet with every section a charted coin renders — chart, market stats, price
+ * extremes and token info. That is the content that outgrows the screen, so this is the preview
+ * that actually exercises the partial rest position, the drag up to full, and the faded cut edge.
+ */
+@Composable
+private fun TokenDetailSheetFullPreview() {
+    val points =
+        List(CHART_POINT_COUNT) { index ->
+            val price = 73.5 + sin(index / 5.0) * 6.0 + index * 0.12
+            ChartPointUiModel(
+                timestampMillis =
+                    CHART_FIRST_POINT_MILLIS + index * CHART_POINT_INTERVAL.inWholeMilliseconds,
+                price = price,
+                priceText = "$${"%.2f".format(price)}",
+            )
+        }
+
+    Box(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary))
+
+    TokenDetailScreen(
+        uiModel =
+            TokenDetailUiModel(
+                token =
+                    ChainTokenUiModel(
+                        name = "SOL",
+                        balance = "0.07010079 SOL",
+                        fiatBalance = "$5.15",
+                        tokenLogo = getCoinLogo(Coins.Solana.SOL.logo),
+                        chainLogo = Chain.Solana.logo,
+                        price = "$73.51",
+                        network = Chain.Solana.raw,
+                    ),
+                canSwap = true,
+                canSend = true,
+                canBuy = true,
+                chart =
+                    ChartUiModel(points = points, isPositive = true, changePercentText = "+4.21%"),
+                marketStats =
+                    MarketStatsUiModel(
+                        marketCap = "$34.2B",
+                        marketCapRank = "#6",
+                        fullyDilutedValuation = "$41.8B",
+                        volume24h = "$2.1B",
+                        circulatingSupply = "465.2M SOL",
+                        maxSupply = "588.9M SOL",
+                    ),
+                priceExtremes =
+                    PriceExtremesUiModel(
+                        low24h = "$71.02",
+                        high24h = "$75.88",
+                        athPrice = "$259.96",
+                        athDate = "19 Nov 2021",
+                        atlPrice = "$0.50",
+                        atlDate = "11 May 2020",
+                    ),
+                tokenInfo = TokenInfoUiModel(decimals = "9"),
+            )
+    )
 }
 
 /**

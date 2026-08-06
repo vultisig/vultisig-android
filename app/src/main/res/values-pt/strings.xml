@@ -758,6 +758,7 @@
     <string name="token_details_bottom_sheet_network">Rede</string>
     <!-- Price chart + market data — issue #5428 -->
     <string name="price_chart_content_description">Gráfico de preços, variação de %1$s</string>
+    <string name="close_sheet_content_description">Fechar</string>
     <string name="price_chart_retry_hint">Não foi possível carregar o gráfico. Toque para tentar novamente.</string>
     <string name="token_details_market_stats_title">Estatísticas de mercado</string>
     <string name="token_details_price_extremes_title">Extremos de preço</string>

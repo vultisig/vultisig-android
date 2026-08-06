@@ -759,6 +759,7 @@
     <string name="token_details_bottom_sheet_network">Red</string>
     <!-- Price chart + market data — issue #5428 -->
     <string name="price_chart_content_description">Gráfico de precios, variación de %1$s</string>
+    <string name="close_sheet_content_description">Cerrar</string>
     <string name="price_chart_retry_hint">No se pudo cargar el gráfico. Toca para reintentar.</string>
     <string name="token_details_market_stats_title">Estadísticas del mercado</string>
     <string name="token_details_price_extremes_title">Extremos de precio</string>
