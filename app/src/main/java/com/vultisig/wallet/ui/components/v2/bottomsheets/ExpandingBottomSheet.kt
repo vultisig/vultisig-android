@@ -11,6 +11,8 @@ import androidx.compose.foundation.gestures.ScrollScope
 import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -26,8 +28,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -57,6 +61,7 @@ import androidx.compose.ui.window.DialogWindowProvider
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
 import kotlin.math.roundToInt
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
@@ -94,6 +99,7 @@ internal fun ExpandingBottomSheet(
     val state = remember { AnchoredDraggableState(initialValue = ExpandingSheetValue.Hidden) }
     val flingBehavior = AnchoredDraggableDefaults.flingBehavior(state)
     val scrollState = rememberScrollState()
+    val dragInteractions = remember { MutableInteractionSource() }
 
     var windowHeight by remember { mutableIntStateOf(0) }
     var contentHeight by remember { mutableIntStateOf(0) }
@@ -115,72 +121,79 @@ internal fun ExpandingBottomSheet(
     val view = LocalView.current
     remember(view) { (view.parent as? DialogWindowProvider)?.window?.apply { setDimAmount(0f) } }
 
-    LaunchedEffect(windowHeight, restHeight, expandedTop, cutEdgeFade) {
-        if (windowHeight <= 0) return@LaunchedEffect
-        val hiddenOffset = windowHeight.toFloat()
-        // A third of the window is the resting height the design asks for. The measured content
-        // only ever raises it, on a screen too short — or a font scale too large — for the part
-        // that has to be readable to clear the fade within a third; it never lets the sheet open
-        // taller than that just because there is more to show.
-        val visibleAtRest = maxOf(hiddenOffset * RestFraction, restHeight + cutEdgeFade)
-        // Where the sheet is headed has to be read before the rewind below moves it away from its
-        // anchor: read afterwards, it is whichever anchor happens to be nearest the old offset, and
-        // once the resting place climbs past the halfway mark of the window that is the bottom of
-        // the screen — so the sheet would leave rather than grow.
-        val target = state.targetValue
-        val offsetBeforeUpdate = state.offset
-        state.updateAnchors(
-            newAnchors =
-                DraggableAnchors {
-                    ExpandingSheetValue.Hidden at hiddenOffset
-                    ExpandingSheetValue.Rest at
-                        (hiddenOffset - visibleAtRest).coerceIn(expandedTop.toFloat(), hiddenOffset)
-                    ExpandingSheetValue.Full at expandedTop.toFloat()
-                },
-            // Holding the target instead of snapping to whichever anchor is nearest matters while
-            // the sheet is still sliding in: the content measures a frame later and moves the rest
-            // anchor, and at that moment the nearest anchor is still Hidden — which would abort the
-            // entrance and dismiss the sheet before it ever appeared.
-            newTarget = target,
+    // Where the sheet is headed, held here rather than read back out of the state. Asked at the
+    // moment its anchors move, AnchoredDraggableState answers with whichever anchor is nearest the
+    // current offset, and an offset caught under a finger or half way through an animation makes
+    // that answer an accident of timing — the reading that once told a sheet which had only grown
+    // taller that it was on its way out. It starts on Hidden because that is where the sheet is
+    // before it slides in: name Rest any earlier and the first anchors the sheet is given put it
+    // there outright, with nothing left to animate.
+    var destination by remember { mutableStateOf(ExpandingSheetValue.Hidden) }
+
+    // Two ways a reader can have hold of the sheet, neither of them visible from the state itself:
+    // a drag on the sheet takes its lock but announces nothing else, and a scroll in the content
+    // drives the sheet through dispatchRawDelta, which takes no lock at all.
+    val isSheetDragged = dragInteractions.collectIsDraggedAsState()
+    val isHeldByReader = { isSheetDragged.value || scrollState.isScrollInProgress }
+
+    val geometry by
+        rememberUpdatedState(
+            SheetGeometry(
+                windowHeight = windowHeight,
+                restHeight = restHeight,
+                expandedTop = expandedTop,
+                cutEdgeFade = cutEdgeFade,
+            )
         )
 
-        // A sheet already parked on an anchor is moved there by a write with no animation behind
-        // it, so a balance that loads late and wraps to a second line grows the resting height
-        // under a sheet the reader is looking at and its edge jumps. That write only lands when
-        // nothing else holds the sheet — an entrance, a drag or a fling keeps its own animation and
-        // leaves the offset alone — so an offset that moved here is precisely the case worth
-        // animating. Undoing it is synchronous and runs before this frame is laid out, so the jump
-        // is never drawn; the sheet then travels the distance.
-        val offsetAfterUpdate = state.offset
-        if (!offsetBeforeUpdate.isNaN() && offsetAfterUpdate != offsetBeforeUpdate) {
-            state.dispatchRawDelta(offsetBeforeUpdate - offsetAfterUpdate)
-            state.anchoredDrag(target) { anchors, latestTarget ->
-                animate(
-                    initialValue = offsetBeforeUpdate,
-                    targetValue = anchors.positionOf(latestTarget),
-                    animationSpec = AnchoredDraggableDefaults.SnapAnimationSpec,
-                ) { value, _ ->
-                    dragTo(value)
-                }
+    LaunchedEffect(Unit) {
+        // One collector rather than an effect keyed on the measurements: a resting height that
+        // changes again while the sheet is still travelling to the last one waits its turn instead
+        // of cutting that travel short. Cut short, the travel is cancelled between anchors and
+        // leaves the sheet parked where no anchor is — the one position from which nothing can
+        // work out where it was going.
+        snapshotFlow { geometry }
+            .filter { it.windowHeight > 0 }
+            .collect { measured ->
+                state.moveAnchors(
+                    geometry = measured,
+                    isHeldByReader = isHeldByReader,
+                    destination = { destination },
+                )
             }
-        }
     }
 
     LaunchedEffect(Unit) {
         snapshotFlow { state.anchors.hasPositionFor(ExpandingSheetValue.Rest) }.first { it }
+        // Claimed before the entrance starts, so that the content measuring a frame later and
+        // moving the resting anchor re-aims the entrance rather than aborting it: mid-slide the
+        // nearest anchor is still the bottom of the screen, which would send the sheet back out
+        // before it ever arrived.
+        destination = ExpandingSheetValue.Rest
         state.animateTo(ExpandingSheetValue.Rest)
     }
 
     // Settling on Hidden is the single exit: swipe, scrim tap and back press all just animate
-    // there.
+    // there. Every settle is also where the destination above is re-read from what the sheet
+    // actually did, so a drag or a fling that lands somewhere new is accounted for. The first
+    // value is skipped: the sheet starts settled on Hidden, which is where it is rather than where
+    // it is going.
     LaunchedEffect(Unit) {
         snapshotFlow { state.settledValue }
             .drop(1)
-            .filter { it == ExpandingSheetValue.Hidden }
-            .collect { onDismiss() }
+            .collect { settled ->
+                destination = settled
+                if (settled == ExpandingSheetValue.Hidden) onDismiss()
+            }
     }
 
-    val hide = { coroutineScope.launch { state.animateTo(ExpandingSheetValue.Hidden) } }
+    val hide = {
+        // Named before the animation starts rather than left to the settle above: an anchor update
+        // landing mid-dismissal reads the destination to decide where the sheet belongs, and a
+        // stale one restarts the dismissal towards whichever anchor the sheet is still nearest.
+        destination = ExpandingSheetValue.Hidden
+        coroutineScope.launch { state.animateTo(ExpandingSheetValue.Hidden) }
+    }
 
     BackHandler { hide() }
 
@@ -229,6 +242,7 @@ internal fun ExpandingBottomSheet(
                     .anchoredDraggable(
                         state = state,
                         orientation = Orientation.Vertical,
+                        interactionSource = dragInteractions,
                         flingBehavior = flingBehavior,
                     )
         ) {
@@ -262,6 +276,89 @@ internal fun ExpandingBottomSheet(
             )
         }
     }
+}
+
+/** The measurements the sheet's three anchors are cut from. */
+private data class SheetGeometry(
+    val windowHeight: Int,
+    val restHeight: Int,
+    val expandedTop: Int,
+    val cutEdgeFade: Float,
+) {
+    fun anchors(): DraggableAnchors<ExpandingSheetValue> {
+        val hiddenOffset = windowHeight.toFloat()
+        // A third of the window is the resting height the design asks for. The measured content
+        // only ever raises it, on a screen too short — or a font scale too large — for the part
+        // that has to be readable to clear the fade within a third; it never lets the sheet open
+        // taller than that just because there is more to show.
+        val visibleAtRest = maxOf(hiddenOffset * RestFraction, restHeight + cutEdgeFade)
+        return DraggableAnchors {
+            ExpandingSheetValue.Hidden at hiddenOffset
+            ExpandingSheetValue.Rest at
+                (hiddenOffset - visibleAtRest).coerceIn(expandedTop.toFloat(), hiddenOffset)
+            ExpandingSheetValue.Full at expandedTop.toFloat()
+        }
+    }
+}
+
+/**
+ * Hands the sheet the anchors [geometry] asks for and takes it along to the one it belongs on,
+ * rather than leaving it where the old anchors put it.
+ *
+ * A sheet nothing else has hold of is moved to its new anchor by a write with no animation behind
+ * it, so a balance that loads late and wraps to a second line grows the resting height under a
+ * sheet the reader is looking at and its edge jumps. Undoing that write is synchronous and runs
+ * before the frame it landed in is laid out, so the jump is never drawn; the sheet then travels the
+ * distance instead.
+ */
+private suspend fun AnchoredDraggableState<ExpandingSheetValue>.moveAnchors(
+    geometry: SheetGeometry,
+    isHeldByReader: () -> Boolean,
+    destination: () -> ExpandingSheetValue,
+) {
+    // Moving the anchors under a finger moves the ground the reader is standing on: the write
+    // above lands, because a scroll in the content holds no lock to stop it, and the sheet is then
+    // carried off to an anchor while they are still choosing one. Waiting costs nothing — the
+    // height that changed is still the height applied the moment they let go.
+    snapshotFlow(isHeldByReader).first { !it }
+
+    val settlesOn = destination()
+    val offsetBeforeUpdate = offset
+    updateAnchors(newAnchors = geometry.anchors(), newTarget = settlesOn)
+    val offsetAfterUpdate = offset
+    if (offsetBeforeUpdate.isNaN() || offsetAfterUpdate == offsetBeforeUpdate) return
+
+    dispatchRawDelta(offsetBeforeUpdate - offsetAfterUpdate)
+    travelTo(settlesOn, from = offsetBeforeUpdate, abandonWhen = isHeldByReader)
+}
+
+/** Walks the sheet from [from] to where [destination] now sits, on the spec its own settles use. */
+private suspend fun AnchoredDraggableState<ExpandingSheetValue>.travelTo(
+    destination: ExpandingSheetValue,
+    from: Float,
+    abandonWhen: () -> Boolean,
+) = coroutineScope {
+    val travel = launch {
+        anchoredDrag(destination) { anchors, latestDestination ->
+            animate(
+                initialValue = from,
+                targetValue = anchors.positionOf(latestDestination),
+                animationSpec = AnchoredDraggableDefaults.SnapAnimationSpec,
+            ) { value, _ ->
+                dragTo(value)
+            }
+        }
+    }
+    // A reader taking hold part way through cannot cancel this the way a competing drag on the
+    // sheet would: a scroll in the content writes the offset through dispatchRawDelta, which takes
+    // no lock, so the two would write over each other every frame and the animation would win.
+    // Standing down is what following the finger looks like.
+    val handOver = launch {
+        snapshotFlow(abandonWhen).first { it }
+        travel.cancel()
+    }
+    travel.join()
+    handOver.cancel()
 }
 
 /**
