@@ -6,13 +6,9 @@ import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.FlingBehavior
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.ScrollScope
-import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -83,7 +79,11 @@ internal enum class ExpandingSheetValue {
  * dismisses it, so there is never a "drag it back, then tap outside" dance to leave.
  *
  * The sheet owns its scrolling so the two gestures can be handed off cleanly — [content] supplies a
- * plain column, not a scrollable one.
+ * plain column, not a scrollable one. That scroll is also the sheet's only way in: it covers the
+ * sheet edge to edge and claims every touch before anything underneath is offered one, so a drag
+ * gesture of the sheet's own would never run. Everything the reader does arrives as a scroll, a
+ * fling, or the leftovers of one — which is what makes it possible to tell when they have hold of
+ * it.
  *
  * Material3's own [ModalBottomSheet] can't do this: it hardcodes its partial anchor at half the
  * screen inside a private layout block, with no parameter to move it and no way to add a third
@@ -99,7 +99,6 @@ internal fun ExpandingBottomSheet(
     val state = remember { AnchoredDraggableState(initialValue = ExpandingSheetValue.Hidden) }
     val flingBehavior = AnchoredDraggableDefaults.flingBehavior(state)
     val scrollState = rememberScrollState()
-    val dragInteractions = remember { MutableInteractionSource() }
 
     var windowHeight by remember { mutableIntStateOf(0) }
     var contentHeight by remember { mutableIntStateOf(0) }
@@ -130,11 +129,20 @@ internal fun ExpandingBottomSheet(
     // there outright, with nothing left to animate.
     var destination by remember { mutableStateOf(ExpandingSheetValue.Hidden) }
 
-    // Two ways a reader can have hold of the sheet, neither of them visible from the state itself:
-    // a drag on the sheet takes its lock but announces nothing else, and a scroll in the content
-    // drives the sheet through dispatchRawDelta, which takes no lock at all.
-    val isSheetDragged = dragInteractions.collectIsDraggedAsState()
-    val isHeldByReader = { isSheetDragged.value || scrollState.isScrollInProgress }
+    // A fling thrown from the content carries on driving the sheet after the finger has gone, and
+    // for that whole stretch nothing else says so: the scroll session the child opens for a drag is
+    // closed before its fling is dispatched, and reopened only for the part of the fling the sheet
+    // leaves it, so isScrollInProgress reads false across the sheet's own. Anchors swapped in that
+    // window restart the fling — anchoredDrag re-runs its block whenever they change — from a new
+    // offset with the velocity it began with, landing it somewhere the flick never asked for.
+    var isFlingingSheet by remember { mutableStateOf(false) }
+
+    // The two ways a reader has hold of the sheet, neither of them visible from the state itself: a
+    // scroll in the content drives the sheet through dispatchRawDelta, which takes no lock at all,
+    // and the fling that follows drives it through a lock nothing else can see. There is no third —
+    // every touch on the sheet arrives as one or the other — which is what makes the pair an answer
+    // rather than a guess.
+    val isHeldByReader = { scrollState.isScrollInProgress || isFlingingSheet }
 
     val geometry by
         rememberUpdatedState(
@@ -148,16 +156,17 @@ internal fun ExpandingBottomSheet(
 
     LaunchedEffect(Unit) {
         // One collector rather than an effect keyed on the measurements: a resting height that
-        // changes again while the sheet is still travelling to the last one waits its turn instead
-        // of cutting that travel short. Cut short, the travel is cancelled between anchors and
-        // leaves the sheet parked where no anchor is — the one position from which nothing can
-        // work out where it was going.
+        // changes again while the sheet is still travelling to the last one is picked up by the
+        // next pass instead of cutting that travel short from outside. Cut short that way, the
+        // travel is cancelled between anchors and leaves the sheet parked where no anchor is — the
+        // one position from which nothing can work out where it was going.
         snapshotFlow { geometry }
             .filter { it.windowHeight > 0 }
             .collect { measured ->
                 state.moveAnchors(
                     geometry = measured,
                     isHeldByReader = isHeldByReader,
+                    isOutOfDate = { geometry != measured },
                     destination = { destination },
                 )
             }
@@ -174,10 +183,9 @@ internal fun ExpandingBottomSheet(
     }
 
     // Settling on Hidden is the single exit: swipe, scrim tap and back press all just animate
-    // there. Every settle is also where the destination above is re-read from what the sheet
-    // actually did, so a drag or a fling that lands somewhere new is accounted for. The first
-    // value is skipped: the sheet starts settled on Hidden, which is where it is rather than where
-    // it is going.
+    // there. Every settle also has the last word on the destination above, for anything that ends
+    // up somewhere other than where it set off for. The first value is skipped: the sheet starts
+    // settled on Hidden, which is where it is rather than where it is going.
     LaunchedEffect(Unit) {
         snapshotFlow { state.settledValue }
             .drop(1)
@@ -235,15 +243,20 @@ internal fun ExpandingBottomSheet(
                     .nestedScroll(
                         remember(state, flingBehavior) {
                             expandBeforeScrollingConnection(state) { velocity ->
-                                state.flingToAnchor(velocity, flingBehavior)
+                                isFlingingSheet = true
+                                try {
+                                    state.flingToAnchor(velocity, flingBehavior)
+                                    // Recorded here rather than left to the settle below, which is
+                                    // a frame behind: the anchor update this fling has been
+                                    // holding up reads the destination the moment it is released,
+                                    // and a destination still naming where the sheet was before
+                                    // the flick would take it back there.
+                                    destination = state.settledValue
+                                } finally {
+                                    isFlingingSheet = false
+                                }
                             }
                         }
-                    )
-                    .anchoredDraggable(
-                        state = state,
-                        orientation = Orientation.Vertical,
-                        interactionSource = dragInteractions,
-                        flingBehavior = flingBehavior,
                     )
         ) {
             val fadeColor = Theme.v2.colors.backgrounds.secondary
@@ -310,10 +323,16 @@ private data class SheetGeometry(
  * sheet the reader is looking at and its edge jumps. Undoing that write is synchronous and runs
  * before the frame it landed in is laid out, so the jump is never drawn; the sheet then travels the
  * distance instead.
+ *
+ * [geometry] is the measurement this pass was handed, and a travel outlives the frame it started
+ * in, so [isOutOfDate] says when a newer one has arrived: the travel stands down and the next pass
+ * carries on from wherever it had got to, rather than seeing the old measurement out to the end and
+ * settling on a height that has already been superseded.
  */
 private suspend fun AnchoredDraggableState<ExpandingSheetValue>.moveAnchors(
     geometry: SheetGeometry,
     isHeldByReader: () -> Boolean,
+    isOutOfDate: () -> Boolean,
     destination: () -> ExpandingSheetValue,
 ) {
     // Moving the anchors under a finger moves the ground the reader is standing on: the write
@@ -321,6 +340,10 @@ private suspend fun AnchoredDraggableState<ExpandingSheetValue>.moveAnchors(
     // carried off to an anchor while they are still choosing one. Waiting costs nothing — the
     // height that changed is still the height applied the moment they let go.
     snapshotFlow(isHeldByReader).first { !it }
+    // A wait long enough for the reader to finish is long enough for the measurement to be taken
+    // again, and swapping anchors for a height nobody is asking for any more is a swap the sheet
+    // has to be walked back from.
+    if (isOutOfDate()) return
 
     val settlesOn = destination()
     val offsetBeforeUpdate = offset
@@ -329,7 +352,11 @@ private suspend fun AnchoredDraggableState<ExpandingSheetValue>.moveAnchors(
     if (offsetBeforeUpdate.isNaN() || offsetAfterUpdate == offsetBeforeUpdate) return
 
     dispatchRawDelta(offsetBeforeUpdate - offsetAfterUpdate)
-    travelTo(settlesOn, from = offsetBeforeUpdate, abandonWhen = isHeldByReader)
+    travelTo(
+        destination = settlesOn,
+        from = offsetBeforeUpdate,
+        abandonWhen = { isHeldByReader() || isOutOfDate() },
+    )
 }
 
 /** Walks the sheet from [from] to where [destination] now sits, on the spec its own settles use. */
@@ -352,7 +379,8 @@ private suspend fun AnchoredDraggableState<ExpandingSheetValue>.travelTo(
     // A reader taking hold part way through cannot cancel this the way a competing drag on the
     // sheet would: a scroll in the content writes the offset through dispatchRawDelta, which takes
     // no lock, so the two would write over each other every frame and the animation would win.
-    // Standing down is what following the finger looks like.
+    // Standing down is what following the finger looks like, and it is also what a measurement
+    // that has moved on looks like — arriving is only worth it if the place is still the place.
     val handOver = launch {
         snapshotFlow(abandonWhen).first { it }
         travel.cancel()
