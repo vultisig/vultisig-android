@@ -167,12 +167,24 @@ internal class GasFeeOrchestrator(
                                     .toBigDecimalOrNull()
                                     ?.movePointRight(token.decimal)
                                     ?.toBigInteger()
-                                    // TRON freeze/unfreeze pays a fixed, amount-independent fee, so
-                                    // compute it with a zero amount on entry instead of waiting for
-                                    // the user to type — otherwise the fee row shimmers forever.
-                                    // Every other flow keeps its amount-dependent fee.
-                                    ?: if (uiState.value.tronResourceType != null) BigInteger.ZERO
-                                    else return@mapNotNull null
+                                    // TRON freeze/unfreeze pays a fixed fee; UtxoFeeService's
+                                    // byteFee is a network-stats lookup that ignores the amount too
+                                    // (Cardano's fee is size-derived, so it's excluded). Compute
+                                    // both on a zero amount instead of waiting for the user to type
+                                    // — else gasFee, and collectSpecific behind its
+                                    // filterNotNull(), never populate before an amount exists, so a
+                                    // Max tap as the first action always raced an empty `specific`
+                                    // and fell back to the imprecise math (#5504). Every other flow
+                                    // keeps its amount-dependent fee.
+                                    ?: if (
+                                        uiState.value.tronResourceType != null ||
+                                            (token.chain.standard == TokenStandard.UTXO &&
+                                                token.chain != Chain.Cardano)
+                                    ) {
+                                        BigInteger.ZERO
+                                    } else {
+                                        return@mapNotNull null
+                                    }
 
                             // A valid amount is present and we're about to (re)compute the fee:
                             // show the shimmer and re-disable Continue. This lives inside the

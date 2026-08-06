@@ -5,6 +5,7 @@ package com.vultisig.wallet.ui.models.send
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.model.BasicFee
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -241,6 +242,41 @@ internal class GasFeeOrchestratorTest {
             assertEquals(UiText.DynamicString("1.5 ETH"), uiState.value.gasTokenBalance)
         }
 
+    // ──────── collectGasFees ────────
+
+    @Test
+    fun `collectGasFees computes a UTXO byte fee on load, without waiting for a typed amount`() =
+        runTest(mainDispatcher) {
+            // Regression for #5504: UtxoFeeService's byte fee is a pure network-stats lookup that
+            // never looks at the amount, but the shared mapNotNull gate used to skip every UTXO
+            // estimate until an amount existed — so gasFee (and therefore collectSpecific, which
+            // requires gasFee.filterNotNull() before it runs at all) never populated before *some*
+            // amount was typed. A Max tap as the very first action on a fresh screen then always
+            // raced an empty `specific` and fell back to the imprecise byte-fee-only math.
+            vault = vault()
+            account = btcAccount()
+            val btcCoin = btcAccount().token
+            coEvery { feeServiceComposite.calculateFees(any()) } returns BasicFee(BigInteger("2"))
+            coEvery { tokenRepository.getNativeToken(any()) } returns btcCoin
+            val orchestrator = build(backgroundScope)
+
+            // collectGasFees hops to Dispatchers.IO for the fee/native-token calls; route it back
+            // to the test scheduler so advanceUntilIdle() can actually drive it to completion.
+            mockkStatic(Dispatchers::class)
+            every { Dispatchers.IO } returns mainDispatcher
+            try {
+                orchestrator.start()
+                selectedToken.value = btcCoin
+                // Amount field is left blank — the whole point of this test.
+                advanceTimeBy(400)
+                advanceUntilIdle()
+            } finally {
+                unmockkStatic(Dispatchers::class)
+            }
+
+            assertEquals(BigInteger("2"), gasFee.value?.value)
+        }
+
     // ──────── collectSpecific ────────
 
     @Test
@@ -407,4 +443,13 @@ internal class GasFeeOrchestratorTest {
 
     private fun tokenValue(value: Long, coin: Coin): TokenValue =
         TokenValue(value = BigInteger.valueOf(value), token = coin)
+
+    private fun vault(): Vault =
+        Vault(
+            id = "vault-id",
+            name = "test",
+            hexChainCode = "00",
+            pubKeyECDSA = "",
+            pubKeyEDDSA = "",
+        )
 }
