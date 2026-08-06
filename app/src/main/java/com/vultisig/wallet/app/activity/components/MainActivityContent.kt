@@ -43,7 +43,6 @@ import com.vultisig.wallet.app.activity.ForegroundNotificationState
 import com.vultisig.wallet.app.activity.MainViewModel
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.ui.components.BiometryAuthScreen
 import com.vultisig.wallet.ui.components.banners.ForegroundNotificationBanner
 import com.vultisig.wallet.ui.components.banners.OfflineBanner
 import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
@@ -53,6 +52,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.screens.home.VaultAccountsScreen
+import com.vultisig.wallet.ui.screens.passcode.PasscodeGuard
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.asString
@@ -119,7 +119,7 @@ internal fun MainActivityContent(
             SetupNavGraph(navController = navController, startDestination = startDestination)
         },
         overlayContent = {
-            BiometryAuthScreen()
+            PasscodeGuard()
 
             VsSnackBar(
                 modifier = Modifier.align(Alignment.BottomCenter),
