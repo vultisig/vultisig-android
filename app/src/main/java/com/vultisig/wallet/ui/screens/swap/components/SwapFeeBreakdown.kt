@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.SwapProviderLabel
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormDetails2
@@ -75,11 +76,17 @@ internal fun SwapFeeBreakdown(
         ) {
             FormDetails2(
                 title = stringResource(R.string.swap_screen_provider_title),
-                value = quoteDisplay.provider.asString(),
-                placeholder =
+                valueComposable = {
                     if (isLoading) {
-                        { loadingPlaceholder() }
-                    } else null,
+                        loadingPlaceholder()
+                    } else {
+                        SwapProviderLabel(
+                            provider = quoteDisplay.provider.asString(),
+                            style = Theme.brockmann.supplementary.caption,
+                            color = Theme.v2.colors.text.secondary,
+                        )
+                    }
+                },
             )
 
             FormDetails2(

@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.SignMessageCard
+import com.vultisig.wallet.ui.components.SwapProviderLabel
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -274,10 +275,11 @@ private fun SwapTransactionDetail(swapTransaction: SwapTransactionUiModel) {
     )
 
     if (swapTransaction.provider.isNotEmpty()) {
-        OtherField(
-            title = stringResource(R.string.swap_screen_provider_title),
-            value = swapTransaction.providerLabel.ifBlank { swapTransaction.provider },
-        )
+        OtherField(title = stringResource(R.string.swap_screen_provider_title)) {
+            SwapProviderLabel(
+                provider = swapTransaction.providerLabel.ifBlank { swapTransaction.provider }
+            )
+        }
     }
 
     // Mirror the verify screen (#5358): hide the Swap Fee row for a SwapKit UTXO deposit whose cost
@@ -429,6 +431,18 @@ private fun AddressField(title: String, address: String, divider: Boolean = true
 
 @Composable
 private fun OtherField(title: String, value: String, divider: Boolean = true) {
+    OtherField(title = title, divider = divider) {
+        Text(
+            text = value,
+            textAlign = TextAlign.End,
+            color = Theme.v2.colors.text.primary,
+            style = Theme.brockmann.body.s.medium,
+        )
+    }
+}
+
+@Composable
+private fun OtherField(title: String, divider: Boolean = true, value: @Composable () -> Unit) {
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -443,12 +457,7 @@ private fun OtherField(title: String, value: String, divider: Boolean = true) {
             UiSpacer(weight = 1f)
             UiSpacer(size = 8.dp)
 
-            Text(
-                text = value,
-                textAlign = TextAlign.End,
-                color = Theme.v2.colors.text.primary,
-                style = Theme.brockmann.body.s.medium,
-            )
+            value()
         }
 
         if (divider) {

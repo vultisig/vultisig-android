@@ -262,6 +262,7 @@ private fun SwapDetailContent(item: TransactionHistoryItemUiModel.Swap) {
         feeEstimate = item.feeEstimate,
         network = item.chain,
         provider = item.provider.takeIf { it.isNotEmpty() },
+        providerLogo = item.providerLogo,
     )
 }
 
@@ -305,6 +306,7 @@ private fun DetailInfoRows(
     feeEstimate: String?,
     network: String,
     provider: String?,
+    providerLogo: ImageModel? = null,
 ) {
     Column(
         modifier =
@@ -376,7 +378,7 @@ private fun DetailInfoRows(
             HorizontalDivider(color = Theme.v2.colors.border.light, thickness = 1.dp)
             DetailRow(
                 label = stringResource(R.string.transaction_history_detail_provider),
-                value = { DetailValuePill(text = provider) },
+                value = { DetailValuePill(text = provider, logo = providerLogo) },
             )
         }
         if (!feeEstimate.isNullOrEmpty()) {
@@ -437,11 +439,10 @@ private fun DetailRow(label: String, value: @Composable () -> Unit) {
 }
 
 @Composable
-private fun DetailValuePill(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text,
-        style = Theme.brockmann.supplementary.caption,
-        color = Theme.v2.colors.text.primary,
+private fun DetailValuePill(text: String, modifier: Modifier = Modifier, logo: ImageModel? = null) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
         modifier =
             modifier
                 .background(
@@ -449,7 +450,16 @@ private fun DetailValuePill(text: String, modifier: Modifier = Modifier) {
                     shape = RoundedCornerShape(8.dp),
                 )
                 .padding(horizontal = 8.dp, vertical = 3.dp),
-    )
+    ) {
+        if (logo != null) {
+            TokenCircle(logo = logo, ticker = text, size = 16)
+        }
+        Text(
+            text = text,
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.v2.colors.text.primary,
+        )
+    }
 }
 
 @Composable

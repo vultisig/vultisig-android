@@ -168,6 +168,38 @@ internal fun SwapFormQuoteLoadingPreview() {
     )
 }
 
+// Resolved-quote snapshot used to check the fee panel's Provider row: the provider name must be
+// preceded by its logo, and the row must stay the same height as while the quote was loading.
+@Preview
+@Composable
+internal fun SwapFormProviderPreview() {
+    SwapScreen(
+        state =
+            SwapFormUiModel(
+                selectedSrcToken = longTokenInput,
+                selectedDstToken = tokenInput,
+                srcFiatValue = "5.25",
+                quoteDisplay =
+                    QuoteDisplay(
+                        provider = UiText.DynamicString("THORChain"),
+                        estimatedDstTokenValue = "12.80",
+                        estimatedDstFiatValue = "$5.24",
+                        hasQuote = true,
+                        expiredAt = Clock.System.now().plus(36.seconds),
+                    ),
+                feeBreakdown =
+                    FeeBreakdown(
+                        networkFee = "0.02 RUNE",
+                        networkFeeFiat = "$0.004",
+                        totalFee = "$0.024",
+                        fee = "0.02 RUNE",
+                    ),
+                isSwapDisabled = false,
+            ),
+        srcAmountTextFieldState = TextFieldState("2.5"),
+    )
+}
+
 // Full Swap screen with the quote countdown running, used to verify the top toolbar (back / title /
 // advanced-settings sliders button / timer) and the bottom CTA together (#4858).
 @Preview

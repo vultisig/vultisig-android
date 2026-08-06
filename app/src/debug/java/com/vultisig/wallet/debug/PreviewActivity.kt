@@ -53,6 +53,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.DAppMetadata
@@ -90,9 +91,11 @@ import com.vultisig.wallet.ui.models.TokenDetailUiModel
 import com.vultisig.wallet.ui.models.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.TokenUiModel
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
+import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryTab
 import com.vultisig.wallet.ui.models.TransactionHistoryUiState
 import com.vultisig.wallet.ui.models.TransactionScanStatus
+import com.vultisig.wallet.ui.models.TransactionStatusUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultDetailUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
@@ -181,10 +184,12 @@ import com.vultisig.wallet.ui.screens.swap.preview.AdvancedGasLimitPreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedMenuConfiguredPreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedMenuPreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedSlippagePreview
+import com.vultisig.wallet.ui.screens.swap.preview.SwapFormProviderPreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapFormQuoteLoadingPreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapToolbarPreview
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
+import com.vultisig.wallet.ui.screens.transaction.TransactionDetailBottomSheet
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryScreen
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
@@ -276,6 +281,10 @@ class PreviewActivity : ComponentActivity() {
                     "swap_error_before" -> SwapErrorBeforePreview()
                     "swap_error" -> SwapErrorPreview()
                     "swap_quote_loading" -> SwapFormQuoteLoadingPreview()
+                    "provider_swap_form" -> SwapFormProviderPreview()
+                    "provider_tx_done" -> SwapProviderTxDonePreview()
+                    "provider_detail_sheet" -> SwapProviderDetailSheetPreview()
+                    "provider_verify" -> SwapProviderVerifyPreview()
                     "swap_toolbar" -> SwapToolbarPreview()
                     "swap_advanced_locked" -> SwapAdvancedLockedPreview()
                     "custom_rpc_gate" -> CustomRpcGatePreview()
@@ -1875,6 +1884,90 @@ private fun BlockaidHeroDoneSwapPreview() {
         onBack = {},
         onUriClick = {},
         transactionTypeUiModel = TransactionTypeUiModel.Send(blockaidHeroSwapDetails()),
+    )
+}
+
+// The three surfaces that named a swap provider as plain text, plus verify as the control. Each
+// uses a provider whose logo getProviderLogo can resolve, so a missing icon means the surface is
+// not wired up rather than that the provider has no drawable.
+@Composable
+private fun swapProviderDoneTx() =
+    SwapTransactionUiModel(
+        src = ValuedToken(token = Coins.Ethereum.ETH, value = "1.5", fiatValue = "$3,847.50"),
+        dst = ValuedToken(token = Coins.Bitcoin.BTC, value = "0.0589", fiatValue = "$3,820.00"),
+        networkFee = ValuedToken(token = Coins.Ethereum.ETH, value = "0.0024", fiatValue = "$6.15"),
+        providerFee =
+            ValuedToken(token = Coins.Ethereum.ETH, value = "0.0045", fiatValue = "$11.52"),
+        totalFee = "$17.67",
+        networkFeeFormatted = "0.0024 ETH ($6.15)",
+        providerFeeFormatted = "0.0045 ETH ($11.52)",
+        provider = "SwapKit",
+        providerLabel = "SwapKit (CHAINFLIP)",
+    )
+
+@Composable
+private fun SwapProviderTxDonePreview() {
+    TransactionDoneView(
+        showToolbar = true,
+        transactionHash = "0xabc123def456...",
+        approveTransactionHash = "",
+        transactionLink = "https://etherscan.io/tx/0xabc123",
+        approveTransactionLink = "",
+        onComplete = {},
+        onBack = {},
+        onUriClick = {},
+        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapProviderDoneTx()),
+    )
+}
+
+@Composable
+private fun SwapProviderDetailSheetPreview() {
+    TransactionDetailBottomSheet(
+        item =
+            TransactionHistoryItemUiModel.Swap(
+                id = "2",
+                txHash = "0xdef456",
+                chain = "Ethereum",
+                status = TransactionStatusUiModel.Confirmed,
+                explorerUrl = "https://etherscan.io/tx/0xdef456",
+                timestamp = 1_754_400_000_000,
+                fromToken = "RUNE",
+                fromAmount = "1,000.12",
+                fromChain = "THORChain",
+                fromTokenLogo = R.drawable.rune,
+                toToken = "WBTC",
+                toAmount = "0.1251",
+                toChain = "Ethereum",
+                toTokenLogo = R.drawable.wbtc,
+                provider = "THORChain",
+                providerLogo = getProviderLogo("THORChain"),
+                fiatValue = "$1,116.28",
+                fromAddress = "0xF43jf9840fkfjn38fk0dk9Ac5",
+                toAddress = "0xF43jf9840fkfjn38fk0dk9Ac5",
+                feeEstimate = "0.2 ETH",
+            ),
+        onDismiss = {},
+        onViewExplorer = {},
+    )
+}
+
+@Composable
+private fun SwapProviderVerifyPreview() {
+    VerifySwapScreen(
+        state =
+            VerifySwapUiModel(
+                tx = swapProviderDoneTx(),
+                consentAmount = true,
+                consentReceiveAmount = true,
+                consentAllowance = false,
+                hasFastSign = true,
+                vaultName = "Main Vault",
+            ),
+        hasToolbar = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onBackClick = {},
     )
 }
 
