@@ -2,20 +2,24 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.R
 
+/**
+ * Drawable for a swap provider's logo, resolved from the label the UI shows for it.
+ *
+ * Keyed off [SwapProvider] rather than the raw display string, so adding a provider to the swap
+ * layer is a compile error here instead of a silently missing icon. Route hints appended by
+ * `formatSwapKitProviderLabel` (`SwapKit (CHAINFLIP)`) are stripped before the lookup, so a hinted
+ * label resolves the same logo as the bare provider — for every provider, not just SwapKit.
+ */
 internal fun getProviderLogo(providerName: String): ImageModel? {
-    val name = providerName.lowercase()
-    if (name.startsWith("swapkit")) return R.drawable.swapkit
-    return when (name) {
-        "thorchain" -> R.drawable.rune
-        "maya",
-        "mayachain" -> R.drawable.maya
-        "jupiter" -> R.drawable.jup
-        "uni" -> R.drawable.uni
-        "1inch" -> R.drawable.oneinch
-        "kyber",
-        "kyberswap" -> R.drawable.kyberswap
-        "li.fi" -> R.drawable.lifi
-        else -> null
+    val provider = swapProviderFromWireId(providerName.substringBefore(" (")) ?: return null
+    return when (provider) {
+        SwapProvider.THORCHAIN -> R.drawable.rune
+        SwapProvider.MAYA -> R.drawable.maya
+        SwapProvider.JUPITER -> R.drawable.jup
+        SwapProvider.ONEINCH -> R.drawable.oneinch
+        SwapProvider.KYBER -> R.drawable.kyberswap
+        SwapProvider.LIFI -> R.drawable.lifi
+        SwapProvider.SWAPKIT -> R.drawable.swapkit
     }
 }
 

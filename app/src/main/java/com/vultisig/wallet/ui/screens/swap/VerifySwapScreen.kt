@@ -44,11 +44,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.getCoinLogo
-import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.swapAssetName
 import com.vultisig.wallet.data.usecases.getTierType
+import com.vultisig.wallet.ui.components.SwapProviderLabel
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -707,7 +707,6 @@ internal fun VerifyExternalRecipientRow(address: String, modifier: Modifier = Mo
 
 @Composable
 internal fun VerifyProviderRow(provider: String, modifier: Modifier = Modifier) {
-    val logo = remember(provider) { getProviderLogo(provider) }
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier.fillMaxWidth().padding(vertical = 12.dp),
@@ -722,31 +721,7 @@ internal fun VerifyProviderRow(provider: String, modifier: Modifier = Modifier) 
 
         UiSpacer(weight = 1f)
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (logo != null) {
-                TokenLogo(
-                    logo = logo,
-                    title = provider,
-                    errorLogoModifier = Modifier.size(16.dp).clip(CircleShape),
-                    modifier =
-                        Modifier.size(16.dp)
-                            .border(
-                                width = 1.dp,
-                                color = Theme.v2.colors.border.light,
-                                shape = CircleShape,
-                            ),
-                )
-            }
-            Text(
-                text = provider,
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary,
-                maxLines = 1,
-            )
-        }
+        SwapProviderLabel(provider = provider)
     }
 }
 

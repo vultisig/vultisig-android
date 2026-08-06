@@ -3,6 +3,8 @@ package com.vultisig.wallet.data.models
 import com.vultisig.wallet.R
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -138,5 +140,63 @@ internal class CoinLogoTest {
     fun `tokenLogoRes resolves hyperliquid aliases`() {
         assertEquals(R.drawable.hyperliquid, coin(logo = "hype").tokenLogoRes())
         assertEquals(R.drawable.hyperliquid, coin(logo = "whype").tokenLogoRes())
+    }
+
+    // The five surfaces that name a swap provider all render through getProviderLogo, so one it
+    // cannot resolve shows a bare name on every one of them. The `when` over SwapProvider turns a
+    // newly added provider into a compile error; these tests pin the string -> enum step in front
+    // of it, which no compiler can check.
+    @Test
+    fun `getProviderLogo resolves every provider's display label`() {
+        SwapProvider.entries.forEach { provider ->
+            val label = provider.getSwapProviderId()
+            assertNotNull(
+                getProviderLogo(label),
+                "Expected a logo for $provider, whose UI label is \"$label\"",
+            )
+        }
+    }
+
+    @Test
+    fun `getProviderLogo resolves display labels to their drawable`() {
+        assertEquals(R.drawable.rune, getProviderLogo("THORChain"))
+        assertEquals(R.drawable.maya, getProviderLogo("MayaChain"))
+        assertEquals(R.drawable.jup, getProviderLogo("Jupiter"))
+        assertEquals(R.drawable.oneinch, getProviderLogo("1Inch"))
+        assertEquals(R.drawable.kyberswap, getProviderLogo("KyberSwap"))
+        assertEquals(R.drawable.lifi, getProviderLogo("LI.FI"))
+        assertEquals(R.drawable.swapkit, getProviderLogo("SwapKit"))
+    }
+
+    @Test
+    fun `getProviderLogo is case-insensitive`() {
+        assertEquals(R.drawable.rune, getProviderLogo("thorchain"))
+        assertEquals(R.drawable.rune, getProviderLogo("THORCHAIN"))
+    }
+
+    @Test
+    fun `getProviderLogo resolves wire aliases the history layer stores`() {
+        assertEquals(R.drawable.maya, getProviderLogo("maya"))
+        assertEquals(R.drawable.maya, getProviderLogo("mayachain"))
+        assertEquals(R.drawable.kyberswap, getProviderLogo("kyber"))
+        assertEquals(R.drawable.kyberswap, getProviderLogo("kyberswap"))
+    }
+
+    // formatSwapKitProviderLabel appends the route as `SwapKit (CHAINFLIP)`. Stripping the hint is
+    // a
+    // general rule now rather than a startsWith("swapkit") special case, so it must hold for a
+    // provider that has never carried a hint too.
+    @Test
+    fun `getProviderLogo strips the route hint before matching`() {
+        assertEquals(R.drawable.swapkit, getProviderLogo("SwapKit (CHAINFLIP)"))
+        assertEquals(R.drawable.swapkit, getProviderLogo("SwapKit (NEAR)"))
+        assertEquals(R.drawable.swapkit, getProviderLogo("SwapKit (GARDEN)"))
+        assertEquals(R.drawable.rune, getProviderLogo("THORChain (SOMEROUTE)"))
+    }
+
+    @Test
+    fun `getProviderLogo returns null for an unknown provider`() {
+        assertNull(getProviderLogo("NotAProvider"))
+        assertNull(getProviderLogo(""))
     }
 }
