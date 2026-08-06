@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.formatAddress
 import com.vultisig.wallet.ui.screens.v2.defi.formatAmount
 import com.vultisig.wallet.ui.screens.v2.defi.formatDate
 import com.vultisig.wallet.ui.screens.v2.defi.formatPercentage
+import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
 import com.vultisig.wallet.ui.screens.v2.defi.hasMayaStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState.Companion.fromApiStatus
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
@@ -95,6 +96,10 @@ private val MAYA_STATIC_POSITION_KEYS = setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CA
 
 private val MAYA_DEFAULT_SELECTED_POSITIONS = listOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY)
 
+// Nothing bonded, said in CACAO. emptyBondedTabUiModel is the Thorchain screen's and would render
+// this as "0 RUNE".
+private const val ZERO_CACAO_BONDED = "0 CACAO"
+
 @Immutable
 internal sealed interface MayachainDefiUiState {
     data object Loading : MayachainDefiUiState
@@ -109,7 +114,7 @@ internal data class MayachainDefiPositionsUiModel(
     // Null until the total is priced in the user's currency; a hardcoded "$0.00" was wrong for
     // every non-USD user and indistinguishable from a genuinely empty vault.
     val totalAmountPrice: String? = null,
-    val bonded: BondedTabUiModel = BondedTabUiModel(totalBondedAmount = "0 CACAO"),
+    val bonded: BondedTabUiModel = BondedTabUiModel(totalBondedAmount = ZERO_CACAO_BONDED),
     val staking: StakingTabUiModel = StakingTabUiModel(),
     val lp: LpTabUiModel = LpTabUiModel(),
     val isTotalAmountLoading: Boolean = true,
@@ -276,9 +281,19 @@ constructor(
             defiPositionsRepository
                 .getSelectedPositions(vaultId)
                 .map { saved ->
-                    val hasMayaPositions =
-                        saved.any { it in MAYA_STATIC_POSITION_KEYS || it.contains(".") }
-                    if (hasMayaPositions) saved.toList() else MAYA_DEFAULT_SELECTED_POSITIONS
+                    when {
+                        // A vault that never chose reads back as the store's own defaults, never
+                        // as an empty set, so empty is a selection the user cleared on purpose.
+                        // It has to be taken at face value: falling through to the Maya defaults
+                        // below would derive it back to what it just replaced, and the dedup would
+                        // then drop the reload it needs.
+                        saved.isEmpty() -> emptyList()
+                        // The THORChain screen writes this same key. A set holding nothing this
+                        // screen can show is that screen's selection, not a choice made here.
+                        saved.any { it in MAYA_STATIC_POSITION_KEYS || it.contains(".") } ->
+                            saved.toList()
+                        else -> MAYA_DEFAULT_SELECTED_POSITIONS
+                    }
                 }
                 // The store re-emits for writes that leave this vault's selection alone — the
                 // first-ever save flips the key from absent to present, which it cannot read as
@@ -326,6 +341,25 @@ constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun loadBondedNodes() {
+        // Bond is a checkbox in Manage Positions like the others, and unchecking it has to drop the
+        // card and its leg from the total — otherwise the header goes on counting a position the
+        // user removed. Reported as a real zero rather than left unreported, or the total would
+        // wait on a leg that is never coming.
+        if (!currentModel.selectedPositions.hasBondPositions()) {
+            _totalBondedRaw.value = BigInteger.ZERO
+            val zero = zeroFiat()
+            updateModel {
+                it.copy(
+                    bonded =
+                        BondedTabUiModel(
+                            totalBondedAmount = ZERO_CACAO_BONDED,
+                            totalBondedPrice = zero,
+                        )
+                )
+            }
+            return
+        }
+
         updateModel { it.copy(bonded = it.bonded.copy(isLoading = true)) }
 
         try {

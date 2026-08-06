@@ -769,6 +769,74 @@ internal class MayachainDefiPositionsViewModelTest {
         assertEquals(settled.selectedPositions, data.selectedPositions)
     }
 
+    @Test
+    fun `clearing every position settles the header instead of freezing it`() = runTest {
+        // An empty selection is what the store hands back for a vault that has one of its own, so
+        // deriving it to the Maya defaults produced the same set the collector last saw and the
+        // dedup dropped the emission — the tabs cleared while the header kept the total of the
+        // positions just removed.
+        val saved = MutableStateFlow(setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY))
+        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns saved
+        coEvery { defiPositionsRepository.saveSelectedPositions(VAULT_ID, any()) } answers
+            {
+                saved.value = secondArg<List<String>>().toSet()
+            }
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+            flowOf(listOf(bondedNode(amount = HUNDRED_CACAO)))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        successData(vm).totalAmountPrice shouldBe "$200.00"
+
+        vm.setPositionSelectionDialogVisibility(true)
+        vm.onPositionSelectionChange(MAYA_BOND_CACAO_KEY, selected = false)
+        vm.onPositionSelectionChange(MAYA_STAKE_CACAO_KEY, selected = false)
+        vm.onPositionSelectionDone()
+
+        val data = successData(vm)
+        assertTrue(data.selectedPositions.isEmpty())
+        data.isTotalAmountLoading shouldBe false
+        data.totalAmountPrice shouldBe "$0.00"
+        assertTrue(data.bonded.nodes.isEmpty())
+        assertTrue(data.staking.positions.isEmpty())
+    }
+
+    @Test
+    fun `an emptied stored selection is honoured, not re-derived to the defaults`() = runTest {
+        // The store returns its own defaults for a vault that never chose, so an empty set can only
+        // be one this screen cleared — the Maya fallback must not claim it back.
+        val saved = MutableStateFlow(setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY))
+        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns saved
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+            flowOf(listOf(bondedNode(amount = HUNDRED_CACAO)))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        successData(vm).totalAmountPrice shouldBe "$200.00"
+
+        saved.value = emptySet()
+
+        val data = successData(vm)
+        assertTrue(data.selectedPositions.isEmpty())
+        data.isTotalAmountLoading shouldBe false
+        data.totalAmountPrice shouldBe "$0.00"
+    }
+
+    @Test
+    fun `deselecting bond drops its card and its leg from the total`() = runTest {
+        // Bond is a checkbox like the others; the loader used to ignore it, so the card stayed and
+        // the header went on counting a position the user had removed.
+        selectPositions(MAYA_STAKE_CACAO_KEY)
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+            flowOf(listOf(bondedNode(amount = HUNDRED_CACAO)))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val data = successData(vm)
+        assertFalse(data.bonded.isLoading)
+        assertTrue(data.bonded.nodes.isEmpty())
+        data.isTotalAmountLoading shouldBe false
+        data.totalAmountPrice shouldBe "$0.00"
+    }
+
     private fun selectPositions(vararg keys: String) {
         coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns
             flowOf(keys.toSet())
