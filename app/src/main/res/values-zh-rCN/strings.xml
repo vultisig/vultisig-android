@@ -318,7 +318,7 @@
     <string name="passcode_lock_too_many_attempts_minutes">尝试次数过多，请在 %1$d 分钟后重试。</string>
     <string name="passcode_settings_title">密码加密</string>
     <string name="passcode_settings_encryption_title">密码加密</string>
-    <string name="passcode_settings_encryption_subtitle">加密本设备上的保险库存储，并用 5 位密码锁定应用。</string>
+    <string name="passcode_settings_encryption_subtitle">加密本设备的保险库存储并锁定应用。</string>
     <string name="passcode_settings_change">更改密码</string>
     <string name="passcode_settings_auto_lock">自动锁定</string>
     <string name="auto_lock_setting_title">自动锁定</string>

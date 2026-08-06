@@ -172,7 +172,7 @@
     <string name="passcode_lock_too_many_attempts_minutes">Troppi tentativi. Riprova tra %1$d min.</string>
     <string name="passcode_settings_title">Crittografia con codice di accesso</string>
     <string name="passcode_settings_encryption_title">Crittografia con codice di accesso</string>
-    <string name="passcode_settings_encryption_subtitle">Cripta le casseforti salvate su questo dispositivo e blocca l’app con un codice di accesso di 5 cifre.</string>
+    <string name="passcode_settings_encryption_subtitle">Cripta le casseforti su questo dispositivo e blocca l’app.</string>
     <string name="passcode_settings_change">Cambia codice di accesso</string>
     <string name="passcode_settings_auto_lock">Blocco automatico</string>
     <string name="auto_lock_setting_title">Blocco automatico</string>

@@ -172,7 +172,7 @@
     <string name="passcode_lock_too_many_attempts_minutes">Demasiadas tentativas. Tente novamente em %1$d min.</string>
     <string name="passcode_settings_title">Encriptação com código de acesso</string>
     <string name="passcode_settings_encryption_title">Encriptação com código de acesso</string>
-    <string name="passcode_settings_encryption_subtitle">Encripte o armazenamento de cofres deste dispositivo e bloqueie a aplicação com um código de acesso de 5 dígitos.</string>
+    <string name="passcode_settings_encryption_subtitle">Encripta o armazenamento de cofres neste dispositivo e bloqueia a aplicação.</string>
     <string name="passcode_settings_change">Alterar código de acesso</string>
     <string name="passcode_settings_auto_lock">Bloqueio automático</string>
     <string name="auto_lock_setting_title">Bloqueio automático</string>

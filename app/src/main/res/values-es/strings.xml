@@ -173,7 +173,7 @@
     <string name="passcode_lock_too_many_attempts_minutes">Demasiados intentos. Inténtelo de nuevo en %1$d min.</string>
     <string name="passcode_settings_title">Cifrado con código de acceso</string>
     <string name="passcode_settings_encryption_title">Cifrado con código de acceso</string>
-    <string name="passcode_settings_encryption_subtitle">Cifre el almacenamiento de bóvedas de este dispositivo y bloquee la aplicación con un código de acceso de 5 dígitos.</string>
+    <string name="passcode_settings_encryption_subtitle">Cifra el almacenamiento de bóvedas de este dispositivo y bloquea la aplicación.</string>
     <string name="passcode_settings_change">Cambiar código de acceso</string>
     <string name="passcode_settings_auto_lock">Bloqueo automático</string>
     <string name="auto_lock_setting_title">Bloqueo automático</string>

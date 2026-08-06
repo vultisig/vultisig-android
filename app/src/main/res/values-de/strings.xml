@@ -172,7 +172,7 @@
     <string name="passcode_lock_too_many_attempts_minutes">Zu viele Versuche. Erneut versuchen in %1$d Min.</string>
     <string name="passcode_settings_title">Passcode-Verschlüsselung</string>
     <string name="passcode_settings_encryption_title">Passcode-Verschlüsselung</string>
-    <string name="passcode_settings_encryption_subtitle">Verschlüsseln Sie den Vault-Speicher dieses Geräts und sperren Sie die App mit einem 5-stelligen Passcode.</string>
+    <string name="passcode_settings_encryption_subtitle">Verschlüsselt den Vault-Speicher auf diesem Gerät und sperrt die App.</string>
     <string name="passcode_settings_change">Passcode ändern</string>
     <string name="passcode_settings_auto_lock">Automatische Sperre</string>
     <string name="auto_lock_setting_title">Automatische Sperre</string>

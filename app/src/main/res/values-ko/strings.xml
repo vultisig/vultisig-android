@@ -259,7 +259,7 @@
     <string name="passcode_lock_too_many_attempts_minutes">시도 횟수를 초과했습니다. %1$d분 후에 다시 시도하세요.</string>
     <string name="passcode_settings_title">패스코드 암호화</string>
     <string name="passcode_settings_encryption_title">패스코드 암호화</string>
-    <string name="passcode_settings_encryption_subtitle">이 기기의 볼트 저장소를 암호화하고 5자리 패스코드로 앱을 잠급니다.</string>
+    <string name="passcode_settings_encryption_subtitle">이 기기의 볼트 저장소를 암호화하고 앱을 잠급니다.</string>
     <string name="passcode_settings_change">패스코드 변경</string>
     <string name="passcode_settings_auto_lock">자동 잠금</string>
     <string name="auto_lock_setting_title">자동 잠금</string>

@@ -33,7 +33,7 @@ internal fun AutoLockSettingScreen(navController: NavHostController) {
 }
 
 @Composable
-private fun AutoLockSettingScreen(
+internal fun AutoLockSettingScreen(
     state: AutoLockSettingUiModel,
     onBackClick: () -> Unit,
     onTimeoutClick: (AutoLockTimeout) -> Unit,

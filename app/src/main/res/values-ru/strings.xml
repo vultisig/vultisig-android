@@ -183,7 +183,7 @@
     <string name="passcode_lock_too_many_attempts_minutes">Слишком много попыток. Повторите через %1$d мин.</string>
     <string name="passcode_settings_title">Шифрование код-паролем</string>
     <string name="passcode_settings_encryption_title">Шифрование код-паролем</string>
-    <string name="passcode_settings_encryption_subtitle">Зашифруйте хранилище сейфов на этом устройстве и блокируйте приложение пятизначным код-паролем.</string>
+    <string name="passcode_settings_encryption_subtitle">Шифрует хранилище сейфов на этом устройстве и блокирует приложение.</string>
     <string name="passcode_settings_change">Изменить код-пароль</string>
     <string name="passcode_settings_auto_lock">Автоблокировка</string>
     <string name="auto_lock_setting_title">Автоблокировка</string>

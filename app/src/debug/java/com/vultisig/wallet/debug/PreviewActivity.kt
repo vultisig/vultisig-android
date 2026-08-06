@@ -143,7 +143,12 @@ import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VultTierGateUiModel
 import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesUiState
+import com.vultisig.wallet.data.passcode.AutoLockTimeout
+import com.vultisig.wallet.ui.models.passcode.AutoLockSettingUiModel
 import com.vultisig.wallet.ui.models.passcode.PasscodeLockError
+import com.vultisig.wallet.ui.screens.passcode.AutoLockSettingScreen
+import com.vultisig.wallet.ui.models.passcode.PasscodeSettingsUiModel
+import com.vultisig.wallet.ui.screens.passcode.PasscodeSettingsScreen
 import com.vultisig.wallet.ui.models.passcode.PasscodeLockUiModel
 import com.vultisig.wallet.ui.screens.passcode.PasscodeLockScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
@@ -232,6 +237,25 @@ class PreviewActivity : ComponentActivity() {
         setContent {
             OnBoardingComposeTheme {
                 when (screen) {
+                    "auto_lock_setting" ->
+                        AutoLockSettingScreen(
+                            state =
+                                AutoLockSettingUiModel(selected = AutoLockTimeout.FiveMinutes),
+                            onBackClick = {},
+                            onTimeoutClick = {},
+                        )
+                    "passcode_settings" ->
+                        PasscodeSettingsScreen(
+                            state =
+                                PasscodeSettingsUiModel(
+                                    isPasscodeEnabled = true,
+                                    autoLockTimeout = AutoLockTimeout.Immediate,
+                                ),
+                            onBackClick = {},
+                            onPasscodeEnabledChange = {},
+                            onChangePasscodeClick = {},
+                            onAutoLockClick = {},
+                        )
                     "passcode_lock" ->
                         PasscodeLockScreen(
                             state = PasscodeLockUiModel(),

@@ -34,7 +34,7 @@ internal fun PasscodeSettingsScreen(navController: NavHostController) {
 }
 
 @Composable
-private fun PasscodeSettingsScreen(
+internal fun PasscodeSettingsScreen(
     state: PasscodeSettingsUiModel,
     onBackClick: () -> Unit,
     onPasscodeEnabledChange: (Boolean) -> Unit,

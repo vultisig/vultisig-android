@@ -183,7 +183,7 @@
     <string name="passcode_lock_too_many_attempts_minutes">Te veel pogingen. Probeer het opnieuw over %1$d min.</string>
     <string name="passcode_settings_title">Toegangscodeversleuteling</string>
     <string name="passcode_settings_encryption_title">Toegangscodeversleuteling</string>
-    <string name="passcode_settings_encryption_subtitle">Versleutel de kluisopslag op dit apparaat en vergrendel de app met een toegangscode van 5 cijfers.</string>
+    <string name="passcode_settings_encryption_subtitle">Versleutelt de kluisopslag op dit apparaat en vergrendelt de app.</string>
     <string name="passcode_settings_change">Toegangscode wijzigen</string>
     <string name="passcode_settings_auto_lock">Automatisch vergrendelen</string>
     <string name="auto_lock_setting_title">Automatisch vergrendelen</string>

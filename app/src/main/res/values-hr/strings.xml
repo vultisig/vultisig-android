@@ -172,7 +172,7 @@
     <string name="passcode_lock_too_many_attempts_minutes">Previše pokušaja. Pokušajte ponovno za %1$d min.</string>
     <string name="passcode_settings_title">Šifriranje pristupnim kodom</string>
     <string name="passcode_settings_encryption_title">Šifriranje pristupnim kodom</string>
-    <string name="passcode_settings_encryption_subtitle">Šifrirajte pohranu trezora na ovom uređaju i zaključajte aplikaciju petoznamenkastim pristupnim kodom.</string>
+    <string name="passcode_settings_encryption_subtitle">Šifrira pohranu trezora na ovom uređaju i zaključava aplikaciju.</string>
     <string name="passcode_settings_change">Promijeni pristupni kod</string>
     <string name="passcode_settings_auto_lock">Automatsko zaključavanje</string>
     <string name="auto_lock_setting_title">Automatsko zaključavanje</string>

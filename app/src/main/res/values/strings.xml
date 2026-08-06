@@ -263,7 +263,7 @@
     <string name="passcode_lock_too_many_attempts_minutes">Too many attempts. Try again in %1$d min.</string>
     <string name="passcode_settings_title">Passcode Encryption</string>
     <string name="passcode_settings_encryption_title">Passcode encryption</string>
-    <string name="passcode_settings_encryption_subtitle">Encrypt this device\'s vault storage and lock the app behind a 5-digit passcode.</string>
+    <string name="passcode_settings_encryption_subtitle">Encrypt vault storage on this device and lock the app.</string>
     <string name="passcode_settings_change">Change passcode</string>
     <string name="passcode_settings_auto_lock">Auto-lock</string>
     <string name="auto_lock_setting_title">Auto-lock</string>
