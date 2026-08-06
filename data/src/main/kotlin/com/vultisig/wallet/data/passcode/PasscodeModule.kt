@@ -19,4 +19,7 @@ internal interface PasscodeModule {
     @Binds fun bindPasscodeDataKeySource(impl: PasscodeRepositoryImpl): PasscodeDataKeySource
 
     @Binds fun bindAutoLockRepository(impl: AutoLockRepositoryImpl): AutoLockRepository
+
+    @Binds
+    fun bindVaultKeyShareProtection(impl: VaultKeyShareProtectionImpl): VaultKeyShareProtection
 }

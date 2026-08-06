@@ -19,11 +19,13 @@ import org.junit.jupiter.api.Test
 internal class PasscodeRepositoryImplTest {
 
     private lateinit var store: FakePasscodeStore
+    private lateinit var protection: RecordingKeyShareProtection
     private var now = 1_000_000L
 
     @BeforeEach
     fun setUp() {
         store = FakePasscodeStore()
+        protection = RecordingKeyShareProtection()
         now = 1_000_000L
     }
 
@@ -32,6 +34,7 @@ internal class PasscodeRepositoryImplTest {
         PasscodeRepositoryImpl(
             cipher = PasscodeCipher(),
             store = store,
+            keyShareProtection = protection,
             dispatcher = StandardTestDispatcher(testScheduler),
             nowMillis = { now },
         )
@@ -248,6 +251,80 @@ internal class PasscodeRepositoryImplTest {
         }
 
     @Test
+    fun `setPasscode encrypts stored keyshares with the new data key`() = runTest {
+        val repository = repository()
+
+        repository.setPasscode("12345")
+
+        assertEquals(listOf("protect"), protection.calls)
+        assertContentEquals(repository.dataKeyOrNull(), protection.protectedWith)
+    }
+
+    @Test
+    fun `setPasscode persists the wrapped key before encrypting anything with it`() = runTest {
+        // Reverse that order and a crash mid-encryption strands ciphertext with no recorded key.
+        val repository = repository()
+        protection.calls.clear()
+
+        repository.setPasscode("12345")
+
+        assertNotNull(store.readCredentials(), "credentials must exist by the time we encrypt")
+        assertEquals(listOf("protect"), protection.calls)
+    }
+
+    @Test
+    fun `disablePasscode decrypts keyshares before dropping the credentials`() = runTest {
+        val repository = repository()
+        repository.setPasscode("12345")
+        protection.calls.clear()
+
+        repository.disablePasscode("12345")
+
+        assertEquals(listOf("unprotect"), protection.calls)
+        assertNull(store.readCredentials())
+    }
+
+    @Test
+    fun `a failed decrypt leaves the passcode in place`() = runTest {
+        val repository = repository()
+        repository.setPasscode("12345")
+        protection.unprotectFailure = IllegalStateException("keyshare failed to decrypt")
+
+        assertFailsWith<IllegalStateException> { repository.disablePasscode("12345") }
+
+        assertNotNull(store.readCredentials(), "credentials must survive a failed decrypt")
+        assertEquals(PasscodeState.Unlocked, repository.state.value)
+        assertNotNull(repository.dataKeyOrNull())
+    }
+
+    @Test
+    fun `changePasscode does not re-encrypt keyshares`() = runTest {
+        val repository = repository()
+        repository.setPasscode("12345")
+        protection.calls.clear()
+
+        repository.changePasscode("12345", "54321")
+
+        assertEquals(emptyList(), protection.calls, "the data key is unchanged")
+    }
+
+    @Test
+    fun `isLocked is true only while a passcode is configured and not entered`() = runTest {
+        val repository = repository()
+        repository.initialize()
+        assertEquals(false, repository.isLocked())
+
+        repository.setPasscode("12345")
+        assertEquals(false, repository.isLocked())
+
+        repository.lock()
+        assertEquals(true, repository.isLocked())
+
+        repository.unlock("12345")
+        assertEquals(false, repository.isLocked())
+    }
+
+    @Test
     fun `concurrent wrong attempts are counted individually`() = runTest {
         // Runs on real threads: the mutex, not the test scheduler, has to serialise the
         // read-modify-write of the attempt counter.
@@ -255,6 +332,7 @@ internal class PasscodeRepositoryImplTest {
             PasscodeRepositoryImpl(
                 cipher = PasscodeCipher(),
                 store = store,
+                keyShareProtection = protection,
                 dispatcher = Dispatchers.Default,
                 nowMillis = { now },
             )
@@ -272,6 +350,23 @@ internal class PasscodeRepositoryImplTest {
             PasscodeLockout.ATTEMPTS_BEFORE_LOCKOUT - 1,
             store.readLockout().failedAttempts,
         )
+    }
+}
+
+/** Records how the repository drives the bulk keyshare re-keying, including its ordering. */
+internal class RecordingKeyShareProtection : VaultKeyShareProtection {
+    val calls = mutableListOf<String>()
+    var protectedWith: ByteArray? = null
+    var unprotectFailure: Throwable? = null
+
+    override suspend fun protectAll(dataKey: ByteArray) {
+        calls += "protect"
+        protectedWith = dataKey.copyOf()
+    }
+
+    override suspend fun unprotectAll(dataKey: ByteArray) {
+        calls += "unprotect"
+        unprotectFailure?.let { throw it }
     }
 }
 

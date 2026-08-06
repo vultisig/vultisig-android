@@ -2,12 +2,16 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.db.dao.VaultDao
 import com.vultisig.wallet.data.db.models.CoinEntity
+import com.vultisig.wallet.data.db.models.KeyShareEntity
 import com.vultisig.wallet.data.db.models.VaultEntity
 import com.vultisig.wallet.data.db.models.VaultWithKeySharesAndTokens
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.passcode.KeyShareCipher
+import com.vultisig.wallet.data.passcode.PasscodeDataKeySource
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
@@ -15,6 +19,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -28,13 +33,27 @@ internal class VaultRepositoryImplTest {
 
     private lateinit var vaultDao: VaultDao
     private lateinit var tokenRepository: TokenRepository
+    private lateinit var passcode: FakePasscodeDataKeySource
     private lateinit var repository: VaultRepositoryImpl
+
+    private val keyShareCipher = KeyShareCipher()
 
     @BeforeEach
     fun setUp() {
         vaultDao = mockk(relaxUnitFun = true)
         tokenRepository = mockk()
-        repository = VaultRepositoryImpl(vaultDao, tokenRepository)
+        passcode = FakePasscodeDataKeySource()
+        repository = VaultRepositoryImpl(vaultDao, tokenRepository, keyShareCipher, passcode)
+    }
+
+    /** Stands in for the passcode repository's in-memory key without pulling in its dependencies. */
+    private class FakePasscodeDataKeySource : PasscodeDataKeySource {
+        var dataKey: ByteArray? = null
+        var locked: Boolean = false
+
+        override fun dataKeyOrNull(): ByteArray? = dataKey
+
+        override fun isLocked(): Boolean = locked
     }
 
     /** Returns a minimal [VaultWithKeySharesAndTokens] suitable for DAO stub returns. */
@@ -422,4 +441,114 @@ internal class VaultRepositoryImplTest {
 
         assertEquals(listOf("ETH-Ethereum"), repository.getDisabledCoinIds("vault-1"))
     }
+
+    private val dataKey = ByteArray(32) { it.toByte() }
+
+    /** Returns a stored vault carrying [keyShare] verbatim in the keyshare column. */
+    private fun vaultWithStoredKeyShare(keyShare: String) =
+        makeVaultWithTokens()
+            .copy(
+                keyShares =
+                    listOf(
+                        KeyShareEntity(vaultId = "vault-1", pubKey = "pub-1", keyShare = keyShare)
+                    )
+            )
+
+    /** Verifies a vault stored before the passcode existed still loads unchanged. */
+    @Test
+    fun `get returns plaintext keyshares for vaults stored without a passcode`() = runTest {
+        coEvery { vaultDao.loadById("vault-1") } returns vaultWithStoredKeyShare("share-1")
+
+        assertEquals(listOf("share-1"), repository.get("vault-1")?.keyshares?.map { it.keyShare })
+    }
+
+    /** Verifies encrypted keyshares are decrypted while the app is unlocked. */
+    @Test
+    fun `get decrypts keyshares while unlocked`() = runTest {
+        passcode.dataKey = dataKey
+        coEvery { vaultDao.loadById("vault-1") } returns
+            vaultWithStoredKeyShare(keyShareCipher.encrypt("share-1", dataKey))
+
+        assertEquals(listOf("share-1"), repository.get("vault-1")?.keyshares?.map { it.keyShare })
+    }
+
+    /**
+     * Verifies a locked read yields the vault without its keyshares rather than throwing, so
+     * background work that only needs addresses keeps running behind the lock screen.
+     */
+    @Test
+    fun `get drops keyshares it cannot decrypt while locked`() = runTest {
+        coEvery { vaultDao.loadById("vault-1") } returns
+            vaultWithStoredKeyShare(keyShareCipher.encrypt("share-1", dataKey))
+        passcode.dataKey = null
+        passcode.locked = true
+
+        val vault = repository.get("vault-1")
+
+        assertNotNull(vault)
+        assertEquals(emptyList(), vault.keyshares)
+        assertEquals("ecdsa-vault-1", vault.pubKeyECDSA)
+    }
+
+    /** Verifies keyshares are encrypted on the way into the database while unlocked. */
+    @Test
+    fun `add encrypts keyshares while unlocked`() = runTest {
+        passcode.dataKey = dataKey
+        val stored = slot<VaultWithKeySharesAndTokens>()
+
+        repository.add(makeVault().copy(keyshares = listOf(KeyShare("pub-1", "share-1"))))
+
+        coVerify { vaultDao.insert(capture(stored)) }
+        val written = stored.captured.keyShares.single().keyShare
+        assertTrue(keyShareCipher.isEncrypted(written))
+        assertEquals("share-1", keyShareCipher.decrypt(written, dataKey))
+    }
+
+    /** Verifies users without a passcode keep storing keyshares in the clear. */
+    @Test
+    fun `add stores plaintext keyshares when no passcode is set`() = runTest {
+        val stored = slot<VaultWithKeySharesAndTokens>()
+
+        repository.add(makeVault().copy(keyshares = listOf(KeyShare("pub-1", "share-1"))))
+
+        coVerify { vaultDao.insert(capture(stored)) }
+        assertEquals("share-1", stored.captured.keyShares.single().keyShare)
+    }
+
+    /**
+     * Verifies a locked write fails loudly. Storing the share in the clear instead would silently
+     * undo the at-rest protection the user asked for.
+     */
+    @Test
+    fun `add refuses to persist keyshares while locked`() = runTest {
+        passcode.dataKey = null
+        passcode.locked = true
+
+        assertFailsWith<IllegalStateException> {
+            repository.add(makeVault().copy(keyshares = listOf(KeyShare("pub-1", "share-1"))))
+        }
+
+        coVerify(exactly = 0) { vaultDao.insert(any()) }
+    }
+
+    /** Verifies a locked write of a vault with no keyshares still goes through. */
+    @Test
+    fun `upsert of a keyshare-free vault is allowed while locked`() = runTest {
+        passcode.locked = true
+
+        repository.upsert(makeVault())
+
+        coVerify { vaultDao.upsert(any()) }
+    }
+
+    /** Returns a minimal domain [Vault]. */
+    private fun makeVault() =
+        Vault(
+            id = "vault-1",
+            name = "Test Vault",
+            pubKeyECDSA = "ecdsa-vault-1",
+            pubKeyEDDSA = "eddsa-vault-1",
+            hexChainCode = "chaincode",
+            localPartyID = "device-1",
+        )
 }

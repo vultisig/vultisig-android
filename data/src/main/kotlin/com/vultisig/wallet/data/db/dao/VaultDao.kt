@@ -42,6 +42,11 @@ interface VaultDao {
     @Query("SELECT coinId FROM disabledCoin WHERE vaultId = :vaultId")
     suspend fun loadDisabledCoinIds(vaultId: VaultId): List<String>
 
+    /**
+     * Every keyshare across every vault, used to re-key them when the passcode is set or removed.
+     */
+    @Query("SELECT * FROM keyShare") suspend fun loadAllKeyShares(): List<KeyShareEntity>
+
     @Query("SELECT COUNT(*) > 0 FROM vault") suspend fun hasVaults(): Boolean
 
     @Query("SELECT EXISTS(SELECT 1 FROM coin WHERE chain = :chainId)")

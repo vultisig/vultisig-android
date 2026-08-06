@@ -13,6 +13,8 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.passcode.KeyShareCipher
+import com.vultisig.wallet.data.passcode.PasscodeDataKeySource
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
@@ -66,8 +68,12 @@ interface VaultRepository {
 
 internal class VaultRepositoryImpl
 @Inject
-constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRepository) :
-    VaultRepository {
+constructor(
+    private val vaultDao: VaultDao,
+    private val tokenRepository: TokenRepository,
+    private val keyShareCipher: KeyShareCipher,
+    private val passcodeDataKeySource: PasscodeDataKeySource,
+) : VaultRepository {
 
     override fun getEnabledTokens(vaultId: String): Flow<List<Coin>> =
         getAsFlow(vaultId).map { it?.coins.orEmpty() }
@@ -143,6 +149,41 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
         vaultDao.replaceToken(vaultId, oldToken.id, newToken.toCoinEntity(vaultId))
     }
 
+    /**
+     * Decrypts stored keyshares, dropping any that cannot be opened.
+     *
+     * They cannot be opened only when a passcode is set and the app is locked, which the lock
+     * screen keeps the user away from — but background work (notifications, balance sync) does
+     * still read vaults, and it only needs public keys and addresses. Returning the vault without
+     * its shares keeps that work alive; the write path refuses to persist a vault in that state, so
+     * a locked read can never be echoed back as data loss.
+     */
+    private fun List<KeyShareEntity>.toKeyShares(vaultId: VaultId): List<KeyShare> {
+        val dataKey = passcodeDataKeySource.dataKeyOrNull()
+        val shares = mapNotNull { entity ->
+            keyShareCipher.decrypt(entity.keyShare, dataKey)?.let { KeyShare(entity.pubKey, it) }
+        }
+        if (shares.size != size) {
+            Timber.w("Dropped %d locked keyshare(s) for vault %s", size - shares.size, vaultId)
+        }
+        return shares
+    }
+
+    /**
+     * Encrypts [keyShare] for storage when a passcode is active.
+     *
+     * Refuses to write while locked rather than silently storing a share in the clear, which would
+     * quietly undo the at-rest protection the user asked for.
+     */
+    private fun protect(keyShare: String): String {
+        val dataKey = passcodeDataKeySource.dataKeyOrNull()
+        if (dataKey != null) return keyShareCipher.encrypt(keyShare, dataKey)
+        check(!passcodeDataKeySource.isLocked()) {
+            "Refusing to persist a keyshare while the app is locked"
+        }
+        return keyShare
+    }
+
     private suspend fun VaultWithKeySharesAndTokens.toVault(): Vault {
         val vault = this
         return Vault(
@@ -155,7 +196,7 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
             localPartyID = vault.vault.localPartyID,
             signers = vault.signers.sortedBy { it.index }.map { it.title },
             resharePrefix = vault.vault.resharePrefix,
-            keyshares = vault.keyShares.map { KeyShare(it.pubKey, it.keyShare) },
+            keyshares = vault.keyShares.toKeyShares(vault.vault.id),
             coins =
                 vault.coins.mapNotNull { coinEntity ->
                     val chain =
@@ -225,7 +266,11 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
                 ),
             keyShares =
                 vault.keyshares.map {
-                    KeyShareEntity(vaultId = vaultId, pubKey = it.pubKey, keyShare = it.keyShare)
+                    KeyShareEntity(
+                        vaultId = vaultId,
+                        pubKey = it.pubKey,
+                        keyShare = protect(it.keyShare),
+                    )
                 },
             signers =
                 vault.signers.mapIndexed { index, signer ->

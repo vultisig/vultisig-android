@@ -72,12 +72,16 @@ interface PasscodeRepository {
 internal interface PasscodeDataKeySource {
     /** The data-encryption key while unlocked, or null when locked or not configured. */
     fun dataKeyOrNull(): ByteArray?
+
+    /** True when a passcode is configured but has not been entered in this session. */
+    fun isLocked(): Boolean
 }
 
 @Singleton
 internal class PasscodeRepositoryImpl(
     private val cipher: PasscodeCipher,
     private val store: PasscodeStore,
+    private val keyShareProtection: VaultKeyShareProtection,
     private val dispatcher: CoroutineDispatcher,
     private val nowMillis: () -> Long,
 ) : PasscodeRepository, PasscodeDataKeySource {
@@ -86,8 +90,9 @@ internal class PasscodeRepositoryImpl(
     constructor(
         cipher: PasscodeCipher,
         store: PasscodeStore,
+        keyShareProtection: VaultKeyShareProtection,
         @DefaultDispatcher dispatcher: CoroutineDispatcher,
-    ) : this(cipher, store, dispatcher, System::currentTimeMillis)
+    ) : this(cipher, store, keyShareProtection, dispatcher, System::currentTimeMillis)
 
     private val _state = MutableStateFlow<PasscodeState>(PasscodeState.Unknown)
     override val state: StateFlow<PasscodeState> = _state.asStateFlow()
@@ -106,6 +111,8 @@ internal class PasscodeRepositoryImpl(
 
     override fun dataKeyOrNull(): ByteArray? = dataKey
 
+    override fun isLocked(): Boolean = _state.value == PasscodeState.Locked
+
     override suspend fun initialize() {
         mutex.withLock {
             if (_state.value != PasscodeState.Unknown) return
@@ -118,9 +125,12 @@ internal class PasscodeRepositoryImpl(
         requireValidPasscode(passcode)
         mutex.withLock {
             val key = withContext(dispatcher) { cipher.newDataKey() }
+            // Persist the wrapped key before encrypting anything with it. The reverse order would
+            // let a crash mid-encryption leave ciphertext whose key was never written down.
             persistWrappedKey(key, passcode)
             dataKey = key
-            store.writeLockout(PasscodeLockout.cleared())
+            withContext(dispatcher) { store.writeLockout(PasscodeLockout.cleared()) }
+            keyShareProtection.protectAll(key)
             _state.value = PasscodeState.Unlocked
         }
     }
@@ -132,6 +142,8 @@ internal class PasscodeRepositoryImpl(
         requireValidPasscode(newPasscode)
         return mutex.withLock {
             verifyLocked(currentPasscode) { key ->
+                // The data key is unchanged, so stored keyshares stay valid: only the wrap is
+                // rewritten. This is why changing the passcode is instant on a large vault set.
                 persistWrappedKey(key, newPasscode)
                 dataKey = key
                 _state.value = PasscodeState.Unlocked
@@ -141,7 +153,10 @@ internal class PasscodeRepositoryImpl(
 
     override suspend fun disablePasscode(passcode: String): PasscodeUnlockResult =
         mutex.withLock {
-            verifyLocked(passcode) {
+            verifyLocked(passcode) { key ->
+                // Decrypt first, drop the credentials second. A crash between the two leaves the
+                // passcode in place over a partly decrypted table, which still reads correctly.
+                keyShareProtection.unprotectAll(key)
                 withContext(dispatcher) { store.clearCredentials() }
                 dataKey = null
                 _state.value = PasscodeState.Disabled
