@@ -173,6 +173,14 @@
     <string name="faq_settings_a5">Vultisig is gratis te gebruiken. Alleen de standaard netwerkkosten zijn van toepassing op verzenden. Voor ruilen en bridgen geldt een tarief van 0,5% (50 bps).</string>
     <string name="faq_settings_a6">Vultisig ondersteunt de belangrijkste cryptovaluta en tokens, met ondersteuning voor vele blockchains en hun tokens.</string>
     <string name="biometry_auth_login_button">Inloggen met biometrie</string>
+
+    <!-- Passcode App Lock -->
+    <string name="passcode_lock_title">App vergrendeld</string>
+    <string name="passcode_lock_subtitle">Voer je toegangscode in om door te gaan.</string>
+    <string name="passcode_lock_wrong_passcode">Onjuiste toegangscode, probeer het opnieuw.</string>
+    <string name="passcode_lock_last_attempt">Onjuiste toegangscode. Nog één poging over.</string>
+    <string name="passcode_lock_too_many_attempts_seconds">Te veel pogingen. Probeer het opnieuw over %1$d s.</string>
+    <string name="passcode_lock_too_many_attempts_minutes">Te veel pogingen. Probeer het opnieuw over %1$d min.</string>
     <string name="swap_form_from_title">Van</string>
     <string name="swap_form_estimated_fees_title">Wisselkosten</string>
     <string name="swap_form_estimated_fees_with_percent_title">Wisselkosten (%1$s)</string>

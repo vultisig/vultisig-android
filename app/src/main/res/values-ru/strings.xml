@@ -173,6 +173,14 @@
     <string name="faq_settings_a5">Vultisig предоставляется бесплатно. За отправку взимается только стандартная комиссия сети. За обмены и мосты взимается комиссия в размере 0,5% (50 б.с.).</string>
     <string name="faq_settings_a6">Vultisig поддерживает основные криптовалюты и токены, в настоящее время доступно более 30 сетей и их токенов.</string>
     <string name="biometry_auth_login_button">Вход с использованием биометрии</string>
+
+    <!-- Passcode App Lock -->
+    <string name="passcode_lock_title">Приложение заблокировано</string>
+    <string name="passcode_lock_subtitle">Введите код-пароль, чтобы продолжить.</string>
+    <string name="passcode_lock_wrong_passcode">Неверный код-пароль, попробуйте еще раз.</string>
+    <string name="passcode_lock_last_attempt">Неверный код-пароль. Осталась одна попытка.</string>
+    <string name="passcode_lock_too_many_attempts_seconds">Слишком много попыток. Повторите через %1$d с.</string>
+    <string name="passcode_lock_too_many_attempts_minutes">Слишком много попыток. Повторите через %1$d мин.</string>
     <string name="swap_form_from_title">Из</string>
     <string name="swap_form_estimated_fees_title">Комиссия за обмен</string>
     <string name="swap_form_estimated_fees_with_percent_title">Комиссия за обмен (%1$s)</string>

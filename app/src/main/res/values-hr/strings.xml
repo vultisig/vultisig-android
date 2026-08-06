@@ -162,6 +162,14 @@
     <string name="send_error_no_gas_fee">Nema naknade za plin</string>
     <string name="send_screen_max">MAKS</string>
     <string name="biometry_auth_login_button">Prijavite se biometrijom</string>
+
+    <!-- Passcode App Lock -->
+    <string name="passcode_lock_title">Aplikacija je zaključana</string>
+    <string name="passcode_lock_subtitle">Unesite svoj pristupni kod za nastavak.</string>
+    <string name="passcode_lock_wrong_passcode">Netočan pristupni kod, pokušajte ponovno.</string>
+    <string name="passcode_lock_last_attempt">Netočan pristupni kod. Preostao je jedan pokušaj.</string>
+    <string name="passcode_lock_too_many_attempts_seconds">Previše pokušaja. Pokušajte ponovno za %1$d s.</string>
+    <string name="passcode_lock_too_many_attempts_minutes">Previše pokušaja. Pokušajte ponovno za %1$d min.</string>
     <string name="feature_item_learn_more">Saznajte više</string>
     <string name="keysign">Keysign</string>
     <string name="generating_key_screen_keygen_failed">Keygen nije uspio</string>

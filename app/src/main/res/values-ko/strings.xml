@@ -249,6 +249,14 @@
     <string name="faq_settings_a5">Vultisig는 무료로 사용할 수 있습니다. 보내기에는 표준 네트워크 수수료만 적용됩니다. 스왑과 브릿지에는 0.5% (50 bps) 수수료가 있습니다.</string>
     <string name="faq_settings_a6">Vultisig는 주요 암호화폐와 토큰을 지원하며, 현재 30개 이상의 체인과 해당 토큰을 사용할 수 있습니다.</string>
     <string name="biometry_auth_login_button">생체 인증으로 로그인</string>
+
+    <!-- Passcode App Lock -->
+    <string name="passcode_lock_title">앱 잠김</string>
+    <string name="passcode_lock_subtitle">계속하려면 패스코드를 입력하세요.</string>
+    <string name="passcode_lock_wrong_passcode">패스코드가 틀렸습니다. 다시 시도해 주세요.</string>
+    <string name="passcode_lock_last_attempt">패스코드가 틀렸습니다. 1회 남았습니다.</string>
+    <string name="passcode_lock_too_many_attempts_seconds">시도 횟수를 초과했습니다. %1$d초 후에 다시 시도하세요.</string>
+    <string name="passcode_lock_too_many_attempts_minutes">시도 횟수를 초과했습니다. %1$d분 후에 다시 시도하세요.</string>
     <string name="swap_form_from_title">보내는 토큰</string>
     <string name="swap_form_estimated_fees_title">스왑 수수료</string>
     <string name="swap_form_estimated_fees_with_percent_title">스왑 수수료 (%1$s)</string>

@@ -162,6 +162,14 @@
     <string name="send_error_no_gas_fee">Nessuna commissione per il gas</string>
     <string name="send_screen_max">Massimo</string>
     <string name="biometry_auth_login_button">Accedi con la biometria</string>
+
+    <!-- Passcode App Lock -->
+    <string name="passcode_lock_title">App bloccata</string>
+    <string name="passcode_lock_subtitle">Inserisci il tuo codice di accesso per continuare.</string>
+    <string name="passcode_lock_wrong_passcode">Codice di accesso errato, riprova.</string>
+    <string name="passcode_lock_last_attempt">Codice di accesso errato. Resta un tentativo.</string>
+    <string name="passcode_lock_too_many_attempts_seconds">Troppi tentativi. Riprova tra %1$d s.</string>
+    <string name="passcode_lock_too_many_attempts_minutes">Troppi tentativi. Riprova tra %1$d min.</string>
     <string name="feature_item_learn_more">Saperne di più</string>
     <string name="keysign">Keysign</string>
     <string name="generating_key_screen_keygen_failed">Keygen non riuscito</string>

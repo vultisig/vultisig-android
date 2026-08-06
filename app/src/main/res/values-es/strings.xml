@@ -163,6 +163,14 @@
     <string name="faq_settings_a5">Vultisig es gratuito. Solo se aplican las tarifas de red estándar para el envío. Y para los intercambios y puentes, hay una tarifa del 0,5 % (50 puntos básicos).</string>
     <string name="faq_settings_a6">Vultisig admite las principales criptomonedas y tokens, con más de 30 cadenas y sus tokens disponibles actualmente.</string>
     <string name="biometry_auth_login_button">Iniciar sesión con biometría</string>
+
+    <!-- Passcode App Lock -->
+    <string name="passcode_lock_title">Aplicación bloqueada</string>
+    <string name="passcode_lock_subtitle">Introduzca su código de acceso para continuar.</string>
+    <string name="passcode_lock_wrong_passcode">Código de acceso incorrecto, inténtelo de nuevo.</string>
+    <string name="passcode_lock_last_attempt">Código de acceso incorrecto. Queda un intento.</string>
+    <string name="passcode_lock_too_many_attempts_seconds">Demasiados intentos. Inténtelo de nuevo en %1$d s.</string>
+    <string name="passcode_lock_too_many_attempts_minutes">Demasiados intentos. Inténtelo de nuevo en %1$d min.</string>
     <string name="swap_form_from_title">De</string>
     <string name="swap_form_estimated_fees_title">Tarifa de intercambio</string>
     <string name="swap_form_estimated_fees_with_percent_title">Tarifa de intercambio (%1$s)</string>

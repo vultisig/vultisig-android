@@ -162,6 +162,14 @@
     <string name="send_error_no_gas_fee">Keine Gasgebühren</string>
     <string name="send_screen_max">MAX</string>
     <string name="biometry_auth_login_button">Login mit Biometrie</string>
+
+    <!-- Passcode App Lock -->
+    <string name="passcode_lock_title">App gesperrt</string>
+    <string name="passcode_lock_subtitle">Geben Sie Ihren Passcode ein, um fortzufahren.</string>
+    <string name="passcode_lock_wrong_passcode">Falscher Passcode, bitte versuchen Sie es erneut.</string>
+    <string name="passcode_lock_last_attempt">Falscher Passcode. Noch ein Versuch übrig.</string>
+    <string name="passcode_lock_too_many_attempts_seconds">Zu viele Versuche. Erneut versuchen in %1$d Sek.</string>
+    <string name="passcode_lock_too_many_attempts_minutes">Zu viele Versuche. Erneut versuchen in %1$d Min.</string>
     <string name="feature_item_learn_more">Erfahren Sie mehr</string>
     <string name="keysign">Keysign</string>
     <string name="generating_key_screen_keygen_failed">Keygen fehlgeschlagen</string>
