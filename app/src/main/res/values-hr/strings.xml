@@ -196,7 +196,7 @@
     <string name="passcode_operation_failed">To nije uspjelo. Vaš pristupni kod nije promijenjen.</string>
     <string name="passcode_not_digits">Unesite samo znamenke.</string>
     <string name="passcode_key_unavailable_title">Trezori nisu dostupni</string>
-    <string name="passcode_key_unavailable_message">Ključevi koji štite pohranu trezora na ovom uređaju su izgubljeni, pa se njegovi keyshareovi više ne mogu pročitati. Ponovno instalirajte aplikaciju i vratite trezore iz sigurnosne kopije.</string>
+    <string name="passcode_key_unavailable_message">Ključevi koji štite pohranu trezora na ovom uređaju su izgubljeni, pa se njegova dijeljenja trezora više ne mogu pročitati. Ponovno instalirajte aplikaciju i vratite trezore iz sigurnosne kopije.</string>
     <string name="passcode_input_field_content_description">Uneseno %1$d od %2$d znamenki</string>
     <string name="feature_item_learn_more">Saznajte više</string>
     <string name="keysign">Keysign</string>

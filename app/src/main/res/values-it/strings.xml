@@ -196,7 +196,7 @@
     <string name="passcode_operation_failed">Non ha funzionato. Il tuo codice di accesso non è cambiato.</string>
     <string name="passcode_not_digits">Inserisci solo cifre.</string>
     <string name="passcode_key_unavailable_title">Vault non disponibili</string>
-    <string name="passcode_key_unavailable_message">Le chiavi che proteggono l\'archiviazione dei vault su questo dispositivo sono andate perse, quindi i suoi keyshare non possono più essere letti. Reinstalla l\'app e ripristina i tuoi vault da un backup.</string>
+    <string name="passcode_key_unavailable_message">Le chiavi che proteggono l\'archiviazione dei vault su questo dispositivo sono andate perse, quindi le sue condivisioni del vault non possono più essere lette. Reinstalla l\'app e ripristina i tuoi vault da un backup.</string>
     <string name="passcode_input_field_content_description">%1$d di %2$d cifre inserite</string>
     <string name="feature_item_learn_more">Saperne di più</string>
     <string name="keysign">Keysign</string>

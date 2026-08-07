@@ -15,6 +15,7 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.json.Json
@@ -135,6 +136,14 @@ internal class MapVaultToProtoImplTest {
 
     @Test
     fun `a vault with no keyshares is refused rather than exported`() {
-        assertFailsWith<IllegalStateException> { mapper(vault().copy(keyshares = emptyList())) }
+        assertFailsWith<VaultKeysharesUnavailableException> {
+            mapper(vault().copy(keyshares = emptyList()))
+        }
+    }
+
+    @Test
+    fun `exportableOrNull turns that refusal into a null the backup paths can report`() {
+        assertNull(mapper.exportableOrNull(vault().copy(keyshares = emptyList())))
+        assertNotNull(mapper.exportableOrNull(vault()))
     }
 }

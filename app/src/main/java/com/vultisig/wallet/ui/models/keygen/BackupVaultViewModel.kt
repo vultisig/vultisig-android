@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.mappers.MapVaultToProto
+import com.vultisig.wallet.data.mappers.exportableOrNull
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getVaultPart
@@ -158,7 +159,10 @@ constructor(
         }
 
         val backup =
-            withContext(Dispatchers.Default) { createVaultBackup(mapVaultToProto(vault), password) }
+            withContext(Dispatchers.Default) {
+                val proto = mapVaultToProto.exportableOrNull(vault) ?: return@withContext null
+                createVaultBackup(proto, password)
+            }
 
         if (backup == null) {
             viewModelScope.launch {

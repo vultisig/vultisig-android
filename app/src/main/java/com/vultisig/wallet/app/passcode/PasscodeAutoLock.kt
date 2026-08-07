@@ -33,7 +33,7 @@ import timber.log.Timber
  *
  * This is not, and cannot be, what keeps the app off the recents thumbnail. `ProcessLifecycleOwner`
  * holds ON_STOP back by 700ms so that a configuration change does not read as leaving the app, so
- * even the [AutoLockTimeout.Immediate] lock lands well after the system has taken its snapshot.
+ * even the shortest [AutoLockTimeout] lands well after the system has taken its snapshot.
  * `FLAG_SECURE` is what covers that surface, and the prevent-screenshots setting is what sets it.
  */
 @Singleton

@@ -197,7 +197,7 @@
     <string name="passcode_operation_failed">No funcionó. Su código de acceso no ha cambiado.</string>
     <string name="passcode_not_digits">Introduzca solo dígitos.</string>
     <string name="passcode_key_unavailable_title">Bóvedas no disponibles</string>
-    <string name="passcode_key_unavailable_message">Las claves que protegen el almacenamiento de bóvedas de este dispositivo se han perdido, por lo que ya no se pueden leer sus keyshares. Reinstale la aplicación y restaure sus bóvedas desde una copia de seguridad.</string>
+    <string name="passcode_key_unavailable_message">Las claves que protegen el almacenamiento de bóvedas de este dispositivo se han perdido, por lo que ya no se pueden leer sus recursos compartidos de la bóveda. Reinstale la aplicación y restaure sus bóvedas desde una copia de seguridad.</string>
     <string name="passcode_input_field_content_description">%1$d de %2$d dígitos introducidos</string>
     <string name="swap_form_from_title">De</string>
     <string name="swap_form_estimated_fees_title">Tarifa de intercambio</string>

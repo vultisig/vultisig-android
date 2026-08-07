@@ -11,6 +11,32 @@ import kotlinx.datetime.Clock
 
 internal interface MapVaultToProto : MapperFunc<Vault, VaultProto>
 
+/**
+ * A vault reached export with no keyshares, which means storage dropped them because the data key
+ * was unavailable — not that the vault has none.
+ *
+ * Typed rather than a bare `check`, because every export path runs inside a plain
+ * `viewModelScope.launch`: an [IllegalStateException] there kills the coroutine before the backup
+ * flow can report the failure, delete the empty document it already created, or tell the user
+ * anything. Callers catch this one type and nothing else.
+ */
+internal class VaultKeysharesUnavailableException :
+    IllegalStateException("Refusing to export a vault with no keyshares")
+
+/**
+ * Maps [vault] for export, or returns null when its keyshares are unavailable.
+ *
+ * Null is the failure channel the backup paths already speak — `createVaultBackup` returns it too,
+ * and every caller answers it by deleting the document it created and showing the user an error.
+ * Catching the one type keeps cancellation and genuine bugs propagating.
+ */
+internal fun MapVaultToProto.exportableOrNull(vault: Vault): VaultProto? =
+    try {
+        this(vault)
+    } catch (_: VaultKeysharesUnavailableException) {
+        null
+    }
+
 internal class MapVaultToProtoImpl @Inject constructor() : MapVaultToProto {
 
     override fun invoke(from: Vault): VaultProto {
@@ -18,7 +44,7 @@ internal class MapVaultToProtoImpl @Inject constructor() : MapVaultToProto {
         // of storage because the data key was unavailable. Exporting that would hand the user a
         // .vult that reports success, restores cleanly, and can never sign — the worst shape a
         // backup failure can take, because it is only discovered when the backup is needed.
-        check(from.keyshares.isNotEmpty()) { "Refusing to export a vault with no keyshares" }
+        if (from.keyshares.isEmpty()) throw VaultKeysharesUnavailableException()
         return VaultProto(
             name = from.name,
             localPartyId = from.localPartyID,

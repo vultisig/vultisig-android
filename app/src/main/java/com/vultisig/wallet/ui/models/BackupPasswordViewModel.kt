@@ -8,6 +8,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.AppZipEntry
 import com.vultisig.wallet.data.mappers.MapVaultToProto
+import com.vultisig.wallet.data.mappers.exportableOrNull
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -280,7 +281,10 @@ constructor(
         }
 
         val backup =
-            withContext(Dispatchers.Default) { createVaultBackup(mapVaultToProto(vault), password) }
+            withContext(Dispatchers.Default) {
+                val proto = mapVaultToProto.exportableOrNull(vault) ?: return@withContext null
+                createVaultBackup(proto, password)
+            }
         if (backup == null) {
             viewModelScope.launch { showError() }
             return false
@@ -294,9 +298,9 @@ constructor(
         val content =
             withContext(Dispatchers.Default) {
                 vaultsToBackup.map { vault ->
+                    val proto = mapVaultToProto.exportableOrNull(vault) ?: return@withContext null
                     val vaultBackupData =
-                        createVaultBackup(mapVaultToProto(vault), password)
-                            ?: return@withContext null
+                        createVaultBackup(proto, password) ?: return@withContext null
                     val fileName = createVaultBackupFileName(vault)
                     AppZipEntry(fileName, vaultBackupData)
                 }
