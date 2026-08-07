@@ -39,7 +39,7 @@ internal class GetThorChainLpPositionsUseCaseTest {
         coEvery { api.getLiquidityProvider("ETH.ETH", RUNE_ADDR) } returns null
         coEvery { api.getLiquidityProvider("LTC.LTC", RUNE_ADDR) } returns lp(units = "0")
 
-        val positions = useCase(runeAddress = RUNE_ADDR)
+        val positions = useCase(runeAddress = RUNE_ADDR).positions
 
         assertEquals(1, positions.size)
         val btc = positions.single()
@@ -62,9 +62,10 @@ internal class GetThorChainLpPositionsUseCaseTest {
 
         val positions =
             useCase(
-                runeAddress = RUNE_ADDR,
-                assetAddressesByPool = mapOf("BTC.BTC" to BTC_ADDR, "ETH.ETH" to ETH_ADDR),
-            )
+                    runeAddress = RUNE_ADDR,
+                    assetAddressesByPool = mapOf("BTC.BTC" to BTC_ADDR, "ETH.ETH" to ETH_ADDR),
+                )
+                .positions
 
         assertEquals(setOf("BTC.BTC", "ETH.ETH"), positions.map { it.pool }.toSet())
         coVerify { api.getLiquidityProvider("BTC.BTC", BTC_ADDR) }
@@ -80,7 +81,7 @@ internal class GetThorChainLpPositionsUseCaseTest {
             listOf(pool("BTC.BTC", status = "staged"), pool("ETH.ETH"))
         coEvery { api.getLiquidityProvider("ETH.ETH", RUNE_ADDR) } returns lp(units = "1")
 
-        val positions = useCase(runeAddress = RUNE_ADDR)
+        val positions = useCase(runeAddress = RUNE_ADDR).positions
 
         assertEquals(listOf("ETH.ETH"), positions.map { it.pool })
         coVerify(exactly = 0) { api.getLiquidityProvider("BTC.BTC", any()) }
@@ -92,7 +93,7 @@ internal class GetThorChainLpPositionsUseCaseTest {
         coEvery { api.getLiquidityProvider("BTC.BTC", RUNE_ADDR) } returns lp(units = "1")
         coEvery { api.getLiquidityProvider("ETH.ETH", RUNE_ADDR) } returns null
 
-        val positions = useCase(runeAddress = RUNE_ADDR, availablePools = pools)
+        val positions = useCase(runeAddress = RUNE_ADDR, availablePools = pools).positions
 
         assertEquals(listOf("BTC.BTC"), positions.map { it.pool })
         coVerify(exactly = 0) { api.getPoolStats(any()) }
@@ -103,22 +104,37 @@ internal class GetThorChainLpPositionsUseCaseTest {
         val pools = listOf(pool("BTC.BTC", status = "staged"), pool("ETH.ETH"))
         coEvery { api.getLiquidityProvider("ETH.ETH", RUNE_ADDR) } returns lp(units = "1")
 
-        val positions = useCase(runeAddress = RUNE_ADDR, availablePools = pools)
+        val positions = useCase(runeAddress = RUNE_ADDR, availablePools = pools).positions
 
         assertEquals(listOf("ETH.ETH"), positions.map { it.pool })
         coVerify(exactly = 0) { api.getLiquidityProvider("BTC.BTC", any()) }
     }
 
     @Test
-    fun `swallows per-pool network errors and continues`() = runTest {
+    fun `a per-pool network error does not stop the other pools but is reported`() = runTest {
         coEvery { api.getPoolStats(any()) } returns listOf(pool("BTC.BTC"), pool("ETH.ETH"))
         coEvery { api.getLiquidityProvider("BTC.BTC", RUNE_ADDR) } throws
             NetworkException(httpStatusCode = 500, message = "boom")
         coEvery { api.getLiquidityProvider("ETH.ETH", RUNE_ADDR) } returns lp(units = "5")
 
-        val positions = useCase(runeAddress = RUNE_ADDR)
+        val result = useCase(runeAddress = RUNE_ADDR)
 
-        assertEquals(listOf("ETH.ETH"), positions.map { it.pool })
+        assertEquals(listOf("ETH.ETH"), result.positions.map { it.pool })
+        // Without this the caller can't tell BTC's absence from "the user holds no BTC liquidity",
+        // and would fold a pool it knows nothing about into a total as zero.
+        assertEquals(setOf("BTC.BTC"), result.failedPools)
+    }
+
+    @Test
+    fun `a pool the user simply has no position in is not reported as failed`() = runTest {
+        coEvery { api.getPoolStats(any()) } returns listOf(pool("BTC.BTC"), pool("ETH.ETH"))
+        coEvery { api.getLiquidityProvider("BTC.BTC", RUNE_ADDR) } returns null
+        coEvery { api.getLiquidityProvider("ETH.ETH", RUNE_ADDR) } returns lp(units = "0")
+
+        val result = useCase(runeAddress = RUNE_ADDR)
+
+        assertTrue(result.positions.isEmpty())
+        assertTrue(result.failedPools.isEmpty())
     }
 
     @Test
@@ -135,7 +151,7 @@ internal class GetThorChainLpPositionsUseCaseTest {
         coEvery { api.getPoolStats(any()) } returns listOf(pool("BTC.BTC", apr = "NaN"))
         coEvery { api.getLiquidityProvider("BTC.BTC", RUNE_ADDR) } returns lp(units = "1")
 
-        val position = useCase(runeAddress = RUNE_ADDR).single()
+        val position = useCase(runeAddress = RUNE_ADDR).positions.single()
 
         assertTrue(position.annualPercentageRate == null)
     }

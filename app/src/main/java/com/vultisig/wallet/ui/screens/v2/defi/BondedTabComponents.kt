@@ -362,6 +362,7 @@ private fun HeaderDeFiWidgetPreview() {
     HeaderDeFiWidget(
         onClickAction = {},
         totalAmount = "2600 RUNE",
+        totalPrice = "$4,160.00",
         iconRes = R.drawable.rune,
         buttonText = "Bond to Node",
         title = "Total Bonded Rune",

@@ -30,6 +30,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.MAYA_BOND_CACAO_KEY
 import com.vultisig.wallet.ui.screens.v2.defi.MAYA_STAKE_CACAO_KEY
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -42,6 +43,11 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -272,6 +278,310 @@ internal class MayachainDefiPositionsViewModelTest {
     }
 
     @Test
+    fun `LP value counts toward the header total`() = runTest {
+        // The total summed bond and stake only, so a holder whose value sat in LP saw a header
+        // that disagreed with the cards underneath it.
+        selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+        givenLpPool(liquidityUnits = "100", units = "1000")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        // Nothing bonded or staked, so the header is the LP position's own $0.40.
+        val data = successData(vm)
+        data.lp.positions.single().totalPriceLp shouldBe "$0.40"
+        data.totalAmountPrice shouldBe "$0.40"
+        data.isTotalAmountLoading shouldBe false
+    }
+
+    @Test
+    fun `a failed staking load leaves the CACAO card priced at zero rather than blank`() = runTest {
+        // Clearing the spinner alone left the card with no fiat line at all, which the tab hid.
+        coEvery { mayaCacaoStakingService.getStakingDetails(CACAO_ADDRESS) } returns
+            flow { throw RuntimeException("maya node down") }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val position = successData(vm).staking.positions.single()
+        position.isLoading shouldBe false
+        position.stakedFiatDisplay shouldBe "$0.00"
+    }
+
+    @Test
+    fun `a failed bond load settles the header total instead of stranding it`() = runTest {
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+            flow { throw RuntimeException("maya node down") }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val data = successData(vm)
+        data.bonded.isLoading shouldBe false
+        data.isTotalAmountLoading shouldBe false
+        data.bonded.totalBondedPrice shouldBe "$0.00"
+    }
+
+    @Test
+    fun `a vault without CACAO prices the bond card at zero rather than unavailable`() = runTest {
+        // Nothing bonded is a real zero, not a price we failed to resolve, so the card has to say
+        // so. Clearing the spinner alone left it on the unavailable dash.
+        coEvery { vaultRepository.get(VAULT_ID) } returns VAULT.copy(coins = listOf(BTC_COIN))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val data = successData(vm)
+        data.bonded.isLoading shouldBe false
+        data.bonded.totalBondedPrice shouldBe "$0.00"
+        data.isTotalAmountLoading shouldBe false
+    }
+
+    @Test
+    fun `a bond load that throws before the flow starts still prices the card`() = runTest {
+        // The outer catch wraps the vault lookup. It used to clear the spinner without filling the
+        // price, which is the same blank-line bug as the in-flow failure below.
+        coEvery { vaultRepository.get(VAULT_ID) } throws RuntimeException("db closed")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val data = successData(vm)
+        data.bonded.isLoading shouldBe false
+        data.bonded.totalBondedPrice shouldBe "$0.00"
+        data.isTotalAmountLoading shouldBe false
+    }
+
+    @Test
+    fun `the header total waits for every leg instead of settling on the seeded zeros`() = runTest {
+        // The legs are seeded flows; combining them unconditionally published $0.00 with the
+        // spinner already off, before bond, stake or LP had loaded anything.
+        selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+        givenLpPool(liquidityUnits = "100", units = "1000")
+        val heldBond = MutableStateFlow<List<BondedNodePosition>?>(null)
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+            heldBond.filterNotNull()
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        // Bond has not reported yet, so the total must still be pending.
+        successData(vm).isTotalAmountLoading shouldBe true
+        successData(vm).totalAmountPrice shouldBe null
+
+        heldBond.value = listOf(bondedNode(HUNDRED_CACAO))
+
+        val settled = successData(vm)
+        settled.isTotalAmountLoading shouldBe false
+        // 100 CACAO at 2, plus the LP position's 0.40.
+        settled.totalAmountPrice shouldBe "$200.40"
+    }
+
+    @Test
+    fun `a failed LP load leaves the placeholder priced at zero, not unavailable`() = runTest {
+        // The placeholder used to snapshot a zero that was still being resolved on another
+        // coroutine, then a failed load froze that null in as the terminal state.
+        selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+        givenLpPool(liquidityUnits = "100", units = "1000")
+        coEvery { mayachainBondRepository.getLpPoolStats() } throws RuntimeException("midgard down")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val data = successData(vm)
+        data.lp.isLoading shouldBe false
+        data.lp.positions.single().totalPriceLp shouldBe "$0.00"
+        data.isTotalAmountLoading shouldBe false
+    }
+
+    @Test
+    fun `switching currency re-prices LP instead of relabelling the old magnitude`() = runTest {
+        // LP is stored already converted, so it cannot be re-based the way the raw legs are. The
+        // total used to add that stale magnitude straight into a sum priced in the new currency.
+        selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+        givenLpPool(liquidityUnits = "100", units = "1000")
+        val currency = MutableStateFlow(AppCurrency.USD)
+        coEvery { appCurrencyRepository.currency } returns currency
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        successData(vm).totalAmountPrice shouldBe "$0.40"
+
+        // A different EUR price on purpose: with both currencies priced the same, a magnitude
+        // carried across unchanged and one genuinely re-converted are the same number, and only
+        // the formatter would be left to assert on — which relabelling passes just as well.
+        coEvery { tokenPriceRepository.getCachedPrice(any(), AppCurrency.EUR) } returns
+            BigDecimal("3")
+        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+            NumberFormat.getCurrencyInstance(Locale.GERMANY)
+        currency.value = AppCurrency.EUR
+
+        // Re-priced under the new currency rather than carrying the old number across: the same
+        // 0.1 CACAO + 0.1 BTC at 3 apiece, not the 0.40 they were worth in USD.
+        val settled = successData(vm)
+        settled.isTotalAmountLoading shouldBe false
+        settled.totalAmountPrice shouldBe germanFormat.format(BigDecimal("0.60"))
+    }
+
+    @Test
+    fun `a superseded staking load leaves its leg to the load that replaced it`() = runTest {
+        // A currency switch cancels the staking load and starts another, but onCompletion runs on
+        // the way out of a cancelled collector too. Reporting zero there hands the replacement's
+        // still-pending leg a value it never sent, settling the header on a total with the staked
+        // amount missing from it.
+        selectPositions(MAYA_STAKE_CACAO_KEY)
+        val currency = MutableStateFlow(AppCurrency.USD)
+        coEvery { appCurrencyRepository.currency } returns currency
+
+        val replacementLoad = MutableStateFlow<MayaCacaoStakingDetails?>(null)
+        var loads = 0
+        coEvery { mayaCacaoStakingService.getStakingDetails(CACAO_ADDRESS) } coAnswers
+            {
+                if (loads++ == 0) {
+                    flow { awaitCancellation() }
+                } else {
+                    flow { emit(replacementLoad.filterNotNull().first()) }
+                }
+            }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+            NumberFormat.getCurrencyInstance(Locale.GERMANY)
+        currency.value = AppCurrency.EUR
+
+        successData(vm).isTotalAmountLoading shouldBe true
+        successData(vm).totalAmountPrice shouldBe null
+
+        replacementLoad.value = MayaCacaoStakingDetails(FIFTY_CACAO, apr = null, canUnstake = false)
+
+        val settled = successData(vm)
+        settled.isTotalAmountLoading shouldBe false
+        settled.totalAmountPrice shouldBe germanFormat.format(BigDecimal("100.00"))
+    }
+
+    @Test
+    fun `a bonded collector dropped for a newer refresh leaves its leg to that refresh`() =
+        runTest {
+            // Same shape on the bonded side, where flatMapLatest is what does the dropping.
+            selectPositions(MAYA_BOND_CACAO_KEY)
+            val currency = MutableStateFlow(AppCurrency.USD)
+            coEvery { appCurrencyRepository.currency } returns currency
+
+            var collections = 0
+            coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+                flow {
+                    if (collections++ == 0) {
+                        emit(listOf(bondedNode(amount = HUNDRED_CACAO)))
+                    }
+                    // getActiveNodes stays open on a live feed; being dropped is how it ends.
+                    awaitCancellation()
+                }
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+            successData(vm).totalAmountPrice shouldBe "$200.00"
+
+            coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+                NumberFormat.getCurrencyInstance(Locale.GERMANY)
+            currency.value = AppCurrency.EUR
+
+            successData(vm).isTotalAmountLoading shouldBe true
+            successData(vm).totalAmountPrice shouldBe null
+        }
+
+    @Test
+    fun `switching currency parks the header on its spinner, not on the old total`() = runTest {
+        // Dropping the LP leg stops the combine from emitting, so the header simply kept its
+        // settled prior-currency figure — no spinner, no sign anything was in flight — for the
+        // whole refetch.
+        selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+        givenLpPool(liquidityUnits = "100", units = "1000")
+        val currency = MutableStateFlow(AppCurrency.USD)
+        coEvery { appCurrencyRepository.currency } returns currency
+        val loadedMemberDetails = memberDetails(liquidityUnits = "100")
+        val heldMemberDetails = MutableStateFlow<MayaMemberDetails?>(loadedMemberDetails)
+        coEvery { mayachainBondRepository.getMemberDetails(CACAO_ADDRESS) } coAnswers
+            {
+                heldMemberDetails.filterNotNull().first()
+            }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        successData(vm).totalAmountPrice shouldBe "$0.40"
+
+        // Hold the re-price so the switch can be observed mid-flight.
+        heldMemberDetails.value = null
+        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+            NumberFormat.getCurrencyInstance(Locale.GERMANY)
+        currency.value = AppCurrency.EUR
+
+        successData(vm).totalAmountPrice shouldBe null
+        successData(vm).isTotalAmountLoading shouldBe true
+
+        heldMemberDetails.value = loadedMemberDetails
+
+        val settled = successData(vm)
+        settled.isTotalAmountLoading shouldBe false
+        settled.totalAmountPrice shouldBe germanFormat.format(BigDecimal("0.40"))
+    }
+
+    @Test
+    fun `switching currency re-prices the bonded and staking cards, not just the header`() =
+        runTest {
+            // Card fiat strings are formatted once per load from one-shot flows, so nothing
+            // re-converts on its own. The header moved to the new currency while Bonded and CACAO
+            // Staking kept showing the old one.
+            selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY)
+            val currency = MutableStateFlow(AppCurrency.USD)
+            coEvery { appCurrencyRepository.currency } returns currency
+            coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+                flowOf(listOf(bondedNode(HUNDRED_CACAO)))
+            coEvery { mayaCacaoStakingService.getStakingDetails(any()) } returns
+                flowOf(MayaCacaoStakingDetails(HUNDRED_CACAO, apr = null, canUnstake = false))
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+            successData(vm).bonded.totalBondedPrice shouldBe "$200.00"
+
+            // A different EUR price, so re-converting and merely re-formatting produce different
+            // numbers.
+            coEvery { tokenPriceRepository.getCachedPrice(any(), AppCurrency.EUR) } returns
+                BigDecimal("3")
+            coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+                NumberFormat.getCurrencyInstance(Locale.GERMANY)
+            currency.value = AppCurrency.EUR
+
+            val expected = germanFormat.format(BigDecimal("300.00"))
+            val settled = successData(vm)
+            settled.bonded.totalBondedPrice shouldBe expected
+            settled.staking.positions.single().stakedFiatDisplay shouldBe expected
+        }
+
+    @Test
+    fun `a chain reporting no LP pools still settles the header`() = runTest {
+        // reloadLpTab used to wait on a non-empty dialog list, which cannot tell "not fetched yet"
+        // from "fetched, no pools". With an LP key persisted, the leg never reported and the
+        // header spun forever — pull-to-refresh included.
+        selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+        coEvery { mayachainBondRepository.getMayaNodePools() } returns emptyList()
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val data = successData(vm)
+        data.isTotalAmountLoading shouldBe false
+        data.totalAmountPrice shouldBe "$0.00"
+    }
+
+    @Test
+    fun `member details that fail to load make the header unavailable rather than zero`() =
+        runTest {
+            // The failure fell back to an empty MayaMemberDetails, which reads as "holds no
+            // liquidity". Every selected pool then folded into the header total as zero, giving a
+            // confident figure that understated what the vault holds.
+            selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+            givenLpPool(liquidityUnits = "100", units = "1000")
+            coEvery { mayachainBondRepository.getMemberDetails(CACAO_ADDRESS) } throws
+                RuntimeException("midgard down")
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+            val data = successData(vm)
+            data.isTotalAmountLoading shouldBe false
+            data.totalAmountPrice shouldBe null
+            data.lp.positions.single().totalPriceLp shouldBe null
+        }
+
+    @Test
     fun `the LP tab stays empty while only the static Maya keys are selected`() = runTest {
         givenLpPool(liquidityUnits = "100", units = "1000")
 
@@ -372,10 +682,178 @@ internal class MayachainDefiPositionsViewModelTest {
         assertEquals(expected, data.selectedPositions)
     }
 
+    @Test
+    fun `adding a pool parks the header on its spinner, not on the pre-add total`() = runTest {
+        // Confirming the dialog writes the selection, and the saved-positions collector reloads
+        // every leg for it — but left the legs holding their pre-selection values, so the header
+        // read as a settled total, short by the pool just added, for the whole refetch.
+        val saved = MutableStateFlow(setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY))
+        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns saved
+        coEvery { defiPositionsRepository.saveSelectedPositions(VAULT_ID, any()) } answers
+            {
+                saved.value = secondArg<List<String>>().toSet()
+            }
+        givenLpPool(liquidityUnits = "100", units = "1000")
+        val loadedMemberDetails = memberDetails(liquidityUnits = "100")
+        val heldMemberDetails = MutableStateFlow<MayaMemberDetails?>(loadedMemberDetails)
+        coEvery { mayachainBondRepository.getMemberDetails(CACAO_ADDRESS) } coAnswers
+            {
+                heldMemberDetails.filterNotNull().first()
+            }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        successData(vm).totalAmountPrice shouldBe "$0.00"
+
+        // Hold the new pool's fetch so the add can be observed mid-flight.
+        heldMemberDetails.value = null
+        vm.setPositionSelectionDialogVisibility(true)
+        vm.onPositionSelectionChange(BTC_POOL, selected = true)
+        vm.onPositionSelectionDone()
+
+        successData(vm).totalAmountPrice shouldBe null
+        successData(vm).isTotalAmountLoading shouldBe true
+
+        heldMemberDetails.value = loadedMemberDetails
+
+        val settled = successData(vm)
+        settled.isTotalAmountLoading shouldBe false
+        settled.totalAmountPrice shouldBe "$0.40"
+    }
+
+    @Test
+    fun `confirming a selection nothing changed in writes nothing`() = runTest {
+        // Done is reachable without touching a checkbox. Writing anyway would clobber the stored
+        // selection this screen only ever reads through its Maya defaults, and the write would come
+        // back through the collector as a reload of all three legs.
+        val saved = MutableStateFlow(setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY))
+        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns saved
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        val settled = successData(vm)
+        settled.isTotalAmountLoading shouldBe false
+
+        vm.setPositionSelectionDialogVisibility(true)
+        vm.onPositionSelectionDone()
+
+        coVerify(exactly = 0) { defiPositionsRepository.saveSelectedPositions(VAULT_ID, any()) }
+        val data = successData(vm)
+        assertFalse(data.showPositionSelectionDialog)
+        data.isTotalAmountLoading shouldBe false
+        data.totalAmountPrice shouldBe settled.totalAmountPrice
+    }
+
+    @Test
+    fun `a store emission that leaves the selection alone keeps the header settled`() = runTest {
+        // A vault's first-ever save flips the key from absent to present, which the store cannot
+        // read as unchanged even though both sides map to the same Maya defaults — and the stored
+        // set need not come back in the order the default list has.
+        val saved = MutableStateFlow(setOf("RUNE", "TCY"))
+        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns saved
+        val heldStaking =
+            MutableStateFlow<MayaCacaoStakingDetails?>(
+                MayaCacaoStakingDetails(BigInteger.ZERO, apr = null, canUnstake = false)
+            )
+        coEvery { mayaCacaoStakingService.getStakingDetails(any()) } returns
+            heldStaking.filterNotNull()
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        val settled = successData(vm)
+        settled.isTotalAmountLoading shouldBe false
+
+        // Hold the staking leg: a reload would leave the header on its spinner here.
+        heldStaking.value = null
+        saved.value = setOf(MAYA_STAKE_CACAO_KEY, MAYA_BOND_CACAO_KEY)
+
+        val data = successData(vm)
+        data.isTotalAmountLoading shouldBe false
+        data.totalAmountPrice shouldBe settled.totalAmountPrice
+        assertEquals(settled.selectedPositions, data.selectedPositions)
+    }
+
+    @Test
+    fun `clearing every position settles the header instead of freezing it`() = runTest {
+        // An empty selection is what the store hands back for a vault that has one of its own, so
+        // deriving it to the Maya defaults produced the same set the collector last saw and the
+        // dedup dropped the emission — the tabs cleared while the header kept the total of the
+        // positions just removed.
+        val saved = MutableStateFlow(setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY))
+        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns saved
+        coEvery { defiPositionsRepository.saveSelectedPositions(VAULT_ID, any()) } answers
+            {
+                saved.value = secondArg<List<String>>().toSet()
+            }
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+            flowOf(listOf(bondedNode(amount = HUNDRED_CACAO)))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        successData(vm).totalAmountPrice shouldBe "$200.00"
+
+        vm.setPositionSelectionDialogVisibility(true)
+        vm.onPositionSelectionChange(MAYA_BOND_CACAO_KEY, selected = false)
+        vm.onPositionSelectionChange(MAYA_STAKE_CACAO_KEY, selected = false)
+        vm.onPositionSelectionDone()
+
+        val data = successData(vm)
+        assertTrue(data.selectedPositions.isEmpty())
+        data.isTotalAmountLoading shouldBe false
+        data.totalAmountPrice shouldBe "$0.00"
+        assertTrue(data.bonded.nodes.isEmpty())
+        assertTrue(data.staking.positions.isEmpty())
+    }
+
+    @Test
+    fun `an emptied stored selection is honoured, not re-derived to the defaults`() = runTest {
+        // The store returns its own defaults for a vault that never chose, so an empty set can only
+        // be one this screen cleared — the Maya fallback must not claim it back.
+        val saved = MutableStateFlow(setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY))
+        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns saved
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+            flowOf(listOf(bondedNode(amount = HUNDRED_CACAO)))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        successData(vm).totalAmountPrice shouldBe "$200.00"
+
+        saved.value = emptySet()
+
+        val data = successData(vm)
+        assertTrue(data.selectedPositions.isEmpty())
+        data.isTotalAmountLoading shouldBe false
+        data.totalAmountPrice shouldBe "$0.00"
+    }
+
+    @Test
+    fun `deselecting bond drops its card and its leg from the total`() = runTest {
+        // Bond is a checkbox like the others; the loader used to ignore it, so the card stayed and
+        // the header went on counting a position the user had removed.
+        selectPositions(MAYA_STAKE_CACAO_KEY)
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+            flowOf(listOf(bondedNode(amount = HUNDRED_CACAO)))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val data = successData(vm)
+        assertFalse(data.bonded.isLoading)
+        assertTrue(data.bonded.nodes.isEmpty())
+        data.isTotalAmountLoading shouldBe false
+        data.totalAmountPrice shouldBe "$0.00"
+    }
+
     private fun selectPositions(vararg keys: String) {
         coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns
             flowOf(keys.toSet())
     }
+
+    private fun memberDetails(liquidityUnits: String) =
+        MayaMemberDetails(
+            pools =
+                listOf(
+                    MayaMemberPool(
+                        pool = BTC_POOL,
+                        assetAdded = "0",
+                        cacaoAdded = "0",
+                        liquidityUnits = liquidityUnits,
+                    )
+                )
+        )
 
     private fun givenLpPool(
         liquidityUnits: String,
@@ -449,6 +927,8 @@ internal class MayachainDefiPositionsViewModelTest {
         const val CACAO_ADDRESS = "maya1cacaoaddress"
         const val NODE_ADDRESS = "maya1qwertyuiopasdfgh"
         const val BTC_POOL = "BTC.BTC"
+
+        val germanFormat: NumberFormat = NumberFormat.getCurrencyInstance(Locale.GERMANY)
 
         val HUNDRED_CACAO: BigInteger = BigInteger("1000000000000")
         val FIFTY_CACAO: BigInteger = BigInteger("500000000000")

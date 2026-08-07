@@ -80,7 +80,6 @@ constructor(
     private val _state =
         MutableStateFlow(
             DefiUiModel(
-                totalAmountPrice = "$0.00",
                 isTotalAmountLoading = true,
                 isBalanceVisible = true,
                 supportEditChains = false,
@@ -164,13 +163,22 @@ constructor(
                             mscaAddress = fetchedAddress
                             fetchUSDCBalanceFromNetwork(fetchedAddress)
                         } else {
+                            // No Circle account yet means the user holds nothing, which is a real
+                            // zero rather than a price we failed to resolve — say so instead of
+                            // leaving a brand-new user on the unavailable dash.
+                            val zero = zeroFiat()
                             // Preserve `isAccountOpen` from current state: if `onCreateAccount`
                             // raced ahead and already marked the account open, don't stomp it back
                             // to false based on this now-stale "no account" finding.
                             _state.update { currentState ->
                                 currentState.copy(
                                     isTotalAmountLoading = false,
-                                    circleDefi = currentState.circleDefi.copy(isLoading = false),
+                                    totalAmountPrice = zero,
+                                    circleDefi =
+                                        currentState.circleDefi.copy(
+                                            isLoading = false,
+                                            totalDepositCurrency = zero,
+                                        ),
                                 )
                             }
                         }
@@ -378,6 +386,21 @@ constructor(
                         ),
                 )
             }
+        }
+
+    /**
+     * Zero rendered in the user's currency. A path that holds nothing settles here rather than at a
+     * blank, so the card states what the position is worth instead of dropping the line. Null when
+     * the currency format itself can't be resolved, which the UI shows as unavailable.
+     */
+    private suspend fun zeroFiat(): String? =
+        try {
+            withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
+                .format(BigDecimal.ZERO)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to format zero balance")
+            null
         }
 
     private suspend fun createFiatValue(
