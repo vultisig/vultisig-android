@@ -100,7 +100,8 @@ internal class PasscodeAutoLock(
             scope.launch {
                 delay(current.minutes * MILLIS_PER_MINUTE)
                 lockWhenNothingHoldsIt(
-                    "Auto-locking after ${current.minutes} minute(s) in the background"
+                    "Auto-locking after %d minute(s) in the background",
+                    current.minutes,
                 )
             }
     }
@@ -118,7 +119,7 @@ internal class PasscodeAutoLock(
         val awayMillis = elapsedRealtimeMillis() - backgroundedAt
         if (awayMillis >= current.minutes * MILLIS_PER_MINUTE) {
             pendingLock =
-                scope.launch { lockWhenNothingHoldsIt("Auto-locking: away for $awayMillis ms") }
+                scope.launch { lockWhenNothingHoldsIt("Auto-locking: away for %d ms", awayMillis) }
         }
     }
 
@@ -129,12 +130,12 @@ internal class PasscodeAutoLock(
      * ceremony in flight has not yet written its keyshare, and locking first destroys that share
      * outright. See [AutoLockHold].
      */
-    private suspend fun lockWhenNothingHoldsIt(reason: String) {
+    private suspend fun lockWhenNothingHoldsIt(reason: String, vararg reasonArgs: Any) {
         if (autoLockHold.holds.value > 0) {
             Timber.d("Auto-lock deferred: an operation is in flight")
             autoLockHold.awaitRelease()
         }
-        Timber.d(reason)
+        Timber.d(reason, *reasonArgs)
         passcodeRepository.lock()
     }
 

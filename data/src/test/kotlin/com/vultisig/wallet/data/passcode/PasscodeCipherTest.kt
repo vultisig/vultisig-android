@@ -5,6 +5,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 
 internal class PasscodeCipherTest {
@@ -74,7 +75,12 @@ internal class PasscodeCipherTest {
     @Test
     fun `key derivation uses at least the OWASP floor of PBKDF2 iterations`() {
         assertEquals("PBKDF2WithHmacSHA256", PasscodeCipher.PBKDF2_ALGORITHM)
-        assertEquals(210_000, PasscodeCipher.PBKDF2_ITERATIONS)
+        // A floor, not an equality: raising the cost is the change this test exists to protect,
+        // and it should not have to be edited to let one through.
+        assertTrue(
+            PasscodeCipher.PBKDF2_ITERATIONS >= 210_000,
+            "PBKDF2 iterations fell to ${PasscodeCipher.PBKDF2_ITERATIONS}, below the OWASP floor",
+        )
     }
 
     @Test

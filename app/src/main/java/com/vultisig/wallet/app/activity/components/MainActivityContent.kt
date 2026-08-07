@@ -301,4 +301,7 @@ private fun MainActivityContentPreview() {
 private fun NavBackStackEntry?.isDialog(): Boolean =
     this?.destination?.navigatorName == DIALOG_NAVIGATOR_NAME
 
-private const val DIALOG_NAVIGATOR_NAME = "dialog"
+/**
+ * Internal so a test can hold it against the annotation the navigation library actually declares.
+ */
+internal const val DIALOG_NAVIGATOR_NAME = "dialog"

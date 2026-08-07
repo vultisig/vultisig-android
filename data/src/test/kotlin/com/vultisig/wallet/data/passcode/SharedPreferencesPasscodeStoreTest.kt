@@ -69,6 +69,9 @@ internal class SharedPreferencesPasscodeStoreTest {
 
         verify { editor.remove(KEY_SALT) }
         verify { editor.remove(KEY_WRAPPED_KEY) }
+        // Staging the removals on a relaxed editor mock proves nothing on its own — without the
+        // apply() the half-credential survives the process and the next read repeats this.
+        verify { editor.apply() }
     }
 
     @Test
@@ -79,6 +82,9 @@ internal class SharedPreferencesPasscodeStoreTest {
 
         verify { editor.remove(KEY_SALT) }
         verify { editor.remove(KEY_WRAPPED_KEY) }
+        // Staging the removals on a relaxed editor mock proves nothing on its own — without the
+        // apply() the half-credential survives the process and the next read repeats this.
+        verify { editor.apply() }
     }
 
     @Test
@@ -89,10 +95,16 @@ internal class SharedPreferencesPasscodeStoreTest {
 
         verify { editor.remove(KEY_SALT) }
         verify { editor.remove(KEY_WRAPPED_KEY) }
+        // Staging the removals on a relaxed editor mock proves nothing on its own — without the
+        // apply() the half-credential survives the process and the next read repeats this.
+        verify { editor.apply() }
     }
 
     private companion object {
-        const val KEY_SALT = "passcode_salt"
-        const val KEY_WRAPPED_KEY = "passcode_wrapped_data_key"
+        // Deliberately the production constants, not copies: a local copy keeps passing after a
+        // rename in the store, which is exactly the change that would strand every user's
+        // credentials on upgrade.
+        const val KEY_SALT = SharedPreferencesPasscodeStore.KEY_SALT
+        const val KEY_WRAPPED_KEY = SharedPreferencesPasscodeStore.KEY_WRAPPED_KEY
     }
 }

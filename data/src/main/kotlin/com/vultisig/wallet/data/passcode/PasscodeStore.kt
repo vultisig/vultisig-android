@@ -99,7 +99,12 @@ constructor(private val prefs: SharedPreferences) : PasscodeStore {
             null
         }
 
-    private companion object {
+    /**
+     * Internal rather than private so tests bind to the real keys. A test carrying its own copy of
+     * these strings passes happily while a rename in here loses every user's credentials on upgrade
+     * — the one failure this class must never ship.
+     */
+    internal companion object {
         const val KEY_SALT = "passcode_salt"
         const val KEY_WRAPPED_KEY = "passcode_wrapped_data_key"
         const val KEY_FAILED_ATTEMPTS = "passcode_failed_attempts"

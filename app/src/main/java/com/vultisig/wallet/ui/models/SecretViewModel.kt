@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.passcode.PasscodeConfig
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@Immutable
 internal data class SecretUiModel(
     val isSwapKitEnabled: Boolean = true,
     val isCustomRpcEnabled: Boolean = false,

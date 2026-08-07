@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.AppLocaleRepository
 import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.settings.SettingsItem.AddressBook
 import com.vultisig.wallet.ui.models.settings.SettingsItem.CheckForUpdates
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Currency
@@ -391,7 +392,10 @@ constructor(
      * must not strand a tester with an encrypted vault and no way to reach the off switch.
      */
     private fun loadPasscodeVisibility() {
-        viewModelScope.launch {
+        // safeLaunch, because initialize() decodes persisted credentials off a keystore that can be
+        // wiped or unavailable. Letting that throw here would take the whole Settings screen's
+        // coroutine down over a row that is merely meant to stay hidden.
+        viewModelScope.safeLaunch {
             passcodeRepository.initialize()
             combine(passcodeConfig.isFeatureEnabled, passcodeRepository.state) {
                     isFeatureEnabled,
