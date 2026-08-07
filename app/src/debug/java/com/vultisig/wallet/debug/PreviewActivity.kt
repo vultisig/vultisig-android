@@ -57,6 +57,7 @@ import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.DAppMetadata
+import com.vultisig.wallet.data.passcode.AutoLockTimeout
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
@@ -123,6 +124,10 @@ import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelPresentation
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderHistoryStatus
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderHistoryUiModel
+import com.vultisig.wallet.ui.models.passcode.AutoLockSettingUiModel
+import com.vultisig.wallet.ui.models.passcode.PasscodeLockError
+import com.vultisig.wallet.ui.models.passcode.PasscodeLockUiModel
+import com.vultisig.wallet.ui.models.passcode.PasscodeSettingsUiModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimMaturingUtxoUiModel
@@ -143,14 +148,6 @@ import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VultTierGateUiModel
 import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesUiState
-import com.vultisig.wallet.data.passcode.AutoLockTimeout
-import com.vultisig.wallet.ui.models.passcode.AutoLockSettingUiModel
-import com.vultisig.wallet.ui.models.passcode.PasscodeLockError
-import com.vultisig.wallet.ui.screens.passcode.AutoLockSettingScreen
-import com.vultisig.wallet.ui.models.passcode.PasscodeSettingsUiModel
-import com.vultisig.wallet.ui.screens.passcode.PasscodeSettingsScreen
-import com.vultisig.wallet.ui.models.passcode.PasscodeLockUiModel
-import com.vultisig.wallet.ui.screens.passcode.PasscodeLockScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
@@ -169,6 +166,9 @@ import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
 import com.vultisig.wallet.ui.screens.keysign.KeysignErrorScreen
 import com.vultisig.wallet.ui.screens.keysign.KeysignView
+import com.vultisig.wallet.ui.screens.passcode.AutoLockSettingScreen
+import com.vultisig.wallet.ui.screens.passcode.PasscodeLockScreen
+import com.vultisig.wallet.ui.screens.passcode.PasscodeSettingsScreen
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimScreen
 import com.vultisig.wallet.ui.screens.qbtc.QuantumSecurityIntroScreenContent
@@ -239,8 +239,7 @@ class PreviewActivity : ComponentActivity() {
                 when (screen) {
                     "auto_lock_setting" ->
                         AutoLockSettingScreen(
-                            state =
-                                AutoLockSettingUiModel(selected = AutoLockTimeout.FiveMinutes),
+                            state = AutoLockSettingUiModel(selected = AutoLockTimeout.FiveMinutes),
                             onBackClick = {},
                             onTimeoutClick = {},
                         )
@@ -249,7 +248,7 @@ class PreviewActivity : ComponentActivity() {
                             state =
                                 PasscodeSettingsUiModel(
                                     isPasscodeEnabled = true,
-                                    autoLockTimeout = AutoLockTimeout.Immediate,
+                                    autoLockTimeout = AutoLockTimeout.Never,
                                 ),
                             onBackClick = {},
                             onPasscodeEnabledChange = {},

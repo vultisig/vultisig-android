@@ -45,8 +45,15 @@ internal class SharedPreferencesPasscodeStore
 constructor(private val prefs: SharedPreferences) : PasscodeStore {
 
     override fun readCredentials(): PasscodeCredentials? {
-        val salt = prefs.getString(KEY_SALT, null)?.let(::decodeOrNull) ?: return null
-        val wrapped = prefs.getString(KEY_WRAPPED_KEY, null)?.let(::decodeOrNull) ?: return null
+        val salt = prefs.getString(KEY_SALT, null)?.let(::decodeOrNull)
+        val wrapped = prefs.getString(KEY_WRAPPED_KEY, null)?.let(::decodeOrNull)
+        if (salt == null || wrapped == null) {
+            // Half a credential is not a passcode, it is a torn write or a corrupted store. Drop
+            // the remaining half so the app reports "no passcode" consistently rather than leaving
+            // a stray salt that a later write would pair with a mismatched key.
+            if (salt != null || wrapped != null) clearCredentials()
+            return null
+        }
         return PasscodeCredentials(salt = salt, wrappedDataKey = wrapped)
     }
 
@@ -72,7 +79,10 @@ constructor(private val prefs: SharedPreferences) : PasscodeStore {
         )
 
     override fun writeLockout(state: PasscodeLockoutState) {
-        prefs.edit {
+        // commit, not apply: the caller charges an attempt before spending hundreds of milliseconds
+        // deriving the key, precisely so that force-stopping the process mid-derivation cannot
+        // discard it. An asynchronous apply() would let exactly that write be lost.
+        prefs.edit(commit = true) {
             putInt(KEY_FAILED_ATTEMPTS, state.failedAttempts)
             putLong(KEY_LOCKED_OUT_UNTIL, state.lockedOutUntilMillis)
             putLong(KEY_LOCKED_OUT_AT, state.lockedOutAtMillis)

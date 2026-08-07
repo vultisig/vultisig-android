@@ -8,6 +8,9 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.models.settings.AppLanguage
+import com.vultisig.wallet.data.passcode.PasscodeConfig
+import com.vultisig.wallet.data.passcode.PasscodeRepository
+import com.vultisig.wallet.data.passcode.isConfigured
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.AppLocaleRepository
 import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
@@ -41,6 +44,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -248,6 +253,8 @@ constructor(
     private val appLocaleRepository: AppLocaleRepository,
     private val referralRepository: ReferralCodeSettingsRepositoryContract,
     private val preventScreenshotsRepository: PreventScreenshotsRepository,
+    private val passcodeRepository: PasscodeRepository,
+    private val passcodeConfig: PasscodeConfig,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val _uiEvents = Channel<SettingsUiEvent>()
@@ -274,7 +281,9 @@ constructor(
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.settings_screen_privacy),
-                        items = listOf(PasscodeEncryption, PreventScreenshots()),
+                        // PasscodeEncryption is inserted by loadPasscodeVisibility when the
+                        // Advanced Settings flag is on, or when a passcode is already configured.
+                        items = listOf(PreventScreenshots()),
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.support),
@@ -371,9 +380,42 @@ constructor(
             loadCurrency()
             loadAppLocale()
             loadPreventScreenshots()
+            loadPasscodeVisibility()
             loadWasReferralUsed()
         }
     }
+
+    /**
+     * Shows Settings → Passcode only once the feature has been switched on in Advanced Settings, or
+     * whenever a passcode is already configured. The second half matters: turning the flag back off
+     * must not strand a tester with an encrypted vault and no way to reach the off switch.
+     */
+    private fun loadPasscodeVisibility() {
+        viewModelScope.launch {
+            passcodeRepository.initialize()
+            combine(passcodeConfig.isFeatureEnabled, passcodeRepository.state) {
+                    isFeatureEnabled,
+                    passcodeState ->
+                    isFeatureEnabled || passcodeState.isConfigured
+                }
+                .distinctUntilChanged()
+                .collect { isVisible ->
+                    state.update { it.copy(items = updatedPasscodeVisibility(it.items, isVisible)) }
+                }
+        }
+    }
+
+    private fun updatedPasscodeVisibility(
+        groups: List<SettingsGroupUiModel>,
+        isVisible: Boolean,
+    ): List<SettingsGroupUiModel> =
+        groups.map { group ->
+            // The privacy group is the one holding the screenshot switch; it is the only place the
+            // passcode entry belongs.
+            if (group.items.none { it is PreventScreenshots }) return@map group
+            val others = group.items.filterNot { it == PasscodeEncryption }
+            group.copy(items = if (isVisible) listOf(PasscodeEncryption) + others else others)
+        }
 
     private fun loadWasReferralUsed() {
         viewModelScope.launch { hasUsedReferral = referralRepository.hasVisitReferralCode() }

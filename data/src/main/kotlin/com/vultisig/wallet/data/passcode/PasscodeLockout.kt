@@ -21,10 +21,10 @@ internal data class PasscodeLockoutState(
 /**
  * Escalating delay applied to repeated wrong passcodes.
  *
- * A 5-digit passcode has only 100k combinations, so an attacker who can drive the unlock screen
- * unthrottled would exhaust it quickly. The delays below put a hard ceiling on that: reaching even
- * 1% of the keyspace costs weeks of wall-clock time. State is persisted, so killing and relaunching
- * the app does not reset the penalty.
+ * A 6-digit passcode has only a million combinations, so an attacker who can drive the unlock
+ * screen unthrottled would exhaust it quickly. The delays below put a hard ceiling on that:
+ * reaching even 1% of the keyspace costs weeks of wall-clock time. State is persisted, so killing
+ * and relaunching the app does not reset the penalty.
  *
  * Pure and clock-injected so every branch is unit-testable without waiting.
  */
@@ -48,7 +48,9 @@ internal object PasscodeLockout {
      *
      * If the device clock has moved backwards past the instant the penalty started, the remaining
      * time is reported as the full penalty rather than expiring early — otherwise changing the
-     * system clock would be a trivial bypass.
+     * system clock would be a trivial bypass. Callers persist [reanchoredForClockChange] first so
+     * that penalty is then served from the moment the change was noticed and does actually run
+     * down; without it the same wound-back clock would report a full penalty forever.
      */
     fun remainingLockoutMillis(state: PasscodeLockoutState, nowMillis: Long): Long {
         if (state.lockedOutUntilMillis <= 0L) return 0L
@@ -56,6 +58,20 @@ internal object PasscodeLockout {
             return state.lockedOutUntilMillis - state.lockedOutAtMillis
         }
         return (state.lockedOutUntilMillis - nowMillis).coerceAtLeast(0L)
+    }
+
+    /**
+     * Restarts an active penalty at [nowMillis] when the device clock has moved behind the instant
+     * it began, so winding the clock back costs one more penalty period instead of an open-ended
+     * lockout. Returns [state] itself when there is nothing to re-anchor.
+     */
+    fun reanchoredForClockChange(
+        state: PasscodeLockoutState,
+        nowMillis: Long,
+    ): PasscodeLockoutState {
+        if (state.lockedOutUntilMillis <= 0L || nowMillis >= state.lockedOutAtMillis) return state
+        val penalty = state.lockedOutUntilMillis - state.lockedOutAtMillis
+        return state.copy(lockedOutUntilMillis = nowMillis + penalty, lockedOutAtMillis = nowMillis)
     }
 
     /** Returns the state after one more wrong passcode at [nowMillis]. */

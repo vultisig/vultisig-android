@@ -176,7 +176,7 @@
     <string name="passcode_settings_change">Passcode ändern</string>
     <string name="passcode_settings_auto_lock">Automatische Sperre</string>
     <string name="auto_lock_setting_title">Automatische Sperre</string>
-    <string name="auto_lock_immediately">Sofort</string>
+    <string name="auto_lock_never">Nie</string>
     <string name="auto_lock_one_minute">Nach 1 Minute</string>
     <string name="auto_lock_five_minutes">Nach 5 Minuten</string>
     <string name="auto_lock_ten_minutes">Nach 10 Minuten</string>
@@ -190,9 +190,14 @@
     <string name="passcode_entry_headline_confirm">Bestätigen Sie Ihren Passcode</string>
     <string name="passcode_entry_caption_current_change">Bestätigen Sie Ihre Identität, bevor Sie den Passcode ändern.</string>
     <string name="passcode_entry_caption_current_disable">Bestätigen Sie Ihre Identität, bevor Sie die Verschlüsselung deaktivieren.</string>
-    <string name="passcode_entry_caption_new">Wählen Sie 5 Ziffern. Sie benötigen sie bei jeder Sperrung der App.</string>
-    <string name="passcode_entry_caption_confirm">Geben Sie dieselben 5 Ziffern erneut ein.</string>
+    <string name="passcode_entry_caption_new">Wählen Sie %1$d Ziffern. Sie benötigen sie bei jeder Sperrung der App.</string>
+    <string name="passcode_entry_caption_confirm">Geben Sie dieselben %1$d Ziffern erneut ein.</string>
     <string name="passcode_entry_mismatch">Diese Passcodes stimmen nicht überein. Wählen Sie erneut.</string>
+    <string name="passcode_operation_failed">Das hat nicht funktioniert. Ihr Passcode ist unverändert.</string>
+    <string name="passcode_not_digits">Nur Ziffern eingeben.</string>
+    <string name="passcode_key_unavailable_title">Vaults nicht verfügbar</string>
+    <string name="passcode_key_unavailable_message">Die Schlüssel, die den Vault-Speicher dieses Geräts schützen, sind verloren, sodass die Keyshares nicht mehr gelesen werden können. Installieren Sie die App neu und stellen Sie Ihre Vaults aus einem Backup wieder her.</string>
+    <string name="passcode_input_field_content_description">%1$d von %2$d Ziffern eingegeben</string>
     <string name="feature_item_learn_more">Erfahren Sie mehr</string>
     <string name="keysign">Keysign</string>
     <string name="generating_key_screen_keygen_failed">Keygen fehlgeschlagen</string>
@@ -630,6 +635,7 @@
     <string name="settings_advanced_swapkit_toggle">SwapKit Aggregator</string>
     <string name="settings_advanced_custom_rpc_toggle">Benutzerdefinierter RPC</string>
     <string name="settings_advanced_limit_swap_toggle">Limit-Orders</string>
+    <string name="settings_advanced_passcode_toggle">Passcode-Verschlüsselung</string>
     <string name="custom_rpc_title">Benutzerdefinierter RPC</string>
     <string name="custom_rpc_tier_badge">VULT TIER</string>
     <string name="custom_rpc_advanced_subtitle">Nutze eigene Nodes pro Blockchain</string>

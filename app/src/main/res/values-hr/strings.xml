@@ -176,7 +176,7 @@
     <string name="passcode_settings_change">Promijeni pristupni kod</string>
     <string name="passcode_settings_auto_lock">Automatsko zaključavanje</string>
     <string name="auto_lock_setting_title">Automatsko zaključavanje</string>
-    <string name="auto_lock_immediately">Odmah</string>
+    <string name="auto_lock_never">Nikad</string>
     <string name="auto_lock_one_minute">Nakon 1 minute</string>
     <string name="auto_lock_five_minutes">Nakon 5 minuta</string>
     <string name="auto_lock_ten_minutes">Nakon 10 minuta</string>
@@ -190,9 +190,14 @@
     <string name="passcode_entry_headline_confirm">Potvrdite svoj pristupni kod</string>
     <string name="passcode_entry_caption_current_change">Potvrdite svoj identitet prije promjene pristupnog koda.</string>
     <string name="passcode_entry_caption_current_disable">Potvrdite svoj identitet prije isključivanja šifriranja.</string>
-    <string name="passcode_entry_caption_new">Odaberite 5 znamenki. Trebat će vam svaki put kada se aplikacija zaključa.</string>
-    <string name="passcode_entry_caption_confirm">Unesite istih 5 znamenki ponovno.</string>
+    <string name="passcode_entry_caption_new">Odaberite %1$d znamenki. Trebat će vam svaki put kada se aplikacija zaključa.</string>
+    <string name="passcode_entry_caption_confirm">Unesite istih %1$d znamenki ponovno.</string>
     <string name="passcode_entry_mismatch">Pristupni kodovi se ne podudaraju. Odaberite ponovno.</string>
+    <string name="passcode_operation_failed">To nije uspjelo. Vaš pristupni kod nije promijenjen.</string>
+    <string name="passcode_not_digits">Unesite samo znamenke.</string>
+    <string name="passcode_key_unavailable_title">Trezori nisu dostupni</string>
+    <string name="passcode_key_unavailable_message">Ključevi koji štite pohranu trezora na ovom uređaju su izgubljeni, pa se njegovi keyshareovi više ne mogu pročitati. Ponovno instalirajte aplikaciju i vratite trezore iz sigurnosne kopije.</string>
+    <string name="passcode_input_field_content_description">Uneseno %1$d od %2$d znamenki</string>
     <string name="feature_item_learn_more">Saznajte više</string>
     <string name="keysign">Keysign</string>
     <string name="generating_key_screen_keygen_failed">Keygen nije uspio</string>
@@ -631,6 +636,7 @@
     <string name="settings_advanced_swapkit_toggle">SwapKit agregator</string>
     <string name="settings_advanced_custom_rpc_toggle">Prilagođeni RPC</string>
     <string name="settings_advanced_limit_swap_toggle">Limit nalozi</string>
+    <string name="settings_advanced_passcode_toggle">Šifriranje pristupnim kodom</string>
     <string name="custom_rpc_title">Prilagođeni RPC</string>
     <string name="custom_rpc_tier_badge">VULT TIER</string>
     <string name="custom_rpc_advanced_subtitle">Koristite vlastite čvorove po lancu</string>

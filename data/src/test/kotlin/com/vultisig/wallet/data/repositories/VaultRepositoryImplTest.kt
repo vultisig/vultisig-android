@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.passcode.KeyShareCipher
+import com.vultisig.wallet.data.passcode.KeyShareIdentity
 import com.vultisig.wallet.data.passcode.PasscodeDataKeySource
 import io.mockk.coEvery
 import io.mockk.coJustRun
@@ -46,7 +47,9 @@ internal class VaultRepositoryImplTest {
         repository = VaultRepositoryImpl(vaultDao, tokenRepository, keyShareCipher, passcode)
     }
 
-    /** Stands in for the passcode repository's in-memory key without pulling in its dependencies. */
+    /**
+     * Stands in for the passcode repository's in-memory key without pulling in its dependencies.
+     */
     private class FakePasscodeDataKeySource : PasscodeDataKeySource {
         var dataKey: ByteArray? = null
         var locked: Boolean = false
@@ -443,6 +446,7 @@ internal class VaultRepositoryImplTest {
     }
 
     private val dataKey = ByteArray(32) { it.toByte() }
+    private val keyShareIdentity = KeyShareIdentity(vaultId = "vault-1", pubKey = "pub-1")
 
     /** Returns a stored vault carrying [keyShare] verbatim in the keyshare column. */
     private fun vaultWithStoredKeyShare(keyShare: String) =
@@ -467,9 +471,22 @@ internal class VaultRepositoryImplTest {
     fun `get decrypts keyshares while unlocked`() = runTest {
         passcode.dataKey = dataKey
         coEvery { vaultDao.loadById("vault-1") } returns
-            vaultWithStoredKeyShare(keyShareCipher.encrypt("share-1", dataKey))
+            vaultWithStoredKeyShare(keyShareCipher.encrypt("share-1", dataKey, keyShareIdentity))
 
         assertEquals(listOf("share-1"), repository.get("vault-1")?.keyshares?.map { it.keyShare })
+    }
+
+    /**
+     * Verifies a share that will not open *with the key in hand* fails loudly. Dropping it, as the
+     * locked path does, would hand the caller a vault that looks like it simply has fewer shares.
+     */
+    @Test
+    fun `get fails when an unlocked keyshare cannot be decrypted`() = runTest {
+        passcode.dataKey = ByteArray(32) { (it + 1).toByte() }
+        coEvery { vaultDao.loadById("vault-1") } returns
+            vaultWithStoredKeyShare(keyShareCipher.encrypt("share-1", dataKey, keyShareIdentity))
+
+        assertFailsWith<IllegalStateException> { repository.get("vault-1") }
     }
 
     /**
@@ -479,7 +496,7 @@ internal class VaultRepositoryImplTest {
     @Test
     fun `get drops keyshares it cannot decrypt while locked`() = runTest {
         coEvery { vaultDao.loadById("vault-1") } returns
-            vaultWithStoredKeyShare(keyShareCipher.encrypt("share-1", dataKey))
+            vaultWithStoredKeyShare(keyShareCipher.encrypt("share-1", dataKey, keyShareIdentity))
         passcode.dataKey = null
         passcode.locked = true
 
@@ -501,7 +518,7 @@ internal class VaultRepositoryImplTest {
         coVerify { vaultDao.insert(capture(stored)) }
         val written = stored.captured.keyShares.single().keyShare
         assertTrue(keyShareCipher.isEncrypted(written))
-        assertEquals("share-1", keyShareCipher.decrypt(written, dataKey))
+        assertEquals("share-1", keyShareCipher.decrypt(written, dataKey, keyShareIdentity))
     }
 
     /** Verifies users without a passcode keep storing keyshares in the clear. */
@@ -531,14 +548,21 @@ internal class VaultRepositoryImplTest {
         coVerify(exactly = 0) { vaultDao.insert(any()) }
     }
 
-    /** Verifies a locked write of a vault with no keyshares still goes through. */
+    /**
+     * Verifies a locked write is refused even when the vault carries no keyshares.
+     *
+     * That shape is exactly what a locked *read* produces — the shares are dropped on the way out —
+     * so it is the dangerous case, not the harmless one. Nothing reaches the per-share encryption
+     * on this path, so the refusal has to sit above it; previously only Room's habit of leaving
+     * keyshare rows alone on an empty upsert stood between this and erasing them.
+     */
     @Test
-    fun `upsert of a keyshare-free vault is allowed while locked`() = runTest {
+    fun `upsert of a keyshare-free vault is refused while locked`() = runTest {
         passcode.locked = true
 
-        repository.upsert(makeVault())
+        assertFailsWith<IllegalStateException> { repository.upsert(makeVault()) }
 
-        coVerify { vaultDao.upsert(any()) }
+        coVerify(exactly = 0) { vaultDao.upsert(any()) }
     }
 
     /** Returns a minimal domain [Vault]. */

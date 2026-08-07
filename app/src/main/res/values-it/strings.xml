@@ -176,7 +176,7 @@
     <string name="passcode_settings_change">Cambia codice di accesso</string>
     <string name="passcode_settings_auto_lock">Blocco automatico</string>
     <string name="auto_lock_setting_title">Blocco automatico</string>
-    <string name="auto_lock_immediately">Immediatamente</string>
+    <string name="auto_lock_never">Mai</string>
     <string name="auto_lock_one_minute">Dopo 1 minuto</string>
     <string name="auto_lock_five_minutes">Dopo 5 minuti</string>
     <string name="auto_lock_ten_minutes">Dopo 10 minuti</string>
@@ -190,9 +190,14 @@
     <string name="passcode_entry_headline_confirm">Conferma il codice di accesso</string>
     <string name="passcode_entry_caption_current_change">Conferma la tua identità prima di cambiare il codice di accesso.</string>
     <string name="passcode_entry_caption_current_disable">Conferma la tua identità prima di disattivare la crittografia.</string>
-    <string name="passcode_entry_caption_new">Scegli 5 cifre. Ti serviranno ogni volta che l’app si blocca.</string>
-    <string name="passcode_entry_caption_confirm">Inserisci di nuovo le stesse 5 cifre.</string>
+    <string name="passcode_entry_caption_new">Scegli %1$d cifre. Ti serviranno ogni volta che l’app si blocca.</string>
+    <string name="passcode_entry_caption_confirm">Inserisci di nuovo le stesse %1$d cifre.</string>
     <string name="passcode_entry_mismatch">I codici di accesso non corrispondono. Scegli di nuovo.</string>
+    <string name="passcode_operation_failed">Non ha funzionato. Il tuo codice di accesso non è cambiato.</string>
+    <string name="passcode_not_digits">Inserisci solo cifre.</string>
+    <string name="passcode_key_unavailable_title">Vault non disponibili</string>
+    <string name="passcode_key_unavailable_message">Le chiavi che proteggono l\'archiviazione dei vault su questo dispositivo sono andate perse, quindi i suoi keyshare non possono più essere letti. Reinstalla l\'app e ripristina i tuoi vault da un backup.</string>
+    <string name="passcode_input_field_content_description">%1$d di %2$d cifre inserite</string>
     <string name="feature_item_learn_more">Saperne di più</string>
     <string name="keysign">Keysign</string>
     <string name="generating_key_screen_keygen_failed">Keygen non riuscito</string>
@@ -630,6 +635,7 @@
     <string name="settings_advanced_swapkit_toggle">Aggregatore SwapKit</string>
     <string name="settings_advanced_custom_rpc_toggle">RPC personalizzato</string>
     <string name="settings_advanced_limit_swap_toggle">Ordini limite</string>
+    <string name="settings_advanced_passcode_toggle">Crittografia con codice di accesso</string>
     <string name="custom_rpc_title">RPC personalizzato</string>
     <string name="custom_rpc_tier_badge">VULT TIER</string>
     <string name="custom_rpc_advanced_subtitle">Usa i tuoi nodi per ogni catena</string>

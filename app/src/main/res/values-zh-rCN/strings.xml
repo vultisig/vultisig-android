@@ -322,7 +322,7 @@
     <string name="passcode_settings_change">更改密码</string>
     <string name="passcode_settings_auto_lock">自动锁定</string>
     <string name="auto_lock_setting_title">自动锁定</string>
-    <string name="auto_lock_immediately">立即</string>
+    <string name="auto_lock_never">从不</string>
     <string name="auto_lock_one_minute">1 分钟后</string>
     <string name="auto_lock_five_minutes">5 分钟后</string>
     <string name="auto_lock_ten_minutes">10 分钟后</string>
@@ -336,9 +336,14 @@
     <string name="passcode_entry_headline_confirm">确认您的密码</string>
     <string name="passcode_entry_caption_current_change">更改密码前请确认您的身份。</string>
     <string name="passcode_entry_caption_current_disable">关闭加密前请确认您的身份。</string>
-    <string name="passcode_entry_caption_new">选择 5 位数字。每次应用锁定时都会用到。</string>
-    <string name="passcode_entry_caption_confirm">再次输入相同的 5 位数字。</string>
+    <string name="passcode_entry_caption_new">选择 %1$d 位数字。每次应用锁定时都会用到。</string>
+    <string name="passcode_entry_caption_confirm">再次输入相同的 %1$d 位数字。</string>
     <string name="passcode_entry_mismatch">两次输入的密码不一致，请重新设定。</string>
+    <string name="passcode_operation_failed">操作失败。您的密码未更改。</string>
+    <string name="passcode_not_digits">请仅输入数字。</string>
+    <string name="passcode_key_unavailable_title">保管库不可用</string>
+    <string name="passcode_key_unavailable_message">保护本设备保管库存储的密钥已丢失，其密钥分片无法再读取。请重新安装应用并从备份恢复您的保管库。</string>
+    <string name="passcode_input_field_content_description">已输入 %2$d 位数字中的 %1$d 位</string>
 
     <!-- Swap Form -->
     <string name="swap_form_from_title">从</string>
@@ -880,6 +885,7 @@
     <string name="settings_advanced_swapkit_toggle">SwapKit 聚合器</string>
     <string name="settings_advanced_custom_rpc_toggle">自定义 RPC</string>
     <string name="settings_advanced_limit_swap_toggle">限价订单</string>
+    <string name="settings_advanced_passcode_toggle">密码加密</string>
     <string name="custom_rpc_title">自定义 RPC</string>
     <string name="custom_rpc_tier_badge">VULT TIER</string>
     <string name="custom_rpc_advanced_subtitle">为每条链使用您自己的节点</string>

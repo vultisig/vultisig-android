@@ -77,6 +77,18 @@ internal class PasscodeSettingsViewModelTest {
     }
 
     @Test
+    fun `a key-unavailable vault does not read as having a passcode configured`() = runTest {
+        // There are no credentials to prove, so offering the switch as "on" would present an
+        // off-ramp that cannot work.
+        passcodeState.value = PasscodeState.KeyUnavailable
+        val model = viewModel()
+
+        advanceUntilIdle()
+
+        assertFalse(model.state.value.isPasscodeEnabled)
+    }
+
+    @Test
     fun `the auto-lock row follows the stored timeout`() = runTest {
         autoLockTimeout.value = AutoLockTimeout.FifteenMinutes
         val model = viewModel()
@@ -84,6 +96,21 @@ internal class PasscodeSettingsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(AutoLockTimeout.FifteenMinutes, model.state.value.autoLockTimeout)
+    }
+
+    @Test
+    fun `the switch does nothing until the persisted state has been read`() = runTest {
+        // While the state is Unknown the switch reads as off even when a passcode exists, so acting
+        // on it would route to Set and try to replace the wrap the stored keyshares depend on.
+        passcodeState.value = PasscodeState.Unknown
+        val model = viewModel()
+        advanceUntilIdle()
+
+        assertFalse(model.state.value.isReady)
+        model.onPasscodeEnabledChange(true)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { navigator.route(any<Route.PasscodeEntry>()) }
     }
 
     @Test

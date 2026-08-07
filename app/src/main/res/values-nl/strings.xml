@@ -187,7 +187,7 @@
     <string name="passcode_settings_change">Toegangscode wijzigen</string>
     <string name="passcode_settings_auto_lock">Automatisch vergrendelen</string>
     <string name="auto_lock_setting_title">Automatisch vergrendelen</string>
-    <string name="auto_lock_immediately">Direct</string>
+    <string name="auto_lock_never">Nooit</string>
     <string name="auto_lock_one_minute">Na 1 minuut</string>
     <string name="auto_lock_five_minutes">Na 5 minuten</string>
     <string name="auto_lock_ten_minutes">Na 10 minuten</string>
@@ -201,9 +201,14 @@
     <string name="passcode_entry_headline_confirm">Bevestig je toegangscode</string>
     <string name="passcode_entry_caption_current_change">Bevestig dat jij het bent voordat je de toegangscode wijzigt.</string>
     <string name="passcode_entry_caption_current_disable">Bevestig dat jij het bent voordat je de versleuteling uitschakelt.</string>
-    <string name="passcode_entry_caption_new">Kies 5 cijfers. Je hebt ze nodig elke keer dat de app vergrendelt.</string>
-    <string name="passcode_entry_caption_confirm">Voer dezelfde 5 cijfers opnieuw in.</string>
+    <string name="passcode_entry_caption_new">Kies %1$d cijfers. Je hebt ze nodig elke keer dat de app vergrendelt.</string>
+    <string name="passcode_entry_caption_confirm">Voer dezelfde %1$d cijfers opnieuw in.</string>
     <string name="passcode_entry_mismatch">Die toegangscodes komen niet overeen. Kies opnieuw.</string>
+    <string name="passcode_operation_failed">Dat is niet gelukt. Je toegangscode is ongewijzigd.</string>
+    <string name="passcode_not_digits">Voer alleen cijfers in.</string>
+    <string name="passcode_key_unavailable_title">Kluizen niet beschikbaar</string>
+    <string name="passcode_key_unavailable_message">De sleutels die de kluisopslag van dit apparaat beschermen zijn verdwenen, waardoor de keyshares niet meer gelezen kunnen worden. Installeer de app opnieuw en herstel je kluizen vanaf een back-up.</string>
+    <string name="passcode_input_field_content_description">%1$d van %2$d cijfers ingevoerd</string>
     <string name="swap_form_from_title">Van</string>
     <string name="swap_form_estimated_fees_title">Wisselkosten</string>
     <string name="swap_form_estimated_fees_with_percent_title">Wisselkosten (%1$s)</string>
@@ -627,6 +632,7 @@
     <string name="settings_advanced_swapkit_toggle">SwapKit-aggregator</string>
     <string name="settings_advanced_custom_rpc_toggle">Aangepaste RPC</string>
     <string name="settings_advanced_limit_swap_toggle">Limietorders</string>
+    <string name="settings_advanced_passcode_toggle">Toegangscodeversleuteling</string>
     <string name="custom_rpc_title">Aangepaste RPC</string>
     <string name="custom_rpc_tier_badge">VULT TIER</string>
     <string name="custom_rpc_advanced_subtitle">Gebruik je eigen nodes per blockchain</string>

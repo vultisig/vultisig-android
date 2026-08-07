@@ -267,7 +267,7 @@
     <string name="passcode_settings_change">Change passcode</string>
     <string name="passcode_settings_auto_lock">Auto-lock</string>
     <string name="auto_lock_setting_title">Auto-lock</string>
-    <string name="auto_lock_immediately">Immediately</string>
+    <string name="auto_lock_never">Never</string>
     <string name="auto_lock_one_minute">After 1 minute</string>
     <string name="auto_lock_five_minutes">After 5 minutes</string>
     <string name="auto_lock_ten_minutes">After 10 minutes</string>
@@ -281,9 +281,14 @@
     <string name="passcode_entry_headline_confirm">Confirm your passcode</string>
     <string name="passcode_entry_caption_current_change">Confirm it is you before changing your passcode.</string>
     <string name="passcode_entry_caption_current_disable">Confirm it is you before turning encryption off.</string>
-    <string name="passcode_entry_caption_new">Pick 5 digits. You will need them every time the app locks.</string>
-    <string name="passcode_entry_caption_confirm">Enter the same 5 digits again.</string>
+    <string name="passcode_entry_caption_new">Pick %1$d digits. You will need them every time the app locks.</string>
+    <string name="passcode_entry_caption_confirm">Enter the same %1$d digits again.</string>
     <string name="passcode_entry_mismatch">Those passcodes do not match. Choose again.</string>
+    <string name="passcode_operation_failed">That did not work. Your passcode is unchanged.</string>
+    <string name="passcode_not_digits">Enter digits only.</string>
+    <string name="passcode_key_unavailable_title">Vaults unavailable</string>
+    <string name="passcode_key_unavailable_message">The keys that protect this device\'s vault storage are gone, so its keyshares can no longer be read. Reinstall the app and restore your vaults from a backup.</string>
+    <string name="passcode_input_field_content_description">%1$d of %2$d digits entered</string>
     <string name="swap_form_from_title">From</string>
     <string name="swap_form_estimated_fees_title">Swap Fee</string>
     <string name="swap_form_estimated_fees_with_percent_title">Swap Fee (%1$s)</string>
@@ -944,6 +949,7 @@
     <string name="settings_advanced_swapkit_toggle">SwapKit aggregator</string>
     <string name="settings_advanced_custom_rpc_toggle">Custom RPC</string>
     <string name="settings_advanced_limit_swap_toggle">Limit Orders</string>
+    <string name="settings_advanced_passcode_toggle">Passcode Encryption</string>
     <string name="custom_rpc_title">Custom RPCs</string>
     <string name="custom_rpc_tier_badge">VULT TIER</string>
     <string name="custom_rpc_advanced_subtitle">Use your own nodes per chain</string>

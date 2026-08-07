@@ -10,6 +10,8 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 internal interface PasscodeModule {
 
+    @Binds fun bindPasscodeConfig(impl: PasscodeConfigImpl): PasscodeConfig
+
     @Binds fun bindPasscodeStore(impl: SharedPreferencesPasscodeStore): PasscodeStore
 
     @Binds fun bindPasscodeRepository(impl: PasscodeRepositoryImpl): PasscodeRepository

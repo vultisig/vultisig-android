@@ -3,15 +3,18 @@
 package com.vultisig.wallet.app.passcode
 
 import androidx.lifecycle.LifecycleOwner
+import com.vultisig.wallet.data.passcode.AutoLockHold
 import com.vultisig.wallet.data.passcode.AutoLockRepository
 import com.vultisig.wallet.data.passcode.AutoLockTimeout
 import com.vultisig.wallet.data.passcode.PasscodeRepository
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -37,10 +40,13 @@ internal class PasscodeAutoLockTest {
         elapsedRealtime = 100_000L
     }
 
+    private val autoLockHold = AutoLockHold()
+
     private fun autoLock(scope: CoroutineScope) =
         PasscodeAutoLock(
             passcodeRepository = passcodeRepository,
             autoLockRepository = autoLockRepository,
+            autoLockHold = autoLockHold,
             elapsedRealtimeMillis = { elapsedRealtime },
             parentScope = scope,
         )
@@ -54,12 +60,15 @@ internal class PasscodeAutoLockTest {
         autoLock(backgroundScope).also { it.start(mockk(relaxed = true)) }.also { runCurrent() }
 
     @Test
-    fun `the default timeout locks the moment the app is backgrounded`() = runTest {
+    fun `the default timeout never locks on its own`() = runTest {
+        // Matches the Windows client: auto-lock is off until the user turns it on.
         val autoLock = started()
 
         autoLock.onStop(owner)
+        advanceTimeBy(24 * 60 * 60_000L)
+        runCurrent()
 
-        verify { passcodeRepository.lock() }
+        verify(exactly = 0) { passcodeRepository.lock() }
     }
 
     @Test
@@ -143,13 +152,64 @@ internal class PasscodeAutoLockTest {
     }
 
     @Test
-    fun `changing the timeout takes effect without a restart`() = runTest {
-        timeout.value = AutoLockTimeout.FiveMinutes
+    fun `starting twice does not register a second timeout collector`() = runTest {
+        // MainActivity.onCreate runs again on every configuration change and calls start each
+        // time. Without the guard each pass leaks another collector into the process singleton.
+        val lifecycle = mockk<androidx.lifecycle.Lifecycle>(relaxed = true)
+        val autoLock = autoLock(backgroundScope)
+
+        autoLock.start(lifecycle)
+        autoLock.start(lifecycle)
+        runCurrent()
+
+        verify(exactly = 1) { lifecycle.addObserver(autoLock) }
+    }
+
+    @Test
+    fun `a timeout raised while away is still applied on return`() = runTest {
+        // The stamp is taken before the timeout is consulted, so a change made while the app is
+        // away still has something for the elapsed-time check on return to compare against.
         val autoLock = started()
 
-        timeout.value = AutoLockTimeout.Immediate
+        autoLock.onStop(owner)
+        timeout.value = AutoLockTimeout.FiveMinutes
+        runCurrent()
+        elapsedRealtime += 10 * 60_000L
+        autoLock.onStart(owner)
+        runCurrent()
+
+        verify { passcodeRepository.lock() }
+    }
+
+    @Test
+    fun `a held lock waits for the ceremony to finish`() = runTest {
+        // Keygen cannot be paused: locking before it writes its keyshare destroys that share.
+        timeout.value = AutoLockTimeout.OneMinute
+        val autoLock = started()
+        val released = CompletableDeferred<Unit>()
+        backgroundScope.launch { autoLockHold.withHold { released.await() } }
+        runCurrent()
+
+        autoLock.onStop(owner)
+        advanceTimeBy(2 * 60_000L)
+        runCurrent()
+        verify(exactly = 0) { passcodeRepository.lock() }
+
+        released.complete(Unit)
+        runCurrent()
+        verify { passcodeRepository.lock() }
+    }
+
+    @Test
+    fun `changing the timeout takes effect without a restart`() = runTest {
+        timeout.value = AutoLockTimeout.ThirtyMinutes
+        val autoLock = started()
+
+        timeout.value = AutoLockTimeout.OneMinute
         runCurrent()
         autoLock.onStop(owner)
+        advanceTimeBy(60_000L + 1)
+        runCurrent()
 
         verify { passcodeRepository.lock() }
     }

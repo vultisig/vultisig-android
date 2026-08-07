@@ -21,10 +21,11 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
@@ -51,7 +52,13 @@ internal class PasscodeLockViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = PasscodeLockViewModel(passcodeRepository)
+    private fun TestScope.viewModel() =
+        PasscodeLockViewModel(
+            passcodeRepository = passcodeRepository,
+            // The lockout countdown reads a monotonic clock; the scheduler's virtual time is the
+            // one that advances in step with the delays this test fast-forwards through.
+            elapsedRealtimeMillis = { testScheduler.currentTime },
+        )
 
     @Test
     fun `re-locking wipes whatever the previous prompt was left holding`() = runTest {
@@ -59,7 +66,7 @@ internal class PasscodeLockViewModelTest {
         // instance serves every lock. A rejected attempt must not still be on screen next time.
         coEvery { passcodeRepository.unlock(any()) } returns PasscodeUnlockResult.Wrong(3)
         val model = viewModel()
-        model.textFieldState.type("00000")
+        model.textFieldState.type("000000")
         advanceUntilIdle()
         Snapshot.sendApplyNotifications()
         advanceUntilIdle()
@@ -84,24 +91,24 @@ internal class PasscodeLockViewModelTest {
     }
 
     @Test
-    fun `does not verify until all five digits are entered`() = runTest {
+    fun `does not verify until all six digits are entered`() = runTest {
         val model = viewModel()
 
-        model.textFieldState.type("1234")
+        model.textFieldState.type("12345")
         advanceUntilIdle()
 
         coVerify(exactly = 0) { passcodeRepository.unlock(any()) }
     }
 
     @Test
-    fun `verifies as soon as the fifth digit lands`() = runTest {
-        coEvery { passcodeRepository.unlock("12345") } returns PasscodeUnlockResult.Success
+    fun `verifies as soon as the sixth digit lands`() = runTest {
+        coEvery { passcodeRepository.unlock("123456") } returns PasscodeUnlockResult.Success
         val model = viewModel()
 
-        model.textFieldState.type("12345")
+        model.textFieldState.type("123456")
         advanceUntilIdle()
 
-        coVerify { passcodeRepository.unlock("12345") }
+        coVerify { passcodeRepository.unlock("123456") }
         assertNull(model.state.value.error)
     }
 
@@ -110,7 +117,7 @@ internal class PasscodeLockViewModelTest {
         coEvery { passcodeRepository.unlock(any()) } returns PasscodeUnlockResult.Wrong(3)
         val model = viewModel()
 
-        model.textFieldState.type("00000")
+        model.textFieldState.type("000000")
         advanceUntilIdle()
 
         assertEquals(PasscodeLockError.Wrong(3), model.state.value.error)
@@ -126,7 +133,7 @@ internal class PasscodeLockViewModelTest {
         coEvery { passcodeRepository.unlock(any()) } returns PasscodeUnlockResult.Wrong(3)
         val model = viewModel()
 
-        model.textFieldState.type("00000")
+        model.textFieldState.type("000000")
         advanceUntilIdle()
         Snapshot.sendApplyNotifications()
         advanceUntilIdle()
@@ -138,7 +145,7 @@ internal class PasscodeLockViewModelTest {
     fun `the error clears once the user starts typing again`() = runTest {
         coEvery { passcodeRepository.unlock(any()) } returns PasscodeUnlockResult.Wrong(3)
         val model = viewModel()
-        model.textFieldState.type("00000")
+        model.textFieldState.type("000000")
         advanceUntilIdle()
 
         model.textFieldState.type("1")
@@ -148,11 +155,25 @@ internal class PasscodeLockViewModelTest {
     }
 
     @Test
+    fun `letters from a hardware keyboard are rejected instead of killing the process`() = runTest {
+        // KeyboardType is only an IME hint, so a hardware keyboard can put letters in the field.
+        // Passing them on trips requireValidPasscode, whose exception escapes the collector.
+        val model = viewModel()
+
+        model.textFieldState.type("12345a")
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { passcodeRepository.unlock(any()) }
+        assertEquals(PasscodeLockError.NotDigits, model.state.value.error)
+        assertEquals("", model.textFieldState.text.toString())
+    }
+
+    @Test
     fun `a lockout disables input and counts down to zero`() = runTest {
         coEvery { passcodeRepository.unlock(any()) } returns PasscodeUnlockResult.LockedOut(3_000L)
         val model = viewModel()
 
-        model.textFieldState.type("00000")
+        model.textFieldState.type("000000")
         // runCurrent, not advanceUntilIdle: the latter would fast-forward straight through the
         // countdown's delays and land on the cleared state, testing nothing.
         runCurrent()
@@ -179,7 +200,7 @@ internal class PasscodeLockViewModelTest {
             }
         val model = viewModel()
 
-        model.textFieldState.type("12345")
+        model.textFieldState.type("123456")
         advanceTimeBy(100)
 
         assertTrue(model.state.value.isVerifying)

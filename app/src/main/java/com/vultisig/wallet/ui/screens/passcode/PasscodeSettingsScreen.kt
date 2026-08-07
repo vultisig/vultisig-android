@@ -59,7 +59,9 @@ internal fun PasscodeSettingsScreen(
                             leadingIcon = R.drawable.security,
                             trailingSwitch = state.isPasscodeEnabled,
                         ),
-                    onClick = { onPasscodeEnabledChange(!state.isPasscodeEnabled) },
+                    onClick = {
+                        if (state.isReady) onPasscodeEnabledChange(!state.isPasscodeEnabled)
+                    },
                     // Change and auto-lock only exist once a passcode does, so with the switch off
                     // this row is both first and last.
                     isLastItem = !state.isPasscodeEnabled,
@@ -97,7 +99,7 @@ internal fun PasscodeSettingsScreen(
 /** The picker's own label for [this], reused here so the row and the picker cannot disagree. */
 internal fun AutoLockTimeout.labelRes(): Int =
     when (this) {
-        AutoLockTimeout.Immediate -> R.string.auto_lock_immediately
+        AutoLockTimeout.Never -> R.string.auto_lock_never
         AutoLockTimeout.OneMinute -> R.string.auto_lock_one_minute
         AutoLockTimeout.FiveMinutes -> R.string.auto_lock_five_minutes
         AutoLockTimeout.TenMinutes -> R.string.auto_lock_ten_minutes
@@ -113,6 +115,7 @@ private fun PasscodeSettingsScreenPreview() {
             PasscodeSettingsUiModel(
                 isPasscodeEnabled = true,
                 autoLockTimeout = AutoLockTimeout.FiveMinutes,
+                isReady = true,
             ),
         onBackClick = {},
         onPasscodeEnabledChange = {},

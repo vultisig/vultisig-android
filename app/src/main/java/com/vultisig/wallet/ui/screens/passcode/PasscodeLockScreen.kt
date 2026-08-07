@@ -34,7 +34,6 @@ import com.vultisig.wallet.ui.models.passcode.PasscodeLockError
 import com.vultisig.wallet.ui.models.passcode.PasscodeLockUiModel
 import com.vultisig.wallet.ui.models.passcode.PasscodeLockViewModel
 import com.vultisig.wallet.ui.theme.Theme
-import kotlin.math.ceil
 
 /** Full-screen gate shown whenever the app is locked behind a passcode. */
 @Composable
@@ -118,21 +117,9 @@ internal fun PasscodeLockScreen(state: PasscodeLockUiModel, textFieldState: Text
 @Composable
 private fun PasscodeLockError.message(): String =
     when (this) {
-        is PasscodeLockError.Wrong ->
-            if (remainingAttempts == 1) stringResource(R.string.passcode_lock_last_attempt)
-            else stringResource(R.string.passcode_lock_wrong_passcode)
-        is PasscodeLockError.LockedOut ->
-            if (remainingSeconds >= SECONDS_PER_MINUTE) {
-                stringResource(
-                    R.string.passcode_lock_too_many_attempts_minutes,
-                    ceil(remainingSeconds / SECONDS_PER_MINUTE.toFloat()).toInt(),
-                )
-            } else {
-                stringResource(
-                    R.string.passcode_lock_too_many_attempts_seconds,
-                    remainingSeconds.toInt(),
-                )
-            }
+        is PasscodeLockError.Wrong -> wrongPasscodeMessage(remainingAttempts)
+        is PasscodeLockError.LockedOut -> lockedOutMessage(remainingSeconds)
+        is PasscodeLockError.NotDigits -> stringResource(R.string.passcode_not_digits)
     }
 
 /**
@@ -154,12 +141,15 @@ private fun Modifier.glow(): Modifier = drawWithCache {
             color = GlowRing,
             radius = radius * GLOW_RING_TO_RADIUS,
             center = center,
-            style = Stroke(width = 1f),
+            // Density-scaled like the card's 1.dp border, so the ring does not thin out to a
+            // hairline on high-density screens.
+            style = Stroke(width = GLOW_RING_WIDTH.toPx()),
         )
     }
 }
 
 private val CONTENT_MAX_WIDTH = 360.dp
+private val GLOW_RING_WIDTH = 1.dp
 
 /** Figma seats the content block this far above the frame's vertical midpoint. */
 private val FIGMA_CENTRE_OFFSET = 28.dp
@@ -176,7 +166,6 @@ private val GlowRing = Color(0xFF33E6BF).copy(alpha = 0.05f)
 private const val GLOW_RADIUS_TO_WIDTH = 0.9f
 private const val GLOW_CENTER_TO_HEIGHT = 0.577f
 private const val GLOW_RING_TO_RADIUS = 0.911f
-private const val SECONDS_PER_MINUTE = 60
 
 @Preview
 @Composable

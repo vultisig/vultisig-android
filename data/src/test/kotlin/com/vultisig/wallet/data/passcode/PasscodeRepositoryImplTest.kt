@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.passcode
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -51,7 +52,7 @@ internal class PasscodeRepositoryImplTest {
 
     @Test
     fun `state is Locked after initialize when a passcode is stored`() = runTest {
-        repository().setPasscode("12345")
+        repository().setPasscode("123456")
 
         val reopened = repository()
         reopened.initialize()
@@ -62,7 +63,7 @@ internal class PasscodeRepositoryImplTest {
     @Test
     fun `initialize does not clobber an already resolved state`() = runTest {
         val repository = repository()
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
 
         repository.initialize()
 
@@ -73,7 +74,7 @@ internal class PasscodeRepositoryImplTest {
     fun `setPasscode unlocks and persists a wrapped key`() = runTest {
         val repository = repository()
 
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
 
         assertEquals(PasscodeState.Unlocked, repository.state.value)
         assertNotNull(store.readCredentials())
@@ -81,24 +82,24 @@ internal class PasscodeRepositoryImplTest {
     }
 
     @Test
-    fun `setPasscode rejects anything that is not five digits`() = runTest {
+    fun `setPasscode rejects anything that is not six digits`() = runTest {
         val repository = repository()
 
-        assertFailsWith<IllegalArgumentException> { repository.setPasscode("1234") }
-        assertFailsWith<IllegalArgumentException> { repository.setPasscode("123456") }
-        assertFailsWith<IllegalArgumentException> { repository.setPasscode("1234a") }
+        assertFailsWith<IllegalArgumentException> { repository.setPasscode("12345") }
+        assertFailsWith<IllegalArgumentException> { repository.setPasscode("1234567") }
+        assertFailsWith<IllegalArgumentException> { repository.setPasscode("12345a") }
     }
 
     @Test
     fun `unlock succeeds with the right passcode and exposes the same data key`() = runTest {
         val first = repository()
-        first.setPasscode("12345")
+        first.setPasscode("123456")
         val originalKey = first.dataKeyOrNull()!!.copyOf()
 
         val reopened = repository()
         reopened.initialize()
 
-        assertEquals(PasscodeUnlockResult.Success, reopened.unlock("12345"))
+        assertEquals(PasscodeUnlockResult.Success, reopened.unlock("123456"))
         assertEquals(PasscodeState.Unlocked, reopened.state.value)
         assertContentEquals(originalKey, reopened.dataKeyOrNull())
     }
@@ -106,11 +107,11 @@ internal class PasscodeRepositoryImplTest {
     @Test
     fun `unlock reports wrong passcode and counts down the remaining attempts`() = runTest {
         val repository = repository()
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
         repository.lock()
 
-        assertEquals(PasscodeUnlockResult.Wrong(4), repository.unlock("00000"))
-        assertEquals(PasscodeUnlockResult.Wrong(3), repository.unlock("00000"))
+        assertEquals(PasscodeUnlockResult.Wrong(4), repository.unlock("000000"))
+        assertEquals(PasscodeUnlockResult.Wrong(3), repository.unlock("000000"))
         assertEquals(PasscodeState.Locked, repository.state.value)
     }
 
@@ -118,50 +119,50 @@ internal class PasscodeRepositoryImplTest {
     fun `unlock locks the user out after too many wrong attempts and recovers after the delay`() =
         runTest {
             val repository = repository()
-            repository.setPasscode("12345")
+            repository.setPasscode("123456")
             repository.lock()
 
-            repeat(PasscodeLockout.ATTEMPTS_BEFORE_LOCKOUT - 1) { repository.unlock("00000") }
-            val lockedOut = repository.unlock("00000")
+            repeat(PasscodeLockout.ATTEMPTS_BEFORE_LOCKOUT - 1) { repository.unlock("000000") }
+            val lockedOut = repository.unlock("000000")
             assertTrue(lockedOut is PasscodeUnlockResult.LockedOut, "expected a lockout")
 
             // Even the correct passcode is refused while the penalty is active.
-            assertTrue(repository.unlock("12345") is PasscodeUnlockResult.LockedOut)
+            assertTrue(repository.unlock("123456") is PasscodeUnlockResult.LockedOut)
 
             now += lockedOut.retryAfterMillis
-            assertEquals(PasscodeUnlockResult.Success, repository.unlock("12345"))
+            assertEquals(PasscodeUnlockResult.Success, repository.unlock("123456"))
         }
 
     @Test
     fun `a successful unlock clears the failed attempt counter`() = runTest {
         val repository = repository()
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
         repository.lock()
 
-        repository.unlock("00000")
-        repository.unlock("12345")
+        repository.unlock("000000")
+        repository.unlock("123456")
         repository.lock()
 
-        assertEquals(PasscodeUnlockResult.Wrong(4), repository.unlock("00000"))
+        assertEquals(PasscodeUnlockResult.Wrong(4), repository.unlock("000000"))
     }
 
     @Test
     fun `lockout survives a relaunch`() = runTest {
         val repository = repository()
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
         repository.lock()
-        repeat(PasscodeLockout.ATTEMPTS_BEFORE_LOCKOUT) { repository.unlock("00000") }
+        repeat(PasscodeLockout.ATTEMPTS_BEFORE_LOCKOUT) { repository.unlock("000000") }
 
         val reopened = repository()
         reopened.initialize()
 
-        assertTrue(reopened.unlock("12345") is PasscodeUnlockResult.LockedOut)
+        assertTrue(reopened.unlock("123456") is PasscodeUnlockResult.LockedOut)
     }
 
     @Test
     fun `lock drops the in-memory key`() = runTest {
         val repository = repository()
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
 
         repository.lock()
 
@@ -182,45 +183,45 @@ internal class PasscodeRepositoryImplTest {
     @Test
     fun `changePasscode keeps the data key and accepts only the new passcode`() = runTest {
         val repository = repository()
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
         val keyBefore = repository.dataKeyOrNull()!!.copyOf()
 
-        assertEquals(PasscodeUnlockResult.Success, repository.changePasscode("12345", "54321"))
+        assertEquals(PasscodeUnlockResult.Success, repository.changePasscode("123456", "654321"))
 
         assertContentEquals(keyBefore, repository.dataKeyOrNull())
         repository.lock()
-        assertEquals(PasscodeUnlockResult.Wrong(4), repository.unlock("12345"))
-        assertEquals(PasscodeUnlockResult.Success, repository.unlock("54321"))
+        assertEquals(PasscodeUnlockResult.Wrong(4), repository.unlock("123456"))
+        assertEquals(PasscodeUnlockResult.Success, repository.unlock("654321"))
     }
 
     @Test
     fun `changePasscode with the wrong current passcode leaves the old one working`() = runTest {
         val repository = repository()
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
 
-        assertEquals(PasscodeUnlockResult.Wrong(4), repository.changePasscode("00000", "54321"))
+        assertEquals(PasscodeUnlockResult.Wrong(4), repository.changePasscode("000000", "654321"))
 
         repository.lock()
-        assertEquals(PasscodeUnlockResult.Success, repository.unlock("12345"))
+        assertEquals(PasscodeUnlockResult.Success, repository.unlock("123456"))
     }
 
     @Test
     fun `changePasscode validates the new passcode before touching anything`() = runTest {
         val repository = repository()
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
 
-        assertFailsWith<IllegalArgumentException> { repository.changePasscode("12345", "1") }
+        assertFailsWith<IllegalArgumentException> { repository.changePasscode("123456", "1") }
 
         repository.lock()
-        assertEquals(PasscodeUnlockResult.Success, repository.unlock("12345"))
+        assertEquals(PasscodeUnlockResult.Success, repository.unlock("123456"))
     }
 
     @Test
     fun `disablePasscode clears the credentials`() = runTest {
         val repository = repository()
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
 
-        assertEquals(PasscodeUnlockResult.Success, repository.disablePasscode("12345"))
+        assertEquals(PasscodeUnlockResult.Success, repository.disablePasscode("123456"))
 
         assertEquals(PasscodeState.Disabled, repository.state.value)
         assertNull(store.readCredentials())
@@ -230,9 +231,9 @@ internal class PasscodeRepositoryImplTest {
     @Test
     fun `disablePasscode refuses a wrong passcode`() = runTest {
         val repository = repository()
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
 
-        assertEquals(PasscodeUnlockResult.Wrong(4), repository.disablePasscode("00000"))
+        assertEquals(PasscodeUnlockResult.Wrong(4), repository.disablePasscode("000000"))
 
         assertNotNull(store.readCredentials())
         assertEquals(PasscodeState.Unlocked, repository.state.value)
@@ -246,7 +247,7 @@ internal class PasscodeRepositoryImplTest {
 
             assertEquals(
                 PasscodeUnlockResult.Wrong(PasscodeLockout.ATTEMPTS_BEFORE_LOCKOUT),
-                repository.unlock("12345"),
+                repository.unlock("123456"),
             )
         }
 
@@ -254,7 +255,7 @@ internal class PasscodeRepositoryImplTest {
     fun `setPasscode encrypts stored keyshares with the new data key`() = runTest {
         val repository = repository()
 
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
 
         assertEquals(listOf("protect"), protection.calls)
         assertContentEquals(repository.dataKeyOrNull(), protection.protectedWith)
@@ -263,22 +264,45 @@ internal class PasscodeRepositoryImplTest {
     @Test
     fun `setPasscode persists the wrapped key before encrypting anything with it`() = runTest {
         // Reverse that order and a crash mid-encryption strands ciphertext with no recorded key.
+        // Observed from inside protectAll, not after setPasscode returns: by then both writes have
+        // happened and the assertion would hold whatever order they ran in.
         val repository = repository()
         protection.calls.clear()
+        var credentialsWhenProtectionBegan: PasscodeCredentials? = null
+        protection.onProtectAll = { credentialsWhenProtectionBegan = store.readCredentials() }
 
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
 
-        assertNotNull(store.readCredentials(), "credentials must exist by the time we encrypt")
+        assertNotNull(
+            credentialsWhenProtectionBegan,
+            "credentials must already be stored when encryption starts",
+        )
         assertEquals(listOf("protect"), protection.calls)
+    }
+
+    @Test
+    fun `setPasscode refuses to replace a passcode that is already configured`() = runTest {
+        // Overwriting the wrap would orphan every keyshare already encrypted under the old data
+        // key, because protectAll skips rows that are encrypted already.
+        val repository = repository()
+        repository.setPasscode("123456")
+        val credentials = store.readCredentials()
+        protection.calls.clear()
+
+        assertFailsWith<IllegalStateException> { repository.setPasscode("654321") }
+
+        assertEquals(credentials, store.readCredentials(), "the original wrap must survive")
+        assertEquals(emptyList(), protection.calls)
+        assertEquals(PasscodeUnlockResult.Success, repository.unlock("123456"))
     }
 
     @Test
     fun `disablePasscode decrypts keyshares before dropping the credentials`() = runTest {
         val repository = repository()
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
         protection.calls.clear()
 
-        repository.disablePasscode("12345")
+        repository.disablePasscode("123456")
 
         assertEquals(listOf("unprotect"), protection.calls)
         assertNull(store.readCredentials())
@@ -286,11 +310,13 @@ internal class PasscodeRepositoryImplTest {
 
     @Test
     fun `a failed decrypt leaves the passcode in place`() = runTest {
+        // Reported, not thrown. Escaping here would reach a bare viewModelScope.launch and take
+        // the process down, leaving the user holding a passcode they could never remove.
         val repository = repository()
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
         protection.unprotectFailure = IllegalStateException("keyshare failed to decrypt")
 
-        assertFailsWith<IllegalStateException> { repository.disablePasscode("12345") }
+        assertEquals(PasscodeUnlockResult.Failed, repository.disablePasscode("123456"))
 
         assertNotNull(store.readCredentials(), "credentials must survive a failed decrypt")
         assertEquals(PasscodeState.Unlocked, repository.state.value)
@@ -298,12 +324,80 @@ internal class PasscodeRepositoryImplTest {
     }
 
     @Test
+    fun `a failed disable does not charge the user an attempt`() = runTest {
+        // The passcode was right; only the operation failed. Counting it would march the user
+        // towards a lockout for repeatedly trying something that cannot work.
+        val repository = repository()
+        repository.setPasscode("123456")
+        protection.unprotectFailure = IllegalStateException("keyshare failed to decrypt")
+
+        repository.disablePasscode("123456")
+
+        assertEquals(
+            PasscodeLockout.ATTEMPTS_BEFORE_LOCKOUT,
+            PasscodeLockout.remainingAttempts(store.readLockout()),
+        )
+    }
+
+    @Test
+    fun `initialize reports KeyUnavailable when ciphertext outlives its credentials`() = runTest {
+        // The keystore-backed prefs were wiped underneath us. Reporting Disabled here is what
+        // turns that into silent, permanent data loss: shares dropped on read, plaintext on write.
+        protection.encryptedSharesPresent = true
+        val repository = repository()
+
+        repository.initialize()
+
+        assertEquals(PasscodeState.KeyUnavailable, repository.state.value)
+    }
+
+    @Test
+    fun `initialize reports Disabled when there is no ciphertext to worry about`() = runTest {
+        protection.encryptedSharesPresent = false
+        val repository = repository()
+
+        repository.initialize()
+
+        assertEquals(PasscodeState.Disabled, repository.state.value)
+    }
+
+    @Test
+    fun `the key handed to protectAll is not the one lock zeroes`() = runTest {
+        // lock() takes no mutex and zeroes whatever the field holds. Sharing that array with the
+        // bulk encrypt would let backgrounding mid-run seal rows under 32 zero bytes.
+        val repository = repository()
+
+        repository.setPasscode("123456")
+
+        val used = protection.protectedWith
+        assertNotNull(used)
+        assertFalse(used.all { it == 0.toByte() }, "protectAll was handed a live key")
+        assertContentEquals(used, repository.dataKeyOrNull())
+    }
+
+    @Test
+    fun `a wrong passcode is charged before the derivation runs`() = runTest {
+        // Force-stopping during the 210k-iteration unwrap must not discard the attempt, or a
+        // scripted walk of the keyspace never trips the escalating delay.
+        val repository = repository()
+        repository.setPasscode("123456")
+        repository.lock()
+        var chargedDuringUnwrap: Int? = null
+        store.onReadCredentials = { chargedDuringUnwrap = store.readLockout().failedAttempts }
+
+        repository.unlock("000000")
+
+        assertEquals(1, store.readLockout().failedAttempts)
+        assertEquals(0, chargedDuringUnwrap, "the charge lands after the credentials are read")
+    }
+
+    @Test
     fun `changePasscode does not re-encrypt keyshares`() = runTest {
         val repository = repository()
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
         protection.calls.clear()
 
-        repository.changePasscode("12345", "54321")
+        repository.changePasscode("123456", "654321")
 
         assertEquals(emptyList(), protection.calls, "the data key is unchanged")
     }
@@ -314,13 +408,13 @@ internal class PasscodeRepositoryImplTest {
         repository.initialize()
         assertEquals(false, repository.isLocked())
 
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
         assertEquals(false, repository.isLocked())
 
         repository.lock()
         assertEquals(true, repository.isLocked())
 
-        repository.unlock("12345")
+        repository.unlock("123456")
         assertEquals(false, repository.isLocked())
     }
 
@@ -336,12 +430,12 @@ internal class PasscodeRepositoryImplTest {
                 dispatcher = Dispatchers.Default,
                 nowMillis = { now },
             )
-        repository.setPasscode("12345")
+        repository.setPasscode("123456")
         repository.lock()
 
         withContext(Dispatchers.Default) {
             List(PasscodeLockout.ATTEMPTS_BEFORE_LOCKOUT - 1) {
-                    async { repository.unlock("00000") }
+                    async { repository.unlock("000000") }
                 }
                 .awaitAll()
         }
@@ -359,7 +453,15 @@ internal class RecordingKeyShareProtection : VaultKeyShareProtection {
     var protectedWith: ByteArray? = null
     var unprotectFailure: Throwable? = null
 
+    /** Runs when protection begins, so a test can observe the store mid-operation. */
+    var onProtectAll: (() -> Unit)? = null
+
+    var encryptedSharesPresent = false
+
+    override suspend fun hasEncryptedKeyShares(): Boolean = encryptedSharesPresent
+
     override suspend fun protectAll(dataKey: ByteArray) {
+        onProtectAll?.invoke()
         calls += "protect"
         protectedWith = dataKey.copyOf()
     }
@@ -375,7 +477,14 @@ internal class FakePasscodeStore : PasscodeStore {
     private var credentials: PasscodeCredentials? = null
     private var lockout: PasscodeLockoutState = PasscodeLockoutState()
 
-    @Synchronized override fun readCredentials(): PasscodeCredentials? = credentials
+    /** Runs on each credential read, so a test can observe the store mid-verification. */
+    var onReadCredentials: (() -> Unit)? = null
+
+    @Synchronized
+    override fun readCredentials(): PasscodeCredentials? {
+        onReadCredentials?.invoke()
+        return credentials
+    }
 
     @Synchronized
     override fun writeCredentials(credentials: PasscodeCredentials) {

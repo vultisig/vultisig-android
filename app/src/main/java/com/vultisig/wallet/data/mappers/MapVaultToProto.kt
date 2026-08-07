@@ -13,8 +13,13 @@ internal interface MapVaultToProto : MapperFunc<Vault, VaultProto>
 
 internal class MapVaultToProtoImpl @Inject constructor() : MapVaultToProto {
 
-    override fun invoke(from: Vault) =
-        VaultProto(
+    override fun invoke(from: Vault): VaultProto {
+        // A vault always has keyshares; an empty list here means they were dropped on the way out
+        // of storage because the data key was unavailable. Exporting that would hand the user a
+        // .vult that reports success, restores cleanly, and can never sign — the worst shape a
+        // backup failure can take, because it is only discovered when the backup is needed.
+        check(from.keyshares.isNotEmpty()) { "Refusing to export a vault with no keyshares" }
+        return VaultProto(
             name = from.name,
             localPartyId = from.localPartyID,
             publicKeyEcdsa = from.pubKeyECDSA,
@@ -36,4 +41,5 @@ internal class MapVaultToProtoImpl @Inject constructor() : MapVaultToProto {
                 },
             publicKeyMldsa44 = from.pubKeyMLDSA,
         )
+    }
 }

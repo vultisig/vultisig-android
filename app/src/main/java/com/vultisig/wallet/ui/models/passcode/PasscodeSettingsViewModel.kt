@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.passcode.AutoLockRepository
 import com.vultisig.wallet.data.passcode.AutoLockTimeout
 import com.vultisig.wallet.data.passcode.PasscodeRepository
 import com.vultisig.wallet.data.passcode.PasscodeState
+import com.vultisig.wallet.data.passcode.isConfigured
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -20,6 +21,10 @@ import kotlinx.coroutines.launch
 internal data class PasscodeSettingsUiModel(
     val isPasscodeEnabled: Boolean = false,
     val autoLockTimeout: AutoLockTimeout = AutoLockTimeout.Default,
+    /**
+     * False until the persisted credentials have been read; the switch must not act before then.
+     */
+    val isReady: Boolean = false,
 )
 
 /** Backs Settings → Passcode encryption: the on/off switch, change, and auto-lock entry points. */
@@ -41,6 +46,7 @@ constructor(
                     PasscodeSettingsUiModel(
                         isPasscodeEnabled = passcode.isConfigured,
                         autoLockTimeout = timeout,
+                        isReady = passcode != PasscodeState.Unknown,
                     )
                 }
                 .collect { state.value = it }
@@ -52,6 +58,10 @@ constructor(
      * needs a passcode to set, and turning it off needs proof the user knows the current one.
      */
     fun onPasscodeEnabledChange(enabled: Boolean) {
+        // Until the persisted credentials have been read the switch reads as off even when a
+        // passcode exists, and acting on that would route to Set and try to replace the wrap that
+        // already-encrypted keyshares depend on.
+        if (!state.value.isReady) return
         val action =
             if (enabled) Route.PasscodeEntryAction.Set else Route.PasscodeEntryAction.Disable
         viewModelScope.launch { navigator.route(Route.PasscodeEntry(action)) }
@@ -67,13 +77,3 @@ constructor(
         viewModelScope.launch { navigator.route(Route.AutoLockSetting) }
     }
 }
-
-/** True once a passcode exists, whether or not it has been entered in this session. */
-private val PasscodeState.isConfigured: Boolean
-    get() =
-        when (this) {
-            PasscodeState.Locked,
-            PasscodeState.Unlocked -> true
-            PasscodeState.Disabled,
-            PasscodeState.Unknown -> false
-        }

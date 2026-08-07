@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.passcode
 
+import android.os.SystemClock
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.Immutable
@@ -12,10 +13,7 @@ import com.vultisig.wallet.data.passcode.PasscodeUnlockResult
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -28,6 +26,9 @@ internal sealed interface PasscodeLockError {
 
     /** Entry is throttled for another [remainingSeconds]. */
     data class LockedOut(val remainingSeconds: Long) : PasscodeLockError
+
+    /** The field held something other than digits — reachable with a hardware keyboard. */
+    data object NotDigits : PasscodeLockError
 }
 
 @Immutable
@@ -40,13 +41,19 @@ internal data class PasscodeLockUiModel(
 }
 
 /**
- * Drives the App Locked screen: collects five digits, verifies them, and counts down the throttle
- * when too many were wrong.
+ * Drives the App Locked screen: collects the passcode digits, verifies them, and counts down the
+ * throttle when too many were wrong.
  */
 @HiltViewModel
-internal class PasscodeLockViewModel
-@Inject
-constructor(private val passcodeRepository: PasscodeRepository) : ViewModel() {
+internal class PasscodeLockViewModel(
+    private val passcodeRepository: PasscodeRepository,
+    private val elapsedRealtimeMillis: () -> Long,
+) : ViewModel() {
+
+    @Inject
+    constructor(
+        passcodeRepository: PasscodeRepository
+    ) : this(passcodeRepository, SystemClock::elapsedRealtime)
 
     val textFieldState = TextFieldState()
 
@@ -62,11 +69,21 @@ constructor(private val passcodeRepository: PasscodeRepository) : ViewModel() {
                 // accusing them while they type the next attempt. Only a non-empty field counts as
                 // starting over: emptying it is how this view model reacts to a wrong passcode, and
                 // treating that as a fresh start would wipe the error in the frame it appears.
-                if (text.isNotEmpty() && state.value.error is PasscodeLockError.Wrong) {
+                if (text.isNotEmpty() && state.value.error !is PasscodeLockError.LockedOut) {
                     state.update { it.copy(error = null) }
                 }
+                // Length alone is not enough to call this a passcode: KeyboardType is only an IME
+                // hint, so a hardware keyboard can put letters in the field, and passing those on
+                // trips requireValidPasscode — whose exception escapes this collector and takes
+                // the process with it.
                 if (text.length == PASSCODE_LENGTH) {
-                    verify(text.toString())
+                    val entered = text.toString()
+                    if (entered.all(Char::isDigit)) {
+                        verify(entered)
+                    } else {
+                        textFieldState.clearText()
+                        state.update { it.copy(error = PasscodeLockError.NotDigits) }
+                    }
                 }
             }
         }
@@ -117,6 +134,9 @@ constructor(private val passcodeRepository: PasscodeRepository) : ViewModel() {
                         textFieldState.clearText()
                         startCountdown(result.retryAfterMillis)
                     }
+                    // Nothing on the lock screen can fail this way — it only ever unlocks — but
+                    // the branch keeps the result exhaustive rather than silently swallowed.
+                    is PasscodeUnlockResult.Failed -> textFieldState.clearText()
                 }
             }
     }
@@ -125,13 +145,8 @@ constructor(private val passcodeRepository: PasscodeRepository) : ViewModel() {
         countdownJob?.cancel()
         countdownJob =
             viewModelScope.launch {
-                var remaining = retryAfterMillis.milliseconds
-                while (remaining > 0.seconds) {
-                    state.update {
-                        it.copy(error = PasscodeLockError.LockedOut(remaining.inWholeSeconds))
-                    }
-                    delay(1.seconds)
-                    remaining -= 1.seconds
+                countdownSeconds(retryAfterMillis, elapsedRealtimeMillis) { remainingSeconds ->
+                    state.update { it.copy(error = PasscodeLockError.LockedOut(remainingSeconds)) }
                 }
                 state.update { it.copy(error = null) }
             }

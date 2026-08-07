@@ -10,6 +10,21 @@ import javax.inject.Inject
 import timber.log.Timber
 
 /**
+ * Identifies the row a keyshare ciphertext belongs to. Bound into the GCM tag as additional
+ * authenticated data, so a ciphertext lifted from one row and pasted into another fails to decrypt
+ * instead of silently handing back the wrong vault's share.
+ */
+internal data class KeyShareIdentity(val vaultId: String, val pubKey: String) {
+    /**
+     * Canonical bytes for the AAD. Length-prefixed rather than joined by a separator, so the
+     * encoding is injective whatever the fields contain: no two distinct rows can produce the same
+     * bytes, which a bare delimiter cannot promise once that delimiter appears inside a field.
+     */
+    fun toAad(): ByteArray =
+        "${vaultId.length}:$vaultId:${pubKey.length}:$pubKey".toByteArray(Charsets.UTF_8)
+}
+
+/**
  * Encrypts individual vault keyshares under the passcode-derived data key.
  *
  * Ciphertext is tagged with [PREFIX] so plaintext and encrypted rows can coexist in the same table.
@@ -27,21 +42,25 @@ internal class KeyShareCipher @Inject constructor() {
     /** True when [stored] was written by [encrypt] rather than stored in the clear. */
     fun isEncrypted(stored: String): Boolean = stored.startsWith(PREFIX)
 
-    /** Returns [plaintext] encrypted under [dataKey], tagged with [PREFIX]. */
-    fun encrypt(plaintext: String, dataKey: ByteArray): String {
+    /**
+     * Returns [plaintext] encrypted under [dataKey] and bound to [identity], tagged with [PREFIX].
+     */
+    fun encrypt(plaintext: String, dataKey: ByteArray, identity: KeyShareIdentity): String {
         val key = SecretKeySpec(dataKey, AES)
         val iv = ByteArray(IV_LENGTH).also(random::nextBytes)
         val cipher = Cipher.getInstance(AES_GCM_NO_PADDING)
         cipher.init(Cipher.ENCRYPT_MODE, key, GCMParameterSpec(GCM_TAG_BITS, iv))
+        cipher.updateAAD(identity.toAad())
         val ciphertext = cipher.doFinal(plaintext.toByteArray(Charsets.UTF_8))
         return PREFIX + Base64.getEncoder().encodeToString(iv + ciphertext)
     }
 
     /**
      * Returns the plaintext for [stored]: unchanged when it was never encrypted, decrypted under
-     * [dataKey] when it was, or null when it is encrypted and [dataKey] cannot open it.
+     * [dataKey] when it was, or null when it is encrypted and [dataKey] cannot open it under
+     * [identity] — a wrong key, a damaged blob, or a row it was not written for.
      */
-    fun decrypt(stored: String, dataKey: ByteArray?): String? {
+    fun decrypt(stored: String, dataKey: ByteArray?, identity: KeyShareIdentity): String? {
         if (!isEncrypted(stored)) return stored
         if (dataKey == null) return null
         return try {
@@ -53,6 +72,7 @@ internal class KeyShareCipher @Inject constructor() {
                 SecretKeySpec(dataKey, AES),
                 GCMParameterSpec(GCM_TAG_BITS, blob, 0, IV_LENGTH),
             )
+            cipher.updateAAD(identity.toAad())
             String(cipher.doFinal(blob, IV_LENGTH, blob.size - IV_LENGTH), Charsets.UTF_8)
         } catch (e: GeneralSecurityException) {
             Timber.e(e, "Failed to decrypt keyshare")

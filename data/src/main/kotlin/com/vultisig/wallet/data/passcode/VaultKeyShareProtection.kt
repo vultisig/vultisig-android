@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.passcode
 
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.db.dao.VaultDao
+import com.vultisig.wallet.data.db.models.KeyShareEntity
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -23,6 +24,12 @@ internal interface VaultKeyShareProtection {
     suspend fun protectAll(dataKey: ByteArray)
 
     /**
+     * True when at least one stored keyshare is encrypted. Lets the repository tell "no passcode
+     * was ever set" apart from "the passcode material is gone but its ciphertext is still here".
+     */
+    suspend fun hasEncryptedKeyShares(): Boolean
+
+    /**
      * Decrypts every encrypted keyshare with [dataKey] and stores it in the clear.
      *
      * @throws IllegalStateException if a keyshare cannot be decrypted, leaving the table untouched
@@ -39,13 +46,20 @@ constructor(
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
 ) : VaultKeyShareProtection {
 
+    override suspend fun hasEncryptedKeyShares(): Boolean =
+        withContext(dispatcher) {
+            vaultDao.loadAllKeyShares().any { cipher.isEncrypted(it.keyShare) }
+        }
+
     override suspend fun protectAll(dataKey: ByteArray) {
         withContext(dispatcher) {
             val plaintext =
                 vaultDao.loadAllKeyShares().filterNot { cipher.isEncrypted(it.keyShare) }
             if (plaintext.isEmpty()) return@withContext
             vaultDao.upsertKeyshares(
-                plaintext.map { it.copy(keyShare = cipher.encrypt(it.keyShare, dataKey)) }
+                plaintext.map {
+                    it.copy(keyShare = cipher.encrypt(it.keyShare, dataKey, it.identity()))
+                }
             )
             Timber.i("Encrypted %d keyshare(s) at rest", plaintext.size)
         }
@@ -60,7 +74,7 @@ constructor(
             val decrypted =
                 encrypted.map { entity ->
                     val plaintext =
-                        checkNotNull(cipher.decrypt(entity.keyShare, dataKey)) {
+                        checkNotNull(cipher.decrypt(entity.keyShare, dataKey, entity.identity())) {
                             "Keyshare for vault ${entity.vaultId} failed to decrypt"
                         }
                     entity.copy(keyShare = plaintext)
@@ -70,3 +84,6 @@ constructor(
         }
     }
 }
+
+internal fun KeyShareEntity.identity(): KeyShareIdentity =
+    KeyShareIdentity(vaultId = vaultId, pubKey = pubKey)

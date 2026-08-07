@@ -24,12 +24,17 @@ internal class VaultKeyShareProtectionImplTest {
     @BeforeEach
     fun setUp() {
         vaultDao = mockk(relaxUnitFun = true)
-        protection =
-            VaultKeyShareProtectionImpl(vaultDao, cipher, UnconfinedTestDispatcher())
+        protection = VaultKeyShareProtectionImpl(vaultDao, cipher, UnconfinedTestDispatcher())
     }
 
     private fun share(vaultId: String, keyShare: String) =
         KeyShareEntity(vaultId = vaultId, pubKey = "pub-$vaultId", keyShare = keyShare)
+
+    /** A row whose ciphertext is bound to that row's own identity, as production would write it. */
+    private fun encryptedShare(vaultId: String, plaintext: String): KeyShareEntity {
+        val row = share(vaultId, plaintext)
+        return row.copy(keyShare = cipher.encrypt(plaintext, dataKey, row.identity()))
+    }
 
     @Test
     fun `protectAll encrypts every plaintext share`() = runTest {
@@ -44,7 +49,7 @@ internal class VaultKeyShareProtectionImplTest {
         assertTrue(written.captured.all { cipher.isEncrypted(it.keyShare) })
         assertEquals(
             listOf("share-a", "share-b"),
-            written.captured.map { cipher.decrypt(it.keyShare, dataKey) },
+            written.captured.map { cipher.decrypt(it.keyShare, dataKey, it.identity()) },
         )
     }
 
@@ -52,20 +57,20 @@ internal class VaultKeyShareProtectionImplTest {
     fun `protectAll skips shares that are already encrypted`() = runTest {
         // The half-migrated table left by a process death must not be double-encrypted on retry.
         coEvery { vaultDao.loadAllKeyShares() } returns
-            listOf(share("a", cipher.encrypt("share-a", dataKey)), share("b", "share-b"))
+            listOf(encryptedShare("a", "share-a"), share("b", "share-b"))
         val written = slot<List<KeyShareEntity>>()
 
         protection.protectAll(dataKey)
 
         coVerify { vaultDao.upsertKeyshares(capture(written)) }
         assertEquals(1, written.captured.size)
-        assertEquals("share-b", cipher.decrypt(written.captured.single().keyShare, dataKey))
+        val only = written.captured.single()
+        assertEquals("share-b", cipher.decrypt(only.keyShare, dataKey, only.identity()))
     }
 
     @Test
     fun `protectAll writes nothing when every share is already encrypted`() = runTest {
-        coEvery { vaultDao.loadAllKeyShares() } returns
-            listOf(share("a", cipher.encrypt("share-a", dataKey)))
+        coEvery { vaultDao.loadAllKeyShares() } returns listOf(encryptedShare("a", "share-a"))
 
         protection.protectAll(dataKey)
 
@@ -75,10 +80,7 @@ internal class VaultKeyShareProtectionImplTest {
     @Test
     fun `unprotectAll restores plaintext`() = runTest {
         coEvery { vaultDao.loadAllKeyShares() } returns
-            listOf(
-                share("a", cipher.encrypt("share-a", dataKey)),
-                share("b", "already-plaintext"),
-            )
+            listOf(encryptedShare("a", "share-a"), share("b", "already-plaintext"))
         val written = slot<List<KeyShareEntity>>()
 
         protection.unprotectAll(dataKey)
@@ -90,10 +92,7 @@ internal class VaultKeyShareProtectionImplTest {
     @Test
     fun `unprotectAll writes nothing when a share cannot be decrypted`() = runTest {
         coEvery { vaultDao.loadAllKeyShares() } returns
-            listOf(
-                share("a", cipher.encrypt("share-a", dataKey)),
-                share("b", "vlpc1:Z2FyYmFnZQ=="),
-            )
+            listOf(encryptedShare("a", "share-a"), share("b", "vlpc1:Z2FyYmFnZQ=="))
 
         assertFailsWith<IllegalStateException> { protection.unprotectAll(dataKey) }
 

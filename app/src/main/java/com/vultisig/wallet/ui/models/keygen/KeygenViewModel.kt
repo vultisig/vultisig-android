@@ -38,6 +38,7 @@ import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.isFastVault
+import com.vultisig.wallet.data.passcode.AutoLockHold
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ChainImportSetting
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
@@ -140,6 +141,7 @@ constructor(
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     private val featureFlagRepository: FeatureFlagRepository,
+    private val autoLockHold: AutoLockHold,
     private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : ViewModel() {
@@ -317,30 +319,35 @@ constructor(
             _state.update { it.copy(error = null) }
 
             try {
-                featureFlags = featureFlagRepository.getFeatureFlags()
+                // The ceremony holds auto-lock off from here until the keyshare is written. The
+                // other devices cannot be paused, and locking before saveVault() leaves this
+                // device with no share for a vault the rest of the group has already created.
+                autoLockHold.withHold {
+                    featureFlags = featureFlagRepository.getFeatureFlags()
 
-                if (action == TssAction.SingleKeygen) {
-                    require(vault.pubKeyECDSA.isNotBlank() && vault.pubKeyEDDSA.isNotBlank()) {
-                        "SingleKeygen requires an existing vault with ECDSA and EdDSA keys"
+                    if (action == TssAction.SingleKeygen) {
+                        require(vault.pubKeyECDSA.isNotBlank() && vault.pubKeyEDDSA.isNotBlank()) {
+                            "SingleKeygen requires an existing vault with ECDSA and EdDSA keys"
+                        }
+                        startSingleKeygen()
+                    } else {
+                        // Pure dispatch function lives in KeygenExecution.kt so the matrix is
+                        // unit-testable in isolation — the previous inline `when` shipped a
+                        // dispatch bug for (ReShare, KeyImport) that abstract audits missed.
+                        when (selectKeygenExecutor(action, libType)) {
+                            KeygenExecutor.SingleKeygen -> startSingleKeygen()
+                            KeygenExecutor.DklsKeygen -> startKeygenDkls()
+                            KeygenExecutor.Gg20Keygen -> startKeygenGG20()
+                            KeygenExecutor.KeyImportKeygen -> startKeyImportKeygen()
+                        }
                     }
-                    startSingleKeygen()
-                } else {
-                    // Pure dispatch function lives in KeygenExecution.kt so the matrix is
-                    // unit-testable in isolation — the previous inline `when` shipped a
-                    // dispatch bug for (ReShare, KeyImport) that abstract audits missed.
-                    when (selectKeygenExecutor(action, libType)) {
-                        KeygenExecutor.SingleKeygen -> startSingleKeygen()
-                        KeygenExecutor.DklsKeygen -> startKeygenDkls()
-                        KeygenExecutor.Gg20Keygen -> startKeygenGG20()
-                        KeygenExecutor.KeyImportKeygen -> startKeyImportKeygen()
-                    }
+
+                    updateStep(KeygenState.Success)
+
+                    delay(1.seconds)
+
+                    saveVault()
                 }
-
-                updateStep(KeygenState.Success)
-
-                delay(1.seconds)
-
-                saveVault()
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e, "generateKey error")

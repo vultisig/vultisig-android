@@ -36,6 +36,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
@@ -119,7 +120,16 @@ internal fun MainActivityContent(
             SetupNavGraph(navController = navController, startDestination = startDestination)
         },
         overlayContent = {
-            PasscodeGuard()
+            PasscodeGuard(
+                // Dialog destinations render in their own window, above this overlay. Popping them
+                // as the gate closes is what stops a bottom sheet — a receive address, a QR — from
+                // sitting on top of the lock screen and still accepting taps.
+                onLocked = {
+                    while (navController.currentBackStackEntry.isDialog()) {
+                        if (!navController.popBackStack()) break
+                    }
+                }
+            )
 
             VsSnackBar(
                 modifier = Modifier.align(Alignment.BottomCenter),
@@ -281,3 +291,14 @@ private fun MainActivityContentPreview() {
         },
     )
 }
+
+/**
+ * True when [entry] is a `dialog<>` destination.
+ *
+ * Matched by navigator name because `DialogNavigator.NAME` is internal to the navigation library.
+ * The name is part of the destination's serialised form, so it is as stable as the routes are.
+ */
+private fun NavBackStackEntry?.isDialog(): Boolean =
+    this?.destination?.navigatorName == DIALOG_NAVIGATOR_NAME
+
+private const val DIALOG_NAVIGATOR_NAME = "dialog"

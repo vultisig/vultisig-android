@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.passcode
 
+import android.os.SystemClock
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.Immutable
@@ -18,10 +19,7 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -43,6 +41,12 @@ internal sealed interface PasscodeEntryError {
     data class LockedOut(val remainingSeconds: Long) : PasscodeEntryError
 
     data object Mismatch : PasscodeEntryError
+
+    /** The passcode was right but the operation could not be carried out; nothing changed. */
+    data object OperationFailed : PasscodeEntryError
+
+    /** The field held something other than digits — reachable with a hardware keyboard. */
+    data object NotDigits : PasscodeEntryError
 }
 
 @Immutable
@@ -58,13 +62,19 @@ internal data class PasscodeEntryUiModel(
 
 /** Drives the set / change / disable passcode prompts. */
 @HiltViewModel
-internal class PasscodeEntryViewModel
-@Inject
-constructor(
+internal class PasscodeEntryViewModel(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val passcodeRepository: PasscodeRepository,
+    private val elapsedRealtimeMillis: () -> Long,
 ) : ViewModel() {
+
+    @Inject
+    constructor(
+        savedStateHandle: SavedStateHandle,
+        navigator: Navigator<Destination>,
+        passcodeRepository: PasscodeRepository,
+    ) : this(savedStateHandle, navigator, passcodeRepository, SystemClock::elapsedRealtime)
 
     private val action = savedStateHandle.toRoute<Route.PasscodeEntry>().action
 
@@ -98,8 +108,17 @@ constructor(
                 if (text.isNotEmpty() && state.value.error !is PasscodeEntryError.LockedOut) {
                     state.update { it.copy(error = null) }
                 }
+                // Length alone is not enough to call this a passcode. KeyboardType is only an
+                // IME hint, so a hardware keyboard can put letters in the field; passing those on
+                // would trip requireValidPasscode, whose exception escapes this collector and
+                // takes the process with it.
                 if (text.length == PASSCODE_LENGTH) {
-                    submit(text.toString())
+                    val entered = text.toString()
+                    if (entered.all(Char::isDigit)) {
+                        submit(entered)
+                    } else {
+                        fail(PasscodeEntryError.NotDigits)
+                    }
                 }
             }
         }
@@ -134,6 +153,7 @@ constructor(
             is PasscodeUnlockResult.Wrong ->
                 fail(PasscodeEntryError.Wrong(result.remainingAttempts))
             is PasscodeUnlockResult.LockedOut -> startCountdown(result.retryAfterMillis)
+            is PasscodeUnlockResult.Failed -> fail(PasscodeEntryError.OperationFailed)
         }
     }
 
@@ -159,7 +179,10 @@ constructor(
                 close()
             }
             PasscodeEntryAction.Change -> {
-                val current = currentPasscode ?: return
+                // Reachable only if the verified passcode was dropped underneath us — process death
+                // restoring this screen mid-flow. Returning silently would strand the user on a
+                // Confirm step that can never complete, so send them back to prove themselves.
+                val current = currentPasscode ?: return restartFromCurrentStep()
                 when (
                     val result = withBusyState {
                         passcodeRepository.changePasscode(current, passcode)
@@ -169,6 +192,7 @@ constructor(
                     is PasscodeUnlockResult.Wrong ->
                         fail(PasscodeEntryError.Wrong(result.remainingAttempts))
                     is PasscodeUnlockResult.LockedOut -> startCountdown(result.retryAfterMillis)
+                    is PasscodeUnlockResult.Failed -> fail(PasscodeEntryError.OperationFailed)
                 }
             }
             // Disable never reaches Confirm; it completes as soon as the current passcode checks
@@ -183,6 +207,12 @@ constructor(
             is PasscodeUnlockResult.Wrong ->
                 fail(PasscodeEntryError.Wrong(result.remainingAttempts))
             is PasscodeUnlockResult.LockedOut -> startCountdown(result.retryAfterMillis)
+            // A keyshare would not decrypt, so the passcode is still in place. Reported rather
+            // than thrown: the alternative crashed the app and left it impossible to turn off.
+            is PasscodeUnlockResult.Failed -> {
+                state.update { it.copy(step = PasscodeEntryStep.Current) }
+                fail(PasscodeEntryError.OperationFailed)
+            }
         }
     }
 
@@ -205,19 +235,38 @@ constructor(
         countdownJob?.cancel()
         countdownJob =
             viewModelScope.launch {
-                var remaining = retryAfterMillis.milliseconds
-                while (remaining > 0.seconds) {
-                    state.update {
-                        it.copy(error = PasscodeEntryError.LockedOut(remaining.inWholeSeconds))
-                    }
-                    delay(1.seconds)
-                    remaining -= 1.seconds
+                countdownSeconds(retryAfterMillis, elapsedRealtimeMillis) { remainingSeconds ->
+                    state.update { it.copy(error = PasscodeEntryError.LockedOut(remainingSeconds)) }
                 }
                 state.update { it.copy(error = null) }
             }
     }
 
+    /** Sends the user back to proving the current passcode, discarding what they chose so far. */
+    private fun restartFromCurrentStep() {
+        newPasscode = null
+        textFieldState.clearText()
+        state.update { it.copy(step = PasscodeEntryStep.Current, error = null) }
+    }
+
     private suspend fun close() {
+        clearSecrets()
         navigator.back()
+    }
+
+    /**
+     * Drops the plaintext passcodes as soon as they are no longer needed. Kotlin strings cannot be
+     * zeroed, so releasing the references promptly is the only lever available: it shortens the
+     * window in which a heap dump of the process contains the passcode.
+     */
+    private fun clearSecrets() {
+        currentPasscode = null
+        newPasscode = null
+        textFieldState.clearText()
+    }
+
+    override fun onCleared() {
+        clearSecrets()
+        super.onCleared()
     }
 }

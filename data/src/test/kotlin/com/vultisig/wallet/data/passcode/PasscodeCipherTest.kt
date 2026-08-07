@@ -16,42 +16,42 @@ internal class PasscodeCipherTest {
         val salt = cipher.newSalt()
         val dataKey = cipher.newDataKey()
 
-        val wrapped = cipher.wrap(dataKey, "12345", salt)
+        val wrapped = cipher.wrap(dataKey, "123456", salt)
 
-        assertContentEquals(dataKey, cipher.unwrap(wrapped, "12345", salt))
+        assertContentEquals(dataKey, cipher.unwrap(wrapped, "123456", salt))
     }
 
     @Test
     fun `unwrap returns null for a wrong passcode`() {
         val salt = cipher.newSalt()
-        val wrapped = cipher.wrap(cipher.newDataKey(), "12345", salt)
+        val wrapped = cipher.wrap(cipher.newDataKey(), "123456", salt)
 
-        assertNull(cipher.unwrap(wrapped, "54321", salt))
+        assertNull(cipher.unwrap(wrapped, "654321", salt))
     }
 
     @Test
     fun `unwrap returns null when the salt does not match`() {
-        val wrapped = cipher.wrap(cipher.newDataKey(), "12345", cipher.newSalt())
+        val wrapped = cipher.wrap(cipher.newDataKey(), "123456", cipher.newSalt())
 
-        assertNull(cipher.unwrap(wrapped, "12345", cipher.newSalt()))
+        assertNull(cipher.unwrap(wrapped, "123456", cipher.newSalt()))
     }
 
     @Test
     fun `unwrap returns null when the blob is truncated`() {
         val salt = cipher.newSalt()
-        val wrapped = cipher.wrap(cipher.newDataKey(), "12345", salt)
+        val wrapped = cipher.wrap(cipher.newDataKey(), "123456", salt)
 
-        assertNull(cipher.unwrap(wrapped.copyOf(wrapped.size - 1), "12345", salt))
-        assertNull(cipher.unwrap(ByteArray(0), "12345", salt))
+        assertNull(cipher.unwrap(wrapped.copyOf(wrapped.size - 1), "123456", salt))
+        assertNull(cipher.unwrap(ByteArray(0), "123456", salt))
     }
 
     @Test
     fun `unwrap returns null when a single ciphertext byte is flipped`() {
         val salt = cipher.newSalt()
-        val wrapped = cipher.wrap(cipher.newDataKey(), "12345", salt)
+        val wrapped = cipher.wrap(cipher.newDataKey(), "123456", salt)
         wrapped[wrapped.lastIndex] = (wrapped[wrapped.lastIndex] + 1).toByte()
 
-        assertNull(cipher.unwrap(wrapped, "12345", salt))
+        assertNull(cipher.unwrap(wrapped, "123456", salt))
     }
 
     @Test
@@ -59,11 +59,22 @@ internal class PasscodeCipherTest {
         val salt = cipher.newSalt()
         val dataKey = cipher.newDataKey()
 
-        val first = cipher.wrap(dataKey, "12345", salt)
-        val second = cipher.wrap(dataKey, "12345", salt)
+        val first = cipher.wrap(dataKey, "123456", salt)
+        val second = cipher.wrap(dataKey, "123456", salt)
 
         assertFalse(first.contentEquals(second), "GCM IV must be random per wrap")
-        assertContentEquals(dataKey, cipher.unwrap(second, "12345", salt))
+        assertContentEquals(dataKey, cipher.unwrap(second, "123456", salt))
+    }
+
+    /**
+     * Pins the KDF cost. The wrapped key is only as expensive to attack as this number makes it,
+     * and a well-meaning "unlock feels slow on old devices" tweak would weaken it without any test
+     * noticing. 210k is the OWASP floor for PBKDF2-HMAC-SHA256.
+     */
+    @Test
+    fun `key derivation uses at least the OWASP floor of PBKDF2 iterations`() {
+        assertEquals("PBKDF2WithHmacSHA256", PasscodeCipher.PBKDF2_ALGORITHM)
+        assertEquals(210_000, PasscodeCipher.PBKDF2_ITERATIONS)
     }
 
     @Test

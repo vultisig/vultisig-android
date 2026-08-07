@@ -2,17 +2,17 @@
 
 package com.vultisig.wallet.ui.models.passcode
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
+import androidx.lifecycle.SavedStateHandle
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.passcode.PasscodeRepository
 import com.vultisig.wallet.data.passcode.PasscodeUnlockResult
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.PasscodeEntryAction
-import androidx.navigation.toRoute
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -58,7 +58,7 @@ internal class PasscodeEntryViewModelTest {
      * Builds the view model for [action]. `toRoute` decodes through an android Bundle, which is not
      * available to a plain JVM test, so the extension is stubbed rather than fed real arguments.
      */
-    private fun viewModel(action: PasscodeEntryAction): PasscodeEntryViewModel {
+    private fun TestScope.viewModel(action: PasscodeEntryAction): PasscodeEntryViewModel {
         mockkStatic("androidx.navigation.SavedStateHandleKt")
         every { any<SavedStateHandle>().toRoute<Route.PasscodeEntry>() } returns
             Route.PasscodeEntry(action)
@@ -66,6 +66,9 @@ internal class PasscodeEntryViewModelTest {
             savedStateHandle = SavedStateHandle(),
             navigator = navigator,
             passcodeRepository = passcodeRepository,
+            // The lockout countdown reads a monotonic clock; the scheduler's virtual time is the
+            // one that advances in step with the delays this test fast-forwards through.
+            elapsedRealtimeMillis = { testScheduler.currentTime },
         )
     }
 
@@ -91,21 +94,21 @@ internal class PasscodeEntryViewModelTest {
         advanceUntilIdle()
         assertEquals(PasscodeEntryStep.New, model.state.value.step)
 
-        type(model.textFieldState, "12345")
+        type(model.textFieldState, "123456")
         assertEquals(PasscodeEntryStep.Confirm, model.state.value.step)
 
-        type(model.textFieldState, "12345")
+        type(model.textFieldState, "123456")
 
-        coVerify { passcodeRepository.setPasscode("12345") }
+        coVerify { passcodeRepository.setPasscode("123456") }
     }
 
     @Test
     fun `a mismatched confirmation restarts at the choose step`() = runTest {
         val model = viewModel(PasscodeEntryAction.Set)
         advanceUntilIdle()
-        type(model.textFieldState, "12345")
+        type(model.textFieldState, "123456")
 
-        type(model.textFieldState, "54321")
+        type(model.textFieldState, "654321")
 
         assertEquals(PasscodeEntryStep.New, model.state.value.step)
         assertEquals(PasscodeEntryError.Mismatch, model.state.value.error)
@@ -114,18 +117,18 @@ internal class PasscodeEntryViewModelTest {
 
     @Test
     fun `changing starts by proving the current passcode`() = runTest {
-        coEvery { passcodeRepository.unlock("11111") } returns PasscodeUnlockResult.Success
+        coEvery { passcodeRepository.unlock("111111") } returns PasscodeUnlockResult.Success
         val model = viewModel(PasscodeEntryAction.Change)
         advanceUntilIdle()
         assertEquals(PasscodeEntryStep.Current, model.state.value.step)
 
-        type(model.textFieldState, "11111")
+        type(model.textFieldState, "111111")
         assertEquals(PasscodeEntryStep.New, model.state.value.step)
 
-        type(model.textFieldState, "22222")
-        type(model.textFieldState, "22222")
+        type(model.textFieldState, "222222")
+        type(model.textFieldState, "222222")
 
-        coVerify { passcodeRepository.changePasscode("11111", "22222") }
+        coVerify { passcodeRepository.changePasscode("111111", "222222") }
     }
 
     @Test
@@ -136,7 +139,7 @@ internal class PasscodeEntryViewModelTest {
         val model = viewModel(PasscodeEntryAction.Change)
         advanceUntilIdle()
 
-        type(model.textFieldState, "00000")
+        type(model.textFieldState, "000000")
         Snapshot.sendApplyNotifications()
         advanceUntilIdle()
 
@@ -147,9 +150,9 @@ internal class PasscodeEntryViewModelTest {
     fun `a mismatch keeps its message after the field self-clears`() = runTest {
         val model = viewModel(PasscodeEntryAction.Set)
         advanceUntilIdle()
-        type(model.textFieldState, "12345")
+        type(model.textFieldState, "123456")
 
-        type(model.textFieldState, "54321")
+        type(model.textFieldState, "654321")
         Snapshot.sendApplyNotifications()
         advanceUntilIdle()
 
@@ -162,7 +165,7 @@ internal class PasscodeEntryViewModelTest {
         val model = viewModel(PasscodeEntryAction.Change)
         advanceUntilIdle()
 
-        type(model.textFieldState, "00000")
+        type(model.textFieldState, "000000")
 
         assertEquals(PasscodeEntryStep.Current, model.state.value.step)
         assertEquals(PasscodeEntryError.Wrong(4), model.state.value.error)
@@ -170,14 +173,15 @@ internal class PasscodeEntryViewModelTest {
 
     @Test
     fun `disabling completes as soon as the current passcode checks out`() = runTest {
-        coEvery { passcodeRepository.unlock("11111") } returns PasscodeUnlockResult.Success
-        coEvery { passcodeRepository.disablePasscode("11111") } returns PasscodeUnlockResult.Success
+        coEvery { passcodeRepository.unlock("111111") } returns PasscodeUnlockResult.Success
+        coEvery { passcodeRepository.disablePasscode("111111") } returns
+            PasscodeUnlockResult.Success
         val model = viewModel(PasscodeEntryAction.Disable)
         advanceUntilIdle()
 
-        type(model.textFieldState, "11111")
+        type(model.textFieldState, "111111")
 
-        coVerify { passcodeRepository.disablePasscode("11111") }
+        coVerify { passcodeRepository.disablePasscode("111111") }
     }
 
     @Test
@@ -188,7 +192,7 @@ internal class PasscodeEntryViewModelTest {
 
         Snapshot.sendApplyNotifications()
         advanceUntilIdle()
-        model.textFieldState.setTextAndPlaceCursorAtEnd("00000")
+        model.textFieldState.setTextAndPlaceCursorAtEnd("000000")
         Snapshot.sendApplyNotifications()
         runCurrent()
 

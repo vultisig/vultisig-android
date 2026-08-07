@@ -4,9 +4,11 @@ import android.os.SystemClock
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import com.vultisig.wallet.data.passcode.AutoLockHold
 import com.vultisig.wallet.data.passcode.AutoLockRepository
 import com.vultisig.wallet.data.passcode.AutoLockTimeout
 import com.vultisig.wallet.data.passcode.PasscodeRepository
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
@@ -28,11 +30,17 @@ import timber.log.Timber
  *
  * [SystemClock.elapsedRealtime] is the clock for that check: it keeps counting through deep sleep,
  * unlike uptime, and cannot be wound backwards by changing the system time.
+ *
+ * This is not, and cannot be, what keeps the app off the recents thumbnail. `ProcessLifecycleOwner`
+ * holds ON_STOP back by 700ms so that a configuration change does not read as leaving the app, so
+ * even the [AutoLockTimeout.Immediate] lock lands well after the system has taken its snapshot.
+ * `FLAG_SECURE` is what covers that surface, and the prevent-screenshots setting is what sets it.
  */
 @Singleton
 internal class PasscodeAutoLock(
     private val passcodeRepository: PasscodeRepository,
     private val autoLockRepository: AutoLockRepository,
+    private val autoLockHold: AutoLockHold,
     private val elapsedRealtimeMillis: () -> Long,
     parentScope: CoroutineScope?,
 ) : DefaultLifecycleObserver {
@@ -41,10 +49,17 @@ internal class PasscodeAutoLock(
     constructor(
         passcodeRepository: PasscodeRepository,
         autoLockRepository: AutoLockRepository,
-    ) : this(passcodeRepository, autoLockRepository, SystemClock::elapsedRealtime, null)
+        autoLockHold: AutoLockHold,
+    ) : this(
+        passcodeRepository,
+        autoLockRepository,
+        autoLockHold,
+        SystemClock::elapsedRealtime,
+        null,
+    )
 
-    // Main.immediate so the lock lands in the same frame the app leaves the foreground, before
-    // anything can screenshot the task for the recents list.
+    // Main.immediate so the lock is dispatched as soon as the app leaves the foreground rather
+    // than queued behind whatever else the main thread has pending.
     private val scope = parentScope ?: CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     /**
@@ -56,27 +71,37 @@ internal class PasscodeAutoLock(
     private var backgroundedAtMillis: Long? = null
     private var pendingLock: Job? = null
 
-    /** Starts mirroring the timeout and observing [lifecycle]. Safe to call once per process. */
+    private val isStarted = AtomicBoolean(false)
+
+    /**
+     * Starts mirroring the timeout and observing [lifecycle]. Repeat calls are ignored: this is a
+     * process singleton but the caller is `MainActivity.onCreate`, which runs again on every
+     * configuration change, and each pass would otherwise leak another timeout collector.
+     */
     fun start(lifecycle: Lifecycle) {
+        if (!isStarted.compareAndSet(false, true)) return
         scope.launch { autoLockRepository.timeout.collect { timeout = it } }
         lifecycle.addObserver(this)
     }
 
     override fun onStop(owner: LifecycleOwner) {
+        // Stamped before the immediate branch so the elapsed-time check on return stays meaningful
+        // whatever the timeout was when the app left, including if it changes while away.
+        backgroundedAtMillis = elapsedRealtimeMillis()
+        pendingLock?.cancel()
+
         val current = timeout
-        if (current == AutoLockTimeout.Immediate) {
-            Timber.d("Auto-locking immediately on background")
-            passcodeRepository.lock()
+        if (current == AutoLockTimeout.Never) {
+            pendingLock = null
             return
         }
 
-        backgroundedAtMillis = elapsedRealtimeMillis()
-        pendingLock?.cancel()
         pendingLock =
             scope.launch {
                 delay(current.minutes * MILLIS_PER_MINUTE)
-                Timber.d("Auto-locking after %d minute(s) in the background", current.minutes)
-                passcodeRepository.lock()
+                lockWhenNothingHoldsIt(
+                    "Auto-locking after ${current.minutes} minute(s) in the background"
+                )
             }
     }
 
@@ -87,11 +112,30 @@ internal class PasscodeAutoLock(
         val backgroundedAt = backgroundedAtMillis ?: return
         backgroundedAtMillis = null
 
+        val current = timeout
+        if (current == AutoLockTimeout.Never) return
+
         val awayMillis = elapsedRealtimeMillis() - backgroundedAt
-        if (awayMillis >= timeout.minutes * MILLIS_PER_MINUTE) {
-            Timber.d("Auto-locking: away for %d ms", awayMillis)
-            passcodeRepository.lock()
+        if (awayMillis >= current.minutes * MILLIS_PER_MINUTE) {
+            pendingLock =
+                scope.launch { lockWhenNothingHoldsIt("Auto-locking: away for $awayMillis ms") }
         }
+    }
+
+    /**
+     * Locks, once nothing is holding it off.
+     *
+     * The wait is not a grace period — the timeout has already elapsed. It exists because a keygen
+     * ceremony in flight has not yet written its keyshare, and locking first destroys that share
+     * outright. See [AutoLockHold].
+     */
+    private suspend fun lockWhenNothingHoldsIt(reason: String) {
+        if (autoLockHold.holds.value > 0) {
+            Timber.d("Auto-lock deferred: an operation is in flight")
+            autoLockHold.awaitRelease()
+        }
+        Timber.d(reason)
+        passcodeRepository.lock()
     }
 
     private companion object {

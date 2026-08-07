@@ -20,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.passcode.PASSCODE_LENGTH
 import com.vultisig.wallet.ui.components.inputs.PasscodeInputField
 import com.vultisig.wallet.ui.components.inputs.PasscodeInputFieldState
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
@@ -29,7 +30,6 @@ import com.vultisig.wallet.ui.models.passcode.PasscodeEntryUiModel
 import com.vultisig.wallet.ui.models.passcode.PasscodeEntryViewModel
 import com.vultisig.wallet.ui.navigation.Route.PasscodeEntryAction
 import com.vultisig.wallet.ui.theme.Theme
-import kotlin.math.ceil
 
 @Composable
 internal fun PasscodeEntryScreen(navController: NavHostController) {
@@ -66,7 +66,7 @@ private fun PasscodeEntryScreen(
             )
 
             Text(
-                text = stringResource(state.step.captionRes(state.action)),
+                text = state.step.caption(state.action),
                 color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.footnote,
                 textAlign = TextAlign.Center,
@@ -109,40 +109,32 @@ private fun PasscodeEntryStep.headlineRes(): Int =
         PasscodeEntryStep.Confirm -> R.string.passcode_entry_headline_confirm
     }
 
-private fun PasscodeEntryStep.captionRes(action: PasscodeEntryAction): Int =
+@Composable
+private fun PasscodeEntryStep.caption(action: PasscodeEntryAction): String =
     when (this) {
         PasscodeEntryStep.Current ->
             if (action == PasscodeEntryAction.Disable) {
-                R.string.passcode_entry_caption_current_disable
+                stringResource(R.string.passcode_entry_caption_current_disable)
             } else {
-                R.string.passcode_entry_caption_current_change
+                stringResource(R.string.passcode_entry_caption_current_change)
             }
-        PasscodeEntryStep.New -> R.string.passcode_entry_caption_new
-        PasscodeEntryStep.Confirm -> R.string.passcode_entry_caption_confirm
+        // The digit count comes from the constant the input field and validation share, so the copy
+        // cannot drift from the length actually enforced.
+        PasscodeEntryStep.New ->
+            stringResource(R.string.passcode_entry_caption_new, PASSCODE_LENGTH)
+        PasscodeEntryStep.Confirm ->
+            stringResource(R.string.passcode_entry_caption_confirm, PASSCODE_LENGTH)
     }
 
 @Composable
 private fun PasscodeEntryError.message(): String =
     when (this) {
-        is PasscodeEntryError.Wrong ->
-            if (remainingAttempts == 1) stringResource(R.string.passcode_lock_last_attempt)
-            else stringResource(R.string.passcode_lock_wrong_passcode)
+        is PasscodeEntryError.Wrong -> wrongPasscodeMessage(remainingAttempts)
+        is PasscodeEntryError.LockedOut -> lockedOutMessage(remainingSeconds)
         is PasscodeEntryError.Mismatch -> stringResource(R.string.passcode_entry_mismatch)
-        is PasscodeEntryError.LockedOut ->
-            if (remainingSeconds >= SECONDS_PER_MINUTE) {
-                stringResource(
-                    R.string.passcode_lock_too_many_attempts_minutes,
-                    ceil(remainingSeconds / SECONDS_PER_MINUTE.toFloat()).toInt(),
-                )
-            } else {
-                stringResource(
-                    R.string.passcode_lock_too_many_attempts_seconds,
-                    remainingSeconds.toInt(),
-                )
-            }
+        is PasscodeEntryError.OperationFailed -> stringResource(R.string.passcode_operation_failed)
+        is PasscodeEntryError.NotDigits -> stringResource(R.string.passcode_not_digits)
     }
-
-private const val SECONDS_PER_MINUTE = 60
 
 @Preview
 @Composable

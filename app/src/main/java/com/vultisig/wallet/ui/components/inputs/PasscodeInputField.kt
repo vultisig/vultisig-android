@@ -32,6 +32,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.passcode.PASSCODE_LENGTH
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -49,7 +51,7 @@ internal enum class PasscodeInputFieldState {
 }
 
 /**
- * Five-cell passcode entry.
+ * One cell per [PASSCODE_LENGTH] digit.
  *
  * Follows the same mechanic as [VsCodeInputField] — a 1dp invisible [BasicTextField] owns the input
  * and keyboard while the visible cells are drawn from its text — but masks what it renders. This is
@@ -147,14 +149,15 @@ internal fun PasscodeInputField(
             }
         }
 
-        // One description for the whole row: announcing five identical cells adds nothing, whereas
-        // how many digits are in so far is the part a screen-reader user cannot see.
-        Box(
-            modifier =
-                Modifier.size(1.dp).semantics {
-                    contentDescription = "$entered of $PASSCODE_LENGTH digits entered"
-                }
-        )
+        // One description for the whole row: announcing identical cells adds nothing, whereas how
+        // many digits are in so far is the part a screen-reader user cannot see.
+        val enteredDescription =
+            stringResource(
+                R.string.passcode_input_field_content_description,
+                entered,
+                PASSCODE_LENGTH,
+            )
+        Box(modifier = Modifier.size(1.dp).semantics { contentDescription = enteredDescription })
     }
 }
 
