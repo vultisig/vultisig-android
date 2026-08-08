@@ -44,13 +44,7 @@ constructor(private val tokenPriceRepository: TokenPriceRepository) {
         currency: AppCurrency,
     ): FiatValue =
         convert(amount, currency) {
-            val curated =
-                Coins.allResolvable.firstOrNull { coin ->
-                    coin.chain == chain &&
-                        coin.ticker.equals(ticker, ignoreCase = true) &&
-                        (contractAddress.isEmpty() ||
-                            coin.contractAddress.equals(contractAddress, ignoreCase = true))
-                }
+            val curated = Coins.findCurated(chain, ticker, contractAddress)
 
             if (curated != null) {
                 price(curated, currency)

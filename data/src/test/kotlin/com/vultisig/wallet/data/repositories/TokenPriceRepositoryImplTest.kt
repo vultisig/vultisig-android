@@ -391,6 +391,42 @@ internal class TokenPriceRepositoryImplTest {
     }
 
     @Test
+    fun `a resolved contract price is cached under the coin id readers query by`() = runTest {
+        // The row used to be keyed by the raw contract address, which nothing ever reads back, so
+        // the write was dead and every reload repeated the live lookup.
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.TCY.id, "usd") } returns "2.0"
+        coEvery { thorApi.getThorchainTokenPriceByContract(any()) } returns
+            redemption(bondSize = "200", bondShares = "100")
+
+        repository.getPriceByContactAddress(Chain.ThorChain.id, sTcy.contractAddress)
+
+        coVerify { tokenPriceDao.insertTokenPrice(match { it.tokenId == sTcy.id }) }
+        coVerify(exactly = 0) {
+            tokenPriceDao.insertTokenPrice(match { it.tokenId == sTcy.contractAddress })
+        }
+    }
+
+    @Test
+    fun `a non-USD price is left unresolved when the FX rate cannot be fetched`() = runTest {
+        // tetherPriceFor answers a CoinGecko miss with ZERO. Multiplying blind turned a good USD
+        // price into a $0.00 indistinguishable from "no price", and only ever for non-USD users.
+        coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrency.EUR)
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { thorApi.getPools() } returns listOf(pool("THOR.RUJI", "150000000"))
+
+        val price =
+            repository.getPriceByContactAddress(
+                Chain.ThorChain.id,
+                Coins.ThorChain.RUJI.contractAddress,
+            )
+
+        assertPriceEquals("0", price)
+        coVerify(exactly = 0) { tokenPriceDao.insertTokenPrice(any()) }
+    }
+
+    @Test
     fun `a contract nothing can price is never written to the cache as zero`() = runTest {
         // The old path mapped an unresolved LI.FI price to ZERO, which made the result look like a
         // real quote: it was returned as $0.00 *and* persisted, and on a chain with no working

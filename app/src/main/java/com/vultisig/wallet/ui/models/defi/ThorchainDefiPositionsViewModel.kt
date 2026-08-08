@@ -846,15 +846,18 @@ constructor(
                     // user separately enabled them the vault does not hold them, and the periodic
                     // price refresh only ever covers vault coins. Refresh them here — nothing else
                     // will — or their cards fall through to a contract lookup with no cache row
-                    // behind it and render $0.00.
-                    withContext(ioDispatcher) {
-                        try {
-                            tokenPriceRepository.refresh(loadedPositions.map { it.coin })
-                        } catch (t: Throwable) {
-                            if (t is CancellationException) throw t
-                            // Pricing is cosmetic here: a failed refresh leaves the previous
-                            // cached price in place rather than blocking the cards.
-                            Timber.e(t, "Failed to refresh staking position prices")
+                    // behind it and render $0.00. Skipped when nothing loaded: refresh has no
+                    // empty-list guard of its own and would spend a live request on no ids.
+                    if (loadedPositions.isNotEmpty()) {
+                        withContext(ioDispatcher) {
+                            try {
+                                tokenPriceRepository.refresh(loadedPositions.map { it.coin })
+                            } catch (t: Throwable) {
+                                if (t is CancellationException) throw t
+                                // Pricing is cosmetic here: a failed refresh leaves the previous
+                                // cached price in place rather than blocking the cards.
+                                Timber.e(t, "Failed to refresh staking position prices")
+                            }
                         }
                     }
 
@@ -1208,17 +1211,18 @@ constructor(
         contractAddress: String,
         currency: AppCurrency,
     ): BigDecimal {
-        val curated =
-            Coins.allResolvable.firstOrNull { coin ->
-                coin.chain == chain &&
-                    coin.ticker.equals(ticker, ignoreCase = true) &&
-                    (contractAddress.isEmpty() ||
-                        coin.contractAddress.equals(contractAddress, ignoreCase = true))
-            }
-        if (curated != null) return priceFor(curated, currency)
+        Coins.findCurated(chain, ticker, contractAddress)?.let {
+            return priceFor(it, currency)
+        }
 
         return try {
-            tokenPriceRepository.getPriceByContactAddress(chain.id, contractAddress)
+            // An asset the catalogue doesn't carry can still have a cache row under the id a coin
+            // of that chain and ticker would have had, so read that before paying for a live
+            // contract lookup — the same order [DefiFiatValueCalculator] uses for its pool assets.
+            tokenPriceRepository.getCachedPrice(
+                tokenId = "$ticker-${chain.id}",
+                appCurrency = currency,
+            ) ?: tokenPriceRepository.getPriceByContactAddress(chain.id, contractAddress)
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
             Timber.e(e, "Failed to fetch price for %s %s", chain, contractAddress)

@@ -4479,4 +4479,40 @@ object Coins {
 
     /** [all] plus [defiOnly] — use whenever a stored coin id is resolved back to its [Coin]. */
     val allResolvable: List<Coin> = all + defiOnly
+
+    /**
+     * The curated [Coin] a pool or contract refers to, or null when the catalogue doesn't carry it.
+     *
+     * Pools name their assets by chain and ticker (`BTC.BTC`, `ETH.USDC-0x…`), which is all a
+     * caller has for a position the vault doesn't hold. Resolving that to the curated coin is what
+     * gives the asset its CoinGecko id — without it a native asset has no contract address to look
+     * up and can only ever price at zero.
+     *
+     * [contractAddress] is matched case-insensitively because pool strings and the catalogue's
+     * checksummed EVM addresses disagree on case; an empty one matches on chain and ticker alone,
+     * which is how native assets arrive. Ticker matching is likewise case-insensitive: chain
+     * metadata is not uniformly uppercased the way the EVM token lists are.
+     */
+    fun findCurated(chain: Chain, ticker: String, contractAddress: String): Coin? =
+        allResolvable.firstOrNull { coin ->
+            coin.chain == chain &&
+                coin.ticker.equals(ticker, ignoreCase = true) &&
+                (contractAddress.isEmpty() ||
+                    coin.contractAddress.equals(contractAddress, ignoreCase = true))
+        }
+
+    /**
+     * The curated [Coin] for a contract address on [chain], when the caller has no ticker to go
+     * with it — a contract-address price lookup, for instance, which needs the coin only to learn
+     * the id its result should be cached under. Never matches an empty [contractAddress], because
+     * every native coin carries one and the first would win arbitrarily.
+     */
+    fun findCuratedByContract(chain: Chain, contractAddress: String): Coin? =
+        contractAddress
+            .takeIf { it.isNotEmpty() }
+            ?.let { address ->
+                allResolvable.firstOrNull { coin ->
+                    coin.chain == chain && coin.contractAddress.equals(address, ignoreCase = true)
+                }
+            }
 }

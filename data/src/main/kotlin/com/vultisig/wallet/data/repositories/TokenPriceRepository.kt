@@ -211,7 +211,13 @@ constructor(
         // than the zero this replaces.
         if (price == null || price.signum() <= 0) return BigDecimal.ZERO
 
-        savePrices(mapOf(contractAddress to mapOf(currency to price)), currency)
+        // Cache under the coin id every reader queries by. The row used to be keyed by the raw
+        // contract address, which nothing ever reads back — so the write was dead and each reload
+        // repeated the live lookup. A contract the catalogue doesn't carry has no id to key on and
+        // is simply not cached, rather than written somewhere unreachable.
+        Coins.findCuratedByContract(chain, contractAddress)?.let { coin ->
+            savePrices(mapOf(coin.id to mapOf(currency to price)), currency)
+        }
         return price
     }
 
@@ -254,7 +260,16 @@ constructor(
 
         val priceUsd = receiptPrice ?: thorPoolPriceUsd(contractAddress) ?: return null
         if (priceUsd.signum() <= 0) return null
-        return priceUsd * tetherPriceFor(currency)
+
+        // fetchTetherPrice answers a CoinGecko miss with ZERO, so multiplying blind would turn a
+        // perfectly good USD price into a $0.00 that reads exactly like "we have no price" — and
+        // for a non-USD user, only ever on the FX leg. Treat a missing rate as a failed lookup.
+        val fxRate = tetherPriceFor(currency)
+        if (fxRate.signum() <= 0) {
+            Timber.w("No %s/USD rate available, leaving %s unpriced", currency, contractAddress)
+            return null
+        }
+        return priceUsd * fxRate
     }
 
     /**
@@ -312,7 +327,10 @@ constructor(
             Coins.coins[Chain.MayaChain]?.firstOrNull {
                 !it.isNativeToken && it.contractAddress.equals(contractAddress, ignoreCase = true)
             } ?: return null
-        return mayaPoolPrice(token, currency)
+        // `currency` travels lowercased through this class; fromTicker matches on the enum's
+        // uppercase ticker, so it has to be raised back or every lookup silently resolves to null.
+        val appCurrency = AppCurrency.fromTicker(currency.uppercase()) ?: return null
+        return mayaPoolPrice(token, appCurrency)
     }
 
     override suspend fun getPriceByPriceProviderId(priceProviderId: String): BigDecimal {
@@ -357,7 +375,9 @@ constructor(
 
             // LI.FI only indexes EVM chains, so asking it about a THORChain/Maya/Cosmos contract
             // could only ever fail. Skip it rather than fan out calls whose one possible answer is
-            // a miss — the caller's non-EVM route handles those chains.
+            // a miss. THORChain and Maya have their own route in nativeChainContractPrice; the
+            // Cosmos chains have none, so a contract there stays unpriced — but unpriced and
+            // unrecorded, rather than the zero this used to write down as a real quote.
             if (notInCoinGeckoTokens.isEmpty() || chain.evmChainId() == null) {
                 return@coroutineScope coinGeckoContractsPrice
             }
@@ -413,6 +433,13 @@ constructor(
     /**
      * Currency-per-USD, for converting the USD-quoted sources (pool TOR prices, index NAV) into the
      * app currency. Skips the USDT round trip when the app currency already is USD.
+     *
+     * [currency] selects only between skipping and fetching: the fetch itself resolves the app
+     * currency live, so a switch between the caller capturing [currency] and this call returning
+     * would quote the rate in the newer one. Callers refetch wholesale on a currency change, which
+     * is what keeps that window from mattering; it is not safe to widen the gap between capture and
+     * use on the strength of this parameter alone. Returns ZERO when the rate can't be fetched —
+     * callers must treat that as a failed lookup, not as a rate.
      */
     private suspend fun tetherPriceFor(currency: String): BigDecimal =
         if (currency.equals(AppCurrency.USD.ticker, ignoreCase = true)) BigDecimal.ONE
@@ -448,8 +475,11 @@ constructor(
                             priceUsd = poolAssetToPriceMap[tickerAsset]?.toBigDecimal(scale = 8)
                         }
 
-                        // If still no price found, skip this token
-                        if (priceUsd == null) {
+                        // No price, or a pool quoting zero: skip the token either way. savePrices
+                        // only filters empty maps, so a zero would land in Room and every later
+                        // cache read would serve it as a real "worth nothing" — permanently, since
+                        // nothing invalidates a cached price.
+                        if (priceUsd == null || priceUsd.signum() <= 0) {
                             return@mapNotNull null
                         }
 
@@ -469,16 +499,12 @@ constructor(
             val mayaTokens = tokenList.filter { it.chain == Chain.MayaChain && !it.isNativeToken }
             if (mayaTokens.isEmpty()) return@supervisorScope
 
-            // CACAO has to be in the list for its own price to have been refreshed this cycle;
-            // mayaPoolPrice reads that price from the cache.
-            tokenList.find { it.chain == Chain.MayaChain && it.isNativeToken }
-                ?: return@supervisorScope
-
+            val appCurrency = appCurrencyRepository.currency.first()
             val tokenIdToPrices =
                 mayaTokens
                     .mapNotNull { token ->
                         try {
-                            mayaPoolPrice(token, currency)?.let {
+                            mayaPoolPrice(token, appCurrency)?.let {
                                 token.id to mapOf(currency to it)
                             }
                         } catch (e: Exception) {
@@ -495,14 +521,35 @@ constructor(
 
     /**
      * A Maya asset's price in [currency], derived from its pool's depth: the pool quotes the asset
-     * in CACAO, and CACAO's own price comes from the cache (it is a CoinGecko-priced native coin).
-     * Null when the pool is empty or CACAO has no price yet, so the caller drops the token rather
-     * than recording a zero.
+     * in CACAO, and CACAO carries the CoinGecko id that turns that into fiat. Null when the pool is
+     * empty or CACAO has no price at all, so the caller drops the token rather than record a zero.
      */
-    private suspend fun mayaPoolPrice(token: Coin, currency: String): BigDecimal? {
-        val userCurrency = appCurrencyRepository.currency.first()
-        val cacaoPrice = getCachedPrice(Coins.MayaChain.CACAO.id, userCurrency) ?: return null
-        if (cacaoPrice <= BigDecimal.ZERO) return null
+    /**
+     * CACAO in [currency]: the cached price when there is one, else a live fetch by its CoinGecko
+     * id — the same cache-then-live shape [runePriceUsd] and [tcyPriceUsd] use for their
+     * underlyings. Reading the cache alone left every Maya pool leg at $0.00 on a cold cache,
+     * because the single-contract lookup has no refresh cycle ahead of it to populate CACAO first.
+     */
+    private suspend fun cacaoPrice(currency: AppCurrency): BigDecimal? {
+        getCachedPrice(Coins.MayaChain.CACAO.id, currency)
+            ?.takeIf { it > BigDecimal.ZERO }
+            ?.let {
+                return it
+            }
+        return coinGeckoApi
+            .getCryptoPrices(
+                listOf(Coins.MayaChain.CACAO.priceProviderID),
+                listOf(currency.ticker.lowercase()),
+            )
+            .values
+            .firstOrNull()
+            ?.values
+            ?.firstOrNull()
+            ?.takeIf { it > BigDecimal.ZERO }
+    }
+
+    private suspend fun mayaPoolPrice(token: Coin, currency: AppCurrency): BigDecimal? {
+        val cacaoPrice = cacaoPrice(currency) ?: return null
 
         val pool = mayaApi.getPool("MAYA.${token.ticker}")
         val balanceCacao = pool.balanceCacao.toBigDecimal()
