@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.isSecureVault
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.tokenLogoRes
@@ -372,15 +373,16 @@ constructor(
     private fun buildJoinRequest(vault: Vault): JoinKeysignRequestJson? {
         val password = password
         if (password.isNullOrBlank()) return null
+        val chain = resolveKeysignChain(_keysignPayload, customMessagePayload)
         return JoinKeysignRequestJson(
             publicKeyEcdsa = vault.pubKeyECDSA,
             messages = messagesToSign,
             sessionId = _sessionID,
             hexEncryptionKey = _encryptionKeyHex,
-            derivePath = (_keysignPayload?.coin?.coinType ?: CoinType.ETHEREUM).derivationPath(),
+            derivePath = (chain?.coinType ?: CoinType.ETHEREUM).derivationPath(),
             isEcdsa = tssKeysignType == TssKeyType.ECDSA,
             password = password,
-            chain = _keysignPayload?.coin?.chain?.raw ?: "",
+            chain = resolveJoinRequestChainRaw(_keysignPayload, customMessagePayload),
             mldsa = tssKeysignType == TssKeyType.MLDSA,
         )
     }
