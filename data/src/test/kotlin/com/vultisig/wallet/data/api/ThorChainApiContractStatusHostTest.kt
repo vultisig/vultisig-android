@@ -37,6 +37,7 @@ internal class ThorChainApiContractStatusHostTest {
         """{"data":{"liquid_bond_size":"200","liquid_bond_shares":"100","nav_per_share":"1.5"}}"""
 
     private val requestedHosts = mutableListOf<String>()
+    private val requestedPaths = mutableListOf<String>()
 
     /** Routes by host so a test can fail one and serve the other. */
     private fun api(gatewayStatus: HttpStatusCode, ibsStatus: HttpStatusCode): ThorChainApi {
@@ -45,6 +46,7 @@ internal class ThorChainApiContractStatusHostTest {
                 MockEngine { request ->
                     val host = request.url.host
                     requestedHosts += host
+                    requestedPaths += request.url.encodedPath
                     val status = if (host.contains("ibs.team")) ibsStatus else gatewayStatus
                     val body =
                         if (status == HttpStatusCode.OK) statusBody
@@ -77,7 +79,7 @@ internal class ThorChainApiContractStatusHostTest {
                 .getThorchainTokenPriceByContract("thor1contract")
 
         assertEquals("200", response.data.liquidBondSize)
-        assertEquals(listOf(false), requestedHosts.map { it.contains("ibs.team") })
+        assertEquals(listOf(GATEWAY_HOST), requestedHosts)
     }
 
     @Test
@@ -90,9 +92,33 @@ internal class ThorChainApiContractStatusHostTest {
             // The NAV still resolves, so sTCY keeps its premium instead of dropping to parity.
             assertEquals("200", response.data.liquidBondSize)
             assertEquals("100", response.data.liquidBondShares)
-            assertTrue(
-                requestedHosts.any { it.contains("ibs.team") },
-                "expected the ibs.team fallback to be attempted, got $requestedHosts",
-            )
+            // Ordered: the gateway is tried first and ibs.team only as the fallback.
+            assertEquals(listOf(GATEWAY_HOST, IBS_HOST), requestedHosts)
         }
+
+    /**
+     * THORChain denoms routinely carry slashes (`x/staking-x/brune`), and the contract reaching
+     * here is derived from one. Interpolated raw, such a value would split into extra path segments
+     * and retarget the request.
+     */
+    @Test
+    fun `a contract containing a slash stays inside its own path segment`() = runBlocking {
+        api(HttpStatusCode.OK, HttpStatusCode.InternalServerError)
+            .getThorchainTokenPriceByContract("thor1abc/../../evil")
+
+        val path = requestedPaths.single()
+        assertTrue(
+            path.contains("thor1abc%2F..%2F..%2Fevil"),
+            "expected the slashes encoded within one segment, got $path",
+        )
+        assertTrue(
+            path.startsWith("/chain/thorchain_api/cosmwasm/wasm/v1/contract/"),
+            "expected the query to stay on the contract route, got $path",
+        )
+    }
+
+    private companion object {
+        const val GATEWAY_HOST = "gateway.liquify.com"
+        const val IBS_HOST = "thorchain.ibs.team"
+    }
 }
