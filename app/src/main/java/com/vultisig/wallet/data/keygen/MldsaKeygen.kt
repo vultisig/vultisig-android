@@ -21,7 +21,6 @@ import com.silencelaboratories.godilithium.mldsa_error
 import com.silencelaboratories.godilithium.mldsa_error.LIB_OK
 import com.silencelaboratories.godilithium.tss_buffer
 import com.vultisig.wallet.data.api.SessionApi
-import com.vultisig.wallet.data.keygen.mldsa.toGoSlice
 import com.vultisig.wallet.data.mediator.Message
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
@@ -68,8 +67,7 @@ class MldsaKeygen(
         try {
             val threshold = DklsHelper.getThreshold(keygenCommittee.size)
             val byteArray = DklsHelper.arrayToBytes(keygenCommittee)
-            val ids = go_slice()
-            BufferUtilJNI.set_bytes_on_go_slice(ids, byteArray)
+            val ids = byteArray.toMldsaGoSlice()
             val err =
                 mldsa_keygen_setupmsg_new(MldsaSecurityLevel.MlDsa44, threshold, null, ids, buf)
             if (err != LIB_OK) {
@@ -126,7 +124,7 @@ class MldsaKeygen(
                 return
             }
 
-            val message = outboundMessage.toGoSlice()
+            val message = outboundMessage.toMldsaGoSlice()
             val encodedOutboundMessage = Base64.encode(outboundMessage)
             for (i in keygenCommittee.indices) {
                 val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
@@ -191,7 +189,7 @@ class MldsaKeygen(
                 ) ?: error("fail to decrypt message body")
             val decodedMsg = Base64.decode(decryptedBody)
 
-            val decryptedBodySlice = decodedMsg.toGoSlice()
+            val decryptedBodySlice = decodedMsg.toMldsaGoSlice()
 
             val isFinished = intArrayOf(0)
             val result = mldsa_keygen_session_input_message(handle, decryptedBodySlice, isFinished)
@@ -267,9 +265,9 @@ class MldsaKeygen(
                 }
 
                 setupMessage = keygenSetupMsg
-                val decodedSetupMsg = keygenSetupMsg.toGoSlice()
+                val decodedSetupMsg = keygenSetupMsg.toMldsaGoSlice()
                 val localPartyIDArr = localPartyId.toByteArray()
-                val localPartySlice = localPartyIDArr.toGoSlice()
+                val localPartySlice = localPartyIDArr.toMldsaGoSlice()
 
                 val result =
                     mldsa_keygen_session_from_setup(

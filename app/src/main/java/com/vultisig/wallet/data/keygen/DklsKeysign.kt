@@ -21,7 +21,6 @@ import com.silencelaboratories.godkls.tss_buffer
 import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.md5
-import com.vultisig.wallet.data.keygen.dkls.toGoSlice
 import com.vultisig.wallet.data.mediator.Message
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
@@ -107,7 +106,7 @@ class DKLSKeysign(
         val buf = tss_buffer()
         try {
             val keyShareBytes = getKeyshareBytes()
-            val keyshareSlice = keyShareBytes.toGoSlice()
+            val keyshareSlice = keyShareBytes.toDklsGoSlice()
             val h = Handle()
             val result = dkls_keyshare_from_bytes(keyshareSlice, h)
             if (result != LIB_OK) {
@@ -128,14 +127,14 @@ class DKLSKeysign(
         val buf = tss_buffer()
         try {
             val keyIdArr = getDKLSKeyshareID()
-            val keyIdSlice = keyIdArr.toGoSlice()
+            val keyIdSlice = keyIdArr.toDklsGoSlice()
             val byteArray = DklsHelper.arrayToBytes(keysignCommittee)
-            val ids = byteArray.toGoSlice()
+            val ids = byteArray.toDklsGoSlice()
             var chainPathSlice: go_slice?
             when (vault.libType) {
                 SigningLibType.DKLS -> {
                     val chainPathArr = chainPath.replace("'", "").toByteArray(Charsets.UTF_8)
-                    chainPathSlice = chainPathArr.toGoSlice()
+                    chainPathSlice = chainPathArr.toDklsGoSlice()
                 }
 
                 SigningLibType.KeyImport -> {
@@ -148,7 +147,7 @@ class DKLSKeysign(
             }
 
             val decodedMsgData = message.hexToByteArray()
-            val msgSlice = decodedMsgData.toGoSlice()
+            val msgSlice = decodedMsgData.toDklsGoSlice()
             val err = dkls_sign_setupmsg_new(keyIdSlice, chainPathSlice, msgSlice, ids, buf)
             if (err != LIB_OK) {
                 error("fail to setup keysign message, dkls error: $err")
@@ -163,7 +162,7 @@ class DKLSKeysign(
     private fun decodeMessage(setupMsg: ByteArray): String {
         val buf = tss_buffer()
         try {
-            val setupMsgSlice = setupMsg.toGoSlice()
+            val setupMsgSlice = setupMsg.toDklsGoSlice()
             val result = dkls_decode_message(setupMsgSlice, buf)
             if (result != LIB_OK) {
                 error("fail to extract message from setup message: $result")
@@ -216,7 +215,7 @@ class DKLSKeysign(
             if (outboundMessage.isEmpty()) {
                 return
             }
-            val message = outboundMessage.toGoSlice()
+            val message = outboundMessage.toDklsGoSlice()
             val encodedOutboundMessage = Base64.encode(outboundMessage)
             for (i in keysignCommittee.indices) {
                 val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
@@ -255,7 +254,7 @@ class DKLSKeysign(
                     Numeric.hexStringToByteArray(encryptionKeyHex),
                 ) ?: error("fail to decrypt message body")
             val decodedMsg = Base64.decode(decryptedBody)
-            val decryptedBodySlice = decodedMsg.toGoSlice()
+            val decryptedBodySlice = decodedMsg.toDklsGoSlice()
             val isFinished = intArrayOf(0)
             val result = dkls_sign_session_input_message(handle, decryptedBodySlice, isFinished)
             if (result != LIB_OK) {
@@ -329,12 +328,12 @@ class DKLSKeysign(
             if (signingMsg != messageToSign) {
                 error("message doesn't match ($messageToSign) vs ($signingMsg)")
             }
-            val decodedSetupMsg = keysignSetupMsg.toGoSlice()
+            val decodedSetupMsg = keysignSetupMsg.toDklsGoSlice()
             val handler = Handle()
             val localPartyIDArr = localPartyID.toByteArray()
-            val localPartySlice = localPartyIDArr.toGoSlice()
+            val localPartySlice = localPartyIDArr.toDklsGoSlice()
             val keyShareBytes = getKeyshareBytes()
-            val keyshareSlice = keyShareBytes.toGoSlice()
+            val keyshareSlice = keyShareBytes.toDklsGoSlice()
             val keyshareHandle = Handle()
             val result = dkls_keyshare_from_bytes(keyshareSlice, keyshareHandle)
             if (result != LIB_OK) {

@@ -29,7 +29,6 @@ import com.silencelaboratories.godkls.lib_error
 import com.silencelaboratories.godkls.lib_error.LIB_OK
 import com.silencelaboratories.godkls.tss_buffer
 import com.vultisig.wallet.data.api.SessionApi
-import com.vultisig.wallet.data.keygen.dkls.toGoSlice
 import com.vultisig.wallet.data.mediator.Message
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
@@ -82,8 +81,7 @@ class DKLSKeygen(
         try {
             val threshold = DklsHelper.getThreshold(keygenCommittee.size)
             val byteArray = DklsHelper.arrayToBytes(keygenCommittee)
-            val ids = go_slice()
-            BufferUtilJNI.set_bytes_on_go_slice(ids, byteArray)
+            val ids = byteArray.toDklsGoSlice()
             val err = dkls_keygen_setupmsg_new(threshold, null, ids, buf)
             if (err != LIB_OK) {
                 error("fail to setup keygen message, dkls error: $err")
@@ -104,13 +102,12 @@ class DKLSKeygen(
         val handler = Handle()
         try {
             val chainCodeArray = Numeric.hexStringToByteArray(hexRootChainCode)
-            val chainCodeSlice = chainCodeArray.toGoSlice()
+            val chainCodeSlice = chainCodeArray.toDklsGoSlice()
             val localUIArray = Numeric.hexStringToByteArray(hexPrivateKey)
-            val localUISlice = localUIArray.toGoSlice()
+            val localUISlice = localUIArray.toDklsGoSlice()
             val threshold = DklsHelper.getThreshold(keygenCommittee.size)
             val byteArray = DklsHelper.arrayToBytes(keygenCommittee)
-            val ids = go_slice()
-            BufferUtilJNI.set_bytes_on_go_slice(ids, byteArray)
+            val ids = byteArray.toDklsGoSlice()
             val err =
                 dkls_key_import_initiator_new(
                     localUISlice,
@@ -193,7 +190,7 @@ class DKLSKeygen(
                 return
             }
 
-            val message = outboundMessage.toGoSlice()
+            val message = outboundMessage.toDklsGoSlice()
             val encodedOutboundMessage = Base64.encode(outboundMessage)
             for (i in keygenCommittee.indices) {
                 val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
@@ -264,7 +261,7 @@ class DKLSKeygen(
                 ) ?: error("fail to decrypt message body")
             val decodedMsg = Base64.decode(decryptedBody)
 
-            val decryptedBodySlice = decodedMsg.toGoSlice()
+            val decryptedBodySlice = decodedMsg.toDklsGoSlice()
 
             val isFinished = intArrayOf(0)
 
@@ -364,9 +361,9 @@ class DKLSKeygen(
             }
 
             setupMessage = keygenSetupMsg
-            val decodedSetupMsg = keygenSetupMsg.toGoSlice()
+            val decodedSetupMsg = keygenSetupMsg.toDklsGoSlice()
             val localPartyIDArr = this.localPartyId.toByteArray()
-            val localPartySlice = localPartyIDArr.toGoSlice()
+            val localPartySlice = localPartyIDArr.toDklsGoSlice()
 
             when (action) {
                 TssAction.KEYGEN -> {
@@ -383,11 +380,11 @@ class DKLSKeygen(
                     }
                     val localUI = this.localUi
                     val publicKeyArray = Numeric.hexStringToByteArray(vault.pubKeyECDSA)
-                    val publicKeySlice = publicKeyArray.toGoSlice()
+                    val publicKeySlice = publicKeyArray.toDklsGoSlice()
                     val chainCodeArray = Numeric.hexStringToByteArray(this.hexChainCode)
-                    val chainCodeSlice = chainCodeArray.toGoSlice()
+                    val chainCodeSlice = chainCodeArray.toDklsGoSlice()
                     val localUIArray = Numeric.hexStringToByteArray(localUI)
-                    val localUISlice = localUIArray.toGoSlice()
+                    val localUISlice = localUIArray.toDklsGoSlice()
 
                     val result =
                         dkls_key_migration_session_from_setup(
@@ -496,9 +493,9 @@ class DKLSKeygen(
             val (allParties, newPartiesIdx, oldPartiesIdx) =
                 processReshareCommittee(oldCommittee, keygenCommittee)
             val byteArray = DklsHelper.arrayToBytes(allParties)
-            val ids = byteArray.toGoSlice()
-            val newPartiesIdxSlice = newPartiesIdx.toByteArray().toGoSlice()
-            val oldPartiesIdxSlice = oldPartiesIdx.toByteArray().toGoSlice()
+            val ids = byteArray.toDklsGoSlice()
+            val newPartiesIdxSlice = newPartiesIdx.toByteArray().toDklsGoSlice()
+            val oldPartiesIdxSlice = oldPartiesIdx.toByteArray().toDklsGoSlice()
             val result =
                 dkls_qc_setupmsg_new(
                     keyshareHandle,
@@ -545,7 +542,7 @@ class DKLSKeygen(
             val keyshareHandle = Handle()
             if (vault.pubKeyECDSA.isNotEmpty()) {
                 val keyshareBytes = getKeyshareBytesFromVault()
-                val keyshareSlice = keyshareBytes.toGoSlice()
+                val keyshareSlice = keyshareBytes.toDklsGoSlice()
                 val result = dkls_keyshare_from_bytes(keyshareSlice, keyshareHandle)
                 if (result != LIB_OK) {
                     error("fail to get keyshare, $result")
@@ -580,10 +577,10 @@ class DKLSKeygen(
                         .let { Base64.decode(it) }
                 }
 
-            val decodedSetupMsg = reshareSetupMsg.toGoSlice()
+            val decodedSetupMsg = reshareSetupMsg.toDklsGoSlice()
             val handler = Handle()
             val localPartyIDArr = localPartyId.toByteArray()
-            val localPartySlice = localPartyIDArr.toGoSlice()
+            val localPartySlice = localPartyIDArr.toDklsGoSlice()
 
             val sessionResult =
                 dkls_qc_session_from_setup(

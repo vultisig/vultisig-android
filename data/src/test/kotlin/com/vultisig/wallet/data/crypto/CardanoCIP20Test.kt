@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.crypto
 
 import com.vultisig.wallet.data.common.Utils
+import com.vultisig.wallet.data.common.toHex
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -14,9 +15,7 @@ import org.junit.jupiter.api.Test
  */
 class CardanoCIP20Test {
 
-    private fun ByteArray.hex(): String = joinToString("") { "%02x".format(it) }
-
-    private fun String.utf8Hex(): String = toByteArray(Charsets.UTF_8).hex()
+    private fun String.utf8Hex(): String = toByteArray(Charsets.UTF_8).toHex()
 
     // memoToChunks
 
@@ -88,19 +87,19 @@ class CardanoCIP20Test {
     fun `buildAuxData produces pinned cbor for hello world`() {
         // a1 1902a2 a1 636d7367 81 6b <"hello world">
         val expected = "a11902a2a1636d7367816b" + "hello world".utf8Hex()
-        assertEquals(expected, CardanoCIP20.buildAuxData("hello world").auxDataCbor.hex())
+        assertEquals(expected, CardanoCIP20.buildAuxData("hello world").auxDataCbor.toHex())
     }
 
     @Test
     fun `buildAuxData encodes label 674 and msg key`() {
-        val hex = CardanoCIP20.buildAuxData("hello world").auxDataCbor.hex()
+        val hex = CardanoCIP20.buildAuxData("hello world").auxDataCbor.toHex()
         assertTrue(hex.startsWith("a11902a2a1636d7367"))
     }
 
     @Test
     fun `buildAuxData chunks a 64-byte chunk head correctly`() {
         // A 65-byte ASCII memo -> two text chunks: one 64-byte (head 78 40) and one 1-byte.
-        val hex = CardanoCIP20.buildAuxData("a".repeat(65)).auxDataCbor.hex()
+        val hex = CardanoCIP20.buildAuxData("a".repeat(65)).auxDataCbor.toHex()
         assertTrue(hex.contains("82")) // array(2) header
         assertTrue(hex.contains("7840" + "61".repeat(64))) // 64-byte text head + 64 'a'
     }
@@ -108,14 +107,17 @@ class CardanoCIP20Test {
     @Test
     fun `buildAuxData empty memo encodes single empty chunk`() {
         // { 674: { "msg": [""] } } -> ... 81 60  (array(1), text(0))
-        assertEquals("a11902a2a1636d7367" + "8160", CardanoCIP20.buildAuxData("").auxDataCbor.hex())
+        assertEquals(
+            "a11902a2a1636d7367" + "8160",
+            CardanoCIP20.buildAuxData("").auxDataCbor.toHex(),
+        )
     }
 
     @Test
     fun `aux data hash is blake2b-256 of cbor`() {
         val aux = CardanoCIP20.buildAuxData("vultisig-test")
         assertEquals(32, aux.auxDataHash.size)
-        assertEquals(Utils.blake2bHash(aux.auxDataCbor).hex(), aux.auxDataHash.hex())
+        assertEquals(Utils.blake2bHash(aux.auxDataCbor).toHex(), aux.auxDataHash.toHex())
         assertTrue(aux.auxDataHash.any { it.toInt() != 0 })
     }
 }

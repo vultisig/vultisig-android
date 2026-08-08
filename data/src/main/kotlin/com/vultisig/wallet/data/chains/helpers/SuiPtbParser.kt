@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.data.chains.helpers
 
+import com.vultisig.wallet.data.common.toLittleEndianBigInteger
 import java.math.BigInteger
 import java.util.Base64
 
@@ -260,14 +261,6 @@ sealed class SuiCommand {
         val dependencyCount: Int,
         val ticket: SuiArgument,
     ) : SuiCommand()
-}
-
-private fun ByteArray.toLittleEndianBigInteger(): BigInteger {
-    var result = BigInteger.ZERO
-    for (i in indices.reversed()) {
-        result = result.shiftLeft(8).or(BigInteger.valueOf(this[i].toLong() and 0xFF))
-    }
-    return result
 }
 
 /**

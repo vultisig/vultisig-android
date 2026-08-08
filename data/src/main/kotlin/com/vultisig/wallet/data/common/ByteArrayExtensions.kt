@@ -2,7 +2,9 @@ package com.vultisig.wallet.data.common
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.utils.Numeric
+import java.math.BigInteger
 import java.security.MessageDigest
+import java.util.Base64
 import org.bouncycastle.crypto.digests.Blake2bDigest
 import org.bouncycastle.jcajce.provider.digest.Keccak
 
@@ -67,3 +69,18 @@ fun ByteArray.toByteString(): ByteString {
 
 /** Lowercase hex string of the bytes, with no `0x` prefix. */
 fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
+
+/** `0x`-prefixed hex string, the shape EVM JSON-RPC expects for a call's `data` field. */
+fun ByteArray.asCallData(): String = Numeric.toHexString(this)
+
+/** Base64 without the line breaks `Base64.getMimeEncoder()` would insert. */
+fun ByteArray.base64NoWrap(): String = Base64.getEncoder().encodeToString(this)
+
+/** Reads the bytes as an unsigned little-endian integer, as BCS encodes `u64` / `u128`. */
+fun ByteArray.toLittleEndianBigInteger(): BigInteger {
+    var result = BigInteger.ZERO
+    for (i in indices.reversed()) {
+        result = result.shiftLeft(8).or(BigInteger.valueOf(this[i].toLong() and 0xFF))
+    }
+    return result
+}

@@ -27,7 +27,6 @@ import com.silencelaboratories.goschnorr.schnorr_lib_error
 import com.silencelaboratories.goschnorr.schnorr_lib_error.LIB_OK
 import com.silencelaboratories.goschnorr.tss_buffer
 import com.vultisig.wallet.data.api.SessionApi
-import com.vultisig.wallet.data.keygen.schnorr.toGoSlice
 import com.vultisig.wallet.data.mediator.Message
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
@@ -134,7 +133,7 @@ class SchnorrKeygen(
                 return
             }
 
-            val message = outboundMessage.toGoSlice()
+            val message = outboundMessage.toSchnorrGoSlice()
             val encodedOutboundMessage = Base64.encode(outboundMessage)
             for (i in keygenCommittee.indices) {
                 val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
@@ -197,7 +196,7 @@ class SchnorrKeygen(
                 ) ?: error("fail to decrypt message body")
             val decodedMsg = Base64.decode(decryptedBody)
 
-            val decryptedBodySlice = decodedMsg.toGoSlice()
+            val decryptedBodySlice = decodedMsg.toSchnorrGoSlice()
 
             val isFinished = intArrayOf(0)
             val result =
@@ -264,13 +263,12 @@ class SchnorrKeygen(
         val handler = Handle()
         try {
             val chainCodeArray = Numeric.hexStringToByteArray(hexRootChainCode)
-            val chainCodeSlice = chainCodeArray.toGoSlice()
+            val chainCodeSlice = chainCodeArray.toSchnorrGoSlice()
             val localUIArray = Numeric.hexStringToByteArray(hexPrivateKey)
-            val localUISlice = localUIArray.toGoSlice()
+            val localUISlice = localUIArray.toSchnorrGoSlice()
             val threshold = DklsHelper.getThreshold(keygenCommittee.size)
             val byteArray = DklsHelper.arrayToBytes(keygenCommittee)
-            val ids = go_slice()
-            BufferUtilJNI.set_bytes_on_go_slice(ids, byteArray)
+            val ids = byteArray.toSchnorrGoSlice()
             val err =
                 schnorr_key_import_initiator_new(
                     localUISlice,
@@ -307,11 +305,11 @@ class SchnorrKeygen(
         ) {
             var handler = Handle()
             val localPartyIDArr = localPartyId.toByteArray()
-            val localPartySlice = localPartyIDArr.toGoSlice()
+            val localPartySlice = localPartyIDArr.toSchnorrGoSlice()
 
             when (action) {
                 TssAction.KEYGEN -> {
-                    val decodedSetupMsg = getSharedSetupMessage().toGoSlice()
+                    val decodedSetupMsg = getSharedSetupMessage().toSchnorrGoSlice()
                     val result =
                         schnorr_keygen_session_from_setup(decodedSetupMsg, localPartySlice, handler)
                     if (result != LIB_OK) {
@@ -320,17 +318,17 @@ class SchnorrKeygen(
                 }
 
                 TssAction.Migrate -> {
-                    val decodedSetupMsg = getSharedSetupMessage().toGoSlice()
+                    val decodedSetupMsg = getSharedSetupMessage().toSchnorrGoSlice()
                     if (this.localUi.isEmpty()) {
                         throw RuntimeException("can't migrate, local UI is empty")
                     }
                     val localUI = this.localUi
                     val publicKeyArray = Numeric.hexStringToByteArray(vault.pubKeyEDDSA)
-                    val publicKeySlice = publicKeyArray.toGoSlice()
+                    val publicKeySlice = publicKeyArray.toSchnorrGoSlice()
                     val chainCodeArray = Numeric.hexStringToByteArray(this.hexChainCode)
-                    val chainCodeSlice = chainCodeArray.toGoSlice()
+                    val chainCodeSlice = chainCodeArray.toSchnorrGoSlice()
                     val localUIArray = Numeric.hexStringToByteArray(localUI)
-                    val localUISlice = localUIArray.toGoSlice()
+                    val localUISlice = localUIArray.toSchnorrGoSlice()
 
                     val result =
                         schnorr_key_migration_session_from_setup(
@@ -382,7 +380,7 @@ class SchnorrKeygen(
                                 .let { Base64.decode(it) }
                         val result =
                             schnorr_key_importer_new(
-                                keygenSetupMsg.toGoSlice(),
+                                keygenSetupMsg.toSchnorrGoSlice(),
                                 localPartySlice,
                                 handler,
                             )
@@ -470,9 +468,9 @@ class SchnorrKeygen(
             val (allParties, newPartiesIdx, oldPartiesIdx) =
                 processReshareCommittee(oldCommittee, keygenCommittee)
             val byteArray = DklsHelper.arrayToBytes(allParties)
-            val ids = byteArray.toGoSlice()
-            val newPartiesIdxSlice = newPartiesIdx.toByteArray().toGoSlice()
-            val oldPartiesIdxSlice = oldPartiesIdx.toByteArray().toGoSlice()
+            val ids = byteArray.toSchnorrGoSlice()
+            val newPartiesIdxSlice = newPartiesIdx.toByteArray().toSchnorrGoSlice()
+            val oldPartiesIdxSlice = oldPartiesIdx.toByteArray().toSchnorrGoSlice()
             val result =
                 schnorr_qc_setupmsg_new(
                     keyshareHandle,
@@ -525,7 +523,7 @@ class SchnorrKeygen(
             val keyshareHandle = Handle()
             if (vault.pubKeyEDDSA.isNotEmpty()) {
                 val keyshareBytes = getKeyshareBytesFromVault()
-                val keyshareSlice = keyshareBytes.toGoSlice()
+                val keyshareSlice = keyshareBytes.toSchnorrGoSlice()
                 val result = schnorr_keyshare_from_bytes(keyshareSlice, keyshareHandle)
                 if (result != LIB_OK) {
                     error("fail to get keyshare, $result")
@@ -562,10 +560,10 @@ class SchnorrKeygen(
                         .let { Base64.decode(it) }
                 }
 
-            val decodedSetupMsg = reshareSetupMsg.toGoSlice()
+            val decodedSetupMsg = reshareSetupMsg.toSchnorrGoSlice()
             val handler = Handle()
             val localPartyIDArr = localPartyId.toByteArray()
-            val localPartySlice = localPartyIDArr.toGoSlice()
+            val localPartySlice = localPartyIDArr.toSchnorrGoSlice()
 
             val sessionResult =
                 schnorr_qc_session_from_setup(
