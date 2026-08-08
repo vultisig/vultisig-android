@@ -12,6 +12,9 @@ import com.silencelaboratories.goschnorr.go_slice as SchnorrGoSlice
  *
  * The three bindings each declare their own `go_slice`, so the same conversion needs one function
  * per binding; they differ only in return type and so cannot share a name.
+ *
+ * All three leak the buffer `set_bytes_on_go_slice` mallocs — the bindings expose no way to free
+ * it. See https://github.com/vultisig/vultisig-android/issues/5543.
  */
 internal fun ByteArray.toDklsGoSlice(): DklsGoSlice {
     val slice = DklsGoSlice()
