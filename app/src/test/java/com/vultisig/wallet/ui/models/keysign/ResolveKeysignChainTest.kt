@@ -36,4 +36,14 @@ class ResolveKeysignChainTest {
             resolveKeysignChain(keysignPayload = null, customMessagePayload = customMessage),
         )
     }
+
+    @Test
+    fun `custom message with an unparseable chain resolves to null instead of Ethereum`() {
+        val customMessage = CustomMessagePayload(chain = "NotAChain")
+
+        assertEquals(
+            null,
+            resolveKeysignChain(keysignPayload = null, customMessagePayload = customMessage),
+        )
+    }
 }

@@ -115,6 +115,30 @@ fun Vault.getEcdsaSigningKey(chain: Chain): SigningKey {
     }
 }
 
+/**
+ * Returns a [Chain] the vault actually holds an ECDSA key for, preferring [preferred] itself.
+ *
+ * KeyImport selection is balance-driven, so [preferred] (e.g. Ethereum) may not be present in
+ * [chainPublicKeys]. Any chain sharing its derivation path is an equally valid stand-in (e.g.
+ * BSC/Polygon/Arbitrum for Ethereum) since they resolve to the same keyshare via
+ * [getEcdsaSigningKey]. Falls back to [preferred] when the vault holds no such chain.
+ */
+fun Vault.resolveEcdsaChain(preferred: Chain): Chain {
+    if (libType != SigningLibType.KeyImport) return preferred
+    val ecdsaKeys = chainPublicKeys.filterNot { it.isEddsa }
+    if (ecdsaKeys.any { it.chain == preferred.raw }) return preferred
+    val preferredPath = preferred.coinType.compatibleDerivationPath()
+    val sibling =
+        ecdsaKeys.firstOrNull { cpk ->
+            try {
+                Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() == preferredPath
+            } catch (_: Exception) {
+                false
+            }
+        }
+    return sibling?.let { Chain.fromRaw(it.chain) } ?: preferred
+}
+
 fun Vault.getEddsaSigningKey(chain: Chain): String {
     if (libType != SigningLibType.KeyImport) {
         return pubKeyEDDSA

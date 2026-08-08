@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
 import com.vultisig.wallet.data.models.getEddsaSigningKey
 import com.vultisig.wallet.data.models.getSwapProviderId
@@ -110,8 +111,21 @@ internal fun resolveKeysignChain(
 ): Chain? =
     keysignPayload?.coin?.chain
         ?: customMessagePayload?.let { payload ->
-            runCatching { Chain.fromRaw(payload.chain.orEmpty()) }.getOrDefault(Chain.Ethereum)
+            val raw = payload.chain
+            if (raw.isNullOrBlank()) {
+                Chain.Ethereum
+            } else {
+                runCatching { Chain.fromRaw(raw) }
+                    .onFailure { Timber.w("Unknown custom message chain %s", raw) }
+                    .getOrNull()
+            }
         }
+
+/** The `chain` field sent to VultiServer when joining a keysign session. */
+internal fun resolveJoinRequestChainRaw(
+    keysignPayload: KeysignPayload?,
+    customMessagePayload: CustomMessagePayload?,
+): String = resolveKeysignChain(keysignPayload, customMessagePayload)?.raw ?: ""
 
 /** UI state for an in-progress or completed keysign session. */
 internal sealed class KeysignState {

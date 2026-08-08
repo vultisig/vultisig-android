@@ -382,7 +382,7 @@ constructor(
             derivePath = (chain?.coinType ?: CoinType.ETHEREUM).derivationPath(),
             isEcdsa = tssKeysignType == TssKeyType.ECDSA,
             password = password,
-            chain = chain?.raw ?: "",
+            chain = resolveJoinRequestChainRaw(_keysignPayload, customMessagePayload),
             mldsa = tssKeysignType == TssKeyType.MLDSA,
         )
     }
