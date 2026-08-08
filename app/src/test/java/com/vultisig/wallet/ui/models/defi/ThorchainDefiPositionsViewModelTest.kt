@@ -389,6 +389,53 @@ internal class ThorchainDefiPositionsViewModelTest {
         assertFalse(sTcy.supportsMint)
     }
 
+    /**
+     * These position tokens usually aren't vault coins, and the periodic price refresh only ever
+     * covers vault coins — so unless the screen refreshes them itself they have no cache row, and
+     * the contract fallback has nothing to hit. That combination is what left staked sTCY/yTCY
+     * reading $0.00.
+     */
+    @Test
+    fun `staking positions refresh their own prices rather than relying on vault membership`() =
+        runTest {
+            selectPositions("yRUNE", "sTCY")
+            coEvery {
+                defaultStakingPositionService.getStakingDetails(RUNE_ADDRESS, VAULT_ID)
+            } returns
+                flowOf(
+                    listOf(
+                        stakingDetails(Coins.ThorChain.yRUNE, BigInteger("100000000")),
+                        stakingDetails(Coins.ThorChain.sTCY, BigInteger("200000000")),
+                    )
+                )
+
+            createViewModel().also { it.setData(VAULT_ID) }
+
+            coVerify {
+                tokenPriceRepository.refresh(
+                    match { coins ->
+                        coins.map { it.id }.toSet() ==
+                            setOf(Coins.ThorChain.yRUNE.id, Coins.ThorChain.sTCY.id)
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun `a failed price refresh still prices the cards from the cache`() = runTest {
+        selectPositions("sTCY")
+        coEvery { defaultStakingPositionService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(listOf(stakingDetails(Coins.ThorChain.sTCY, BigInteger("200000000"))))
+        coEvery { tokenPriceRepository.refresh(any()) } throws RuntimeException("thornode down")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        // 2 sTCY at the cached 2 — the refresh is an optimization, not a precondition.
+        vm.state.value.staking.positions
+            .single { it.coin.id == Coins.ThorChain.sTCY.id }
+            .stakedFiatDisplay shouldBe "$4.00"
+    }
+
     @Test
     fun `a zero generic position cannot be unstaked`() = runTest {
         selectPositions("yTCY")
@@ -450,12 +497,14 @@ internal class ThorchainDefiPositionsViewModelTest {
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
-        // 3 RUNE at 2. The BTC side prices to zero — the vault holds no BTC coin, so it falls
-        // through to the contract lookup, which this test leaves unstubbed.
+        // 3 RUNE at 2 plus 1 BTC at 2. The vault holds no BTC coin, but the pool names its asset
+        // by chain and ticker, which resolves to the curated BTC and so to a real price — that
+        // side used to read zero because it went straight to a contract lookup BTC has no
+        // contract address for.
         vm.totalValueLpFiat.value shouldBe
-            LpLegTotal.Priced(FiatValue(BigDecimal("6.00"), AppCurrencyUsd.ticker))
-        vm.state.value.lp.positions.single().totalPriceLp shouldBe "$6.00"
-        vm.state.value.totalAmountPrice shouldBe "$6.00"
+            LpLegTotal.Priced(FiatValue(BigDecimal("8.00"), AppCurrencyUsd.ticker))
+        vm.state.value.lp.positions.single().totalPriceLp shouldBe "$8.00"
+        vm.state.value.totalAmountPrice shouldBe "$8.00"
     }
 
     @Test

@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.CoinGeckoApi
 import com.vultisig.wallet.data.api.LiQuestApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolJson
 import com.vultisig.wallet.data.api.models.thorchain.VaultRedemptionResponseJson
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.models.Chain
@@ -347,6 +348,84 @@ internal class TokenPriceRepositoryImplTest {
 
         // 2 USD (TCY) × 2 (NAV) × 0.9 EUR/USD = 3.6 EUR. A double-applied FX would yield 3.24.
         assertPriceEquals("3.6", repository.getPrice(sTcy, AppCurrency.EUR).first())
+    }
+
+    private fun pool(asset: String, torPrice: String) =
+        ThorChainPoolJson(
+            asset = asset,
+            assetTorPrice = java.math.BigInteger(torPrice),
+            status = "Available",
+        )
+
+    @Test
+    fun `a THORChain contract lookup prices the staking receipt off NAV instead of returning zero`() =
+        runTest {
+            // The contract route is the last resort for a DeFi position the vault doesn't hold.
+            // CoinGecko has no THORChain asset platform and LI.FI has no THORChain id, so this used
+            // to be dead code that answered zero for every `x/…` denom.
+            coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+            coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.TCY.id, "usd") } returns "2.0"
+            // sTCY NAV = 200 / 100 = 2, so sTCY = 2 (TCY) × 2 (NAV) = 4.
+            coEvery { thorApi.getThorchainTokenPriceByContract(any()) } returns
+                redemption(bondSize = "200", bondShares = "100")
+
+            val price =
+                repository.getPriceByContactAddress(Chain.ThorChain.id, sTcy.contractAddress)
+
+            assertPriceEquals("4", price)
+        }
+
+    @Test
+    fun `a THORChain contract with no receipt route falls back to its pool price`() = runTest {
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        // Pool TOR prices carry 8 decimals: 1_50000000 → $1.50.
+        coEvery { thorApi.getPools() } returns listOf(pool("THOR.RUJI", "150000000"))
+
+        val price =
+            repository.getPriceByContactAddress(
+                Chain.ThorChain.id,
+                Coins.ThorChain.RUJI.contractAddress,
+            )
+
+        assertPriceEquals("1.5", price)
+    }
+
+    @Test
+    fun `a contract nothing can price is never written to the cache as zero`() = runTest {
+        // The old path mapped an unresolved LI.FI price to ZERO, which made the result look like a
+        // real quote: it was returned as $0.00 *and* persisted, and on a chain with no working
+        // contract source that poisoned row was the only price the token would ever have.
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { thorApi.getPools() } returns emptyList()
+
+        val price = repository.getPriceByContactAddress(Chain.ThorChain.id, "x/unknown-denom")
+
+        assertPriceEquals("0", price)
+        coVerify(exactly = 0) { tokenPriceDao.insertTokenPrice(any()) }
+    }
+
+    @Test
+    fun `a non-EVM contract lookup never reaches LI_FI`() = runTest {
+        // LI.FI only indexes EVM chains, so a THORChain contract could only ever miss there.
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { thorApi.getPools() } returns emptyList()
+
+        repository.getPriceByContactAddress(Chain.ThorChain.id, "x/unknown-denom")
+
+        coVerify(exactly = 0) { liQuestApi.getLifiContractPriceUsd(any(), any()) }
+    }
+
+    @Test
+    fun `an EVM contract LI_FI cannot price is dropped rather than cached as zero`() = runTest {
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { liQuestApi.getLifiContractPriceUsd(any(), any()) } throws
+            RuntimeException("no lifi")
+
+        val price = repository.getPriceByContactAddress(Chain.Base.id, ezEth.contractAddress)
+
+        assertPriceEquals("0", price)
+        coVerify(exactly = 0) { tokenPriceDao.insertTokenPrice(any()) }
     }
 
     @Test
