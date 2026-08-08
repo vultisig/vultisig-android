@@ -145,19 +145,67 @@ internal class DefiFiatValueCalculatorTest {
         assertEquals(BigDecimal("50.00"), fiat.value)
     }
 
+    /**
+     * A pool asset the catalogue knows is priced through its curated coin, so it picks up that
+     * coin's CoinGecko id. Going straight to the contract route left every pool leg the vault
+     * doesn't hold at zero on the chains that route can't answer for.
+     */
     @Test
-    fun `an uncached pool asset falls back to its contract address`() = runTest {
+    fun `an uncached pool asset resolves through its curated coin's price provider id`() = runTest {
         coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns null
         coEvery {
-            tokenPriceRepository.getPriceByContactAddress(Chain.Ethereum.id, CONTRACT)
+            tokenPriceRepository.getPriceByPriceProviderId(Coins.Ethereum.USDC.priceProviderID)
+        } returns BigDecimal("1.0")
+
+        val fiat =
+            calculator.createFiatValueFromPoolAsset(
+                amount = BigDecimal("3"),
+                chain = Chain.Ethereum,
+                // Lowercased on purpose: the pool names the contract in a different case than the
+                // catalogue's checksummed form, and the match has to survive that.
+                contractAddress = Coins.Ethereum.USDC.contractAddress.lowercase(),
+                ticker = "USDC",
+                currency = AppCurrency.USD,
+            )
+
+        assertEquals(BigDecimal("3.00"), fiat.value)
+        coVerify(exactly = 0) { tokenPriceRepository.getPriceByContactAddress(any(), any()) }
+    }
+
+    /** A native pool asset carries no contract address, so only the curated coin can price it. */
+    @Test
+    fun `a native pool asset with no contract address still resolves through its curated coin`() =
+        runTest {
+            coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns null
+            coEvery {
+                tokenPriceRepository.getPriceByPriceProviderId(Coins.Bitcoin.BTC.priceProviderID)
+            } returns BigDecimal("60000")
+
+            val fiat =
+                calculator.createFiatValueFromPoolAsset(
+                    amount = BigDecimal("0.5"),
+                    chain = Chain.Bitcoin,
+                    ticker = "BTC",
+                    contractAddress = "",
+                    currency = AppCurrency.USD,
+                )
+
+            assertEquals(BigDecimal("30000.00"), fiat.value)
+        }
+
+    @Test
+    fun `a pool asset the catalogue doesn't carry falls back to its contract address`() = runTest {
+        coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns null
+        coEvery {
+            tokenPriceRepository.getPriceByContactAddress(Chain.Ethereum.id, UNKNOWN_CONTRACT)
         } returns BigDecimal("4")
 
         val fiat =
             calculator.createFiatValueFromPoolAsset(
                 amount = BigDecimal("3"),
                 chain = Chain.Ethereum,
-                ticker = "USDC",
-                contractAddress = CONTRACT,
+                ticker = "NOTACOIN",
+                contractAddress = UNKNOWN_CONTRACT,
                 currency = AppCurrency.USD,
             )
 
@@ -167,6 +215,6 @@ internal class DefiFiatValueCalculatorTest {
     private companion object {
         val RUNE = Coins.ThorChain.RUNE
         val RUJI = Coins.ThorChain.RUJI
-        const val CONTRACT = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+        const val UNKNOWN_CONTRACT = "0x00000000000000000000000000000000deadbeef"
     }
 }

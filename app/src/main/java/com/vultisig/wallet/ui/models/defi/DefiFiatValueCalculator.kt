@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.defi
 
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
@@ -24,18 +25,16 @@ internal class DefiFiatValueCalculator
 constructor(private val tokenPriceRepository: TokenPriceRepository) {
 
     suspend fun createFiatValue(amount: BigDecimal, coin: Coin, currency: AppCurrency): FiatValue =
-        convert(amount, currency) {
-            tokenPriceRepository.getCachedPrice(tokenId = coin.id, appCurrency = currency)
-                ?: priceByProviderId(coin)
-                ?: tokenPriceRepository.getPriceByContactAddress(
-                    coin.chain.id,
-                    coin.contractAddress,
-                )
-        }
+        convert(amount, currency) { price(coin, currency) }
 
     /**
-     * Prices a pool asset the vault does not hold as a [Coin], so there is no coin id to look up —
-     * the cache key is rebuilt from the pool's ticker and chain instead.
+     * Prices a pool asset the vault does not hold as a [Coin], so there is no coin id to look up.
+     *
+     * The pool names its asset by chain and ticker, which is enough to find the curated [Coin] for
+     * it — and going through that coin is what gives the asset its CoinGecko id. Without it the
+     * lookup fell straight to the contract route, which for a native pool asset has no contract
+     * address to look up at all, so every pool leg not already in the vault read as $0.00. The raw
+     * cache key stays as the fallback for an asset the catalogue doesn't carry.
      */
     suspend fun createFiatValueFromPoolAsset(
         amount: BigDecimal,
@@ -45,11 +44,22 @@ constructor(private val tokenPriceRepository: TokenPriceRepository) {
         currency: AppCurrency,
     ): FiatValue =
         convert(amount, currency) {
-            tokenPriceRepository.getCachedPrice(
-                tokenId = "$ticker-${chain.id}",
-                appCurrency = currency,
-            ) ?: tokenPriceRepository.getPriceByContactAddress(chain.id, contractAddress)
+            val curated = Coins.findCurated(chain, ticker, contractAddress)
+
+            if (curated != null) {
+                price(curated, currency)
+            } else {
+                tokenPriceRepository.getCachedPrice(
+                    tokenId = "$ticker-${chain.id}",
+                    appCurrency = currency,
+                ) ?: tokenPriceRepository.getPriceByContactAddress(chain.id, contractAddress)
+            }
         }
+
+    private suspend fun price(coin: Coin, currency: AppCurrency): BigDecimal =
+        tokenPriceRepository.getCachedPrice(tokenId = coin.id, appCurrency = currency)
+            ?: priceByProviderId(coin)
+            ?: tokenPriceRepository.getPriceByContactAddress(coin.chain.id, coin.contractAddress)
 
     /**
      * The CoinGecko-id route, tried before the contract-address one. THORChain has neither a

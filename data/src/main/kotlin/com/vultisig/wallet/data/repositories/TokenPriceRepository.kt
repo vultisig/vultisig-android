@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.evmChainId
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -192,14 +193,144 @@ constructor(
         chainId: String,
         contractAddress: String,
     ): BigDecimal {
+        if (contractAddress.isEmpty()) return BigDecimal.ZERO
+        val chain = runCatching { Chain.fromRaw(chainId) }.getOrNull() ?: return BigDecimal.ZERO
         val currency = appCurrencyRepository.currency.first().ticker.lowercase()
-        val priceAndContract =
-            fetchPriceWithContractAddress(Chain.fromRaw(chainId), contractAddress, currency)
-        if (!priceAndContract.isNullOrEmpty()) {
-            savePrices(mapOf(contractAddress to priceAndContract), currency)
-            return priceAndContract.values.first()
+
+        val price =
+            nativeChainContractPrice(chain, contractAddress, currency)
+                ?: fetchPriceWithContractAddress(chain, contractAddress, currency)
+                    ?.values
+                    ?.firstOrNull()
+
+        // Only a real quote is worth keeping. A miss used to arrive here as a zero and be written
+        // straight into Room, so every later cache read served it back as a confident "this token
+        // is worth nothing" — and on the chains with no working contract source that poisoned row
+        // was the only price the token would ever have. Anything not strictly positive is a miss:
+        // a negative quote is nonsense no source should produce, and persisting one would be worse
+        // than the zero this replaces.
+        if (price == null || price.signum() <= 0) return BigDecimal.ZERO
+
+        // Cache under the coin id every reader queries by. The row used to be keyed by the raw
+        // contract address, which nothing ever reads back — so the write was dead and each reload
+        // repeated the live lookup. A contract the catalogue doesn't carry has no id to key on and
+        // is simply not cached, rather than written somewhere unreachable.
+        Coins.findCuratedByContract(chain, contractAddress)?.let { coin ->
+            savePrices(mapOf(coin.id to mapOf(currency to price)), currency)
         }
-        return BigDecimal.ZERO
+        return price
+    }
+
+    /**
+     * Prices a contract on a chain that CoinGecko's contract endpoint and LI.FI both ignore.
+     *
+     * THORChain and Maya carry their own price sources — index NAV for the staking receipts, pool
+     * depth for anything with a pool — and are exactly the chains DeFi positions live on, so a
+     * contract lookup there has to go through them or it can only ever answer zero.
+     */
+    private suspend fun nativeChainContractPrice(
+        chain: Chain,
+        contractAddress: String,
+        currency: String,
+    ): BigDecimal? =
+        try {
+            when (chain) {
+                Chain.ThorChain -> thorContractPrice(contractAddress, currency)
+                Chain.MayaChain -> mayaContractPrice(contractAddress, currency)
+                else -> null
+            }
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Timber.e(e, "Failed to price %s contract %s natively", chain, contractAddress)
+            null
+        }
+
+    private suspend fun thorContractPrice(contractAddress: String, currency: String): BigDecimal? {
+        // The receipt route is contained rather than allowed to propagate: it is one source of
+        // several, and the NAV host going down should cost this denom its preferred price, not its
+        // turn at the pool route below.
+        val receiptPrice =
+            try {
+                thorReceiptPriceUsd(contractAddress, currency)
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Timber.w(e, "NAV price unavailable for %s, trying the pool", contractAddress)
+                null
+            }
+
+        val priceUsd = receiptPrice ?: thorPoolPriceUsd(contractAddress) ?: return null
+        if (priceUsd.signum() <= 0) return null
+
+        // fetchTetherPrice answers a CoinGecko miss with ZERO, so multiplying blind would turn a
+        // perfectly good USD price into a $0.00 that reads exactly like "we have no price" — and
+        // for a non-USD user, only ever on the FX leg. Treat a missing rate as a failed lookup.
+        val fxRate = tetherPriceFor(currency)
+        if (fxRate.signum() <= 0) {
+            Timber.w("No %s/USD rate available, leaving %s unpriced", currency, contractAddress)
+            return null
+        }
+        return priceUsd * fxRate
+    }
+
+    /**
+     * The curated liquid-bonding and index-receipt denoms, priced the way [fetchThorContractPrices]
+     * prices them for vault-held coins: parity with RUNE for bRUNE, index NAV times the underlying
+     * for the receipts. Returns null for any other denom so the pool route gets a turn.
+     */
+    private suspend fun thorReceiptPriceUsd(
+        contractAddress: String,
+        currency: String,
+    ): BigDecimal? {
+        val denom = contractAddress.lowercase()
+        return when {
+            denom == BRUNE_DENOM -> runePriceUsd(currency)
+            denom == YBRUNE_DENOM -> navPerShare(BRUNE_STAKING_CONTRACT) * runePriceUsd(currency)
+            denom == STAKING_TCY_DENOM -> navPerShare(STAKING_TCY_CONTRACT) * tcyPriceUsd(currency)
+            denom.startsWith("x/nami") ->
+                thorApi
+                    .getThorchainTokenPriceByContract(
+                        denom.substringAfter("nav-").substringBefore("-rcpt")
+                    )
+                    .data
+                    .navPerShare
+                    .toBigDecimalOrNull()
+
+            else -> null
+        }
+    }
+
+    private suspend fun navPerShare(contract: String): BigDecimal =
+        navPerShareFromStatus(thorApi.getThorchainTokenPriceByContract(contract))
+
+    /**
+     * Every other THORChain denom — `x/ruji`, `thor.kuji`, the secured assets — off its pool's TOR
+     * price, the same source [fetchThorPoolPrices] uses. The `x/` prefix is stripped for the
+     * ticker-shaped fallback because a native denom's pool is listed as `thor.<ticker>`.
+     */
+    private suspend fun thorPoolPriceUsd(contractAddress: String): BigDecimal? {
+        val denom = contractAddress.lowercase()
+        val pools = thorApi.getPools().associate { it.asset.lowercase() to it.assetTorPrice }
+        val torPrice =
+            pools[mapThorPoolAsset(denom)]
+                ?: pools["thor.${denom.removePrefix("x/")}"]
+                ?: return null
+        return torPrice.toBigDecimal(scale = 8)
+    }
+
+    /**
+     * Maya has no CoinGecko asset platform and no LI.FI chain, so its non-native assets price off
+     * pool depth. The contract is resolved back to its curated coin because the pool math needs the
+     * asset's decimals, which the contract address alone doesn't carry.
+     */
+    private suspend fun mayaContractPrice(contractAddress: String, currency: String): BigDecimal? {
+        val token =
+            Coins.coins[Chain.MayaChain]?.firstOrNull {
+                !it.isNativeToken && it.contractAddress.equals(contractAddress, ignoreCase = true)
+            } ?: return null
+        // `currency` travels lowercased through this class; fromTicker matches on the enum's
+        // uppercase ticker, so it has to be raised back or every lookup silently resolves to null.
+        val appCurrency = AppCurrency.fromTicker(currency.uppercase()) ?: return null
+        return mayaPoolPrice(token, appCurrency)
     }
 
     override suspend fun getPriceByPriceProviderId(priceProviderId: String): BigDecimal {
@@ -242,8 +373,14 @@ constructor(
                     coinGeckoContractsPrice.keys.any { key -> key.equals(address, false) }
                 }
 
-            notInCoinGeckoTokens.takeIf { it.isNotEmpty() }
-                ?: return@coroutineScope coinGeckoContractsPrice
+            // LI.FI only indexes EVM chains, so asking it about a THORChain/Maya/Cosmos contract
+            // could only ever fail. Skip it rather than fan out calls whose one possible answer is
+            // a miss. THORChain and Maya have their own route in nativeChainContractPrice; the
+            // Cosmos chains have none, so a contract there stays unpriced — but unpriced and
+            // unrecorded, rather than the zero this used to write down as a real quote.
+            if (notInCoinGeckoTokens.isEmpty() || chain.evmChainId() == null) {
+                return@coroutineScope coinGeckoContractsPrice
+            }
 
             val tetherPrice = fetchTetherPrice()
             val currency = currencies.first()
@@ -255,13 +392,16 @@ constructor(
                         }
                     }
                     .awaitAll()
-                    .associate { (contractAddress, priceInUsd) ->
-                        // Since Lifi provides prices in USD, we use USDT to convert them into the
-                        // local
-                        // currency
-                        contractAddress to
-                            mapOf(currency to (priceInUsd?.times(tetherPrice) ?: BigDecimal.ZERO))
+                    // Lifi quotes in USD, so convert with USDT into the local currency. A contract
+                    // it can't price is dropped, not recorded as zero: a zero is indistinguishable
+                    // from a real "worth nothing" quote, and callers persist what they are handed.
+                    // A quote of literal 0 from Lifi is treated the same way, for the same reason.
+                    .mapNotNull { (contractAddress, priceInUsd) ->
+                        priceInUsd
+                            ?.takeIf { it.signum() > 0 }
+                            ?.let { contractAddress to mapOf(currency to it * tetherPrice) }
                     }
+                    .toMap()
             coinGeckoContractsPrice + lifiContractsPrice
         }
     }
@@ -290,6 +430,21 @@ constructor(
 
     private suspend fun fetchTetherPrice() = getPriceByPriceProviderId(TETHER_PRICE_PROVIDER_ID)
 
+    /**
+     * Currency-per-USD, for converting the USD-quoted sources (pool TOR prices, index NAV) into the
+     * app currency. Skips the USDT round trip when the app currency already is USD.
+     *
+     * [currency] selects only between skipping and fetching: the fetch itself resolves the app
+     * currency live, so a switch between the caller capturing [currency] and this call returning
+     * would quote the rate in the newer one. Callers refetch wholesale on a currency change, which
+     * is what keeps that window from mattering; it is not safe to widen the gap between capture and
+     * use on the strength of this parameter alone. Returns ZERO when the rate can't be fetched —
+     * callers must treat that as a failed lookup, not as a rate.
+     */
+    private suspend fun tetherPriceFor(currency: String): BigDecimal =
+        if (currency.equals(AppCurrency.USD.ticker, ignoreCase = true)) BigDecimal.ONE
+        else fetchTetherPrice()
+
     private suspend fun fetchThorPoolPrices(tokenList: List<Coin>, currency: String) {
         supervisorScope {
             // if we have any thorchain tokens, then fetch their pool prices
@@ -305,10 +460,7 @@ constructor(
                     return@supervisorScope
                 }
 
-            val tickerUsd = AppCurrency.USD.ticker.lowercase()
-            val tetherPrice =
-                if (currency.equals(tickerUsd, ignoreCase = true)) 1.toBigDecimal()
-                else fetchTetherPrice()
+            val tetherPrice = tetherPriceFor(currency)
 
             val tokenIdToPrices =
                 thorTokens
@@ -323,8 +475,11 @@ constructor(
                             priceUsd = poolAssetToPriceMap[tickerAsset]?.toBigDecimal(scale = 8)
                         }
 
-                        // If still no price found, skip this token
-                        if (priceUsd == null) {
+                        // No price, or a pool quoting zero: skip the token either way. savePrices
+                        // only filters empty maps, so a zero would land in Room and every later
+                        // cache read would serve it as a real "worth nothing" — permanently, since
+                        // nothing invalidates a cached price.
+                        if (priceUsd == null || priceUsd.signum() <= 0) {
                             return@mapNotNull null
                         }
 
@@ -344,37 +499,17 @@ constructor(
             val mayaTokens = tokenList.filter { it.chain == Chain.MayaChain && !it.isNativeToken }
             if (mayaTokens.isEmpty()) return@supervisorScope
 
-            val cacaoToken =
-                tokenList.find { it.chain == Chain.MayaChain && it.isNativeToken }
-                    ?: return@supervisorScope
-
-            val userCurrency = appCurrencyRepository.currency.first()
-            val cacaoPrice = getCachedPrice(cacaoToken.id, userCurrency) ?: return@supervisorScope
-            if (cacaoPrice <= BigDecimal.ZERO) return@supervisorScope
-
+            val appCurrency = appCurrencyRepository.currency.first()
             val tokenIdToPrices =
                 mayaTokens
                     .mapNotNull { token ->
                         try {
-                            val poolAsset = "MAYA.${token.ticker}"
-                            val pool = mayaApi.getPool(poolAsset)
-                            val balanceCacao = pool.balanceCacao.toBigDecimal()
-                            val balanceAsset = pool.balanceAsset.toBigDecimal()
-                            if (balanceAsset <= BigDecimal.ZERO) return@mapNotNull null
-
-                            val cacaoDecimals = BigDecimal.TEN.pow(CACAO_DECIMALS)
-                            val assetDecimals = BigDecimal.TEN.pow(token.decimal)
-                            val normalizedCacao =
-                                balanceCacao.divide(cacaoDecimals, 8, RoundingMode.HALF_UP)
-                            val normalizedAsset =
-                                balanceAsset.divide(assetDecimals, 8, RoundingMode.HALF_UP)
-                            val priceInCacao =
-                                normalizedCacao.divide(normalizedAsset, 8, RoundingMode.HALF_UP)
-
-                            token.id to mapOf(currency to priceInCacao * cacaoPrice)
+                            mayaPoolPrice(token, appCurrency)?.let {
+                                token.id to mapOf(currency to it)
+                            }
                         } catch (e: Exception) {
                             if (e is kotlinx.coroutines.CancellationException) throw e
-                            Timber.e(e, "Failed to fetch Maya pool price for ${token.ticker}")
+                            Timber.e(e, "Failed to fetch Maya pool price for %s", token.ticker)
                             null
                         }
                     }
@@ -384,13 +519,63 @@ constructor(
         }
     }
 
+    /**
+     * A Maya asset's price in [currency], derived from its pool's depth: the pool quotes the asset
+     * in CACAO, and CACAO carries the CoinGecko id that turns that into fiat. Null when the pool is
+     * empty or CACAO has no price at all, so the caller drops the token rather than record a zero.
+     */
+    /**
+     * CACAO in [currency]: the cached price when there is one, else a live fetch by its CoinGecko
+     * id — the same cache-then-live shape [runePriceUsd] and [tcyPriceUsd] use for their
+     * underlyings. Reading the cache alone left every Maya pool leg at $0.00 on a cold cache,
+     * because the single-contract lookup has no refresh cycle ahead of it to populate CACAO first.
+     */
+    private suspend fun cacaoPrice(currency: AppCurrency): BigDecimal? {
+        getCachedPrice(Coins.MayaChain.CACAO.id, currency)
+            ?.takeIf { it > BigDecimal.ZERO }
+            ?.let {
+                return it
+            }
+        return coinGeckoApi
+            .getCryptoPrices(
+                listOf(Coins.MayaChain.CACAO.priceProviderID),
+                listOf(currency.ticker.lowercase()),
+            )
+            .values
+            .firstOrNull()
+            ?.values
+            ?.firstOrNull()
+            ?.takeIf { it > BigDecimal.ZERO }
+    }
+
+    private suspend fun mayaPoolPrice(token: Coin, currency: AppCurrency): BigDecimal? {
+        val cacaoPrice = cacaoPrice(currency) ?: return null
+
+        val pool = mayaApi.getPool("MAYA.${token.ticker}")
+        val balanceCacao = pool.balanceCacao.toBigDecimal()
+        val balanceAsset = pool.balanceAsset.toBigDecimal()
+        // An empty side means the pool can't quote the asset at all. Both are checked: a zero CACAO
+        // balance divides out to a price of 0, which the caller would go on to persist as though
+        // the asset were genuinely worthless.
+        if (balanceAsset <= BigDecimal.ZERO || balanceCacao <= BigDecimal.ZERO) return null
+
+        val cacaoDecimals = BigDecimal.TEN.pow(CACAO_DECIMALS)
+        val assetDecimals = BigDecimal.TEN.pow(token.decimal)
+        val normalizedCacao = balanceCacao.divide(cacaoDecimals, 8, RoundingMode.HALF_UP)
+        val normalizedAsset = balanceAsset.divide(assetDecimals, 8, RoundingMode.HALF_UP)
+        val priceInCacao = normalizedCacao.divide(normalizedAsset, 8, RoundingMode.HALF_UP)
+
+        // A pool so thin that the ratio rounds to zero at 8dp is a miss, not a valuation.
+        return (priceInCacao * cacaoPrice).takeIf { it.signum() > 0 }
+    }
+
     private suspend fun fetchThorContractPrices(tokenList: List<Coin>, currency: String) =
         supervisorScope {
             try {
                 val thorTokens =
                     Coins.coins[Chain.ThorChain]?.filter {
                         it.contractAddress.startsWith("x/nami") ||
-                            it.contractAddress == "x/staking-tcy" ||
+                            it.contractAddress == STAKING_TCY_DENOM ||
                             it.contractAddress == BRUNE_DENOM ||
                             it.contractAddress == YBRUNE_DENOM
                     } ?: emptyList()
@@ -406,8 +591,7 @@ constructor(
                         when {
                             addr.startsWith("x/nami") ->
                                 addr.substringAfter("nav-").substringBefore("-rcpt")
-                            addr == "x/staking-tcy" ->
-                                "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
+                            addr == STAKING_TCY_DENOM -> STAKING_TCY_CONTRACT
                             addr == YBRUNE_DENOM -> BRUNE_STAKING_CONTRACT
                             else -> it.contractAddress
                         }
@@ -415,13 +599,7 @@ constructor(
 
                 val tokenIds = matchingTokens.map { it.id }
 
-                val tickerUsd = AppCurrency.USD.ticker.lowercase()
-                val tetherPrice =
-                    if (currency.equals(tickerUsd, ignoreCase = true)) {
-                        BigDecimal.ONE
-                    } else {
-                        fetchTetherPrice()
-                    }
+                val tetherPrice = tetherPriceFor(currency)
 
                 // bRUNE and ybRUNE both price off RUNE-in-USD. Fetch it once up front (only when a
                 // RUNE-backed denom is present) so concurrent per-token async blocks don't each
@@ -465,25 +643,9 @@ constructor(
                                             // ybRUNE is the auto-compounding bRUNE staking receipt:
                                             // NAV (liquid_bond_size / liquid_bond_shares) × bRUNE,
                                             // and bRUNE ≈ RUNE. Same mechanism as sTCY.
-                                            YBRUNE_DENOM -> {
-                                                val nav =
-                                                    navPerShareFromStatus(
-                                                        thorApi.getThorchainTokenPriceByContract(
-                                                            contract
-                                                        )
-                                                    )
-                                                nav * runeUsdPrice
-                                            }
-                                            "x/staking-tcy" -> {
-                                                val tcyPriceUSD = tcyPriceUsd(currency)
-                                                val nav =
-                                                    navPerShareFromStatus(
-                                                        thorApi.getThorchainTokenPriceByContract(
-                                                            contract
-                                                        )
-                                                    )
-                                                nav * tcyPriceUSD
-                                            }
+                                            YBRUNE_DENOM -> navPerShare(contract) * runeUsdPrice
+                                            STAKING_TCY_DENOM ->
+                                                navPerShare(contract) * tcyPriceUsd(currency)
                                             else -> {
                                                 // For NAMI tokens, use navPerShare
                                                 thorApi
@@ -586,8 +748,11 @@ constructor(
         // Single source of truth: the curated denoms in Coins.kt.
         private val BRUNE_DENOM = Coins.ThorChain.bRUNE.contractAddress
         private val YBRUNE_DENOM = Coins.ThorChain.ybRUNE.contractAddress
+        private val STAKING_TCY_DENOM = Coins.ThorChain.sTCY.contractAddress
         private const val BRUNE_STAKING_CONTRACT =
             "thor179fex2rxd45caedmz4hxsnu42sw20lu0djyh4yukyh965sq8muuqptru2g"
+        private const val STAKING_TCY_CONTRACT =
+            "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
     }
 
     private fun mapThorPoolAsset(contractAddress: String): String {
