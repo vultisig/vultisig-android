@@ -123,7 +123,7 @@ internal fun LpWidget(
                     UiPlaceholderLoader(modifier = Modifier.width(120.dp).height(28.dp))
                 } else {
                     Text(
-                        text = state.totalPriceLp,
+                        text = state.totalPriceLp ?: FIAT_VALUE_UNAVAILABLE,
                         style = Theme.brockmann.headings.title1,
                         color = Theme.v2.colors.text.primary,
                     )
