@@ -105,7 +105,7 @@ class SchnorrKeysign(
         val buf = tss_buffer()
         try {
             val keyShareBytes = getKeyshareBytes()
-            val keyshareSlice = keyShareBytes.toGoSlice()
+            val keyshareSlice = keyShareBytes.toSchnorrGoSlice()
             val h = Handle()
             val result = schnorr_keyshare_from_bytes(keyshareSlice, h)
             if (result != LIB_OK) {
@@ -127,11 +127,11 @@ class SchnorrKeysign(
         val buf = tss_buffer()
         try {
             val keyIdArr = getKeyshareID()
-            val keyIdSlice = keyIdArr.toGoSlice()
+            val keyIdSlice = keyIdArr.toSchnorrGoSlice()
             val byteArray = DklsHelper.arrayToBytes(keysignCommittee)
-            val ids = byteArray.toGoSlice()
+            val ids = byteArray.toSchnorrGoSlice()
             val decodedMsgData = message.hexToByteArray()
-            val msgSlice = decodedMsgData.toGoSlice()
+            val msgSlice = decodedMsgData.toSchnorrGoSlice()
             val err = schnorr_sign_setupmsg_new(keyIdSlice, null, msgSlice, ids, buf)
             if (err != LIB_OK) {
                 throw RuntimeException("fail to setup keysign message, error: $err")
@@ -146,7 +146,7 @@ class SchnorrKeysign(
     private fun decodeMessage(setupMsg: ByteArray): String {
         val buf = tss_buffer()
         try {
-            val setupMsgSlice = setupMsg.toGoSlice()
+            val setupMsgSlice = setupMsg.toSchnorrGoSlice()
             val result = schnorr_decode_message(setupMsgSlice, buf)
             if (result != LIB_OK) {
                 throw RuntimeException("fail to extract message from setup message: $result")
@@ -200,7 +200,7 @@ class SchnorrKeysign(
             if (outboundMessage.isEmpty()) {
                 return
             }
-            val message = outboundMessage.toGoSlice()
+            val message = outboundMessage.toSchnorrGoSlice()
             val encodedOutboundMessage = Base64.encode(outboundMessage)
             for (i in keysignCommittee.indices) {
                 val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
@@ -244,7 +244,7 @@ class SchnorrKeysign(
                     Numeric.hexStringToByteArray(encryptionKeyHex),
                 ) ?: error("fail to decrypt message body")
             val decodedMsg = Base64.decode(decryptedBody)
-            val decryptedBodySlice = decodedMsg.toGoSlice()
+            val decryptedBodySlice = decodedMsg.toSchnorrGoSlice()
             val isFinished = intArrayOf(0)
             val result = schnorr_sign_session_input_message(handle, decryptedBodySlice, isFinished)
             if (result != LIB_OK) {
@@ -324,12 +324,12 @@ class SchnorrKeysign(
             if (signingMsg != messageToSign) {
                 throw RuntimeException("message doesn't match ($messageToSign) vs ($signingMsg)")
             }
-            val decodedSetupMsg = keysignSetupMsg.toGoSlice()
+            val decodedSetupMsg = keysignSetupMsg.toSchnorrGoSlice()
             val handler = Handle()
             val localPartyIDArr = localPartyID.toByteArray()
-            val localPartySlice = localPartyIDArr.toGoSlice()
+            val localPartySlice = localPartyIDArr.toSchnorrGoSlice()
             val keyShareBytes = getKeyshareBytes()
-            val keyshareSlice = keyShareBytes.toGoSlice()
+            val keyshareSlice = keyShareBytes.toSchnorrGoSlice()
             val keyshareHandle = Handle()
             val result = schnorr_keyshare_from_bytes(keyshareSlice, keyshareHandle)
             if (result != LIB_OK) {
@@ -408,11 +408,5 @@ class SchnorrKeysign(
         for (msg in messageToSign) {
             keysignOneMessageWithRetry(0, msg)
         }
-    }
-
-    private fun ByteArray.toGoSlice(): go_slice {
-        val slice = go_slice()
-        BufferUtilJNI.set_bytes_on_go_slice(slice, this)
-        return slice
     }
 }
