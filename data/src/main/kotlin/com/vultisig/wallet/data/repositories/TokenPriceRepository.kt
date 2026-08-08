@@ -206,8 +206,10 @@ constructor(
         // Only a real quote is worth keeping. A miss used to arrive here as a zero and be written
         // straight into Room, so every later cache read served it back as a confident "this token
         // is worth nothing" — and on the chains with no working contract source that poisoned row
-        // was the only price the token would ever have.
-        if (price == null || price.signum() == 0) return BigDecimal.ZERO
+        // was the only price the token would ever have. Anything not strictly positive is a miss:
+        // a negative quote is nonsense no source should produce, and persisting one would be worse
+        // than the zero this replaces.
+        if (price == null || price.signum() <= 0) return BigDecimal.ZERO
 
         savePrices(mapOf(contractAddress to mapOf(currency to price)), currency)
         return price
@@ -364,8 +366,11 @@ constructor(
                     // Lifi quotes in USD, so convert with USDT into the local currency. A contract
                     // it can't price is dropped, not recorded as zero: a zero is indistinguishable
                     // from a real "worth nothing" quote, and callers persist what they are handed.
+                    // A quote of literal 0 from Lifi is treated the same way, for the same reason.
                     .mapNotNull { (contractAddress, priceInUsd) ->
-                        priceInUsd?.let { contractAddress to mapOf(currency to it * tetherPrice) }
+                        priceInUsd
+                            ?.takeIf { it.signum() > 0 }
+                            ?.let { contractAddress to mapOf(currency to it * tetherPrice) }
                     }
                     .toMap()
             coinGeckoContractsPrice + lifiContractsPrice
@@ -493,7 +498,10 @@ constructor(
         val pool = mayaApi.getPool("MAYA.${token.ticker}")
         val balanceCacao = pool.balanceCacao.toBigDecimal()
         val balanceAsset = pool.balanceAsset.toBigDecimal()
-        if (balanceAsset <= BigDecimal.ZERO) return null
+        // An empty side means the pool can't quote the asset at all. Both are checked: a zero CACAO
+        // balance divides out to a price of 0, which the caller would go on to persist as though
+        // the asset were genuinely worthless.
+        if (balanceAsset <= BigDecimal.ZERO || balanceCacao <= BigDecimal.ZERO) return null
 
         val cacaoDecimals = BigDecimal.TEN.pow(CACAO_DECIMALS)
         val assetDecimals = BigDecimal.TEN.pow(token.decimal)
@@ -501,7 +509,8 @@ constructor(
         val normalizedAsset = balanceAsset.divide(assetDecimals, 8, RoundingMode.HALF_UP)
         val priceInCacao = normalizedCacao.divide(normalizedAsset, 8, RoundingMode.HALF_UP)
 
-        return priceInCacao * cacaoPrice
+        // A pool so thin that the ratio rounds to zero at 8dp is a miss, not a valuation.
+        return (priceInCacao * cacaoPrice).takeIf { it.signum() > 0 }
     }
 
     private suspend fun fetchThorContractPrices(tokenList: List<Coin>, currency: String) =
