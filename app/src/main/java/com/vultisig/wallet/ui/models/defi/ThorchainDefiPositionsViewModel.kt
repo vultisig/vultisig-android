@@ -61,14 +61,21 @@ import java.math.RoundingMode
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -77,12 +84,14 @@ import wallet.core.jni.CoinType
 
 internal data class ThorchainDefiPositionsUiModel(
     // tabs info
-    val totalAmountPrice: String = ThorchainDefiPositionsViewModel.DEFAULT_ZERO_BALANCE,
+    // Starts null/loading rather than at a hardcoded "$0.00": the currency isn't known until the
+    // first read, and a USD literal was wrong for everyone else.
+    val totalAmountPrice: String? = null,
     val selectedTab: Int = R.string.defi_tab_bonded,
     val bonded: BondedTabUiModel = BondedTabUiModel(),
     val staking: StakingTabUiModel = StakingTabUiModel(),
     val lp: LpTabUiModel = LpTabUiModel(),
-    val isTotalAmountLoading: Boolean = false,
+    val isTotalAmountLoading: Boolean = true,
     val isBalanceVisible: Boolean = true,
 
     // position selection dialog
@@ -98,12 +107,13 @@ internal data class ThorchainDefiPositionsUiModel(
     val tempSelectedPositions: List<String> = defaultSelectedPositionsDialog(),
 )
 
-data class TotalDefiValue(
+/** A complete set of leg values: only built once every leg has reported. */
+internal data class TotalDefiValue(
     val bondAmount: BigInteger = BigInteger.ZERO,
     val defaultStakeValues: StakeDefaultValues = StakeDefaultValues(),
     val rujiStakeAmount: BigInteger = BigInteger.ZERO,
     val tcyStakeAmount: BigInteger = BigInteger.ZERO,
-    val isLoading: Boolean = false,
+    val lpFiatValue: LpLegTotal,
 )
 
 @HiltViewModel
@@ -133,17 +143,25 @@ constructor(
 
     private val loadedTabs = mutableSetOf<Int>()
 
-    private val _totalValueBond = MutableStateFlow(BigInteger.ZERO)
-    private val _totalValueDefaultStake = MutableStateFlow(StakeDefaultValues())
-    private val _totalValueRujiStake = MutableStateFlow(BigInteger.ZERO)
-    private val _totalValueTCYStake = MutableStateFlow(BigInteger.ZERO)
-    private val _isLoadingTotalAmount = MutableStateFlow(true)
+    // Null until the leg reports in — loaded, empty, or failed. The header total is the sum of all
+    // five, so pricing it while a leg is still unreported would publish a partial figure that
+    // silently jumps as the rest land. A single shared "is loading" flag could not express that:
+    // whichever leg finished first cleared it for everyone. Every terminal path in a leg — the
+    // success collect, each .catch, and every early bail-out — must therefore assign here.
+    private val _totalValueBond = MutableStateFlow<BigInteger?>(null)
+    private val _totalValueDefaultStake = MutableStateFlow<StakeDefaultValues?>(null)
+    private val _totalValueRujiStake = MutableStateFlow<BigInteger?>(null)
+    private val _totalValueTCYStake = MutableStateFlow<BigInteger?>(null)
+    // LP is priced per pool from two different assets, so it joins the total already converted to
+    // fiat rather than as a raw chain amount like the other legs — see [LpLegTotal] for why it
+    // carries a currency and why a failed pool reports as unavailable rather than as zero.
+    private val _totalValueLpFiat = MutableStateFlow<LpLegTotal?>(null)
 
-    val totalValueBond: StateFlow<BigInteger> = _totalValueBond
-    val totalValueDefaultStake: StateFlow<StakeDefaultValues> = _totalValueDefaultStake
-    val totalValueRujiStake: StateFlow<BigInteger> = _totalValueRujiStake
-    val totalValueTCYStake: StateFlow<BigInteger> = _totalValueTCYStake
-    val isLoadingTotalAmount: StateFlow<Boolean> = _isLoadingTotalAmount
+    val totalValueBond: StateFlow<BigInteger?> = _totalValueBond
+    val totalValueDefaultStake: StateFlow<StakeDefaultValues?> = _totalValueDefaultStake
+    val totalValueRujiStake: StateFlow<BigInteger?> = _totalValueRujiStake
+    val totalValueTCYStake: StateFlow<BigInteger?> = _totalValueTCYStake
+    val totalValueLpFiat: StateFlow<LpLegTotal?> = _totalValueLpFiat
 
     // Cached "available" pool list shared by the Manage-Positions dialog and the LP tab loader so
     // cold start makes a single getPoolStats call instead of two. `null` means "not loaded yet"
@@ -151,9 +169,11 @@ constructor(
     // available", but Midgard never returns that in practice.
     private val availablePools = MutableStateFlow<List<ThorChainPoolStatsJson>?>(null)
 
+    private var currencyJob: Job? = null
     private var lpDialogJob: Job? = null
     private var loadLpJob: Job? = null
     private var loadBondedNodesJob: Job? = null
+    private var loadStakingPositionsJob: Job? = null
 
     // Latest bonded nodes, kept so onClickUnBond can resolve the selected node's raw bonded amount
     // (the UI model only carries the formatted string). Read/written on the main dispatcher.
@@ -166,6 +186,8 @@ constructor(
         lpDialogJob = loadLpPositionsForDialog()
         loadSavedPositions()
         loadTotalValue()
+        currencyJob?.cancel()
+        currencyJob = observeCurrencyChanges()
     }
 
     private fun loadLpPositionsForDialog(): Job =
@@ -190,6 +212,11 @@ constructor(
                 Timber.e(e, "Failed to load THORChain LP pools for dialog")
                 // Leave availablePools null so the next user interaction (e.g. opening Manage
                 // Positions or saving a selection) retries instead of soft-locking.
+                // The tab deliberately stays in its loading state (see above), but the header total
+                // is a separate concern: reloadLpTab parks the LP leg unreported while it waits for
+                // this dataset, so report it as zero here or the total would never see all five
+                // legs and would spin forever.
+                reportLpFiat(BigDecimal.ZERO)
             }
         }
 
@@ -214,72 +241,111 @@ constructor(
                     totalValueDefaultStake,
                     totalValueRujiStake,
                     totalValueTCYStake,
-                    isLoadingTotalAmount,
-                ) { bondValue, stakeValue, rujiStake, tcyStake, isLoading ->
-                    TotalDefiValue(
-                        bondAmount = bondValue,
-                        defaultStakeValues = stakeValue,
-                        rujiStakeAmount = rujiStake,
-                        tcyStakeAmount = tcyStake,
-                        isLoading = isLoading,
-                    )
-                }
-                .collect { totalValue ->
-                    if (!totalValue.isLoading) {
-                        handleTotalValueUpdate(totalValue)
+                    totalValueLpFiat,
+                ) { bondValue, stakeValue, rujiStake, tcyStake, lpFiat ->
+                    if (
+                        bondValue == null ||
+                            stakeValue == null ||
+                            rujiStake == null ||
+                            tcyStake == null ||
+                            lpFiat == null
+                    ) {
+                        null
+                    } else {
+                        TotalDefiValue(
+                            bondAmount = bondValue,
+                            defaultStakeValues = stakeValue,
+                            rujiStakeAmount = rujiStake,
+                            tcyStakeAmount = tcyStake,
+                            lpFiatValue = lpFiat,
+                        )
                     }
                 }
+                .filterNotNull()
+                // collectLatest, not collect: pricing suspends on the currency and price lookups,
+                // and a run started for an older set of legs could otherwise land after a newer
+                // one and overwrite the header with a stale total.
+                .collectLatest { totalValue -> handleTotalValueUpdate(totalValue) }
         }
     }
 
-    private fun handleTotalValueUpdate(totalValue: TotalDefiValue) {
-        viewModelScope.launch {
-            val totalInRune = CoinType.THORCHAIN.toValue(totalValue.bondAmount)
-            val totalInRuji = CoinType.THORCHAIN.toValue(totalValue.rujiStakeAmount)
-            val totalInTCY = CoinType.THORCHAIN.toValue(totalValue.tcyStakeAmount)
+    /**
+     * Prices the header total once every leg has reported. This is the only place that clears
+     * [ThorchainDefiPositionsUiModel.isTotalAmountLoading] — a leg settling its own card must not
+     * stop the header spinner, because the other legs may still be in flight.
+     */
+    private suspend fun handleTotalValueUpdate(totalValue: TotalDefiValue) {
+        val totalInRune = CoinType.THORCHAIN.toValue(totalValue.bondAmount)
+        val totalInRuji = CoinType.THORCHAIN.toValue(totalValue.rujiStakeAmount)
+        val totalInTCY = CoinType.THORCHAIN.toValue(totalValue.tcyStakeAmount)
 
-            try {
-                val currency = appCurrencyRepository.currency.first()
+        try {
+            val currency = appCurrencyRepository.currency.first()
 
-                val runeFiatValue =
-                    fiatValueCalculator.createFiatValue(totalInRune, Coins.ThorChain.RUNE, currency)
-                val rujiFiatValue =
-                    fiatValueCalculator.createFiatValue(totalInRuji, Coins.ThorChain.RUJI, currency)
-                val tcyFiatValue =
-                    fiatValueCalculator.createFiatValue(totalInTCY, Coins.ThorChain.TCY, currency)
+            val runeFiatValue =
+                fiatValueCalculator.createFiatValue(totalInRune, Coins.ThorChain.RUNE, currency)
+            val rujiFiatValue =
+                fiatValueCalculator.createFiatValue(totalInRuji, Coins.ThorChain.RUJI, currency)
+            val tcyFiatValue =
+                fiatValueCalculator.createFiatValue(totalInTCY, Coins.ThorChain.TCY, currency)
 
-                val defaultStakingFiatValues =
-                    totalValue.defaultStakeValues.stakeElements.map { position ->
-                        val decimalAmount = CoinType.THORCHAIN.toValue(position.amount)
-                        fiatValueCalculator.createFiatValue(decimalAmount, position.coin, currency)
-                    }
+            val defaultStakingFiatValues =
+                totalValue.defaultStakeValues.stakeElements.map { position ->
+                    val decimalAmount = CoinType.THORCHAIN.toValue(position.amount)
+                    fiatValueCalculator.createFiatValue(decimalAmount, position.coin, currency)
+                }
 
-                val totalFiatValue =
-                    listOf(runeFiatValue, rujiFiatValue, tcyFiatValue)
-                        .plus(defaultStakingFiatValues)
-                        .fold(FiatValue(BigDecimal.ZERO, currency.ticker)) { acc, fiatValue ->
-                            acc + fiatValue
+            val lpFiatValue =
+                when (val lpLeg = totalValue.lpFiatValue) {
+                    // A pool we were asked to price failed to load. Its positions read as zero, so
+                    // a sum including it would understate the real total while looking just as
+                    // settled as a correct one. Say the total is unavailable instead of quietly
+                    // getting it wrong.
+                    LpLegTotal.Unavailable -> {
+                        state.update {
+                            it.copy(totalAmountPrice = null, isTotalAmountLoading = false)
                         }
+                        return
+                    }
 
-                val currencyFormat =
-                    withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
-
-                state.update {
-                    it.copy(
-                        totalAmountPrice = currencyFormat.format(totalFiatValue.value),
-                        isTotalAmountLoading = false,
-                    )
+                    is LpLegTotal.Priced -> lpLeg.fiatValue
                 }
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                Timber.e(e, "Failed to calculate total fiat value")
 
-                state.update { it.copy(isTotalAmountLoading = false) }
+            if (lpFiatValue.currency != currency.ticker) {
+                // The currency changed after LP was priced. The raw legs re-convert on every run,
+                // but LP is stored already converted, so adding it now would sum two currencies.
+                // observeCurrencyChanges has already dropped the leg and asked for a re-price, so
+                // park the header on its spinner: keeping the old figure on screen would show a
+                // total in the currency the user just navigated away from.
+                state.update { it.copy(totalAmountPrice = null, isTotalAmountLoading = true) }
+                return
             }
+
+            val totalFiatValue =
+                listOf(runeFiatValue, rujiFiatValue, tcyFiatValue, lpFiatValue)
+                    .plus(defaultStakingFiatValues)
+                    .fold(FiatValue(BigDecimal.ZERO, currency.ticker)) { acc, fiatValue ->
+                        acc + fiatValue
+                    }
+
+            val currencyFormat =
+                withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
+
+            state.update {
+                it.copy(
+                    totalAmountPrice = currencyFormat.format(totalFiatValue.value),
+                    isTotalAmountLoading = false,
+                )
+            }
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Timber.e(e, "Failed to calculate total fiat value")
+
+            state.update { it.copy(isTotalAmountLoading = false) }
         }
     }
 
-    private suspend fun calculateStakingFiatPrice(amount: BigDecimal, coin: Coin): String {
+    private suspend fun calculateStakingFiatPrice(amount: BigDecimal, coin: Coin): String? {
         return try {
             val currency = appCurrencyRepository.currency.first()
             val currencyFormat =
@@ -287,7 +353,110 @@ constructor(
             formatFiatString(amount, coin, currency, currencyFormat)
         } catch (e: java.io.IOException) {
             Timber.e(e, "Failed to calculate THORChain staking fiat price")
-            ""
+            null
+        }
+    }
+
+    /**
+     * Zero rendered in the user's currency. Positions that failed to load are worth showing as an
+     * explicit zero rather than a blank, and the amount has to go through the same currency format
+     * as a real balance so a non-USD user never sees a dollar sign. Returns `null` if the format
+     * itself can't be resolved, which the UI renders as "price unavailable".
+     */
+    private suspend fun zeroFiat(): String? =
+        try {
+            withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
+                .format(BigDecimal.ZERO)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to format zero balance")
+            null
+        }
+
+    /**
+     * Reports the LP leg together with the currency it was priced in, so a later total can tell a
+     * fresh value from one left over from a previous currency.
+     */
+    private suspend fun reportLpFiat(value: BigDecimal) {
+        val currency = appCurrencyRepository.currency.first()
+        _totalValueLpFiat.value = LpLegTotal.Priced(FiatValue(value, currency.ticker))
+    }
+
+    /**
+     * Re-prices every leg and every card when the user switches currency.
+     *
+     * Nothing re-converts on its own: the card fiat strings are formatted once at load time from
+     * one-shot flows, and LP joins the total already converted, so a switch that only touched the
+     * header would leave the Bonded and Staking cards reading in the currency the user just left.
+     * Reloading is also what re-prices LP, which cannot be re-based from the stored magnitude.
+     */
+    private fun observeCurrencyChanges(): Job =
+        viewModelScope.launch {
+            appCurrencyRepository.currency
+                .map { it.ticker }
+                .distinctUntilChanged()
+                .drop(1)
+                .collect {
+                    resetTotalsToPending()
+
+                    bondedNodesRefreshTrigger.value++
+                    loadBondedNodes()
+                    loadStakingPositions()
+                    reloadLpTab()
+                }
+        }
+
+    /**
+     * Drops every leg back to unreported and puts the header back on its spinner.
+     *
+     * Legs keep their last value across a reload, so without this the header would go on showing a
+     * settled total — in the old currency — for as long as the refetch takes. Clearing the value
+     * and the legs together is what makes the spinner honest.
+     */
+    private fun resetTotalsToPending() {
+        _totalValueBond.value = null
+        _totalValueDefaultStake.value = null
+        _totalValueRujiStake.value = null
+        _totalValueTCYStake.value = null
+        _totalValueLpFiat.value = null
+        state.update { it.copy(totalAmountPrice = null, isTotalAmountLoading = true) }
+    }
+
+    /**
+     * Reports every staking leg as zero. Used where no staking source will run at all — nothing
+     * selected, no RUNE coin, or the whole load threw — so the header total isn't left waiting on
+     * legs that will never arrive.
+     */
+    private fun settleStakingTotals() {
+        _totalValueDefaultStake.update { StakeDefaultValues() }
+        _totalValueRujiStake.update { BigInteger.ZERO }
+        _totalValueTCYStake.update { BigInteger.ZERO }
+    }
+
+    /**
+     * Settles staking cards a failed load left mid-flight. Clearing the spinner alone used to leave
+     * the card as a bare ticker with no amount and no fiat, which reads as a dropped value; filling
+     * the price with a formatted zero keeps the card showing what the position is actually worth.
+     */
+    private suspend fun settleStakingPositions(matches: (StakePositionUiModel) -> Boolean) {
+        val zero = zeroFiat()
+        state.update { current ->
+            current.copy(
+                staking =
+                    current.staking.copy(
+                        positions =
+                            current.staking.positions.map { position ->
+                                if (matches(position)) {
+                                    position.copy(
+                                        isLoading = false,
+                                        stakedFiatDisplay = position.stakedFiatDisplay ?: zero,
+                                    )
+                                } else {
+                                    position
+                                }
+                            }
+                    )
+            )
         }
     }
 
@@ -313,7 +482,7 @@ constructor(
 
             loadBondedNodes()
 
-            launch { loadStakingPositions() }
+            loadStakingPositions()
 
             reloadLpTab()
         }
@@ -332,7 +501,8 @@ constructor(
                 if (!state.value.selectedPositions.hasBondPositions()) {
                     _totalValueBond.value = BigInteger.ZERO
 
-                    state.update { it.copy(bonded = emptyBondedTabUiModel()) }
+                    val zero = zeroFiat()
+                    state.update { it.copy(bonded = emptyBondedTabUiModel(zero)) }
                     return@launch
                 }
 
@@ -348,17 +518,45 @@ constructor(
 
                     if (runeCoin == null) {
                         Timber.e("Vault does not have RUNE coin")
-                        state.update { it.copy(bonded = it.bonded.copy(isLoading = false)) }
+                        val zero = zeroFiat()
+                        state.update {
+                            it.copy(
+                                bonded = it.bonded.copy(isLoading = false, totalBondedPrice = zero)
+                            )
+                        }
+                        _totalValueBond.update { BigInteger.ZERO }
                         return@launch
                     }
 
                     val address = runeCoin.address
 
                     bondedNodesRefreshTrigger
-                        .flatMapLatest { bondUseCase.getActiveNodes(vaultId, address) }
-                        .catch { it ->
-                            Timber.e(it)
-                            state.update { it.copy(bonded = it.bonded.copy(isLoading = false)) }
+                        .flatMapLatest {
+                            bondUseCase.getActiveNodes(vaultId, address).onCompletion { cause ->
+                                // A source that finishes without ever emitting is done, not
+                                // pending. Report it, or the header total waits on a leg that is
+                                // never going to arrive. Cancellation means flatMapLatest dropped
+                                // this collector for a newer trigger, and settling the leg for a
+                                // run that has been replaced understates the total until the
+                                // replacement lands.
+                                if (cause !is CancellationException) {
+                                    _totalValueBond.compareAndSet(null, BigInteger.ZERO)
+                                }
+                            }
+                        }
+                        .catch { t ->
+                            Timber.e(t)
+                            // The bond leg is one input to the header total. Leaving it unreported
+                            // would strand the header on its spinner, so settle it at zero instead
+                            // of letting a failed leg look like a total that never arrived.
+                            val zero = zeroFiat()
+                            state.update {
+                                it.copy(
+                                    bonded =
+                                        it.bonded.copy(isLoading = false, totalBondedPrice = zero)
+                                )
+                            }
+                            _totalValueBond.update { BigInteger.ZERO }
                         }
                         .collect { activeNodes ->
                             activeBondedNodes = activeNodes
@@ -373,35 +571,30 @@ constructor(
 
                             state.update {
                                 it.copy(
-                                    isTotalAmountLoading = false,
                                     bonded =
                                         BondedTabUiModel(
                                             isLoading = false,
                                             totalBondedAmount = totalBonded,
                                             totalBondedPrice = bondedPrice,
                                             nodes = nodeUiModels,
-                                        ),
+                                        )
                                 )
                             }
 
-                            updateTotalValueStatus(totalBondedRaw, false)
+                            _totalValueBond.update { totalBondedRaw }
                         }
                 } catch (t: Throwable) {
                     if (t is kotlinx.coroutines.CancellationException) throw t
                     Timber.e(t)
+                    // Same contract as the .catch above: this wraps the vault lookup, and leaving
+                    // the leg unreported here would hang the header total forever.
+                    val zero = zeroFiat()
                     state.update {
-                        it.copy(
-                            isTotalAmountLoading = false,
-                            bonded = it.bonded.copy(isLoading = false),
-                        )
+                        it.copy(bonded = it.bonded.copy(isLoading = false, totalBondedPrice = zero))
                     }
+                    _totalValueBond.update { BigInteger.ZERO }
                 }
             }
-    }
-
-    private fun updateTotalValueStatus(amount: BigInteger, loading: Boolean) {
-        _totalValueBond.update { amount }
-        _isLoadingTotalAmount.update { loading }
     }
 
     private fun calculateTotalBonded(nodes: List<BondedNodePosition>): String {
@@ -409,7 +602,7 @@ constructor(
         return total.formatAmount(CoinType.THORCHAIN)
     }
 
-    private suspend fun calculateBondedFiatPrice(totalBondedRaw: BigInteger): String {
+    private suspend fun calculateBondedFiatPrice(totalBondedRaw: BigInteger): String? {
         return try {
             val totalInRune = CoinType.THORCHAIN.toValue(totalBondedRaw)
             val currency = appCurrencyRepository.currency.first()
@@ -421,111 +614,107 @@ constructor(
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to calculate bonded fiat price")
-            ""
+            null
         }
     }
 
     private fun loadStakingPositions() {
         loadedTabs.add(DeFiTab.STAKED.displayNameRes)
 
-        viewModelScope.launch {
-            val selectedPositions = state.value.selectedPositions
+        // Cancel the in-flight load before starting another, the way loadBondedNodes does. A
+        // currency switch relaunches both; without this the two staking loads run side by side and
+        // the slower older one lands last, leaving the cards priced in the currency just left.
+        loadStakingPositionsJob?.cancel()
+        loadStakingPositionsJob =
+            viewModelScope.launch {
+                val selectedPositions = state.value.selectedPositions
 
-            // Initial Loading Status
-            if (!selectedPositions.hasStakingPositions()) {
-                _totalValueDefaultStake.update { StakeDefaultValues() }
-                _totalValueRujiStake.update { BigInteger.ZERO }
-                _totalValueTCYStake.update { BigInteger.ZERO }
-                _isLoadingTotalAmount.update { false }
+                // Initial Loading Status
+                if (!selectedPositions.hasStakingPositions()) {
+                    settleStakingTotals()
 
-                state.update { it.copy(staking = emptyStakingTabUiModel()) }
-                return@launch
-            }
-            val defaultLoadingPositions =
-                loadDefaultStakingPositions()
-                    .filter { position -> selectedPositions.contains(position.selectionKey()) }
-                    .map { positionUiModel -> positionUiModel.copy(isLoading = true) }
-            state.update {
-                it.copy(staking = StakingTabUiModel(positions = defaultLoadingPositions))
-            }
-
-            try {
-                val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
-
-                // THORChain hosts several coins (RUNE, RUJI, TCY…); staking is held against the
-                // RUNE account, so match the ticker explicitly rather than the first chain coin.
-                val runeCoin =
-                    vault?.coins?.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
-
-                if (runeCoin == null) {
-                    Timber.e("Vault does not have RUNE coin")
-
-                    state.update {
-                        it.copy(
-                            staking =
-                                it.staking.copy(
-                                    positions =
-                                        it.staking.positions.map { position ->
-                                            position.copy(isLoading = false)
-                                        }
-                                )
-                        )
-                    }
+                    state.update { it.copy(staking = emptyStakingTabUiModel()) }
                     return@launch
                 }
-
-                val address = runeCoin.address
-                val coinsToLoad =
-                    thorchainSupportStakingDeFi
-                        .filter { coin -> selectedPositions.contains(coin.ticker) }
-                        .map { coin -> coin.id }
-
-                if (coinsToLoad.contains(Coins.ThorChain.RUJI.id)) {
-                    createRujiStakePosition(address, vaultId)
-                }
-                if (coinsToLoad.contains(Coins.ThorChain.TCY.id)) {
-                    createTCYStakePosition(address, vaultId)
-                }
-
-                createGenericStakePosition(address, vaultId, coinsToLoad)
-            } catch (t: Throwable) {
-                if (t is kotlinx.coroutines.CancellationException) throw t
-                Timber.e(t, "Failed to load staking positions")
+                val zero = zeroFiat()
+                val defaultLoadingPositions =
+                    loadDefaultStakingPositions()
+                        .filter { position -> selectedPositions.contains(position.selectionKey()) }
+                        .map { positionUiModel ->
+                            positionUiModel.copy(isLoading = true, stakedFiatDisplay = zero)
+                        }
                 state.update {
-                    it.copy(
-                        staking =
-                            it.staking.copy(
-                                positions =
-                                    it.staking.positions.map { position ->
-                                        position.copy(isLoading = false)
-                                    }
-                            )
-                    )
+                    it.copy(staking = StakingTabUiModel(positions = defaultLoadingPositions))
+                }
+
+                try {
+                    val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
+
+                    // THORChain hosts several coins (RUNE, RUJI, TCY…); staking is held against the
+                    // RUNE account, so match the ticker explicitly rather than the first chain
+                    // coin.
+                    val runeCoin =
+                        vault?.coins?.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
+
+                    if (runeCoin == null) {
+                        Timber.e("Vault does not have RUNE coin")
+
+                        settleStakingTotals()
+                        settleStakingPositions { true }
+                        return@launch
+                    }
+
+                    val address = runeCoin.address
+                    val coinsToLoad =
+                        thorchainSupportStakingDeFi
+                            .filter { coin -> selectedPositions.contains(coin.ticker) }
+                            .map { coin -> coin.id }
+
+                    // A staking source that isn't selected still has to report, or the header total
+                    // would wait on a leg that is never going to load.
+                    if (coinsToLoad.contains(Coins.ThorChain.RUJI.id)) {
+                        createRujiStakePosition(address, vaultId)
+                    } else {
+                        _totalValueRujiStake.update { BigInteger.ZERO }
+                    }
+                    if (coinsToLoad.contains(Coins.ThorChain.TCY.id)) {
+                        createTCYStakePosition(address, vaultId)
+                    } else {
+                        _totalValueTCYStake.update { BigInteger.ZERO }
+                    }
+
+                    createGenericStakePosition(address, vaultId, coinsToLoad)
+                } catch (t: Throwable) {
+                    if (t is CancellationException) throw t
+                    Timber.e(t, "Failed to load staking positions")
+                    settleStakingTotals()
+                    settleStakingPositions { true }
                 }
             }
-        }
     }
 
-    private fun createRujiStakePosition(address: String, vaultId: String) {
-        viewModelScope.launch {
+    // The three sources launch into the caller's scope rather than viewModelScope so they are
+    // children of the load that started them: cancelling that load has to reach the collectors it
+    // spawned, or a superseded run keeps writing cards and legs after its parent is gone.
+    private fun CoroutineScope.createRujiStakePosition(address: String, vaultId: String) {
+        launch {
             rujiStakingService
                 .getStakingDetails(address, vaultId)
                 .catch { t ->
                     Timber.e(t, "Failed to load staking positions RUJI")
-                    state.update {
-                        it.copy(
-                            staking =
-                                it.staking.copy(
-                                    positions =
-                                        it.staking.positions.map { position ->
-                                            if (position.coin.id in RUJI_POSITION_COIN_IDS) {
-                                                position.copy(isLoading = false)
-                                            } else {
-                                                position
-                                            }
-                                        }
-                                )
-                        )
+                    // Report the leg as zero rather than leaving it unset: the header sums it, so
+                    // an unreported failure would keep the total spinning, and a stale prior value
+                    // would survive a refresh whose cards have already fallen back to zero.
+                    _totalValueRujiStake.update { BigInteger.ZERO }
+                    settleStakingPositions { it.coin.id in RUJI_POSITION_COIN_IDS }
+                }
+                // A source that finishes without ever emitting is done, not pending, and has to
+                // report or the header waits forever. Cancellation is the exception: this load has
+                // been superseded, and settling the leg on its way out would hand the replacement's
+                // still-pending leg a zero it never reported.
+                .onCompletion { cause ->
+                    if (cause !is CancellationException) {
+                        _totalValueRujiStake.compareAndSet(null, BigInteger.ZERO)
                     }
                 }
                 .collect { detailsList ->
@@ -539,7 +728,6 @@ constructor(
                             acc + details.stakeAmount
                         }
                     }
-                    _isLoadingTotalAmount.update { false }
                 }
         }
     }
@@ -586,26 +774,18 @@ constructor(
         )
     }
 
-    private fun createTCYStakePosition(address: String, vaultId: String) {
-        viewModelScope.launch {
+    private fun CoroutineScope.createTCYStakePosition(address: String, vaultId: String) {
+        launch {
             tcyStakingService
                 .getStakingDetails(address = address, vaultId = vaultId)
                 .catch { t ->
                     Timber.e(t, "Failed to load staking positions TCY Stake")
-                    state.update {
-                        it.copy(
-                            staking =
-                                it.staking.copy(
-                                    positions =
-                                        it.staking.positions.map { position ->
-                                            if (position.coin.id == Coins.ThorChain.TCY.id) {
-                                                position.copy(isLoading = false)
-                                            } else {
-                                                position
-                                            }
-                                        }
-                                )
-                        )
+                    _totalValueTCYStake.update { BigInteger.ZERO }
+                    settleStakingPositions { it.coin.id == Coins.ThorChain.TCY.id }
+                }
+                .onCompletion { cause ->
+                    if (cause !is CancellationException) {
+                        _totalValueTCYStake.compareAndSet(null, BigInteger.ZERO)
                     }
                 }
                 .collect { position ->
@@ -633,39 +813,30 @@ constructor(
                     updateExistingPosition(stakePosition)
 
                     _totalValueTCYStake.update { position.stakeAmount }
-                    _isLoadingTotalAmount.update { false }
                 }
         }
     }
 
-    private fun createGenericStakePosition(
+    private fun CoroutineScope.createGenericStakePosition(
         address: String,
         vaultId: String,
         coinsToLoad: List<String>,
     ) {
-        viewModelScope.launch {
+        launch {
             defaultStakingPositionService
                 .getStakingDetails(address, vaultId)
                 .catch { t ->
                     Timber.e(t, "Failed to load staking positions")
-                    state.update {
-                        it.copy(
-                            staking =
-                                it.staking.copy(
-                                    positions =
-                                        it.staking.positions.map { position ->
-                                            if (
-                                                position.coin.id == Coins.ThorChain.yRUNE.id ||
-                                                    position.coin.id == Coins.ThorChain.yTCY.id ||
-                                                    position.coin.id == Coins.ThorChain.sTCY.id
-                                            ) {
-                                                position.copy(isLoading = false)
-                                            } else {
-                                                position
-                                            }
-                                        }
-                                )
-                        )
+                    _totalValueDefaultStake.update { StakeDefaultValues() }
+                    settleStakingPositions {
+                        it.coin.id == Coins.ThorChain.yRUNE.id ||
+                            it.coin.id == Coins.ThorChain.yTCY.id ||
+                            it.coin.id == Coins.ThorChain.sTCY.id
+                    }
+                }
+                .onCompletion { cause ->
+                    if (cause !is CancellationException) {
+                        _totalValueDefaultStake.compareAndSet(null, StakeDefaultValues())
                     }
                 }
                 .collect { defaultPositions ->
@@ -711,7 +882,10 @@ constructor(
                                         UiText.FormattedText(headerResId, listOf(coin.ticker)),
                                     stakedAmountDisplay =
                                         "${stakeAmount.toPlainString()} ${coin.ticker}",
-                                    stakedFiatDisplay = stakedFiatByCoinId[coin.id].orEmpty(),
+                                    // No .orEmpty(): a missed lookup means "we have no price",
+                                    // which the card states as unavailable. Coercing it to "" would
+                                    // drop the fiat line instead.
+                                    stakedFiatDisplay = stakedFiatByCoinId[coin.id],
                                     stakeAmount = stakeAmount,
                                     apy = null,
                                     supportsMint = supportsMint,
@@ -740,8 +914,6 @@ constructor(
                                 }
                         )
                     }
-
-                    _isLoadingTotalAmount.update { false }
                 }
         }
     }
@@ -799,17 +971,26 @@ constructor(
         if (selectedPools.isEmpty()) {
             loadLpJob?.cancel()
             state.update { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
+            loadLpJob = viewModelScope.launch { reportLpFiat(BigDecimal.ZERO) }
             return
         }
 
-        // Show placeholder cards for each selected pool first — even pools where the user has no
-        // liquidity yet should be visible so the Add button is reachable.
-        val placeholders = selectedPools.map { it.toPlaceholderUiModel() }
-        state.update { it.copy(lp = LpTabUiModel(isLoading = true, positions = placeholders)) }
+        state.update { it.copy(lp = it.lp.copy(isLoading = true)) }
 
         loadLpJob?.cancel()
         loadLpJob =
             viewModelScope.launch {
+                // The zero has to be resolved before the placeholders are built: a failed load
+                // freezes these exact objects into the terminal state, so a placeholder that
+                // snapshotted an unresolved zero would strand the card on the dash for good.
+                val zero = zeroFiat()
+                // Show placeholder cards for each selected pool first — even pools where the user
+                // has no liquidity yet should be visible so the Add button is reachable.
+                val placeholders = selectedPools.map { it.toPlaceholderUiModel(zero) }
+                state.update {
+                    it.copy(lp = LpTabUiModel(isLoading = true, positions = placeholders))
+                }
+
                 try {
                     val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
                     // THORChain hosts several coins (RUNE, RUJI, TCY…); LP positions are held
@@ -820,6 +1001,7 @@ constructor(
 
                     if (runeCoin == null) {
                         Timber.e("Vault does not have RUNE coin for LP positions")
+                        reportLpFiat(BigDecimal.ZERO)
                         state.update {
                             it.copy(lp = LpTabUiModel(isLoading = false, positions = placeholders))
                         }
@@ -840,7 +1022,7 @@ constructor(
                             }
                             .toMap()
 
-                    val allPositions =
+                    val lpPositions =
                         withContext(ioDispatcher) {
                             getThorChainLpPositionsUseCase(
                                 runeAddress = runeCoin.address,
@@ -848,7 +1030,11 @@ constructor(
                                 availablePools = pools,
                             )
                         }
-                    val positionsByPool = allPositions.associateBy { it.pool }
+                    val positionsByPool = lpPositions.positions.associateBy { it.pool }
+                    // The use case queries every available pool, so only failures among the pools
+                    // the user actually selected can affect what this screen shows.
+                    val failedSelectedPools =
+                        selectedPools.filter { it.positionKey in lpPositions.failedPools }
 
                     val currency = appCurrencyRepository.currency.first()
                     val currencyFormat =
@@ -858,24 +1044,44 @@ constructor(
                     val merged =
                         selectedPools.map { dialogPool ->
                             val realPosition = positionsByPool[dialogPool.positionKey]
-                            if (realPosition != null) {
-                                realPosition.toUiModel(
-                                    vault.coins,
-                                    runePrice,
-                                    currency,
-                                    currencyFormat,
-                                )
-                            } else {
-                                dialogPool.toPlaceholderUiModel()
+                            when {
+                                realPosition != null ->
+                                    realPosition.toUiModel(
+                                        vault.coins,
+                                        runePrice,
+                                        currency,
+                                        currencyFormat,
+                                    )
+                                // This pool's lookup errored, so we don't know what it holds. A
+                                // zero here would be a claim we can't make.
+                                dialogPool in failedSelectedPools ->
+                                    dialogPool.toPlaceholderUiModel(null)
+                                else -> dialogPool.toPlaceholderUiModel(zero)
                             }
                         }
 
+                    _totalValueLpFiat.value =
+                        if (failedSelectedPools.isEmpty()) {
+                            LpLegTotal.Priced(
+                                FiatValue(
+                                    merged.fold(BigDecimal.ZERO) { acc, position ->
+                                        acc + position.totalFiatValue
+                                    },
+                                    currency.ticker,
+                                )
+                            )
+                        } else {
+                            // Those pools contribute zero to the fold above, which would quietly
+                            // understate the header total rather than admit a value is missing.
+                            LpLegTotal.Unavailable
+                        }
                     state.update {
                         it.copy(lp = LpTabUiModel(isLoading = false, positions = merged))
                     }
                 } catch (e: Throwable) {
                     if (e is CancellationException) throw e
                     Timber.e(e, "Failed to load THORChain LP positions")
+                    reportLpFiat(BigDecimal.ZERO)
                     state.update {
                         it.copy(lp = LpTabUiModel(isLoading = false, positions = placeholders))
                     }
@@ -883,14 +1089,14 @@ constructor(
             }
     }
 
-    private fun PositionUiModelDialog.toPlaceholderUiModel(): LpPositionUiModel {
+    private fun PositionUiModelDialog.toPlaceholderUiModel(zero: String?): LpPositionUiModel {
         val parsed = parseThorChainPool(positionKey)
         val assetTicker = parsed.ticker
         val resolvedAssetLogo: ImageModel? =
             lpAssetLogoRes(parsed.chain, parsed.ticker, parsed.contractAddress) ?: (logo as? Int)
         return LpPositionUiModel(
             titleLp = "$ticker Pool",
-            totalPriceLp = DEFAULT_ZERO_BALANCE,
+            totalPriceLp = zero,
             icon = resolvedAssetLogo ?: getCoinLogo(assetTicker.lowercase()),
             assetTicker = assetTicker,
             apr = null,
@@ -943,6 +1149,7 @@ constructor(
         return LpPositionUiModel(
             titleLp = "RUNE/$assetTicker Pool",
             totalPriceLp = currencyFormat.format(totalFiat),
+            totalFiatValue = totalFiat,
             icon = resolvedAssetLogo ?: getCoinLogo(assetTicker.lowercase()),
             assetTicker = assetTicker,
             apr = annualPercentageRate?.formatPercentage(),
@@ -1050,6 +1257,13 @@ constructor(
         viewModelScope.launch {
             val selectedPositions = state.value.tempSelectedPositions
 
+            // A Done that changed nothing has nothing to persist and nothing to refetch. Compared
+            // as sets because only membership decides what gets loaded.
+            if (selectedPositions.toSet() == state.value.selectedPositions.toSet()) {
+                state.update { it.copy(showPositionSelectionDialog = false) }
+                return@launch
+            }
+
             launch {
                 withContext(ioDispatcher) {
                     defiPositionsRepository.saveSelectedPositions(vaultId, selectedPositions)
@@ -1062,11 +1276,16 @@ constructor(
 
             loadedTabs.clear()
 
+            // Same reload set as a currency switch, so the header owes the same honesty: legs keep
+            // their pre-selection values, and without this a newly added pool would leave the total
+            // reading as settled — and short by that pool — until its fetch lands.
+            resetTotalsToPending()
+
             bondedNodesRefreshTrigger.value++
 
             loadBondedNodes()
 
-            launch { loadStakingPositions() }
+            loadStakingPositions()
 
             // If a previous getPoolStats fetch failed, retry now so the user isn't soft-locked.
             ensureAvailablePoolsLoaded()
@@ -1194,7 +1413,6 @@ constructor(
     }
 
     companion object {
-        internal const val DEFAULT_ZERO_BALANCE = "$0.00"
         private const val RUJI_SYMBOL = "RUJI"
         private const val RUJI_REWARDS_SYMBOL = "USDC"
         private const val POSITION_DISPLAY_SCALE = 4
@@ -1203,10 +1421,12 @@ constructor(
          * The Manage-Positions key a placeholder is gated on. Both RUJI positions are toggled by
          * the single "RUJI" tile, so the auto-compounding placeholder borrows the bonded ticker;
          * every other placeholder is keyed by its own ticker.
+         *
+         * Reads the ticker off the coin rather than off [StakePositionUiModel.stakedAmountDisplay],
+         * which now carries a formatted "0 TICKER" amount instead of the bare ticker.
          */
         private fun StakePositionUiModel.selectionKey(): String =
-            if (coin.id == Coins.ThorChain.sRUJI.id) Coins.ThorChain.RUJI.ticker
-            else stakedAmountDisplay
+            if (coin.id == Coins.ThorChain.sRUJI.id) Coins.ThorChain.RUJI.ticker else coin.ticker
 
         private fun loadDefaultStakingPositions(): List<StakePositionUiModel> {
             val rujiCoin = Coins.ThorChain.RUJI
@@ -1220,7 +1440,7 @@ constructor(
                 StakePositionUiModel(
                     coin = rujiCoin,
                     stakeAssetHeader = UiText.StringResource(R.string.staked_ruji_header),
-                    stakedAmountDisplay = rujiCoin.ticker,
+                    stakedAmountDisplay = "0 ${rujiCoin.ticker}",
                     apy = null,
                     canWithdraw = false,
                     canStake = true,
@@ -1236,7 +1456,7 @@ constructor(
                             R.string.defi_header_compounded,
                             listOf(rujiCoin.ticker),
                         ),
-                    stakedAmountDisplay = sruji.ticker,
+                    stakedAmountDisplay = "0 ${sruji.ticker}",
                     apy = null,
                     canWithdraw = false,
                     canStake = true,
@@ -1248,7 +1468,7 @@ constructor(
                 StakePositionUiModel(
                     coin = tcy,
                     stakeAssetHeader = UiText.StringResource(R.string.staked_tcy_header),
-                    stakedAmountDisplay = tcy.ticker,
+                    stakedAmountDisplay = "0 ${tcy.ticker}",
                     apy = null,
                     canWithdraw = false,
                     canStake = true,
@@ -1260,7 +1480,7 @@ constructor(
                 StakePositionUiModel(
                     coin = stcy,
                     stakeAssetHeader = UiText.StringResource(R.string.compounded_tcy_header),
-                    stakedAmountDisplay = stcy.ticker,
+                    stakedAmountDisplay = "0 ${stcy.ticker}",
                     apy = null,
                     canWithdraw = false,
                     canStake = true,
@@ -1272,7 +1492,7 @@ constructor(
                 StakePositionUiModel(
                     coin = ytcy,
                     stakeAssetHeader = UiText.StringResource(R.string.staked_ytcy_header),
-                    stakedAmountDisplay = ytcy.ticker,
+                    stakedAmountDisplay = "0 ${ytcy.ticker}",
                     apy = null,
                     canWithdraw = false,
                     canStake = true,
@@ -1284,7 +1504,7 @@ constructor(
                 StakePositionUiModel(
                     coin = yrune,
                     stakeAssetHeader = UiText.StringResource(R.string.staked_yrune_header),
-                    stakedAmountDisplay = yrune.ticker,
+                    stakedAmountDisplay = "0 ${yrune.ticker}",
                     apy = null,
                     canWithdraw = false,
                     canStake = true,

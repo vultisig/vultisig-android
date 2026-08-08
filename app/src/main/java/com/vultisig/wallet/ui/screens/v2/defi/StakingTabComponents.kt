@@ -117,15 +117,13 @@ internal fun StakingWidget(
                         color = Theme.v2.colors.text.primary,
                     )
 
-                    if (state.stakedFiatDisplay.isNotEmpty()) {
-                        Text(
-                            text =
-                                if (isBalanceVisible) state.stakedFiatDisplay
-                                else HIDE_BALANCE_CHARS,
-                            style = Theme.brockmann.body.s.medium,
-                            color = Theme.v2.colors.text.tertiary,
-                        )
-                    }
+                    Text(
+                        text =
+                            if (isBalanceVisible) state.stakedFiatDisplay ?: FIAT_VALUE_UNAVAILABLE
+                            else HIDE_BALANCE_CHARS,
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.v2.colors.text.tertiary,
+                    )
                 }
             }
         }

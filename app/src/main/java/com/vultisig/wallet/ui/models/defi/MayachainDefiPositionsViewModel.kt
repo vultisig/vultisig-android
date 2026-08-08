@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.formatAddress
 import com.vultisig.wallet.ui.screens.v2.defi.formatAmount
 import com.vultisig.wallet.ui.screens.v2.defi.formatDate
 import com.vultisig.wallet.ui.screens.v2.defi.formatPercentage
+import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
 import com.vultisig.wallet.ui.screens.v2.defi.hasMayaStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState.Companion.fromApiStatus
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
@@ -55,9 +56,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -89,6 +96,10 @@ private val MAYA_STATIC_POSITION_KEYS = setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CA
 
 private val MAYA_DEFAULT_SELECTED_POSITIONS = listOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY)
 
+// Nothing bonded, said in CACAO. emptyBondedTabUiModel is the Thorchain screen's and would render
+// this as "0 RUNE".
+private const val ZERO_CACAO_BONDED = "0 CACAO"
+
 @Immutable
 internal sealed interface MayachainDefiUiState {
     data object Loading : MayachainDefiUiState
@@ -100,24 +111,26 @@ internal sealed interface MayachainDefiUiState {
 
 @Immutable
 internal data class MayachainDefiPositionsUiModel(
-    val totalAmountPrice: String = DEFAULT_ZERO_BALANCE,
-    val bonded: BondedTabUiModel = BondedTabUiModel(totalBondedAmount = "0 CACAO"),
+    // Null until the total is priced in the user's currency; a hardcoded "$0.00" was wrong for
+    // every non-USD user and indistinguishable from a genuinely empty vault.
+    val totalAmountPrice: String? = null,
+    val bonded: BondedTabUiModel = BondedTabUiModel(totalBondedAmount = ZERO_CACAO_BONDED),
     val staking: StakingTabUiModel = StakingTabUiModel(),
     val lp: LpTabUiModel = LpTabUiModel(),
-    val isTotalAmountLoading: Boolean = false,
+    val isTotalAmountLoading: Boolean = true,
     val isBalanceVisible: Boolean = true,
     val selectedTab: Int = DeFiTab.BONDED.displayNameRes,
     val showPositionSelectionDialog: Boolean = false,
     val bondPositionsDialog: List<PositionUiModelDialog> = MAYA_BOND_POSITIONS_DIALOG,
     val stakingPositionsDialog: List<PositionUiModelDialog> = MAYA_STAKE_POSITIONS_DIALOG,
     val lpPositionsDialog: List<PositionUiModelDialog> = emptyList(),
+    // Flips true once the pool fetch returns, whatever it returns. An empty [lpPositionsDialog]
+    // cannot stand in for this: "not fetched yet" and "fetched, no pools available" would look
+    // identical, and the LP leg would sit unreported forever on the second one.
+    val lpDialogLoaded: Boolean = false,
     val selectedPositions: List<String> = MAYA_DEFAULT_SELECTED_POSITIONS,
     val tempSelectedPositions: List<String> = MAYA_DEFAULT_SELECTED_POSITIONS,
-) {
-    companion object {
-        const val DEFAULT_ZERO_BALANCE = "$0.00"
-    }
-}
+)
 
 @HiltViewModel
 internal class MayachainDefiPositionsViewModel
@@ -143,9 +156,17 @@ constructor(
 
     private val bondedNodesRefreshTrigger = MutableStateFlow(0)
 
-    private val _totalBondedRaw = MutableStateFlow(BigInteger.ZERO)
-    private val _totalStakingRaw = MutableStateFlow(BigInteger.ZERO)
+    // Null until the leg reports in — loaded, empty, or failed. The header total is the sum of all
+    // three, so pricing it while a leg is still unreported would publish a partial figure that
+    // silently jumps as the rest land. Every terminal path in a leg must therefore assign here.
+    private val _totalBondedRaw = MutableStateFlow<BigInteger?>(null)
+    private val _totalStakingRaw = MutableStateFlow<BigInteger?>(null)
+    // LP is priced from two assets per pool, so it joins the total already converted to fiat rather
+    // than as a raw chain amount like the other legs — see [LpLegTotal] for why it carries a
+    // currency and why an unpriceable load reports as unavailable rather than as zero.
+    private val _totalLpFiat = MutableStateFlow<LpLegTotal?>(null)
 
+    private var currencyJob: Job? = null
     private var observeTotalRawJob: Job? = null
     private var savedPositionsJob: Job? = null
     private var lpDialogJob: Job? = null
@@ -177,12 +198,74 @@ constructor(
         lpDialogJob = loadLpPositionsForDialog()
         observeTotalRawJob?.cancel()
         observeTotalRawJob = observeTotalRaw()
+        currencyJob?.cancel()
+        currencyJob = observeCurrencyChanges()
+    }
+
+    /**
+     * Reports the LP leg together with the currency it was priced in, so a later total can tell a
+     * fresh value from one left over from a previous currency.
+     */
+    private suspend fun reportLpFiat(value: BigDecimal) {
+        val currency = appCurrencyRepository.currency.first()
+        _totalLpFiat.value = LpLegTotal.Priced(FiatValue(value, currency.ticker))
+    }
+
+    /**
+     * Re-prices every leg and every card when the user switches currency.
+     *
+     * Nothing re-converts on its own: the card fiat strings are formatted once at load time from
+     * one-shot flows, and LP joins the total already converted, so a switch that only touched the
+     * header would leave the Bonded and CACAO Staking cards reading in the currency the user just
+     * left. Reloading is also what re-prices LP, which cannot be re-based from the stored
+     * magnitude.
+     */
+    private fun observeCurrencyChanges(): Job =
+        viewModelScope.launch {
+            appCurrencyRepository.currency
+                .map { it.ticker }
+                .distinctUntilChanged()
+                .drop(1)
+                .collect {
+                    resetTotalsToPending()
+
+                    bondedNodesRefreshTrigger.value++
+                    loadBondedJob?.cancel()
+                    loadBondedJob = launch { loadBondedNodes() }
+                    loadStakingJob?.cancel()
+                    loadStakingJob = launch { loadStakingPosition() }
+                    reloadLpTab()
+                }
+        }
+
+    /**
+     * Drops every leg back to unreported and puts the header back on its spinner.
+     *
+     * Legs keep their last value across a reload, so without this the header would go on showing a
+     * settled total — in the old currency — for as long as the refetch takes. Clearing the value
+     * and the legs together is what makes the spinner honest.
+     */
+    private fun resetTotalsToPending() {
+        _totalBondedRaw.value = null
+        _totalStakingRaw.value = null
+        _totalLpFiat.value = null
+        updateModel { it.copy(totalAmountPrice = null, isTotalAmountLoading = true) }
     }
 
     private fun observeTotalRaw(): Job =
         viewModelScope.launch {
-            combine(_totalBondedRaw, _totalStakingRaw) { bonded, staking -> bonded + staking }
-                .collect { totalRaw -> updateTotalFiatValue(totalRaw) }
+            combine(_totalBondedRaw, _totalStakingRaw, _totalLpFiat) { bonded, staking, lpFiat ->
+                    if (bonded == null || staking == null || lpFiat == null) {
+                        null
+                    } else {
+                        Pair(bonded + staking, lpFiat)
+                    }
+                }
+                .filterNotNull()
+                // collectLatest, not collect: pricing suspends on the currency lookup, and a run
+                // started for an older set of legs could otherwise land after a newer one and
+                // overwrite the header with a stale total.
+                .collectLatest { (totalRaw, lpFiat) -> updateTotalFiatValue(totalRaw, lpFiat) }
         }
 
     private fun loadBalanceVisibility() {
@@ -195,25 +278,48 @@ constructor(
 
     private fun loadSavedPositions(): Job =
         viewModelScope.launch {
-            defiPositionsRepository.getSelectedPositions(vaultId).collect { saved ->
-                val hasMayaPositions =
-                    saved.any { it in MAYA_STATIC_POSITION_KEYS || it.contains(".") }
-                val positions =
-                    if (hasMayaPositions) {
-                        saved.toList()
-                    } else {
-                        MAYA_DEFAULT_SELECTED_POSITIONS
+            defiPositionsRepository
+                .getSelectedPositions(vaultId)
+                .map { saved ->
+                    when {
+                        // A vault that never chose reads back as the store's own defaults, never
+                        // as an empty set, so empty is a selection the user cleared on purpose.
+                        // It has to be taken at face value: falling through to the Maya defaults
+                        // below would derive it back to what it just replaced, and the dedup would
+                        // then drop the reload it needs.
+                        saved.isEmpty() -> emptyList()
+                        // The THORChain screen writes this same key. A set holding nothing this
+                        // screen can show is that screen's selection, not a choice made here.
+                        saved.any { it in MAYA_STATIC_POSITION_KEYS || it.contains(".") } ->
+                            saved.toList()
+                        else -> MAYA_DEFAULT_SELECTED_POSITIONS
                     }
-                updateModel {
-                    it.copy(selectedPositions = positions, tempSelectedPositions = positions)
                 }
-                reloadLpTab()
+                // The store re-emits for writes that leave this vault's selection alone — the
+                // first-ever save flips the key from absent to present, which it cannot read as
+                // unchanged — and a reload for one of those would blank a settled header for
+                // nothing. Compared as sets: only membership decides what gets loaded, and a stored
+                // set can come back in a different order than the default list.
+                .distinctUntilChanged { old, new -> old.toSet() == new.toSet() }
+                .collect { positions ->
+                    updateModel {
+                        it.copy(selectedPositions = positions, tempSelectedPositions = positions)
+                    }
 
-                loadBondedJob?.cancel()
-                loadBondedJob = launch { loadBondedNodes() }
-                loadStakingJob?.cancel()
-                loadStakingJob = launch { loadStakingPosition() }
-            }
+                    // Every selection change re-runs this collector, so it reloads all three legs
+                    // for the same reason a currency switch does and owes the header the same
+                    // honesty: legs keep their pre-selection values, and without this a newly added
+                    // pool would leave the total reading as settled — and short by that pool —
+                    // until its fetch lands.
+                    resetTotalsToPending()
+
+                    reloadLpTab()
+
+                    loadBondedJob?.cancel()
+                    loadBondedJob = launch { loadBondedNodes() }
+                    loadStakingJob?.cancel()
+                    loadStakingJob = launch { loadStakingPosition() }
+                }
         }
 
     private fun loadLpPositionsForDialog(): Job =
@@ -221,16 +327,39 @@ constructor(
             try {
                 val pools = withContext(ioDispatcher) { mayachainBondRepository.getMayaNodePools() }
                 val lpPositions = pools.map { pool -> pool.toPositionDialogModel() }
-                updateModel { it.copy(lpPositionsDialog = lpPositions) }
+                updateModel { it.copy(lpPositionsDialog = lpPositions, lpDialogLoaded = true) }
                 reloadLpTab()
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Timber.e(e, "Failed to load Maya LP positions for dialog")
+                // The tab keeps its own loading state; the header total is a separate concern.
+                // reloadLpTab parks the LP leg unreported while it waits for this dataset, so
+                // report it as zero here or the total would never see all three legs.
+                reportLpFiat(BigDecimal.ZERO)
             }
         }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun loadBondedNodes() {
+        // Bond is a checkbox in Manage Positions like the others, and unchecking it has to drop the
+        // card and its leg from the total — otherwise the header goes on counting a position the
+        // user removed. Reported as a real zero rather than left unreported, or the total would
+        // wait on a leg that is never coming.
+        if (!currentModel.selectedPositions.hasBondPositions()) {
+            _totalBondedRaw.value = BigInteger.ZERO
+            val zero = zeroFiat()
+            updateModel {
+                it.copy(
+                    bonded =
+                        BondedTabUiModel(
+                            totalBondedAmount = ZERO_CACAO_BONDED,
+                            totalBondedPrice = zero,
+                        )
+                )
+            }
+            return
+        }
+
         updateModel { it.copy(bonded = it.bonded.copy(isLoading = true)) }
 
         try {
@@ -243,16 +372,35 @@ constructor(
             if (cacaoCoin == null) {
                 Timber.e("Vault does not have CACAO coin")
                 _totalBondedRaw.value = BigInteger.ZERO
-                updateModel { it.copy(bonded = it.bonded.copy(isLoading = false)) }
+                // No CACAO coin means nothing is bonded, which is a real zero rather than a price
+                // we failed to resolve — say so instead of leaving the card on the dash.
+                val zero = zeroFiat()
+                updateModel {
+                    it.copy(bonded = it.bonded.copy(isLoading = false, totalBondedPrice = zero))
+                }
                 return
             }
 
             bondedNodesRefreshTrigger
-                .flatMapLatest { bondUseCase.getActiveNodes(vaultId, cacaoCoin.address) }
+                .flatMapLatest {
+                    bondUseCase.getActiveNodes(vaultId, cacaoCoin.address).onCompletion { cause ->
+                        // A source that finishes without ever emitting is done, not pending.
+                        // Report it, or the header total waits on a leg that will never arrive.
+                        // Cancellation is the exception: flatMapLatest dropped this collector for
+                        // a newer trigger, and reporting on behalf of a run that has been replaced
+                        // understates the total until the replacement lands.
+                        if (cause !is CancellationException) {
+                            _totalBondedRaw.compareAndSet(null, BigInteger.ZERO)
+                        }
+                    }
+                }
                 .catch { t ->
                     Timber.e(t)
                     _totalBondedRaw.value = BigInteger.ZERO
-                    updateModel { it.copy(bonded = it.bonded.copy(isLoading = false)) }
+                    val zero = zeroFiat()
+                    updateModel {
+                        it.copy(bonded = it.bonded.copy(isLoading = false, totalBondedPrice = zero))
+                    }
                 }
                 .collect { activeNodes ->
                     val cacaoSymbol = Coins.MayaChain.CACAO.ticker
@@ -278,14 +426,13 @@ constructor(
 
                     updateModel {
                         it.copy(
-                            isTotalAmountLoading = false,
                             bonded =
                                 BondedTabUiModel(
                                     isLoading = false,
                                     totalBondedAmount = totalBonded,
                                     totalBondedPrice = bondedPrice,
                                     nodes = nodeUiModels,
-                                ),
+                                )
                         )
                     }
 
@@ -295,8 +442,9 @@ constructor(
             if (t is CancellationException) throw t
             Timber.e(t)
             _totalBondedRaw.value = BigInteger.ZERO
+            val zero = zeroFiat()
             updateModel {
-                it.copy(isTotalAmountLoading = false, bonded = it.bonded.copy(isLoading = false))
+                it.copy(bonded = it.bonded.copy(isLoading = false, totalBondedPrice = zero))
             }
         }
     }
@@ -341,13 +489,14 @@ constructor(
                 .catch { t ->
                     Timber.e(t, "Failed to load CACAO staking details")
                     _totalStakingRaw.value = BigInteger.ZERO
-                    updateModel {
-                        it.copy(
-                            staking =
-                                StakingTabUiModel(
-                                    positions = listOf(loadingPosition.copy(isLoading = false))
-                                )
-                        )
+                    settleStakingPosition(loadingPosition)
+                }
+                // Same on the way out of a cancelled load: the switch that cancelled it has already
+                // started the replacement, and settling the leg here would report a zero on that
+                // replacement's behalf while its own fetch is still in flight.
+                .onCompletion { cause ->
+                    if (cause !is CancellationException) {
+                        _totalStakingRaw.compareAndSet(null, BigInteger.ZERO)
                     }
                 }
                 .collect { details ->
@@ -377,45 +526,96 @@ constructor(
             if (t is CancellationException) throw t
             Timber.e(t, "Failed to load CACAO staking position")
             _totalStakingRaw.value = BigInteger.ZERO
+            settleStakingPosition(loadingPosition)
+        }
+    }
+
+    /**
+     * Settles the CACAO card after a failed load. Clearing the spinner alone left it showing an
+     * amount with no fiat line at all; a formatted zero states the position's worth instead.
+     */
+    private suspend fun settleStakingPosition(loadingPosition: StakePositionUiModel) {
+        val zero = zeroFiat()
+        updateModel {
+            it.copy(
+                staking =
+                    StakingTabUiModel(
+                        positions =
+                            listOf(
+                                loadingPosition.copy(isLoading = false, stakedFiatDisplay = zero)
+                            )
+                    )
+            )
+        }
+    }
+
+    /**
+     * Prices the header total once every leg has reported. This is the only place that clears
+     * [MayachainDefiPositionsUiModel.isTotalAmountLoading] — a leg settling its own card must not
+     * stop the header spinner, because the other legs may still be in flight.
+     */
+    private suspend fun updateTotalFiatValue(totalRaw: BigInteger, lpLeg: LpLegTotal) {
+        try {
+            val lpFiat =
+                when (lpLeg) {
+                    // The LP positions couldn't be priced, and they read as zero when they can't. A
+                    // sum including them would understate the real total while looking just as
+                    // settled as a correct one, so say the total is unavailable instead of quietly
+                    // getting it wrong.
+                    LpLegTotal.Unavailable -> {
+                        updateModel {
+                            it.copy(totalAmountPrice = null, isTotalAmountLoading = false)
+                        }
+                        return
+                    }
+
+                    is LpLegTotal.Priced -> lpLeg.fiatValue
+                }
+
+            val currency = appCurrencyRepository.currency.first()
+            if (lpFiat.currency != currency.ticker) {
+                // The currency changed after LP was priced. The raw legs re-convert on every run,
+                // but LP is stored already converted, so adding it now would sum two currencies.
+                // observeCurrencyChanges has already dropped the leg and asked for a re-price, so
+                // park the header on its spinner: keeping the old figure on screen would show a
+                // total in the currency the user just navigated away from.
+                updateModel { it.copy(totalAmountPrice = null, isTotalAmountLoading = true) }
+                return
+            }
+            val totalInCacao = totalRaw.toValue(10)
+            val fiatValue =
+                fiatValueCalculator.createFiatValue(totalInCacao, Coins.MayaChain.CACAO, currency)
+            val currencyFormat =
+                withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
             updateModel {
                 it.copy(
-                    staking =
-                        StakingTabUiModel(
-                            positions = listOf(loadingPosition.copy(isLoading = false))
-                        )
+                    totalAmountPrice = currencyFormat.format(fiatValue.value.add(lpFiat.value)),
+                    isTotalAmountLoading = false,
                 )
             }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to calculate Maya total fiat value")
+            updateModel { it.copy(isTotalAmountLoading = false) }
         }
     }
 
-    private fun updateTotalFiatValue(totalRaw: BigInteger) {
-        viewModelScope.launch {
-            try {
-                val currency = appCurrencyRepository.currency.first()
-                val totalInCacao = totalRaw.toValue(10)
-                val fiatValue =
-                    fiatValueCalculator.createFiatValue(
-                        totalInCacao,
-                        Coins.MayaChain.CACAO,
-                        currency,
-                    )
-                val currencyFormat =
-                    withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
-                updateModel {
-                    it.copy(
-                        totalAmountPrice = currencyFormat.format(fiatValue.value),
-                        isTotalAmountLoading = false,
-                    )
-                }
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                Timber.e(e, "Failed to calculate Maya total fiat value")
-                updateModel { it.copy(isTotalAmountLoading = false) }
-            }
+    /**
+     * Zero rendered in the user's currency. Failed legs settle here rather than at a blank, so a
+     * card always states what the position is worth instead of dropping the line entirely. Null
+     * when the currency format itself can't be resolved, which the UI shows as unavailable.
+     */
+    private suspend fun zeroFiat(): String? =
+        try {
+            withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
+                .format(BigDecimal.ZERO)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to format zero balance")
+            null
         }
-    }
 
-    private suspend fun calculateStakingFiatPrice(amount: BigDecimal): String {
+    private suspend fun calculateStakingFiatPrice(amount: BigDecimal): String? {
         return try {
             val currency = appCurrencyRepository.currency.first()
             val fiatValue =
@@ -426,11 +626,11 @@ constructor(
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Timber.e(e, "Failed to calculate Maya staking fiat price")
-            ""
+            null
         }
     }
 
-    private suspend fun calculateBondedFiatPrice(totalBondedRaw: BigInteger): String {
+    private suspend fun calculateBondedFiatPrice(totalBondedRaw: BigInteger): String? {
         return try {
             val totalInCacao = totalBondedRaw.toValue(10)
             val currency = appCurrencyRepository.currency.first()
@@ -442,7 +642,7 @@ constructor(
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Timber.e(e, "Failed to calculate Maya bonded fiat price")
-            ""
+            null
         }
     }
 
@@ -455,10 +655,14 @@ constructor(
         if (selectedLpKeys.isEmpty()) {
             loadLpJob?.cancel()
             updateModel { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
+            loadLpJob = viewModelScope.launch { reportLpFiat(BigDecimal.ZERO) }
             return
         }
 
-        if (model.lpPositionsDialog.isEmpty()) {
+        // Wait for the pool fetch, not for a non-empty list: a chain that legitimately reports no
+        // pools would otherwise park the LP leg here for good and strand the header on its spinner,
+        // pull-to-refresh included. loadLpPositionsForDialog calls back here once it settles.
+        if (!model.lpDialogLoaded) {
             updateModel { it.copy(lp = it.lp.copy(isLoading = true)) }
             return
         }
@@ -466,31 +670,44 @@ constructor(
         if (selectedPools.isEmpty()) {
             loadLpJob?.cancel()
             updateModel { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
+            loadLpJob = viewModelScope.launch { reportLpFiat(BigDecimal.ZERO) }
             return
         }
 
-        val placeholderPositions =
-            selectedPools.map { pool ->
-                val assetTicker = pool.ticker.substringAfter("/")
-                LpPositionUiModel(
-                    titleLp = "${pool.ticker} Pool",
-                    totalPriceLp = MayachainDefiPositionsUiModel.DEFAULT_ZERO_BALANCE,
-                    icon = pool.logo,
-                    assetTicker = assetTicker,
-                    apr = null,
-                    position = "0 CACAO + 0 $assetTicker",
-                    positionKey = pool.positionKey,
-                    canRemove = false,
-                    chainLogo = pool.chainLogo as? Int,
-                )
-            }
-        updateModel {
-            it.copy(lp = LpTabUiModel(isLoading = true, positions = placeholderPositions))
-        }
+        updateModel { it.copy(lp = it.lp.copy(isLoading = true)) }
 
         loadLpJob?.cancel()
         loadLpJob =
-            viewModelScope.safeLaunch {
+            viewModelScope.safeLaunch(
+                onError = { e ->
+                    Timber.e(e, "Failed to load Maya LP positions")
+                    reportLpFiat(BigDecimal.ZERO)
+                    updateModel { it.copy(lp = it.lp.copy(isLoading = false)) }
+                }
+            ) {
+                // The zero has to be resolved before the placeholders are built: a failed load
+                // freezes these exact objects into the terminal state, so a placeholder that
+                // snapshotted an unresolved zero would strand the card on the dash for good.
+                val zero = zeroFiat()
+                val placeholderPositions =
+                    selectedPools.map { pool ->
+                        val assetTicker = pool.ticker.substringAfter("/")
+                        LpPositionUiModel(
+                            titleLp = "${pool.ticker} Pool",
+                            totalPriceLp = zero,
+                            icon = pool.logo,
+                            assetTicker = assetTicker,
+                            apr = null,
+                            position = "0 CACAO + 0 $assetTicker",
+                            positionKey = pool.positionKey,
+                            canRemove = false,
+                            chainLogo = pool.chainLogo as? Int,
+                        )
+                    }
+                updateModel {
+                    it.copy(lp = LpTabUiModel(isLoading = true, positions = placeholderPositions))
+                }
+
                 val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
                 val cacaoCoin =
                     vault?.coins?.find {
@@ -499,6 +716,7 @@ constructor(
 
                 if (cacaoCoin == null) {
                     Timber.e("Vault does not have CACAO coin for LP positions")
+                    reportLpFiat(BigDecimal.ZERO)
                     updateModel {
                         it.copy(
                             lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
@@ -509,6 +727,7 @@ constructor(
 
                 if (!chainAccountAddressRepository.isValid(Chain.MayaChain, cacaoCoin.address)) {
                     Timber.e("CACAO coin address failed MayaChain validation")
+                    reportLpFiat(BigDecimal.ZERO)
                     updateModel {
                         it.copy(
                             lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
@@ -517,7 +736,7 @@ constructor(
                     return@safeLaunch
                 }
 
-                val (memberDetails, poolStats) =
+                val (loadedMemberDetails, poolStats) =
                     withContext(ioDispatcher) {
                         coroutineScope {
                             val memberDeferred = async {
@@ -526,7 +745,10 @@ constructor(
                                 } catch (e: Exception) {
                                     if (e is CancellationException) throw e
                                     Timber.e(e, "Failed to fetch Maya member details")
-                                    MayaMemberDetails()
+                                    // Null rather than an empty MayaMemberDetails: an empty one
+                                    // reads as "this vault holds no liquidity anywhere", which is a
+                                    // claim a failed request has no business making.
+                                    null
                                 }
                             }
                             val statsDeferred = async {
@@ -541,6 +763,12 @@ constructor(
                             Pair(memberDeferred.await(), statsDeferred.await())
                         }
                     }
+
+                // Losing the pool stats is survivable — the share calculation below falls back to
+                // the amounts the user added, which still values the position. Losing the member
+                // details is not: every selected pool would read as zero liquidity.
+                val memberDetails = loadedMemberDetails ?: MayaMemberDetails()
+                val isPriceable = loadedMemberDetails != null
 
                 val memberPoolMap = memberDetails.pools.associateBy { it.pool }
                 val poolStatsMap = poolStats.associateBy { it.asset }
@@ -633,7 +861,10 @@ constructor(
 
                         LpPositionUiModel(
                             titleLp = "${pool.ticker} Pool",
-                            totalPriceLp = currencyFormat.format(totalFiatValue.value),
+                            totalPriceLp =
+                                if (isPriceable) currencyFormat.format(totalFiatValue.value)
+                                else null,
+                            totalFiatValue = totalFiatValue.value,
                             icon = pool.logo,
                             assetTicker = assetCoinTicker,
                             apr = apr?.formatPercentage(),
@@ -645,6 +876,21 @@ constructor(
                         )
                     }
 
+                _totalLpFiat.value =
+                    if (isPriceable) {
+                        LpLegTotal.Priced(
+                            FiatValue(
+                                lpPositions.fold(BigDecimal.ZERO) { acc, position ->
+                                    acc + position.totalFiatValue
+                                },
+                                currency.ticker,
+                            )
+                        )
+                    } else {
+                        // Every position folded in as zero above, so this sum would understate the
+                        // header total rather than admit a value is missing.
+                        LpLegTotal.Unavailable
+                    }
                 updateModel {
                     it.copy(lp = LpTabUiModel(isLoading = false, positions = lpPositions))
                 }
@@ -676,6 +922,14 @@ constructor(
     fun onPositionSelectionDone() {
         viewModelScope.launch {
             val selectedPositions = currentModel.tempSelectedPositions
+
+            // A Done that changed nothing has nothing to persist. Writing anyway would also clobber
+            // the stored selection this screen only reads through its Maya defaults.
+            if (selectedPositions.toSet() == currentModel.selectedPositions.toSet()) {
+                updateModel { it.copy(showPositionSelectionDialog = false) }
+                return@launch
+            }
+
             defiPositionsRepository.saveSelectedPositions(vaultId, selectedPositions)
             updateModel {
                 it.copy(showPositionSelectionDialog = false, selectedPositions = selectedPositions)

@@ -74,10 +74,15 @@ internal fun List<String>.hasLpPositions(lpPositionsDialog: List<PositionUiModel
         lpPositionsDialog.any { it.positionKey == key }
     }
 
-internal fun emptyBondedTabUiModel() =
+/**
+ * The Bonded tab with nothing bonded. [totalBondedPrice] is passed in already formatted because the
+ * zero has to render in the user's currency — leaving it unset showed no fiat line at all.
+ */
+internal fun emptyBondedTabUiModel(totalBondedPrice: String? = null) =
     BondedTabUiModel(
         isLoading = false,
         totalBondedAmount = "0 ${Chain.ThorChain.coinType.symbol}",
+        totalBondedPrice = totalBondedPrice,
         nodes = emptyList(),
     )
 

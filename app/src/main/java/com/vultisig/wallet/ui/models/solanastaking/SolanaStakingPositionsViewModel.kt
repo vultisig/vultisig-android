@@ -94,7 +94,9 @@ internal data class SolanaStakingPositionsUiState(
     val isLoading: Boolean = true,
     val isReloading: Boolean = false,
     val isBalanceVisible: Boolean = true,
-    val totalStakedFiatDisplay: String = "",
+    // Null until priced. The shared DeFi header renders null as the unavailable marker; an empty
+    // string would slip past that and draw a blank line where the price belongs.
+    val totalStakedFiatDisplay: String? = null,
     val totalStakedSolDisplay: String = "",
     val positions: List<SolanaStakePositionRow> = emptyList(),
     val error: UiText? = null,

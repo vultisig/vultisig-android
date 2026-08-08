@@ -1,12 +1,13 @@
 package com.vultisig.wallet.ui.screens.v2.defi.model
 
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
 
 data class DefiUiModel(
     // Global screen parameters
-    val totalAmountPrice: String = ThorchainDefiPositionsViewModel.DEFAULT_ZERO_BALANCE,
-    val isTotalAmountLoading: Boolean = false,
+    // Null until the total is priced in the user's currency; the banner shows its loading state
+    // until then rather than a hardcoded USD zero.
+    val totalAmountPrice: String? = null,
+    val isTotalAmountLoading: Boolean = true,
     val isBalanceVisible: Boolean = true,
     val supportEditChains: Boolean = false,
     val bannerImage: Int = R.drawable.circle_defi_banner,
@@ -21,6 +22,6 @@ data class DefiUiModel(
         val isAccountOpen: Boolean = false,
         val closeWarning: Boolean = false,
         val totalDeposit: String = "0 USDC",
-        val totalDepositCurrency: String = "$0",
+        val totalDepositCurrency: String? = null,
     )
 }

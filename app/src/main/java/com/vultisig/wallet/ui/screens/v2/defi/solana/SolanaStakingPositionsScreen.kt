@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsViewMod
 import com.vultisig.wallet.ui.screens.cosmosstaking.ValidatorAvatar
 import com.vultisig.wallet.ui.screens.v2.defi.ActionButton
 import com.vultisig.wallet.ui.screens.v2.defi.ApyInfoItem
+import com.vultisig.wallet.ui.screens.v2.defi.FIAT_VALUE_UNAVAILABLE
 import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
 import com.vultisig.wallet.ui.screens.v2.defi.InfoItem
 import com.vultisig.wallet.ui.theme.Theme
@@ -364,7 +365,7 @@ private fun StakeAccountContent(
  * right (matching the iOS header) instead of overflowing the box.
  */
 @Composable
-private fun SolanaHeaderBanner(totalValue: String, isLoading: Boolean, isBalanceVisible: Boolean) {
+private fun SolanaHeaderBanner(totalValue: String?, isLoading: Boolean, isBalanceVisible: Boolean) {
     Box(
         modifier =
             Modifier.fillMaxWidth()
@@ -404,7 +405,9 @@ private fun SolanaHeaderBanner(totalValue: String, isLoading: Boolean, isBalance
                 UiPlaceholderLoader(modifier = Modifier.size(width = 150.dp, height = 32.dp))
             } else {
                 Text(
-                    text = if (isBalanceVisible) totalValue else HIDE_BALANCE_CHARS,
+                    text =
+                        if (isBalanceVisible) totalValue ?: FIAT_VALUE_UNAVAILABLE
+                        else HIDE_BALANCE_CHARS,
                     color = Theme.v2.colors.text.primary,
                     style = Theme.satoshi.price.title1,
                 )
