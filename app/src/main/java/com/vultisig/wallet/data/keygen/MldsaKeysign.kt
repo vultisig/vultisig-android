@@ -24,6 +24,7 @@ import com.silencelaboratories.godilithium.tss_buffer
 import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.md5
+import com.vultisig.wallet.data.keygen.mldsa.toGoSlice
 import com.vultisig.wallet.data.mediator.Message
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.tss.TssMessenger
@@ -411,12 +412,6 @@ class MldsaKeysign(
     /** Throws [IllegalStateException] with a descriptive message if this is not [LIB_OK]. */
     private fun mldsa_error.check(operation: String) {
         if (this != LIB_OK) error("MLDSA $operation failed: $this")
-    }
-
-    private fun ByteArray.toGoSlice(): go_slice {
-        val slice = go_slice()
-        BufferUtilJNI.set_bytes_on_go_slice(slice, this)
-        return slice
     }
 
     companion object {

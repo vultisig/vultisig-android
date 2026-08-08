@@ -21,6 +21,7 @@ import com.silencelaboratories.goschnorr.tss_buffer
 import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.md5
+import com.vultisig.wallet.data.keygen.schnorr.toGoSlice
 import com.vultisig.wallet.data.mediator.Message
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.tss.TssMessenger
@@ -408,11 +409,5 @@ class SchnorrKeysign(
         for (msg in messageToSign) {
             keysignOneMessageWithRetry(0, msg)
         }
-    }
-
-    private fun ByteArray.toGoSlice(): go_slice {
-        val slice = go_slice()
-        BufferUtilJNI.set_bytes_on_go_slice(slice, this)
-        return slice
     }
 }

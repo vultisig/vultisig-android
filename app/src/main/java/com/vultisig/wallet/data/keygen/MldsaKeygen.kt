@@ -21,6 +21,7 @@ import com.silencelaboratories.godilithium.mldsa_error
 import com.silencelaboratories.godilithium.mldsa_error.LIB_OK
 import com.silencelaboratories.godilithium.tss_buffer
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.keygen.mldsa.toGoSlice
 import com.vultisig.wallet.data.mediator.Message
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
@@ -334,11 +335,5 @@ class MldsaKeygen(
         } finally {
             tss_buffer_free(buf)
         }
-    }
-
-    private fun ByteArray.toGoSlice(): go_slice {
-        val slice = go_slice()
-        BufferUtilJNI.set_bytes_on_go_slice(slice, this)
-        return slice
     }
 }

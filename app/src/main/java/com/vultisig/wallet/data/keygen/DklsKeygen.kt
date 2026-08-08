@@ -29,6 +29,7 @@ import com.silencelaboratories.godkls.lib_error
 import com.silencelaboratories.godkls.lib_error.LIB_OK
 import com.silencelaboratories.godkls.tss_buffer
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.keygen.dkls.toGoSlice
 import com.vultisig.wallet.data.mediator.Message
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
@@ -650,11 +651,5 @@ class DKLSKeygen(
         } finally {
             tss_buffer_free(buf)
         }
-    }
-
-    private fun ByteArray.toGoSlice(): go_slice {
-        val slice = go_slice()
-        BufferUtilJNI.set_bytes_on_go_slice(slice, this)
-        return slice
     }
 }
