@@ -4,6 +4,7 @@ package com.vultisig.wallet.data.mappers
 
 import com.vultisig.wallet.data.mappers.utils.MapHexToPlainString
 import com.vultisig.wallet.data.models.ChainPublicKey
+import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.proto.v1.VaultContainerProto
@@ -12,7 +13,9 @@ import com.vultisig.wallet.data.usecases.VaultBackupEncryption
 import io.mockk.mockk
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.json.Json
@@ -125,5 +128,22 @@ internal class MapVaultToProtoImplTest {
             libType = libType,
             chainPublicKeys = chainPublicKeys,
             pubKeyMLDSA = pubKeyMLDSA,
+            // Every real vault has keyshares, and the mapper now refuses to export one that does
+            // not: an empty list means they were dropped on the way out of storage, and exporting
+            // that yields a .vult that restores cleanly and can never sign.
+            keyshares = listOf(KeyShare(pubKey = "ecdsa", keyShare = "share")),
         )
+
+    @Test
+    fun `a vault with no keyshares is refused rather than exported`() {
+        assertFailsWith<VaultKeysharesUnavailableException> {
+            mapper(vault().copy(keyshares = emptyList()))
+        }
+    }
+
+    @Test
+    fun `exportableOrNull turns that refusal into a null the backup paths can report`() {
+        assertNull(mapper.exportableOrNull(vault().copy(keyshares = emptyList())))
+        assertNotNull(mapper.exportableOrNull(vault()))
+    }
 }

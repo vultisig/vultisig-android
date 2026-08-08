@@ -6,6 +6,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.common.AppZipEntry
 import com.vultisig.wallet.data.mappers.MapVaultToProto
 import com.vultisig.wallet.data.mappers.MapVaultToProtoImpl
+import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -88,7 +89,14 @@ internal class BackupPasswordRequestViewModelTest {
     }
 
     private fun testVault(id: String) =
-        Vault(id = id, name = "Vault $id", libType = SigningLibType.DKLS)
+        Vault(
+            id = id,
+            name = "Vault $id",
+            libType = SigningLibType.DKLS,
+            // A real vault always has keyshares, and the proto mapper refuses to export one that
+            // does not — an empty list means storage dropped them and the backup would be useless.
+            keyshares = listOf(KeyShare(pubKey = "pub-$id", keyShare = "share-$id")),
+        )
 
     private fun createViewModel(vaultId: String = "vault-1"): BackupPasswordRequestViewModel {
         every {

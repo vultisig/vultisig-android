@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -44,6 +45,7 @@ import com.google.android.play.core.install.model.AppUpdateType
 import com.vultisig.wallet.app.activity.components.AnimatedSplash
 import com.vultisig.wallet.app.activity.components.CheckDeeplink
 import com.vultisig.wallet.app.activity.components.MainActivityContent
+import com.vultisig.wallet.app.passcode.PasscodeAutoLock
 import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.services.VultisigFirebaseMessagingService
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
@@ -65,6 +67,8 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var preventScreenshotsRepository: PreventScreenshotsRepository
 
     @Inject internal lateinit var snackbarFlow: SnackbarFlow
+
+    @Inject internal lateinit var passcodeAutoLock: PasscodeAutoLock
 
     private val pushNotificationReceiver =
         object : BroadcastReceiver() {
@@ -107,6 +111,11 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge(statusBarStyle = systemBarStyle, navigationBarStyle = systemBarStyle)
 
         observePreventScreenshots()
+
+        // Observes the whole process, not this activity, so rotating or re-entering the task does
+        // not read as leaving the app. Registered here rather than at startup so it cannot pull the
+        // keystore-backed preferences onto the main thread before they are warmed.
+        passcodeAutoLock.start(ProcessLifecycleOwner.get().lifecycle)
 
         setContent {
             @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)

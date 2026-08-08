@@ -8,6 +8,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.AppZipEntry
 import com.vultisig.wallet.data.mappers.MapVaultToProto
+import com.vultisig.wallet.data.mappers.exportableOrNull
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -159,8 +160,10 @@ constructor(
     private suspend fun backupCurrentVault(uri: Uri): Boolean {
         val vault = vault.value ?: return false
         val vaultBackupData =
-            withContext(Dispatchers.Default) { createVaultBackup(mapVaultToProto(vault), null) }
-                ?: return false
+            withContext(Dispatchers.Default) {
+                val proto = mapVaultToProto.exportableOrNull(vault) ?: return@withContext null
+                createVaultBackup(proto, null)
+            } ?: return false
 
         return saveBackupToUri(uri, vaultBackupData)
     }
@@ -170,8 +173,8 @@ constructor(
         val content =
             withContext(Dispatchers.Default) {
                 vaultsToBackup.map { vault ->
-                    val vaultBackupData =
-                        createVaultBackup(mapVaultToProto(vault), null) ?: return@withContext null
+                    val proto = mapVaultToProto.exportableOrNull(vault) ?: return@withContext null
+                    val vaultBackupData = createVaultBackup(proto, null) ?: return@withContext null
                     val fileName = createVaultBackupFileName(vault)
                     AppZipEntry(fileName, vaultBackupData)
                 }

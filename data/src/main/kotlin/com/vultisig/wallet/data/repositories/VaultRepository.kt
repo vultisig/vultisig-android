@@ -13,6 +13,10 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.passcode.KeyShareCipher
+import com.vultisig.wallet.data.passcode.KeyShareIdentity
+import com.vultisig.wallet.data.passcode.PasscodeDataKeySource
+import com.vultisig.wallet.data.passcode.identity
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
@@ -66,8 +70,12 @@ interface VaultRepository {
 
 internal class VaultRepositoryImpl
 @Inject
-constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRepository) :
-    VaultRepository {
+constructor(
+    private val vaultDao: VaultDao,
+    private val tokenRepository: TokenRepository,
+    private val keyShareCipher: KeyShareCipher,
+    private val passcodeDataKeySource: PasscodeDataKeySource,
+) : VaultRepository {
 
     override fun getEnabledTokens(vaultId: String): Flow<List<Coin>> =
         getAsFlow(vaultId).map { it?.coins.orEmpty() }
@@ -143,6 +151,51 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
         vaultDao.replaceToken(vaultId, oldToken.id, newToken.toCoinEntity(vaultId))
     }
 
+    /**
+     * Decrypts stored keyshares, dropping any that cannot be opened *while the app is locked*.
+     *
+     * A locked read is expected and harmless: background work (notifications, balance sync) still
+     * reads vaults and only needs public keys and addresses. Returning the vault without its shares
+     * keeps that work alive, and the write path refuses to persist a vault in that state, so a
+     * locked read can never be echoed back as data loss.
+     *
+     * A failure with the data key in hand is a different thing entirely — a damaged row, or one
+     * written for another vault — and returning a partial vault there would let the caller act as
+     * if the share simply did not exist. That fails loudly instead.
+     */
+    private fun List<KeyShareEntity>.toKeyShares(vaultId: VaultId): List<KeyShare> {
+        val dataKey = passcodeDataKeySource.dataKeyOrNull()
+        val shares = mapNotNull { entity ->
+            keyShareCipher.decrypt(entity.keyShare, dataKey, entity.identity())?.let {
+                KeyShare(entity.pubKey, it)
+            }
+        }
+        if (shares.size != size) {
+            check(dataKey == null) {
+                "Failed to decrypt ${size - shares.size} keyshare(s) for vault $vaultId"
+            }
+            Timber.w("Dropped %d locked keyshare(s) for vault %s", size - shares.size, vaultId)
+        }
+        return shares
+    }
+
+    /**
+     * Encrypts [keyShare] for storage when a passcode is active.
+     *
+     * Refuses to write while locked rather than silently storing a share in the clear, which would
+     * quietly undo the at-rest protection the user asked for.
+     */
+    private fun protect(
+        keyShare: String,
+        identity: KeyShareIdentity,
+        dataKey: ByteArray?,
+        isLocked: Boolean,
+    ): String {
+        if (dataKey != null) return keyShareCipher.encrypt(keyShare, dataKey, identity)
+        check(!isLocked) { "Refusing to persist a keyshare while the app is locked" }
+        return keyShare
+    }
+
     private suspend fun VaultWithKeySharesAndTokens.toVault(): Vault {
         val vault = this
         return Vault(
@@ -155,7 +208,7 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
             localPartyID = vault.vault.localPartyID,
             signers = vault.signers.sortedBy { it.index }.map { it.title },
             resharePrefix = vault.vault.resharePrefix,
-            keyshares = vault.keyShares.map { KeyShare(it.pubKey, it.keyShare) },
+            keyshares = vault.keyShares.toKeyShares(vault.vault.id),
             coins =
                 vault.coins.mapNotNull { coinEntity ->
                     val chain =
@@ -210,6 +263,17 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
     private fun Vault.toVaultDb(): VaultWithKeySharesAndTokens {
         val vault = this
         val vaultId = vault.id
+        // One snapshot for the whole vault: reading the lock state per share would let a lock
+        // landing mid-loop write some rows encrypted and the rest in the clear.
+        val dataKey = passcodeDataKeySource.dataKeyOrNull()
+        val isLocked = passcodeDataKeySource.isLocked()
+        // Refuse here rather than inside the per-share mapping below. A vault read while locked
+        // comes back with its shares dropped, so that mapping is empty and never reaches protect()
+        // at all — the refusal would not fire, and only Room's habit of leaving keyshare rows
+        // alone on an empty upsert would stand between this and silently erasing them.
+        check(!(isLocked && dataKey == null)) {
+            "Refusing to persist vault $vaultId while its keyshares are unreadable"
+        }
         return VaultWithKeySharesAndTokens(
             vault =
                 VaultEntity(
@@ -225,7 +289,12 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
                 ),
             keyShares =
                 vault.keyshares.map {
-                    KeyShareEntity(vaultId = vaultId, pubKey = it.pubKey, keyShare = it.keyShare)
+                    val identity = KeyShareIdentity(vaultId = vaultId, pubKey = it.pubKey)
+                    KeyShareEntity(
+                        vaultId = vaultId,
+                        pubKey = it.pubKey,
+                        keyShare = protect(it.keyShare, identity, dataKey, isLocked),
+                    )
                 },
             signers =
                 vault.signers.mapIndexed { index, signer ->
