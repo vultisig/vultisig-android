@@ -615,15 +615,36 @@ constructor(
         return response.bodyOrThrow<List<BlockNumber>>().firstOrNull()?.thorchain ?: 0L
     }
 
+    /**
+     * The `{"status": {}}` smart query behind every index-receipt price (sTCY, ybRUNE, the NAMI
+     * indexes). It is the only source for those, so a host that stops answering prices them all at
+     * $0.00.
+     *
+     * The shared gateway is asked first and ibs.team is kept as the fallback. ibs.team used to be
+     * the only host, and when its node fell behind the chain head it answered every query with
+     * `invalid height: context did not contain latest block height` — leaving yRUNE and yTCY at
+     * zero and sTCY stuck at bare TCY parity with no NAV premium, on a node the app never consulted
+     * for anything else.
+     */
     override suspend fun getThorchainTokenPriceByContract(
         contract: String
     ): VaultRedemptionResponseJson {
         // STATUS_QUERY_BASE64 is the base64-encoded CosmWasm smart query `{"status": {}}`.
-        val url = "$IBS_TEAM_URL/api/cosmwasm/wasm/v1/contract/$contract/smart/$STATUS_QUERY_BASE64"
-        return httpClient
+        val path = "cosmwasm/wasm/v1/contract/$contract/smart/$STATUS_QUERY_BASE64"
+        return try {
+            fetchContractStatus("$THORNODE_BASE/$path")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Gateway status query failed for %s, falling back to ibs.team", contract)
+            fetchContractStatus("$IBS_TEAM_URL/api/$path")
+        }
+    }
+
+    private suspend fun fetchContractStatus(url: String): VaultRedemptionResponseJson =
+        httpClient
             .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
             .bodyOrThrow<VaultRedemptionResponseJson>()
-    }
 
     private suspend fun getThorchainDenomMetadata(denom: String): DenomMetadata? {
         return try {

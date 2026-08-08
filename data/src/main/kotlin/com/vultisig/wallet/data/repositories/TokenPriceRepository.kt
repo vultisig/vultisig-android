@@ -240,11 +240,20 @@ constructor(
         }
 
     private suspend fun thorContractPrice(contractAddress: String, currency: String): BigDecimal? {
-        val priceUsd =
-            thorReceiptPriceUsd(contractAddress, currency)
-                ?: thorPoolPriceUsd(contractAddress)
-                ?: return null
-        if (priceUsd.signum() == 0) return null
+        // The receipt route is contained rather than allowed to propagate: it is one source of
+        // several, and the NAV host going down should cost this denom its preferred price, not its
+        // turn at the pool route below.
+        val receiptPrice =
+            try {
+                thorReceiptPriceUsd(contractAddress, currency)
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Timber.w(e, "NAV price unavailable for %s, trying the pool", contractAddress)
+                null
+            }
+
+        val priceUsd = receiptPrice ?: thorPoolPriceUsd(contractAddress) ?: return null
+        if (priceUsd.signum() <= 0) return null
         return priceUsd * tetherPriceFor(currency)
     }
 
