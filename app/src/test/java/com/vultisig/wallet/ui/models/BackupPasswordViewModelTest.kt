@@ -70,6 +70,7 @@ internal class BackupPasswordViewModelTest {
         mockkStatic("androidx.navigation.SavedStateHandleKt")
 
         vaultRepository = mockk()
+        coEvery { vaultRepository.awaitKeySharesReadable() } returns Unit
         mapVaultToProto = MapVaultToProtoImpl()
         createVaultBackupFileName = mockk(relaxed = true)
         createZipVaultsBackupFileName = mockk(relaxed = true)

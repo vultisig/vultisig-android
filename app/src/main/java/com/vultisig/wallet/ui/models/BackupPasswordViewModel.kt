@@ -122,6 +122,9 @@ constructor(
             }
         } else {
             viewModelScope.launch {
+                // Held for the lifetime of the screen and exported from, so it has to carry its
+                // keyshares: a vault read while the app is locked comes back without them.
+                vaultRepository.awaitKeySharesReadable()
                 vaults.value = vaultRepository.getAll()
                 val loadedVault = vaultRepository.get(vaultId)
                 if (loadedVault == null) {

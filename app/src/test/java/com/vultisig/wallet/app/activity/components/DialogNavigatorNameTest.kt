@@ -2,7 +2,7 @@ package com.vultisig.wallet.app.activity.components
 
 import androidx.navigation.Navigator
 import androidx.navigation.compose.DialogNavigator
-import kotlin.test.assertEquals
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
@@ -20,6 +20,6 @@ internal class DialogNavigatorNameTest {
     fun `the guard matches the navigator name the library actually registers`() {
         val declared = DialogNavigator::class.java.getAnnotation(Navigator.Name::class.java)?.value
 
-        assertEquals(declared, DIALOG_NAVIGATOR_NAME)
+        declared shouldBe DIALOG_NAVIGATOR_NAME
     }
 }

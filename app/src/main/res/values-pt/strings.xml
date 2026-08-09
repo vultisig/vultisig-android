@@ -197,6 +197,8 @@
     <string name="passcode_not_digits">Introduza apenas dígitos.</string>
     <string name="passcode_key_unavailable_title">Cofres indisponíveis</string>
     <string name="passcode_key_unavailable_message">As chaves que protegem o armazenamento de cofres deste dispositivo foram perdidas, pelo que as suas partilhas do cofre já não podem ser lidas. Reinstale a aplicação e restaure os seus cofres a partir de uma cópia de segurança.</string>
+    <string name="passcode_store_unavailable_title">Cofres temporariamente indisponíveis</string>
+    <string name="passcode_store_unavailable_message">Desta vez não foi possível abrir o armazenamento seguro deste dispositivo, pelo que os seus cofres permanecem bloqueados. Reinicie a aplicação para tentar novamente. Os seus cofres continuam neste dispositivo, pelo que não é necessário reinstalar.</string>
     <string name="passcode_input_field_content_description">%1$d de %2$d dígitos introduzidos</string>
     <string name="feature_item_learn_more">Saber mais</string>
     <string name="keysign">Keysign</string>

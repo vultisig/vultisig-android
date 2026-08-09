@@ -97,6 +97,9 @@ constructor(
 
     init {
         viewModelScope.launch {
+            // Held for the lifetime of the screen and exported from, so it has to carry its
+            // keyshares: a vault read while the app is locked comes back without them.
+            vaultRepository.awaitKeySharesReadable()
             vault.value = vaultRepository.get(vaultId) ?: error("Vault with id $vaultId not found")
             vaults.value = vaultRepository.getAll()
         }
@@ -126,6 +129,12 @@ constructor(
         viewModelScope.launch {
             if (isFileExtensionValid(uri = uri, mimeType = mimeType.toMimeType())) {
                 val isSuccess = backup(uri)
+                // The picker created the document before anything was written to it. Failing
+                // without removing it leaves an empty .vult in the user's files that looks like a
+                // backup and restores nothing.
+                if (!isSuccess) {
+                    deleteBackupDocument(uri)
+                }
                 completeBackupVault(isSuccess)
             } else {
                 deleteBackupDocument(uri)

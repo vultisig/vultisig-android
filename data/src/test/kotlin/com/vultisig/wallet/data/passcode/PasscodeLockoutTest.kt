@@ -53,57 +53,66 @@ internal class PasscodeLockoutTest {
     }
 
     @Test
-    fun `winding the clock back does not shorten the lockout`() {
+    fun `the penalty is served by elapsed time alone`() {
+        // Nothing here reads the wall clock, so moving the device clock — forwards, which used to
+        // clear a penalty outright, or backwards — changes nothing about what is owed.
         var state = PasscodeLockout.cleared()
         repeat(PasscodeLockout.ATTEMPTS_BEFORE_LOCKOUT) {
             state = PasscodeLockout.onFailedAttempt(state, now)
         }
 
-        // A device clock dragged a year into the past must not read as "penalty already served".
-        val rewound = now - 365L * 24 * 60 * 60 * 1000
         assertEquals(
             30.seconds.inWholeMilliseconds,
-            PasscodeLockout.remainingLockoutMillis(state, rewound),
+            PasscodeLockout.remainingLockoutMillis(state, now),
         )
+        assertEquals(
+            30.seconds.inWholeMilliseconds - 1_000,
+            PasscodeLockout.remainingLockoutMillis(state, now + 1_000),
+        )
+        assertEquals(0, PasscodeLockout.remainingAttempts(state))
     }
 
     @Test
-    fun `re-anchoring bounds a wound-back clock to one more penalty period`() {
+    fun `a reboot leaves the whole penalty outstanding until it is re-anchored`() {
         var state = PasscodeLockout.cleared()
         repeat(PasscodeLockout.ATTEMPTS_BEFORE_LOCKOUT) {
             state = PasscodeLockout.onFailedAttempt(state, now)
         }
-        val rewound = now - 500_000
-
-        // Without re-anchoring the stored instants, every later attempt reads the full penalty
-        // again and the lockout never expires for as long as the clock stays behind.
-        val reanchored = PasscodeLockout.reanchoredForClockChange(state, rewound)
+        // Elapsed realtime restarts from zero, the one thing that puts "now" behind the anchor.
+        val afterReboot = 5_000L
 
         assertEquals(
             30.seconds.inWholeMilliseconds,
-            PasscodeLockout.remainingLockoutMillis(reanchored, rewound),
+            PasscodeLockout.remainingLockoutMillis(state, afterReboot),
+        )
+
+        val reanchored = PasscodeLockout.reanchoredAfterReboot(state, afterReboot)
+
+        assertEquals(
+            30.seconds.inWholeMilliseconds,
+            PasscodeLockout.remainingLockoutMillis(reanchored, afterReboot),
         )
         assertEquals(
             0L,
             PasscodeLockout.remainingLockoutMillis(
                 reanchored,
-                rewound + 30.seconds.inWholeMilliseconds,
+                afterReboot + 30.seconds.inWholeMilliseconds,
             ),
         )
     }
 
     @Test
-    fun `re-anchoring leaves a forward-running clock untouched`() {
+    fun `re-anchoring leaves a clock that has only moved forwards untouched`() {
         var state = PasscodeLockout.cleared()
         repeat(PasscodeLockout.ATTEMPTS_BEFORE_LOCKOUT) {
             state = PasscodeLockout.onFailedAttempt(state, now)
         }
 
-        assertSame(state, PasscodeLockout.reanchoredForClockChange(state, now + 1_000))
+        assertSame(state, PasscodeLockout.reanchoredAfterReboot(state, now + 1_000))
 
-        // Nothing to re-anchor when no penalty is active, whichever way the clock moved.
+        // Nothing to re-anchor when no penalty is active.
         val cleared = PasscodeLockout.cleared()
-        assertSame(cleared, PasscodeLockout.reanchoredForClockChange(cleared, now - 1_000))
+        assertSame(cleared, PasscodeLockout.reanchoredAfterReboot(cleared, 0L))
     }
 
     @Test

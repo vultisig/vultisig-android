@@ -43,9 +43,21 @@ interface VaultDao {
     suspend fun loadDisabledCoinIds(vaultId: VaultId): List<String>
 
     /**
-     * Every keyshare across every vault, used to re-key them when the passcode is set or removed.
+     * The keyshares that still need converting when the passcode is set or removed, matched on the
+     * marker their ciphertext carries.
+     *
+     * `GLOB` rather than `LIKE` because it is the case-sensitive one, and the marker is matched
+     * case-sensitively everywhere else. Only the rows with work to do are read: these blobs are the
+     * largest column in the database, and the encrypted-share check below runs on every cold start.
      */
-    @Query("SELECT * FROM keyShare") suspend fun loadAllKeyShares(): List<KeyShareEntity>
+    @Query("SELECT * FROM keyShare WHERE keyShare GLOB :markerPattern")
+    suspend fun loadKeySharesMatching(markerPattern: String): List<KeyShareEntity>
+
+    @Query("SELECT * FROM keyShare WHERE keyShare NOT GLOB :markerPattern")
+    suspend fun loadKeySharesNotMatching(markerPattern: String): List<KeyShareEntity>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM keyShare WHERE keyShare GLOB :markerPattern)")
+    suspend fun hasKeySharesMatching(markerPattern: String): Boolean
 
     @Query("SELECT COUNT(*) > 0 FROM vault") suspend fun hasVaults(): Boolean
 

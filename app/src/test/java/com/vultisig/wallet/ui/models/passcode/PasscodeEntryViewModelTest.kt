@@ -90,6 +90,7 @@ internal class PasscodeEntryViewModelTest {
 
     @Test
     fun `setting a passcode asks twice and stores the confirmed value`() = runTest {
+        coEvery { passcodeRepository.setPasscode("123456") } returns PasscodeUnlockResult.Success
         val model = viewModel(PasscodeEntryAction.Set)
         advanceUntilIdle()
         assertEquals(PasscodeEntryStep.New, model.state.value.step)
@@ -100,6 +101,24 @@ internal class PasscodeEntryViewModelTest {
         type(model.textFieldState, "123456")
 
         coVerify { passcodeRepository.setPasscode("123456") }
+        assertNull(model.state.value.error)
+    }
+
+    @Test
+    fun `a passcode that could not be stored is reported, not thrown`() = runTest {
+        // setPasscode used to return Unit and throw on every refusal — into a bare launch, which
+        // takes the process with it. The sibling actions have always reported theirs.
+        coEvery { passcodeRepository.setPasscode(any()) } returns PasscodeUnlockResult.Failed
+        val model = viewModel(PasscodeEntryAction.Set)
+        advanceUntilIdle()
+
+        type(model.textFieldState, "123456")
+        type(model.textFieldState, "123456")
+
+        assertEquals(PasscodeEntryError.OperationFailed, model.state.value.error)
+        // Nothing was stored, so leaving the user on Confirm would be confirming nothing.
+        assertEquals(PasscodeEntryStep.New, model.state.value.step)
+        coVerify(exactly = 0) { navigator.navigate(Destination.Back) }
     }
 
     @Test

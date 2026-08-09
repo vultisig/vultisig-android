@@ -175,8 +175,16 @@ internal class PasscodeEntryViewModel(
 
         when (action) {
             PasscodeEntryAction.Set -> {
-                withBusyState { passcodeRepository.setPasscode(passcode) }
-                close()
+                when (withBusyState { passcodeRepository.setPasscode(passcode) }) {
+                    is PasscodeUnlockResult.Success -> close()
+                    // Nothing was changed, so send the user back to choosing rather than leaving
+                    // them on a Confirm step for a passcode that was never stored.
+                    else -> {
+                        newPasscode = null
+                        state.update { it.copy(step = PasscodeEntryStep.New) }
+                        fail(PasscodeEntryError.OperationFailed)
+                    }
+                }
             }
             PasscodeEntryAction.Change -> {
                 // Reachable only if the verified passcode was dropped underneath us — process death

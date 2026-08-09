@@ -206,8 +206,10 @@
     <string name="passcode_entry_mismatch">Коды-пароли не совпадают. Придумайте заново.</string>
     <string name="passcode_operation_failed">Не удалось. Код-пароль не изменён.</string>
     <string name="passcode_not_digits">Вводите только цифры.</string>
-    <string name="passcode_key_unavailable_title">Сейфы недоступны</string>
-    <string name="passcode_key_unavailable_message">Ключи, защищающие хранилище на этом устройстве, утрачены, поэтому его доли ключа больше нельзя прочитать. Переустановите приложение и восстановите сейфы из резервной копии.</string>
+    <string name="passcode_key_unavailable_title">Хранилища недоступны</string>
+    <string name="passcode_key_unavailable_message">Ключи, защищающие данные хранилищ на этом устройстве, утрачены, поэтому его доли ключа больше нельзя прочитать. Переустановите приложение и восстановите хранилища из резервной копии.</string>
+    <string name="passcode_store_unavailable_title">Хранилища временно недоступны</string>
+    <string name="passcode_store_unavailable_message">На этот раз не удалось открыть защищённое хранилище ключей этого устройства, поэтому ваши хранилища остаются заблокированными. Перезапустите приложение и попробуйте снова. Ваши хранилища по-прежнему на этом устройстве, переустанавливать приложение не нужно.</string>
     <string name="passcode_input_field_content_description">Введено %1$d из %2$d цифр</string>
     <string name="swap_form_from_title">Из</string>
     <string name="swap_form_estimated_fees_title">Комиссия за обмен</string>

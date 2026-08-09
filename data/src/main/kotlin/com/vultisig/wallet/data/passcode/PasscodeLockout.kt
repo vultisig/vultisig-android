@@ -8,14 +8,13 @@ import kotlin.time.Duration.Companion.seconds
  * Persisted throttling state for passcode entry.
  *
  * @param failedAttempts consecutive wrong passcodes since the last successful unlock.
- * @param lockedOutUntilMillis wall-clock instant at which entry is allowed again.
- * @param lockedOutAtMillis wall-clock instant at which the current penalty began, used to detect a
- *   backwards clock change.
+ * @param penaltyMillis how long the current penalty lasts, or zero when none is active.
+ * @param anchorElapsedMillis `SystemClock.elapsedRealtime` at which the current penalty began.
  */
 internal data class PasscodeLockoutState(
     val failedAttempts: Int = 0,
-    val lockedOutUntilMillis: Long = 0L,
-    val lockedOutAtMillis: Long = 0L,
+    val penaltyMillis: Long = 0L,
+    val anchorElapsedMillis: Long = 0L,
 )
 
 /**
@@ -25,6 +24,11 @@ internal data class PasscodeLockoutState(
  * screen unthrottled would exhaust it quickly. The delays below put a hard ceiling on that:
  * reaching even 1% of the keyspace costs weeks of wall-clock time. State is persisted, so killing
  * and relaunching the app does not reset the penalty.
+ *
+ * Time is measured with `SystemClock.elapsedRealtime`, never the wall clock. Wall time is under the
+ * attacker's control — winding it forward past the deadline would clear any penalty instantly — and
+ * defending only the backwards direction leaves the cheaper bypass wide open. Elapsed realtime
+ * cannot be set, and keeps counting through deep sleep.
  *
  * Pure and clock-injected so every branch is unit-testable without waiting.
  */
@@ -46,36 +50,38 @@ internal object PasscodeLockout {
      * Milliseconds the caller must wait before another attempt is accepted, or zero when entry is
      * currently allowed.
      *
-     * If the device clock has moved backwards past the instant the penalty started, the remaining
-     * time is reported as the full penalty rather than expiring early — otherwise changing the
-     * system clock would be a trivial bypass. Callers persist [reanchoredForClockChange] first so
-     * that penalty is then served from the moment the change was noticed and does actually run
-     * down; without it the same wound-back clock would report a full penalty forever.
+     * An [elapsedRealtimeMillis] behind the anchor means the device rebooted — the only thing that
+     * resets this clock — and the whole penalty is reported as outstanding until
+     * [reanchoredAfterReboot] restarts it from now. Serving it in full again is deliberate: a
+     * reboot is the one lever left for shortening a penalty, and it must cost more than it saves.
      */
-    fun remainingLockoutMillis(state: PasscodeLockoutState, nowMillis: Long): Long {
-        if (state.lockedOutUntilMillis <= 0L) return 0L
-        if (nowMillis < state.lockedOutAtMillis) {
-            return state.lockedOutUntilMillis - state.lockedOutAtMillis
-        }
-        return (state.lockedOutUntilMillis - nowMillis).coerceAtLeast(0L)
+    fun remainingLockoutMillis(state: PasscodeLockoutState, elapsedRealtimeMillis: Long): Long {
+        if (state.penaltyMillis <= 0L) return 0L
+        val served = elapsedRealtimeMillis - state.anchorElapsedMillis
+        if (served < 0L) return state.penaltyMillis
+        return (state.penaltyMillis - served).coerceAtLeast(0L)
     }
 
     /**
-     * Restarts an active penalty at [nowMillis] when the device clock has moved behind the instant
-     * it began, so winding the clock back costs one more penalty period instead of an open-ended
-     * lockout. Returns [state] itself when there is nothing to re-anchor.
+     * Restarts an active penalty at [elapsedRealtimeMillis] when the device has rebooted since it
+     * began, so the penalty runs down again instead of standing forever. Returns [state] itself
+     * when there is nothing to re-anchor.
      */
-    fun reanchoredForClockChange(
+    fun reanchoredAfterReboot(
         state: PasscodeLockoutState,
-        nowMillis: Long,
+        elapsedRealtimeMillis: Long,
     ): PasscodeLockoutState {
-        if (state.lockedOutUntilMillis <= 0L || nowMillis >= state.lockedOutAtMillis) return state
-        val penalty = state.lockedOutUntilMillis - state.lockedOutAtMillis
-        return state.copy(lockedOutUntilMillis = nowMillis + penalty, lockedOutAtMillis = nowMillis)
+        if (state.penaltyMillis <= 0L || elapsedRealtimeMillis >= state.anchorElapsedMillis) {
+            return state
+        }
+        return state.copy(anchorElapsedMillis = elapsedRealtimeMillis)
     }
 
-    /** Returns the state after one more wrong passcode at [nowMillis]. */
-    fun onFailedAttempt(state: PasscodeLockoutState, nowMillis: Long): PasscodeLockoutState {
+    /** Returns the state after one more wrong passcode at [elapsedRealtimeMillis]. */
+    fun onFailedAttempt(
+        state: PasscodeLockoutState,
+        elapsedRealtimeMillis: Long,
+    ): PasscodeLockoutState {
         val attempts = state.failedAttempts + 1
         val penalty = penaltyFor(attempts)
         if (penalty == Duration.ZERO) {
@@ -83,8 +89,8 @@ internal object PasscodeLockout {
         }
         return PasscodeLockoutState(
             failedAttempts = attempts,
-            lockedOutUntilMillis = nowMillis + penalty.inWholeMilliseconds,
-            lockedOutAtMillis = nowMillis,
+            penaltyMillis = penalty.inWholeMilliseconds,
+            anchorElapsedMillis = elapsedRealtimeMillis,
         )
     }
 

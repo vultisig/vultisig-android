@@ -43,6 +43,14 @@ internal class KeyShareCipher @Inject constructor() {
     fun isEncrypted(stored: String): Boolean = stored.startsWith(PREFIX)
 
     /**
+     * SQLite `GLOB` pattern selecting exactly the rows [isEncrypted] is true for, so the database
+     * can answer "which shares need converting" without handing every blob to Kotlin. The marker
+     * holds no `GLOB` metacharacter, so this stays a plain prefix match.
+     */
+    val encryptedMarkerPattern: String
+        get() = "$PREFIX*"
+
+    /**
      * Returns [plaintext] encrypted under [dataKey] and bound to [identity], tagged with [PREFIX].
      */
     fun encrypt(plaintext: String, dataKey: ByteArray, identity: KeyShareIdentity): String {

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.passcode
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,10 +48,17 @@ internal fun PasscodeGuard(
 ) {
     val state by model.state.collectAsStateWithLifecycle()
 
-    val isGateClosed =
+    val isLocked =
         state.passcodeState == PasscodeState.Locked ||
-            state.passcodeState == PasscodeState.KeyUnavailable
-    LaunchedEffect(isGateClosed) { if (isGateClosed) onLocked() }
+            state.passcodeState == PasscodeState.KeyUnavailable ||
+            state.passcodeState == PasscodeState.StoreUnavailable
+    LaunchedEffect(isLocked) { if (isLocked) onLocked() }
+
+    // Swallowed rather than passed on. The navigation content behind the gate is still composed
+    // and still has its own back handling, so back would walk that graph unseen and leave the user
+    // somewhere else entirely once they unlock. This handler is registered after the nav host's,
+    // which is what puts it first in line.
+    BackHandler(enabled = state.isGateClosed) {}
 
     when (state.passcodeState) {
         // Persisted state is still loading. An opaque cover, not nothing: the alternative is a
@@ -69,7 +77,16 @@ internal fun PasscodeGuard(
                 Spacer(Modifier.fillMaxSize().swallowPointerInput())
                 PasscodeLockScreen()
             }
-        PasscodeState.KeyUnavailable -> KeyUnavailableScreen()
+        PasscodeState.KeyUnavailable ->
+            DeadEndScreen(
+                title = stringResource(R.string.passcode_key_unavailable_title),
+                message = stringResource(R.string.passcode_key_unavailable_message),
+            )
+        PasscodeState.StoreUnavailable ->
+            DeadEndScreen(
+                title = stringResource(R.string.passcode_store_unavailable_title),
+                message = stringResource(R.string.passcode_store_unavailable_message),
+            )
         PasscodeState.Unlocked -> Unit
         // The passcode was just turned off, so the user has already identified themselves this
         // session; sending them straight into a device-credential prompt would be a non sequitur.
@@ -78,12 +95,14 @@ internal fun PasscodeGuard(
 }
 
 /**
- * Shown when encrypted keyshares outlived the credentials that opened them — see
- * [PasscodeState.KeyUnavailable]. There is no way back on this device, so the screen says so
- * plainly rather than presenting a passcode prompt that could never succeed.
+ * Shown when encrypted keyshares cannot be opened at all — the credentials are gone
+ * ([PasscodeState.KeyUnavailable]) or unreachable this launch ([PasscodeState.StoreUnavailable]).
+ * Neither has a passcode that would work, so the screen says what happened rather than presenting a
+ * prompt that could never succeed. The two differ only in what the user should do next, which is
+ * exactly what [message] carries.
  */
 @Composable
-private fun KeyUnavailableScreen() {
+private fun DeadEndScreen(title: String, message: String) {
     Box(
         contentAlignment = Alignment.Center,
         modifier =
@@ -97,14 +116,14 @@ private fun KeyUnavailableScreen() {
             modifier = Modifier.padding(horizontal = 32.dp),
         ) {
             Text(
-                text = stringResource(R.string.passcode_key_unavailable_title),
+                text = title,
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.headings.title2,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(
-                text = stringResource(R.string.passcode_key_unavailable_message),
+                text = message,
                 color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.footnote,
                 textAlign = TextAlign.Center,

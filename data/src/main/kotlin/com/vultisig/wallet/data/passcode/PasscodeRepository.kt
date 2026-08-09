@@ -1,13 +1,16 @@
 package com.vultisig.wallet.data.passcode
 
+import android.os.SystemClock
 import com.vultisig.wallet.data.DefaultDispatcher
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -38,6 +41,17 @@ sealed interface PasscodeState {
      * ciphertext nothing can decrypt. The user has to re-import from a backup, and needs telling.
      */
     data object KeyUnavailable : PasscodeState
+
+    /**
+     * Encrypted keyshares exist and the credential store could not be opened *this launch* — see
+     * [PasscodeStore.isPersistent].
+     *
+     * Indistinguishable from [KeyUnavailable] by what is readable right now, and worlds apart in
+     * what it means: the wrap is almost certainly still on disk, waiting for a keystore that comes
+     * back. Collapsing the two would tell a user whose vaults are intact to reinstall the app,
+     * which is the one action that would actually destroy them.
+     */
+    data object StoreUnavailable : PasscodeState
 }
 
 /** True once a passcode exists, whether or not it has been entered in this session. */
@@ -47,6 +61,7 @@ val PasscodeState.isConfigured: Boolean
             PasscodeState.Locked,
             PasscodeState.Unlocked -> true
             PasscodeState.KeyUnavailable,
+            PasscodeState.StoreUnavailable,
             PasscodeState.Disabled,
             PasscodeState.Unknown -> false
         }
@@ -81,8 +96,15 @@ interface PasscodeRepository {
     /** Reads persisted state off the main thread. Safe to call more than once. */
     suspend fun initialize()
 
-    /** Configures [passcode] for the first time and leaves the app unlocked. */
-    suspend fun setPasscode(passcode: String)
+    /**
+     * Configures [passcode] for the first time and leaves the app unlocked.
+     *
+     * Returns [PasscodeUnlockResult.Success] or [PasscodeUnlockResult.Failed]; the verification
+     * outcomes cannot arise because there is nothing yet to verify against. Reported rather than
+     * thrown for the same reason as the other three: every caller is a `launch` from a UI event,
+     * and an escape there takes the process down.
+     */
+    suspend fun setPasscode(passcode: String): PasscodeUnlockResult
 
     /** Re-wraps the existing data key under [newPasscode] after verifying [currentPasscode]. */
     suspend fun changePasscode(currentPasscode: String, newPasscode: String): PasscodeUnlockResult
@@ -118,6 +140,16 @@ internal interface PasscodeDataKeySource {
      * Either way the storage layer must refuse to write a share in the clear beside them.
      */
     fun isLocked(): Boolean
+
+    /**
+     * Suspends while the app is locked, returning as soon as keyshares are readable — immediately
+     * when no passcode is configured.
+     *
+     * Returns without waiting when the credentials are unreachable ([PasscodeState.KeyUnavailable],
+     * [PasscodeState.StoreUnavailable]): neither resolves without a relaunch, so waiting would be a
+     * hang rather than a delay.
+     */
+    suspend fun awaitUnlocked()
 }
 
 @Singleton
@@ -126,7 +158,7 @@ internal class PasscodeRepositoryImpl(
     private val store: PasscodeStore,
     private val keyShareProtection: VaultKeyShareProtection,
     private val dispatcher: CoroutineDispatcher,
-    private val nowMillis: () -> Long,
+    private val elapsedRealtimeMillis: () -> Long,
 ) : PasscodeRepository, PasscodeDataKeySource {
 
     @Inject
@@ -135,7 +167,7 @@ internal class PasscodeRepositoryImpl(
         store: PasscodeStore,
         keyShareProtection: VaultKeyShareProtection,
         @DefaultDispatcher dispatcher: CoroutineDispatcher,
-    ) : this(cipher, store, keyShareProtection, dispatcher, System::currentTimeMillis)
+    ) : this(cipher, store, keyShareProtection, dispatcher, SystemClock::elapsedRealtime)
 
     private val _state = MutableStateFlow<PasscodeState>(PasscodeState.Unknown)
     override val state: StateFlow<PasscodeState> = _state.asStateFlow()
@@ -147,15 +179,40 @@ internal class PasscodeRepositoryImpl(
     private val mutex = Mutex()
 
     /**
+     * Held across every read and every zeroing of [dataKey].
+     *
+     * [lock] can land on any thread at any moment, and zeroing the array a reader is halfway
+     * through copying hands that reader a key that is part real and part zeroes — still 32 bytes,
+     * still accepted by AES, and quietly wrong. Volatile publishes the reference, not the bytes
+     * behind it, so the copy and the zeroing have to exclude each other outright.
+     */
+    private val keyLock = Any()
+
+    /**
      * Read from arbitrary threads by the storage layer while written under [mutex]; volatile so a
      * reader never observes a half-published reference.
      */
     @Volatile private var dataKey: ByteArray? = null
 
-    override fun dataKeyOrNull(): ByteArray? = dataKey?.copyOf()
+    override fun dataKeyOrNull(): ByteArray? = synchronized(keyLock) { dataKey?.copyOf() }
 
     override fun isLocked(): Boolean =
-        _state.value == PasscodeState.Locked || _state.value == PasscodeState.KeyUnavailable
+        when (_state.value) {
+            PasscodeState.Locked,
+            PasscodeState.KeyUnavailable,
+            PasscodeState.StoreUnavailable -> true
+            PasscodeState.Unlocked,
+            PasscodeState.Disabled,
+            PasscodeState.Unknown -> false
+        }
+
+    override suspend fun awaitUnlocked() {
+        // Resolves the state rather than assuming someone else has. Only the guard calls
+        // initialize, so a caller reached from a service or a worker — with no UI in this process
+        // — would otherwise wait on an Unknown that nothing is going to move.
+        initialize()
+        _state.first { it != PasscodeState.Unknown && it != PasscodeState.Locked }
+    }
 
     override suspend fun initialize() {
         mutex.withLock {
@@ -164,44 +221,91 @@ internal class PasscodeRepositoryImpl(
             _state.value =
                 when {
                     hasPasscode -> PasscodeState.Locked
-                    // No credentials, but ciphertext that needed them. Reporting Disabled here is
-                    // what turns a keystore wipe into silent, permanent data loss.
-                    keyShareProtection.hasEncryptedKeyShares() -> PasscodeState.KeyUnavailable
-                    else -> PasscodeState.Disabled
+                    !keyShareProtection.hasEncryptedKeyShares() -> PasscodeState.Disabled
+                    // Ciphertext with nothing to open it. Reporting Disabled here is what turns a
+                    // keystore wipe into silent, permanent data loss — but which of the two
+                    // unreadable states this is decides what the user is told to do about it, and
+                    // "reinstall" aimed at a store that is merely unavailable this launch would
+                    // destroy vaults whose wrap is sitting intact on disk.
+                    withContext(dispatcher) { store.isPersistent() } -> PasscodeState.KeyUnavailable
+                    else -> PasscodeState.StoreUnavailable
                 }
         }
     }
 
-    override suspend fun setPasscode(passcode: String) {
+    override suspend fun setPasscode(passcode: String): PasscodeUnlockResult {
         requireValidPasscode(passcode)
-        mutex.withLock {
+        return mutex.withLock {
+            // Nothing written here would survive the launch, but protectAll's ciphertext would:
+            // the next launch would find every keyshare encrypted under a key whose only record
+            // went to a store that no longer exists. Refusing costs the user a retry after a
+            // restart; going ahead costs them their vaults.
+            if (!withContext(dispatcher) { store.isPersistent() }) {
+                Timber.e("Refusing to set a passcode: the credential store is not persistent")
+                return@withLock PasscodeUnlockResult.Failed
+            }
             // Overwriting an existing wrap would throw away the data key that already-encrypted
             // keyshares were sealed under, and protectAll skips those rows, so every one of them
             // would become permanently unreadable. Callers changing a passcode want changePasscode.
-            check(withContext(dispatcher) { store.readCredentials() } == null) {
-                "A passcode is already configured; use changePasscode instead"
+            if (withContext(dispatcher) { store.readCredentials() } != null) {
+                Timber.e("Refusing to set a passcode: one is already configured")
+                return@withLock PasscodeUnlockResult.Failed
             }
             // Credentials gone but ciphertext left behind — see PasscodeState.KeyUnavailable. A
             // new passcode cannot open those rows, and protectAll skips them because they are
             // already encrypted, so this would quietly leave them orphaned forever.
-            check(!keyShareProtection.hasEncryptedKeyShares()) {
-                "Encrypted keyshares exist with no credentials; a new passcode cannot open them"
+            if (keyShareProtection.hasEncryptedKeyShares()) {
+                Timber.e("Refusing to set a passcode: encrypted keyshares have no credentials")
+                return@withLock PasscodeUnlockResult.Failed
             }
             val key = withContext(dispatcher) { cipher.newDataKey() }
-            // Persist the wrapped key before encrypting anything with it. The reverse order would
-            // let a crash mid-encryption leave ciphertext whose key was never written down.
-            persistWrappedKey(key, passcode)
-            // The field gets its own array. lock() zeroes whatever the field holds and takes no
-            // mutex, so handing the same array to protectAll would let backgrounding mid-run seal
-            // the remaining rows under 32 zero bytes that no passcode can ever reopen.
-            swapDataKey(key.copyOf())
-            withContext(dispatcher) { store.writeLockout(PasscodeLockout.cleared()) }
             try {
-                keyShareProtection.protectAll(key)
+                // Not cancellable as a unit. Cancellation between the wrap and the bulk encrypt
+                // leaves a passcode this session still believes is off, over shares this session
+                // keeps writing in the clear — and nothing re-runs protectAll to close the gap
+                // until the user unlocks again, which they will not be prompted to do.
+                withContext(NonCancellable) {
+                    // Ahead of the wrap, so a store that cannot be written to fails before any of
+                    // this becomes real rather than half-way through.
+                    withContext(dispatcher) { store.writeLockout(PasscodeLockout.cleared()) }
+                    // Persist the wrapped key before encrypting anything with it. The reverse
+                    // order lets a crash mid-encryption leave ciphertext with no recorded key.
+                    persistWrappedKey(key, passcode)
+                    // The field gets its own array. lock() zeroes whatever the field holds, so
+                    // handing the same array to protectAll would let backgrounding mid-run seal
+                    // the remaining rows under 32 zero bytes that no passcode can ever reopen.
+                    swapDataKey(key.copyOf())
+                    protectAllOrLog(key)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Nothing above the wrap changes anything, and everything below it cannot throw,
+                // so an escape here means the passcode was never stored.
+                Timber.e(e, "Failed to store the passcode")
+                return@withLock PasscodeUnlockResult.Failed
             } finally {
                 key.fill(0)
             }
             publishUnlockedUnlessLocked()
+            PasscodeUnlockResult.Success
+        }
+    }
+
+    /**
+     * Encrypts the plaintext keyshares under [key], reporting a failure rather than propagating it.
+     *
+     * The passcode is already in place and working by the time this runs, so an unwritable row is
+     * not a reason to fail the operation around it — rows carry their own marker, and the sweep at
+     * the next [unlock] picks up whatever was left behind.
+     */
+    private suspend fun protectAllOrLog(key: ByteArray) {
+        try {
+            keyShareProtection.protectAll(key)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to encrypt keyshares at rest; retrying on the next unlock")
         }
     }
 
@@ -249,10 +353,15 @@ internal class PasscodeRepositoryImpl(
                     key.fill(0)
                     return@verifyLocked PasscodeUnlockResult.Failed
                 }
-                withContext(dispatcher) { store.clearCredentials() }
-                swapDataKey(null)
-                key.fill(0)
-                _state.value = PasscodeState.Disabled
+                // One unit, uncancellable. Stopping between the two leaves the key live and the
+                // state Unlocked with no wrap on disk: every keyshare written afterwards would be
+                // sealed under a key the next launch has no way to recover.
+                withContext(NonCancellable) {
+                    withContext(dispatcher) { store.clearCredentials() }
+                    swapDataKey(null)
+                    key.fill(0)
+                    _state.value = PasscodeState.Disabled
+                }
                 PasscodeUnlockResult.Success
             }
         }
@@ -260,7 +369,16 @@ internal class PasscodeRepositoryImpl(
     override suspend fun unlock(passcode: String): PasscodeUnlockResult =
         mutex.withLock {
             verifyLocked(passcode) { key ->
-                swapDataKey(key)
+                // The field gets a copy so the array below stays ours to zero — see swapDataKey.
+                swapDataKey(key.copyOf())
+                try {
+                    // The only other caller of protectAll is setPasscode, which cannot be resumed
+                    // if it is interrupted: this is what finishes the job. Cheap when there is
+                    // nothing to do — the query matches only rows still in the clear.
+                    protectAllOrLog(key)
+                } finally {
+                    key.fill(0)
+                }
                 publishUnlockedUnlessLocked()
                 PasscodeUnlockResult.Success
             }
@@ -268,17 +386,24 @@ internal class PasscodeRepositoryImpl(
 
     override fun lock() {
         // Deliberately not suspending: the guard has to be able to lock the moment the app leaves
-        // the foreground, without waiting on a coroutine that may never be scheduled. Zeroing is
-        // safe against a concurrent reader because dataKeyOrNull hands out copies.
+        // the foreground, without waiting on a coroutine that may never be scheduled. Racing a
+        // reader is safe because both sides hold keyLock, so a copy is taken whole or not at all.
         swapDataKey(null)
         _state.compareAndSet(PasscodeState.Unlocked, PasscodeState.Locked)
     }
 
-    /** Installs [newKey] as the in-memory data key, zeroing whatever it displaced. */
+    /**
+     * Installs [newKey] as the in-memory data key, zeroing whatever it displaced.
+     *
+     * Callers that keep using the array they pass in must hand over a copy: whatever goes in here
+     * belongs to the field, and the next [lock] fills it with zeroes wherever else it is held.
+     */
     private fun swapDataKey(newKey: ByteArray?) {
-        val previous = dataKey
-        dataKey = newKey
-        if (previous !== newKey) previous?.fill(0)
+        synchronized(keyLock) {
+            val previous = dataKey
+            dataKey = newKey
+            if (previous !== newKey) previous?.fill(0)
+        }
     }
 
     /**
@@ -294,13 +419,14 @@ internal class PasscodeRepositoryImpl(
                 ?: return PasscodeUnlockResult.Wrong(PasscodeLockout.ATTEMPTS_BEFORE_LOCKOUT)
 
         val stored = withContext(dispatcher) { store.readLockout() }
-        // Persist the re-anchor, otherwise a clock wound into the past keeps reporting a full
-        // penalty on every attempt and the lockout never expires.
-        val lockout = PasscodeLockout.reanchoredForClockChange(stored, nowMillis())
+        // Persist the re-anchor, otherwise a penalty that outlived a reboot reads as fully
+        // outstanding on every attempt from then on and never expires.
+        val lockout = PasscodeLockout.reanchoredAfterReboot(stored, elapsedRealtimeMillis())
         if (lockout !== stored) {
             withContext(dispatcher) { store.writeLockout(lockout) }
         }
-        val remainingLockout = PasscodeLockout.remainingLockoutMillis(lockout, nowMillis())
+        val remainingLockout =
+            PasscodeLockout.remainingLockoutMillis(lockout, elapsedRealtimeMillis())
         if (remainingLockout > 0L) {
             return PasscodeUnlockResult.LockedOut(remainingLockout)
         }
@@ -309,7 +435,7 @@ internal class PasscodeRepositoryImpl(
         // hundreds of milliseconds of wall clock in which a scripted attacker can force-stop the
         // process, and anything only written afterwards (or written with apply()) is simply lost.
         // The counter would never reach the threshold and the escalating delay would never engage.
-        val attempted = PasscodeLockout.onFailedAttempt(lockout, nowMillis())
+        val attempted = PasscodeLockout.onFailedAttempt(lockout, elapsedRealtimeMillis())
         withContext(dispatcher) { store.writeLockout(attempted) }
 
         val key =
@@ -318,7 +444,7 @@ internal class PasscodeRepositoryImpl(
             }
 
         if (key == null) {
-            val penalty = PasscodeLockout.remainingLockoutMillis(attempted, nowMillis())
+            val penalty = PasscodeLockout.remainingLockoutMillis(attempted, elapsedRealtimeMillis())
             return if (penalty > 0L) PasscodeUnlockResult.LockedOut(penalty)
             else PasscodeUnlockResult.Wrong(PasscodeLockout.remainingAttempts(attempted))
         }

@@ -288,6 +288,8 @@
     <string name="passcode_not_digits">Enter digits only.</string>
     <string name="passcode_key_unavailable_title">Vaults unavailable</string>
     <string name="passcode_key_unavailable_message">The keys that protect this device\'s vault storage are gone, so its keyshares can no longer be read. Reinstall the app and restore your vaults from a backup.</string>
+    <string name="passcode_store_unavailable_title">Vaults temporarily unavailable</string>
+    <string name="passcode_store_unavailable_message">This device\'s secure storage could not be opened this time, so your vaults stay locked. Restart the app to try again. Your vaults are still on this device, so there is no need to reinstall.</string>
     <string name="passcode_input_field_content_description">%1$d of %2$d digits entered</string>
     <string name="swap_form_from_title">From</string>
     <string name="swap_form_estimated_fees_title">Swap Fee</string>

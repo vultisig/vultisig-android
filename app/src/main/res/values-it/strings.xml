@@ -197,6 +197,8 @@
     <string name="passcode_not_digits">Inserisci solo cifre.</string>
     <string name="passcode_key_unavailable_title">Vault non disponibili</string>
     <string name="passcode_key_unavailable_message">Le chiavi che proteggono l\'archiviazione dei vault su questo dispositivo sono andate perse, quindi le sue condivisioni del vault non possono più essere lette. Reinstalla l\'app e ripristina i tuoi vault da un backup.</string>
+    <string name="passcode_store_unavailable_title">Vault temporaneamente non disponibili</string>
+    <string name="passcode_store_unavailable_message">Questa volta non è stato possibile aprire l\'archiviazione sicura di questo dispositivo, quindi i tuoi vault restano bloccati. Riavvia l\'app per riprovare. I tuoi vault sono ancora su questo dispositivo, quindi non è necessario reinstallare.</string>
     <string name="passcode_input_field_content_description">%1$d di %2$d cifre inserite</string>
     <string name="feature_item_learn_more">Saperne di più</string>
     <string name="keysign">Keysign</string>

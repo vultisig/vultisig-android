@@ -57,6 +57,8 @@ internal class VaultRepositoryImplTest {
         override fun dataKeyOrNull(): ByteArray? = dataKey
 
         override fun isLocked(): Boolean = locked
+
+        override suspend fun awaitUnlocked() = Unit
     }
 
     /** Returns a minimal [VaultWithKeySharesAndTokens] suitable for DAO stub returns. */

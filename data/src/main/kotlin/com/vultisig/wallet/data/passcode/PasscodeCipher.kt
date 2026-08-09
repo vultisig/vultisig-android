@@ -111,14 +111,17 @@ internal class PasscodeCipher @Inject constructor() {
         const val DATA_KEY_LENGTH = 32
 
         /**
-         * Deliberately lower than the 600k used for exported vault backups
-         * ([com.vultisig.wallet.data.usecases.Pbkdf2AesEncryption]). A backup file travels off the
-         * device and faces unlimited offline guessing, so it buys every iteration it can afford.
-         * The wrapped passcode key never leaves the device: it is stored inside the
-         * AndroidKeyStore- encrypted preferences, so reaching it already requires defeating
-         * hardware-backed key storage, and online guessing is rate-limited by [PasscodeLockout].
-         * 210k is the OWASP floor for PBKDF2-HMAC-SHA256 and keeps unlock responsive on low-end
-         * devices, which matters when auto-lock fires every minute.
+         * Below OWASP's recommendation for this PRF, deliberately. Their figure for
+         * PBKDF2-HMAC-SHA256 is 600k — which is what exported vault backups use
+         * ([com.vultisig.wallet.data.usecases.Pbkdf2AesEncryption]) — and 210k is the number they
+         * give for PBKDF2-HMAC-SHA512, a costlier PRF per iteration.
+         *
+         * A backup file travels off the device and faces unlimited offline guessing, so it buys
+         * every iteration it can afford. The wrapped passcode key never leaves the device: it is
+         * stored inside the AndroidKeyStore-encrypted preferences, so reaching it already requires
+         * defeating hardware-backed key storage, and online guessing is rate-limited by
+         * [PasscodeLockout]. What is bought instead is an unlock that stays responsive on low-end
+         * devices, which matters when auto-lock can fire after a minute in the background.
          */
         const val PBKDF2_ITERATIONS = 210_000
     }

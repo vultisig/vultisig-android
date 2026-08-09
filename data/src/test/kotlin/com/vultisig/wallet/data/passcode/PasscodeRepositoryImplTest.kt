@@ -12,6 +12,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.BeforeEach
@@ -37,7 +38,7 @@ internal class PasscodeRepositoryImplTest {
             store = store,
             keyShareProtection = protection,
             dispatcher = StandardTestDispatcher(testScheduler),
-            nowMillis = { now },
+            elapsedRealtimeMillis = { now },
         )
 
     @Test
@@ -283,17 +284,120 @@ internal class PasscodeRepositoryImplTest {
     @Test
     fun `setPasscode refuses to replace a passcode that is already configured`() = runTest {
         // Overwriting the wrap would orphan every keyshare already encrypted under the old data
-        // key, because protectAll skips rows that are encrypted already.
+        // key, because protectAll skips rows that are encrypted already. Reported rather than
+        // thrown: every caller is a launch from a UI event, where an escape kills the process.
         val repository = repository()
         repository.setPasscode("123456")
         val credentials = store.readCredentials()
         protection.calls.clear()
 
-        assertFailsWith<IllegalStateException> { repository.setPasscode("654321") }
+        assertEquals(PasscodeUnlockResult.Failed, repository.setPasscode("654321"))
 
         assertEquals(credentials, store.readCredentials(), "the original wrap must survive")
         assertEquals(emptyList(), protection.calls)
         assertEquals(PasscodeUnlockResult.Success, repository.unlock("123456"))
+    }
+
+    @Test
+    fun `setPasscode refuses a store that will not survive the process`() = runTest {
+        // The credentials would go to an in-memory fallback and vanish with the process, while
+        // protectAll's ciphertext would not: every keyshare sealed under a key nothing recorded.
+        store.persistent = false
+        val repository = repository()
+
+        assertEquals(PasscodeUnlockResult.Failed, repository.setPasscode("123456"))
+
+        assertEquals(emptyList(), protection.calls, "nothing may be encrypted")
+        assertNull(store.readCredentials())
+        assertNull(repository.dataKeyOrNull())
+    }
+
+    @Test
+    fun `setPasscode survives an encryption failure with a working passcode`() = runTest {
+        // The wrap is already stored and the app is unlocked by the time protectAll runs, so a
+        // failed row is not a reason to fail the operation around it — the next unlock sweeps it.
+        val repository = repository()
+        protection.protectFailure = IllegalStateException("database is locked")
+
+        assertEquals(PasscodeUnlockResult.Success, repository.setPasscode("123456"))
+
+        assertEquals(PasscodeState.Unlocked, repository.state.value)
+        assertNotNull(store.readCredentials())
+    }
+
+    @Test
+    fun `unlock finishes an encryption that setPasscode did not`() = runTest {
+        // setPasscode is the only other caller of protectAll and cannot be resumed once it is
+        // interrupted, so rows left in the clear would stay that way for good.
+        val repository = repository()
+        protection.protectFailure = IllegalStateException("killed mid-run")
+        repository.setPasscode("123456")
+        repository.lock()
+        protection.protectFailure = null
+        protection.calls.clear()
+
+        assertEquals(PasscodeUnlockResult.Success, repository.unlock("123456"))
+
+        assertEquals(listOf("protect"), protection.calls)
+        assertContentEquals(repository.dataKeyOrNull(), protection.protectedWith)
+    }
+
+    @Test
+    fun `the key handed to the unlock sweep is not the one lock zeroes`() = runTest {
+        val repository = repository()
+        repository.setPasscode("123456")
+        repository.lock()
+        protection.protectedWith = null
+
+        repository.unlock("123456")
+
+        val used = protection.protectedWith
+        assertNotNull(used)
+        assertFalse(used.all { it == 0.toByte() }, "the sweep was handed a live key")
+        assertContentEquals(used, repository.dataKeyOrNull())
+    }
+
+    @Test
+    fun `initialize separates an unreachable store from lost credentials`() = runTest {
+        // Same symptom — ciphertext with nothing to open it — and opposite advice. Telling a user
+        // whose wrap is intact on disk to reinstall is what would actually destroy their vaults.
+        protection.encryptedSharesPresent = true
+        store.persistent = false
+        val repository = repository()
+
+        repository.initialize()
+
+        assertEquals(PasscodeState.StoreUnavailable, repository.state.value)
+        assertEquals(true, repository.isLocked(), "keyshare writes must still be refused")
+    }
+
+    @Test
+    fun `awaitUnlocked waits for the passcode and returns at once without one`() = runTest {
+        val repository = repository()
+        repository.setPasscode("123456")
+        repository.lock()
+
+        val waiting = async { repository.awaitUnlocked() }
+        runCurrent()
+        assertEquals(false, waiting.isCompleted, "a locked app must not report readable keyshares")
+
+        repository.unlock("123456")
+        waiting.await()
+
+        // Nothing to wait for once the passcode is gone.
+        repository.disablePasscode("123456")
+        repository.awaitUnlocked()
+    }
+
+    @Test
+    fun `awaitUnlocked does not wait on a state no unlock can resolve`() = runTest {
+        // KeyUnavailable and StoreUnavailable never become Unlocked without a relaunch, so waiting
+        // on them is a hang rather than a delay.
+        protection.encryptedSharesPresent = true
+        val repository = repository()
+        repository.initialize()
+
+        repository.awaitUnlocked()
     }
 
     @Test
@@ -428,7 +532,7 @@ internal class PasscodeRepositoryImplTest {
                 store = store,
                 keyShareProtection = protection,
                 dispatcher = Dispatchers.Default,
-                nowMillis = { now },
+                elapsedRealtimeMillis = { now },
             )
         repository.setPasscode("123456")
         repository.lock()
@@ -452,6 +556,7 @@ internal class RecordingKeyShareProtection : VaultKeyShareProtection {
     val calls = mutableListOf<String>()
     var protectedWith: ByteArray? = null
     var unprotectFailure: Throwable? = null
+    var protectFailure: Throwable? = null
 
     /** Runs when protection begins, so a test can observe the store mid-operation. */
     var onProtectAll: (() -> Unit)? = null
@@ -462,6 +567,7 @@ internal class RecordingKeyShareProtection : VaultKeyShareProtection {
 
     override suspend fun protectAll(dataKey: ByteArray) {
         onProtectAll?.invoke()
+        protectFailure?.let { throw it }
         calls += "protect"
         protectedWith = dataKey.copyOf()
     }
@@ -479,6 +585,11 @@ internal class FakePasscodeStore : PasscodeStore {
 
     /** Runs on each credential read, so a test can observe the store mid-verification. */
     var onReadCredentials: (() -> Unit)? = null
+
+    /** Set false to stand in for the in-memory fallback a keystore failure installs. */
+    var persistent = true
+
+    override fun isPersistent(): Boolean = persistent
 
     @Synchronized
     override fun readCredentials(): PasscodeCredentials? {

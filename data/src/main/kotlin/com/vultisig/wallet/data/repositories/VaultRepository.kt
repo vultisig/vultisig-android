@@ -31,6 +31,18 @@ interface VaultRepository {
 
     suspend fun getDisabledCoinIds(vaultId: VaultId): List<String>
 
+    /**
+     * Suspends until stored keyshares can be decrypted — until the passcode has been entered, or at
+     * once when none is set.
+     *
+     * Callers that hold on to the vault they read must await this first. A read taken while the app
+     * is locked comes back without its keyshares by design, and nothing re-reads it on unlock, so a
+     * screen that loaded behind the lock screen keeps a vault it cannot sign or export with for as
+     * long as it lives. Callers that only need public keys and addresses — background sync,
+     * notifications — should not wait, and do not.
+     */
+    suspend fun awaitKeySharesReadable()
+
     suspend fun get(vaultId: VaultId): Vault?
 
     fun getAsFlow(vaultId: VaultId): Flow<Vault?>
@@ -87,6 +99,8 @@ constructor(
 
     override suspend fun getDisabledCoinIds(vaultId: VaultId) =
         vaultDao.loadDisabledCoinIds(vaultId)
+
+    override suspend fun awaitKeySharesReadable() = passcodeDataKeySource.awaitUnlocked()
 
     override suspend fun get(vaultId: String): Vault? = vaultDao.loadById(vaultId)?.toVault()
 

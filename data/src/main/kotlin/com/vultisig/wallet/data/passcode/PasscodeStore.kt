@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.passcode
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.vultisig.wallet.data.utils.InMemorySharedPreferences
 import java.util.Base64
 import javax.inject.Inject
 import timber.log.Timber
@@ -24,6 +25,16 @@ internal class PasscodeCredentials(val salt: ByteArray, val wrappedDataKey: Byte
 
 /** Persistence seam for passcode material, kept narrow so tests can swap in an in-memory map. */
 internal interface PasscodeStore {
+    /**
+     * False when this store is a transient stand-in that will not survive the process — the
+     * fallback `MainDataModule` installs after a keystore failure it expects to self-heal.
+     *
+     * The distinction is not cosmetic. Reads return nothing, which is indistinguishable from "no
+     * passcode was ever set", and writes go nowhere, so anything durable done on the strength of
+     * either is done against credentials that will not exist on the next launch.
+     */
+    fun isPersistent(): Boolean
+
     fun readCredentials(): PasscodeCredentials?
 
     fun writeCredentials(credentials: PasscodeCredentials)
@@ -43,6 +54,11 @@ internal interface PasscodeStore {
 internal class SharedPreferencesPasscodeStore
 @Inject
 constructor(private val prefs: SharedPreferences) : PasscodeStore {
+
+    // Matched by type because that is what the fallback is: MainDataModule hands back an
+    // InMemorySharedPreferences when the keystore fails in a way it expects to recover from, and
+    // nothing else about the instance says so.
+    override fun isPersistent(): Boolean = prefs !is InMemorySharedPreferences
 
     override fun readCredentials(): PasscodeCredentials? {
         val salt = prefs.getString(KEY_SALT, null)?.let(::decodeOrNull)
@@ -74,8 +90,8 @@ constructor(private val prefs: SharedPreferences) : PasscodeStore {
     override fun readLockout(): PasscodeLockoutState =
         PasscodeLockoutState(
             failedAttempts = prefs.getInt(KEY_FAILED_ATTEMPTS, 0),
-            lockedOutUntilMillis = prefs.getLong(KEY_LOCKED_OUT_UNTIL, 0L),
-            lockedOutAtMillis = prefs.getLong(KEY_LOCKED_OUT_AT, 0L),
+            penaltyMillis = prefs.getLong(KEY_PENALTY_MILLIS, 0L),
+            anchorElapsedMillis = prefs.getLong(KEY_PENALTY_ANCHOR_ELAPSED, 0L),
         )
 
     override fun writeLockout(state: PasscodeLockoutState) {
@@ -84,8 +100,8 @@ constructor(private val prefs: SharedPreferences) : PasscodeStore {
         // discard it. An asynchronous apply() would let exactly that write be lost.
         prefs.edit(commit = true) {
             putInt(KEY_FAILED_ATTEMPTS, state.failedAttempts)
-            putLong(KEY_LOCKED_OUT_UNTIL, state.lockedOutUntilMillis)
-            putLong(KEY_LOCKED_OUT_AT, state.lockedOutAtMillis)
+            putLong(KEY_PENALTY_MILLIS, state.penaltyMillis)
+            putLong(KEY_PENALTY_ANCHOR_ELAPSED, state.anchorElapsedMillis)
         }
     }
 
@@ -108,7 +124,7 @@ constructor(private val prefs: SharedPreferences) : PasscodeStore {
         const val KEY_SALT = "passcode_salt"
         const val KEY_WRAPPED_KEY = "passcode_wrapped_data_key"
         const val KEY_FAILED_ATTEMPTS = "passcode_failed_attempts"
-        const val KEY_LOCKED_OUT_UNTIL = "passcode_locked_out_until"
-        const val KEY_LOCKED_OUT_AT = "passcode_locked_out_at"
+        const val KEY_PENALTY_MILLIS = "passcode_lockout_penalty_millis"
+        const val KEY_PENALTY_ANCHOR_ELAPSED = "passcode_lockout_anchor_elapsed"
     }
 }

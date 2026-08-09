@@ -47,14 +47,11 @@ constructor(
 ) : VaultKeyShareProtection {
 
     override suspend fun hasEncryptedKeyShares(): Boolean =
-        withContext(dispatcher) {
-            vaultDao.loadAllKeyShares().any { cipher.isEncrypted(it.keyShare) }
-        }
+        withContext(dispatcher) { vaultDao.hasKeySharesMatching(cipher.encryptedMarkerPattern) }
 
     override suspend fun protectAll(dataKey: ByteArray) {
         withContext(dispatcher) {
-            val plaintext =
-                vaultDao.loadAllKeyShares().filterNot { cipher.isEncrypted(it.keyShare) }
+            val plaintext = vaultDao.loadKeySharesNotMatching(cipher.encryptedMarkerPattern)
             if (plaintext.isEmpty()) return@withContext
             vaultDao.upsertKeyshares(
                 plaintext.map {
@@ -67,7 +64,7 @@ constructor(
 
     override suspend fun unprotectAll(dataKey: ByteArray) {
         withContext(dispatcher) {
-            val encrypted = vaultDao.loadAllKeyShares().filter { cipher.isEncrypted(it.keyShare) }
+            val encrypted = vaultDao.loadKeySharesMatching(cipher.encryptedMarkerPattern)
             if (encrypted.isEmpty()) return@withContext
             // Decrypt everything before writing anything: a share that will not open must abort the
             // whole operation while the passcode is still in place to protect the rest.
