@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -209,7 +208,7 @@ private fun VerifySwapScreen(
                     modifier =
                         Modifier.background(
                                 color = Theme.v2.colors.backgrounds.secondary,
-                                shape = RoundedCornerShape(16.dp),
+                                shape = Theme.v2.radius.xl,
                             )
                             .padding(all = 24.dp)
                 ) {

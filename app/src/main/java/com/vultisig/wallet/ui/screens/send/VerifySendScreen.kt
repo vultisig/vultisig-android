@@ -203,7 +203,7 @@ internal fun VerifySendScreen(
                                 r.riskLevel == SecurityRiskLevel.LOW)
                     } == true
 
-                val cardShape = RoundedCornerShape(16.dp)
+                val cardShape = Theme.v2.radius.xl
                 val cardModifier =
                     Modifier.background(
                             color = Theme.v2.colors.backgrounds.secondary,
