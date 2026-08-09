@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.mappers.MapVaultToProto
+import com.vultisig.wallet.data.mappers.exportableOrNull
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getVaultPart
@@ -109,6 +110,9 @@ constructor(
     }
 
     private suspend fun backupWithVultiServerPassword() {
+        // Kept for the export that follows, so it has to carry its keyshares: a vault read while
+        // the app is locked comes back without them.
+        vaultRepository.awaitKeySharesReadable()
         val vault = requireNotNull(vaultRepository.get(args.vaultId))
         this@BackupVaultViewModel.vault.value = vault
         val fileName = createVaultBackupFileName(vault)
@@ -135,6 +139,12 @@ constructor(
                     }
             if (isFileExtensionValid(uri, mimeType.toMimeType())) {
                 val isSuccess = backupCurrentVault(password, uri)
+                // The picker created the document before anything was written to it. Failing
+                // without removing it leaves an empty .vult in the user's files that looks like a
+                // backup and restores nothing.
+                if (!isSuccess) {
+                    deleteBackupDocument(uri)
+                }
                 completeBackupVault(isSuccess)
             } else {
                 deleteBackupDocument(uri)
@@ -158,7 +168,10 @@ constructor(
         }
 
         val backup =
-            withContext(Dispatchers.Default) { createVaultBackup(mapVaultToProto(vault), password) }
+            withContext(Dispatchers.Default) {
+                val proto = mapVaultToProto.exportableOrNull(vault) ?: return@withContext null
+                createVaultBackup(proto, password)
+            }
 
         if (backup == null) {
             viewModelScope.launch {

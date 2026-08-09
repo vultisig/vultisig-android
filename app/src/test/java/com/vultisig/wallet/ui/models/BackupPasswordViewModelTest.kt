@@ -8,6 +8,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.common.AppZipEntry
 import com.vultisig.wallet.data.mappers.MapVaultToProto
 import com.vultisig.wallet.data.mappers.MapVaultToProtoImpl
+import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -69,6 +70,7 @@ internal class BackupPasswordViewModelTest {
         mockkStatic("androidx.navigation.SavedStateHandleKt")
 
         vaultRepository = mockk()
+        coEvery { vaultRepository.awaitKeySharesReadable() } returns Unit
         mapVaultToProto = MapVaultToProtoImpl()
         createVaultBackupFileName = mockk(relaxed = true)
         createZipVaultsBackupFileName = mockk(relaxed = true)
@@ -92,11 +94,21 @@ internal class BackupPasswordViewModelTest {
     }
 
     private fun testVault(id: String) =
-        Vault(id = id, name = "Vault $id", libType = SigningLibType.DKLS)
+        Vault(
+            id = id,
+            name = "Vault $id",
+            libType = SigningLibType.DKLS,
+            // A real vault always has keyshares, and the proto mapper refuses to export one that
+            // does not — an empty list means storage dropped them and the backup would be useless.
+            keyshares = listOf(KeyShare(pubKey = "pub-$id", keyShare = "share-$id")),
+        )
 
-    private fun createViewModel(vaultId: String = "vault-1"): BackupPasswordViewModel {
+    private fun createViewModel(
+        vaultId: String = "vault-1",
+        backupType: BackupType = BackupType.AllVaults,
+    ): BackupPasswordViewModel {
         every { any<SavedStateHandle>().toRoute<Route.BackupPassword>(typeMap = any()) } returns
-            Route.BackupPassword(vaultId = vaultId, backupType = BackupType.AllVaults)
+            Route.BackupPassword(vaultId = vaultId, backupType = backupType)
 
         return BackupPasswordViewModel(
             savedStateHandle = SavedStateHandle(),
@@ -227,6 +239,52 @@ internal class BackupPasswordViewModelTest {
             coEvery { vaultRepository.get("vault-1") } returns vaults.first()
             coEvery { vaultRepository.getAll() } returns vaults
             every { createVaultBackup(any(), any()) } returns null
+
+            val vm = createViewModel()
+            val uri = mockk<Uri>()
+
+            vm.saveContentToUriResult(uri, "application/zip")
+
+            coVerify(timeout = 5_000) { deleteBackupDocument(uri) }
+            coVerify(exactly = 0) { saveBackupToUri(any(), any<List<AppZipEntry>>()) }
+
+            advanceUntilIdle()
+            vm.state.value.error.shouldNotBeNull()
+        }
+
+    @Test
+    fun `a current-vault export whose keyshares are unavailable fails instead of killing the coroutine`() =
+        runTest(testDispatcher) {
+            // The mapper refuses a keyshare-free vault, because exporting one yields a .vult that
+            // restores cleanly and can never sign. That refusal reaches this bare
+            // viewModelScope.launch, so it has to arrive as a failed backup rather than as an
+            // exception: an exception here kills the coroutine before the flow can delete the
+            // empty document SAF already created, or tell the user anything at all.
+            val vault = testVault("a").copy(keyshares = emptyList())
+            coEvery { vaultRepository.get("vault-1") } returns vault
+            coEvery { vaultRepository.getAll() } returns listOf(vault)
+            coEvery { saveBackupToUri(any(), any<String>()) } returns true
+
+            val vm = createViewModel(backupType = BackupType.CurrentVault())
+            val uri = mockk<Uri>()
+
+            vm.saveContentToUriResult(uri, "application/octet-stream")
+
+            coVerify(timeout = 5_000) { deleteBackupDocument(uri) }
+            coVerify(exactly = 0) { saveBackupToUri(any(), any<String>()) }
+
+            advanceUntilIdle()
+            vm.state.value.error.shouldNotBeNull()
+        }
+
+    @Test
+    fun `one unreadable vault fails the all-vaults export rather than silently omitting it`() =
+        runTest(testDispatcher) {
+            // A zip that quietly drops the vault it could not read is the same trap one file down:
+            // the archive restores, and the missing vault is only noticed when it is needed.
+            val vaults = listOf(testVault("a"), testVault("b").copy(keyshares = emptyList()))
+            coEvery { vaultRepository.get("vault-1") } returns vaults.first()
+            coEvery { vaultRepository.getAll() } returns vaults
 
             val vm = createViewModel()
             val uri = mockk<Uri>()

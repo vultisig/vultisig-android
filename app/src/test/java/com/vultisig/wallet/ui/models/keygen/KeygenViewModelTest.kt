@@ -8,6 +8,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.passcode.AutoLockHold
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.KeyImportRepository
@@ -131,6 +132,7 @@ internal class KeygenViewModelTest {
             sessionApi = sessionApi,
             encryption = encryption,
             featureFlagRepository = featureFlagRepository,
+            autoLockHold = AutoLockHold(),
             referralCodeSettingsRepository = referralCodeSettingsRepository,
             chainAccountAddressRepository = chainAccountAddressRepository,
         )

@@ -57,6 +57,7 @@ import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.DAppMetadata
+import com.vultisig.wallet.data.passcode.AutoLockTimeout
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
@@ -128,6 +129,10 @@ import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelPresentation
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderHistoryStatus
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderHistoryUiModel
+import com.vultisig.wallet.ui.models.passcode.AutoLockSettingUiModel
+import com.vultisig.wallet.ui.models.passcode.PasscodeLockError
+import com.vultisig.wallet.ui.models.passcode.PasscodeLockUiModel
+import com.vultisig.wallet.ui.models.passcode.PasscodeSettingsUiModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimMaturingUtxoUiModel
@@ -166,6 +171,9 @@ import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
 import com.vultisig.wallet.ui.screens.keysign.KeysignErrorScreen
 import com.vultisig.wallet.ui.screens.keysign.KeysignView
+import com.vultisig.wallet.ui.screens.passcode.AutoLockSettingScreen
+import com.vultisig.wallet.ui.screens.passcode.PasscodeLockScreen
+import com.vultisig.wallet.ui.screens.passcode.PasscodeSettingsScreen
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimScreen
 import com.vultisig.wallet.ui.screens.qbtc.QuantumSecurityIntroScreenContent
@@ -236,6 +244,42 @@ class PreviewActivity : ComponentActivity() {
         setContent {
             OnBoardingComposeTheme {
                 when (screen) {
+                    "auto_lock_setting" ->
+                        AutoLockSettingScreen(
+                            state = AutoLockSettingUiModel(selected = AutoLockTimeout.FiveMinutes),
+                            onBackClick = {},
+                            onTimeoutClick = {},
+                        )
+                    "passcode_settings" ->
+                        PasscodeSettingsScreen(
+                            state =
+                                PasscodeSettingsUiModel(
+                                    isPasscodeEnabled = true,
+                                    autoLockTimeout = AutoLockTimeout.Never,
+                                ),
+                            onBackClick = {},
+                            onPasscodeEnabledChange = {},
+                            onChangePasscodeClick = {},
+                            onAutoLockClick = {},
+                        )
+                    "passcode_lock" ->
+                        PasscodeLockScreen(
+                            state = PasscodeLockUiModel(),
+                            textFieldState = TextFieldState(),
+                        )
+                    "passcode_lock_filled" ->
+                        PasscodeLockScreen(
+                            state = PasscodeLockUiModel(),
+                            textFieldState = TextFieldState("12"),
+                        )
+                    "passcode_lock_error" ->
+                        PasscodeLockScreen(
+                            state =
+                                PasscodeLockUiModel(
+                                    error = PasscodeLockError.Wrong(remainingAttempts = 2)
+                                ),
+                            textFieldState = TextFieldState(),
+                        )
                     "limit_swap_form" -> LimitSwapFormPreview()
                     "limit_swap_form_assets" ->
                         LimitSwapFormPreview(expandedSection = LimitFormSection.Asset)

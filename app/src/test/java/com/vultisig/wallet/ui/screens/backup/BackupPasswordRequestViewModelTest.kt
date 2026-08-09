@@ -6,6 +6,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.common.AppZipEntry
 import com.vultisig.wallet.data.mappers.MapVaultToProto
 import com.vultisig.wallet.data.mappers.MapVaultToProtoImpl
+import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -71,6 +72,7 @@ internal class BackupPasswordRequestViewModelTest {
         createVaultBackup = mockk()
         isFileExtensionValid = mockk()
         vaultRepository = mockk()
+        coEvery { vaultRepository.awaitKeySharesReadable() } returns Unit
         vaultDataStoreRepository = mockk(relaxed = true)
         mapVaultToProto = MapVaultToProtoImpl()
         saveBackupToUri = mockk()
@@ -88,7 +90,14 @@ internal class BackupPasswordRequestViewModelTest {
     }
 
     private fun testVault(id: String) =
-        Vault(id = id, name = "Vault $id", libType = SigningLibType.DKLS)
+        Vault(
+            id = id,
+            name = "Vault $id",
+            libType = SigningLibType.DKLS,
+            // A real vault always has keyshares, and the proto mapper refuses to export one that
+            // does not — an empty list means storage dropped them and the backup would be useless.
+            keyshares = listOf(KeyShare(pubKey = "pub-$id", keyShare = "share-$id")),
+        )
 
     private fun createViewModel(vaultId: String = "vault-1"): BackupPasswordRequestViewModel {
         every {
@@ -172,5 +181,42 @@ internal class BackupPasswordRequestViewModelTest {
             vaultsLoaded.complete(Unit)
             requestedFileName shouldBe "vaults_backup.zip"
             collectJob.cancel()
+        }
+
+    @Test
+    fun `a failed export deletes the document the picker created`() =
+        runTest(testDispatcher) {
+            // The picker creates the file before anything is written to it, so failing without
+            // removing it leaves a 0 KB .vult that looks like a backup and restores nothing.
+            val unexportable = testVault("a").copy(keyshares = emptyList())
+            coEvery { vaultRepository.get("vault-1") } returns unexportable
+            coEvery { vaultRepository.getAll() } returns listOf(unexportable)
+
+            val vm = createViewModel()
+            val uri = mockk<Uri>()
+
+            vm.saveVaultIntoUri(uri, "application/zip")
+
+            coVerify(timeout = 5_000) { deleteBackupDocument(uri) }
+            coVerify(exactly = 0) { saveBackupToUri(any(), any<List<AppZipEntry>>()) }
+        }
+
+    @Test
+    fun `the vault is read only once its keyshares can be decrypted`() =
+        runTest(testDispatcher) {
+            // This screen composes behind the lock screen, and a vault read while locked comes
+            // back without keyshares. Caching that one would leave the export permanently broken.
+            val unlocked = CompletableDeferred<Unit>()
+            coEvery { vaultRepository.awaitKeySharesReadable() } coAnswers { unlocked.await() }
+            coEvery { vaultRepository.get("vault-1") } returns testVault("a")
+            coEvery { vaultRepository.getAll() } returns listOf(testVault("a"))
+
+            createViewModel()
+
+            coVerify(exactly = 0) { vaultRepository.get(any()) }
+
+            unlocked.complete(Unit)
+
+            coVerify(timeout = 5_000) { vaultRepository.get("vault-1") }
         }
 }
