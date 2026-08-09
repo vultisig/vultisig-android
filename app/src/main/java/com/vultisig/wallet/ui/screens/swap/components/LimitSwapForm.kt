@@ -254,9 +254,9 @@ private fun ExpiryRow(selected: LimitExpiryOption, onExpiryClick: (LimitExpiryOp
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.lg)
                 .background(colors.backgrounds.disabled)
-                .border(1.dp, colors.border.light, RoundedCornerShape(16.dp))
+                .border(1.dp, colors.border.light, Theme.v2.radius.lg)
                 .padding(14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -552,8 +552,7 @@ private fun SummaryRow(
             modifier = Modifier.size(16.dp),
         )
         Box(
-            modifier =
-                Modifier.size(40.dp).clip(RoundedCornerShape(20.dp)).clickable(onClick = onEdit),
+            modifier = Modifier.size(40.dp).clip(Theme.v2.radius.pill).clickable(onClick = onEdit),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

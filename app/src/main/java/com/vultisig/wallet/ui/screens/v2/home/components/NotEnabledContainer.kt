@@ -32,8 +32,8 @@ import com.vultisig.wallet.ui.theme.v2.Radius
 internal fun NotEnabledContainer(
     title: String,
     content: String,
-    action: @Composable (() -> Unit)? = null,
     radius: Radius = Theme.v2.radius.xl,
+    action: @Composable (() -> Unit)? = null,
 ) {
     TopShineContainer(radius = radius) {
         Column(
