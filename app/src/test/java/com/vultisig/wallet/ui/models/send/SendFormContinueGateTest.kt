@@ -21,13 +21,20 @@ internal class SendFormContinueGateTest {
         defiType: DeFiNavActions? = null,
         memoError: UiText? = null,
         hasMemo: Boolean = false,
+        isGasFeeLoading: Boolean = false,
+        hasAmountInput: Boolean = false,
+        isAmountSelectionLoading: Boolean = false,
+        isLoading: Boolean = false,
     ): SendFormUiModel =
         SendFormUiModel(
             dstAddressError = dstAddressError,
             defiType = defiType,
             memoError = memoError,
             hasMemo = hasMemo,
-            isGasFeeLoading = false,
+            isGasFeeLoading = isGasFeeLoading,
+            hasAmountInput = hasAmountInput,
+            isAmountSelectionLoading = isAmountSelectionLoading,
+            isLoading = isLoading,
         )
 
     @Test
@@ -61,6 +68,58 @@ internal class SendFormContinueGateTest {
 
         assertTrue(state.isDstAddressEditable)
         assertTrue(state.isContinueDisabled())
+    }
+
+    @Test
+    fun `percentage selection blocks continue and shows it as loading`() {
+        // The calculation is about to overwrite the amount field, so Continue must not submit the
+        // amount the user just replaced — and it says so with the spinner instead of greying out.
+        val state = model(isAmountSelectionLoading = true)
+
+        assertTrue(state.isContinueDisabled())
+        assertTrue(state.isContinueLoading())
+    }
+
+    @Test
+    fun `fee recompute after an amount is entered shows continue as loading`() {
+        val state = model(isGasFeeLoading = true, hasAmountInput = true)
+
+        assertTrue(state.isContinueDisabled())
+        assertTrue(state.isContinueLoading())
+    }
+
+    @Test
+    fun `no amount entered leaves continue plainly disabled`() {
+        // isGasFeeLoading starts true before any amount exists, but no estimate is armed there —
+        // a spinner would claim work that isn't running.
+        val state = model(isGasFeeLoading = true)
+
+        assertTrue(state.isContinueDisabled())
+        assertFalse(state.isContinueLoading())
+    }
+
+    @Test
+    fun `submit in flight shows continue as loading`() {
+        val state = model(isLoading = true)
+
+        assertTrue(state.isContinueDisabled())
+        assertTrue(state.isContinueLoading())
+    }
+
+    @Test
+    fun `input the user must fix disables continue without a spinner`() {
+        val state = model(dstAddressError = invalidRecipient)
+
+        assertTrue(state.isContinueDisabled())
+        assertFalse(state.isContinueLoading())
+    }
+
+    @Test
+    fun `a settled form shows no loading`() {
+        val state = model(hasAmountInput = true)
+
+        assertFalse(state.isContinueDisabled())
+        assertFalse(state.isContinueLoading())
     }
 
     @Test
