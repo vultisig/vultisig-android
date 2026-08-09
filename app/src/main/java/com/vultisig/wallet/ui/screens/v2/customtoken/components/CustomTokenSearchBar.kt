@@ -29,7 +29,6 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -45,7 +44,7 @@ internal fun CustomTokenSearchBar(
         V2Container(
             modifier = Modifier.weight(1f).height(40.dp),
             type = ContainerType.SECONDARY,
-            cornerType = CornerType.Circular,
+            radius = Theme.v2.radius.pill,
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,

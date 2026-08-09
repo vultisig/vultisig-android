@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -191,7 +190,7 @@ internal fun <T : Any> FastSelectionModalContent(
                                 Modifier.wrapContentHeight()
                             }
                         )
-                        .clip(RoundedCornerShape(24.dp))
+                        .clip(Theme.v2.radius.xl)
                         .background(
                             color = Theme.v2.colors.backgrounds.tertiary_2.copy(alpha = 0.5f)
                         )

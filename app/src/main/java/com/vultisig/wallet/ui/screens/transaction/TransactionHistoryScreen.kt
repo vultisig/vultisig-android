@@ -52,7 +52,6 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
@@ -192,7 +191,7 @@ internal fun TransactionHistoryScreen(
                 UiSpacer(weight = 1f)
                 V2Container(
                     modifier = Modifier.clickOnce(onClick = onSearchClick),
-                    cornerType = CornerType.Circular,
+                    radius = Theme.v2.radius.pill,
                     type = ContainerType.SECONDARY,
                     borderType = ContainerBorderType.Borderless,
                 ) {
@@ -454,13 +453,17 @@ internal fun TransactionHistoryEmptyState(modifier: Modifier = Modifier) {
                     1.0f to Theme.v2.colors.backgrounds.surface1,
                 )
         )
+    // The border is drawn onto the canvas, which takes a raw radius rather than a shape, so this is
+    // one of the few places the token's size is read directly. It has to stay the same token as the
+    // background below or the stroke stops tracing the surface it outlines.
+    val radius = Theme.v2.radius.md
     Box(
         modifier =
             modifier.drawWithContent {
                 drawContent()
                 drawRoundRect(
                     brush = borderBrush,
-                    cornerRadius = CornerRadius(12.dp.toPx()),
+                    cornerRadius = CornerRadius(radius.size.toPx()),
                     style = Stroke(width = 1.dp.toPx()),
                 )
             },
@@ -469,10 +472,7 @@ internal fun TransactionHistoryEmptyState(modifier: Modifier = Modifier) {
         Column(
             modifier =
                 Modifier.fillMaxWidth()
-                    .background(
-                        color = Theme.v2.colors.backgrounds.surface1,
-                        shape = RoundedCornerShape(12.dp),
-                    )
+                    .background(color = Theme.v2.colors.backgrounds.surface1, shape = radius)
                     .padding(horizontal = 40.dp, vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),

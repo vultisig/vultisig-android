@@ -23,7 +23,6 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
@@ -65,7 +64,7 @@ internal fun HomePageTabMenu(
         ) {
             V2Container(
                 modifier = Modifier.clickOnce(onClick = onSearchClick),
-                cornerType = CornerType.Circular,
+                radius = Theme.v2.radius.pill,
                 type = ContainerType.SECONDARY,
                 borderType = ContainerBorderType.Borderless,
             ) {
@@ -81,7 +80,7 @@ internal fun HomePageTabMenu(
             if (isEditVisible) {
                 V2Container(
                     modifier = Modifier.clickOnce(onClick = onEditClick),
-                    cornerType = CornerType.Circular,
+                    radius = Theme.v2.radius.pill,
                     type = ContainerType.SECONDARY,
                     borderType = ContainerBorderType.Borderless,
                 ) {
@@ -111,10 +110,7 @@ private fun HomepageTab(
 
             Spacer(modifier = Modifier.width(6.dp))
 
-            V2Container(
-                type = ContainerType.SECONDARY,
-                cornerType = CornerType.RoundedCornerShape(8.dp),
-            ) {
+            V2Container(type = ContainerType.SECONDARY, radius = Theme.v2.radius.sm) {
                 Text(
                     text = stringResource(R.string.search_bar_soon),
                     color = Theme.v2.colors.alerts.info,

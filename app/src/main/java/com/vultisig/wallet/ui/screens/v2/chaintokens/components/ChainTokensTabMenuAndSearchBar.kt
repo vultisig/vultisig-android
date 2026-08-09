@@ -20,7 +20,6 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.tab.TabMenuAndSearchBar
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
@@ -66,7 +65,7 @@ fun ChainTokensTabMenuAndSearchBar(
 
                 V2Container(
                     type = ContainerType.SECONDARY,
-                    cornerType = CornerType.Circular,
+                    radius = Theme.v2.radius.pill,
                     modifier = Modifier.clickOnce(onClick = onSearchClick),
                 ) {
                     UiIcon(
@@ -80,7 +79,7 @@ fun ChainTokensTabMenuAndSearchBar(
 
                 V2Container(
                     type = ContainerType.SECONDARY,
-                    cornerType = CornerType.Circular,
+                    radius = Theme.v2.radius.pill,
                     modifier = Modifier.clickOnce(onClick = onEditClick),
                 ) {
                     UiIcon(

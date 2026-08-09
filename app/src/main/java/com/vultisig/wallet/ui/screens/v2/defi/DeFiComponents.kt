@@ -64,7 +64,6 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
@@ -528,7 +527,7 @@ internal fun ManagePositionsButton(
 ) {
     V2Container(
         type = ContainerType.SECONDARY,
-        cornerType = CornerType.Circular,
+        radius = Theme.v2.radius.pill,
         modifier = modifier.clickOnce(enabled = isEnabled, onClick = onClick),
     ) {
         UiIcon(

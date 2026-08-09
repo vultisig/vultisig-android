@@ -5,8 +5,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -15,9 +13,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.Radius
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 internal enum class ContainerType {
@@ -32,18 +30,12 @@ internal sealed interface ContainerBorderType {
     data class Bordered(val color: Color = colors.border.light) : ContainerBorderType
 }
 
-internal sealed interface CornerType {
-    object Circular : CornerType
-
-    data class RoundedCornerShape(val size: Dp = 12.dp) : CornerType
-}
-
 @Composable
 internal fun V2Container(
     modifier: Modifier = Modifier,
     type: ContainerType = ContainerType.PRIMARY,
     borderType: ContainerBorderType = ContainerBorderType.Borderless,
-    cornerType: CornerType = CornerType.RoundedCornerShape(),
+    radius: Radius = Theme.v2.radius.md,
     content: @Composable () -> Unit,
 ) {
     val containerColor =
@@ -59,18 +51,12 @@ internal fun V2Container(
             is ContainerBorderType.Bordered -> borderType.color
         }
 
-    val shape =
-        when (cornerType) {
-            CornerType.Circular -> CircleShape
-            is CornerType.RoundedCornerShape -> RoundedCornerShape(size = cornerType.size)
-        }
-
     val containerColorAnimated by animateColorAsState(containerColor)
     val borderColorAnimated by animateColorAsState(borderColor)
 
     Card(
         modifier = modifier,
-        shape = shape,
+        shape = radius,
         colors = CardDefaults.cardColors(containerColor = containerColorAnimated),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(width = 1.dp, color = borderColorAnimated),
