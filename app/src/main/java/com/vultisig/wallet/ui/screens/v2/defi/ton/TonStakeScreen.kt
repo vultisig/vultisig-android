@@ -312,7 +312,9 @@ private fun TonPoolRow(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(16.dp)
+    // Rows in a picker list, not cards on a page: they keep the inner step rather than
+    // taking the container one. Figma measures this row at 16 specifically.
+    val shape = Theme.v2.radius.lg
     Row(
         modifier =
             Modifier.fillMaxWidth()

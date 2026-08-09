@@ -15,4 +15,35 @@ class ResolveKeysignChainTest {
             resolveKeysignChain(keysignPayload = null, customMessagePayload = customMessage),
         )
     }
+
+    @Test
+    fun `custom message with no chain set defaults to Ethereum`() {
+        assertEquals(
+            Chain.Ethereum,
+            resolveKeysignChain(
+                keysignPayload = null,
+                customMessagePayload = CustomMessagePayload(),
+            ),
+        )
+    }
+
+    @Test
+    fun `custom message chain still takes precedence over the default`() {
+        val customMessage = CustomMessagePayload(chain = Chain.Solana.raw)
+
+        assertEquals(
+            Chain.Solana,
+            resolveKeysignChain(keysignPayload = null, customMessagePayload = customMessage),
+        )
+    }
+
+    @Test
+    fun `custom message with an unparseable chain resolves to null instead of Ethereum`() {
+        val customMessage = CustomMessagePayload(chain = "NotAChain")
+
+        assertEquals(
+            null,
+            resolveKeysignChain(keysignPayload = null, customMessagePayload = customMessage),
+        )
+    }
 }

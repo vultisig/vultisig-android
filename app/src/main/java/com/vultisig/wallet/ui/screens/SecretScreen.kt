@@ -29,6 +29,7 @@ internal fun SecretScreen(model: SecretViewModel = hiltViewModel()) {
         onToggleSwapKit = model::toggleSwapKit,
         onToggleCustomRpc = model::toggleCustomRpc,
         onToggleLimitSwap = model::toggleLimitSwap,
+        onTogglePasscode = model::togglePasscode,
     )
 }
 
@@ -39,6 +40,7 @@ private fun SecretScreen(
     onToggleSwapKit: (Boolean) -> Unit,
     onToggleCustomRpc: (Boolean) -> Unit,
     onToggleLimitSwap: (Boolean) -> Unit,
+    onTogglePasscode: (Boolean) -> Unit,
 ) {
 
     V2Scaffold(title = stringResource(R.string.vault_settings_title), onBackClick = onBackClick) {
@@ -61,6 +63,11 @@ private fun SecretScreen(
                 isChecked = state.isLimitSwapEnabled,
                 onCheckedChange = onToggleLimitSwap,
             )
+            SelectionItem(
+                title = stringResource(R.string.settings_advanced_passcode_toggle),
+                isChecked = state.isPasscodeEnabled,
+                onCheckedChange = onTogglePasscode,
+            )
         }
     }
 }
@@ -74,5 +81,6 @@ private fun SecretScreenPreview() {
         onToggleSwapKit = {},
         onToggleCustomRpc = {},
         onToggleLimitSwap = {},
+        onTogglePasscode = {},
     )
 }

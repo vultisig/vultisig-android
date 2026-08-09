@@ -5,6 +5,7 @@ package com.vultisig.wallet.ui.components.topbar
 import android.annotation.SuppressLint
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,11 +20,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.DashedProgressIndicator
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.buttons.DesignType
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.theme.Theme
+
+/**
+ * Inset added on top of the 4.dp the top bar already reserves around its icon slots, so the back
+ * and action buttons land on the same 16.dp screen margin as the rest of the app.
+ */
+private val EDGE_SPACING = 12.dp
 
 @Composable
 fun VsTopAppBar(
@@ -59,6 +67,7 @@ fun VsTopAppBar(
         actions = {
             if (iconRight != null) {
                 VsTopAppBarAction(icon = iconRight, onClick = onIconRightClick)
+                UiSpacer(size = EDGE_SPACING)
             }
         },
         modifier = modifier,
@@ -77,7 +86,10 @@ fun VsTopAppBar(
         title = title,
         navigationContent = {
             if (iconLeft != null) {
-                VsTopAppBarAction(icon = iconLeft, onClick = onIconLeftClick)
+                Row {
+                    UiSpacer(size = EDGE_SPACING)
+                    VsTopAppBarAction(icon = iconLeft, onClick = onIconLeftClick)
+                }
             }
         },
         actions = actions,

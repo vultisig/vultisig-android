@@ -500,7 +500,10 @@ private fun ValidatorPickerRow(
         }
     // Figma (node 75918:75259 / 75918:75266): spaced rounded-16 cards on surface-1. The selected
     // card carries a success-tinted fill + border; unselected cards are borderless.
-    val shape = RoundedCornerShape(16.dp)
+    //
+    // Rows in a picker list, not cards on a page, so they keep the inner step rather than taking
+    // the container one — and the design file names 16 for this row specifically.
+    val shape = Theme.v2.radius.lg
     Row(
         modifier =
             Modifier.fillMaxWidth()

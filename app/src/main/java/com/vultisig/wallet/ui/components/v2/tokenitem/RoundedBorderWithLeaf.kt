@@ -26,7 +26,8 @@ internal fun RoundedBorderWithLeaf(
     leafColor: Color = Theme.v2.colors.border.light,
     checkMarkColor: Color = Theme.v2.colors.alerts.success,
     borderWidth: Dp = 1.5.dp,
-    cornerRadius: Dp = 24.dp,
+    // Drawn into the chain tile, which clips at the container step — same rect, same token.
+    cornerRadius: Dp = Theme.v2.radius.xl.size,
     leafXLength: Dp = 32.dp,
     leafYLength: Dp = 24.dp,
     checkMarkScale: Float = 2f,

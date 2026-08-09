@@ -168,8 +168,16 @@ private fun SwapAmountText(amount: String, token: String, modifier: Modifier = M
 
 @Composable
 private fun ViaBadge(provider: String, providerLogo: ImageModel?, modifier: Modifier = Modifier) {
+    // The badge is anchored to the card's bottom-end corner, so its outer corner is not its own
+    // geometry — it is the card's, and has to be read from the same token or the badge cuts across
+    // the curve it is meant to follow.
     val shape =
-        RoundedCornerShape(topStart = 12.dp, topEnd = 0.dp, bottomEnd = 0.dp, bottomStart = 0.dp)
+        RoundedCornerShape(
+            topStart = Theme.v2.radius.md.size,
+            topEnd = 0.dp,
+            bottomEnd = Theme.v2.radius.xl.size,
+            bottomStart = 0.dp,
+        )
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),

@@ -375,6 +375,11 @@ constructor(
     fun setScanResult(qrBase64: String) {
         viewModelScope.launch {
             transactionHistoryData = null
+            // This screen composes behind the passcode lock when the app is opened from a keysign
+            // notification, and the vault read here is kept for the whole ceremony. Taken while
+            // locked it would arrive without its keyshares and the signing would fail with
+            // "fail to get local keyshare" long after the user has unlocked.
+            vaultRepository.awaitKeySharesReadable()
             vaultRepository.get(vaultId)?.let {
                 _currentVault = it
                 _localPartyID = it.localPartyID

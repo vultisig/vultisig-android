@@ -2,11 +2,13 @@
 
 package com.vultisig.wallet.ui.models
 
+import com.vultisig.wallet.data.passcode.PasscodeConfig
 import com.vultisig.wallet.data.repositories.CustomRpcConfig
 import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
 import com.vultisig.wallet.data.repositories.swap.SwapKitConfig
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.mockk.coVerify
 import io.mockk.every
@@ -31,6 +33,7 @@ internal class SecretViewModelTest {
     private lateinit var swapKitConfig: SwapKitConfig
     private lateinit var customRpcConfig: CustomRpcConfig
     private lateinit var limitSwapConfig: LimitSwapConfig
+    private lateinit var passcodeConfig: PasscodeConfig
     private lateinit var navigator: Navigator<Destination>
 
     /** Sets up mocks and test dispatcher before each test. */
@@ -40,6 +43,7 @@ internal class SecretViewModelTest {
         swapKitConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
         customRpcConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
         limitSwapConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
+        passcodeConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
         navigator = mockk(relaxed = true)
     }
 
@@ -54,8 +58,31 @@ internal class SecretViewModelTest {
             swapKitConfig = swapKitConfig,
             customRpcConfig = customRpcConfig,
             limitSwapConfig = limitSwapConfig,
+            passcodeConfig = passcodeConfig,
             navigator = navigator,
         )
+
+    /** Verifies togglePasscode persists the new feature flag value. */
+    @Test
+    fun `togglePasscode persists the new flag value`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+
+            vm.togglePasscode(true)
+            coVerify { passcodeConfig.setFeatureEnabled(true) }
+
+            vm.togglePasscode(false)
+            coVerify { passcodeConfig.setFeatureEnabled(false) }
+        }
+
+    /** Verifies the passcode flag defaults to off so the feature stays hidden until enabled. */
+    @Test
+    fun `the passcode flag is off by default`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+
+            vm.state.value.isPasscodeEnabled.shouldBeFalse()
+        }
 
     /** Verifies toggleSwapKit persists the new feature flag value. */
     @Test

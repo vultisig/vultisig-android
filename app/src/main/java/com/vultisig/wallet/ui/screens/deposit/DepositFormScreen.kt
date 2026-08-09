@@ -486,7 +486,7 @@ internal fun DepositFormScreen(
                             color = Theme.v2.colors.text.tertiary,
                         )
 
-                        V2Container(type = ContainerType.TERTIARY) {
+                        V2Container(type = ContainerType.TERTIARY, radius = Theme.v2.radius.md) {
                             Text(
                                 text =
                                     stringResource(
@@ -507,7 +507,7 @@ internal fun DepositFormScreen(
                             color = Theme.v2.colors.text.tertiary,
                         )
 
-                        V2Container(type = ContainerType.TERTIARY) {
+                        V2Container(type = ContainerType.TERTIARY, radius = Theme.v2.radius.md) {
                             Text(
                                 text = thorAddress.text.toString(),
                                 style = Theme.brockmann.body.s.regular,
@@ -522,7 +522,7 @@ internal fun DepositFormScreen(
                             color = Theme.v2.colors.text.tertiary,
                         )
 
-                        V2Container(type = ContainerType.TERTIARY) {
+                        V2Container(type = ContainerType.TERTIARY, radius = Theme.v2.radius.md) {
                             Text(
                                 text = stringResource(R.string.secure, thorAddress.text),
                                 style = Theme.brockmann.body.s.regular,

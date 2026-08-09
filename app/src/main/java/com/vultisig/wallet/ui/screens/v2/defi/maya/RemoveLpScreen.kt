@@ -82,7 +82,7 @@ internal fun RemoveLpScreenContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         // Amount card
-        val amountCardShape = RoundedCornerShape(12.dp)
+        val amountCardShape = Theme.v2.radius.xl
         Column(
             modifier =
                 Modifier.fillMaxWidth()

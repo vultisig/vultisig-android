@@ -1,12 +1,12 @@
 package com.vultisig.wallet.data.blockchain.cosmos.staking
 
 import com.vultisig.wallet.data.chains.helpers.QBTCTransactionHelper
+import com.vultisig.wallet.data.common.base64NoWrap
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
-import java.util.Base64
 
 /**
  * Builds the SignDoc artefacts (bodyBytes, authInfoBytes, chainId, accountNumber) for a Cosmos-SDK
@@ -313,6 +313,4 @@ object CosmosStakingSignDataResolver {
         }
         return out
     }
-
-    private fun ByteArray.base64NoWrap(): String = Base64.getEncoder().encodeToString(this)
 }

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -100,9 +99,9 @@ private fun BackupPasswordRequestScreen(
                     Modifier.size(64.dp)
                         .background(
                             color = Theme.v2.colors.backgrounds.tertiary_2,
-                            shape = RoundedCornerShape(16.dp),
+                            shape = Theme.v2.radius.lg,
                         )
-                        .clip(shape = RoundedCornerShape(16.dp))
+                        .clip(shape = Theme.v2.radius.lg)
                         .padding(all = 16.dp),
                 drawableResId = R.drawable.ic_passkeys,
                 size = 32.dp,

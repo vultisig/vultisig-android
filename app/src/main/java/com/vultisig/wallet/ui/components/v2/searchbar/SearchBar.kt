@@ -36,7 +36,6 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -69,7 +68,7 @@ internal fun SearchBar(
                     ContainerBorderType.Bordered(color = Theme.v2.colors.border.light)
                 else ContainerBorderType.Borderless,
             modifier = Modifier.weight(1f),
-            cornerType = CornerType.Circular,
+            radius = Theme.v2.radius.pill,
         ) {
             BasicTextField(
                 state = state,

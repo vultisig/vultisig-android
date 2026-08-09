@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -27,10 +26,7 @@ object VsBottomSheet {
             modifier =
                 Modifier.padding(all = 12.dp)
                     .size(width = 36.dp, height = 6.dp)
-                    .background(
-                        color = Theme.v2.colors.neutrals.n600,
-                        shape = RoundedCornerShape(16.dp),
-                    )
+                    .background(color = Theme.v2.colors.neutrals.n600, shape = Theme.v2.radius.pill)
         )
     }
 }

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -50,9 +49,9 @@ internal fun TonUnstakeScreen(viewModel: TonUnstakeViewModel = hiltViewModel()) 
                 Column(
                     modifier =
                         Modifier.fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(Theme.v2.radius.xl)
                             .background(Theme.v2.colors.backgrounds.secondary)
-                            .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(16.dp))
+                            .border(1.dp, Theme.v2.colors.border.light, Theme.v2.radius.xl)
                             .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {

@@ -467,6 +467,11 @@ internal class SendFormGraph(
                 }
                 .collect { error -> uiState.update { it.copy(memoError = error) } }
         }
+        scope.launch {
+            tokenAmountFieldState.textAsFlow().collect { amount ->
+                uiState.update { it.copy(hasAmountInput = amount.isNotBlank()) }
+            }
+        }
         // Only the TRON freeze/unfreeze branch of isContinueDisabled reads isAmountValid, so limit
         // this per-keystroke validation to staking flows instead of paying it on every send screen.
         if (tronStakingService.isStakingType()) {

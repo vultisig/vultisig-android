@@ -37,7 +37,7 @@ internal fun TokenMetaRow(
                 .padding(all = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        V2Container {
+        V2Container(radius = Theme.v2.radius.md) {
             Text(
                 text = key,
                 color = Theme.v2.colors.text.primary,
@@ -46,7 +46,7 @@ internal fun TokenMetaRow(
             )
         }
         UiSpacer(weight = 1f)
-        V2Container(type = ContainerType.TERTIARY) {
+        V2Container(type = ContainerType.TERTIARY, radius = Theme.v2.radius.md) {
             LoadableValue(
                 value = value,
                 color = Theme.v2.colors.text.primary,
@@ -73,7 +73,7 @@ internal fun TokenMetaAddressRow(key: String, address: String, modifier: Modifie
                 .padding(all = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        V2Container {
+        V2Container(radius = Theme.v2.radius.md) {
             Text(
                 text = key,
                 color = Theme.v2.colors.text.primary,
@@ -82,7 +82,7 @@ internal fun TokenMetaAddressRow(key: String, address: String, modifier: Modifie
             )
         }
         UiSpacer(weight = 1f)
-        V2Container(type = ContainerType.TERTIARY) {
+        V2Container(type = ContainerType.TERTIARY, radius = Theme.v2.radius.md) {
             Row(
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,

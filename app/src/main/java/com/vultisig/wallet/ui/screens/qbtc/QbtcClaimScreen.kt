@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -207,7 +206,7 @@ private fun SelectingContent(state: QbtcClaimUiState.Selecting, onToggle: (Strin
 
 @Composable
 private fun QbtcClaimHeroCard(totalEligibleSats: Long) {
-    val shape = RoundedCornerShape(16.dp)
+    val shape = Theme.v2.radius.xl
     Box(
         modifier =
             Modifier.fillMaxWidth()
@@ -327,7 +326,7 @@ private fun QbtcClaimUtxoRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.lg)
                 .background(Theme.v2.colors.backgrounds.surface1)
                 .clickable(onClick = onToggle)
                 .padding(16.dp),
@@ -397,7 +396,7 @@ private fun MaturingInfoCard() {
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.surface1)
                 .padding(horizontal = 24.dp, vertical = 20.dp),
     ) {
@@ -428,7 +427,7 @@ private fun MaturingUtxoRow(utxo: QbtcClaimMaturingUtxoUiModel) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.lg)
                 .background(Theme.v2.colors.backgrounds.surface1)
                 .padding(16.dp),
     ) {

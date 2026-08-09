@@ -197,6 +197,9 @@ private fun BackupVaultContainer(
                     type = ContainerType.SECONDARY,
                     borderType = ContainerBorderType.Borderless,
                     modifier = Modifier.fillMaxWidth().heightIn(max = vaultListMaxHeight),
+                    // Inside BackupVaultContainer's card, so this group is content, not a
+                    // container.
+                    radius = Theme.v2.radius.md,
                 ) {
                     BoxWithConstraints {
                         val containerMaxHeight = this.maxHeight
@@ -242,6 +245,8 @@ private fun BackupVaultContainer(
                     type = ContainerType.SECONDARY,
                     borderType = ContainerBorderType.Borderless,
                     modifier = Modifier.fillMaxWidth(),
+                    // Same group as above, in the branch that has no height cap to apply.
+                    radius = Theme.v2.radius.md,
                 ) {
                     Column {
                         vaults.forEachIndexed { index, vault ->
@@ -303,7 +308,13 @@ internal fun VaultToBackup(model: VaultToBackupUiModel, isLastItem: Boolean) {
 
 @Composable
 private fun VaultMetaInfo(model: VaultToBackupUiModel) {
-    V2Container(type = ContainerType.SECONDARY, borderType = ContainerBorderType.Bordered()) {
+    V2Container(
+        type = ContainerType.SECONDARY,
+        borderType = ContainerBorderType.Bordered(),
+        // A small inline tag, two levels inside the card and one inside the vault-list group
+        // that already takes md — so it steps down again rather than matching its parent.
+        radius = Theme.v2.radius.sm,
+    ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,

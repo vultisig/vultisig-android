@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -296,7 +295,7 @@ private fun QbtcClaimConsentContent(
 
         UiSpacer(size = 24.dp)
 
-        val shape = RoundedCornerShape(16.dp)
+        val shape = Theme.v2.radius.xl
         Column(
             verticalArrangement = Arrangement.spacedBy(20.dp),
             modifier =
@@ -338,7 +337,7 @@ private fun QbtcClaimAccountRow(logo: Painter, label: String, address: String) {
             Image(
                 painter = logo,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp).clip(RoundedCornerShape(50)),
+                modifier = Modifier.size(20.dp).clip(Theme.v2.radius.pill),
             )
             Text(
                 text = label,

@@ -32,10 +32,13 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
@@ -43,16 +46,17 @@ import com.vultisig.wallet.app.activity.ForegroundNotificationState
 import com.vultisig.wallet.app.activity.MainViewModel
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.ui.components.BiometryAuthScreen
 import com.vultisig.wallet.ui.components.banners.ForegroundNotificationBanner
 import com.vultisig.wallet.ui.components.banners.OfflineBanner
 import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
+import com.vultisig.wallet.ui.models.passcode.PasscodeGuardViewModel
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.screens.home.VaultAccountsScreen
+import com.vultisig.wallet.ui.screens.passcode.PasscodeGuard
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.asString
@@ -71,6 +75,12 @@ internal fun MainActivityContent(
     val foregroundNotification by mainViewModel.foregroundNotification.collectAsStateWithLifecycle()
     var lastNotification by remember { mutableStateOf<ForegroundNotificationState?>(null) }
     if (foregroundNotification != null) lastNotification = foregroundNotification
+
+    // Hoisted out of PasscodeGuard so the content it covers can be taken out of the accessibility
+    // tree at the same moment. Swallowing pointer input is only half a lock: everything behind the
+    // gate stays composed, and TalkBack would happily walk it, read it out and activate it.
+    val passcodeGuardModel: PasscodeGuardViewModel = hiltViewModel()
+    val isGateClosed = passcodeGuardModel.state.collectAsStateWithLifecycle().value.isGateClosed
 
     val context = LocalContext.current
     val snackbarState = mainViewModel.snackbarState
@@ -116,10 +126,26 @@ internal fun MainActivityContent(
                 onNavigationReady()
             }
 
-            SetupNavGraph(navController = navController, startDestination = startDestination)
+            Box(
+                modifier =
+                    Modifier.fillMaxSize()
+                        .then(if (isGateClosed) Modifier.clearAndSetSemantics {} else Modifier)
+            ) {
+                SetupNavGraph(navController = navController, startDestination = startDestination)
+            }
         },
         overlayContent = {
-            BiometryAuthScreen()
+            PasscodeGuard(
+                model = passcodeGuardModel,
+                // Dialog destinations render in their own window, above this overlay. Popping them
+                // as the gate closes is what stops a bottom sheet — a receive address, a QR — from
+                // sitting on top of the lock screen and still accepting taps.
+                onLocked = {
+                    while (navController.currentBackStackEntry.isDialog()) {
+                        if (!navController.popBackStack()) break
+                    }
+                },
+            )
 
             VsSnackBar(
                 modifier = Modifier.align(Alignment.BottomCenter),
@@ -281,3 +307,17 @@ private fun MainActivityContentPreview() {
         },
     )
 }
+
+/**
+ * True when [entry] is a `dialog<>` destination.
+ *
+ * Matched by navigator name because `DialogNavigator.NAME` is internal to the navigation library.
+ * The name is part of the destination's serialised form, so it is as stable as the routes are.
+ */
+private fun NavBackStackEntry?.isDialog(): Boolean =
+    this?.destination?.navigatorName == DIALOG_NAVIGATOR_NAME
+
+/**
+ * Internal so a test can hold it against the annotation the navigation library actually declares.
+ */
+internal const val DIALOG_NAVIGATOR_NAME = "dialog"

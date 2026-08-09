@@ -8,7 +8,7 @@ import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.common.add0x
-import com.vultisig.wallet.data.utils.Numeric
+import com.vultisig.wallet.data.common.asCallData
 import javax.inject.Inject
 
 class ZkFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory) : FeeService {
@@ -73,8 +73,6 @@ class ZkFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory)
                 )
         }
     }
-
-    private fun ByteArray.asCallData(): String = Numeric.toHexString(this)
 
     private data class ZkCall(val to: String, val data: String)
 

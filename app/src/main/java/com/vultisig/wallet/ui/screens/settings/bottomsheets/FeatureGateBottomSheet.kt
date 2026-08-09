@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -146,8 +145,8 @@ private fun RequiresCard(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(20.dp))
+                .clip(Theme.v2.radius.xl)
+                .border(1.dp, Theme.v2.colors.border.light, Theme.v2.radius.xl)
     ) {
         Column(
             modifier =
@@ -223,9 +222,9 @@ private fun BalanceRow(balanceText: String, isBelowThreshold: Boolean) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
+                .clip(Theme.v2.radius.md)
                 .background(Theme.v2.colors.backgrounds.tertiary)
-                .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(14.dp))
+                .border(1.dp, Theme.v2.colors.border.light, Theme.v2.radius.md)
                 .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),

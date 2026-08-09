@@ -179,7 +179,10 @@ internal fun SettingItem(
                 UiSpacer(size = 16.dp)
             }
 
-            Column {
+            // Weighted so the text takes what is left after the trailing switch or value, and wraps
+            // inside it. Without this the column claims its full intrinsic width and pushes the
+            // trailing content off the right edge — invisible until a row carries a long subtitle.
+            Column(modifier = Modifier.weight(1f)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -208,7 +211,7 @@ internal fun SettingItem(
                 }
             }
 
-            UiSpacer(weight = 1f)
+            UiSpacer(size = 12.dp)
 
             item.trailingSwitch?.let { isChecked ->
                 Row(

@@ -3,7 +3,9 @@ package com.vultisig.wallet.ui.models.sign
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.resolveEcdsaChain
 import com.vultisig.wallet.data.repositories.CustomMessagePayloadDto
 import com.vultisig.wallet.data.repositories.CustomMessagePayloadRepo
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -54,6 +56,7 @@ constructor(
                             message = messageFieldState.text.toString(),
                             vaultPublicKeyEcdsa = vault.pubKeyECDSA,
                             vaultLocalPartyId = vault.localPartyID,
+                            chain = vault.resolveEcdsaChain(Chain.Ethereum).raw,
                         ),
                 )
             customMessagePayloadRepo.add(payload)

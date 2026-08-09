@@ -70,6 +70,7 @@ import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
 import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
+import com.vultisig.wallet.ui.theme.v2.V2
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -238,8 +239,8 @@ internal fun BondFormContent(
     }
 }
 
-private val cardShape = RoundedCornerShape(12.dp)
-private val inputShape = RoundedCornerShape(12.dp)
+private val cardShape = V2.radius.xl
+private val inputShape = V2.radius.md
 
 private fun String.toDisplayAsset(): String =
     substringBefore("-").substringAfterLast("/").substringAfterLast(".")

@@ -64,7 +64,6 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
@@ -91,11 +90,11 @@ internal fun BalanceBanner(
         modifier =
             Modifier.fillMaxWidth()
                 .height(118.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = Theme.v2.radius.xl,
                 )
     ) {
         SetBackgroundBanner(backgroundImageResId = image)
@@ -528,7 +527,7 @@ internal fun ManagePositionsButton(
 ) {
     V2Container(
         type = ContainerType.SECONDARY,
-        cornerType = CornerType.Circular,
+        radius = Theme.v2.radius.pill,
         modifier = modifier.clickOnce(enabled = isEnabled, onClick = onClick),
     ) {
         UiIcon(
@@ -621,12 +620,12 @@ internal fun HeaderDeFiWidget(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.secondary)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = Theme.v2.radius.xl,
                 )
                 .padding(16.dp)
     ) {
@@ -775,12 +774,12 @@ internal fun HeaderDeFiWidget(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.secondary)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = Theme.v2.radius.xl,
                 )
                 .padding(16.dp)
     ) {

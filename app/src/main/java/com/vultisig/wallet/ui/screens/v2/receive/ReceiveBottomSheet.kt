@@ -30,7 +30,6 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
 import com.vultisig.wallet.ui.models.ChainToReceiveUiModel
@@ -99,7 +98,7 @@ private fun ReceiveContent(
                             UiSpacer(size = 24.dp)
 
                             V2Container(
-                                cornerType = CornerType.Circular,
+                                radius = Theme.v2.radius.pill,
                                 borderType = ContainerBorderType.Bordered(),
                                 type = ContainerType.SECONDARY,
                             ) {
