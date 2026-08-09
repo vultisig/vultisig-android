@@ -120,7 +120,7 @@ internal fun GridPlus(modifier: Modifier = Modifier, model: GridPlusUiModel) {
                     .dashedBorder(
                         width = 1.dp,
                         color = Theme.v2.colors.border.light,
-                        cornerRadius = 24.dp,
+                        cornerRadius = Theme.v2.radius.xl.size,
                         dashLength = 4.dp,
                         intervalLength = 4.dp,
                     ),

@@ -311,8 +311,9 @@ private fun VaultMetaInfo(model: VaultToBackupUiModel) {
     V2Container(
         type = ContainerType.SECONDARY,
         borderType = ContainerBorderType.Bordered(),
-        // A meta chip inside a vault row, two levels inside the card.
-        radius = Theme.v2.radius.md,
+        // A small inline tag, two levels inside the card and one inside the vault-list group
+        // that already takes md — so it steps down again rather than matching its parent.
+        radius = Theme.v2.radius.sm,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
