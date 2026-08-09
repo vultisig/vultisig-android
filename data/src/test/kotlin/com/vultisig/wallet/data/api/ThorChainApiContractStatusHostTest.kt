@@ -13,7 +13,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 
@@ -73,7 +73,7 @@ internal class ThorChainApiContractStatusHostTest {
     }
 
     @Test
-    fun `the shared gateway answers the status query and ibs team is left alone`() = runBlocking {
+    fun `the shared gateway answers the status query and ibs team is left alone`() = runTest {
         val response =
             api(HttpStatusCode.OK, HttpStatusCode.InternalServerError)
                 .getThorchainTokenPriceByContract("thor1contract")
@@ -84,7 +84,7 @@ internal class ThorChainApiContractStatusHostTest {
 
     @Test
     fun `a stale gateway falls back to ibs team rather than leaving the receipt priceless`() =
-        runBlocking {
+        runTest {
             val response =
                 api(HttpStatusCode.InternalServerError, HttpStatusCode.OK)
                     .getThorchainTokenPriceByContract("thor1contract")
@@ -102,7 +102,7 @@ internal class ThorChainApiContractStatusHostTest {
      * and retarget the request.
      */
     @Test
-    fun `a contract containing a slash stays inside its own path segment`() = runBlocking {
+    fun `a contract containing a slash stays inside its own path segment`() = runTest {
         api(HttpStatusCode.OK, HttpStatusCode.InternalServerError)
             .getThorchainTokenPriceByContract("thor1abc/../../evil")
 

@@ -89,22 +89,36 @@ constructor(
         val currency = appCurrencyRepository.currency.first().ticker.lowercase()
         val currencies = listOf(currency)
 
-        val tokensByPriceProviderIds = tokens.groupBy { it.priceProviderID.lowercase() }
+        // A NAV-priced receipt is deliberately kept out of the generic routes below.
+        // [fetchThorContractPrices] is the only thing that may price these denoms, and sTCY
+        // carries TCY's `tcy` priceProviderID: left in, the provider batch would cache raw TCY
+        // under sTCY's row before the NAV correction runs, and leave it stuck at bare TCY parity
+        // for the cycle whenever that correction fails.
+        val batchTokens = tokens.filterNot(::isNavPricedDenom)
+
+        val tokensByPriceProviderIds = batchTokens.groupBy { it.priceProviderID.lowercase() }
 
         val priceProviderIds = mutableListOf<String>()
         val chainContractAddresses = mutableMapOf<Chain, List<Coin>>()
 
         // sort tokens with contract address and price provider id to different lists
-        tokens.forEach { token ->
+        batchTokens.forEach { token ->
             when {
                 token.priceProviderID.isEmpty() &&
                     token.usdPrice?.let { it > BigDecimal.ZERO } == true -> {
-                    val tetherPrice =
-                        if (currency == AppCurrency.USD.ticker.lowercase()) {
-                            1.toBigDecimal()
-                        } else {
-                            fetchTetherPrice()
-                        }
+                    val tetherPrice = tetherPriceFor(currency)
+
+                    // A missing FX rate arrives as ZERO, and multiplying blind would turn a good
+                    // USD price into a cached $0.00 that reads exactly like "we have no price".
+                    // Treat it as a failed lookup and leave the last-known price in place.
+                    if (tetherPrice.signum() <= 0) {
+                        Timber.w(
+                            "No %s/USD rate available, leaving %s unpriced",
+                            currency,
+                            token.id,
+                        )
+                        return@forEach
+                    }
 
                     val tokenIdToPrices: Map<TokenId, CurrencyToPrice> =
                         mapOf(token.id to mapOf(currency to token.usdPrice * tetherPrice))
@@ -382,8 +396,15 @@ constructor(
                 return@coroutineScope coinGeckoContractsPrice
             }
 
-            val tetherPrice = fetchTetherPrice()
             val currency = currencies.first()
+            // LI.FI quotes in USD and every price below is multiplied by this rate, so a ZERO from
+            // a CoinGecko miss would cache a good quote as $0.00. Hand back what CoinGecko already
+            // resolved and leave the rest unpriced rather than recorded wrong.
+            val tetherPrice = tetherPriceFor(currency)
+            if (tetherPrice.signum() <= 0) {
+                Timber.w("No %s/USD rate available, skipping the LI.FI leg for %s", currency, chain)
+                return@coroutineScope coinGeckoContractsPrice
+            }
             val lifiContractsPrice =
                 notInCoinGeckoTokens
                     .map { contractAddress ->
@@ -428,22 +449,31 @@ constructor(
             .values
             .firstOrNull()
 
-    private suspend fun fetchTetherPrice() = getPriceByPriceProviderId(TETHER_PRICE_PROVIDER_ID)
+    /** USDT quoted in [currency]. ZERO when CoinGecko has no answer. */
+    private suspend fun fetchTetherPrice(currency: String): BigDecimal =
+        coinGeckoApi
+            .getCryptoPrices(listOf(TETHER_PRICE_PROVIDER_ID), listOf(currency))
+            .values
+            .firstOrNull()
+            ?.values
+            ?.firstOrNull() ?: BigDecimal.ZERO
 
     /**
      * Currency-per-USD, for converting the USD-quoted sources (pool TOR prices, index NAV) into the
      * app currency. Skips the USDT round trip when the app currency already is USD.
      *
-     * [currency] selects only between skipping and fetching: the fetch itself resolves the app
-     * currency live, so a switch between the caller capturing [currency] and this call returning
-     * would quote the rate in the newer one. Callers refetch wholesale on a currency change, which
-     * is what keeps that window from mattering; it is not safe to widen the gap between capture and
-     * use on the strength of this parameter alone. Returns ZERO when the rate can't be fetched —
-     * callers must treat that as a failed lookup, not as a rate.
+     * [currency] is the currency the rate is quoted in, all the way down: the fetch used to reread
+     * the app currency itself and ignore this parameter, so a switch between the caller capturing
+     * [currency] and this call returning produced a rate in the newer currency that the caller then
+     * persisted under the older label — and since [price] serves the cache before recomputing, that
+     * mislabeled row was replayed indefinitely for an LP leg no refresh cycle revisits.
+     *
+     * Returns ZERO when the rate can't be fetched — callers must treat that as a failed lookup, not
+     * as a rate.
      */
     private suspend fun tetherPriceFor(currency: String): BigDecimal =
         if (currency.equals(AppCurrency.USD.ticker, ignoreCase = true)) BigDecimal.ONE
-        else fetchTetherPrice()
+        else fetchTetherPrice(currency)
 
     private suspend fun fetchThorPoolPrices(tokenList: List<Coin>, currency: String) {
         supervisorScope {
@@ -460,7 +490,18 @@ constructor(
                     return@supervisorScope
                 }
 
+            // Same failure the single-contract route was fixed for: a CoinGecko miss answers ZERO,
+            // and every pool price below is multiplied by this. A real quote like RUJI's would be
+            // cached as a confident $0.00, permanently, since nothing invalidates a cached price.
+            // A missing rate is a failed lookup for the whole batch, not a valuation.
             val tetherPrice = tetherPriceFor(currency)
+            if (tetherPrice.signum() <= 0) {
+                Timber.w(
+                    "No %s/USD rate available, leaving THORChain pool prices unresolved",
+                    currency,
+                )
+                return@supervisorScope
+            }
 
             val tokenIdToPrices =
                 thorTokens
@@ -499,7 +540,11 @@ constructor(
             val mayaTokens = tokenList.filter { it.chain == Chain.MayaChain && !it.isNativeToken }
             if (mayaTokens.isEmpty()) return@supervisorScope
 
-            val appCurrency = appCurrencyRepository.currency.first()
+            // Derived from the caller's [currency] rather than reread live. savePrices persists
+            // under that same captured label, so rereading here let a switch mid-refresh compute
+            // the price in the new currency and file it under the old one — a corrupt row that
+            // stands until a later refresh happens to land on the matching currency.
+            val appCurrency = AppCurrency.fromTicker(currency.uppercase()) ?: return@supervisorScope
             val tokenIdToPrices =
                 mayaTokens
                     .mapNotNull { token ->
@@ -519,11 +564,6 @@ constructor(
         }
     }
 
-    /**
-     * A Maya asset's price in [currency], derived from its pool's depth: the pool quotes the asset
-     * in CACAO, and CACAO carries the CoinGecko id that turns that into fiat. Null when the pool is
-     * empty or CACAO has no price at all, so the caller drops the token rather than record a zero.
-     */
     /**
      * CACAO in [currency]: the cached price when there is one, else a live fetch by its CoinGecko
      * id — the same cache-then-live shape [runePriceUsd] and [tcyPriceUsd] use for their
@@ -548,6 +588,11 @@ constructor(
             ?.takeIf { it > BigDecimal.ZERO }
     }
 
+    /**
+     * A Maya asset's price in [currency], derived from its pool's depth: the pool quotes the asset
+     * in CACAO, and CACAO carries the CoinGecko id that turns that into fiat. Null when the pool is
+     * empty or CACAO has no price at all, so the caller drops the token rather than record a zero.
+     */
     private suspend fun mayaPoolPrice(token: Coin, currency: AppCurrency): BigDecimal? {
         val cacaoPrice = cacaoPrice(currency) ?: return null
 
@@ -569,16 +614,26 @@ constructor(
         return (priceInCacao * cacaoPrice).takeIf { it.signum() > 0 }
     }
 
+    /**
+     * The THORChain denoms [fetchThorContractPrices] owns: priced off index NAV or RUNE parity
+     * rather than any market quote. Shared with [refresh] so the two lists can't drift apart — a
+     * denom this route claims must be excluded from the generic provider/contract batches there, or
+     * a borrowed priceProviderID writes the wrong price into its row first.
+     */
+    private fun isNavPricedDenom(coin: Coin): Boolean {
+        if (coin.chain != Chain.ThorChain) return false
+        val denom = coin.contractAddress.lowercase()
+        return denom.startsWith("x/nami") ||
+            denom == STAKING_TCY_DENOM ||
+            denom == BRUNE_DENOM ||
+            denom == YBRUNE_DENOM
+    }
+
     private suspend fun fetchThorContractPrices(tokenList: List<Coin>, currency: String) =
         supervisorScope {
             try {
                 val thorTokens =
-                    Coins.coins[Chain.ThorChain]?.filter {
-                        it.contractAddress.startsWith("x/nami") ||
-                            it.contractAddress == STAKING_TCY_DENOM ||
-                            it.contractAddress == BRUNE_DENOM ||
-                            it.contractAddress == YBRUNE_DENOM
-                    } ?: emptyList()
+                    Coins.coins[Chain.ThorChain]?.filter(::isNavPricedDenom) ?: emptyList()
 
                 val matchingTokens =
                     tokenList.filter { token -> thorTokens.any { it.id.equals(token.id, true) } }

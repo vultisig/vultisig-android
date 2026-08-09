@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.CoinGeckoApi
 import com.vultisig.wallet.data.api.LiQuestApi
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.MayaNodePool
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolJson
 import com.vultisig.wallet.data.api.models.thorchain.VaultRedemptionResponseJson
@@ -15,6 +16,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -351,11 +353,7 @@ internal class TokenPriceRepositoryImplTest {
     }
 
     private fun pool(asset: String, torPrice: String) =
-        ThorChainPoolJson(
-            asset = asset,
-            assetTorPrice = java.math.BigInteger(torPrice),
-            status = "Available",
-        )
+        ThorChainPoolJson(asset = asset, assetTorPrice = BigInteger(torPrice), status = "Available")
 
     @Test
     fun `a THORChain contract lookup prices the staking receipt off NAV instead of returning zero`() =
@@ -435,6 +433,95 @@ internal class TokenPriceRepositoryImplTest {
         coEvery { thorApi.getPools() } returns emptyList()
 
         val price = repository.getPriceByContactAddress(Chain.ThorChain.id, "x/unknown-denom")
+
+        assertPriceEquals("0", price)
+        coVerify(exactly = 0) { tokenPriceDao.insertTokenPrice(any()) }
+    }
+
+    @Test
+    fun `a THORChain pool price is not cached when the FX rate cannot be fetched`() = runTest {
+        // The batch route had the same hole the single-contract route was fixed for: every pool
+        // price is multiplied by the USDT rate, and a CoinGecko miss answers ZERO — so a perfectly
+        // good pool quote landed in Room as a confident $0.00, and only for non-USD users.
+        coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrency.EUR)
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { thorApi.getPools() } returns listOf(pool("THOR.RUJI", "150000000"))
+
+        repository.refresh(listOf(Coins.ThorChain.RUJI))
+
+        coVerify(exactly = 0) {
+            tokenPriceDao.insertTokenPrice(match { it.tokenId == Coins.ThorChain.RUJI.id })
+        }
+    }
+
+    @Test
+    fun `sTCY does not inherit TCY's price through their shared provider id`() = runTest {
+        // sTCY carries TCY's `tcy` priceProviderID, so the provider batch would cache raw TCY under
+        // sTCY's row. fetchThorContractPrices corrects it to NAV x TCY afterwards — but when that
+        // correction fails, the uncorrected row is what survives, pinning sTCY at bare TCY parity
+        // instead of leaving its last-known good price alone.
+        stubEmptyContractFallback()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns
+            mapOf("tcy" to mapOf("usd" to BigDecimal("1.0")))
+        coEvery { thorApi.getThorchainTokenPriceByContract(any()) } throws RuntimeException("NAV")
+
+        repository.refresh(listOf(Coins.ThorChain.sTCY))
+
+        coVerify(exactly = 0) {
+            tokenPriceDao.insertTokenPrice(match { it.tokenId == Coins.ThorChain.sTCY.id })
+        }
+    }
+
+    @Test
+    fun `a Maya pool price is computed in the currency it is persisted under`() = runTest {
+        // The currency was captured once for the label and reread live for the computation, so a
+        // switch mid-refresh priced the token in the new currency and filed it under the old one.
+        // Emit USD first (what refresh captures) and EUR after, so a reread is visible.
+        var reads = 0
+        coEvery { appCurrencyRepository.currency } answers
+            {
+                flowOf(if (reads++ == 0) AppCurrency.USD else AppCurrency.EUR)
+            }
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns
+            mapOf("cacao" to mapOf("usd" to BigDecimal("0.5")))
+        coEvery { thorApi.getPools() } returns emptyList()
+        // Cold cache, so CACAO is fetched live. The relaxed dao answers "" rather than null, which
+        // BigDecimal would reject.
+        coEvery { tokenPriceDao.getTokenPrice(Coins.MayaChain.CACAO.id, any()) } returns null
+        coEvery { mayaApi.getPool(any()) } returns
+            MayaNodePool(
+                asset = "MAYA.MAYA",
+                status = "Available",
+                balanceCacao = "1000000000000",
+                balanceAsset = "1000000",
+            )
+
+        repository.refresh(listOf(Coins.MayaChain.MAYA))
+
+        // CACAO must be priced in the currency the row is labeled with, never the reread one.
+        coVerify(exactly = 0) { coinGeckoApi.getCryptoPrices(any(), listOf("eur")) }
+        coVerify {
+            tokenPriceDao.insertTokenPrice(
+                match { it.tokenId == Coins.MayaChain.MAYA.id && it.currency == "usd" }
+            )
+        }
+    }
+
+    @Test
+    fun `a pool quoting zero is a miss, not a valuation worth caching`() = runTest {
+        // Distinct from an absent pool: the pool exists and answers, it just answers 0. Only the
+        // null case used to be rejected, so a zero survived to savePrices — which filters empty
+        // maps, not zero prices — and permanently blocked the token's later real price.
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { thorApi.getPools() } returns listOf(pool("THOR.RUJI", "0"))
+
+        val price =
+            repository.getPriceByContactAddress(
+                Chain.ThorChain.id,
+                Coins.ThorChain.RUJI.contractAddress,
+            )
 
         assertPriceEquals("0", price)
         coVerify(exactly = 0) { tokenPriceDao.insertTokenPrice(any()) }
