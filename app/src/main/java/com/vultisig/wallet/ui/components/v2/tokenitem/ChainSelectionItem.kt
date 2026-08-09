@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -76,7 +75,7 @@ internal fun GridItem(
             contentAlignment = Alignment.Center,
             modifier =
                 Modifier.size(74.dp)
-                    .clip(shape = RoundedCornerShape(size = 24.dp))
+                    .clip(shape = Theme.v2.radius.xl)
                     .background(
                         color =
                             if (checked) Theme.v2.colors.backgrounds.secondary
@@ -116,7 +115,7 @@ internal fun GridPlus(modifier: Modifier = Modifier, model: GridPlusUiModel) {
             contentAlignment = Alignment.Center,
             modifier =
                 Modifier.size(74.dp)
-                    .clip(shape = RoundedCornerShape(size = 24.dp))
+                    .clip(shape = Theme.v2.radius.xl)
                     .background(color = Theme.v2.colors.backgrounds.disabled)
                     .dashedBorder(
                         width = 1.dp,

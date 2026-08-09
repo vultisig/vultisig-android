@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
@@ -92,7 +91,7 @@ internal fun VsCodeInputField(
             repeat(maxCharacters) { index ->
                 val isActiveBox = focusedState.value && index == value.length
 
-                val inputBoxShape = RoundedCornerShape(24.dp)
+                val inputBoxShape = Theme.v2.radius.xl
                 val inputManager = LocalSoftwareKeyboardController.current
 
                 Box(

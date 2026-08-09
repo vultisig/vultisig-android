@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -46,7 +46,7 @@ internal fun TierDiscountBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         containerColor = Theme.v2.colors.backgrounds.secondary,
-        shape = RoundedCornerShape(24.dp),
+        shape = Theme.v2.radius.xl,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         dragHandle = null,
     ) {
@@ -99,7 +99,12 @@ internal fun TierDiscountBottomSheetContent(tier: TierType, onContinue: () -> Un
                         }
                     }
                 }
-                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                .clip(
+                    Theme.v2.radius.xl.shape.copy(
+                        bottomStart = CornerSize(0.dp),
+                        bottomEnd = CornerSize(0.dp),
+                    )
+                )
     ) {
         Column(
             modifier = Modifier.padding(32.dp).fillMaxWidth().navigationBarsPadding(),

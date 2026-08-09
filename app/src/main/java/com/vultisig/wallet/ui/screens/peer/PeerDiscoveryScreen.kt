@@ -624,7 +624,7 @@ private fun DevicePeerCard(
     selected: Boolean = true,
     onClick: (() -> Unit)? = null,
 ) {
-    val shape = RoundedCornerShape(24.dp)
+    val shape = Theme.v2.radius.xl
     val accentColor = if (selected) Theme.v2.colors.alerts.success else Theme.v2.colors.border.light
 
     Row(

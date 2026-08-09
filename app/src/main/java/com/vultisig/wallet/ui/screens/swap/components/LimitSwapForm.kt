@@ -135,9 +135,9 @@ private fun ExecuteWhenCard(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(colors.backgrounds.background)
-                .border(1.dp, colors.border.light, RoundedCornerShape(24.dp))
+                .border(1.dp, colors.border.light, Theme.v2.radius.xl)
                 .padding(start = 14.dp, end = 14.dp, top = 16.dp, bottom = 14.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -389,9 +389,9 @@ private fun AssetEditorCard(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(colors.backgrounds.background)
-                .border(1.dp, colors.border.light, RoundedCornerShape(24.dp))
+                .border(1.dp, colors.border.light, Theme.v2.radius.xl)
                 .padding(start = 14.dp, end = 14.dp, top = 16.dp, bottom = 14.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -535,9 +535,9 @@ private fun SummaryRow(
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(colors.backgrounds.background)
-                .border(1.dp, colors.border.light, RoundedCornerShape(24.dp))
+                .border(1.dp, colors.border.light, Theme.v2.radius.xl)
                 .clickable(onClick = onEdit)
                 .padding(horizontal = 16.dp, vertical = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
