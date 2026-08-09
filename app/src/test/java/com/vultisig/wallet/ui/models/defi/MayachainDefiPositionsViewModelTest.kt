@@ -145,7 +145,7 @@ internal class MayachainDefiPositionsViewModelTest {
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
-        assertEquals(listOf("RUNE", "TCY"), successData(vm).selectedPositions)
+        successData(vm).selectedPositions shouldBe listOf("RUNE", "TCY")
     }
 
     @Test
@@ -877,7 +877,7 @@ internal class MayachainDefiPositionsViewModelTest {
         thorchainSaved.value = setOf("RUNE")
 
         val data = successData(vm)
-        assertEquals(listOf(MAYA_STAKE_CACAO_KEY), data.selectedPositions)
+        data.selectedPositions shouldBe listOf(MAYA_STAKE_CACAO_KEY)
         data.isTotalAmountLoading shouldBe false
         data.totalAmountPrice shouldBe settled.totalAmountPrice
     }

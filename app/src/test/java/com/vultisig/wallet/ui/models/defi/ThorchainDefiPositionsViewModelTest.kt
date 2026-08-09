@@ -1147,7 +1147,7 @@ internal class ThorchainDefiPositionsViewModelTest {
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
-        assertEquals(defaultSelectedPositionsDialog(), vm.state.value.selectedPositions)
+        vm.state.value.selectedPositions shouldBe defaultSelectedPositionsDialog()
     }
 
     private fun selectPositions(vararg keys: String) {
