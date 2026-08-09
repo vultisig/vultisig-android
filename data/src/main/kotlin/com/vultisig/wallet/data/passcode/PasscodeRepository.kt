@@ -93,7 +93,14 @@ interface PasscodeRepository {
     /** Current lock state; starts at [PasscodeState.Unknown] until [initialize] has run. */
     val state: StateFlow<PasscodeState>
 
-    /** Reads persisted state off the main thread. Safe to call more than once. */
+    /**
+     * Reads persisted state off the main thread. Safe to call more than once.
+     *
+     * Does not throw. A store that cannot be read resolves to [PasscodeState.StoreUnavailable]
+     * rather than escaping: every caller is a coroutine started from a UI event or a screen's
+     * `init`, and leaving the state [PasscodeState.Unknown] is as bad as crashing — the guard's
+     * blank cover would sit over the whole app with nothing left to move it.
+     */
     suspend fun initialize()
 
     /**
@@ -217,19 +224,38 @@ internal class PasscodeRepositoryImpl(
     override suspend fun initialize() {
         mutex.withLock {
             if (_state.value != PasscodeState.Unknown) return
-            val hasPasscode = withContext(dispatcher) { store.readCredentials() != null }
             _state.value =
-                when {
-                    hasPasscode -> PasscodeState.Locked
-                    !keyShareProtection.hasEncryptedKeyShares() -> PasscodeState.Disabled
-                    // Ciphertext with nothing to open it. Reporting Disabled here is what turns a
-                    // keystore wipe into silent, permanent data loss — but which of the two
-                    // unreadable states this is decides what the user is told to do about it, and
-                    // "reinstall" aimed at a store that is merely unavailable this launch would
-                    // destroy vaults whose wrap is sitting intact on disk.
-                    withContext(dispatcher) { store.isPersistent() } -> PasscodeState.KeyUnavailable
-                    else -> PasscodeState.StoreUnavailable
+                try {
+                    resolveInitialState()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // Reading the credentials is itself a keystore operation, and the database is
+                    // asked whether any ciphertext exists — either can fail. Neither leaving the
+                    // state Unknown nor letting this escape is survivable: the first leaves the
+                    // guard's blank cover over the whole app with nothing to move it, and the
+                    // second kills whichever coroutine happened to ask first. Reporting Disabled
+                    // is the one answer that would lose data, so it reports the truth — nothing
+                    // readable this launch — which at least says so on screen and names the fix.
+                    Timber.e(e, "Could not read the passcode state")
+                    PasscodeState.StoreUnavailable
                 }
+        }
+    }
+
+    /** Callers must hold [mutex]. */
+    private suspend fun resolveInitialState(): PasscodeState {
+        val hasPasscode = withContext(dispatcher) { store.readCredentials() != null }
+        return when {
+            hasPasscode -> PasscodeState.Locked
+            !keyShareProtection.hasEncryptedKeyShares() -> PasscodeState.Disabled
+            // Ciphertext with nothing to open it. Reporting Disabled here is what turns a keystore
+            // wipe into silent, permanent data loss — but which of the two unreadable states this
+            // is decides what the user is told to do about it, and "reinstall" aimed at a store
+            // that is merely unavailable this launch would destroy vaults whose wrap is sitting
+            // intact on disk.
+            withContext(dispatcher) { store.isPersistent() } -> PasscodeState.KeyUnavailable
+            else -> PasscodeState.StoreUnavailable
         }
     }
 

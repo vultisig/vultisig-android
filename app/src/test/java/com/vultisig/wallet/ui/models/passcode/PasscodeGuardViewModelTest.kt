@@ -41,20 +41,29 @@ internal class PasscodeGuardViewModelTest {
     }
 
     @Test
-    fun `a failed initialize does not leave the gate closed over the whole app`() = runTest {
-        // initialize decodes keystore-backed credentials, and the keystore can fail. Thrown from a
-        // bare launch, that would pin the state at Unknown — and the opaque cover the guard draws
-        // while it waits becomes the entire app until it is force-stopped.
-        coEvery { passcodeRepository.initialize() } throws IllegalStateException("keystore is gone")
+    fun `a throwing initialize neither escapes nor stops the view model following the repository`() =
+        runTest {
+            // Belt to the repository's braces: initialize resolves its own store failures to
+            // StoreUnavailable, so this stands for anything else that could throw. What it must
+            // not do is escape a bare launch and take the process down, or kill the collector
+            // that is the only thing left able to move the state off Unknown.
+            coEvery { passcodeRepository.initialize() } throws
+                IllegalStateException("keystore is gone")
 
-        val model = PasscodeGuardViewModel(passcodeRepository)
-        advanceUntilIdle()
-        state.value = PasscodeState.Disabled
-        advanceUntilIdle()
+            val model = PasscodeGuardViewModel(passcodeRepository)
+            advanceUntilIdle()
 
-        assertEquals(PasscodeState.Disabled, model.state.value.passcodeState)
-        assertFalse(model.state.value.isGateClosed)
-    }
+            // A mocked repository publishes nothing of its own, so the gate is still closed here.
+            // That is the point: only the collector can open it, and it has to have survived.
+            assertEquals(PasscodeState.Unknown, model.state.value.passcodeState)
+            assertTrue(model.state.value.isGateClosed)
+
+            state.value = PasscodeState.Disabled
+            advanceUntilIdle()
+
+            assertEquals(PasscodeState.Disabled, model.state.value.passcodeState)
+            assertFalse(model.state.value.isGateClosed)
+        }
 
     @Test
     fun `the gate stays closed for every state the user cannot see past`() = runTest {

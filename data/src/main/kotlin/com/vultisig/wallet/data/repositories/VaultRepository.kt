@@ -40,6 +40,9 @@ interface VaultRepository {
      * screen that loaded behind the lock screen keeps a vault it cannot sign or export with for as
      * long as it lives. Callers that only need public keys and addresses — background sync,
      * notifications — should not wait, and do not.
+     *
+     * Does not throw: a credential store that cannot be read resolves to an unreadable state and
+     * returns, so this is safe to await from the bare `launch` those callers already run in.
      */
     suspend fun awaitKeySharesReadable()
 

@@ -372,6 +372,32 @@ internal class PasscodeRepositoryImplTest {
     }
 
     @Test
+    fun `a store that cannot be read resolves rather than throwing or standing still`() = runTest {
+        // Both outcomes this replaces are fatal in their own way: an escape kills whichever
+        // coroutine asked first, and staying Unknown leaves the guard's blank cover over the whole
+        // app with nothing left to move it. Disabled is the one answer that would lose data.
+        store.readFailure = IllegalStateException("keystore is gone")
+        val repository = repository()
+
+        repository.initialize()
+
+        assertEquals(PasscodeState.StoreUnavailable, repository.state.value)
+        assertEquals(true, repository.isLocked(), "keyshare writes must still be refused")
+    }
+
+    @Test
+    fun `awaiting readable keyshares survives a store that cannot be read`() = runTest {
+        // Reached from screens that await it inside a bare launch, so it has to resolve on its own
+        // rather than hand them an exception.
+        store.readFailure = IllegalStateException("keystore is gone")
+        val repository = repository()
+
+        repository.awaitUnlocked()
+
+        assertEquals(PasscodeState.StoreUnavailable, repository.state.value)
+    }
+
+    @Test
     fun `awaitUnlocked waits for the passcode and returns at once without one`() = runTest {
         val repository = repository()
         repository.setPasscode("123456")
@@ -589,11 +615,15 @@ internal class FakePasscodeStore : PasscodeStore {
     /** Set false to stand in for the in-memory fallback a keystore failure installs. */
     var persistent = true
 
+    /** Set to stand in for a keystore that throws rather than returning nothing. */
+    var readFailure: Throwable? = null
+
     override fun isPersistent(): Boolean = persistent
 
     @Synchronized
     override fun readCredentials(): PasscodeCredentials? {
         onReadCredentials?.invoke()
+        readFailure?.let { throw it }
         return credentials
     }
 
