@@ -328,7 +328,7 @@ private fun TronPendingWithdrawalRow(
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.secondary)
                 .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,

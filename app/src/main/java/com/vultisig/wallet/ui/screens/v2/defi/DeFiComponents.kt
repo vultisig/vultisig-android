@@ -90,11 +90,11 @@ internal fun BalanceBanner(
         modifier =
             Modifier.fillMaxWidth()
                 .height(118.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = Theme.v2.radius.xl,
                 )
     ) {
         SetBackgroundBanner(backgroundImageResId = image)
@@ -620,12 +620,12 @@ internal fun HeaderDeFiWidget(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.secondary)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = Theme.v2.radius.xl,
                 )
                 .padding(16.dp)
     ) {
@@ -774,12 +774,12 @@ internal fun HeaderDeFiWidget(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.secondary)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = Theme.v2.radius.xl,
                 )
                 .padding(16.dp)
     ) {

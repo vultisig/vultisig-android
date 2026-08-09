@@ -393,11 +393,11 @@ private fun TotalStakedCard(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = Theme.v2.radius.xl,
                 )
                 .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -814,11 +814,11 @@ private fun CosmosStakingBalanceBanner(
         modifier =
             Modifier.fillMaxWidth()
                 .height(118.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .border(
                     width = 1.dp,
                     color = CosmosBannerTeal.copy(alpha = 0.17f),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = Theme.v2.radius.xl,
                 )
                 .background(
                     androidx.compose.ui.graphics.Brush.verticalGradient(

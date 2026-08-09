@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -184,12 +183,12 @@ private fun StakeAccountsWidget(
             Column(
                 modifier =
                     Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(Theme.v2.radius.xl)
                         .background(Theme.v2.colors.backgrounds.secondary)
                         .border(
                             width = 1.dp,
                             color = Theme.v2.colors.border.light,
-                            shape = RoundedCornerShape(16.dp),
+                            shape = Theme.v2.radius.xl,
                         )
                         .padding(16.dp)
             ) {
@@ -370,12 +369,12 @@ private fun SolanaHeaderBanner(totalValue: String?, isLoading: Boolean, isBalanc
         modifier =
             Modifier.fillMaxWidth()
                 .height(118.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.secondary)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = Theme.v2.radius.xl,
                 )
     ) {
         Box(
