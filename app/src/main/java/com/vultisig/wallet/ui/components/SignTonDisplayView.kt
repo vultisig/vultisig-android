@@ -194,7 +194,7 @@ private fun BadgeText(text: String) {
         modifier =
             Modifier.background(
                     color = Theme.v2.colors.variables.bordersLight,
-                    shape = RoundedCornerShape(4.dp),
+                    shape = Theme.v2.radius.xs,
                 )
                 .padding(horizontal = 6.dp, vertical = 2.dp),
         color = Theme.v2.colors.text.primary,

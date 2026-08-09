@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -119,12 +118,12 @@ private fun ShowExactErrorRow(modifier: Modifier = Modifier, onClick: () -> Unit
                 .fillMaxWidth()
                 .background(
                     color = Theme.v2.colors.backgrounds.surface1,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = Theme.v2.radius.lg,
                 )
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = Theme.v2.radius.lg,
                 )
                 .clickable(onClick = onClick)
                 .padding(20.dp),

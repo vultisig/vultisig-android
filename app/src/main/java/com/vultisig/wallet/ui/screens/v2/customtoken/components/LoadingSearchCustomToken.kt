@@ -15,7 +15,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.loading.V2Loading
 import com.vultisig.wallet.ui.theme.Theme
@@ -24,7 +23,7 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun LoadingSearchCustomToken() {
     V2Container(
         type = ContainerType.TERTIARY,
-        cornerType = CornerType.RoundedCornerShape(size = 24.dp),
+        radius = Theme.v2.radius.xl,
         borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.light),
     ) {
         Column(

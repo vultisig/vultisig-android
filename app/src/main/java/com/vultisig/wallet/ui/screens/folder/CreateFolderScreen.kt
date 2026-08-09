@@ -61,7 +61,6 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.models.folder.CreateFolderUiModel
@@ -359,7 +358,7 @@ fun FolderNameTextField(textFieldState: TextFieldState) {
         borderType =
             if (isFocusedState) ContainerBorderType.Bordered(color = Theme.v2.colors.border.normal)
             else ContainerBorderType.Borderless,
-        cornerType = CornerType.RoundedCornerShape(size = 12.dp),
+        radius = Theme.v2.radius.md,
     ) {
         BasicTextField(
             state = textFieldState,

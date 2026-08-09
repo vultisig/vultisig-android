@@ -119,7 +119,7 @@ internal fun TokenCard(
                             .border(
                                 width = 1.dp,
                                 color = Theme.v2.colors.neutrals.n50,
-                                shape = RoundedCornerShape(4.dp),
+                                shape = Theme.v2.radius.xs,
                             )
                             .align(BottomEnd),
                 )

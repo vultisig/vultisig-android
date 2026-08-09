@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.icons.VaultIcon
 import com.vultisig.wallet.ui.theme.Theme
@@ -62,10 +61,7 @@ internal fun VaultCeil(
 
     val (logoBackground, logoBorder) = logo
     FormCard {
-        V2Container(
-            type = containerType,
-            cornerType = CornerType.RoundedCornerShape(size = 12.dp),
-        ) {
+        V2Container(type = containerType, radius = Theme.v2.radius.md) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier =

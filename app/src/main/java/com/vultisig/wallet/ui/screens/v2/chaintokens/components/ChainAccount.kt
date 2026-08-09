@@ -31,7 +31,6 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
 import com.vultisig.wallet.ui.theme.Theme
@@ -98,7 +97,7 @@ internal fun ChainAccount(
             V2Container(
                 type = ContainerType.TERTIARY,
                 borderType = ContainerBorderType.Borderless,
-                cornerType = CornerType.RoundedCornerShape(size = 8.dp),
+                radius = Theme.v2.radius.sm,
             ) {
                 LoadableValue(
                     value = price,

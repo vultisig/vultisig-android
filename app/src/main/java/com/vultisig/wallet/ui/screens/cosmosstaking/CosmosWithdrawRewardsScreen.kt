@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
@@ -230,16 +231,16 @@ private fun androidx.compose.foundation.layout.BoxScope.FooterSummary(
     isValidForm: Boolean,
     onSubmit: () -> Unit,
 ) {
+    // Docked to the bottom edge, so only the top corners are drawn. Derived from the token rather
+    // than restated, so the clip and the border that traces it cannot drift apart.
+    val topCornersOnly =
+        Theme.v2.radius.lg.shape.copy(bottomStart = CornerSize(0.dp), bottomEnd = CornerSize(0.dp))
     Column(
         modifier =
             Modifier.align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                .border(
-                    width = 1.dp,
-                    color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-                )
+                .clip(topCornersOnly)
+                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = topCornersOnly)
                 .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
