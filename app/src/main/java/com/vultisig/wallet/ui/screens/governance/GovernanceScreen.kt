@@ -91,9 +91,9 @@ private fun ProposalCard(proposal: ProposalUi, onVoteClick: () -> Unit) {
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.surface1)
-                .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(20.dp))
+                .border(1.dp, Theme.v2.colors.border.normal, Theme.v2.radius.xl)
                 .padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -291,7 +291,7 @@ private fun YourVoteBadge(option: VoteOption) {
     val color = option.voteColor()
     Row(
         modifier =
-            Modifier.clip(RoundedCornerShape(10.dp))
+            Modifier.clip(Theme.v2.radius.sm)
                 .background(color.copy(alpha = 0.12f))
                 .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -397,9 +397,9 @@ private fun ProposalSkeletonCard() {
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.surface1)
-                .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(20.dp))
+                .border(1.dp, Theme.v2.colors.border.normal, Theme.v2.radius.xl)
                 .padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -146,7 +145,7 @@ internal fun SendTxOverviewScreen(
                                     stringResource(R.string.tx_overview_screen_tx_deposit)
                                 },
                             valuedToken = tx.token,
-                            shape = RoundedCornerShape(24.dp),
+                            shape = Theme.v2.radius.xl,
                             modifier = Modifier.fillMaxWidth(),
                         )
 

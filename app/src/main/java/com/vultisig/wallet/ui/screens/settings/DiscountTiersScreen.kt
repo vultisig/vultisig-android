@@ -131,7 +131,7 @@ private fun TierBanner() {
                 Modifier.align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .height(BannerCardHeight)
-                    .clip(RoundedCornerShape(24.dp))
+                    .clip(Theme.v2.radius.xl)
                     .background(
                         Brush.linearGradient(
                             colors = listOf(BannerGradientStart, Theme.v2.colors.primary.accent1)
@@ -173,8 +173,15 @@ private fun TierBanner() {
 @Composable
 private fun TierCard(tierType: TierType, isActive: Boolean, onClick: () -> Unit) {
     val style = getStyleByTier(tierType)
+    // The 24/20 asymmetry is deliberate — the top is the container step, the bottom is a design
+    // decision the footer bar behind the card is drawn to sit under. Only the top is on the scale.
     val shape =
-        RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 20.dp, bottomEnd = 20.dp)
+        RoundedCornerShape(
+            topStart = Theme.v2.radius.xl.size,
+            topEnd = Theme.v2.radius.xl.size,
+            bottomStart = 20.dp,
+            bottomEnd = 20.dp,
+        )
 
     if (isActive) {
         ActiveTierCard(style = style, shape = shape)
@@ -219,12 +226,12 @@ private fun ActiveTierCard(style: TierStyle, shape: Shape) {
 
             Box(
                 modifier =
-                    Modifier.clip(RoundedCornerShape(16.dp))
+                    Modifier.clip(Theme.v2.radius.lg)
                         .background(Theme.v2.colors.backgrounds.surface1)
                         .border(
                             width = 1.dp,
                             color = Theme.v2.colors.border.light,
-                            shape = RoundedCornerShape(16.dp),
+                            shape = Theme.v2.radius.lg,
                         )
                         .padding(horizontal = 10.dp, vertical = 8.dp)
             ) {

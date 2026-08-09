@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -40,13 +39,13 @@ internal fun TronDeFiBanner(isLoading: Boolean, totalValue: String, isBalanceVis
         modifier =
             Modifier.fillMaxWidth()
                 .height(118.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(TronBannerGradientTop, TronBannerGradientBottom)
                     )
                 )
-                .border(1.dp, TronBannerBorder, RoundedCornerShape(16.dp))
+                .border(1.dp, TronBannerBorder, Theme.v2.radius.xl)
     ) {
         Column(
             horizontalAlignment = Alignment.Start,

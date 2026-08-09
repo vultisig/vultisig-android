@@ -98,6 +98,7 @@ import com.vultisig.wallet.ui.models.TokenInfoUiModel
 import com.vultisig.wallet.ui.models.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.TokenUiModel
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
+import com.vultisig.wallet.ui.models.TransactionHistoryGroupUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryTab
 import com.vultisig.wallet.ui.models.TransactionHistoryUiState
@@ -312,6 +313,7 @@ class PreviewActivity : ComponentActivity() {
                     "deposit_mint_done" -> DepositMintDonePreview()
                     "transaction_history_empty" -> TransactionHistoryEmptyState()
                     "limit_orders_tab" -> LimitOrdersTabPreview()
+                    "swaps_tab" -> SwapsTabPreview()
                     "limit_order_cancel_verify" -> LimitOrderCancelVerifyPreview()
                     "withdraw_usdc_circle" -> WithdrawUsdcCirclePreview()
                     "limit_order_cancel_done" -> LimitOrderCancelDonePreview()
@@ -3751,6 +3753,80 @@ private fun LimitOrdersTabPreview(orders: List<LimitOrderHistoryUiModel> = previ
                 isLoading = false,
                 limitOrders = orders,
                 isLimitTabVisible = true,
+            ),
+        onBack = {},
+        onTabSelected = {},
+        onRefresh = {},
+        onItemClick = {},
+    )
+}
+
+/**
+ * The Swaps tab of TX History. Exists so the "via" badge is verifiable: it is anchored to the
+ * card's bottom-end corner and traces it, so a card radius change has to be looked at here.
+ */
+@Composable
+private fun SwapsTabPreview() {
+    TransactionHistoryScreen(
+        state =
+            TransactionHistoryUiState(
+                selectedTab = TransactionHistoryTab.SWAP,
+                isLoading = false,
+                groups =
+                    listOf(
+                        TransactionHistoryGroupUiModel(
+                            datePrefix = UiText.DynamicString("Today"),
+                            dateSuffix = UiText.DynamicString(""),
+                            dateKey = "today",
+                            transactions =
+                                listOf(
+                                    TransactionHistoryItemUiModel.Swap(
+                                        id = "S1",
+                                        txHash = "0xabc",
+                                        chain = "THORChain",
+                                        status = TransactionStatusUiModel.Confirmed,
+                                        explorerUrl = "",
+                                        timestamp = 0L,
+                                        fromToken = "RUNE",
+                                        fromAmount = "125.5",
+                                        fromChain = "THORChain",
+                                        fromTokenLogo = R.drawable.rune,
+                                        toToken = "BTC",
+                                        toAmount = "0.0261",
+                                        toChain = "Bitcoin",
+                                        toTokenLogo = R.drawable.bitcoin,
+                                        provider = "THORChain",
+                                        providerLogo = R.drawable.rune,
+                                        fiatValue = "$1,204.00",
+                                        fromAddress = "thor1abc",
+                                        toAddress = "bc1qxyz",
+                                        feeEstimate = "$0.42",
+                                    ),
+                                    TransactionHistoryItemUiModel.Swap(
+                                        id = "S2",
+                                        txHash = "0xdef",
+                                        chain = "Ethereum",
+                                        status = TransactionStatusUiModel.Broadcasted,
+                                        explorerUrl = "",
+                                        timestamp = 0L,
+                                        fromToken = "ETH",
+                                        fromAmount = "0.5",
+                                        fromChain = "Ethereum",
+                                        fromTokenLogo = R.drawable.ethereum,
+                                        toToken = "USDC",
+                                        toAmount = "1,610.20",
+                                        toChain = "Ethereum",
+                                        toTokenLogo = R.drawable.usdc,
+                                        provider = "1inch",
+                                        providerLogo = null,
+                                        fiatValue = "$1,610.20",
+                                        fromAddress = "0xAb...234",
+                                        toAddress = "0xAb...234",
+                                        feeEstimate = "$1.10",
+                                    ),
+                                ),
+                        )
+                    ),
             ),
         onBack = {},
         onTabSelected = {},
