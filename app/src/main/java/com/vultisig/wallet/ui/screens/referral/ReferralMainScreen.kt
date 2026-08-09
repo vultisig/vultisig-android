@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -115,7 +114,7 @@ private fun CreateReferralCard(titleRes: Int, enabled: Boolean, onClick: () -> U
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.surface1)
                 .clickable(enabled = enabled, onClick = onClick)
                 .alpha(if (enabled) 1f else DISABLED_CARD_ALPHA)
@@ -177,7 +176,7 @@ private fun ReferralEntryCard(
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.surface1)
                 .clickable(enabled = enabled, onClick = onClick)
                 .alpha(if (enabled) 1f else DISABLED_CARD_ALPHA)

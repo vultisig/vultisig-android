@@ -219,12 +219,12 @@ private fun ActiveTierCard(style: TierStyle, shape: Shape) {
 
             Box(
                 modifier =
-                    Modifier.clip(RoundedCornerShape(16.dp))
+                    Modifier.clip(Theme.v2.radius.lg)
                         .background(Theme.v2.colors.backgrounds.surface1)
                         .border(
                             width = 1.dp,
                             color = Theme.v2.colors.border.light,
-                            shape = RoundedCornerShape(16.dp),
+                            shape = Theme.v2.radius.lg,
                         )
                         .padding(horizontal = 10.dp, vertical = 8.dp)
             ) {

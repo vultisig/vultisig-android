@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -88,7 +87,7 @@ internal fun ReferralVaultListContentScreen(
                     modifier =
                         Modifier.background(
                             Theme.v2.colors.backgrounds.secondary,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = Theme.v2.radius.xl,
                         )
                 ) {
                     itemsIndexed(state.vaults, key = { _, vault -> vault.id }) { index, vault ->
@@ -131,11 +130,11 @@ internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
             modifier =
                 Modifier.background(
                         Theme.v2.colors.backgrounds.secondary,
-                        shape = RoundedCornerShape(20.dp),
+                        shape = Theme.v2.radius.md,
                     )
                     .border(
                         border = BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
-                        shape = RoundedCornerShape(20.dp),
+                        shape = Theme.v2.radius.md,
                     )
                     .padding(horizontal = 10.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
