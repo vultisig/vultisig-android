@@ -27,11 +27,13 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -47,6 +49,7 @@ import org.junit.jupiter.api.Test
 internal class KeygenViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
+    private val autoLockHold = AutoLockHold()
 
     private lateinit var context: Context
     private lateinit var navigator: Navigator<Destination>
@@ -132,7 +135,7 @@ internal class KeygenViewModelTest {
             sessionApi = sessionApi,
             encryption = encryption,
             featureFlagRepository = featureFlagRepository,
-            autoLockHold = AutoLockHold(),
+            autoLockHold = autoLockHold,
             referralCodeSettingsRepository = referralCodeSettingsRepository,
             chainAccountAddressRepository = chainAccountAddressRepository,
         )
@@ -163,5 +166,38 @@ internal class KeygenViewModelTest {
             val vm = createViewModel()
             vm.tryAgain()
             coVerify { navigator.navigate(Destination.Back) }
+        }
+
+    /** Verifies neither the vault read nor the ceremony runs while the keyshares are unwritable. */
+    @Test
+    fun `the ceremony waits until the keyshares can be written`() =
+        runTest(testDispatcher) {
+            val unlocked = CompletableDeferred<Unit>()
+            coEvery { vaultRepository.awaitKeySharesReadable() } coAnswers { unlocked.await() }
+
+            createViewModel()
+
+            coVerify(exactly = 0) { vaultRepository.get(any()) }
+            coVerify(exactly = 0) { saveVault(any(), any()) }
+
+            unlocked.complete(Unit)
+
+            coVerify(timeout = 5_000) { vaultRepository.get("vault-1") }
+        }
+
+    /** Verifies the hold covers the wait, so a pending auto-lock cannot land during it. */
+    @Test
+    fun `auto-lock is held off while the ceremony waits`() =
+        runTest(testDispatcher) {
+            val unlocked = CompletableDeferred<Unit>()
+            coEvery { vaultRepository.awaitKeySharesReadable() } coAnswers { unlocked.await() }
+
+            createViewModel()
+
+            autoLockHold.holds.value shouldBe 1
+
+            unlocked.complete(Unit)
+
+            autoLockHold.holds.value shouldBe 0
         }
 }

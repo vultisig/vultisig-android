@@ -297,25 +297,6 @@ constructor(
         viewModelScope.launch {
             updateStep(KeygenState.CreatingInstance)
 
-            args.vaultId?.let { vaultId ->
-                val cachedVault = vaultRepository.get(vaultId)
-                if (cachedVault != null) {
-                    vault.pubKeyECDSA = cachedVault.pubKeyECDSA
-                    vault.pubKeyEDDSA = cachedVault.pubKeyEDDSA
-                    vault.pubKeyMLDSA = cachedVault.pubKeyMLDSA
-                    vault.keyshares = cachedVault.keyshares
-                    // Preserve user-curated state across reshare / migrate. The keygen ceremony
-                    // only regenerates the threshold root shares — coins (custom token list,
-                    // addresses) and per-chain public keys (KeyImport vaults' chain routing) must
-                    // survive untouched. Without this, SaveVaultUseCase would overwrite the
-                    // upserted vault's empty coin list with default chains, wiping the user's
-                    // selections; for KeyImport vaults the empty `chainPublicKeys` would also
-                    // break per-chain signing-key resolution in `Vault.getEcdsaSigningKey`.
-                    vault.coins = cachedVault.coins
-                    vault.chainPublicKeys = cachedVault.chainPublicKeys
-                }
-            }
-
             _state.update { it.copy(error = null) }
 
             try {
@@ -323,6 +304,30 @@ constructor(
                 // other devices cannot be paused, and locking before saveVault() leaves this
                 // device with no share for a vault the rest of the group has already created.
                 autoLockHold.withHold {
+                    // A hold only postpones a lock, so it cannot rescue a ceremony that started
+                    // already locked, and the read below drops its keyshares while it is.
+                    vaultRepository.awaitKeySharesReadable()
+
+                    args.vaultId?.let { vaultId ->
+                        val cachedVault = vaultRepository.get(vaultId)
+                        if (cachedVault != null) {
+                            vault.pubKeyECDSA = cachedVault.pubKeyECDSA
+                            vault.pubKeyEDDSA = cachedVault.pubKeyEDDSA
+                            vault.pubKeyMLDSA = cachedVault.pubKeyMLDSA
+                            vault.keyshares = cachedVault.keyshares
+                            // Preserve user-curated state across reshare / migrate. The keygen
+                            // ceremony only regenerates the threshold root shares — coins (custom
+                            // token list, addresses) and per-chain public keys (KeyImport vaults'
+                            // chain routing) must survive untouched. Without this,
+                            // SaveVaultUseCase would overwrite the upserted vault's empty coin
+                            // list with default chains, wiping the user's selections; for
+                            // KeyImport vaults the empty `chainPublicKeys` would also break
+                            // per-chain signing-key resolution in `Vault.getEcdsaSigningKey`.
+                            vault.coins = cachedVault.coins
+                            vault.chainPublicKeys = cachedVault.chainPublicKeys
+                        }
+                    }
+
                     featureFlags = featureFlagRepository.getFeatureFlags()
 
                     if (action == TssAction.SingleKeygen) {

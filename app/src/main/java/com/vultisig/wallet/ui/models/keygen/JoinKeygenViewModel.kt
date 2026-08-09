@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.models.proto.v1.SingleKeygenMessageProto
+import com.vultisig.wallet.data.passcode.AutoLockHold
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.DiscoveryTimeout
@@ -104,6 +105,7 @@ constructor(
     private val mapReshareMessageFromProto: ReshareMessageFromProtoMapper,
     private val decompressQr: DecompressQrUseCase,
     private val sessionApi: SessionApi,
+    private val autoLockHold: AutoLockHold,
 ) : ViewModel() {
 
     val state = MutableStateFlow(JoinKeygenUiModel())
@@ -301,13 +303,17 @@ constructor(
                         else -> error(UnknownTss)
                     }
 
-                sessionApi.startSession(
-                    session.serverUrl,
-                    session.sessionId,
-                    listOf(session.localPartyId),
-                )
+                // From here the initiator can add this device to the committee at any moment, and
+                // the ceremony that follows cannot be paused. KeygenViewModel then holds its own.
+                autoLockHold.withHold {
+                    sessionApi.startSession(
+                        session.serverUrl,
+                        session.sessionId,
+                        listOf(session.localPartyId),
+                    )
 
-                waitForKeygenToStart(session)
+                    waitForKeygenToStart(session)
+                }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e)
