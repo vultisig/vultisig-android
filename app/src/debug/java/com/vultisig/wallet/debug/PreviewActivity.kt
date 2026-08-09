@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
@@ -138,7 +139,9 @@ import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimMaturingUtxoUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
+import com.vultisig.wallet.ui.models.send.AmountFraction
 import com.vultisig.wallet.ui.models.send.GasSettingsUiModel
+import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.LimitExpiryOption
@@ -183,6 +186,7 @@ import com.vultisig.wallet.ui.screens.select.AssetUiModel
 import com.vultisig.wallet.ui.screens.select.SelectAssetScreen
 import com.vultisig.wallet.ui.screens.select.SelectAssetUiModel
 import com.vultisig.wallet.ui.screens.send.GasSettingsScreen
+import com.vultisig.wallet.ui.screens.send.SendFormScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
@@ -210,6 +214,7 @@ import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
 import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
@@ -308,6 +313,7 @@ class PreviewActivity : ComponentActivity() {
                     "transaction_history_empty" -> TransactionHistoryEmptyState()
                     "limit_orders_tab" -> LimitOrdersTabPreview()
                     "limit_order_cancel_verify" -> LimitOrderCancelVerifyPreview()
+                    "withdraw_usdc_circle" -> WithdrawUsdcCirclePreview()
                     "limit_order_cancel_done" -> LimitOrderCancelDonePreview()
                     "limit_orders_tab_empty" -> LimitOrdersTabPreview(orders = emptyList())
                     "empty_referral" -> EmptyReferralBanner(onClickedCreateReferral = {})
@@ -3829,5 +3835,63 @@ private fun LimitOrderCancelDonePreview() {
         onUriClick = {},
         transactionTypeUiModel = TransactionTypeUiModel.Deposit(previewCancelDeposit),
         showToolbar = true,
+    )
+}
+
+/** The Circle USDC withdraw form, with a percentage picked and its fee recompute still running. */
+@Composable
+private fun WithdrawUsdcCirclePreview() {
+    val usdc = Coins.Ethereum.USDC
+    val account = Account(token = usdc, tokenValue = null, fiatValue = null, price = null)
+    SendFormScreen(
+        state =
+            SendFormUiModel(
+                defiType = DeFiNavActions.WITHDRAW_USDC_CIRCLE,
+                fiatCurrency = "USD",
+                selectedCoin =
+                    TokenBalanceUiModel(
+                        model =
+                            SendSrc(
+                                address =
+                                    Address(
+                                        chain = Chain.Ethereum,
+                                        address = "0x14F6Ed6b2b1d05C1F7Fd0Eb46E9C61a19c89B6",
+                                        accounts = listOf(account),
+                                    ),
+                                account = account,
+                            ),
+                        title = "USDC",
+                        balance = "0.701331",
+                        fiatValue = "$0.70",
+                        isNativeToken = false,
+                        isLayer2 = false,
+                        tokenStandard = "ERC20",
+                        tokenLogo = usdc.logo,
+                        chainLogo = Chain.Ethereum.logo,
+                    ),
+                selectedAmountFraction = AmountFraction.F50,
+                hasAmountInput = true,
+                isGasFeeLoading = true,
+            ),
+        addressFieldState = rememberTextFieldState(),
+        addressFocusRequester = remember { FocusRequester() },
+        amountFocusRequester = remember { FocusRequester() },
+        tokenAmountFieldState = rememberTextFieldState("0.350665"),
+        fiatAmountFieldState = rememberTextFieldState(),
+        memoFieldState = rememberTextFieldState(),
+        destinationTagFieldState = rememberTextFieldState(),
+        onNetworkDragStart = {},
+        onNetworkDrag = {},
+        onNetworkDragEnd = {},
+        onNetworkDragCancel = {},
+        onNetworkLongPressStarted = {},
+        onAssetDragStart = {},
+        onAssetDrag = {},
+        onAssetDragEnd = {},
+        onAssetDragCancel = {},
+        onAssetLongPressStarted = {},
+        operatorFeeFieldState = rememberTextFieldState(),
+        providerFieldState = rememberTextFieldState(),
+        slippageFieldState = rememberTextFieldState(),
     )
 }
