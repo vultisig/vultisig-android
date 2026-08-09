@@ -1,11 +1,13 @@
 package com.vultisig.wallet.data.passcode
 
 import android.content.SharedPreferences
+import com.vultisig.wallet.data.utils.InMemorySharedPreferences
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import java.util.Base64
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import org.junit.jupiter.api.BeforeEach
@@ -35,6 +37,14 @@ internal class SharedPreferencesPasscodeStoreTest {
 
     private fun encode(bytes: ByteArray) = Base64.getEncoder().encodeToString(bytes)
 
+    private fun assertReadLeavesTheStoreAlone(salt: String?, wrapped: String?) {
+        storedAs(salt, wrapped)
+
+        assertNull(store.readCredentials())
+
+        verify(exactly = 0) { prefs.edit() }
+    }
+
     @Test
     fun `both halves present decode into credentials`() {
         val salt = ByteArray(16) { it.toByte() }
@@ -46,58 +56,88 @@ internal class SharedPreferencesPasscodeStoreTest {
         assertNotNull(credentials)
         assertContentEquals(salt, credentials.salt)
         assertContentEquals(wrapped, credentials.wrappedDataKey)
-        verify(exactly = 0) { editor.remove(any()) }
+        verify(exactly = 0) { prefs.edit() }
     }
 
     @Test
-    fun `nothing stored reads as no passcode without touching the store`() {
-        storedAs(null, null)
-
-        assertNull(store.readCredentials())
-
-        // No half to clean up, so a read of an untouched install must not write anything.
-        verify(exactly = 0) { editor.remove(any()) }
+    fun `nothing stored reads as no passcode`() {
+        assertReadLeavesTheStoreAlone(salt = null, wrapped = null)
     }
 
     @Test
-    fun `a stray salt with no wrapped key is discarded`() {
-        // A torn write. Leaving the salt behind risks a later write pairing it with a key it does
-        // not belong to, so the read drops both halves.
-        storedAs(encode(ByteArray(16)), null)
+    fun `a salt whose partner does not read back is left in place`() {
+        assertReadLeavesTheStoreAlone(salt = encode(ByteArray(16)), wrapped = null)
+    }
 
-        assertNull(store.readCredentials())
+    @Test
+    fun `a wrapped key whose partner does not read back is left in place`() {
+        assertReadLeavesTheStoreAlone(salt = null, wrapped = encode(ByteArray(60)))
+    }
+
+    @Test
+    fun `an undecodable half is left in place`() {
+        assertReadLeavesTheStoreAlone(salt = encode(ByteArray(16)), wrapped = "not-base64!!")
+    }
+
+    @Test
+    fun `a half that did not decrypt on one read still opens on the next`() {
+        // Over a store that remembers what it was given, so a read that deleted a half would show
+        // up as a wrap that is no longer there once the fault clears.
+        val flakyPrefs = FlakyPreferences(InMemorySharedPreferences(), KEY_WRAPPED_KEY)
+        val flakyStore = SharedPreferencesPasscodeStore(flakyPrefs)
+        val credentials =
+            PasscodeCredentials(
+                salt = ByteArray(16) { it.toByte() },
+                wrappedDataKey = ByteArray(60) { (it * 3).toByte() },
+            )
+        flakyStore.writeCredentials(credentials)
+
+        flakyPrefs.failing = true
+
+        assertNull(flakyStore.readCredentials())
+
+        flakyPrefs.failing = false
+
+        assertEquals(credentials, flakyStore.readCredentials())
+    }
+
+    @Test
+    fun `writing credentials commits both halves before returning`() {
+        val salt = ByteArray(16) { it.toByte() }
+        val wrapped = ByteArray(60) { (it * 3).toByte() }
+
+        store.writeCredentials(PasscodeCredentials(salt = salt, wrappedDataKey = wrapped))
+
+        verify { editor.putString(KEY_SALT, encode(salt)) }
+        verify { editor.putString(KEY_WRAPPED_KEY, encode(wrapped)) }
+        // An apply() would let a process kill drop the wrap while the keyshare ciphertext
+        // setPasscode writes next survives.
+        verify { editor.commit() }
+        verify(exactly = 0) { editor.apply() }
+    }
+
+    @Test
+    fun `clearing credentials commits both removals before returning`() {
+        store.clearCredentials()
 
         verify { editor.remove(KEY_SALT) }
         verify { editor.remove(KEY_WRAPPED_KEY) }
-        // Staging the removals on a relaxed editor mock proves nothing on its own — without the
-        // apply() the half-credential survives the process and the next read repeats this.
-        verify { editor.apply() }
+        verify { editor.commit() }
+        verify(exactly = 0) { editor.apply() }
     }
 
-    @Test
-    fun `a wrapped key with no salt is discarded`() {
-        storedAs(null, encode(ByteArray(60)))
+    /**
+     * Preferences whose reads of [failingKey] come back empty while [failing] is set, standing in
+     * for a keystore that decrypts one stored value this launch but not the other.
+     */
+    private class FlakyPreferences(
+        private val delegate: SharedPreferences,
+        private val failingKey: String,
+    ) : SharedPreferences by delegate {
+        var failing = false
 
-        assertNull(store.readCredentials())
-
-        verify { editor.remove(KEY_SALT) }
-        verify { editor.remove(KEY_WRAPPED_KEY) }
-        // Staging the removals on a relaxed editor mock proves nothing on its own — without the
-        // apply() the half-credential survives the process and the next read repeats this.
-        verify { editor.apply() }
-    }
-
-    @Test
-    fun `an undecodable half is discarded like a missing one`() {
-        storedAs(encode(ByteArray(16)), "not-base64!!")
-
-        assertNull(store.readCredentials())
-
-        verify { editor.remove(KEY_SALT) }
-        verify { editor.remove(KEY_WRAPPED_KEY) }
-        // Staging the removals on a relaxed editor mock proves nothing on its own — without the
-        // apply() the half-credential survives the process and the next read repeats this.
-        verify { editor.apply() }
+        override fun getString(key: String, defValue: String?): String? =
+            if (failing && key == failingKey) defValue else delegate.getString(key, defValue)
     }
 
     private companion object {

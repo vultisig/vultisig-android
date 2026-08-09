@@ -63,25 +63,24 @@ constructor(private val prefs: SharedPreferences) : PasscodeStore {
     override fun readCredentials(): PasscodeCredentials? {
         val salt = prefs.getString(KEY_SALT, null)?.let(::decodeOrNull)
         val wrapped = prefs.getString(KEY_WRAPPED_KEY, null)?.let(::decodeOrNull)
-        if (salt == null || wrapped == null) {
-            // Half a credential is not a passcode, it is a torn write or a corrupted store. Drop
-            // the remaining half so the app reports "no passcode" consistently rather than leaving
-            // a stray salt that a later write would pair with a mismatched key.
-            if (salt != null || wrapped != null) clearCredentials()
-            return null
-        }
+        // A read never deletes. A half that failed to decrypt this launch reads exactly like one
+        // that was never stored, and the wrap it pairs with opens every encrypted keyshare.
+        if (salt == null || wrapped == null) return null
         return PasscodeCredentials(salt = salt, wrappedDataKey = wrapped)
     }
 
     override fun writeCredentials(credentials: PasscodeCredentials) {
-        prefs.edit {
+        // commit, not apply: setPasscode durably seals every keyshare under this key straight
+        // afterwards, so an apply() lost to a process kill leaves ciphertext with no wrap.
+        prefs.edit(commit = true) {
             putString(KEY_SALT, encode(credentials.salt))
             putString(KEY_WRAPPED_KEY, encode(credentials.wrappedDataKey))
         }
     }
 
     override fun clearCredentials() {
-        prefs.edit {
+        // Committed too: a lost clear brings back a passcode the user removed.
+        prefs.edit(commit = true) {
             remove(KEY_SALT)
             remove(KEY_WRAPPED_KEY)
         }
