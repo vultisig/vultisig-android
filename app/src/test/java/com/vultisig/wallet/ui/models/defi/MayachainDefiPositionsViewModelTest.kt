@@ -124,9 +124,9 @@ internal class MayachainDefiPositionsViewModelTest {
     }
 
     @Test
-    fun `a saved selection holding no Maya key falls back to the Maya defaults`() = runTest {
-        // Selection persisted by the Thorchain screen: recognising it here would blank both tabs.
-        selectPositions("RUNE", "TCY")
+    fun `a vault that never chose on this chain gets the Maya defaults`() = runTest {
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.MayaChain, VAULT_ID) } returns
+            flowOf<Set<String>?>(null)
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
@@ -134,6 +134,18 @@ internal class MayachainDefiPositionsViewModelTest {
             listOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY),
             successData(vm).selectedPositions,
         )
+    }
+
+    @Test
+    fun `a stored selection is used verbatim even when no key in it is Maya-specific`() = runTest {
+        // The key carries the chain, so whatever is on it was written here. Reading a set of plain
+        // tickers as "the Thorchain screen's" and falling back to the defaults for it is what used
+        // to revive positions the user had turned off.
+        selectPositions("RUNE", "TCY")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        assertEquals(listOf("RUNE", "TCY"), successData(vm).selectedPositions)
     }
 
     @Test
@@ -146,8 +158,7 @@ internal class MayachainDefiPositionsViewModelTest {
     }
 
     @Test
-    fun `a dotted LP asset key counts as a Maya selection`() = runTest {
-        // "BTC.BTC" carries no Maya prefix; the dot is what marks it as an LP pool key.
+    fun `a dotted LP asset key is kept like any other stored key`() = runTest {
         selectPositions("BTC.BTC")
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
@@ -676,7 +687,9 @@ internal class MayachainDefiPositionsViewModelTest {
         vm.onPositionSelectionDone()
 
         val expected = listOf(MAYA_STAKE_CACAO_KEY, BTC_POOL)
-        coVerify(exactly = 1) { defiPositionsRepository.saveSelectedPositions(VAULT_ID, expected) }
+        coVerify(exactly = 1) {
+            defiPositionsRepository.saveSelectedPositions(Chain.MayaChain, VAULT_ID, expected)
+        }
         val data = successData(vm)
         assertFalse(data.showPositionSelectionDialog)
         assertEquals(expected, data.selectedPositions)
@@ -688,11 +701,11 @@ internal class MayachainDefiPositionsViewModelTest {
         // every leg for it — but left the legs holding their pre-selection values, so the header
         // read as a settled total, short by the pool just added, for the whole refetch.
         val saved = MutableStateFlow(setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY))
-        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns saved
-        coEvery { defiPositionsRepository.saveSelectedPositions(VAULT_ID, any()) } answers
-            {
-                saved.value = secondArg<List<String>>().toSet()
-            }
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.MayaChain, VAULT_ID) } returns
+            saved
+        coEvery {
+            defiPositionsRepository.saveSelectedPositions(Chain.MayaChain, VAULT_ID, any())
+        } answers { saved.value = thirdArg<List<String>>().toSet() }
         givenLpPool(liquidityUnits = "100", units = "1000")
         val loadedMemberDetails = memberDetails(liquidityUnits = "100")
         val heldMemberDetails = MutableStateFlow<MayaMemberDetails?>(loadedMemberDetails)
@@ -722,11 +735,11 @@ internal class MayachainDefiPositionsViewModelTest {
 
     @Test
     fun `confirming a selection nothing changed in writes nothing`() = runTest {
-        // Done is reachable without touching a checkbox. Writing anyway would clobber the stored
-        // selection this screen only ever reads through its Maya defaults, and the write would come
-        // back through the collector as a reload of all three legs.
+        // Done is reachable without touching a checkbox, and the write would come back through the
+        // collector as a reload of all three legs.
         val saved = MutableStateFlow(setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY))
-        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns saved
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.MayaChain, VAULT_ID) } returns
+            saved
         val vm = createViewModel().also { it.setData(VAULT_ID) }
         val settled = successData(vm)
         settled.isTotalAmountLoading shouldBe false
@@ -734,7 +747,9 @@ internal class MayachainDefiPositionsViewModelTest {
         vm.setPositionSelectionDialogVisibility(true)
         vm.onPositionSelectionDone()
 
-        coVerify(exactly = 0) { defiPositionsRepository.saveSelectedPositions(VAULT_ID, any()) }
+        coVerify(exactly = 0) {
+            defiPositionsRepository.saveSelectedPositions(Chain.MayaChain, VAULT_ID, any())
+        }
         val data = successData(vm)
         assertFalse(data.showPositionSelectionDialog)
         data.isTotalAmountLoading shouldBe false
@@ -746,8 +761,9 @@ internal class MayachainDefiPositionsViewModelTest {
         // A vault's first-ever save flips the key from absent to present, which the store cannot
         // read as unchanged even though both sides map to the same Maya defaults — and the stored
         // set need not come back in the order the default list has.
-        val saved = MutableStateFlow(setOf("RUNE", "TCY"))
-        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns saved
+        val saved = MutableStateFlow<Set<String>?>(null)
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.MayaChain, VAULT_ID) } returns
+            saved
         val heldStaking =
             MutableStateFlow<MayaCacaoStakingDetails?>(
                 MayaCacaoStakingDetails(BigInteger.ZERO, apr = null, canUnstake = false)
@@ -771,16 +787,15 @@ internal class MayachainDefiPositionsViewModelTest {
 
     @Test
     fun `clearing every position settles the header instead of freezing it`() = runTest {
-        // An empty selection is what the store hands back for a vault that has one of its own, so
-        // deriving it to the Maya defaults produced the same set the collector last saw and the
-        // dedup dropped the emission — the tabs cleared while the header kept the total of the
-        // positions just removed.
+        // An empty set is a selection this screen cleared, so deriving it to the Maya defaults
+        // produced the same set the collector last saw and the dedup dropped the emission — the
+        // tabs cleared while the header kept the total of the positions just removed.
         val saved = MutableStateFlow(setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY))
-        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns saved
-        coEvery { defiPositionsRepository.saveSelectedPositions(VAULT_ID, any()) } answers
-            {
-                saved.value = secondArg<List<String>>().toSet()
-            }
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.MayaChain, VAULT_ID) } returns
+            saved
+        coEvery {
+            defiPositionsRepository.saveSelectedPositions(Chain.MayaChain, VAULT_ID, any())
+        } answers { saved.value = thirdArg<List<String>>().toSet() }
         coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
             flowOf(listOf(bondedNode(amount = HUNDRED_CACAO)))
 
@@ -802,10 +817,11 @@ internal class MayachainDefiPositionsViewModelTest {
 
     @Test
     fun `an emptied stored selection is honoured, not re-derived to the defaults`() = runTest {
-        // The store returns its own defaults for a vault that never chose, so an empty set can only
-        // be one this screen cleared — the Maya fallback must not claim it back.
+        // The store returns null for a vault that never chose, so an empty set can only be one this
+        // screen cleared — the defaults must not claim it back.
         val saved = MutableStateFlow(setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY))
-        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns saved
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.MayaChain, VAULT_ID) } returns
+            saved
         coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
             flowOf(listOf(bondedNode(amount = HUNDRED_CACAO)))
 
@@ -837,8 +853,37 @@ internal class MayachainDefiPositionsViewModelTest {
         data.totalAmountPrice shouldBe "$0.00"
     }
 
+    @Test
+    fun `a Thorchain save for the same vault leaves this screen's selection alone`() = runTest {
+        // Both screens used to write one key per vault, so a Thorchain save landed on the selection
+        // this screen reads. Unchecking everything there persisted an empty set, which this screen
+        // read as its own clearing and zeroed Bond, Staking and LP for; any plain-ticker save there
+        // held nothing this screen could show, so it fell back to the Maya defaults and revived a
+        // position the user had turned off. Neither reaches this screen now the key carries the
+        // chain.
+        val mayaSaved = MutableStateFlow<Set<String>?>(setOf(MAYA_STAKE_CACAO_KEY))
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.MayaChain, VAULT_ID) } returns
+            mayaSaved
+        val thorchainSaved = MutableStateFlow<Set<String>?>(setOf("RUNE", "TCY"))
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.ThorChain, VAULT_ID) } returns
+            thorchainSaved
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        val settled = successData(vm)
+        settled.isTotalAmountLoading shouldBe false
+
+        // Every Thorchain position unchecked, then its selection edited again.
+        thorchainSaved.value = emptySet()
+        thorchainSaved.value = setOf("RUNE")
+
+        val data = successData(vm)
+        assertEquals(listOf(MAYA_STAKE_CACAO_KEY), data.selectedPositions)
+        data.isTotalAmountLoading shouldBe false
+        data.totalAmountPrice shouldBe settled.totalAmountPrice
+    }
+
     private fun selectPositions(vararg keys: String) {
-        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.MayaChain, VAULT_ID) } returns
             flowOf(keys.toSet())
     }
 

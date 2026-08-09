@@ -30,6 +30,7 @@ import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.v2.defi.defaultSelectedPositionsDialog
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.utils.UiText
 import io.kotest.matchers.shouldBe
@@ -1035,7 +1036,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         vm.onPositionSelectionDone()
 
         coVerify(exactly = 1) {
-            defiPositionsRepository.saveSelectedPositions(VAULT_ID, listOf("TCY"))
+            defiPositionsRepository.saveSelectedPositions(Chain.ThorChain, VAULT_ID, listOf("TCY"))
         }
         val state = vm.state.value
         assertFalse(state.showPositionSelectionDialog)
@@ -1115,7 +1116,9 @@ internal class ThorchainDefiPositionsViewModelTest {
         assertFalse(vm.state.value.showPositionSelectionDialog)
         vm.state.value.isTotalAmountLoading shouldBe false
         vm.state.value.totalAmountPrice shouldBe "$6.00"
-        coVerify(exactly = 0) { defiPositionsRepository.saveSelectedPositions(VAULT_ID, any()) }
+        coVerify(exactly = 0) {
+            defiPositionsRepository.saveSelectedPositions(Chain.ThorChain, VAULT_ID, any())
+        }
     }
 
     @Test
@@ -1135,8 +1138,20 @@ internal class ThorchainDefiPositionsViewModelTest {
         assertEquals(before.bonded, after.bonded)
     }
 
+    @Test
+    fun `a vault that never chose on this chain gets the default selection`() = runTest {
+        // The store no longer holds defaults of its own: null is "never chose", and it is the only
+        // case they apply to. An empty set is a selection the user cleared and stays empty.
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.ThorChain, VAULT_ID) } returns
+            flowOf<Set<String>?>(null)
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        assertEquals(defaultSelectedPositionsDialog(), vm.state.value.selectedPositions)
+    }
+
     private fun selectPositions(vararg keys: String) {
-        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.ThorChain, VAULT_ID) } returns
             flowOf(keys.toSet())
     }
 
