@@ -11,7 +11,6 @@ import com.vultisig.wallet.data.mappers.MapVaultToProtoImpl
 import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
 import com.vultisig.wallet.data.usecases.backup.CreateVaultBackupFileNameUseCase
@@ -28,6 +27,7 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -59,7 +59,6 @@ internal class BackupPasswordViewModelTest {
     private lateinit var createVaultBackup: CreateVaultBackupUseCase
     private lateinit var isFileExtensionValid: IsVaultBackupFileExtensionValidUseCase
     private lateinit var navigator: Navigator<Destination>
-    private lateinit var vaultDataStoreRepository: VaultDataStoreRepository
     private lateinit var snackbarFlow: SnackbarFlow
     private lateinit var saveBackupToUri: SaveBackupToUriUseCase
     private lateinit var deleteBackupDocument: DeleteBackupDocumentUseCase
@@ -71,13 +70,13 @@ internal class BackupPasswordViewModelTest {
 
         vaultRepository = mockk()
         coEvery { vaultRepository.awaitKeySharesReadable() } returns Unit
+        coJustRun { vaultRepository.setBackupStatus(any(), any()) }
         mapVaultToProto = MapVaultToProtoImpl()
         createVaultBackupFileName = mockk(relaxed = true)
         createZipVaultsBackupFileName = mockk(relaxed = true)
         createVaultBackup = mockk()
         isFileExtensionValid = mockk()
         navigator = mockk(relaxed = true)
-        vaultDataStoreRepository = mockk(relaxed = true)
         snackbarFlow = mockk(relaxed = true)
         saveBackupToUri = mockk()
         deleteBackupDocument = mockk(relaxed = true)
@@ -119,7 +118,6 @@ internal class BackupPasswordViewModelTest {
             createVaultBackup = createVaultBackup,
             isFileExtensionValid = isFileExtensionValid,
             navigator = navigator,
-            vaultDataStoreRepository = vaultDataStoreRepository,
             snackbarFlow = snackbarFlow,
             saveBackupToUri = saveBackupToUri,
             deleteBackupDocument = deleteBackupDocument,
@@ -158,9 +156,7 @@ internal class BackupPasswordViewModelTest {
             coVerify(timeout = 5_000) { saveBackupToUri(uri, capture(contentSlot)) }
             contentSlot.captured.size shouldBe vaults.size
             vaults.forEach { vault ->
-                coVerify(timeout = 5_000) {
-                    vaultDataStoreRepository.setBackupStatus(vault.id, true)
-                }
+                coVerify(timeout = 5_000) { vaultRepository.setBackupStatus(vault.id, true) }
             }
         }
 

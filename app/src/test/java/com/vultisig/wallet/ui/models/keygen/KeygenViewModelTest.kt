@@ -14,7 +14,6 @@ import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
-import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
@@ -55,7 +54,6 @@ internal class KeygenViewModelTest {
     private lateinit var navigator: Navigator<Destination>
     private lateinit var saveVault: SaveVaultUseCase
     private lateinit var lastOpenedVaultRepository: LastOpenedVaultRepository
-    private lateinit var vaultDataStoreRepository: VaultDataStoreRepository
     private lateinit var vaultPasswordRepository: VaultPasswordRepository
     private lateinit var temporaryVaultRepository: TemporaryVaultRepository
     private lateinit var vaultRepository: VaultRepository
@@ -97,7 +95,6 @@ internal class KeygenViewModelTest {
         navigator = mockk(relaxed = true)
         saveVault = mockk(relaxed = true)
         lastOpenedVaultRepository = mockk(relaxed = true)
-        vaultDataStoreRepository = mockk(relaxed = true)
         vaultPasswordRepository = mockk(relaxed = true)
         temporaryVaultRepository = mockk(relaxed = true)
         vaultRepository = mockk(relaxed = true)
@@ -125,7 +122,6 @@ internal class KeygenViewModelTest {
             context = context,
             saveVault = saveVault,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
-            vaultDataStoreRepository = vaultDataStoreRepository,
             vaultPasswordRepository = vaultPasswordRepository,
             temporaryVaultRepository = temporaryVaultRepository,
             vaultRepository = vaultRepository,

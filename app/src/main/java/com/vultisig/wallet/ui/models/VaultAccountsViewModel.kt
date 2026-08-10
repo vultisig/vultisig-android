@@ -32,7 +32,6 @@ import com.vultisig.wallet.data.repositories.PromoBanner
 import com.vultisig.wallet.data.repositories.PromoBannerDismissalRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TiersNFTRepository
-import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.services.PushNotificationManager
@@ -64,7 +63,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
@@ -138,7 +136,6 @@ constructor(
     private val addressToUiModelMapper: AddressToUiModelMapper,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val vaultRepository: VaultRepository,
-    private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val vaultMetadataRepo: VaultMetadataRepo,
@@ -488,10 +485,9 @@ constructor(
                         // KeyImport vaults have a fixed set of chains chosen during import,
                         // so chain selection is disabled on the home screen
                         isChainSelectionEnabled = vault.libType != SigningLibType.KeyImport,
+                        showBackupWarning = !vault.isBackedUp,
                     )
                 }
-                val isVaultBackedUp = vaultDataStoreRepository.readBackupStatus(vaultId).first()
-                uiState.update { it.copy(showBackupWarning = !isVaultBackedUp) }
             }
     }
 

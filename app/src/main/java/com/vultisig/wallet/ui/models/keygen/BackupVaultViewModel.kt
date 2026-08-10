@@ -11,7 +11,6 @@ import com.vultisig.wallet.data.mappers.exportableOrNull
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getVaultPart
-import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
 import com.vultisig.wallet.data.usecases.backup.CreateVaultBackupFileNameUseCase
@@ -52,7 +51,6 @@ constructor(
     private val isFileExtensionValid: IsVaultBackupFileExtensionValidUseCase,
     private val createVaultBackup: CreateVaultBackupUseCase,
     private val mapVaultToProto: MapVaultToProto,
-    private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val snackbarFlow: SnackbarFlow,
     private val saveBackupToUri: SaveBackupToUriUseCase,
     private val deleteBackupDocument: DeleteBackupDocumentUseCase,
@@ -202,9 +200,7 @@ constructor(
             val vaultId = args.vaultId
 
             if (backupSuccess) {
-                withContext(Dispatchers.IO) {
-                    vaultDataStoreRepository.setBackupStatus(args.vaultId, true)
-                }
+                vaultRepository.setBackupStatus(args.vaultId, true)
 
                 snackbarFlow.showMessage(
                     UiText.StringResource(R.string.vault_settings_success_backup_message)

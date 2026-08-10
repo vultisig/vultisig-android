@@ -39,6 +39,8 @@ interface VaultDao {
     @Query("SELECT * FROM vault")
     fun loadAllAsFlow(): Flow<List<VaultWithKeySharesAndTokens>>
 
+    @Query("SELECT id FROM vault") suspend fun loadAllIds(): List<VaultId>
+
     @Query("SELECT coinId FROM disabledCoin WHERE vaultId = :vaultId")
     suspend fun loadDisabledCoinIds(vaultId: VaultId): List<String>
 
@@ -151,6 +153,16 @@ interface VaultDao {
 
     @Query("UPDATE vault SET name = :name WHERE id = :vaultId")
     suspend fun setVaultName(vaultId: String, name: String)
+
+    /**
+     * Writes the backup flag on its own, without going through the vault upsert.
+     *
+     * The export paths hold a vault they read before writing the file, and rewriting the whole row
+     * from it would echo back whatever else has changed since — including keyshares dropped by a
+     * lock that landed mid-export.
+     */
+    @Query("UPDATE vault SET isBackedUp = :isBackedUp WHERE id = :vaultId")
+    suspend fun setBackupStatus(vaultId: String, isBackedUp: Boolean)
 
     @Query("DELETE FROM signer WHERE vaultId = :vaultId") suspend fun deleteSigners(vaultId: String)
 

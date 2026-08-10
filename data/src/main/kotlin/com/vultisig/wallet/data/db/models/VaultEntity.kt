@@ -19,6 +19,7 @@ data class VaultEntity(
     @ColumnInfo("hexChainCode") val hexChainCode: String,
     @ColumnInfo("resharePrefix") val resharePrefix: String,
     @ColumnInfo("libType") val libType: SigningLibType,
+    @ColumnInfo("isBackedUp", defaultValue = "0") val isBackedUp: Boolean = false,
 )
 
 @Entity(

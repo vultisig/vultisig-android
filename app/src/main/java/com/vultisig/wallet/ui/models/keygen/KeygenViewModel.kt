@@ -46,7 +46,6 @@ import com.vultisig.wallet.data.repositories.KeyImportData
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
-import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.TempVaultDto
@@ -131,7 +130,6 @@ constructor(
     @ApplicationContext private val context: Context,
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
-    private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val temporaryVaultRepository: TemporaryVaultRepository,
     private val vaultRepository: VaultRepository,
@@ -888,6 +886,11 @@ constructor(
                     ?: error("No vault with id $vaultId exists for SingleKeygen save")
             existingVault.pubKeyMLDSA = vault.pubKeyMLDSA
             existingVault.keyshares = vault.keyshares
+            // A .vult exported before this ceremony has no MLDSA share, so restoring it now yields
+            // a vault that cannot sign on QBTC. This branch merges into the vault it read, which
+            // carries the old flag, so clearing it here is what a full upsert of a fresh vault does
+            // by itself on the paths below.
+            existingVault.isBackedUp = false
             saveVault(existingVault, true)
 
             // Auto-enable QBTC chain after MLDSA key generation
@@ -921,7 +924,11 @@ constructor(
                 return
             }
 
-            vaultDataStoreRepository.setBackupStatus(vaultId = vaultId, false)
+            // A vault leaving a ceremony has never been exported, and a reshared one has just
+            // invalidated every .vult that was. The freshly built vault above already carries the
+            // cleared flag through the upsert; this is here so the guarantee does not rest on that
+            // vault never being loaded from storage instead.
+            vaultRepository.setBackupStatus(vaultId = vaultId, isBackedUp = false)
         }
 
         if (action == TssAction.KEYGEN) {

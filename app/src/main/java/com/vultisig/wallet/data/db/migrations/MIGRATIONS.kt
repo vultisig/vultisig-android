@@ -1046,3 +1046,18 @@ internal val MIGRATION_40_41 =
             )
         }
     }
+
+// Gives the vault row the backup flag that until now lived in preferences, defaulting to
+// not-backed-up: a vault nobody has exported must never read as safe to lose, which is how iOS and
+// Windows have always declared it.
+//
+// Every existing row starts at 0, including the ones whose owner has already exported. Restoring
+// those is a code-side pass — VaultBackupStatusBackfill — because the flags it reads live in
+// DataStore, which SQL cannot see. It runs before the first vault read, so nothing observes the
+// gap; a vault with no stored flag stays 0, since unknown is not the same as safe.
+internal val MIGRATION_41_42 =
+    object : Migration(41, 42) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `vault` ADD COLUMN `isBackedUp` INTEGER NOT NULL DEFAULT 0")
+        }
+    }

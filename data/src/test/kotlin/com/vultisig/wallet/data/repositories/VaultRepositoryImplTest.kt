@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.db.dao.VaultDao
+import com.vultisig.wallet.data.db.migrations.VaultBackupStatusBackfill
 import com.vultisig.wallet.data.db.models.CoinEntity
 import com.vultisig.wallet.data.db.models.KeyShareEntity
 import com.vultisig.wallet.data.db.models.VaultEntity
@@ -13,9 +14,11 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.passcode.KeyShareCipher
 import com.vultisig.wallet.data.passcode.KeyShareIdentity
 import com.vultisig.wallet.data.passcode.PasscodeDataKeySource
+import com.vultisig.wallet.data.sources.FakeAppDataStore
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -44,7 +47,15 @@ internal class VaultRepositoryImplTest {
         vaultDao = mockk(relaxUnitFun = true)
         tokenRepository = mockk()
         passcode = FakePasscodeDataKeySource()
-        repository = VaultRepositoryImpl(vaultDao, tokenRepository, keyShareCipher, passcode)
+        coEvery { vaultDao.loadAllIds() } returns emptyList()
+        repository =
+            VaultRepositoryImpl(
+                vaultDao,
+                tokenRepository,
+                keyShareCipher,
+                passcode,
+                VaultBackupStatusBackfill(vaultDao, FakeAppDataStore()),
+            )
     }
 
     /**
@@ -202,6 +213,73 @@ internal class VaultRepositoryImplTest {
         repository.setVaultName("vault-1", "Renamed")
 
         coVerify { vaultDao.setVaultName("vault-1", "Renamed") }
+    }
+
+    // ---- setBackupStatus ----------------------------------------------------
+
+    /** Verifies [VaultRepository.setBackupStatus] writes the flag without rewriting the vault. */
+    @Test
+    fun `setBackupStatus delegates to dao with vault id and flag`() = runTest {
+        repository.setBackupStatus("vault-1", true)
+
+        coVerify { vaultDao.setBackupStatus(vaultId = "vault-1", isBackedUp = true) }
+    }
+
+    /** Verifies the flag stored on the vault row reaches the [Vault] a caller reads. */
+    @Test
+    fun `get carries the backup flag off the vault row`() = runTest {
+        val stored = makeVaultWithTokens()
+        coEvery { vaultDao.loadById("vault-1") } returns
+            stored.copy(vault = stored.vault.copy(isBackedUp = true))
+
+        assertTrue(repository.get("vault-1")!!.isBackedUp)
+    }
+
+    /** Verifies a vault row with no flag set reads as not backed up rather than as safe. */
+    @Test
+    fun `get reports a vault with no flag as not backed up`() = runTest {
+        coEvery { vaultDao.loadById("vault-1") } returns makeVaultWithTokens()
+
+        assertEquals(false, repository.get("vault-1")?.isBackedUp)
+    }
+
+    /**
+     * Verifies an upsert writes the flag the vault carries.
+     *
+     * This is what clears the flag on reshare: the ceremony builds a fresh [Vault], which defaults
+     * to not-backed-up, and overwriting the row with it retires every `.vult` taken of the old
+     * shares.
+     */
+    @Test
+    fun `upsert writes the backup flag the vault carries`() = runTest {
+        val captured = slot<VaultWithKeySharesAndTokens>()
+        coJustRun { vaultDao.upsert(capture(captured)) }
+
+        repository.upsert(Vault(id = "vault-1", name = "V"))
+
+        assertEquals(false, captured.captured.vault.isBackedUp)
+
+        repository.upsert(Vault(id = "vault-1", name = "V", isBackedUp = true))
+
+        assertTrue(captured.captured.vault.isBackedUp)
+    }
+
+    /**
+     * Verifies the flags are carried out of preferences before a vault is read, not after.
+     *
+     * A read that ran first would hand the caller a vault flagged not-backed-up on the strength of
+     * a column the backfill had not filled in yet.
+     */
+    @Test
+    fun `a read carries the legacy flags over before loading the vault`() = runTest {
+        coEvery { vaultDao.loadById("vault-1") } returns makeVaultWithTokens()
+
+        repository.get("vault-1")
+
+        coVerifyOrder {
+            vaultDao.loadAllIds()
+            vaultDao.loadById("vault-1")
+        }
     }
 
     // ---- getByEcdsa ---------------------------------------------------------

@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.db.dao.VaultDao
+import com.vultisig.wallet.data.db.migrations.VaultBackupStatusBackfill
 import com.vultisig.wallet.data.db.models.ChainPublicKeyEntity
 import com.vultisig.wallet.data.db.models.CoinEntity
 import com.vultisig.wallet.data.db.models.KeyShareEntity
@@ -21,6 +22,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import timber.log.Timber
 
 interface VaultRepository {
@@ -70,6 +72,12 @@ interface VaultRepository {
 
     suspend fun setVaultName(vaultId: VaultId, name: String)
 
+    /**
+     * Records whether this vault has been exported to a `.vult` that is known to be complete — see
+     * [Vault.isBackedUp] for when each value is the truthful one.
+     */
+    suspend fun setBackupStatus(vaultId: VaultId, isBackedUp: Boolean)
+
     suspend fun delete(vaultId: VaultId)
 
     suspend fun disableTokenFromVault(vaultId: VaultId, token: Coin)
@@ -90,6 +98,7 @@ constructor(
     private val tokenRepository: TokenRepository,
     private val keyShareCipher: KeyShareCipher,
     private val passcodeDataKeySource: PasscodeDataKeySource,
+    private val backupStatusBackfill: VaultBackupStatusBackfill,
 ) : VaultRepository {
 
     override fun getEnabledTokens(vaultId: String): Flow<List<Coin>> =
@@ -105,19 +114,33 @@ constructor(
 
     override suspend fun awaitKeySharesReadable() = passcodeDataKeySource.awaitUnlocked()
 
-    override suspend fun get(vaultId: String): Vault? = vaultDao.loadById(vaultId)?.toVault()
+    override suspend fun get(vaultId: String): Vault? {
+        backupStatusBackfill.ensureRun()
+        return vaultDao.loadById(vaultId)?.toVault()
+    }
 
     override fun getAllAsFlow(): Flow<List<Vault>> {
-        return vaultDao.loadAllAsFlow().map { it.map { dbVault -> dbVault.toVault() } }
+        return vaultDao
+            .loadAllAsFlow()
+            .onStart { backupStatusBackfill.ensureRun() }
+            .map { it.map { dbVault -> dbVault.toVault() } }
     }
 
     override fun getAsFlow(vaultId: String): Flow<Vault?> =
-        vaultDao.loadByIdAsFlow(vaultId).map { it?.toVault() }
+        vaultDao
+            .loadByIdAsFlow(vaultId)
+            .onStart { backupStatusBackfill.ensureRun() }
+            .map { it?.toVault() }
 
-    override suspend fun getByEcdsa(pubKeyEcdsa: String): Vault? =
-        vaultDao.loadByEcdsa(pubKeyEcdsa)?.toVault()
+    override suspend fun getByEcdsa(pubKeyEcdsa: String): Vault? {
+        backupStatusBackfill.ensureRun()
+        return vaultDao.loadByEcdsa(pubKeyEcdsa)?.toVault()
+    }
 
-    override suspend fun getAll(): List<Vault> = vaultDao.loadAll().map { it.toVault() }
+    override suspend fun getAll(): List<Vault> {
+        backupStatusBackfill.ensureRun()
+        return vaultDao.loadAll().map { it.toVault() }
+    }
 
     override suspend fun hasVaults(): Boolean = vaultDao.hasVaults()
 
@@ -135,11 +158,20 @@ constructor(
     }
 
     override suspend fun upsert(vault: Vault) {
+        // Before, not after. An upsert carries the vault's own backup flag, so a reshare that
+        // cleared it would be undone by a backfill that still holds the legacy value and lands
+        // behind the write.
+        backupStatusBackfill.ensureRun()
         vaultDao.upsert(vault.toVaultDb())
     }
 
     override suspend fun setVaultName(vaultId: String, name: String) {
         vaultDao.setVaultName(vaultId, name)
+    }
+
+    override suspend fun setBackupStatus(vaultId: String, isBackedUp: Boolean) {
+        backupStatusBackfill.ensureRun()
+        vaultDao.setBackupStatus(vaultId = vaultId, isBackedUp = isBackedUp)
     }
 
     override suspend fun delete(vaultId: String) {
@@ -220,6 +252,7 @@ constructor(
             localPartyID = vault.vault.localPartyID,
             signers = vault.signers.sortedBy { it.index }.map { it.title },
             resharePrefix = vault.vault.resharePrefix,
+            isBackedUp = vault.vault.isBackedUp,
             keyshares = vault.keyShares.toKeyShares(vault.vault.id),
             coins =
                 vault.coins.mapNotNull { coinEntity ->
@@ -290,6 +323,7 @@ constructor(
                     localPartyID = vault.localPartyID,
                     resharePrefix = vault.resharePrefix,
                     libType = vault.libType,
+                    isBackedUp = vault.isBackedUp,
                 ),
             keyShares =
                 vault.keyshares.map {

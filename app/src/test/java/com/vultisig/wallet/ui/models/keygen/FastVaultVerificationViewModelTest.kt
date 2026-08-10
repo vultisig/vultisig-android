@@ -7,11 +7,13 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.BackupCodeVerifyResult
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.vault.TempVaultDto
 import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
@@ -23,8 +25,10 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkStatic
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -113,6 +117,46 @@ internal class FastVaultVerificationViewModelTest {
             vm.retry()
             advanceUntilIdle()
             assertEquals(VerifyPinState.Error, vm.state.value.verifyPinState)
+        }
+
+    /**
+     * Verifies the MLDSA merge retires the vault's existing backup.
+     *
+     * This branch writes back the vault it read, old flag and all, so it is the one place a
+     * ceremony can change the keyshares and leave the flag standing. A `.vult` taken before now
+     * carries no MLDSA share, and restoring it yields a vault that cannot sign on QBTC.
+     */
+    @Test
+    fun `the MLDSA merge clears the backup flag of the vault it writes back`() =
+        runTest(testDispatcher) {
+            every { any<SavedStateHandle>().toRoute<Route.FastVaultVerification>() } returns
+                Route.FastVaultVerification(
+                    vaultId = "vault",
+                    pubKeyEcdsa = "pub",
+                    email = "a@b.c",
+                    tssAction = TssAction.SingleKeygen,
+                    vaultName = "v",
+                    password = "pw",
+                )
+            coEvery { verifyUseCase(any(), any()) } returns BackupCodeVerifyResult.Valid
+            coEvery { temporaryVaultRepository.getById("vault") } returns
+                TempVaultDto(
+                    vault = Vault(id = "vault", name = "v", pubKeyMLDSA = "mldsa"),
+                    email = "a@b.c",
+                    password = "pw",
+                    hint = null,
+                )
+            coEvery { vaultRepository.get("vault") } returns
+                Vault(id = "vault", name = "v", isBackedUp = true)
+            val saved = slot<Vault>()
+            coEvery { saveVault(capture(saved), true) } returns Unit
+
+            val vm = buildViewModel()
+            vm.codeFieldState.setTextAndPlaceCursorAtEnd("1234")
+            vm.processCode("1234")
+            advanceUntilIdle()
+
+            assertFalse(saved.captured.isBackedUp)
         }
 
     private fun buildViewModel(): FastVaultVerificationViewModel =

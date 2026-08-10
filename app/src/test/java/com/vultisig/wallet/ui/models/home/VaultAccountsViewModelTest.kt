@@ -26,7 +26,6 @@ import com.vultisig.wallet.data.repositories.PromoBanner
 import com.vultisig.wallet.data.repositories.PromoBannerDismissalRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TiersNFTRepository
-import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.services.PushNotificationManager
@@ -83,7 +82,6 @@ internal class VaultAccountsViewModelTest {
     private lateinit var addressToUiModelMapper: AddressToUiModelMapper
     private lateinit var fiatValueToStringMapper: FiatValueToStringMapper
     private lateinit var vaultRepository: VaultRepository
-    private lateinit var vaultDataStoreRepository: VaultDataStoreRepository
     private lateinit var accountsRepository: AccountsRepository
     private lateinit var balanceVisibilityRepository: BalanceVisibilityRepository
     private lateinit var vaultMetadataRepo: VaultMetadataRepo
@@ -111,7 +109,6 @@ internal class VaultAccountsViewModelTest {
         addressToUiModelMapper = mockk(relaxed = true)
         fiatValueToStringMapper = mockk(relaxed = true)
         vaultRepository = mockk(relaxed = true)
-        vaultDataStoreRepository = mockk(relaxed = true)
         accountsRepository = mockk(relaxed = true)
         balanceVisibilityRepository = mockk(relaxed = true)
         vaultMetadataRepo = mockk(relaxed = true)
@@ -152,7 +149,6 @@ internal class VaultAccountsViewModelTest {
             addressToUiModelMapper = addressToUiModelMapper,
             fiatValueToStringMapper = fiatValueToStringMapper,
             vaultRepository = vaultRepository,
-            vaultDataStoreRepository = vaultDataStoreRepository,
             accountsRepository = accountsRepository,
             balanceVisibilityRepository = balanceVisibilityRepository,
             vaultMetadataRepo = vaultMetadataRepo,
@@ -439,6 +435,35 @@ internal class VaultAccountsViewModelTest {
             val vm = createViewModel()
             advanceUntilIdle()
             vm.uiState.value.showBuyVultBanner.shouldBeFalse()
+        }
+
+    /**
+     * Verifies a vault nobody has exported is told to back up.
+     *
+     * The flag used to be read out of preferences with a default of `true`, and two save paths
+     * never wrote one — so the vaults most in need of this warning were the ones that never saw it.
+     */
+    @Test
+    fun `showBackupWarning is true for a vault that has never been exported`() =
+        runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns
+                Vault(id = "vault-1", name = "Test", isBackedUp = false)
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.showBackupWarning.shouldBeTrue()
+        }
+
+    /** Verifies the warning stays hidden once the vault has been exported. */
+    @Test
+    fun `showBackupWarning is false for an exported vault`() =
+        runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns
+                Vault(id = "vault-1", name = "Test", isBackedUp = true)
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.showBackupWarning.shouldBeFalse()
         }
 
     /** Verifies the upgrade banner shows only for a GG20 (migration-eligible) vault. */

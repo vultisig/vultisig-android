@@ -11,7 +11,6 @@ import com.vultisig.wallet.data.mappers.MapVaultToProto
 import com.vultisig.wallet.data.mappers.exportableOrNull
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
 import com.vultisig.wallet.data.usecases.backup.CreateVaultBackupFileNameUseCase
@@ -65,7 +64,6 @@ constructor(
     private val createVaultBackup: CreateVaultBackupUseCase,
     private val isFileExtensionValid: IsVaultBackupFileExtensionValidUseCase,
     private val vaultRepository: VaultRepository,
-    private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val mapVaultToProto: MapVaultToProto,
     private val saveBackupToUri: SaveBackupToUriUseCase,
     private val deleteBackupDocument: DeleteBackupDocumentUseCase,
@@ -238,13 +236,11 @@ constructor(
     private suspend fun updateBackupStatus() {
         when (backupType) {
             BackupType.AllVaults -> {
-                awaitVaults().forEach { vault ->
-                    vaultDataStoreRepository.setBackupStatus(vault.id, true)
-                }
+                awaitVaults().forEach { vault -> vaultRepository.setBackupStatus(vault.id, true) }
             }
 
             is BackupType.CurrentVault -> {
-                vaultDataStoreRepository.setBackupStatus(vaultId, true)
+                vaultRepository.setBackupStatus(vaultId, true)
             }
         }
     }

@@ -22,6 +22,21 @@ data class Vault(
     var coins: List<Coin> = emptyList(),
     var chainPublicKeys: List<ChainPublicKey> = emptyList(),
     var libType: SigningLibType = SigningLibType.GG20,
+    /**
+     * True once this vault has been exported to a `.vult` that is known to be complete.
+     *
+     * Defaults to false, so a vault nobody has exported is never mistaken for one that is safe to
+     * lose — matching iOS and Windows. Set it only through
+     * [com.vultisig.wallet.data.repositories.VaultRepository.setBackupStatus], and only after an
+     * export that finished writing: a `.vult` missing keyshares restores cleanly and can never
+     * sign, so a flag set on a partial write records a backup that does not exist.
+     *
+     * Any ceremony that changes [keyshares] makes every existing `.vult` stale and must clear it. A
+     * full upsert of a freshly generated vault does that on its own — the flag lives on the vault
+     * row, and a new vault carries the default. A read-modify-write of an existing vault does not,
+     * and has to clear it by hand.
+     */
+    var isBackedUp: Boolean = false,
 ) {
 
     fun getKeyshare(pubKey: String): String? =

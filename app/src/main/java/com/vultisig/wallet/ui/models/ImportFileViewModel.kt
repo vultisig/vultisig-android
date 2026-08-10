@@ -16,7 +16,6 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.MalformedVaultException
@@ -66,7 +65,6 @@ internal class ImportFileViewModel
 constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val saveVault: SaveVaultUseCase,
     private val parseVaultFromString: ParseVaultFromStringUseCase,
     private val vaultRepository: VaultRepository,
@@ -215,7 +213,7 @@ constructor(
 
         saveVault(adjusted, false)
         runBestEffort("Failed to set backup status") {
-            vaultDataStoreRepository.setBackupStatus(adjusted.id, true)
+            vaultRepository.setBackupStatus(adjusted.id, true)
         }
         if (adjusted.pubKeyMLDSA.isNotBlank()) attachQbtcToken(adjusted)
 

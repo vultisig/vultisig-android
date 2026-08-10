@@ -8,7 +8,6 @@ import com.vultisig.wallet.data.mappers.MapVaultToProtoImpl
 import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
 import com.vultisig.wallet.data.usecases.backup.CreateVaultBackupFileNameUseCase
@@ -21,6 +20,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import io.mockk.coEvery
+import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -48,7 +48,6 @@ internal class BackupVaultViewModelTest {
     private lateinit var isFileExtensionValid: IsVaultBackupFileExtensionValidUseCase
     private lateinit var createVaultBackup: CreateVaultBackupUseCase
     private lateinit var mapVaultToProto: MapVaultToProto
-    private lateinit var vaultDataStoreRepository: VaultDataStoreRepository
     private lateinit var snackbarFlow: SnackbarFlow
     private lateinit var saveBackupToUri: SaveBackupToUriUseCase
     private lateinit var deleteBackupDocument: DeleteBackupDocumentUseCase
@@ -64,12 +63,12 @@ internal class BackupVaultViewModelTest {
         isFileExtensionValid = mockk()
         createVaultBackup = mockk()
         mapVaultToProto = MapVaultToProtoImpl()
-        vaultDataStoreRepository = mockk(relaxed = true)
         snackbarFlow = mockk(relaxed = true)
         saveBackupToUri = mockk()
         deleteBackupDocument = mockk(relaxed = true)
 
         coEvery { vaultRepository.awaitKeySharesReadable() } returns Unit
+        coJustRun { vaultRepository.setBackupStatus(any(), any()) }
         coEvery { isFileExtensionValid(any(), any()) } returns true
         coEvery { saveBackupToUri(any(), any<String>()) } returns true
         every { createVaultBackup(any(), any()) } returns "backup-content"
@@ -100,7 +99,6 @@ internal class BackupVaultViewModelTest {
             isFileExtensionValid = isFileExtensionValid,
             createVaultBackup = createVaultBackup,
             mapVaultToProto = mapVaultToProto,
-            vaultDataStoreRepository = vaultDataStoreRepository,
             snackbarFlow = snackbarFlow,
             saveBackupToUri = saveBackupToUri,
             deleteBackupDocument = deleteBackupDocument,

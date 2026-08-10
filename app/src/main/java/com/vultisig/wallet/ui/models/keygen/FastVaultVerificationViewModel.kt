@@ -143,6 +143,10 @@ constructor(
                                         )
                                 existingVault.pubKeyMLDSA = tempVault.vault.pubKeyMLDSA
                                 existingVault.keyshares = tempVault.vault.keyshares
+                                // The keyshares changed, so any .vult taken before now restores a
+                                // vault that cannot sign on QBTC. Cleared by hand because this
+                                // branch writes back the vault it read, old flag included.
+                                existingVault.isBackedUp = false
                                 saveVault(existingVault, true)
 
                                 val qbtcToken = Coins.Qbtc.QBTC

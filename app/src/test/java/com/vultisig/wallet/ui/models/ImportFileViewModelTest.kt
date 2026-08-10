@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.MalformedVaultException
@@ -54,7 +53,6 @@ internal class ImportFileViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private lateinit var navigator: Navigator<Destination>
-    private lateinit var vaultDataStoreRepository: VaultDataStoreRepository
     private lateinit var saveVault: SaveVaultUseCase
     private lateinit var parseVaultFromString: ParseVaultFromStringUseCase
     private lateinit var vaultRepository: VaultRepository
@@ -68,7 +66,6 @@ internal class ImportFileViewModelTest {
         mockkStatic("androidx.navigation.SavedStateHandleKt")
         every { any<SavedStateHandle>().toRoute<Route.ImportVault>() } returns Route.ImportVault()
         navigator = mockk(relaxed = true)
-        vaultDataStoreRepository = mockk(relaxed = true)
         saveVault = mockk(relaxed = true)
         parseVaultFromString = mockk(relaxed = true)
         vaultRepository = mockk(relaxed = true)
@@ -95,7 +92,6 @@ internal class ImportFileViewModelTest {
             ImportFileViewModel(
                 savedStateHandle = savedStateHandle,
                 navigator = navigator,
-                vaultDataStoreRepository = vaultDataStoreRepository,
                 saveVault = saveVault,
                 parseVaultFromString = parseVaultFromString,
                 vaultRepository = vaultRepository,
@@ -170,7 +166,7 @@ internal class ImportFileViewModelTest {
             )
         coEvery { parseVaultFromString(any(), any()) } returns vault
         coEvery { saveVault(any(), false) } returns Unit
-        coEvery { vaultDataStoreRepository.setBackupStatus(any(), any()) } returns Unit
+        coEvery { vaultRepository.setBackupStatus(any(), any()) } returns Unit
         coEvery { chainAccountAddressRepository.getAddress(any<Coin>(), any<Vault>()) } returns
             Pair("qbtc1address", "qbtc-derived-pubkey")
         coEvery { vaultRepository.addTokenToVault(any(), any()) } returns Unit
@@ -551,8 +547,7 @@ internal class ImportFileViewModelTest {
     @Test
     fun `import succeeds when setBackupStatus fails`() = runTest {
         coEvery { parseVaultFromString(any(), any()) } returns testVault()
-        coEvery { vaultDataStoreRepository.setBackupStatus(any(), any()) } throws
-            RuntimeException("datastore")
+        coEvery { vaultRepository.setBackupStatus(any(), any()) } throws RuntimeException("db")
         val vm = createViewModel(fileName = "vault.bak")
 
         vm.decryptVaultData()
