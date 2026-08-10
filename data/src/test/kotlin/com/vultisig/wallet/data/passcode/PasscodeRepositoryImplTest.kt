@@ -368,7 +368,6 @@ internal class PasscodeRepositoryImplTest {
         repository.initialize()
 
         assertEquals(PasscodeState.StoreUnavailable, repository.state.value)
-        assertEquals(true, repository.isLocked(), "keyshare writes must still be refused")
     }
 
     @Test
@@ -382,7 +381,6 @@ internal class PasscodeRepositoryImplTest {
         repository.initialize()
 
         assertEquals(PasscodeState.StoreUnavailable, repository.state.value)
-        assertEquals(true, repository.isLocked(), "keyshare writes must still be refused")
     }
 
     @Test
@@ -530,22 +528,6 @@ internal class PasscodeRepositoryImplTest {
         repository.changePasscode("123456", "654321")
 
         assertEquals(emptyList(), protection.calls, "the data key is unchanged")
-    }
-
-    @Test
-    fun `isLocked is true only while a passcode is configured and not entered`() = runTest {
-        val repository = repository()
-        repository.initialize()
-        assertEquals(false, repository.isLocked())
-
-        repository.setPasscode("123456")
-        assertEquals(false, repository.isLocked())
-
-        repository.lock()
-        assertEquals(true, repository.isLocked())
-
-        repository.unlock("123456")
-        assertEquals(false, repository.isLocked())
     }
 
     @Test

@@ -168,9 +168,11 @@ internal class KeygenViewModelTest {
             coVerify { navigator.navigate(Destination.Back) }
         }
 
-    /** Verifies neither the vault read nor the ceremony runs while the keyshares are unwritable. */
+    /**
+     * Verifies the vault read the ceremony builds on waits until its keyshares can be decrypted.
+     */
     @Test
-    fun `the ceremony waits until the keyshares can be written`() =
+    fun `the ceremony waits until the existing keyshares can be read`() =
         runTest(testDispatcher) {
             val unlocked = CompletableDeferred<Unit>()
             coEvery { vaultRepository.awaitKeySharesReadable() } coAnswers { unlocked.await() }
@@ -192,12 +194,15 @@ internal class KeygenViewModelTest {
             val unlocked = CompletableDeferred<Unit>()
             coEvery { vaultRepository.awaitKeySharesReadable() } coAnswers { unlocked.await() }
 
-            createViewModel()
+            val vm = createViewModel()
 
             autoLockHold.holds.value shouldBe 1
 
             unlocked.complete(Unit)
 
+            // The ceremony ends by failing here, which is the exit a leaked hold would survive:
+            // auto-lock would then be deferred for the rest of the process.
+            vm.state.value.error.shouldNotBeNull()
             autoLockHold.holds.value shouldBe 0
         }
 }

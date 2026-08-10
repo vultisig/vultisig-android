@@ -52,11 +52,8 @@ internal class VaultRepositoryImplTest {
      */
     private class FakePasscodeDataKeySource : PasscodeDataKeySource {
         var dataKey: ByteArray? = null
-        var locked: Boolean = false
 
         override fun dataKeyOrNull(): ByteArray? = dataKey
-
-        override fun isLocked(): Boolean = locked
 
         override suspend fun awaitUnlocked() = Unit
     }
@@ -500,7 +497,6 @@ internal class VaultRepositoryImplTest {
         coEvery { vaultDao.loadById("vault-1") } returns
             vaultWithStoredKeyShare(keyShareCipher.encrypt("share-1", dataKey, keyShareIdentity))
         passcode.dataKey = null
-        passcode.locked = true
 
         val vault = repository.get("vault-1")
 
@@ -535,36 +531,36 @@ internal class VaultRepositoryImplTest {
     }
 
     /**
-     * Verifies a locked write fails loudly. Storing the share in the clear instead would silently
-     * undo the at-rest protection the user asked for.
+     * Verifies a share generated while the app is locked is still stored. A keygen ceremony cannot
+     * be replayed, so refusing the write would cost the user a vault the rest of the group already
+     * considers created; the next unlock re-seals whatever was written in the clear.
      */
     @Test
-    fun `add refuses to persist keyshares while locked`() = runTest {
+    fun `add stores keyshares in the clear while locked`() = runTest {
         passcode.dataKey = null
-        passcode.locked = true
+        val stored = slot<VaultWithKeySharesAndTokens>()
 
-        assertFailsWith<IllegalStateException> {
-            repository.add(makeVault().copy(keyshares = listOf(KeyShare("pub-1", "share-1"))))
-        }
+        repository.add(makeVault().copy(keyshares = listOf(KeyShare("pub-1", "share-1"))))
 
-        coVerify(exactly = 0) { vaultDao.insert(any()) }
+        coVerify { vaultDao.insert(capture(stored)) }
+        assertEquals("share-1", stored.captured.keyShares.single().keyShare)
     }
 
     /**
-     * Verifies a locked write is refused even when the vault carries no keyshares.
+     * Verifies a locked write of a keyshare-free vault reaches the DAO carrying no keyshare rows.
      *
-     * That shape is exactly what a locked *read* produces — the shares are dropped on the way out —
-     * so it is the dangerous case, not the harmless one. Nothing reaches the per-share encryption
-     * on this path, so the refusal has to sit above it; previously only Room's habit of leaving
-     * keyshare rows alone on an empty upsert stood between this and erasing them.
+     * That shape is what a locked *read* produces — the shares are dropped on the way out — so the
+     * stored rows survive only because Room's upsert leaves rows absent from the list alone. Adding
+     * a delete there would turn this into silent vault destruction.
      */
     @Test
-    fun `upsert of a keyshare-free vault is refused while locked`() = runTest {
-        passcode.locked = true
+    fun `upsert of a keyshare-free vault writes no keyshare rows`() = runTest {
+        val stored = slot<VaultWithKeySharesAndTokens>()
+        coJustRun { vaultDao.upsert(capture(stored)) }
 
-        assertFailsWith<IllegalStateException> { repository.upsert(makeVault()) }
+        repository.upsert(makeVault())
 
-        coVerify(exactly = 0) { vaultDao.upsert(any()) }
+        assertTrue(stored.captured.keyShares.isEmpty())
     }
 
     /** Returns a minimal domain [Vault]. */

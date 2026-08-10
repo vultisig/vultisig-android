@@ -28,6 +28,7 @@ import com.vultisig.wallet.data.models.proto.v1.SingleKeygenMessageProto
 import com.vultisig.wallet.data.passcode.AutoLockHold
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.DiscoveryTimeout
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.DuplicateVaultName
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.InvalidQr
@@ -116,220 +117,214 @@ constructor(
     private var discoveryListener: MediatorServiceDiscoveryListener? = null
 
     init {
-        viewModelScope.launch {
-            try {
-                val deepLink = DeepLinkHelper(Base64.UrlSafe.decode(args.qr).decodeToString())
-
-                val bytes =
-                    decompressQr((deepLink.getJsonData() ?: error(InvalidQr)).decodeBase64Bytes())
-
-                val existingVaults = vaultRepository.getAll()
-
-                val session =
-                    when (val action = deepLink.getTssAction()) {
-                        TssAction.KEYGEN,
-                        TssAction.KeyImport -> {
-                            val message =
-                                mapKeygenMessageFromProto(
-                                    protoBuf.decodeFromByteArray<KeygenMessageProto>(bytes)
-                                )
-
-                            // hexChainCode uniquely identifies the vault across devices.
-                            // If a vault with the same chain code is already on this device,
-                            // skip the join and surface a clear "already on device" message
-                            // instead of running keygen + failing on duplicate save.
-                            val alreadyJoinedVault =
-                                existingVaults.find {
-                                    it.hexChainCode == message.hexChainCode &&
-                                        it.hexChainCode.isNotBlank()
-                                }
-                            if (alreadyJoinedVault != null) {
-                                state.update {
-                                    it.copy(
-                                        alreadyJoined =
-                                            AlreadyJoinedVault(
-                                                vaultId = alreadyJoinedVault.id,
-                                                vaultName = alreadyJoinedVault.name,
-                                            )
-                                    )
-                                }
-                                return@launch
-                            }
-
-                            assertNoVaultNameDuplicates(existingVaults, message.vaultName)
-
-                            val serverUrl =
-                                if (message.useVultisigRelay) {
-                                    Endpoints.VULTISIG_RELAY_URL
-                                } else {
-                                    discoverMediator(message.serviceName)
-                                }
-                            Session(
-                                sessionId = message.sessionID,
-                                action = action,
-                                hexChainCode = message.hexChainCode,
-                                serviceName = message.serviceName,
-                                useVultisigRelay = message.useVultisigRelay,
-                                encryptionKeyHex = message.encryptionKeyHex,
-                                vaultName = message.vaultName,
-                                libType = message.libType,
-                                localPartyId = Utils.deviceName(context),
-                                serverUrl = serverUrl,
-                                oldCommittee = emptyList(),
-                                oldResharePrefix = "",
-                                chains = message.chains,
-                                // Follow the initiator's batched opt-in from the QR: iOS/Windows
-                                // run
-                                // key-import (and DKLS keygen) through the batched protocol, which
-                                // uses dedicated relay namespaces; a joiner that ignores this flag
-                                // polls the legacy namespaces and the ceremony deadlocks. AND it
-                                // with
-                                // isBatchEligibleCeremony so a forged QR can't route a GG20 keygen
-                                // through the batched namespaces — this branch defends itself
-                                // instead
-                                // of relying on the executor gate alone.
-                                isTssBatch =
-                                    message.isTssBatch &&
-                                        isBatchEligibleCeremony(action, message.libType),
-                            )
-                        }
-
-                        TssAction.ReShare,
-                        TssAction.Migrate -> {
-                            val message =
-                                mapReshareMessageFromProto(
-                                    protoBuf.decodeFromByteArray<ReshareMessageProto>(bytes)
-                                )
-
-                            val existingVault =
-                                existingVaults.find { it.pubKeyECDSA == message.pubKeyECDSA }
-
-                            if (
-                                existingVault != null &&
-                                    existingVault.resharePrefix != message.oldResharePrefix
-                            ) {
-                                error(WrongResharePrefix)
-                            }
-
-                            // if we don't reshare vault which we already have,
-                            // we should not create duplicate names
-                            if (existingVault == null) {
-                                assertNoVaultNameDuplicates(existingVaults, message.vaultName)
-                            }
-
-                            val serverUrl =
-                                if (message.useVultisigRelay) {
-                                    Endpoints.VULTISIG_RELAY_URL
-                                } else {
-                                    discoverMediator(message.serviceName)
-                                }
-
-                            Session(
-                                sessionId = message.sessionID,
-                                action = action,
-                                hexChainCode = existingVault?.hexChainCode ?: message.hexChainCode,
-                                serviceName = message.serviceName,
-                                useVultisigRelay = message.useVultisigRelay,
-                                encryptionKeyHex = message.encryptionKeyHex,
-                                vaultName = existingVault?.name ?: message.vaultName,
-                                libType =
-                                    if (action == TssAction.Migrate) SigningLibType.DKLS
-                                    else message.libType,
-                                localPartyId =
-                                    existingVault?.localPartyID ?: Utils.deviceName(context),
-                                serverUrl = serverUrl,
-                                oldCommittee = message.oldParties,
-                                oldResharePrefix = message.oldResharePrefix,
-                                vaultId = existingVault?.id,
-                                // Migrate shares the proto with reshare but is excluded from
-                                // batched mode — the flag only flips on for genuine reshares.
-                                // Defensively pin the flag to libTypes that actually run the
-                                // batched protocol so a forged QR cannot route a GG20 ceremony
-                                // through the wrong relay namespace.
-                                isTssBatch =
-                                    message.isTssBatch &&
-                                        isBatchEligibleReshare(
-                                            action,
-                                            if (action == TssAction.Migrate) SigningLibType.DKLS
-                                            else message.libType,
-                                        ),
-                            )
-                        }
-
-                        TssAction.SingleKeygen -> {
-                            val message =
-                                protoBuf.decodeFromByteArray<SingleKeygenMessageProto>(bytes)
-
-                            val existingVault =
-                                existingVaults.find { it.pubKeyECDSA == message.publicKeyEcdsa }
-                                    ?: error(
-                                        UnknownError(
-                                            "No vault found matching the initiator's ECDSA public key"
-                                        )
-                                    )
-
-                            require(existingVault.pubKeyMLDSA.isBlank()) {
-                                "Vault already has an MLDSA key"
-                            }
-
-                            require(existingVault.libType != SigningLibType.KeyImport) {
-                                "Key import vaults do not support MLDSA keygen"
-                            }
-
-                            val serverUrl =
-                                if (message.useVultisigRelay) {
-                                    Endpoints.VULTISIG_RELAY_URL
-                                } else {
-                                    discoverMediator(message.serviceName)
-                                }
-
-                            Session(
-                                sessionId = message.sessionId,
-                                action = TssAction.SingleKeygen,
-                                hexChainCode = existingVault.hexChainCode,
-                                serviceName = message.serviceName,
-                                useVultisigRelay = message.useVultisigRelay,
-                                encryptionKeyHex = message.encryptionKeyHex,
-                                vaultName = existingVault.name,
-                                libType = existingVault.libType,
-                                localPartyId = existingVault.localPartyID,
-                                serverUrl = serverUrl,
-                                oldCommittee = emptyList(),
-                                oldResharePrefix = "",
-                                vaultId = existingVault.id,
-                            )
-                        }
-
-                        else -> error(UnknownTss)
-                    }
-
-                // From here the initiator can add this device to the committee at any moment, and
-                // the ceremony that follows cannot be paused. KeygenViewModel then holds its own.
-                autoLockHold.withHold {
-                    sessionApi.startSession(
-                        session.serverUrl,
-                        session.sessionId,
-                        listOf(session.localPartyId),
-                    )
-
-                    waitForKeygenToStart(session)
-                }
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
+        viewModelScope.safeLaunch(
+            onError = { e ->
                 Timber.e(e)
                 when (e) {
-                    is JoinKeygenException -> {
-                        state.update { it.copy(error = e.error) }
-                    }
+                    is JoinKeygenException -> state.update { it.copy(error = e.error) }
 
-                    else -> {
+                    else ->
                         state.update {
                             it.copy(
                                 error = UnknownError(e.message ?: "An unexpected error occurred")
                             )
                         }
-                    }
                 }
+            }
+        ) {
+            val deepLink = DeepLinkHelper(Base64.UrlSafe.decode(args.qr).decodeToString())
+
+            val bytes =
+                decompressQr((deepLink.getJsonData() ?: error(InvalidQr)).decodeBase64Bytes())
+
+            val existingVaults = vaultRepository.getAll()
+
+            val session =
+                when (val action = deepLink.getTssAction()) {
+                    TssAction.KEYGEN,
+                    TssAction.KeyImport -> {
+                        val message =
+                            mapKeygenMessageFromProto(
+                                protoBuf.decodeFromByteArray<KeygenMessageProto>(bytes)
+                            )
+
+                        // hexChainCode uniquely identifies the vault across devices.
+                        // If a vault with the same chain code is already on this device,
+                        // skip the join and surface a clear "already on device" message
+                        // instead of running keygen + failing on duplicate save.
+                        val alreadyJoinedVault =
+                            existingVaults.find {
+                                it.hexChainCode == message.hexChainCode &&
+                                    it.hexChainCode.isNotBlank()
+                            }
+                        if (alreadyJoinedVault != null) {
+                            state.update {
+                                it.copy(
+                                    alreadyJoined =
+                                        AlreadyJoinedVault(
+                                            vaultId = alreadyJoinedVault.id,
+                                            vaultName = alreadyJoinedVault.name,
+                                        )
+                                )
+                            }
+                            return@safeLaunch
+                        }
+
+                        assertNoVaultNameDuplicates(existingVaults, message.vaultName)
+
+                        val serverUrl =
+                            if (message.useVultisigRelay) {
+                                Endpoints.VULTISIG_RELAY_URL
+                            } else {
+                                discoverMediator(message.serviceName)
+                            }
+                        Session(
+                            sessionId = message.sessionID,
+                            action = action,
+                            hexChainCode = message.hexChainCode,
+                            serviceName = message.serviceName,
+                            useVultisigRelay = message.useVultisigRelay,
+                            encryptionKeyHex = message.encryptionKeyHex,
+                            vaultName = message.vaultName,
+                            libType = message.libType,
+                            localPartyId = Utils.deviceName(context),
+                            serverUrl = serverUrl,
+                            oldCommittee = emptyList(),
+                            oldResharePrefix = "",
+                            chains = message.chains,
+                            // Follow the initiator's batched opt-in from the QR: iOS/Windows
+                            // run
+                            // key-import (and DKLS keygen) through the batched protocol, which
+                            // uses dedicated relay namespaces; a joiner that ignores this flag
+                            // polls the legacy namespaces and the ceremony deadlocks. AND it
+                            // with
+                            // isBatchEligibleCeremony so a forged QR can't route a GG20 keygen
+                            // through the batched namespaces — this branch defends itself
+                            // instead
+                            // of relying on the executor gate alone.
+                            isTssBatch =
+                                message.isTssBatch &&
+                                    isBatchEligibleCeremony(action, message.libType),
+                        )
+                    }
+
+                    TssAction.ReShare,
+                    TssAction.Migrate -> {
+                        val message =
+                            mapReshareMessageFromProto(
+                                protoBuf.decodeFromByteArray<ReshareMessageProto>(bytes)
+                            )
+
+                        val existingVault =
+                            existingVaults.find { it.pubKeyECDSA == message.pubKeyECDSA }
+
+                        if (
+                            existingVault != null &&
+                                existingVault.resharePrefix != message.oldResharePrefix
+                        ) {
+                            error(WrongResharePrefix)
+                        }
+
+                        // if we don't reshare vault which we already have,
+                        // we should not create duplicate names
+                        if (existingVault == null) {
+                            assertNoVaultNameDuplicates(existingVaults, message.vaultName)
+                        }
+
+                        val serverUrl =
+                            if (message.useVultisigRelay) {
+                                Endpoints.VULTISIG_RELAY_URL
+                            } else {
+                                discoverMediator(message.serviceName)
+                            }
+
+                        Session(
+                            sessionId = message.sessionID,
+                            action = action,
+                            hexChainCode = existingVault?.hexChainCode ?: message.hexChainCode,
+                            serviceName = message.serviceName,
+                            useVultisigRelay = message.useVultisigRelay,
+                            encryptionKeyHex = message.encryptionKeyHex,
+                            vaultName = existingVault?.name ?: message.vaultName,
+                            libType =
+                                if (action == TssAction.Migrate) SigningLibType.DKLS
+                                else message.libType,
+                            localPartyId = existingVault?.localPartyID ?: Utils.deviceName(context),
+                            serverUrl = serverUrl,
+                            oldCommittee = message.oldParties,
+                            oldResharePrefix = message.oldResharePrefix,
+                            vaultId = existingVault?.id,
+                            // Migrate shares the proto with reshare but is excluded from
+                            // batched mode — the flag only flips on for genuine reshares.
+                            // Defensively pin the flag to libTypes that actually run the
+                            // batched protocol so a forged QR cannot route a GG20 ceremony
+                            // through the wrong relay namespace.
+                            isTssBatch =
+                                message.isTssBatch &&
+                                    isBatchEligibleReshare(
+                                        action,
+                                        if (action == TssAction.Migrate) SigningLibType.DKLS
+                                        else message.libType,
+                                    ),
+                        )
+                    }
+
+                    TssAction.SingleKeygen -> {
+                        val message = protoBuf.decodeFromByteArray<SingleKeygenMessageProto>(bytes)
+
+                        val existingVault =
+                            existingVaults.find { it.pubKeyECDSA == message.publicKeyEcdsa }
+                                ?: error(
+                                    UnknownError(
+                                        "No vault found matching the initiator's ECDSA public key"
+                                    )
+                                )
+
+                        require(existingVault.pubKeyMLDSA.isBlank()) {
+                            "Vault already has an MLDSA key"
+                        }
+
+                        require(existingVault.libType != SigningLibType.KeyImport) {
+                            "Key import vaults do not support MLDSA keygen"
+                        }
+
+                        val serverUrl =
+                            if (message.useVultisigRelay) {
+                                Endpoints.VULTISIG_RELAY_URL
+                            } else {
+                                discoverMediator(message.serviceName)
+                            }
+
+                        Session(
+                            sessionId = message.sessionId,
+                            action = TssAction.SingleKeygen,
+                            hexChainCode = existingVault.hexChainCode,
+                            serviceName = message.serviceName,
+                            useVultisigRelay = message.useVultisigRelay,
+                            encryptionKeyHex = message.encryptionKeyHex,
+                            vaultName = existingVault.name,
+                            libType = existingVault.libType,
+                            localPartyId = existingVault.localPartyID,
+                            serverUrl = serverUrl,
+                            oldCommittee = emptyList(),
+                            oldResharePrefix = "",
+                            vaultId = existingVault.id,
+                        )
+                    }
+
+                    else -> error(UnknownTss)
+                }
+
+            // From here the initiator can add this device to the committee at any moment, and
+            // the ceremony that follows cannot be paused. KeygenViewModel then holds its own.
+            autoLockHold.withHold {
+                sessionApi.startSession(
+                    session.serverUrl,
+                    session.sessionId,
+                    listOf(session.localPartyId),
+                )
+
+                waitForKeygenToStart(session)
             }
         }
     }
