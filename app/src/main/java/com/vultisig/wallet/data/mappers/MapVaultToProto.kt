@@ -44,6 +44,11 @@ internal class MapVaultToProtoImpl @Inject constructor() : MapVaultToProto {
         // of storage because the data key was unavailable. Exporting that would hand the user a
         // .vult that reports success, restores cleanly, and can never sign — the worst shape a
         // backup failure can take, because it is only discovered when the backup is needed.
+        //
+        // Empty is enough to test for because the read is all-or-nothing: a vault that could not
+        // be fully decrypted arrives with none of its shares rather than the ones that happened to
+        // open. Storage owns that guarantee — see VaultRepositoryImpl.toKeyShares — because the
+        // count of shares a vault *should* have exists only there.
         if (from.keyshares.isEmpty()) throw VaultKeysharesUnavailableException()
         return VaultProto(
             name = from.name,

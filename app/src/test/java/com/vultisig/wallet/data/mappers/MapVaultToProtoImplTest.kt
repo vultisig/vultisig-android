@@ -146,4 +146,22 @@ internal class MapVaultToProtoImplTest {
         assertNull(mapper.exportableOrNull(vault().copy(keyshares = emptyList())))
         assertNotNull(mapper.exportableOrNull(vault()))
     }
+
+    /**
+     * A vault whose stored rows were part plaintext, part encrypted, read with no data key, is
+     * refused.
+     *
+     * The other half of this claim lives in `VaultRepositoryImplTest.get drops every keyshare when
+     * only some can be read while locked`, which is where that vault is actually produced —
+     * `VaultRepositoryImpl` is internal to the data module, so the two halves cannot meet in one
+     * test. This one pins the side the mapper owns: given the all-or-nothing read, checking for
+     * emptiness is what refuses a partial keyshare set, and it must keep doing so.
+     */
+    @Test
+    fun `a partially readable keyshare set reaches the mapper as empty and is refused`() {
+        val fromPartialLockedRead = vault().copy(keyshares = emptyList())
+
+        assertFailsWith<VaultKeysharesUnavailableException> { mapper(fromPartialLockedRead) }
+        assertNull(mapper.exportableOrNull(fromPartialLockedRead))
+    }
 }

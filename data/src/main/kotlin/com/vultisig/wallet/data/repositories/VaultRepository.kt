@@ -169,16 +169,24 @@ constructor(
     }
 
     /**
-     * Decrypts stored keyshares, dropping any that cannot be opened *while the app is locked*.
+     * Decrypts stored keyshares, dropping *all* of them when any cannot be opened while the app is
+     * locked.
      *
      * A locked read is expected and harmless: background work (notifications, balance sync) still
      * reads vaults and only needs public keys and addresses. Returning the vault without its shares
      * keeps that work alive, and the write path refuses to persist a vault in that state, so a
      * locked read can never be echoed back as data loss.
      *
+     * All-or-nothing, because a table holding both plaintext and encrypted rows is a state the app
+     * supports — a `protectAll` interrupted by process death leaves exactly that mix. Keeping the
+     * rows that happened to be readable would return a vault with *some* shares, which no caller
+     * can use and every caller mistakes for a complete one: export writes a .vult that restores
+     * cleanly and can never sign, and a reshare merges the survivors and writes the truncated set
+     * back over the real one. Empty is the shape callers already check for.
+     *
      * A failure with the data key in hand is a different thing entirely — a damaged row, or one
-     * written for another vault — and returning a partial vault there would let the caller act as
-     * if the share simply did not exist. That fails loudly instead.
+     * written for another vault — and silently returning nothing there would hide a real defect.
+     * That fails loudly instead.
      */
     private fun List<KeyShareEntity>.toKeyShares(vaultId: VaultId): List<KeyShare> {
         val dataKey = passcodeDataKeySource.dataKeyOrNull()
@@ -191,7 +199,13 @@ constructor(
             check(dataKey == null) {
                 "Failed to decrypt ${size - shares.size} keyshare(s) for vault $vaultId"
             }
-            Timber.w("Dropped %d locked keyshare(s) for vault %s", size - shares.size, vaultId)
+            Timber.w(
+                "Dropped all %d keyshare(s) for vault %s: %d could not be read while locked",
+                size,
+                vaultId,
+                size - shares.size,
+            )
+            return emptyList()
         }
         return shares
     }
