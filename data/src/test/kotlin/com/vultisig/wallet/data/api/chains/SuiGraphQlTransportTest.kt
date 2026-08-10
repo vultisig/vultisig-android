@@ -38,7 +38,10 @@ class SuiGraphQlTransportTest {
 
         val data = SuiGraphQlTransport(client, endpoints).query(QUERY)
 
-        assertEquals("100", data["epoch"]!!.jsonObject["referenceGasPrice"]!!.jsonPrimitive.content)
+        assertEquals(
+            "100",
+            data["epoch"]?.jsonObject?.get("referenceGasPrice")?.jsonPrimitive?.content,
+        )
     }
 
     // The 5xx case above already covers recovery; what is pinned here is that an unreachable host
