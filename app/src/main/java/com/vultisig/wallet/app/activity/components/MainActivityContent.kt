@@ -39,6 +39,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
@@ -80,7 +81,11 @@ internal fun MainActivityContent(
     // tree at the same moment. Swallowing pointer input is only half a lock: everything behind the
     // gate stays composed, and TalkBack would happily walk it, read it out and activate it.
     val passcodeGuardModel: PasscodeGuardViewModel = hiltViewModel()
-    val isGateClosed = passcodeGuardModel.state.collectAsStateWithLifecycle().value.isGateClosed
+    val guardState by passcodeGuardModel.state.collectAsStateWithLifecycle()
+    val isGateClosed = guardState.isGateClosed
+    val isLocked = guardState.isLocked
+
+    PopDialogDestinationsWhileLocked(navController, isLocked)
 
     val context = LocalContext.current
     val snackbarState = mainViewModel.snackbarState
@@ -135,22 +140,16 @@ internal fun MainActivityContent(
             }
         },
         overlayContent = {
-            PasscodeGuard(
-                model = passcodeGuardModel,
-                // Dialog destinations render in their own window, above this overlay. Popping them
-                // as the gate closes is what stops a bottom sheet — a receive address, a QR — from
-                // sitting on top of the lock screen and still accepting taps.
-                onLocked = {
-                    while (navController.currentBackStackEntry.isDialog()) {
-                        if (!navController.popBackStack()) break
-                    }
-                },
-            )
+            PasscodeGuard(model = passcodeGuardModel)
 
-            VsSnackBar(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                snackbarState = snackbarState,
-            )
+            // The snackbar is a window of its own too, so one raised while the gate is up is added
+            // after the lock's and drawn over it.
+            if (!isGateClosed) {
+                VsSnackBar(
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    snackbarState = snackbarState,
+                )
+            }
         },
     )
 }
@@ -306,6 +305,26 @@ private fun MainActivityContentPreview() {
             )
         },
     )
+}
+
+/**
+ * Keeps `dialog<>` destinations off the back stack for as long as [isLocked].
+ *
+ * They draw in a window of their own, and the passcode lock's window only covers the windows that
+ * were open before it, so one routed after the app locks opens on top of the lock — still visible,
+ * still taking input. Driven by the state rather than by the moment it changes, because routing
+ * carries on behind a closed gate.
+ */
+@Composable
+internal fun PopDialogDestinationsWhileLocked(navController: NavController, isLocked: Boolean) {
+    LaunchedEffect(navController, isLocked) {
+        if (!isLocked) return@LaunchedEffect
+        navController.currentBackStackEntryFlow.collect {
+            while (navController.currentBackStackEntry.isDialog()) {
+                if (!navController.popBackStack()) break
+            }
+        }
+    }
 }
 
 /**

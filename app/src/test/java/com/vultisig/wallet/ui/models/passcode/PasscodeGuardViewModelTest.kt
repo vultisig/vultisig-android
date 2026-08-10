@@ -90,6 +90,38 @@ internal class PasscodeGuardViewModelTest {
     }
 
     @Test
+    fun `the lock only goes up over a gate that is already closed`() = runTest {
+        // Two windows: the lock draws in one of its own, the cover the gate draws is in the
+        // activity's. A state that locked without closing the gate would leave the app live behind
+        // the lock — walkable by TalkBack, and tappable for the frame before the lock's window is
+        // added.
+        val model = PasscodeGuardViewModel(passcodeRepository)
+        advanceUntilIdle()
+
+        val locking =
+            listOf(
+                PasscodeState.Locked,
+                PasscodeState.KeyUnavailable,
+                PasscodeState.StoreUnavailable,
+            )
+        val notLocking =
+            listOf(PasscodeState.Unknown, PasscodeState.Unlocked, PasscodeState.Disabled)
+
+        locking.forEach { locked ->
+            state.value = locked
+            advanceUntilIdle()
+            assertTrue(model.state.value.isLocked, "$locked must read as locked")
+            assertTrue(model.state.value.isGateClosed, "$locked must lock behind a closed gate")
+        }
+
+        notLocking.forEach { open ->
+            state.value = open
+            advanceUntilIdle()
+            assertFalse(model.state.value.isLocked, "$open must not read as locked")
+        }
+    }
+
+    @Test
     fun `an unlock this session is remembered once the passcode is turned off`() = runTest {
         // Disabling flips straight to Disabled, which composes the device-credential gate for the
         // first time this process. The user has just proved who they are; asking again is a non
