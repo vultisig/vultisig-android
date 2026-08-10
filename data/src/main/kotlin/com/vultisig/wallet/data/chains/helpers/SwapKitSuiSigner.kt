@@ -30,8 +30,8 @@ internal class SwapKitSuiSignerException(message: String) : Exception(message)
  * bytes and hash with Blake2b-32 (Bouncy Castle, identical to WalletCore's `Hash.blake2b(_, 32)` —
  * keeps the digest path JNI-free and unit-testable). The submit-format envelope is `[flag=0x00
  * ed25519, sig (64 bytes), pubkey (32 bytes)]`, base64-encoded — this is the `signatures[0]`
- * argument to `sui_executeTransactionBlock`; the `tx_bytes` argument is the same base64 PTB SwapKit
- * handed us, passed verbatim ([SignedTransactionResult.rawTransaction]).
+ * argument to the GraphQL `executeTransaction` mutation; its `transactionDataBcs` argument is the
+ * same base64 PTB SwapKit handed us, passed verbatim ([SignedTransactionResult.rawTransaction]).
  */
 internal class SwapKitSuiSigner(private val vaultHexPublicKey: String) {
 
