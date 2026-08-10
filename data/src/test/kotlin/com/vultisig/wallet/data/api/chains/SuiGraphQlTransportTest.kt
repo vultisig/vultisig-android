@@ -10,6 +10,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
 
@@ -37,29 +38,38 @@ class SuiGraphQlTransportTest {
 
         val data = SuiGraphQlTransport(client, endpoints).query(QUERY)
 
-        assertEquals(
-            "100",
-            data["epoch"]!!.jsonObject()["referenceGasPrice"]!!.jsonPrimitive.content,
-        )
+        assertEquals("100", data["epoch"]!!.jsonObject["referenceGasPrice"]!!.jsonPrimitive.content)
     }
 
+    // The 5xx case above already covers recovery; what is pinned here is that an unreachable host
+    // is retried at all — every endpoint must be attempted before the failure is reported.
     @Test
-    fun `falls over to the next endpoint when the first is unreachable`() = runTest {
+    fun `attempts every endpoint when all are unreachable`() = runTest {
         var call = 0
-        val client =
-            MockHttpClient.respondingWithSequence(
-                HttpStatusCode.OK to successBody,
-                HttpStatusCode.OK to successBody,
-            )
-        // The sequence client cannot throw, so drive the unreachable case through a client whose
-        // transport always fails and assert every endpoint was attempted before giving up.
         val failing = MockHttpClient.throwing(IOException("connection reset")) { call++ }
 
         assertFailsWith<NetworkException> { SuiGraphQlTransport(failing, endpoints).query(QUERY) }
-        assertEquals(endpoints.size, call)
 
-        // Sanity: the same query succeeds when a host answers.
-        SuiGraphQlTransport(client, endpoints).query(QUERY)
+        assertEquals(endpoints.size, call)
+    }
+
+    // A 4xx is deterministic — the node has judged these exact bytes, so replaying them against the
+    // remaining hosts would only delay the same answer. The second host must never be asked.
+    @Test
+    fun `does not fail over on a 4xx`() = runTest {
+        val client =
+            MockHttpClient.respondingWithSequence(
+                HttpStatusCode.BadRequest to "malformed document",
+                HttpStatusCode.OK to successBody,
+            )
+
+        // If the transport retried, the second (successful) response would be returned instead.
+        val e =
+            assertFailsWith<NetworkException> {
+                SuiGraphQlTransport(client, endpoints).query(QUERY)
+            }
+
+        assertEquals(HttpStatusCode.BadRequest.value, e.httpStatusCode)
     }
 
     // Exhausting the list must report the real transport failure, not a generic "no endpoint"
@@ -161,6 +171,3 @@ class SuiGraphQlTransportTest {
         const val QUERY = "query { epoch { referenceGasPrice } }"
     }
 }
-
-private fun kotlinx.serialization.json.JsonElement.jsonObject() =
-    this as kotlinx.serialization.json.JsonObject

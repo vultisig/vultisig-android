@@ -56,6 +56,16 @@ class SuiApiTest {
         assertEquals(BigInteger.ZERO, api.getBalance("0xabc", ""))
     }
 
+    // An absent balance is a genuine zero; an amount the node sent but that cannot be parsed is a
+    // contract violation. Collapsing both into zero would show someone an empty wallet for a bug.
+    @Test
+    fun `getBalance rejects an unparsable balance instead of reading it as zero`() = runTest {
+        val api = api("""{"data":{"address":{"balance":{"totalBalance":"not-a-number"}}}}""")
+
+        val e = assertFailsWith<SuiRpcException> { api.getBalance("0xabc", "") }
+        assertTrue(e.message!!.contains("not-a-number"), "message was: ${e.message}")
+    }
+
     // A shape the selection set cannot describe is a node contract violation. Decoding it into a
     // fallback would report someone's real balance as zero, so it surfaces instead.
     @Test
@@ -173,18 +183,66 @@ class SuiApiTest {
     }
 
     // A wallet whose coin objects span multiple pages must return the whole set — a token whose
-    // objects all land on a later page would otherwise be invisible to the send flow.
+    // objects all land on a later page would otherwise be invisible to the send flow. The second
+    // request must carry the cursor the first page returned; without that assertion the walk could
+    // be re-reading page one and the sequenced mock would still look correct.
     @Test
-    fun `getAllCoins follows pagination to the last page`() = runTest {
+    fun `getAllCoins follows pagination and forwards the endCursor`() = runTest {
+        val capture = MockHttpClient.RequestCapture()
         val client =
-            MockHttpClient.respondingWithSequence(
-                HttpStatusCode.OK to coinsPage(hasNextPage = true, objectId = "0xcoin1"),
-                HttpStatusCode.OK to coinsPage(hasNextPage = false, objectId = "0xcoin2"),
+            MockHttpClient.capturingRequestSequence(
+                capture,
+                HttpStatusCode.OK to
+                    coinsPage(
+                        hasNextPage = true,
+                        objectId = "0xcoin1",
+                        endCursor = "page-1-cursor",
+                    ),
+                HttpStatusCode.OK to
+                    coinsPage(
+                        hasNextPage = false,
+                        objectId = "0xcoin2",
+                        endCursor = "page-2-cursor",
+                    ),
             )
 
         val coins = SuiApiImpl(client, json).getAllCoins("0xabc")
 
         assertEquals(listOf("0xcoin1", "0xcoin2"), coins.map { it.coinObjectId })
+        assertEquals(2, capture.bodies.size)
+        assertTrue(capture.bodies[0].contains("\"cursor\":null"), capture.bodies[0])
+        assertTrue(capture.bodies[1].contains("page-1-cursor"), capture.bodies[1])
+    }
+
+    // Termination must not rest on the node alone. A connection that keeps reporting hasNextPage
+    // while handing back the same cursor would otherwise loop forever, growing the coin list until
+    // the process dies.
+    @Test
+    fun `getAllCoins stops when the endCursor does not advance`() = runTest {
+        // respondingWithSequence pins the last entry, so this page repeats indefinitely.
+        val client =
+            MockHttpClient.respondingWithSequence(
+                HttpStatusCode.OK to
+                    coinsPage(hasNextPage = true, objectId = "0xcoin1", endCursor = "stuck")
+            )
+
+        val coins = SuiApiImpl(client, json).getAllCoins("0xabc")
+
+        // Page one is kept, page two repeats the cursor and ends the walk.
+        assertEquals(2, coins.size)
+    }
+
+    // A node that advances the cursor forever is bounded by the page budget rather than by trust.
+    @Test
+    fun `getAllCoins stops at the page budget when the cursor keeps advancing`() = runTest {
+        val client =
+            MockHttpClient.respondingWithGenerated { page ->
+                coinsPage(hasNextPage = true, objectId = "0xcoin$page", endCursor = "cursor-$page")
+            }
+
+        val coins = SuiApiImpl(client, json).getAllCoins("0xabc")
+
+        assertEquals(SUI_MAX_COIN_PAGES, coins.size)
     }
 
     @Test
@@ -422,10 +480,14 @@ class SuiApiTest {
         assertNull(api.getLatestCheckpointSequenceNumber())
     }
 
-    private fun coinsPage(hasNextPage: Boolean, objectId: String = "0xcoin1") =
+    private fun coinsPage(
+        hasNextPage: Boolean,
+        objectId: String = "0xcoin1",
+        endCursor: String = "cursor-1",
+    ) =
         """
         {"data":{"address":{"objects":{
-          "pageInfo":{"hasNextPage":$hasNextPage,"endCursor":"cursor-1"},
+          "pageInfo":{"hasNextPage":$hasNextPage,"endCursor":"$endCursor"},
           "nodes":[{
             "address":"$objectId",
             "version":100,

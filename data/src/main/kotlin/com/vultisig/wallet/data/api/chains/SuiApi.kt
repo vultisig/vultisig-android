@@ -20,6 +20,13 @@ import kotlinx.serialization.json.putJsonObject
 import timber.log.Timber
 import vultisig.keysign.v1.SuiCoin
 
+/**
+ * Backstop on the coin-object walk in [SuiApi.getAllCoins]: at 50 objects per page this is 5000
+ * coin objects, far beyond any real wallet, so reaching it means the connection is misbehaving
+ * rather than that someone genuinely holds that many.
+ */
+internal const val SUI_MAX_COIN_PAGES = 100
+
 interface SuiApi {
 
     suspend fun getBalance(address: String, contractAddress: String): BigInteger
@@ -70,7 +77,12 @@ internal class SuiApiImpl @Inject constructor(http: HttpClient, private val json
         // An address that has never held the coin type resolves to null rather than an error —
         // that is a genuine zero, not an upstream fault. A malformed address is refused by the node
         // with a populated `errors` array, which the transport has already raised by this point.
-        return response.address?.balance?.totalBalance?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        val totalBalance = response.address?.balance?.totalBalance ?: return BigInteger.ZERO
+
+        // A present-but-unparsable amount is a node contract violation, not an empty wallet, so it
+        // is raised rather than collapsed into the same zero an absent balance returns.
+        return totalBalance.toBigIntegerOrNull()
+            ?: throw SuiRpcException("unparsable balance: $totalBalance")
     }
 
     override suspend fun getReferenceGasPrice(): BigInteger =
@@ -84,6 +96,7 @@ internal class SuiApiImpl @Inject constructor(http: HttpClient, private val json
     override suspend fun getAllCoins(address: String): List<SuiCoin> {
         val allCoins = mutableListOf<SuiCoin>()
         var cursor: String? = null
+        var pagesFetched = 0
 
         // The object connection is paginated. Follow hasNextPage/endCursor so a wallet whose
         // objects span multiple pages doesn't return a truncated set — otherwise a token whose
@@ -117,7 +130,24 @@ internal class SuiApiImpl @Inject constructor(http: HttpClient, private val json
                 )
             }
 
-            cursor = objects.pageInfo.endCursor.takeIf { objects.pageInfo.hasNextPage }
+            pagesFetched++
+
+            // Termination cannot rest on the node alone: a `hasNextPage` that never flips, or an
+            // `endCursor` that never advances, would spin here forever while `allCoins` grows
+            // without bound. Stop on a repeated cursor, and cap the walk at [SUI_MAX_COIN_PAGES].
+            val nextCursor = objects.pageInfo.endCursor.takeIf { objects.pageInfo.hasNextPage }
+            if (
+                nextCursor != null && (nextCursor == cursor || pagesFetched >= SUI_MAX_COIN_PAGES)
+            ) {
+                Timber.w(
+                    "Sui coin pagination stopped after %d pages with more reported; cursor %s",
+                    pagesFetched,
+                    if (nextCursor == cursor) "did not advance" else "budget exhausted",
+                )
+                cursor = null
+            } else {
+                cursor = nextCursor
+            }
         } while (cursor != null)
 
         return allCoins
@@ -178,7 +208,7 @@ internal class SuiApiImpl @Inject constructor(http: HttpClient, private val json
 
         val error = effects.errorMessage()
         if (error.isNotEmpty()) {
-            throw Exception("Simulation Error: $error")
+            error("Simulation Error: $error")
         }
 
         val gasSummary =
@@ -252,7 +282,9 @@ internal class SuiApiImpl @Inject constructor(http: HttpClient, private val json
         try {
             json.decodeFromJsonElement<T>(this)
         } catch (e: SerializationException) {
-            throw SuiRpcException("unexpected response shape: ${e.message}")
+            // Carry the cause: the message alone does not say which field of which selection set
+            // failed, and a decode failure against a live node is hard to place without the trace.
+            throw SuiRpcException("unexpected response shape: ${e.message}", cause = e)
         }
 
     private companion object {
@@ -488,11 +520,14 @@ private fun TransactionEffectsFields.errorMessage(): String =
  * `::coin::USDC` and `::coin::usdc` are genuinely distinct Move types.
  *
  * Returns null for anything that isn't a generic instantiation, which the type filter excludes.
+ *
+ * Internal rather than private so tests that build coins from a raw GraphQL payload normalize
+ * through this exact function instead of a copy that can drift from it.
  */
-private fun unwrapCoinType(repr: String): String? {
+internal fun unwrapCoinType(repr: String): String? {
     val open = repr.indexOf('<')
     val close = repr.lastIndexOf('>')
-    if (open < 0 || close <= open) return null
+    if (open !in 0..<close) return null
     val coinType = repr.substring(open + 1, close)
 
     val addressEnd = coinType.indexOf("::")

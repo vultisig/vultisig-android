@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.crypto
 
+import com.vultisig.wallet.data.api.chains.unwrapCoinType
 import java.math.BigInteger
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -21,7 +22,9 @@ class SuiHelperTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     // Real-shape GraphQL coin-object connection. Three SUI coins of different balances and one
-    // non-SUI coin, so we can exercise eligibility + min-selection + non-SUI exclusion.
+    // non-SUI coin, so we can exercise eligibility + min-selection + non-SUI exclusion. The first
+    // coin carries the zero-padded address spelling GraphQL actually returns, so the parsing below
+    // has to normalize it the way production does rather than pass a pre-stripped string through.
     private val getAllCoinsResponse =
         """
         {
@@ -36,7 +39,9 @@ class SuiHelperTest {
                     "digest": "DGstCoinOneXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
                     "previousTransaction": { "digest": "PrevTx1" },
                     "contents": {
-                      "type": { "repr": "0x2::coin::Coin<0x2::sui::SUI>" },
+                      "type": {
+                        "repr": "0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI>"
+                      },
                       "json": { "balance": "600" }
                     }
                   },
@@ -242,9 +247,10 @@ class SuiHelperTest {
             .build()
 
     /**
-     * Mirrors the parsing in `SuiApiImpl.getAllCoins` so tests consume the real GraphQL shape —
-     * including unwrapping the coin type out of the `0x2::coin::Coin<T>` wrapper the object
-     * connection reports.
+     * Mirrors the parsing in `SuiApiImpl.getAllCoins` so tests consume the real GraphQL shape. The
+     * coin type goes through the production [unwrapCoinType] rather than a local copy: it both
+     * unwraps the `0x2::coin::Coin<T>` wrapper and strips the zero padding GraphQL spells addresses
+     * with, and a copy of that here could drift from the parser it claims to mirror.
      */
     private fun parseCoins(graphQlResponse: String): List<SuiCoin> =
         json
@@ -258,7 +264,7 @@ class SuiHelperTest {
                 val contents = node.jsonObject["contents"]!!.jsonObject
                 val repr = contents["type"]!!.jsonObject["repr"]!!.jsonPrimitive.content
                 SuiCoin(
-                    coinType = repr.substring(repr.indexOf('<') + 1, repr.lastIndexOf('>')),
+                    coinType = unwrapCoinType(repr) ?: error("not a Coin<T> type: $repr"),
                     coinObjectId = node.jsonObject["address"]!!.jsonPrimitive.content,
                     version = node.jsonObject["version"]!!.jsonPrimitive.content,
                     digest = node.jsonObject["digest"]!!.jsonPrimitive.content,

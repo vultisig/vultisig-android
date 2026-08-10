@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api.chains
 
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
@@ -62,10 +63,15 @@ private const val UNKNOWN_GRAPHQL_ERROR = "unknown error"
  * catches the subtype specifically so a persistent node failure is reported immediately instead of
  * being masked as a retryable pending poll.
  */
-internal class SuiRpcException(val errorMessage: String, val code: String? = null) :
+internal class SuiRpcException(
+    val errorMessage: String,
+    val code: String? = null,
+    cause: Throwable? = null,
+) :
     IllegalStateException(
         if (code == null) "Sui GraphQL error: $errorMessage"
-        else "Sui GraphQL error ($code): $errorMessage"
+        else "Sui GraphQL error ($code): $errorMessage",
+        cause,
     )
 
 /**
@@ -74,7 +80,7 @@ internal class SuiRpcException(val errorMessage: String, val code: String? = nul
  * Failover covers transport-level faults only — an unreachable host, a TLS failure, a 5xx. A
  * populated `errors` array is the node's considered answer to a well-formed request, so it is
  * raised immediately rather than replayed against every remaining host, which would only delay the
- * same message.
+ * same message. A 4xx is deterministic for the same reason and is raised the same way.
  *
  * Retrying a broadcast across hosts is safe: Sui identifies a transaction by the digest of its
  * signed bytes, so re-submitting identical bytes is idempotent — the node returns the existing
@@ -104,6 +110,15 @@ internal class SuiGraphQlTransport(
                         .bodyOrThrow<SuiGraphQlResponse>()
                 } catch (e: CancellationException) {
                     throw e
+                } catch (e: NetworkException) {
+                    // A 4xx is the node's deterministic verdict on these exact bytes — a malformed
+                    // document or a rejected header reads the same on every host, so replaying it
+                    // only delays the identical failure. Client-side transport faults (DNS, TLS,
+                    // timeout) arrive as status 0 and do fail over, as do 5xx.
+                    if (e.httpStatusCode in CLIENT_ERROR_STATUS_RANGE) throw e
+                    Timber.w(e, "Sui GraphQL endpoint %s failed, trying the next", endpoint)
+                    lastTransportFailure = e
+                    continue
                 } catch (e: Exception) {
                     Timber.w(e, "Sui GraphQL endpoint %s failed, trying the next", endpoint)
                     lastTransportFailure = e
@@ -125,5 +140,9 @@ internal class SuiGraphQlTransport(
         }
 
         throw lastTransportFailure ?: SuiRpcException("no Sui GraphQL endpoint configured")
+    }
+
+    private companion object {
+        val CLIENT_ERROR_STATUS_RANGE = 400..499
     }
 }
