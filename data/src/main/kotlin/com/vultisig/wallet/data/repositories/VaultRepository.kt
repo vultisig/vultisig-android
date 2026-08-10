@@ -202,8 +202,8 @@ constructor(
      *
      * A keygen ceremony cannot be replayed, so a share that arrives while the app is locked is
      * written as-is rather than refused — losing it costs the user a vault the rest of the group
-     * already considers created. The next unlock sweeps every plaintext row back under the data
-     * key, so the exposure lasts until then rather than indefinitely.
+     * already considers created. The next successful unlock sweeps every plaintext row back under
+     * the data key; the states that can never unlock leave it in the clear.
      */
     private fun protect(keyShare: String, identity: KeyShareIdentity, dataKey: ByteArray?): String =
         if (dataKey != null) keyShareCipher.encrypt(keyShare, dataKey, identity) else keyShare
@@ -291,9 +291,6 @@ constructor(
                     resharePrefix = vault.resharePrefix,
                     libType = vault.libType,
                 ),
-            // A vault read while locked comes back with its keyshares dropped, so this list can be
-            // empty for a vault that does have stored shares. Room's upsert leaves rows absent from
-            // the list alone, which is the only thing keeping that from erasing them.
             keyShares =
                 vault.keyshares.map {
                     val identity = KeyShareIdentity(vaultId = vaultId, pubKey = it.pubKey)

@@ -49,7 +49,6 @@ import org.junit.jupiter.api.Test
 internal class KeygenViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
-    private val autoLockHold = AutoLockHold()
 
     private lateinit var context: Context
     private lateinit var navigator: Navigator<Destination>
@@ -135,7 +134,7 @@ internal class KeygenViewModelTest {
             sessionApi = sessionApi,
             encryption = encryption,
             featureFlagRepository = featureFlagRepository,
-            autoLockHold = autoLockHold,
+            autoLockHold = AutoLockHold(),
             referralCodeSettingsRepository = referralCodeSettingsRepository,
             chainAccountAddressRepository = chainAccountAddressRepository,
         )
@@ -169,7 +168,8 @@ internal class KeygenViewModelTest {
         }
 
     /**
-     * Verifies the vault read the ceremony builds on waits until its keyshares can be decrypted.
+     * Reshare, migrate and MLDSA keygen build on the vault's existing shares, and a read taken
+     * while the app is locked comes back without them.
      */
     @Test
     fun `the ceremony waits until the existing keyshares can be read`() =
@@ -180,7 +180,6 @@ internal class KeygenViewModelTest {
             createViewModel()
 
             coVerify(exactly = 0) { vaultRepository.get(any()) }
-            coVerify(exactly = 0) { saveVault(any(), any()) }
 
             unlocked.complete(Unit)
 

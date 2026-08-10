@@ -142,6 +142,12 @@ internal interface PasscodeDataKeySource {
     fun dataKeyOrNull(): ByteArray?
 
     /**
+     * True when encrypted keyshares exist that this process cannot currently read — either the
+     * passcode has not been entered this session, or the credentials that unwrap them are gone.
+     */
+    fun isLocked(): Boolean
+
+    /**
      * Suspends while the app is locked, returning as soon as keyshares are readable — immediately
      * when no passcode is configured.
      *
@@ -195,6 +201,16 @@ internal class PasscodeRepositoryImpl(
     @Volatile private var dataKey: ByteArray? = null
 
     override fun dataKeyOrNull(): ByteArray? = synchronized(keyLock) { dataKey?.copyOf() }
+
+    override fun isLocked(): Boolean =
+        when (_state.value) {
+            PasscodeState.Locked,
+            PasscodeState.KeyUnavailable,
+            PasscodeState.StoreUnavailable -> true
+            PasscodeState.Unlocked,
+            PasscodeState.Disabled,
+            PasscodeState.Unknown -> false
+        }
 
     override suspend fun awaitUnlocked() {
         // Resolves the state rather than assuming someone else has. Only the guard calls
