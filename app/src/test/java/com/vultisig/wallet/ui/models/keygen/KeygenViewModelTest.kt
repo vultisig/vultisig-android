@@ -38,6 +38,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
@@ -182,7 +183,8 @@ internal class KeygenViewModelTest {
             coVerify(exactly = 0) { vaultRepository.get(any()) }
 
             unlocked.complete(Unit)
+            runCurrent()
 
-            coVerify(timeout = 5_000) { vaultRepository.get("vault-1") }
+            coVerify(exactly = 1) { vaultRepository.get("vault-1") }
         }
 }

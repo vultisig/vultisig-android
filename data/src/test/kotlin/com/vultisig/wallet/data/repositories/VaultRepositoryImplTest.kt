@@ -550,6 +550,22 @@ internal class VaultRepositoryImplTest {
         assertEquals("share-1", stored.captured.keyShares.single().keyShare)
     }
 
+    /**
+     * Verifies the reshare and migrate save path — upsert rather than insert — stores the share
+     * too. That is the path a ceremony behind the lock screen actually takes.
+     */
+    @Test
+    fun `upsert stores keyshares in the clear while locked`() = runTest {
+        passcode.dataKey = null
+        passcode.locked = true
+        val stored = slot<VaultWithKeySharesAndTokens>()
+        coJustRun { vaultDao.upsert(capture(stored)) }
+
+        repository.upsert(makeVault().copy(keyshares = listOf(KeyShare("pub-1", "share-1"))))
+
+        assertEquals("share-1", stored.captured.keyShares.single().keyShare)
+    }
+
     /** Returns a minimal domain [Vault]. */
     private fun makeVault() =
         Vault(
