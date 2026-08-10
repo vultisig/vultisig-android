@@ -62,10 +62,8 @@ data class BlockChainSpecificAndUtxo(
     val blockChainSpecific: BlockChainSpecific,
     val utxos: List<UtxoInfo> = emptyList(),
     /**
-     * Balance the chain charges beyond the fee fields [blockChainSpecific] carries. OP-stack
-     * rollups bill an L1 data fee that op-geth adds to the balance check it runs before executing
-     * (`value + gasLimit * maxFeePerGas + l1Cost`) but that no transaction field holds, so an
-     * amount derived from the balance has to reserve it too. Zero everywhere else.
+     * Balance the chain charges beyond the fee fields [blockChainSpecific] carries — the OP-stack
+     * L1 data fee. Zero everywhere else.
      */
     val extraFeeReserve: BigInteger = BigInteger.ZERO,
 )

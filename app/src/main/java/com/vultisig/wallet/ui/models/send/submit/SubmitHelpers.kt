@@ -16,14 +16,11 @@ internal suspend fun GasFeeToEstimatedFeeUseCase.fiatFeesFor(
     invoke(GasFeeParams(BigInteger.valueOf(1), gasFee = gasFee, selectedToken = selectedToken))
 
 /**
- * What this payload will actually cost the balance on EVM: op-geth reserves `gasLimit *
- * maxFeePerGas` before executing, plus the OP-stack L1 data fee it bills alongside but that no
- * transaction field carries. Every other chain returns [gasFee] unchanged.
- *
- * Read it only once any Advanced Gas Settings override has been applied, so it reflects the numbers
- * that are signed rather than the ones the fee service proposed.
+ * What an EVM transaction reserves from the balance, denominated like [gasFee]: op-geth checks
+ * `value + gasLimit * maxFeePerGas + l1Cost` before executing, and only the gas product is carried
+ * by a signed field. Null off EVM. Valid once Advanced Gas Settings have been applied.
  */
-internal fun BlockChainSpecificAndUtxo.signedGasFee(gasFee: TokenValue): TokenValue {
-    val eth = blockChainSpecific as? BlockChainSpecific.Ethereum ?: return gasFee
+internal fun BlockChainSpecificAndUtxo.evmSignedFee(gasFee: TokenValue): TokenValue? {
+    val eth = blockChainSpecific as? BlockChainSpecific.Ethereum ?: return null
     return gasFee.copy(value = eth.gasLimit * eth.maxFeePerGasWei + extraFeeReserve)
 }

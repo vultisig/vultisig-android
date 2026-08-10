@@ -208,9 +208,8 @@ internal class DefaultSendStrategy(
 
                     val enteredAmountInt =
                         tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
-                    // Sized against the cached estimate so getSpecific below prices its gas limit
-                    // (and an OP-stack chain's L1 payload) against a realistic value; re-clamped
-                    // against the fee that call actually returns once it has.
+                    // Sized against the cached estimate only so getSpecific has a realistic value
+                    // to price its gas limit against; re-clamped below against the fee it returns.
                     val estimatedAmountInt =
                         clampToSpendableBalance(
                             entered = enteredAmountInt,
@@ -272,14 +271,10 @@ internal class DefaultSendStrategy(
                             }
                     val specific = applyRippleDestinationTag(specificAfterPlan, destinationTag)
 
-                    // getSpecific re-read the fee market, so for EVM it just produced the
-                    // maxFeePerGas/gasLimit that are actually signed — which can sit above the
-                    // cached estimate the amount was sized against a few lines up. `balance −
-                    // amount` is then short of what the node reserves and the send is rejected at
-                    // broadcast, with the MPC ceremony already spent (#5491). Re-clamp against the
-                    // signed fee; it only ever reduces, so the send stays within what the user
-                    // asked for. Identity off EVM.
-                    val signedGasFee = specific.signedGasFee(gasFee)
+                    // getSpecific re-read the EVM fee market, so a base-fee tick since the amount
+                    // was sized leaves `balance − amount` short of what the node reserves and the
+                    // send is rejected with the ceremony already spent (#5491).
+                    val signedGasFee = specific.evmSignedFee(gasFee) ?: spendableGasFee
                     val tokenAmountInt =
                         clampToSpendableBalance(
                             entered = estimatedAmountInt,
@@ -423,11 +418,11 @@ internal class DefaultSendStrategy(
                                 )
                             )
                         } else if (nativeTokenValue < signedGasFee.value) {
-                            // Gate on the fee this send actually pays, not the base gas fee: the
-                            // signed EVM fee (Advanced Gas Settings included) is what an ERC-20
-                            // transfer reserves, so checking the estimate would let a native
-                            // balance that cannot cover it through to a full MPC keysign that only
-                            // fails at broadcast.
+                            // Gate on the fee this send actually pays, not the base gas fee:
+                            // raised Advanced Gas Settings are what an ERC-20 transfer reserves,
+                            // so checking the unraised value would let a native balance that
+                            // cannot cover them through to a full MPC keysign that only fails at
+                            // broadcast.
                             throw InvalidTransactionDataException(
                                 UiText.FormattedText(
                                     R.string.insufficient_native_token,
@@ -447,8 +442,6 @@ internal class DefaultSendStrategy(
                                 gasFee =
                                     selectGasFeeForFeeEstimation(
                                         chain = chain,
-                                        // Quote the fee the amount was reserved against, so a Max
-                                        // still reads as amount + fee = balance on Verify.
                                         gasFee = signedGasFee,
                                         planFee = btcPlan?.fee ?: planFee.value,
                                         evmGasSettings = evmGasSettings,
@@ -477,7 +470,7 @@ internal class DefaultSendStrategy(
                                     value = fiatAmount ?: BigDecimal.ZERO,
                                     currency = appCurrency.value.ticker,
                                 ),
-                            gasFee = signedGasFee,
+                            gasFee = gasFee,
                             blockChainSpecific = specific.blockChainSpecific,
                             utxos = specific.utxos,
                             memo = memo,

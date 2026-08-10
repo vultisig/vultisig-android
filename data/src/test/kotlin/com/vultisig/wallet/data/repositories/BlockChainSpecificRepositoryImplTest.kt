@@ -40,6 +40,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.increaseByPercent
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -87,7 +88,7 @@ internal class BlockChainSpecificRepositoryImplTest {
             maxFeePerGas = BigInteger("111"),
             priorityFee = BigInteger("22"),
         )
-        assertEquals(BigInteger.ZERO, result.extraFeeReserve)
+        result.extraFeeReserve shouldBe BigInteger.ZERO
     }
 
     @Test
@@ -124,7 +125,7 @@ internal class BlockChainSpecificRepositoryImplTest {
             maxFeePerGas = BigInteger("111"),
             priorityFee = BigInteger("22"),
         )
-        assertEquals(BigInteger("3000000000"), result.extraFeeReserve)
+        result.extraFeeReserve shouldBe BigInteger("3000000000")
     }
 
     @Test

@@ -135,11 +135,9 @@ internal class WithdrawUsdcCircleStrategy(
                             )
                         }
 
-                    // getSpecific re-read the fee market, so the gate above ran against a cached
-                    // estimate while this is the fee that gets signed. Re-check it, or an ETH
-                    // balance that no longer covers gas reaches a full MPC keysign and only fails
-                    // at broadcast (#5491).
-                    val signedGasFee = specific.signedGasFee(gasFee)
+                    // The gate above ran against the cached estimate; this is the fee getSpecific
+                    // just returned and the payload will sign (#5491).
+                    val signedGasFee = specific.evmSignedFee(gasFee) ?: gasFee
                     if (nonDeFiBalance < signedGasFee.value) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_insufficient_balance)

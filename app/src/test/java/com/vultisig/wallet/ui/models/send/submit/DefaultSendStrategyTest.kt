@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.utils.UiText
+import io.kotest.matchers.shouldBe
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -47,7 +48,6 @@ import io.mockk.verify
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -993,22 +993,17 @@ internal class DefaultSendStrategyTest {
             build(this).submit()
             advanceUntilIdle()
 
-            assertNull(lastError, "Expected no error; got $lastError")
+            lastError shouldBe null
             val signed = captured.captured.blockChainSpecific as BlockChainSpecific.Ethereum
-            assertEquals(
-                balance,
-                captured.captured.tokenValue.value + signed.gasLimit * signed.maxFeePerGasWei,
-            )
-            assertEquals(BigInteger("999475000000000000"), captured.captured.tokenValue.value)
-            assertEquals("0.999475", tokenAmountFieldState.text.toString())
+            captured.captured.tokenValue.value + signed.gasLimit * signed.maxFeePerGasWei shouldBe
+                balance
+            tokenAmountFieldState.text.toString() shouldBe "0.999475"
             verify { amountManager.markMax(BigDecimal("0.999475")) }
             // The fee Verify quotes is the one the amount was reserved against, so the screen still
             // reads as amount + fee = balance.
             val quotedFee = capturedFeeParams.captured
-            assertEquals(
-                signed.gasLimit * signed.maxFeePerGasWei,
-                quotedFee.gasFee.value * quotedFee.gasLimit,
-            )
+            quotedFee.gasFee.value * quotedFee.gasLimit shouldBe
+                signed.gasLimit * signed.maxFeePerGasWei
         } finally {
             unmockkStatic(Dispatchers::class)
         }
@@ -1051,15 +1046,12 @@ internal class DefaultSendStrategyTest {
             build(this).submit()
             advanceUntilIdle()
 
-            assertNull(lastError, "Expected no error; got $lastError")
+            lastError shouldBe null
             val signed = captured.captured.blockChainSpecific as BlockChainSpecific.Ethereum
-            assertEquals(
-                balance,
-                captured.captured.tokenValue.value +
-                    signed.gasLimit * signed.maxFeePerGasWei +
-                    layer1Fee,
-            )
-            assertEquals(BigInteger("996979000000000000"), captured.captured.tokenValue.value)
+            captured.captured.tokenValue.value +
+                signed.gasLimit * signed.maxFeePerGasWei +
+                layer1Fee shouldBe balance
+            captured.captured.tokenValue.value shouldBe BigInteger("996979000000000000")
         } finally {
             unmockkStatic(Dispatchers::class)
         }
@@ -1097,9 +1089,9 @@ internal class DefaultSendStrategyTest {
             build(this).submit()
             advanceUntilIdle()
 
-            assertNull(lastError, "Expected no error; got $lastError")
-            assertEquals(BigInteger("990000000000000000"), captured.captured.tokenValue.value)
-            assertEquals("0.99", tokenAmountFieldState.text.toString())
+            lastError shouldBe null
+            captured.captured.tokenValue.value shouldBe BigInteger("990000000000000000")
+            tokenAmountFieldState.text.toString() shouldBe "0.99"
             verify(exactly = 0) { amountManager.markMax(any()) }
         } finally {
             unmockkStatic(Dispatchers::class)
@@ -1135,9 +1127,9 @@ internal class DefaultSendStrategyTest {
             build(this).submit()
             advanceUntilIdle()
 
-            assertNull(lastError, "Expected no error; got $lastError")
-            assertEquals(BigInteger("500000000000000000"), captured.captured.tokenValue.value)
-            assertEquals("0.5", tokenAmountFieldState.text.toString())
+            lastError shouldBe null
+            captured.captured.tokenValue.value shouldBe BigInteger("500000000000000000")
+            tokenAmountFieldState.text.toString() shouldBe "0.5"
         } finally {
             unmockkStatic(Dispatchers::class)
         }
@@ -1185,8 +1177,8 @@ internal class DefaultSendStrategyTest {
                 build(this).submit()
                 advanceUntilIdle()
 
-                assertNull(lastError, "Expected no error; got $lastError")
-                assertEquals(tokenBalance, captured.captured.tokenValue.value)
+                lastError shouldBe null
+                captured.captured.tokenValue.value shouldBe tokenBalance
             } finally {
                 unmockkStatic(Dispatchers::class)
             }
@@ -1223,11 +1215,9 @@ internal class DefaultSendStrategyTest {
             build(this).submit()
             advanceUntilIdle()
 
-            assertEquals(
-                R.string.send_error_insufficient_native_balance_with_fees,
-                (lastError as UiText.FormattedText).resId,
-            )
-            assertFalse(captured.isCaptured, "No transaction may be staged")
+            (lastError as UiText.FormattedText).resId shouldBe
+                R.string.send_error_insufficient_native_balance_with_fees
+            captured.isCaptured shouldBe false
         } finally {
             unmockkStatic(Dispatchers::class)
         }
