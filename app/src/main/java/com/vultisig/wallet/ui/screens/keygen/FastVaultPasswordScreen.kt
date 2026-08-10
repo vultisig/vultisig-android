@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
@@ -261,9 +260,9 @@ private fun WarningCard(modifier: Modifier, onShowMoreInfo: () -> Unit) {
     Row(
         modifier =
             modifier
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .background(lightWarningColor)
-                .border(width = 1.dp, shape = RoundedCornerShape(12.dp), color = lightWarningColor)
+                .border(width = 1.dp, shape = Theme.v2.radius.md, color = lightWarningColor)
                 .padding(16.dp)
                 .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,

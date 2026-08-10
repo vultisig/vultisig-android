@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -242,12 +241,12 @@ private fun AddressItem(
                     .clickOnce(onClick = onClick)
                     .background(
                         color = Theme.v2.colors.backgrounds.secondary,
-                        shape = RoundedCornerShape(size = 12.dp),
+                        shape = Theme.v2.radius.md,
                     )
                     .border(
                         width = 1.dp,
                         color = Theme.v2.colors.border.light,
-                        shape = RoundedCornerShape(size = 12.dp),
+                        shape = Theme.v2.radius.md,
                     )
                     .padding(horizontal = 20.dp, vertical = 12.dp),
         ) {

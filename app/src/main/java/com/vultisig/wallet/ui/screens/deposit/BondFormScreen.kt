@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -434,7 +433,7 @@ private fun MayaBondFormContent(
                                         }
                                         .background(
                                             color = Theme.v2.colors.backgrounds.surface1,
-                                            shape = RoundedCornerShape(99.dp),
+                                            shape = Theme.v2.radius.pill,
                                         )
                                         .padding(
                                             start = 6.dp,
@@ -493,7 +492,7 @@ private fun MayaBondFormContent(
                                                     .background(
                                                         color =
                                                             Theme.v2.colors.backgrounds.secondary,
-                                                        shape = RoundedCornerShape(99.dp),
+                                                        shape = Theme.v2.radius.pill,
                                                     )
                                                     .padding(
                                                         start = 6.dp,

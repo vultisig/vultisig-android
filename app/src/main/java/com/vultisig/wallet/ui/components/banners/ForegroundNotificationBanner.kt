@@ -198,7 +198,7 @@ internal fun ForegroundNotificationBanner(
                     modifier =
                         Modifier.background(
                                 color = Theme.v2.colors.backgrounds.disabled,
-                                shape = RoundedCornerShape(99.dp),
+                                shape = Theme.v2.radius.pill,
                             )
                             .padding(horizontal = 12.dp, vertical = 6.dp),
                 ) {

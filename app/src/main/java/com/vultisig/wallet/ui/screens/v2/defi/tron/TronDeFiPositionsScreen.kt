@@ -360,7 +360,7 @@ private fun TronPendingWithdrawalRow(
         if (isClaimable) {
             Box(
                 modifier =
-                    Modifier.clip(RoundedCornerShape(8.dp))
+                    Modifier.clip(Theme.v2.radius.sm)
                         .background(Theme.v2.colors.alerts.success.copy(alpha = 0.12f))
                         .padding(horizontal = 10.dp, vertical = 4.dp)
             ) {

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -200,7 +199,7 @@ private fun LimitOrderStatusChip(status: LimitOrderHistoryStatus) {
         style = Theme.brockmann.supplementary.caption,
         color = color,
         modifier =
-            Modifier.background(color = color.copy(alpha = 0.12f), shape = RoundedCornerShape(8.dp))
+            Modifier.background(color = color.copy(alpha = 0.12f), shape = Theme.v2.radius.sm)
                 .padding(horizontal = 8.dp, vertical = 4.dp),
     )
 }
