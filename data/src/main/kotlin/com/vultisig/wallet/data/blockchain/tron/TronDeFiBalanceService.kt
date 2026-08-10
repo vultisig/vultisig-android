@@ -36,7 +36,6 @@ class TronDeFiBalanceService(
             Timber.w(e, "TronDeFiBalanceService: Failed to fetch locked TRX balance")
             // Keep the last-known position rather than erasing it: BalanceRepository caches this
             // result, so an empty list would hide the Tron row until the next invalidation.
-            // Only a network failure degrades this way — anything else propagates.
             getCacheDeFiBalance(address, vaultId)
         }
 
