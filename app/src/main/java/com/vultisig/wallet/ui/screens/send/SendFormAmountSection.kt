@@ -249,9 +249,8 @@ internal fun FoldableAmountWidget(
                 // The coin's balance here is the whole Tron DeFi position and includes TRX already
                 // in the unfreeze cooldown, which cannot be unfrozen again.
                 val fallbackBalance =
-                    state.selectedCoin?.balance.takeIf {
-                        state.defiType != DeFiNavActions.UNFREEZE_TRX
-                    }
+                    if (state.defiType == DeFiNavActions.UNFREEZE_TRX) null
+                    else state.selectedCoin?.balance
                 val balanceText = state.tronBalanceAvailableOverride ?: fallbackBalance ?: "0"
 
                 Text(
