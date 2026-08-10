@@ -8,8 +8,8 @@ import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.genera
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
-import java.io.IOException
 import java.math.BigInteger
+import kotlin.coroutines.cancellation.CancellationException
 import timber.log.Timber
 
 class TronDeFiBalanceService(
@@ -20,56 +20,57 @@ class TronDeFiBalanceService(
     override suspend fun getRemoteDeFiBalance(address: String, vaultId: String): List<DeFiBalance> {
         return try {
             val account = tronApi.getAccount(address)
-            val frozenBandwidth = account.frozenBandwidthSun.toBigInteger()
-            val frozenEnergy = account.frozenEnergySun.toBigInteger()
-            val unfreezing = account.unfreezingTotalSun.toBigInteger()
-            val totalFrozen = frozenBandwidth + frozenEnergy
+            val totalLocked = account.defiLockedTotalSun.toBigInteger()
 
             Timber.d(
-                "TronDeFiBalanceService: frozen bandwidth=%s, energy=%s, unfreezing=%s",
-                frozenBandwidth,
-                frozenEnergy,
-                unfreezing,
+                "TronDeFiBalanceService: frozen bandwidth=%d, energy=%d, unfreezing=%d",
+                account.frozenBandwidthSun,
+                account.frozenEnergySun,
+                account.unfreezingTotalSun,
             )
 
-            persistFrozenBalance(vaultId, totalFrozen)
-
-            if (totalFrozen == BigInteger.ZERO) {
-                emptyList()
-            } else {
-                listOf(
-                    DeFiBalance(
-                        chain = Chain.Tron,
-                        balances =
-                            listOf(DeFiBalance.Balance(coin = Coins.Tron.TRX, amount = totalFrozen)),
-                    )
-                )
-            }
-        } catch (e: IOException) {
-            Timber.w(e, "TronDeFiBalanceService: Network error fetching frozen TRX balance")
-            emptyList()
+            persistLockedBalance(vaultId, totalLocked)
+            balanceOf(totalLocked)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "TronDeFiBalanceService: Failed to fetch locked TRX balance")
+            // Keep the last-known position rather than erasing it: BalanceRepository caches this
+            // result, so an empty list would hide the Tron row until the next invalidation.
+            getCacheDeFiBalance(address, vaultId)
         }
     }
 
-    override suspend fun getCacheDeFiBalance(address: String, vaultId: String): List<DeFiBalance> {
-        val cached = stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Tron.TRX.id)
-        val totalFrozen = cached?.stakeAmount ?: return emptyList()
-        if (totalFrozen == BigInteger.ZERO) return emptyList()
-        return listOf(
-            DeFiBalance(
-                chain = Chain.Tron,
-                balances = listOf(DeFiBalance.Balance(coin = Coins.Tron.TRX, amount = totalFrozen)),
-            )
-        )
-    }
+    override suspend fun getCacheDeFiBalance(address: String, vaultId: String): List<DeFiBalance> =
+        try {
+            val cached =
+                stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Tron.TRX.id)
+            balanceOf(cached?.stakeAmount ?: BigInteger.ZERO)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "TronDeFiBalanceService: Failed to read the cached TRX position")
+            emptyList()
+        }
 
-    private suspend fun persistFrozenBalance(vaultId: String, totalFrozen: BigInteger) {
+    private fun balanceOf(totalLocked: BigInteger): List<DeFiBalance> =
+        if (totalLocked <= BigInteger.ZERO) emptyList()
+        else
+            listOf(
+                DeFiBalance(
+                    chain = Chain.Tron,
+                    balances =
+                        listOf(DeFiBalance.Balance(coin = Coins.Tron.TRX, amount = totalLocked)),
+                )
+            )
+
+    private suspend fun persistLockedBalance(vaultId: String, totalLocked: BigInteger) {
         try {
             val details =
                 StakingDetails(
                     id = Coins.Tron.TRX.generateId(),
                     coin = Coins.Tron.TRX,
-                    stakeAmount = totalFrozen,
+                    stakeAmount = totalLocked,
                     apr = null,
                     estimatedRewards = null,
                     nextPayoutDate = null,
@@ -80,13 +81,13 @@ class TronDeFiBalanceService(
                 stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Tron.TRX.id)
             when {
                 existing == null -> stakingDetailsRepository.saveStakingDetails(vaultId, details)
-                existing.stakeAmount != totalFrozen ->
+                existing.stakeAmount != totalLocked ->
                     stakingDetailsRepository.updateStakingDetails(vaultId, details)
             }
-        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+        } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.e(e, "TronDeFiBalanceService: Failed to persist frozen TRX balance")
+            Timber.e(e, "TronDeFiBalanceService: Failed to persist locked TRX balance")
         }
     }
 }

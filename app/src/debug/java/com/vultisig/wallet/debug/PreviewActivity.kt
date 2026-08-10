@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
+import com.vultisig.wallet.data.api.models.TronAccountJson
+import com.vultisig.wallet.data.api.models.TronUnfrozenV2Json
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBlockedReason
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
@@ -231,6 +233,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import java.math.BigDecimal
+import java.text.NumberFormat
+import java.util.Locale
 import kotlin.math.sin
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.delay
@@ -357,6 +361,10 @@ class PreviewActivity : ComponentActivity() {
                     "select_asset_secured_after" -> SelectAssetSecuredPreview(showSecured = true)
                     "import_seedphrase" -> ImportSeedphrasePreview()
                     "defi_account_list" -> DeFiAccountListPreview()
+                    "defi_tron_cooldown_before" ->
+                        DeFiAccountListPreview(tronIncludesCooldown = false)
+                    "defi_tron_cooldown_after" ->
+                        DeFiAccountListPreview(tronIncludesCooldown = true)
                     "solana_staking_positions" -> SolanaStakingPositionsLoadedPreview()
                     "solana_staking_positions_empty" -> SolanaStakingPositionsEmptyPreview()
                     "solana_delegate" -> SolanaDelegatePreview()
@@ -1623,8 +1631,26 @@ private fun ImportSeedphrasePreview() {
     )
 }
 
+/**
+ * @param tronIncludesCooldown when false, the Tron row is aggregated the pre-#5482 way (frozen
+ *   bandwidth + energy only) so a before/after capture differs by the fix alone. Preview-only.
+ */
 @Composable
-private fun DeFiAccountListPreview() {
+private fun DeFiAccountListPreview(tronIncludesCooldown: Boolean = true) {
+    // A vault mid-unfreeze: nothing is actively frozen any more, but 10,829.10 TRX is still
+    // locked in Tron's ~14-day cooldown and unspendable.
+    val tronAccount =
+        TronAccountJson(
+            address = "TXYZopq123abc456def789ghi012jkl345mno678",
+            balance = 1_500_000L,
+            unfrozenV2 =
+                listOf(TronUnfrozenV2Json(type = "BANDWIDTH", unfreezeAmount = 10_829_100_000L)),
+        )
+    val tronLockedSun =
+        if (tronIncludesCooldown) tronAccount.defiLockedTotalSun
+        else tronAccount.frozenBandwidthSun + tronAccount.frozenEnergySun
+    val tronLockedTrx = BigDecimal(tronLockedSun).movePointLeft(Coins.Tron.TRX.decimal)
+
     val accounts =
         listOf(
             deFiAccount(
@@ -1658,9 +1684,11 @@ private fun DeFiAccountListPreview() {
             deFiAccount(
                 chain = Chain.Tron,
                 chainName = "Tron",
-                address = "TXYZopq123abc456def789ghi012jkl345mno678",
-                fiat = "$865.75",
-                native = "10,829.10 TRX",
+                address = tronAccount.address,
+                fiat =
+                    NumberFormat.getCurrencyInstance(Locale.US)
+                        .format(tronLockedTrx.multiply(TRX_PREVIEW_PRICE)),
+                native = "${NumberFormat.getInstance(Locale.US).format(tronLockedTrx)} TRX",
             ),
         )
 
@@ -1687,6 +1715,8 @@ private fun DeFiAccountListPreview() {
         }
     }
 }
+
+private val TRX_PREVIEW_PRICE = BigDecimal("0.08")
 
 private fun deFiAccount(
     chain: Chain,

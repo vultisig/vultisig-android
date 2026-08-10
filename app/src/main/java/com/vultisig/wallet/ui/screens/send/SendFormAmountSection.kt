@@ -245,8 +245,14 @@ internal fun FoldableAmountWidget(
                 )
 
                 val ticker = state.selectedCoin?.title?.let { " $it" } ?: ""
-                val balanceText =
-                    state.tronBalanceAvailableOverride ?: state.selectedCoin?.balance ?: "0"
+                // Unfreezing is per-resource, so only the override says how much can be unfrozen.
+                // The coin's balance here is the whole Tron DeFi position and includes TRX already
+                // in the unfreeze cooldown, which cannot be unfrozen again.
+                val fallbackBalance =
+                    state.selectedCoin?.balance.takeIf {
+                        state.defiType != DeFiNavActions.UNFREEZE_TRX
+                    }
+                val balanceText = state.tronBalanceAvailableOverride ?: fallbackBalance ?: "0"
 
                 Text(
                     text = balanceText + ticker,
