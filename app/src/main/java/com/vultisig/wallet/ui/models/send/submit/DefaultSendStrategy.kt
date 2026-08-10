@@ -208,7 +208,10 @@ internal class DefaultSendStrategy(
 
                     val enteredAmountInt =
                         tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
-                    val tokenAmountInt =
+                    // Sized against the cached estimate so getSpecific below prices its gas limit
+                    // (and an OP-stack chain's L1 payload) against a realistic value; re-clamped
+                    // against the fee that call actually returns once it has.
+                    val estimatedAmountInt =
                         clampToSpendableBalance(
                             entered = enteredAmountInt,
                             account = selectedAccount,
@@ -216,15 +219,6 @@ internal class DefaultSendStrategy(
                             gasFee = spendableGasFee,
                             isMaxAmount = isMaxAmount,
                         )
-                    // The fields are only rewritten once every validation below has passed — see
-                    // the showAdjustedAmount call before Verify.
-                    val isAmountAdjusted = tokenAmountInt < enteredAmountInt
-                    val fiatAmount =
-                        if (isAmountAdjusted) {
-                            scaleFiat(enteredFiat, tokenAmountInt, enteredAmountInt, selectedToken)
-                        } else {
-                            enteredFiat
-                        }
 
                     if (chain == Chain.Tron) {
                         val isTronStakingOp =
@@ -256,7 +250,7 @@ internal class DefaultSendStrategy(
                                     // could size the byteFee for a different memo than the one
                                     // embedded in Transaction.memo and signed.
                                     memo = memo,
-                                    tokenAmountValue = tokenAmountInt,
+                                    tokenAmountValue = estimatedAmountInt,
                                     isSwap = false,
                                     isMaxAmountEnabled = isMaxAmount,
                                     isDeposit = false,
@@ -271,12 +265,38 @@ internal class DefaultSendStrategy(
                                     vaultId,
                                     selectedToken,
                                     dstAddress,
-                                    tokenAmountInt,
+                                    estimatedAmountInt,
                                     memo,
                                     chain,
                                 )
                             }
                     val specific = applyRippleDestinationTag(specificAfterPlan, destinationTag)
+
+                    // getSpecific re-read the fee market, so for EVM it just produced the
+                    // maxFeePerGas/gasLimit that are actually signed — which can sit above the
+                    // cached estimate the amount was sized against a few lines up. `balance −
+                    // amount` is then short of what the node reserves and the send is rejected at
+                    // broadcast, with the MPC ceremony already spent (#5491). Re-clamp against the
+                    // signed fee; it only ever reduces, so the send stays within what the user
+                    // asked for. Identity off EVM.
+                    val signedGasFee = specific.signedGasFee(gasFee)
+                    val tokenAmountInt =
+                        clampToSpendableBalance(
+                            entered = estimatedAmountInt,
+                            account = selectedAccount,
+                            balance = selectedTokenValue.value,
+                            gasFee = signedGasFee,
+                            isMaxAmount = isMaxAmount,
+                        )
+                    // The fields are only rewritten once every validation below has passed — see
+                    // the showAdjustedAmount call before Verify.
+                    val isAmountAdjusted = tokenAmountInt < enteredAmountInt
+                    val fiatAmount =
+                        if (isAmountAdjusted) {
+                            scaleFiat(enteredFiat, tokenAmountInt, enteredAmountInt, selectedToken)
+                        } else {
+                            enteredFiat
+                        }
 
                     // sendMaxAmount=true tells WalletCore's planner to sweep the real
                     // balance-minus-fee itself, ignoring the requested amount — so for a Max UTXO
@@ -298,8 +318,8 @@ internal class DefaultSendStrategy(
                                     ?.movePointRight(selectedToken.decimal)
                                     ?.toBigInteger() ?: BigInteger.ZERO
                             } else {
-                                getAvailableTokenBalance(selectedAccount, spendableGasFee.value)
-                                    ?.value ?: BigInteger.ZERO
+                                getAvailableTokenBalance(selectedAccount, signedGasFee.value)?.value
+                                    ?: BigInteger.ZERO
                             }
 
                         if (tokenAmountInt > availableTokenBalance) {
@@ -402,12 +422,12 @@ internal class DefaultSendStrategy(
                                     listOf(selectedToken.ticker),
                                 )
                             )
-                        } else if (nativeTokenValue < spendableGasFee.value) {
-                            // Gate on the fee this send actually pays, not the base gas fee:
-                            // raised Advanced Gas Settings are what an ERC-20 transfer reserves,
-                            // so checking the unraised value would let a native balance that
-                            // cannot cover them through to a full MPC keysign that only fails at
-                            // broadcast.
+                        } else if (nativeTokenValue < signedGasFee.value) {
+                            // Gate on the fee this send actually pays, not the base gas fee: the
+                            // signed EVM fee (Advanced Gas Settings included) is what an ERC-20
+                            // transfer reserves, so checking the estimate would let a native
+                            // balance that cannot cover it through to a full MPC keysign that only
+                            // fails at broadcast.
                             throw InvalidTransactionDataException(
                                 UiText.FormattedText(
                                     R.string.insufficient_native_token,
@@ -427,7 +447,9 @@ internal class DefaultSendStrategy(
                                 gasFee =
                                     selectGasFeeForFeeEstimation(
                                         chain = chain,
-                                        gasFee = gasFee,
+                                        // Quote the fee the amount was reserved against, so a Max
+                                        // still reads as amount + fee = balance on Verify.
+                                        gasFee = signedGasFee,
                                         planFee = btcPlan?.fee ?: planFee.value,
                                         evmGasSettings = evmGasSettings,
                                     ),
@@ -455,7 +477,7 @@ internal class DefaultSendStrategy(
                                     value = fiatAmount ?: BigDecimal.ZERO,
                                     currency = appCurrency.value.ticker,
                                 ),
-                            gasFee = gasFee,
+                            gasFee = signedGasFee,
                             blockChainSpecific = specific.blockChainSpecific,
                             utxos = specific.utxos,
                             memo = memo,
@@ -527,12 +549,10 @@ internal class DefaultSendStrategy(
     }
 
     /**
-     * The fee an EVM send actually reserves once Advanced Gas Settings are in play. `adjustGasFee`
-     * folds UTXO byte fees and Cardano fees back into `gasFee` but deliberately leaves
-     * `GasSettings.Eth` out, while [applyGasSettings] still patches the signed `maxFeePerGasWei`
-     * and `gasLimit` — so an amount sized on `gasFee` alone reserves less than the transaction
-     * spends and can be adjusted to a clean-looking value the chain then rejects for insufficient
-     * funds.
+     * The fee an EVM send reserves once Advanced Gas Settings are in play. `adjustGasFee` folds
+     * UTXO byte fees and Cardano fees back into `gasFee` but deliberately leaves `GasSettings.Eth`
+     * out, while [applyGasSettings] still patches the signed `maxFeePerGasWei` and `gasLimit` — so
+     * an amount sized on `gasFee` alone reserves less than the transaction spends.
      */
     private fun withEvmGasSettings(chain: Chain, gasFee: TokenValue): TokenValue {
         // Resolved through evmSettingsFor so a GasSettings.Eth left over from an EVM chain can't

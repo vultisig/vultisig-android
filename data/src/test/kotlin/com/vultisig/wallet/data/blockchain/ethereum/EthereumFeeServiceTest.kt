@@ -478,6 +478,15 @@ internal class EthereumFeeServiceTest {
         val fee = service.calculateDefaultFees(transfer(Chain.Optimism)) as Eip1559
 
         assertEquals(fee.maxFeePerGas.multiply(fee.limit).add(BigInteger("777")), fee.amount)
+        assertEquals(BigInteger("777"), fee.layer1Amount)
+    }
+
+    @Test
+    fun `Ethereum reports no L1 share of the amount`() = runTest {
+        val fee = service.calculateDefaultFees(transfer(Chain.Ethereum)) as Eip1559
+
+        assertEquals(fee.maxFeePerGas.multiply(fee.limit), fee.amount)
+        assertEquals(BigInteger.ZERO, fee.layer1Amount)
     }
 
     @Test

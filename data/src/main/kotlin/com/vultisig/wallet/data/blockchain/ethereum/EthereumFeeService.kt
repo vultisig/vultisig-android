@@ -308,7 +308,7 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         return if (this is GasFees) {
             this.copy(amount = this.amount + l1FeesAmount)
         } else if (this is Eip1559) {
-            this.copy(amount = this.amount + l1FeesAmount)
+            this.copy(amount = this.amount + l1FeesAmount, layer1Amount = l1FeesAmount)
         } else {
             error("Fee Type Not Supported")
         }

@@ -31,6 +31,10 @@ data class GasFees(
  * @param maxFeePerGas Maximum total gas price (including priority fee).
  * @param maxPriorityFeePerGas Tip for miners.
  * @param amount Total fee in wei calculated based on gas used and fees.
+ * @param layer1Amount The share of [amount] that is the OP-stack L1 data fee. op-geth bills it
+ *   against the balance on top of `limit * maxFeePerGas`, but no field of the signed transaction
+ *   carries it, so an amount derived from the balance has to reserve it separately. Zero off
+ *   OP-stack rollups.
  */
 data class Eip1559(
     val limit: BigInteger,
@@ -38,6 +42,7 @@ data class Eip1559(
     val maxFeePerGas: BigInteger, // Max total gas price
     val maxPriorityFeePerGas: BigInteger, // Miner tip
     override val amount: BigInteger,
+    val layer1Amount: BigInteger = BigInteger.ZERO,
 ) : Fee
 
 /**
