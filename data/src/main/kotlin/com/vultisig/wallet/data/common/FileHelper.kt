@@ -44,6 +44,15 @@ const val QRCODE_DIRECTORY_NAME_FULL = "$DIRECTORY_NAME/$QRCODE_DIRECTORY_NAME"
  */
 internal const val MAX_IMPORT_FILE_SIZE_BYTES = 5L * 1024 * 1024
 
+/**
+ * Upper bound for the decompressed content retained from a single `.zip` backup, in bytes.
+ *
+ * [MAX_IMPORT_FILE_SIZE_BYTES] only bounds one entry, so an archive of many individually valid
+ * entries can still exhaust the heap. A backup zip holds a handful of vault shares, so 20 MB leaves
+ * ample headroom for legitimate archives.
+ */
+internal const val MAX_IMPORT_ARCHIVE_CONTENT_BYTES = 20L * 1024 * 1024
+
 suspend fun Context.saveContentToUri(uri: Uri, content: String) = doFileOperation {
     try {
         contentResolver.openOutputStream(uri).use { output ->
@@ -254,7 +263,8 @@ suspend fun Uri.processZip(context: Context): List<AppZipEntry> = doFileOperatio
     context.contentResolver.openInputStream(this@processZip)?.use { inputStream ->
         ZipInputStream(inputStream).use { zipInputStream ->
             var zipEntry = zipInputStream.nextEntry
-            while (zipEntry != null) {
+            var retainedBytes = 0L
+            entryLoop@ while (zipEntry != null) {
                 if (!zipEntry.isDirectory) {
                     val entryName = zipEntry.name
                     val ext = File(entryName).extension.lowercase()
@@ -265,15 +275,26 @@ suspend fun Uri.processZip(context: Context): List<AppZipEntry> = doFileOperatio
                             val bytes = zipInputStream.readBounded(MAX_IMPORT_FILE_SIZE_BYTES)
                             if (bytes == null) {
                                 Timber.w(
-                                    "Skipping zip entry over the %d byte limit: %s",
+                                    "Stopping at a zip entry over the %d byte limit: %s",
                                     MAX_IMPORT_FILE_SIZE_BYTES,
                                     entryName,
                                 )
-                            } else {
-                                val fileContent = bytes.toString(Charsets.UTF_8)
-                                coroutineContext.ensureActive()
-                                entries.add(AppZipEntry(entryName, fileContent))
+                                // closeEntry() inflates whatever is left of this entry, so leave
+                                // the archive alone instead of paying that cost.
+                                break@entryLoop
                             }
+                            retainedBytes += bytes.size
+                            if (retainedBytes > MAX_IMPORT_ARCHIVE_CONTENT_BYTES) {
+                                Timber.w(
+                                    "Stopping at %s, the archive exceeds the %d byte limit",
+                                    entryName,
+                                    MAX_IMPORT_ARCHIVE_CONTENT_BYTES,
+                                )
+                                break@entryLoop
+                            }
+                            val fileContent = bytes.toString(Charsets.UTF_8)
+                            coroutineContext.ensureActive()
+                            entries.add(AppZipEntry(entryName, fileContent))
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: OutOfMemoryError) {
