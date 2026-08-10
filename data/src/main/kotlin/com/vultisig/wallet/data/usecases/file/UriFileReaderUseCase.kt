@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.usecases.file
 
 import android.content.Context
 import android.net.Uri
-import com.vultisig.wallet.data.common.AppZipEntry
+import com.vultisig.wallet.data.common.AppZipContents
 import com.vultisig.wallet.data.common.fileContent
 import com.vultisig.wallet.data.common.fileName
 import com.vultisig.wallet.data.common.isValidZipFile
@@ -17,7 +17,7 @@ interface UriFileReaderUseCase {
 
     suspend fun isValidZip(uri: Uri): Boolean
 
-    suspend fun extractZipEntries(uri: Uri): List<AppZipEntry>
+    suspend fun extractZipEntries(uri: Uri): AppZipContents
 }
 
 internal class UriFileReaderUseCaseImpl
@@ -29,5 +29,5 @@ constructor(@param:ApplicationContext private val context: Context) : UriFileRea
 
     override suspend fun isValidZip(uri: Uri): Boolean = uri.isValidZipFile(context)
 
-    override suspend fun extractZipEntries(uri: Uri): List<AppZipEntry> = uri.processZip(context)
+    override suspend fun extractZipEntries(uri: Uri): AppZipContents = uri.processZip(context)
 }

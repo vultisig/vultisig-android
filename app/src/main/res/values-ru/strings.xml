@@ -246,6 +246,7 @@
     <string name="swap_form_minimum_amount">Сумма обмена слишком мала. Рекомендуемая сумма %1$s %2$s</string>
     <string name="backup_password_screen_title">Резервное копирование</string>
     <string name="import_file_not_supported">Тип файла не поддерживается.</string>
+    <string name="import_file_zip_incomplete">Не удалось прочитать некоторые части хранилища из этого файла</string>
     <string name="import_file_screen_password_error">Неверный пароль, попробуйте еще раз.</string>
     <string name="add_vault_save">Сохранить</string>
     <string name="backup_password_screen_enter_password">Введите пароль</string>

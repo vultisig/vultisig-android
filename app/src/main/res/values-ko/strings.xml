@@ -371,6 +371,7 @@
     <string name="settings_screen_privacy_policy">개인정보 처리방침</string>
     <string name="settings_screen_tos">서비스 이용약관</string>
     <string name="import_file_not_supported">지원되지 않는 파일 형식입니다. 다시 시도해 주세요</string>
+    <string name="import_file_zip_incomplete">이 파일의 일부 볼트 조각을 읽을 수 없습니다</string>
 
     <string name="failed_to_resolve_address">주소 확인 실패</string>
     <string name="vault_settings_success_backup_message">파일이 성공적으로 저장되었습니다</string>

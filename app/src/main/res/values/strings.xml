@@ -382,6 +382,7 @@
     <string name="settings_screen_privacy_policy">Privacy Policy</string>
     <string name="settings_screen_tos">Terms of Service</string>
     <string name="import_file_not_supported">Unsupported file type, please try again</string>
+    <string name="import_file_zip_incomplete">Some vault shares in this file could not be read</string>
 
     <string name="failed_to_resolve_address">Failed to resolve address</string>
     <string name="vault_settings_success_backup_message">File saved successfully</string>
