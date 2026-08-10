@@ -103,6 +103,84 @@ class RippleHelperTest {
         }
     }
 
+    private fun paymentWith(extraFields: String) =
+        """{"TransactionType":"Payment","Account":"$vaultXrpAddress",""" +
+            """"Destination":"rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY","Amount":"1500000",""" +
+            """$extraFields}"""
+
+    @Test
+    fun `verifyDappTransaction rejects a partial Payment with no DeliverMin floor`() {
+        // The attack from issue #5555: Amount reads as an exact payment on the confirmation while
+        // tfPartialPayment lets the ledger deliver dust and still spend up to SendMax.
+        val json = paymentWith(""""SendMax":"1500000","Flags":131072""")
+
+        val ex =
+            assertThrows(IllegalArgumentException::class.java) {
+                RippleHelper.verifyDappTransaction(json, vaultXrpAddress)
+            }
+        assertEquals(true, ex.message?.contains("tfPartialPayment"))
+    }
+
+    @Test
+    fun `verifyDappTransaction passes a partial Payment bounded by a DeliverMin`() {
+        // A floor the co-signer can see and judge — allowed through, flagged on the verify screen.
+        RippleHelper.verifyDappTransaction(
+            paymentWith(""""Flags":131072,"DeliverMin":"1400000""""),
+            vaultXrpAddress,
+        )
+    }
+
+    @Test
+    fun `verifyDappTransaction accepts an issued-currency DeliverMin as the floor`() {
+        RippleHelper.verifyDappTransaction(
+            paymentWith(
+                """"Flags":131072,"DeliverMin":{"currency":"USD",""" +
+                    """"issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q","value":"25"}"""
+            ),
+            vaultXrpAddress,
+        )
+    }
+
+    @Test
+    fun `verifyDappTransaction rejects a partial Payment whose DeliverMin carries no value`() {
+        // A DeliverMin that is present but empty is no floor at all.
+        listOf(""""DeliverMin":"   """", """"DeliverMin":{"currency":"USD"}""").forEach { floor ->
+            assertThrows(IllegalArgumentException::class.java) {
+                RippleHelper.verifyDappTransaction(
+                    paymentWith(""""Flags":131072,$floor"""),
+                    vaultXrpAddress,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `verifyDappTransaction passes a Payment carrying unrelated flags`() {
+        // tfNoRippleDirect (0x00010000) leaves Amount a guaranteed delivery — no DeliverMin needed.
+        RippleHelper.verifyDappTransaction(paymentWith(""""Flags":65536"""), vaultXrpAddress)
+    }
+
+    @Test
+    fun `verifyDappTransaction passes an OfferCreate reusing the same flag bit`() {
+        // 0x00020000 is tfImmediateOrCancel on an OfferCreate, nothing to do with partial payment.
+        val json =
+            """{"TransactionType":"OfferCreate","Account":"$vaultXrpAddress","Flags":131072,""" +
+                """"TakerGets":"1000000","TakerPays":{"currency":"USD",""" +
+                """"issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q","value":"2.5"}}"""
+
+        RippleHelper.verifyDappTransaction(json, vaultXrpAddress)
+    }
+
+    @Test
+    fun `verifyDappTransaction rejects a Payment whose Flags cannot be read`() {
+        // We cannot rule tfPartialPayment out, so it fails closed rather than assuming it is unset.
+        listOf(""""Flags":"tfPartialPayment"""", """"Flags":null""", """"Flags":{}""").forEach {
+            assertThrows(IllegalStateException::class.java) {
+                RippleHelper.verifyDappTransaction(paymentWith(it), vaultXrpAddress)
+            }
+        }
+    }
+
     @Test
     fun `parseRawJsonAccount extracts the Account field`() {
         assertEquals(vaultXrpAddress, RippleHelper.parseRawJsonAccount(rawJson(vaultXrpAddress)))

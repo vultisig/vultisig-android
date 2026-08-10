@@ -1239,6 +1239,9 @@
     <string name="ripple_field_buying_issuer">Emissor da compra</string>
     <string name="ripple_field_limit">Limite</string>
     <string name="ripple_field_limit_issuer">Emissor do limite</string>
+    <string name="ripple_field_flags">Flags</string>
+    <string name="ripple_field_paths">Rotas de pagamento</string>
+    <string name="ripple_partial_payment_warning">Pagamento parcial: o montante apresentado é um máximo, não uma garantia. Pode ser entregue menos.</string>
     <string name="sui_sender">De</string>
     <string name="sui_gas_budget">Orçamento de gás: %1$s SUI</string>
     <string name="sui_gas_price">Preço do gás: %1$s MIST</string>

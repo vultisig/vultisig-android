@@ -1240,6 +1240,9 @@
     <string name="ripple_field_buying_issuer">Kauf-Emittent</string>
     <string name="ripple_field_limit">Limit</string>
     <string name="ripple_field_limit_issuer">Limit-Emittent</string>
+    <string name="ripple_field_flags">Flags</string>
+    <string name="ripple_field_paths">Routing-Pfade</string>
+    <string name="ripple_partial_payment_warning">Teilzahlung: Der angezeigte Betrag ist ein Maximum, keine Garantie. Es kann weniger geliefert werden.</string>
     <string name="sui_sender">Von</string>
     <string name="sui_gas_budget">Gas-Budget: %1$s SUI</string>
     <string name="sui_gas_price">Gas-Preis: %1$s MIST</string>

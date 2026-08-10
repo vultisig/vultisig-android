@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.chains.helpers
 
 import java.math.BigInteger
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -130,6 +131,65 @@ class RippleDappTransactionDecoderTest {
     @Test
     fun `summarize returns null for undecodable JSON`() {
         assertEquals(null, RippleDappTransactionDecoder.summarize("not-json{"))
+    }
+
+    @Test
+    fun `decodes Flags and Paths and marks a Payment as a partial payment`() {
+        val json =
+            """{"TransactionType":"Payment","Account":"rB5TihdPbKgMrkFqrqUC3yLdE8hhv4BdeY",""" +
+                """"Destination":"rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY","Amount":"1500000",""" +
+                """"Flags":131072,"Paths":[[{"currency":"USD"}],[{"currency":"EUR"}]]}"""
+
+        val tx = RippleDappTransactionDecoder.decode(json)
+
+        assertTrue(tx.isPartialPayment)
+        assertEquals("131072", value(tx, RippleDappTxFieldKey.FLAGS))
+        assertEquals("2", value(tx, RippleDappTxFieldKey.PATHS))
+    }
+
+    @Test
+    fun `a zero or absent Flags adds no row and is not a partial payment`() {
+        val zeroFlags =
+            """{"TransactionType":"Payment","Account":"rB5","Amount":"1000000","Flags":0}"""
+        val noFlags = """{"TransactionType":"Payment","Account":"rB5","Amount":"1000000"}"""
+
+        listOf(zeroFlags, noFlags).forEach { json ->
+            val tx = RippleDappTransactionDecoder.decode(json)
+            assertFalse(tx.isPartialPayment)
+            assertNull(value(tx, RippleDappTxFieldKey.FLAGS))
+            assertNull(value(tx, RippleDappTxFieldKey.PATHS))
+        }
+    }
+
+    @Test
+    fun `the partial-payment bit is only read for a Payment`() {
+        // 0x00020000 is tfImmediateOrCancel on an OfferCreate — the flag row still shows, but the
+        // amount is not a ceiling, so the warning must stay off.
+        val json =
+            """{"TransactionType":"OfferCreate","Account":"rB5","Flags":131072,""" +
+                """"TakerGets":"1000000","TakerPays":"2000000"}"""
+
+        val tx = RippleDappTransactionDecoder.decode(json)
+
+        assertFalse(tx.isPartialPayment)
+        assertEquals("131072", value(tx, RippleDappTxFieldKey.FLAGS))
+    }
+
+    @Test
+    fun `summarize renders a partial payment amount as a ceiling`() {
+        val json =
+            """{"TransactionType":"Payment","Account":"rB5","Amount":"1000000","Flags":131072}"""
+
+        assertEquals("Payment: ≤ 1 XRP", RippleDappTransactionDecoder.summarize(json))
+    }
+
+    @Test
+    fun `summarize bounds a partial payment by its DeliverMin`() {
+        val json =
+            """{"TransactionType":"Payment","Account":"rB5","Amount":"1000000",""" +
+                """"DeliverMin":"500000","Flags":131072}"""
+
+        assertEquals("Payment: ≥ 0.5 XRP, ≤ 1 XRP", RippleDappTransactionDecoder.summarize(json))
     }
 
     @Test
