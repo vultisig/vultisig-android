@@ -47,38 +47,50 @@ internal fun PasscodeGuard(model: PasscodeGuardViewModel = hiltViewModel()) {
     // which is what puts it first in line.
     BackHandler(enabled = state.isGateClosed) {}
 
-    // The whole gate while the persisted state is still loading, and the cover over the app for
-    // the frame between the state that raises the lock and the lock's own window being added.
     if (state.isGateClosed) {
+        // Covers the app for the frame between the state that closes the gate and the window below
+        // being added, which is the only moment the window cannot cover for itself.
         Box(
             Modifier.fillMaxSize()
                 .background(Theme.v2.colors.backgrounds.primary)
                 .swallowPointerInput()
         )
+
+        // One call site for the whole closed gate rather than one per state: a second would be a
+        // second composition slot, and moving between them would take the window down and put a new
+        // one up at exactly the moment the lock appears.
+        LockWindow { GateContent(state.passcodeState) }
     }
 
-    when (state.passcodeState) {
-        PasscodeState.Locked -> LockWindow { PasscodeLockScreen() }
+    // The passcode was just turned off, so the user has already identified themselves this session;
+    // sending them straight into a device-credential prompt would be a non sequitur.
+    if (state.passcodeState == PasscodeState.Disabled && !state.isIdentityProven) {
+        BiometryAuthScreen()
+    }
+}
+
+/** What the gate shows, once there is something to show. */
+@Composable
+private fun GateContent(passcodeState: PasscodeState) {
+    when (passcodeState) {
+        PasscodeState.Locked -> PasscodeLockScreen()
         PasscodeState.KeyUnavailable ->
-            LockWindow {
-                DeadEndScreen(
-                    title = stringResource(R.string.passcode_key_unavailable_title),
-                    message = stringResource(R.string.passcode_key_unavailable_message),
-                )
-            }
+            DeadEndScreen(
+                title = stringResource(R.string.passcode_key_unavailable_title),
+                message = stringResource(R.string.passcode_key_unavailable_message),
+            )
         PasscodeState.StoreUnavailable ->
-            LockWindow {
-                DeadEndScreen(
-                    title = stringResource(R.string.passcode_store_unavailable_title),
-                    message = stringResource(R.string.passcode_store_unavailable_message),
-                )
-            }
-        // Persisted state is still loading; the cover above is the gate until it resolves.
+            DeadEndScreen(
+                title = stringResource(R.string.passcode_store_unavailable_title),
+                message = stringResource(R.string.passcode_store_unavailable_message),
+            )
+        // Persisted state is still loading. The window is up regardless, because a dialog
+        // destination restored with the back stack opens its own window while this read is still
+        // running, and only another window can cover that one.
         PasscodeState.Unknown -> Unit
-        PasscodeState.Unlocked -> Unit
-        // The passcode was just turned off, so the user has already identified themselves this
-        // session; sending them straight into a device-credential prompt would be a non sequitur.
-        PasscodeState.Disabled -> if (!state.isIdentityProven) BiometryAuthScreen()
+        // The gate is open in both, so this is not composed.
+        PasscodeState.Unlocked,
+        PasscodeState.Disabled -> Unit
     }
 }
 

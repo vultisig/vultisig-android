@@ -93,6 +93,12 @@ internal fun MainActivityContent(
         snackbarFlow.collectMessage { (message, type) ->
             val resolved = message.asString(context)
             if (resolved.isBlank()) return@collectMessage
+            // Held rather than shown: the bar is a window of its own, so one raised while the gate
+            // is closed would be added after the lock's and drawn over it. Held rather than
+            // dropped, too — the bar's progress runs off its own scope whether or not anything is
+            // composed, so a message shown behind the lock would tick out unseen. The channel
+            // behind collectMessage buffers, so waiting here keeps it until there is a reader.
+            passcodeGuardModel.state.first { !it.isGateClosed }
             snackbarState.show(resolved, type)
         }
     }
@@ -142,14 +148,10 @@ internal fun MainActivityContent(
         overlayContent = {
             PasscodeGuard(model = passcodeGuardModel)
 
-            // The snackbar is a window of its own too, so one raised while the gate is up is added
-            // after the lock's and drawn over it.
-            if (!isGateClosed) {
-                VsSnackBar(
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                    snackbarState = snackbarState,
-                )
-            }
+            VsSnackBar(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                snackbarState = snackbarState,
+            )
         },
     )
 }
