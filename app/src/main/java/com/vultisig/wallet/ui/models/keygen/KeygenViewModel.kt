@@ -297,37 +297,36 @@ constructor(
         viewModelScope.launch {
             updateStep(KeygenState.CreatingInstance)
 
+            args.vaultId?.let { vaultId ->
+                // Reshare, migrate and MLDSA keygen all build on this vault's existing shares, and
+                // a read taken while the app is locked comes back without them.
+                vaultRepository.awaitKeySharesReadable()
+
+                val cachedVault = vaultRepository.get(vaultId)
+                if (cachedVault != null) {
+                    vault.pubKeyECDSA = cachedVault.pubKeyECDSA
+                    vault.pubKeyEDDSA = cachedVault.pubKeyEDDSA
+                    vault.pubKeyMLDSA = cachedVault.pubKeyMLDSA
+                    vault.keyshares = cachedVault.keyshares
+                    // Preserve user-curated state across reshare / migrate. The keygen ceremony
+                    // only regenerates the threshold root shares — coins (custom token list,
+                    // addresses) and per-chain public keys (KeyImport vaults' chain routing) must
+                    // survive untouched. Without this, SaveVaultUseCase would overwrite the
+                    // upserted vault's empty coin list with default chains, wiping the user's
+                    // selections; for KeyImport vaults the empty `chainPublicKeys` would also
+                    // break per-chain signing-key resolution in `Vault.getEcdsaSigningKey`.
+                    vault.coins = cachedVault.coins
+                    vault.chainPublicKeys = cachedVault.chainPublicKeys
+                }
+            }
+
             _state.update { it.copy(error = null) }
 
             try {
                 // The ceremony holds auto-lock off from here until the keyshare is written. The
-                // other devices cannot be paused, and a lock in between costs the share its
-                // encryption at rest until the next unlock.
+                // other devices cannot be paused, and locking before saveVault() costs the share
+                // its encryption at rest until the next unlock re-seals it.
                 autoLockHold.withHold {
-                    args.vaultId?.let { vaultId ->
-                        // Reshare, migrate and MLDSA keygen all build on this vault's existing
-                        // shares, and a read taken while locked comes back without them.
-                        vaultRepository.awaitKeySharesReadable()
-
-                        val cachedVault = vaultRepository.get(vaultId)
-                        if (cachedVault != null) {
-                            vault.pubKeyECDSA = cachedVault.pubKeyECDSA
-                            vault.pubKeyEDDSA = cachedVault.pubKeyEDDSA
-                            vault.pubKeyMLDSA = cachedVault.pubKeyMLDSA
-                            vault.keyshares = cachedVault.keyshares
-                            // Preserve user-curated state across reshare / migrate. The keygen
-                            // ceremony only regenerates the threshold root shares — coins (custom
-                            // token list, addresses) and per-chain public keys (KeyImport vaults'
-                            // chain routing) must survive untouched. Without this,
-                            // SaveVaultUseCase would overwrite the upserted vault's empty coin
-                            // list with default chains, wiping the user's selections; for
-                            // KeyImport vaults the empty `chainPublicKeys` would also break
-                            // per-chain signing-key resolution in `Vault.getEcdsaSigningKey`.
-                            vault.coins = cachedVault.coins
-                            vault.chainPublicKeys = cachedVault.chainPublicKeys
-                        }
-                    }
-
                     featureFlags = featureFlagRepository.getFeatureFlags()
 
                     if (action == TssAction.SingleKeygen) {

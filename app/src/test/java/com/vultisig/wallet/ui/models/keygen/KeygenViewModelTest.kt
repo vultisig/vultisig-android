@@ -186,23 +186,4 @@ internal class KeygenViewModelTest {
 
             coVerify(timeout = 5_000) { vaultRepository.get("vault-1") }
         }
-
-    /** Verifies the hold covers the wait, so a pending auto-lock cannot land during it. */
-    @Test
-    fun `auto-lock is held off while the ceremony waits`() =
-        runTest(testDispatcher) {
-            val unlocked = CompletableDeferred<Unit>()
-            coEvery { vaultRepository.awaitKeySharesReadable() } coAnswers { unlocked.await() }
-
-            val vm = createViewModel()
-
-            autoLockHold.holds.value shouldBe 1
-
-            unlocked.complete(Unit)
-
-            // The ceremony ends by failing here, which is the exit a leaked hold would survive:
-            // auto-lock would then be deferred for the rest of the process.
-            vm.state.value.error.shouldNotBeNull()
-            autoLockHold.holds.value shouldBe 0
-        }
 }

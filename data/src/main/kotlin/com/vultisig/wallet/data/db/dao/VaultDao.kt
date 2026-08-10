@@ -128,6 +128,10 @@ interface VaultDao {
     suspend fun upsert(vault: VaultWithKeySharesAndTokens) {
         upsertVault(vault.vault)
         upsertCoins(vault.coins)
+        // Deliberately not cleared first, unlike the signers and chain public keys below. A vault
+        // read while the app is locked comes back with its keyshares dropped, so this list can be
+        // empty for a vault that has them; deleting first would erase the shares of every vault
+        // saved behind the lock screen. See VaultDaoKeyShareUpsertTest.
         upsertKeyshares(vault.keyShares)
         // it is upsert, so we need to delete all signers and insert them again
         // otherwise we need to figure who get removed , and remove them
