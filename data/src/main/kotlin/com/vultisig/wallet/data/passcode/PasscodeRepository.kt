@@ -393,8 +393,8 @@ internal class PasscodeRepositoryImpl(
                 // sealed under a key the next launch has no way to recover.
                 //
                 // A clear that never reached the disk throws before any of this, so the passcode
-                // is still in place — over shares unprotectAll has already put back in the clear,
-                // which the next unlock re-encrypts.
+                // stays in force — but unprotectAll has already put every share back in the
+                // clear, so they have to be sealed again before the failure is reported.
                 val cleared = runCatching {
                     withContext(NonCancellable) {
                         withContext(dispatcher) { store.clearCredentials() }
@@ -409,6 +409,7 @@ internal class PasscodeRepositoryImpl(
                         cause,
                         "Refusing to disable the passcode: the credentials are still there",
                     )
+                    protectAllOrLog(key)
                     key.fill(0)
                     return@verifyLocked PasscodeUnlockResult.Failed
                 }
