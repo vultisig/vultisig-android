@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -300,7 +299,7 @@ fun ActionButton(
                     )
                 }
             },
-        shape = RoundedCornerShape(50),
+        shape = Theme.v2.radius.pill,
         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
         modifier = modifier.height(42.dp).actionButtonInnerBevel(enabled = enabled),
     ) {
@@ -315,7 +314,7 @@ fun ActionButton(
                             .background(
                                 if (enabled) iconCircleColor
                                 else iconCircleColor.copy(alpha = 0.5f),
-                                RoundedCornerShape(50),
+                                Theme.v2.radius.pill,
                             ),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -562,12 +561,12 @@ internal fun DeFiWarningBanner(text: String, onClickClose: (() -> Unit)? = null)
         Column(
             modifier =
                 Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(Theme.v2.radius.md)
                     .background(Theme.v2.colors.backgrounds.secondary)
                     .border(
                         width = 1.dp,
                         color = Theme.v2.colors.border.light,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = Theme.v2.radius.md,
                     )
                     .padding(
                         start = 16.dp,
@@ -1039,7 +1038,7 @@ private fun CompleteNodeCardMockPreview() {
         Column(
             modifier =
                 Modifier.fillMaxWidth()
-                    .background(Theme.v2.colors.backgrounds.secondary, RoundedCornerShape(12.dp))
+                    .background(Theme.v2.colors.backgrounds.secondary, Theme.v2.radius.md)
                     .padding(16.dp)
         ) {
             // Node Address

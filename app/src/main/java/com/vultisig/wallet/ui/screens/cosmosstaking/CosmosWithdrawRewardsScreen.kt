@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -147,11 +146,11 @@ private fun CapWarning(maxBatchSize: Int) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
+                .clip(Theme.v2.radius.sm)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.alerts.warning,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = Theme.v2.radius.sm,
                 )
                 .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -181,11 +180,11 @@ private fun CandidateRow(
         modifier =
             Modifier.fillMaxWidth()
                 .padding(vertical = 4.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .clickable(onClick = onToggle)
                 .padding(horizontal = 12.dp, vertical = 10.dp),

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -132,10 +131,7 @@ private val rowModifier: Modifier
     @Composable
     get() =
         Modifier.fillMaxWidth()
-            .background(
-                color = Theme.v2.colors.variables.bordersLight,
-                shape = RoundedCornerShape(12.dp),
-            )
+            .background(color = Theme.v2.colors.variables.bordersLight, shape = Theme.v2.radius.md)
             .padding(horizontal = 12.dp)
 
 private const val PREVIEW_RIPPLE_JSON =

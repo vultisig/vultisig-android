@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -58,12 +57,12 @@ internal fun SolanaUnstakeContent(state: SolanaUnstakeUiState, onContinue: () ->
             Row(
                 modifier =
                     Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(Theme.v2.radius.md)
                         .background(Theme.v2.colors.backgrounds.secondary)
                         .border(
                             width = 1.dp,
                             color = Theme.v2.colors.border.light,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = Theme.v2.radius.md,
                         )
                         .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -84,7 +83,7 @@ internal fun SolanaUnstakeContent(state: SolanaUnstakeUiState, onContinue: () ->
             Column(
                 modifier =
                     Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(Theme.v2.radius.md)
                         .background(Theme.v2.colors.backgrounds.secondary)
                         .padding(16.dp)
             ) {

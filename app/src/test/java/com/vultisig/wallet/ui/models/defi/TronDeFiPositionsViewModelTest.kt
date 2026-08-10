@@ -4,6 +4,8 @@ import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.models.TronAccountJson
 import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.TronFrozenV2Json
+import com.vultisig.wallet.data.api.models.TronUnfrozenV2Json
+import com.vultisig.wallet.data.blockchain.tron.TronDeFiBalanceService
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
@@ -16,6 +18,7 @@ import com.vultisig.wallet.data.repositories.TronDeFiSnapshotCache
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import io.kotest.matchers.shouldBe
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.every
@@ -148,6 +151,30 @@ internal class TronDeFiPositionsViewModelTest {
         verify(exactly = 0) { snapshotCache.write(any(), any()) }
     }
 
+    @Test
+    fun `screen header and the DeFi-tab aggregator report the same total`() = runTest {
+        every { snapshotCache.read(TRX_ADDRESS) } returns null
+        coEvery { tronApi.getAccount(TRX_ADDRESS) } returns COOLDOWN_ACCOUNT
+        coEvery { tronApi.getAccountResource(TRX_ADDRESS) } returns FRESH_RESOURCE
+        coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns TRX_PRICE
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        val aggregatedTrx =
+            BigDecimal(
+                    TronDeFiBalanceService(tronApi, mockk(relaxed = true))
+                        .getRemoteDeFiBalance(TRX_ADDRESS, VAULT_ID)
+                        .single()
+                        .balances
+                        .single()
+                        .amount
+                )
+                .movePointLeft(Coins.Tron.TRX.decimal)
+
+        val state = vm.state.value as TronDeFiUiState.Success
+        state.tronData.totalAmountPrice shouldBe
+            NumberFormat.getCurrencyInstance(Locale.US).format(aggregatedTrx.multiply(TRX_PRICE))
+    }
+
     private fun createViewModel(): TronDeFiPositionsViewModel =
         TronDeFiPositionsViewModel(
             vaultRepository = vaultRepository,
@@ -162,6 +189,8 @@ internal class TronDeFiPositionsViewModelTest {
     private companion object {
         const val VAULT_ID = "vault-1"
         const val TRX_ADDRESS = "TXYZtronAddress"
+
+        val TRX_PRICE = BigDecimal("0.30")
 
         val TRX_COIN = Coins.Tron.TRX.copy(address = TRX_ADDRESS)
 
@@ -195,6 +224,15 @@ internal class TronDeFiPositionsViewModelTest {
                 address = TRX_ADDRESS,
                 balance = 2_000_000L,
                 frozenV2 = listOf(TronFrozenV2Json(type = "ENERGY", amount = 9_000_000L)),
+            )
+
+        /** Mid-cooldown: the active freeze is gone, the unfreezing TRX is still locked. */
+        val COOLDOWN_ACCOUNT =
+            TronAccountJson(
+                address = TRX_ADDRESS,
+                balance = 2_000_000L,
+                unfrozenV2 =
+                    listOf(TronUnfrozenV2Json(type = "ENERGY", unfreezeAmount = 9_000_000L)),
             )
 
         val FRESH_RESOURCE = TronAccountResourceJson(netLimit = 100L, energyLimit = 200L)

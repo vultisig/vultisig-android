@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -301,7 +300,7 @@ internal fun TokenChip(
                 }
                 .background(
                     color = Theme.v2.colors.backgrounds.tertiary_2,
-                    shape = RoundedCornerShape(99.dp),
+                    shape = Theme.v2.radius.pill,
                 )
                 .padding(all = 6.dp),
     ) {

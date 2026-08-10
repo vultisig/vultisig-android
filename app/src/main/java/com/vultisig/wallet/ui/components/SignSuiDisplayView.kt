@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -136,7 +135,7 @@ private fun DecodedPtbSections(sender: String, transaction: ParsedSuiTransaction
                 Modifier.fillMaxWidth()
                     .background(
                         color = Theme.v2.colors.variables.bordersLight,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = Theme.v2.radius.md,
                     )
                     .padding(horizontal = 12.dp),
         )
@@ -161,7 +160,7 @@ private fun GasSummarySection(sender: String, transaction: ParsedSuiTransaction)
             Modifier.fillMaxWidth()
                 .background(
                     color = Theme.v2.colors.variables.bordersLight,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -214,7 +213,7 @@ private fun RawBytesFallback(sender: String, unsignedTxMsg: String) {
                 Modifier.fillMaxWidth()
                     .background(
                         color = Theme.v2.colors.variables.bordersLight,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = Theme.v2.radius.md,
                     )
                     .padding(horizontal = 12.dp),
         )
@@ -226,7 +225,7 @@ private fun RawBytesFallback(sender: String, unsignedTxMsg: String) {
             Modifier.fillMaxWidth()
                 .background(
                     color = Theme.v2.colors.variables.bordersLight,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(horizontal = 12.dp),
     )
@@ -239,7 +238,7 @@ private fun CommandsSummarySection(commands: List<SuiCommand>) {
             Modifier.fillMaxWidth()
                 .background(
                     color = Theme.v2.colors.variables.bordersLight,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -308,7 +307,7 @@ private fun InputsSummarySection(inputs: List<SuiPtbInput>) {
             Modifier.fillMaxWidth()
                 .background(
                     color = Theme.v2.colors.variables.bordersLight,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),

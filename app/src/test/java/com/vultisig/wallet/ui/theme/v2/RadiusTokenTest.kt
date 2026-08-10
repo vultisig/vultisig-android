@@ -106,6 +106,52 @@ internal class RadiusTokenTest {
                 (capsule plusOrMinus 0.001f)
         }
         RoundedCornerShape(percent = 50).drawnRadiusOn(searchFieldSized) shouldBe capsule
+        RoundedCornerShape(50).drawnRadiusOn(searchFieldSized) shouldBe capsule
+        listOf(60.dp, 999.dp).forEach { literal ->
+            RoundedCornerShape(literal).drawnRadiusOn(searchFieldSized) shouldBe
+                (capsule plusOrMinus 0.001f)
+        }
+    }
+
+    /**
+     * `percent = 100` is the one fully-round spelling that is not obviously equivalent, because
+     * Compose does not scale the four corners by a common factor — it clamps each to the surface's
+     * smaller dimension and then clamps the second corner of each edge to what is left of it.
+     * Asking for 100% therefore takes the whole smaller dimension and leaves the opposite corner
+     * nothing, which is a very different shape from asking for half of it twice.
+     *
+     * It survives that only because the clamp runs before the outline is built: both corners on the
+     * short edge want the full dimension, and the leftover rule splits it evenly between them. The
+     * app's primary button is drawn this way, so this is measured rather than assumed.
+     */
+    @Test
+    fun `percent = 100 collapses onto the same capsule as pill`() {
+        val buttonSized = Size(width = 328f, height = 48f)
+
+        RoundedCornerShape(percent = 100).drawnRadiusOn(buttonSized) shouldBe
+            radius.pill.drawnRadiusOn(buttonSized)
+    }
+
+    /**
+     * The other spelling of "fully round", and the one a census misses: a number that is not
+     * obviously large, on a surface small enough that it still clamps. Each pair below is a real
+     * call site this migration collapsed onto `pill` — a carousel item, the limit-swap unit toggle,
+     * the referral active dot and a sheet grabber. None of them reads as a fully-round literal, and
+     * all four draw a capsule.
+     */
+    @Test
+    fun `a literal over half the surface is already a capsule`() {
+        val clampedSites =
+            listOf(
+                30.dp to Size(width = 150f, height = 50f),
+                18.dp to Size(width = 32f, height = 32f),
+                3.dp to Size(width = 6f, height = 6f),
+                100.dp to Size(width = 36f, height = 4f),
+            )
+
+        clampedSites.forEach { (literal, size) ->
+            RoundedCornerShape(literal).drawnRadiusOn(size) shouldBe radius.pill.drawnRadiusOn(size)
+        }
     }
 
     /**

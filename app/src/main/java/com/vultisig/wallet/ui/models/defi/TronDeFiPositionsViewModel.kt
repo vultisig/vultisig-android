@@ -215,9 +215,9 @@ constructor(
         val availableBalanceTrx = (account.balance ?: 0L).sunToTrx()
         val frozenTotal =
             account.frozenBandwidthSun.sunToTrx().add(account.frozenEnergySun.sunToTrx())
-        // Header reflects the user's DeFi-locked position: actively frozen TRX plus
-        // TRX in the unfreezing cooldown. Mirrors vultisig-ios `DefiBalanceService`.
-        val defiTotal = frozenTotal.add(account.unfreezingTotalSun.sunToTrx())
+        // Same total the DeFi tab's aggregator reports, read from the one shared property so the
+        // header and the wallet-wide roll-up cannot drift apart again (#5482).
+        val defiTotal = account.defiLockedTotalSun.sunToTrx()
 
         val stats = resource.calculateResourceStats()
         val pendingWithdrawals = mapPendingWithdrawals(account)

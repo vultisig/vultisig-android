@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -158,7 +157,7 @@ internal fun ReferralViewScreen(
                                         width = 1.dp,
                                         color = Theme.v2.colors.border.light,
                                     ),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = Theme.v2.radius.md,
                             )
                             .padding(12.dp)
                 ) {
@@ -236,9 +235,9 @@ private fun ReferralExpirationItem(expiration: String = "25 May of 2027", isLoad
         modifier =
             Modifier.border(
                     border = BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .background(Theme.v2.colors.backgrounds.primary)
                 .fillMaxWidth()
                 .padding(all = 16.dp)
@@ -268,12 +267,12 @@ private fun FriendReferralBanner(isActive: Boolean, onClick: () -> Unit) {
         modifier =
             Modifier.fillMaxWidth()
                 .height(100.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .clickable { onClick() }
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
     ) {
         Image(
@@ -319,15 +318,12 @@ private fun FriendActiveChip(modifier: Modifier = Modifier) {
     Row(
         modifier =
             modifier
-                .clip(RoundedCornerShape(999.dp))
+                .clip(Theme.v2.radius.pill)
                 .background(Theme.v2.colors.primary.accent4.copy(alpha = 0.16f))
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier =
-                Modifier.size(6.dp).clip(RoundedCornerShape(3.dp)).background(FRIEND_ACTIVE_DOT)
-        )
+        Box(modifier = Modifier.size(6.dp).clip(Theme.v2.radius.pill).background(FRIEND_ACTIVE_DOT))
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = stringResource(R.string.referral_view_friend_active),
@@ -345,11 +341,11 @@ private fun ReferralRewardsBanner(rewards: String, isLoading: Boolean) {
         modifier =
             Modifier.fillMaxWidth()
                 .height(110.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
     ) {
         SetBackgroundBanner(backgroundImageResId = R.drawable.referral_data_banner)
@@ -443,12 +439,12 @@ internal fun ContentRow(text: String, icon: @Composable () -> Unit) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .background(Theme.v2.colors.backgrounds.primary)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -477,7 +473,7 @@ internal fun EmptyReferralBanner(onClickedCreateReferral: () -> Unit) {
                 .background(Theme.v2.colors.backgrounds.primary)
                 .border(
                     border = BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
