@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -164,12 +163,12 @@ internal fun FastVaultVerificationScreen(
                                 .height(46.dp)
                                 .background(
                                     color = Theme.v2.colors.backgrounds.secondary,
-                                    shape = RoundedCornerShape(size = 99.dp),
+                                    shape = Theme.v2.radius.pill,
                                 )
                                 .border(
                                     width = 1.dp,
                                     color = Theme.v2.colors.border.extraLight,
-                                    shape = RoundedCornerShape(size = 99.dp),
+                                    shape = Theme.v2.radius.pill,
                                 )
                                 .padding(horizontal = 12.dp, vertical = 12.dp)
                                 .clickable(
@@ -267,11 +266,11 @@ internal fun FastVaultVerificationScreen(
                                                     width = 1.dp,
                                                     color =
                                                         Theme.v2.colors.variables.bordersExtraLight,
-                                                    shape = RoundedCornerShape(12.dp),
+                                                    shape = Theme.v2.radius.md,
                                                 )
                                                 .background(
                                                     color = Theme.v2.colors.buttons.secondary,
-                                                    shape = RoundedCornerShape(12.dp),
+                                                    shape = Theme.v2.radius.md,
                                                 )
                                                 .padding(horizontal = 12.dp, vertical = 8.dp)
                                                 .clickOnce(
@@ -337,11 +336,11 @@ internal fun FastVaultVerificationScreen(
                                         Modifier.border(
                                                 width = 1.dp,
                                                 color = Theme.v2.colors.variables.bordersExtraLight,
-                                                shape = RoundedCornerShape(12.dp),
+                                                shape = Theme.v2.radius.md,
                                             )
                                             .background(
                                                 color = Theme.v2.colors.buttons.secondary,
-                                                shape = RoundedCornerShape(12.dp),
+                                                shape = Theme.v2.radius.md,
                                             )
                                             .padding(horizontal = 16.dp, vertical = 10.dp)
                                             .testTag("FastVaultVerificationScreen.retryButton")

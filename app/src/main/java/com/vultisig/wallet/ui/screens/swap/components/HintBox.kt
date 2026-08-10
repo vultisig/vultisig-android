@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -229,12 +229,13 @@ private fun HintBoxPopupContent(
                 Modifier.fillMaxWidth()
                     .background(
                         color = shapeColor,
+                        // The top-end corner is pulled in so the pointer triangle meets a
+                        // near-square
+                        // corner instead of cutting across a curve; every corner is still a step on
+                        // the scale.
                         shape =
-                            RoundedCornerShape(
-                                topStart = 16.dp,
-                                topEnd = 4.dp,
-                                bottomStart = 16.dp,
-                                bottomEnd = 16.dp,
+                            Theme.v2.radius.lg.shape.copy(
+                                topEnd = CornerSize(Theme.v2.radius.xs.size)
                             ),
                     )
                     .padding(horizontal = 16.dp, vertical = 12.dp)

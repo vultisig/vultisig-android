@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -236,7 +235,7 @@ private fun RemoveLpSlider(
                                 .height(24.dp)
                                 .background(
                                     color = Theme.v2.colors.text.primary,
-                                    shape = RoundedCornerShape(100),
+                                    shape = Theme.v2.radius.pill,
                                 )
                     )
                 },

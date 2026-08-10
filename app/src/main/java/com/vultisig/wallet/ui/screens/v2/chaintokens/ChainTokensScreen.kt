@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -191,7 +190,7 @@ internal fun ChainTokensScreen(
                     address = uiModel.chainAddress,
                     onAddressCopied = { snackbarState.show(addressCopiedMessage) },
                     modifier =
-                        Modifier.clip(RoundedCornerShape(size = 8.dp))
+                        Modifier.clip(Theme.v2.radius.sm)
                             .background(color = Theme.v2.colors.text.button.dim.copy(alpha = 0.12f))
                             .padding(horizontal = 6.dp, vertical = 4.dp),
                     tint = Theme.v2.colors.alerts.info,

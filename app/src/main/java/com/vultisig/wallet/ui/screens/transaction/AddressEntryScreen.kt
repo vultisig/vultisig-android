@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Text
@@ -154,11 +153,11 @@ internal fun SelectChain(modifier: Modifier = Modifier, selectedChain: NetworkUi
                     .border(
                         width = 1.dp,
                         color = Theme.v2.colors.border.light,
-                        shape = RoundedCornerShape(size = 12.dp),
+                        shape = Theme.v2.radius.md,
                     )
                     .background(
                         color = Theme.v2.colors.backgrounds.secondary,
-                        shape = RoundedCornerShape(size = 12.dp),
+                        shape = Theme.v2.radius.md,
                     )
                     .padding(all = 16.dp),
             verticalAlignment = Alignment.CenterVertically,

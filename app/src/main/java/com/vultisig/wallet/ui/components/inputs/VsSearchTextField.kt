@@ -25,6 +25,11 @@ internal fun VsSearchTextField(fieldState: TextFieldState) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier =
             Modifier.padding(all = 16.dp)
+                // Off the scale on purpose: the app has no single answer for an input's corner.
+                // This is 10, VsTextInputField and the passcode cells are 12, the code-entry
+                // boxes 24, and every v2 search surface is fully round — while the design file's
+                // input measures 16. Snapping this one to a token would pick a winner for the
+                // whole input family by accident, so it waits for that decision.
                 .background(
                     color = Theme.v2.colors.fills.primary,
                     shape = RoundedCornerShape(10.dp),

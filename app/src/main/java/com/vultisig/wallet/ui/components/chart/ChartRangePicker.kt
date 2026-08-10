@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,7 +36,7 @@ internal fun ChartRangePicker(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(percent = 50))
+                .clip(Theme.v2.radius.pill)
                 .background(Theme.v2.colors.backgrounds.tertiary)
                 .padding(all = 4.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -75,7 +74,7 @@ private fun ChartRangeTab(
     Box(
         modifier =
             modifier
-                .clip(RoundedCornerShape(percent = 50))
+                .clip(Theme.v2.radius.pill)
                 .background(backgroundColor)
                 .selectable(
                     selected = isSelected,

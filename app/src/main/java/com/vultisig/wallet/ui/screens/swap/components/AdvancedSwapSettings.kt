@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -189,7 +188,7 @@ internal fun AdvancedMenu(
         modifier =
             Modifier.fillMaxWidth()
                 .padding(top = 16.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .background(Theme.v2.colors.backgrounds.secondary)
     ) {
         AdvancedSwapSettingRow(
@@ -253,7 +252,7 @@ internal fun ExternalRecipientPage(
         Row(
             modifier =
                 Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(Theme.v2.radius.md)
                     .background(Theme.v2.colors.backgrounds.secondary)
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -301,7 +300,7 @@ internal fun SlippagePage(slippageBps: Int?, onSelect: (Int?) -> Unit) {
         Column(
             modifier =
                 Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(Theme.v2.radius.md)
                     .background(Theme.v2.colors.backgrounds.secondary)
         ) {
             SlippageOptionRow(
@@ -473,7 +472,7 @@ internal fun GasLimitPage(gasLimitOverride: Long?, onSelect: (Long?) -> Unit) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier =
                 Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(Theme.v2.radius.md)
                     .background(Theme.v2.colors.backgrounds.secondary)
                     .padding(horizontal = 16.dp, vertical = 16.dp),
         )
