@@ -60,9 +60,12 @@ internal fun DappRequestBanner(metadata: DAppMetadata, modifier: Modifier = Modi
         modifier =
             modifier
                 .fillMaxWidth()
+                // A banner on the page background at all four of its call sites — it sits above
+                // the summary card rather than inside it, unlike the iOS twin, so it takes the
+                // container step alongside the card rather than a nested one.
                 .background(
                     color = Theme.v2.colors.backgrounds.surface2,
-                    shape = Theme.v2.radius.lg,
+                    shape = Theme.v2.radius.xl,
                 )
                 .padding(20.dp)
                 .semantics(mergeDescendants = true) { contentDescription = announcement },

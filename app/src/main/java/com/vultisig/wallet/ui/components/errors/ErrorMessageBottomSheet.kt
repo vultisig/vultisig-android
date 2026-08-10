@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,12 +55,12 @@ internal fun ErrorMessageBottomSheet(rawError: String, onDismissRequest: () -> U
                         .heightIn(max = 420.dp)
                         .background(
                             color = Theme.v2.colors.backgrounds.disabled,
-                            shape = RoundedCornerShape(24.dp),
+                            shape = Theme.v2.radius.xl,
                         )
                         .border(
                             width = 1.dp,
                             color = Theme.v2.colors.border.light,
-                            shape = RoundedCornerShape(24.dp),
+                            shape = Theme.v2.radius.xl,
                         )
                         .verticalScroll(rememberScrollState())
                         .padding(20.dp),

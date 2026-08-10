@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -69,7 +68,7 @@ internal fun Banner(
     variant: BannerVariant = BannerVariant.Info,
     @SuppressLint("ComposableLambdaParameterNaming") actions: (@Composable () -> Unit)? = null,
 ) {
-    val shape = RoundedCornerShape(12.dp)
+    val shape = Theme.v2.radius.xl
 
     Row(
         verticalAlignment = Alignment.CenterVertically,

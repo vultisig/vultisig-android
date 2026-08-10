@@ -400,12 +400,12 @@ fun VaultItem(name: String, onVaultClicked: () -> Unit) {
         modifier =
             Modifier.fillMaxWidth()
                 .height(56.dp)
-                .clip(RoundedCornerShape(28.dp))
+                .clip(Theme.v2.radius.pill)
                 .background(Theme.v2.colors.backgrounds.primary)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(28.dp),
+                    shape = Theme.v2.radius.pill,
                 )
                 .clickable { onVaultClicked() }
                 .padding(horizontal = 16.dp),

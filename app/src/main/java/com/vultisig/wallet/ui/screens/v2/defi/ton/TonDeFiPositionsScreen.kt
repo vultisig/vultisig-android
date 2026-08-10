@@ -261,13 +261,13 @@ private fun TonDeFiBanner(isLoading: Boolean, totalValue: String, isBalanceVisib
         modifier =
             Modifier.fillMaxWidth()
                 .height(118.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(TonBannerGradientTop, TonBannerGradientBottom)
                     )
                 )
-                .border(1.dp, TonBannerBorder, RoundedCornerShape(16.dp))
+                .border(1.dp, TonBannerBorder, Theme.v2.radius.xl)
     ) {
         Column(
             horizontalAlignment = Alignment.Start,
@@ -313,9 +313,9 @@ private fun TonStakingPositionCard(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.secondary)
-                .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(16.dp))
+                .border(1.dp, Theme.v2.colors.border.light, Theme.v2.radius.xl)
                 .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {

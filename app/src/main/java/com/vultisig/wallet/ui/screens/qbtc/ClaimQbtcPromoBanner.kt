@@ -41,7 +41,7 @@ internal fun ClaimQbtcPromoBanner(onClaim: () -> Unit, modifier: Modifier = Modi
             modifier
                 .fillMaxWidth()
                 .height(156.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.surface2)
                 .drawBehind {
                     drawRect(

@@ -30,12 +30,22 @@ internal sealed interface ContainerBorderType {
     data class Bordered(val color: Color = colors.border.light) : ContainerBorderType
 }
 
+/**
+ * The app's container chrome: a fill, an optional hairline border, and a clip.
+ *
+ * [radius] defaults to the container step, because that is what the common case is — a card, banner
+ * or list group sitting on the page background. A container rendered *inside* another one is
+ * content rather than a container, and has to say so by passing a smaller step: equal radii nested
+ * one inside the other read flat, and the mismatch grows with the radius. Decide which one a call
+ * site is from the call site, not from this declaration — several of the views that go through here
+ * are the outer surface in one usage and nested in another.
+ */
 @Composable
 internal fun V2Container(
     modifier: Modifier = Modifier,
     type: ContainerType = ContainerType.PRIMARY,
     borderType: ContainerBorderType = ContainerBorderType.Borderless,
-    radius: Radius = Theme.v2.radius.md,
+    radius: Radius = Theme.v2.radius.xl,
     content: @Composable () -> Unit,
 ) {
     val containerColor =

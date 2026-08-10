@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -38,7 +37,7 @@ internal fun ReferralCodeBottomSheet(onContinue: () -> Unit, onDismissRequest: (
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         containerColor = Theme.v2.colors.backgrounds.secondary,
-        shape = RoundedCornerShape(24.dp),
+        shape = Theme.v2.radius.xl,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         dragHandle = null,
     ) {
@@ -57,7 +56,7 @@ internal fun ReferralCodeBottomSheetContent(onContinue: () -> Unit) {
             Image(
                 painter = painterResource(id = R.drawable.referralcodeiphone),
                 contentDescription = null,
-                modifier = Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(24.dp)),
+                modifier = Modifier.fillMaxWidth().height(200.dp).clip(Theme.v2.radius.xl),
             )
         }
 

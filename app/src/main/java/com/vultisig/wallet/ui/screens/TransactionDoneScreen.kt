@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -119,7 +118,7 @@ internal fun TransactionDoneView(
                                         header =
                                             stringResource(R.string.tx_overview_screen_tx_send),
                                         valuedToken = transaction.token,
-                                        shape = RoundedCornerShape(24.dp),
+                                        shape = Theme.v2.radius.xl,
                                         modifier = Modifier.fillMaxWidth(),
                                     )
                                 }

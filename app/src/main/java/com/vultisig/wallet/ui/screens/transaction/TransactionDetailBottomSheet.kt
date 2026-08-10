@@ -170,12 +170,12 @@ private fun SendDetailContent(item: TransactionHistoryItemUiModel.Send) {
             Modifier.border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(size = 16.dp),
+                    shape = Theme.v2.radius.xl,
                 )
                 .fillMaxWidth()
                 .background(
                     color = Theme.v2.colors.backgrounds.surface2,
-                    shape = RoundedCornerShape(size = 16.dp),
+                    shape = Theme.v2.radius.xl,
                 )
                 .padding(vertical = 16.dp, horizontal = 20.dp),
     ) {
