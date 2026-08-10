@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.genera
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
+import com.vultisig.wallet.data.utils.NetworkException
 import java.math.BigInteger
 import kotlin.coroutines.cancellation.CancellationException
 import timber.log.Timber
@@ -17,8 +18,8 @@ class TronDeFiBalanceService(
     private val stakingDetailsRepository: StakingDetailsRepository,
 ) : DeFiService {
 
-    override suspend fun getRemoteDeFiBalance(address: String, vaultId: String): List<DeFiBalance> {
-        return try {
+    override suspend fun getRemoteDeFiBalance(address: String, vaultId: String): List<DeFiBalance> =
+        try {
             val account = tronApi.getAccount(address)
             val totalLocked = account.defiLockedTotalSun.toBigInteger()
 
@@ -31,27 +32,18 @@ class TronDeFiBalanceService(
 
             persistLockedBalance(vaultId, totalLocked)
             balanceOf(totalLocked)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
+        } catch (e: NetworkException) {
             Timber.w(e, "TronDeFiBalanceService: Failed to fetch locked TRX balance")
             // Keep the last-known position rather than erasing it: BalanceRepository caches this
             // result, so an empty list would hide the Tron row until the next invalidation.
+            // Only a network failure degrades this way — anything else propagates.
             getCacheDeFiBalance(address, vaultId)
         }
-    }
 
-    override suspend fun getCacheDeFiBalance(address: String, vaultId: String): List<DeFiBalance> =
-        try {
-            val cached =
-                stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Tron.TRX.id)
-            balanceOf(cached?.stakeAmount ?: BigInteger.ZERO)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Timber.w(e, "TronDeFiBalanceService: Failed to read the cached TRX position")
-            emptyList()
-        }
+    override suspend fun getCacheDeFiBalance(address: String, vaultId: String): List<DeFiBalance> {
+        val cached = stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Tron.TRX.id)
+        return balanceOf(cached?.stakeAmount ?: BigInteger.ZERO)
+    }
 
     private fun balanceOf(totalLocked: BigInteger): List<DeFiBalance> =
         if (totalLocked <= BigInteger.ZERO) emptyList()

@@ -11,13 +11,12 @@ import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.genera
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.utils.NetworkException
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigInteger
-import kotlin.coroutines.cancellation.CancellationException
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -57,7 +56,7 @@ internal class TronDeFiBalanceServiceTest {
 
             val result = service.getRemoteDeFiBalance(ADDRESS, VAULT_ID)
 
-            assertEquals(BigInteger.valueOf(12_000_000L), result.single().balances.single().amount)
+            result.single().balances.single().amount shouldBe BigInteger.valueOf(12_000_000L)
         }
 
     @Test
@@ -67,8 +66,8 @@ internal class TronDeFiBalanceServiceTest {
 
         val result = service.getRemoteDeFiBalance(ADDRESS, VAULT_ID)
 
-        assertEquals(BigInteger.valueOf(6_000_000L), result.single().balances.single().amount)
-        assertEquals(Coins.Tron.TRX, result.single().balances.single().coin)
+        result.single().balances.single().amount shouldBe BigInteger.valueOf(6_000_000L)
+        result.single().balances.single().coin shouldBe Coins.Tron.TRX
     }
 
     @Test
@@ -79,8 +78,8 @@ internal class TronDeFiBalanceServiceTest {
         val remote = service.getRemoteDeFiBalance(ADDRESS, VAULT_ID)
         val cached = service.getCacheDeFiBalance(ADDRESS, VAULT_ID)
 
-        assertEquals(BigInteger.valueOf(6_000_000L), cached.single().balances.single().amount)
-        assertEquals(remote, cached)
+        cached.single().balances.single().amount shouldBe BigInteger.valueOf(6_000_000L)
+        cached shouldBe remote
     }
 
     @Test
@@ -90,8 +89,8 @@ internal class TronDeFiBalanceServiceTest {
 
         val remote = service.getRemoteDeFiBalance(ADDRESS, VAULT_ID)
 
-        assertEquals(emptyList(), remote)
-        assertEquals(emptyList(), service.getCacheDeFiBalance(ADDRESS, VAULT_ID))
+        remote shouldBe emptyList()
+        service.getCacheDeFiBalance(ADDRESS, VAULT_ID) shouldBe emptyList()
     }
 
     @Test
@@ -101,22 +100,22 @@ internal class TronDeFiBalanceServiceTest {
 
         val result = service.getRemoteDeFiBalance(ADDRESS, VAULT_ID)
 
-        assertEquals(BigInteger.valueOf(7_000_000L), result.single().balances.single().amount)
+        result.single().balances.single().amount shouldBe BigInteger.valueOf(7_000_000L)
         coVerify(exactly = 0) { stakingDetailsRepository.saveStakingDetails(any(), any()) }
         coVerify(exactly = 0) { stakingDetailsRepository.updateStakingDetails(any(), any()) }
     }
 
     @Test
-    fun `cancellation propagates instead of degrading to the cached position`() = runTest {
+    fun `an unexpected failure propagates instead of degrading to the cached position`() = runTest {
         persisted = stakingDetails(BigInteger.valueOf(7_000_000L))
-        coEvery { tronApi.getAccount(ADDRESS) } throws CancellationException("vault switched")
+        coEvery { tronApi.getAccount(ADDRESS) } throws IllegalStateException("malformed response")
 
-        assertFailsWith<CancellationException> { service.getRemoteDeFiBalance(ADDRESS, VAULT_ID) }
+        shouldThrow<IllegalStateException> { service.getRemoteDeFiBalance(ADDRESS, VAULT_ID) }
     }
 
     @Test
     fun `no cached total yields no position`() = runTest {
-        assertEquals(emptyList(), service.getCacheDeFiBalance(ADDRESS, VAULT_ID))
+        service.getCacheDeFiBalance(ADDRESS, VAULT_ID) shouldBe emptyList()
     }
 
     private fun account(

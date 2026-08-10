@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.repositories.TronDeFiSnapshotCache
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import io.kotest.matchers.shouldBe
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.every
@@ -27,7 +28,6 @@ import io.mockk.verify
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.util.Locale
-import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -171,10 +171,8 @@ internal class TronDeFiPositionsViewModelTest {
                 .movePointLeft(Coins.Tron.TRX.decimal)
 
         val state = vm.state.value as TronDeFiUiState.Success
-        assertEquals(
-            NumberFormat.getCurrencyInstance(Locale.US).format(aggregatedTrx.multiply(TRX_PRICE)),
-            state.tronData.totalAmountPrice,
-        )
+        state.tronData.totalAmountPrice shouldBe
+            NumberFormat.getCurrencyInstance(Locale.US).format(aggregatedTrx.multiply(TRX_PRICE))
     }
 
     private fun createViewModel(): TronDeFiPositionsViewModel =
