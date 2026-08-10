@@ -128,8 +128,6 @@ interface VaultDao {
     suspend fun upsert(vault: VaultWithKeySharesAndTokens) {
         upsertVault(vault.vault)
         upsertCoins(vault.coins)
-        // Not cleared first, unlike the signers below: a locked read drops keyshares, so an empty
-        // list here must not erase the stored rows.
         upsertKeyshares(vault.keyShares)
         // it is upsert, so we need to delete all signers and insert them again
         // otherwise we need to figure who get removed , and remove them
