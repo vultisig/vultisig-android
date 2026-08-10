@@ -313,6 +313,46 @@ internal class PasscodeRepositoryImplTest {
     }
 
     @Test
+    fun `setPasscode encrypts nothing when the wrap does not reach the disk`() = runTest {
+        val repository = repository()
+        store.writeFailure = IllegalStateException("credentials were not written to disk")
+
+        assertEquals(PasscodeUnlockResult.Failed, repository.setPasscode("123456"))
+
+        assertEquals(emptyList(), protection.calls, "nothing may be encrypted")
+        assertNull(store.readCredentials())
+    }
+
+    @Test
+    fun `changePasscode leaves the old passcode in force when the new wrap is not stored`() =
+        runTest {
+            val repository = repository()
+            repository.setPasscode("123456")
+            val credentials = store.readCredentials()
+            store.writeFailure = IllegalStateException("credentials were not written to disk")
+
+            assertEquals(PasscodeUnlockResult.Failed, repository.changePasscode("123456", "654321"))
+
+            store.writeFailure = null
+            assertEquals(credentials, store.readCredentials())
+            repository.lock()
+            assertEquals(PasscodeUnlockResult.Success, repository.unlock("123456"))
+        }
+
+    @Test
+    fun `disablePasscode keeps the passcode when the credentials are not removed`() = runTest {
+        val repository = repository()
+        repository.setPasscode("123456")
+        val credentials = store.readCredentials()
+        store.writeFailure = IllegalStateException("credentials were not removed from disk")
+
+        assertEquals(PasscodeUnlockResult.Failed, repository.disablePasscode("123456"))
+
+        assertEquals(credentials, store.readCredentials())
+        assertEquals(PasscodeState.Unlocked, repository.state.value)
+    }
+
+    @Test
     fun `setPasscode survives an encryption failure with a working passcode`() = runTest {
         // The wrap is already stored and the app is unlocked by the time protectAll runs, so a
         // failed row is not a reason to fail the operation around it — the next unlock sweeps it.
@@ -618,6 +658,9 @@ internal class FakePasscodeStore : PasscodeStore {
     /** Set to stand in for a keystore that throws rather than returning nothing. */
     var readFailure: Throwable? = null
 
+    /** Set to stand in for a store whose write or removal never reaches the disk. */
+    var writeFailure: Throwable? = null
+
     override fun isPersistent(): Boolean = persistent
 
     @Synchronized
@@ -629,11 +672,13 @@ internal class FakePasscodeStore : PasscodeStore {
 
     @Synchronized
     override fun writeCredentials(credentials: PasscodeCredentials) {
+        writeFailure?.let { throw it }
         this.credentials = credentials
     }
 
     @Synchronized
     override fun clearCredentials() {
+        writeFailure?.let { throw it }
         credentials = null
     }
 

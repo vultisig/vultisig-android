@@ -37,8 +37,10 @@ internal interface PasscodeStore {
 
     fun readCredentials(): PasscodeCredentials?
 
+    /** @throws IllegalStateException if the credentials did not reach the disk. */
     fun writeCredentials(credentials: PasscodeCredentials)
 
+    /** @throws IllegalStateException if the credentials are still on the disk afterwards. */
     fun clearCredentials()
 
     fun readLockout(): PasscodeLockoutState
@@ -70,20 +72,24 @@ constructor(private val prefs: SharedPreferences) : PasscodeStore {
     }
 
     override fun writeCredentials(credentials: PasscodeCredentials) {
-        // commit, not apply: setPasscode durably seals every keyshare under this key straight
-        // afterwards, so an apply() lost to a process kill leaves ciphertext with no wrap.
-        prefs.edit(commit = true) {
-            putString(KEY_SALT, encode(credentials.salt))
-            putString(KEY_WRAPPED_KEY, encode(credentials.wrappedDataKey))
-        }
+        // commit, not apply, and the result is checked: setPasscode durably seals every keyshare
+        // under this key straight afterwards, so a write that was only queued — or refused
+        // outright — leaves ciphertext with no key. androidx's edit(commit = true) discards
+        // commit()'s result.
+        val committed =
+            prefs
+                .edit()
+                .putString(KEY_SALT, encode(credentials.salt))
+                .putString(KEY_WRAPPED_KEY, encode(credentials.wrappedDataKey))
+                .commit()
+        check(committed) { "Passcode credentials were not written to disk" }
     }
 
     override fun clearCredentials() {
-        // Committed too: a lost clear brings back a passcode the user removed.
-        prefs.edit(commit = true) {
-            remove(KEY_SALT)
-            remove(KEY_WRAPPED_KEY)
-        }
+        // Checked for the same reason: a clear that did not land brings back a passcode the user
+        // removed.
+        val committed = prefs.edit().remove(KEY_SALT).remove(KEY_WRAPPED_KEY).commit()
+        check(committed) { "Passcode credentials were not removed from disk" }
     }
 
     override fun readLockout(): PasscodeLockoutState =

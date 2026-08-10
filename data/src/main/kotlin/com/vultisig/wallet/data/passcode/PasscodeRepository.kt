@@ -355,7 +355,16 @@ internal class PasscodeRepositoryImpl(
             verifyLocked(currentPasscode) { key ->
                 // The data key is unchanged, so stored keyshares stay valid: only the wrap is
                 // rewritten. This is why changing the passcode is instant on a large vault set.
-                persistWrappedKey(key, newPasscode)
+                //
+                // Nothing has changed yet at this point, so a wrap that never reached the disk
+                // simply leaves the old passcode in force.
+                val persisted = runCatching { persistWrappedKey(key, newPasscode) }
+                persisted.exceptionOrNull()?.let { cause ->
+                    if (cause is CancellationException) throw cause
+                    Timber.e(cause, "Failed to store the new passcode")
+                    key.fill(0)
+                    return@verifyLocked PasscodeUnlockResult.Failed
+                }
                 swapDataKey(key)
                 publishUnlockedUnlessLocked()
                 PasscodeUnlockResult.Success
@@ -382,11 +391,26 @@ internal class PasscodeRepositoryImpl(
                 // One unit, uncancellable. Stopping between the two leaves the key live and the
                 // state Unlocked with no wrap on disk: every keyshare written afterwards would be
                 // sealed under a key the next launch has no way to recover.
-                withContext(NonCancellable) {
-                    withContext(dispatcher) { store.clearCredentials() }
-                    swapDataKey(null)
+                //
+                // A clear that never reached the disk throws before any of this, so the passcode
+                // is still in place — over shares unprotectAll has already put back in the clear,
+                // which the next unlock re-encrypts.
+                val cleared = runCatching {
+                    withContext(NonCancellable) {
+                        withContext(dispatcher) { store.clearCredentials() }
+                        swapDataKey(null)
+                        key.fill(0)
+                        _state.value = PasscodeState.Disabled
+                    }
+                }
+                cleared.exceptionOrNull()?.let { cause ->
+                    if (cause is CancellationException) throw cause
+                    Timber.e(
+                        cause,
+                        "Refusing to disable the passcode: the credentials are still there",
+                    )
                     key.fill(0)
-                    _state.value = PasscodeState.Disabled
+                    return@verifyLocked PasscodeUnlockResult.Failed
                 }
                 PasscodeUnlockResult.Success
             }

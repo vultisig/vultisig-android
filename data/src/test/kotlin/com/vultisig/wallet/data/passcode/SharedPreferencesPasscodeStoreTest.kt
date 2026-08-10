@@ -8,6 +8,7 @@ import io.mockk.verify
 import java.util.Base64
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import org.junit.jupiter.api.BeforeEach
@@ -27,6 +28,7 @@ internal class SharedPreferencesPasscodeStoreTest {
         every { prefs.edit() } returns editor
         every { editor.remove(any()) } returns editor
         every { editor.putString(any(), any()) } returns editor
+        every { editor.commit() } returns true
         store = SharedPreferencesPasscodeStore(prefs)
     }
 
@@ -124,6 +126,24 @@ internal class SharedPreferencesPasscodeStoreTest {
         verify { editor.remove(KEY_WRAPPED_KEY) }
         verify { editor.commit() }
         verify(exactly = 0) { editor.apply() }
+    }
+
+    @Test
+    fun `a write the disk refused is reported, not passed off as stored`() {
+        every { editor.commit() } returns false
+
+        assertFailsWith<IllegalStateException> {
+            store.writeCredentials(
+                PasscodeCredentials(salt = ByteArray(16), wrappedDataKey = ByteArray(60))
+            )
+        }
+    }
+
+    @Test
+    fun `a clear the disk refused is reported, not passed off as removed`() {
+        every { editor.commit() } returns false
+
+        assertFailsWith<IllegalStateException> { store.clearCredentials() }
     }
 
     /**
