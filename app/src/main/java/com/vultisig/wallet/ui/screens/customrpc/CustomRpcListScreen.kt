@@ -105,14 +105,14 @@ private fun CustomRpcChainTile(chain: CustomRpcChainUiModel, onClick: () -> Unit
             modifier =
                 Modifier.fillMaxWidth()
                     .aspectRatio(1f)
-                    .clip(RoundedCornerShape(24.dp))
+                    .clip(Theme.v2.radius.xl)
                     .background(Theme.v2.colors.backgrounds.surface1)
                     .then(
                         if (chain.isCustom)
                             Modifier.border(
                                 width = 1.5.dp,
                                 color = Theme.v2.colors.border.light,
-                                shape = RoundedCornerShape(24.dp),
+                                shape = Theme.v2.radius.xl,
                             )
                         else Modifier
                     ),
@@ -127,7 +127,13 @@ private fun CustomRpcChainTile(chain: CustomRpcChainUiModel, onClick: () -> Unit
                 Box(
                     modifier =
                         Modifier.align(Alignment.BottomEnd)
-                            .clip(RoundedCornerShape(topStart = 16.dp, bottomEnd = 24.dp))
+                            // bottomEnd traces the tile this badge is anchored into.
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = Theme.v2.radius.lg.size,
+                                    bottomEnd = Theme.v2.radius.xl.size,
+                                )
+                            )
                             .background(Theme.v2.colors.border.light)
                             .padding(8.dp)
                 ) {

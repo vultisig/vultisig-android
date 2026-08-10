@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,13 +21,13 @@ import com.vultisig.wallet.ui.theme.Theme
 fun SetupVaultHeader(logo: Int, title: String, subTitle: String) {
     Box(
         modifier =
-            Modifier.clip(shape = RoundedCornerShape(size = 16.dp))
+            Modifier.clip(shape = Theme.v2.radius.lg)
                 .background(color = Theme.v2.colors.border.light)
                 .padding(top = 1.dp)
     ) {
         Row(
             modifier =
-                Modifier.clip(shape = RoundedCornerShape(size = 16.dp))
+                Modifier.clip(shape = Theme.v2.radius.lg)
                     .background(color = Theme.v2.colors.backgrounds.secondary)
                     .padding(all = 8.dp),
             verticalAlignment = Alignment.CenterVertically,

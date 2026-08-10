@@ -20,14 +20,22 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.Radius
 
+/**
+ * Empty-state panel.
+ *
+ * Outer on the DeFi tab and nested inside the home screen's chain list, so one default cannot serve
+ * both: [radius] defaults to the container step and the nested call site passes a smaller one.
+ */
 @Composable
 internal fun NotEnabledContainer(
     title: String,
     content: String,
+    radius: Radius = Theme.v2.radius.xl,
     action: @Composable (() -> Unit)? = null,
 ) {
-    TopShineContainer {
+    TopShineContainer(radius = radius) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,

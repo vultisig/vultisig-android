@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.models.send.isContinueDisabled
+import com.vultisig.wallet.ui.models.send.isContinueLoading
 import com.vultisig.wallet.ui.models.send.isDstAddressEditable
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
@@ -137,7 +138,7 @@ internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
 }
 
 @Composable
-private fun SendFormScreen(
+internal fun SendFormScreen(
     state: SendFormUiModel,
     addressFieldState: TextFieldState,
     addressFocusRequester: FocusRequester,
@@ -228,7 +229,7 @@ private fun SendFormScreen(
             VsButton(
                 label = stringResource(R.string.send_continue_button),
                 state = if (isContinueDisabled) VsButtonState.Disabled else VsButtonState.Enabled,
-                isLoading = state.isLoading,
+                isLoading = state.isContinueLoading(),
                 onClick = {
                     if (!isContinueDisabled) {
                         focusManager.clearFocus()

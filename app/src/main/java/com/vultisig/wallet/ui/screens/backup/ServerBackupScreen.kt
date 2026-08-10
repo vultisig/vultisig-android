@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
@@ -57,6 +56,7 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.V2
 import com.vultisig.wallet.ui.utils.asString
 
 /**
@@ -164,7 +164,7 @@ private fun ServerBackupScreen(
     }
 }
 
-private val SectionShape = RoundedCornerShape(12.dp)
+private val SectionShape = V2.radius.md
 
 private fun Modifier.sectionCard(): Modifier = composed {
     this.fillMaxWidth()

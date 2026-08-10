@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicSecureTextField
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -471,7 +470,7 @@ internal fun FormCard(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = Theme.v2.colors.backgrounds.secondary),
-        shape = RoundedCornerShape(10.dp),
+        shape = Theme.v2.radius.md,
         content = content,
     )
 }

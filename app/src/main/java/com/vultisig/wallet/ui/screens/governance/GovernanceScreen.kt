@@ -91,9 +91,9 @@ private fun ProposalCard(proposal: ProposalUi, onVoteClick: () -> Unit) {
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.surface1)
-                .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(20.dp))
+                .border(1.dp, Theme.v2.colors.border.normal, Theme.v2.radius.xl)
                 .padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -179,7 +179,7 @@ private fun StatusPill(status: ProposalStatus) {
     val color = status.statusColor()
     Row(
         modifier =
-            Modifier.clip(RoundedCornerShape(8.dp))
+            Modifier.clip(Theme.v2.radius.sm)
                 .background(color.copy(alpha = 0.12f))
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -194,6 +194,11 @@ private fun StatusPill(status: ProposalStatus) {
     }
 }
 
+// Both states of this bar are off the scale, and they disagree with each other: the empty bar
+// rounds
+// at 5 and the voted segments at 3, so the corner visibly changes the moment the first vote lands.
+// Left as found — reconciling them is a design call about how a segmented bar should read, not a
+// rename — but recorded here so the next sweep does not have to rediscover it.
 @Composable
 private fun TallyBar(tally: TallyUi, modifier: Modifier = Modifier) {
     if (!tally.hasVotes) {
@@ -291,7 +296,7 @@ private fun YourVoteBadge(option: VoteOption) {
     val color = option.voteColor()
     Row(
         modifier =
-            Modifier.clip(RoundedCornerShape(10.dp))
+            Modifier.clip(Theme.v2.radius.sm)
                 .background(color.copy(alpha = 0.12f))
                 .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -369,9 +374,9 @@ private fun VoteOptionRow(
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .background(background)
-                .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+                .border(1.dp, borderColor, Theme.v2.radius.md)
                 .clickable(enabled = enabled, onClick = onClick)
                 .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -397,9 +402,9 @@ private fun ProposalSkeletonCard() {
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.surface1)
-                .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(20.dp))
+                .border(1.dp, Theme.v2.colors.border.normal, Theme.v2.radius.xl)
                 .padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {

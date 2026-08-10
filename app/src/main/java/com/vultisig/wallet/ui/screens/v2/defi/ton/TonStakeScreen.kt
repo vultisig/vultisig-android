@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -139,11 +138,11 @@ private fun TonPoolPickerField(selected: TonPoolUiModel?, onClick: () -> Unit) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .clickable(onClick = onClick)
                 .padding(horizontal = 16.dp, vertical = 16.dp),
@@ -214,12 +213,12 @@ private fun TonPoolPickerSheet(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier =
                     Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(99.dp))
+                        .clip(Theme.v2.radius.pill)
                         .background(Theme.v2.colors.backgrounds.surface1)
                         .border(
                             width = 1.dp,
                             color = Theme.v2.colors.border.light,
-                            shape = RoundedCornerShape(99.dp),
+                            shape = Theme.v2.radius.pill,
                         )
                         .padding(horizontal = 12.dp, vertical = 12.dp),
             ) {
@@ -312,7 +311,9 @@ private fun TonPoolRow(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(16.dp)
+    // Rows in a picker list, not cards on a page: they keep the inner step rather than
+    // taking the container one. Figma measures this row at 16 specifically.
+    val shape = Theme.v2.radius.lg
     Row(
         modifier =
             Modifier.fillMaxWidth()

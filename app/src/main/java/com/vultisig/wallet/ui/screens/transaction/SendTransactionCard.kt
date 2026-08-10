@@ -172,7 +172,7 @@ private fun DappSummaryText(summary: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun SendAddressPill(address: String, modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(100.dp)
+    val shape = Theme.v2.radius.pill
     Text(
         text =
             buildAnnotatedString {
@@ -194,8 +194,15 @@ private fun SendAddressPill(address: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun SendProviderChip(provider: String, modifier: Modifier = Modifier) {
+    // Anchored to the card's bottom-end corner: the outer corner traces the card, so it reads the
+    // card's token rather than a number that happened to match it.
     val shape =
-        RoundedCornerShape(topStart = 12.dp, topEnd = 0.dp, bottomEnd = 16.dp, bottomStart = 0.dp)
+        RoundedCornerShape(
+            topStart = Theme.v2.radius.md.size,
+            topEnd = 0.dp,
+            bottomEnd = Theme.v2.radius.xl.size,
+            bottomStart = 0.dp,
+        )
     Text(
         text =
             buildAnnotatedString {

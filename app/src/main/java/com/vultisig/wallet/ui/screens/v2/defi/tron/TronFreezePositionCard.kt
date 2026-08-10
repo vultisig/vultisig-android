@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -103,9 +102,9 @@ internal fun TronFreezePositionCard(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(Theme.v2.radius.xl)
                 .background(Theme.v2.colors.backgrounds.secondary)
-                .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(16.dp))
+                .border(1.dp, Theme.v2.colors.border.light, Theme.v2.radius.xl)
                 .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -237,7 +236,7 @@ private fun TronFreezeActionButton(
                 disabledContentColor = contentColor.copy(alpha = 0.5f),
             ),
         border = resolvedBorder,
-        shape = RoundedCornerShape(50),
+        shape = Theme.v2.radius.pill,
         contentPadding = PaddingValues(start = 4.dp, top = 6.dp, end = 16.dp, bottom = 6.dp),
         modifier = modifier.height(46.dp).tronFreezeButtonBevel(enabled = enabled),
     ) {
@@ -246,7 +245,7 @@ private fun TronFreezeActionButton(
                 Modifier.size(34.dp)
                     .background(
                         if (enabled) iconCircleColor else iconCircleColor.copy(alpha = 0.5f),
-                        RoundedCornerShape(50),
+                        Theme.v2.radius.pill,
                     ),
             contentAlignment = Alignment.Center,
         ) {

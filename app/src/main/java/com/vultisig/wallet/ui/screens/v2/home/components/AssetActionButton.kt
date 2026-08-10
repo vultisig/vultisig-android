@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -78,11 +77,11 @@ fun AssetActionButton(
         Box(
             modifier =
                 Modifier.size(size = IconBoxSize)
-                    .clip(shape = RoundedCornerShape(16.dp))
+                    .clip(shape = Theme.v2.radius.lg)
                     .border(
                         width = 1.dp,
                         color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.03f),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = Theme.v2.radius.lg,
                     )
                     .background(backgroundColor),
             contentAlignment = Alignment.Center,

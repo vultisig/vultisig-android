@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -167,7 +166,7 @@ internal fun VaultNotificationOptInBottomSheetContent(
                 modifier =
                     Modifier.background(
                         color = Theme.v2.colors.variables.backgroundsSurface12,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = Theme.v2.radius.md,
                     )
             ) {
                 Row(
@@ -202,11 +201,11 @@ internal fun VaultNotificationOptInBottomSheetContent(
                                 Modifier.border(
                                         width = 1.dp,
                                         color = Theme.v2.colors.variables.bordersLight,
-                                        shape = RoundedCornerShape(size = 99.dp),
+                                        shape = Theme.v2.radius.pill,
                                     )
                                     .background(
                                         color = Theme.v2.colors.variables.backgroundsSurface12,
-                                        shape = RoundedCornerShape(size = 99.dp),
+                                        shape = Theme.v2.radius.pill,
                                     )
                                     .padding(12.dp),
                         )

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -34,11 +33,11 @@ internal fun SignMessageCard(
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.xl,
                 )
                 .background(
                     color = Theme.v2.colors.backgrounds.disabled,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.xl,
                 )
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),

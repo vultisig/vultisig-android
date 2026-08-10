@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -27,11 +26,13 @@ internal fun FollowXBanner(onFollowXClick: () -> Unit) {
     Box(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                // Rendered inside HomePagePagerContainer, whose clip is drawn on this exact
+                // rect — so this reads the same token rather than its own number.
+                .clip(Theme.v2.radius.xl)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = Theme.v2.radius.xl,
                 )
     ) {
         SetBackgroundBanner(backgroundImageResId = R.drawable.follow_banner)

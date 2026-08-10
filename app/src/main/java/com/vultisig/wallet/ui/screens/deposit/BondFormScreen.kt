@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -70,6 +69,7 @@ import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
 import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
+import com.vultisig.wallet.ui.theme.v2.V2
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -238,8 +238,8 @@ internal fun BondFormContent(
     }
 }
 
-private val cardShape = RoundedCornerShape(12.dp)
-private val inputShape = RoundedCornerShape(12.dp)
+private val cardShape = V2.radius.xl
+private val inputShape = V2.radius.md
 
 private fun String.toDisplayAsset(): String =
     substringBefore("-").substringAfterLast("/").substringAfterLast(".")
@@ -433,7 +433,7 @@ private fun MayaBondFormContent(
                                         }
                                         .background(
                                             color = Theme.v2.colors.backgrounds.surface1,
-                                            shape = RoundedCornerShape(99.dp),
+                                            shape = Theme.v2.radius.pill,
                                         )
                                         .padding(
                                             start = 6.dp,
@@ -492,7 +492,7 @@ private fun MayaBondFormContent(
                                                     .background(
                                                         color =
                                                             Theme.v2.colors.backgrounds.secondary,
-                                                        shape = RoundedCornerShape(99.dp),
+                                                        shape = Theme.v2.radius.pill,
                                                     )
                                                     .padding(
                                                         start = 6.dp,

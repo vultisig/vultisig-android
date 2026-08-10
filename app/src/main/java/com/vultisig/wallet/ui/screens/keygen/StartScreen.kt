@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -246,7 +245,7 @@ private fun ChooseImportTypeButton(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(shape = RoundedCornerShape(size = 16.dp))
+                .clip(shape = Theme.v2.radius.xl)
                 .clickable(onClick = onClick)
                 .background(color = Theme.v2.colors.backgrounds.tertiary)
                 .padding(all = 24.dp)

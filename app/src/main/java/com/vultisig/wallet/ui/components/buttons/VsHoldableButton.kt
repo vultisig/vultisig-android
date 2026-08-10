@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -85,9 +84,9 @@ fun VsHoldableButton(
                     onClick = onClick,
                     onLongClick = onLongClick,
                 )
-                .background(backgroundColor, RoundedCornerShape(percent = 100))
+                .background(backgroundColor, Theme.v2.radius.pill)
     ) {
-        Box(modifier = Modifier.matchParentSize().clip(RoundedCornerShape(percent = 100))) {
+        Box(modifier = Modifier.matchParentSize().clip(Theme.v2.radius.pill)) {
             Box(
                 modifier =
                     Modifier.fillMaxHeight().fillMaxWidth(progress.value).background(fillColor)

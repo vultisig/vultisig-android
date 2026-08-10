@@ -33,6 +33,17 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.theme.Theme
 
+/**
+ * The top corners of the app's bottom sheets.
+ *
+ * Deliberately off the radius scale, and the one shape the scale does not name: `Radii` stops at 24
+ * because the sheet frames in the design file are stock design-kit components (Apple's 38, Material
+ * 3's 28) rather than authored Vultisig surfaces, so there is no sheet step to reference. It is
+ * hoisted here rather than restated per sheet because it was already spelled out three times in
+ * this package alone — that is the drift the scale exists to stop, token or no token.
+ */
+internal val V2SheetShape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun V2BottomSheet(
@@ -57,7 +68,7 @@ fun V2BottomSheet(
                 Column(
                     modifier =
                         Modifier.fillMaxWidth()
-                            .clip(shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
+                            .clip(shape = V2SheetShape)
                             .background(Theme.v2.colors.backgrounds.primary)
                             .padding(all = 16.dp)
                 ) {
@@ -95,10 +106,7 @@ fun V2BottomSheet(
         containerColor = Color.Transparent,
         shape = RectangleShape,
         content = {
-            Box(
-                modifier =
-                    Modifier.clip(shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
-            ) {
+            Box(modifier = Modifier.clip(shape = V2SheetShape)) {
                 Box(
                     modifier =
                         Modifier.fillMaxWidth().background(Theme.v2.colors.backgrounds.primary),

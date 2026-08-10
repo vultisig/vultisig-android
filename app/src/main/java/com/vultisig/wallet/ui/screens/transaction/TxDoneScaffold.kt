@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -298,12 +297,12 @@ private fun SuccessTransaction(
             modifier =
                 Modifier.background(
                         color = Theme.v2.colors.backgrounds.disabled,
-                        shape = RoundedCornerShape(16.dp),
+                        shape = Theme.v2.radius.xl,
                     )
                     .border(
                         width = 1.dp,
                         color = Theme.v2.colors.border.light,
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                        shape = Theme.v2.radius.xl,
                     )
                     .padding(horizontal = 24.dp, vertical = 8.dp)
         ) {
@@ -415,7 +414,7 @@ private fun SuccessTransactionPreview() {
                 VsOverviewToken(
                     header = "token header",
                     valuedToken = ValuedToken.Empty,
-                    shape = RoundedCornerShape(24.dp),
+                    shape = Theme.v2.radius.xl,
                     modifier = Modifier.fillMaxWidth(),
                 )
             },

@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
@@ -97,6 +98,7 @@ import com.vultisig.wallet.ui.models.TokenInfoUiModel
 import com.vultisig.wallet.ui.models.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.TokenUiModel
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
+import com.vultisig.wallet.ui.models.TransactionHistoryGroupUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryTab
 import com.vultisig.wallet.ui.models.TransactionHistoryUiState
@@ -138,7 +140,9 @@ import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimMaturingUtxoUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
+import com.vultisig.wallet.ui.models.send.AmountFraction
 import com.vultisig.wallet.ui.models.send.GasSettingsUiModel
+import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.LimitExpiryOption
@@ -183,6 +187,7 @@ import com.vultisig.wallet.ui.screens.select.AssetUiModel
 import com.vultisig.wallet.ui.screens.select.SelectAssetScreen
 import com.vultisig.wallet.ui.screens.select.SelectAssetUiModel
 import com.vultisig.wallet.ui.screens.send.GasSettingsScreen
+import com.vultisig.wallet.ui.screens.send.SendFormScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
@@ -210,6 +215,7 @@ import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
 import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
@@ -307,7 +313,9 @@ class PreviewActivity : ComponentActivity() {
                     "deposit_mint_done" -> DepositMintDonePreview()
                     "transaction_history_empty" -> TransactionHistoryEmptyState()
                     "limit_orders_tab" -> LimitOrdersTabPreview()
+                    "swaps_tab" -> SwapsTabPreview()
                     "limit_order_cancel_verify" -> LimitOrderCancelVerifyPreview()
+                    "withdraw_usdc_circle" -> WithdrawUsdcCirclePreview()
                     "limit_order_cancel_done" -> LimitOrderCancelDonePreview()
                     "limit_orders_tab_empty" -> LimitOrdersTabPreview(orders = emptyList())
                     "empty_referral" -> EmptyReferralBanner(onClickedCreateReferral = {})
@@ -1263,7 +1271,7 @@ private fun SolanaDisplayPreview() {
                 .fillMaxSize()
                 .background(
                     color = Theme.v2.colors.variables.bordersLight,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -1313,10 +1321,7 @@ private fun SolanaInstructionMock(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .background(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Theme.v2.colors.backgrounds.dark,
-                )
+                .background(shape = Theme.v2.radius.sm, color = Theme.v2.colors.backgrounds.dark)
                 .padding(6.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -1666,7 +1671,7 @@ private fun DeFiAccountListPreview() {
             modifier =
                 Modifier.background(
                     color = Theme.v2.colors.backgrounds.secondary,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
         ) {
             AccountList(
@@ -3753,6 +3758,80 @@ private fun LimitOrdersTabPreview(orders: List<LimitOrderHistoryUiModel> = previ
     )
 }
 
+/**
+ * The Swaps tab of TX History. Exists so the "via" badge is verifiable: it is anchored to the
+ * card's bottom-end corner and traces it, so a card radius change has to be looked at here.
+ */
+@Composable
+private fun SwapsTabPreview() {
+    TransactionHistoryScreen(
+        state =
+            TransactionHistoryUiState(
+                selectedTab = TransactionHistoryTab.SWAP,
+                isLoading = false,
+                groups =
+                    listOf(
+                        TransactionHistoryGroupUiModel(
+                            datePrefix = UiText.DynamicString("Today"),
+                            dateSuffix = UiText.DynamicString(""),
+                            dateKey = "today",
+                            transactions =
+                                listOf(
+                                    TransactionHistoryItemUiModel.Swap(
+                                        id = "S1",
+                                        txHash = "0xabc",
+                                        chain = "THORChain",
+                                        status = TransactionStatusUiModel.Confirmed,
+                                        explorerUrl = "",
+                                        timestamp = 0L,
+                                        fromToken = "RUNE",
+                                        fromAmount = "125.5",
+                                        fromChain = "THORChain",
+                                        fromTokenLogo = R.drawable.rune,
+                                        toToken = "BTC",
+                                        toAmount = "0.0261",
+                                        toChain = "Bitcoin",
+                                        toTokenLogo = R.drawable.bitcoin,
+                                        provider = "THORChain",
+                                        providerLogo = R.drawable.rune,
+                                        fiatValue = "$1,204.00",
+                                        fromAddress = "thor1abc",
+                                        toAddress = "bc1qxyz",
+                                        feeEstimate = "$0.42",
+                                    ),
+                                    TransactionHistoryItemUiModel.Swap(
+                                        id = "S2",
+                                        txHash = "0xdef",
+                                        chain = "Ethereum",
+                                        status = TransactionStatusUiModel.Broadcasted,
+                                        explorerUrl = "",
+                                        timestamp = 0L,
+                                        fromToken = "ETH",
+                                        fromAmount = "0.5",
+                                        fromChain = "Ethereum",
+                                        fromTokenLogo = R.drawable.ethereum,
+                                        toToken = "USDC",
+                                        toAmount = "1,610.20",
+                                        toChain = "Ethereum",
+                                        toTokenLogo = R.drawable.usdc,
+                                        provider = "1inch",
+                                        providerLogo = null,
+                                        fiatValue = "$1,610.20",
+                                        fromAddress = "0xAb...234",
+                                        toAddress = "0xAb...234",
+                                        feeEstimate = "$1.10",
+                                    ),
+                                ),
+                        )
+                    ),
+            ),
+        onBack = {},
+        onTabSelected = {},
+        onRefresh = {},
+        onItemClick = {},
+    )
+}
+
 private val previewLimitOrders =
     listOf(
         LimitOrderHistoryUiModel(
@@ -3829,5 +3908,63 @@ private fun LimitOrderCancelDonePreview() {
         onUriClick = {},
         transactionTypeUiModel = TransactionTypeUiModel.Deposit(previewCancelDeposit),
         showToolbar = true,
+    )
+}
+
+/** The Circle USDC withdraw form, with a percentage picked and its fee recompute still running. */
+@Composable
+private fun WithdrawUsdcCirclePreview() {
+    val usdc = Coins.Ethereum.USDC
+    val account = Account(token = usdc, tokenValue = null, fiatValue = null, price = null)
+    SendFormScreen(
+        state =
+            SendFormUiModel(
+                defiType = DeFiNavActions.WITHDRAW_USDC_CIRCLE,
+                fiatCurrency = "USD",
+                selectedCoin =
+                    TokenBalanceUiModel(
+                        model =
+                            SendSrc(
+                                address =
+                                    Address(
+                                        chain = Chain.Ethereum,
+                                        address = "0x14F6Ed6b2b1d05C1F7Fd0Eb46E9C61a19c89B6",
+                                        accounts = listOf(account),
+                                    ),
+                                account = account,
+                            ),
+                        title = "USDC",
+                        balance = "0.701331",
+                        fiatValue = "$0.70",
+                        isNativeToken = false,
+                        isLayer2 = false,
+                        tokenStandard = "ERC20",
+                        tokenLogo = usdc.logo,
+                        chainLogo = Chain.Ethereum.logo,
+                    ),
+                selectedAmountFraction = AmountFraction.F50,
+                hasAmountInput = true,
+                isGasFeeLoading = true,
+            ),
+        addressFieldState = rememberTextFieldState(),
+        addressFocusRequester = remember { FocusRequester() },
+        amountFocusRequester = remember { FocusRequester() },
+        tokenAmountFieldState = rememberTextFieldState("0.350665"),
+        fiatAmountFieldState = rememberTextFieldState(),
+        memoFieldState = rememberTextFieldState(),
+        destinationTagFieldState = rememberTextFieldState(),
+        onNetworkDragStart = {},
+        onNetworkDrag = {},
+        onNetworkDragEnd = {},
+        onNetworkDragCancel = {},
+        onNetworkLongPressStarted = {},
+        onAssetDragStart = {},
+        onAssetDrag = {},
+        onAssetDragEnd = {},
+        onAssetDragCancel = {},
+        onAssetLongPressStarted = {},
+        operatorFeeFieldState = rememberTextFieldState(),
+        providerFieldState = rememberTextFieldState(),
+        slippageFieldState = rememberTextFieldState(),
     )
 }

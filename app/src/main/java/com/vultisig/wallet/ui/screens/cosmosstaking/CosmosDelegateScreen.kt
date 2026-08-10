@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -167,11 +166,11 @@ internal fun StakingAmountCard(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -216,7 +215,7 @@ internal fun BalanceAvailableRow(ticker: String, available: BigDecimal) {
             Modifier.fillMaxWidth()
                 .background(
                     color = Theme.v2.colors.backgrounds.secondary,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(all = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -246,11 +245,11 @@ internal fun ValidatorPickerField(selected: CosmosValidator?, onClick: () -> Uni
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .clickable(onClick = onClick)
                 .padding(horizontal = 16.dp, vertical = 16.dp),
@@ -355,12 +354,12 @@ internal fun ValidatorPickerSheet(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier =
                     Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(99.dp))
+                        .clip(Theme.v2.radius.pill)
                         .background(Theme.v2.colors.backgrounds.surface1)
                         .border(
                             width = 1.dp,
                             color = Theme.v2.colors.border.light,
-                            shape = RoundedCornerShape(99.dp),
+                            shape = Theme.v2.radius.pill,
                         )
                         .padding(horizontal = 12.dp, vertical = 12.dp),
             ) {
@@ -500,7 +499,10 @@ private fun ValidatorPickerRow(
         }
     // Figma (node 75918:75259 / 75918:75266): spaced rounded-16 cards on surface-1. The selected
     // card carries a success-tinted fill + border; unselected cards are borderless.
-    val shape = RoundedCornerShape(16.dp)
+    //
+    // Rows in a picker list, not cards on a page, so they keep the inner step rather than taking
+    // the container one — and the design file names 16 for this row specifically.
+    val shape = Theme.v2.radius.lg
     Row(
         modifier =
             Modifier.fillMaxWidth()

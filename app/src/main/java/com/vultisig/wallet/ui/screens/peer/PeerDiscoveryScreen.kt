@@ -365,7 +365,7 @@ internal fun PeerDiscoveryScreen(
 @Composable
 private fun ResendNotificationButton(remainingSeconds: Int, onClick: () -> Unit) {
     val isEnabled = remainingSeconds == 0
-    val shape = RoundedCornerShape(12.dp)
+    val shape = Theme.v2.radius.md
     val contentColor = if (isEnabled) Theme.v2.colors.alerts.info else Theme.v2.colors.text.tertiary
     val bgColor =
         if (isEnabled) Theme.v2.colors.backgrounds.disabled
@@ -465,6 +465,9 @@ private fun QrCodeContainer(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Off the scale by construction, not by drift: these two trace a frame drawn around the QR
+    // bitmap, so the inner corner has to sit a fixed inset inside the outer one. Rounding either to
+    // a step would break the concentricity the frame depends on.
     val outerShape = RoundedCornerShape(24.75.dp)
     val innerShape = RoundedCornerShape(18.56.dp)
 
@@ -624,7 +627,7 @@ private fun DevicePeerCard(
     selected: Boolean = true,
     onClick: (() -> Unit)? = null,
 ) {
-    val shape = RoundedCornerShape(24.dp)
+    val shape = Theme.v2.radius.xl
     val accentColor = if (selected) Theme.v2.colors.alerts.success else Theme.v2.colors.border.light
 
     Row(
@@ -686,7 +689,7 @@ private fun DeviceCountBadge(index: Int, maxLabel: String) {
         modifier =
             Modifier.background(
                     color = Theme.v2.colors.backgrounds.tertiary_2,
-                    shape = RoundedCornerShape(99.dp),
+                    shape = Theme.v2.radius.pill,
                 )
                 .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
@@ -767,7 +770,7 @@ private fun ExpandedQrOverlay(qrCode: BitmapPainter, onDismiss: () -> Unit) {
 
 @Composable
 private fun LocalModeHint() {
-    val shape = RoundedCornerShape(12.dp)
+    val shape = Theme.v2.radius.md
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
