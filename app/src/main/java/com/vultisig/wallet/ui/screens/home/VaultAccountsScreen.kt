@@ -328,7 +328,12 @@ internal fun VaultAccountsScreen(
                                         title =
                                             stringResource(R.string.home_page_no_chains_enabled),
                                         content =
-                                            stringResource(R.string.home_page_no_chain_enabled_desc),
+                                            stringResource(
+                                                R.string.home_page_no_chain_enabled_desc
+                                            ),
+                                        // Rendered inside the chain-list container above, so it
+                                        // steps down rather than matching it.
+                                        radius = Theme.v2.radius.md,
                                     )
                                 } else {
                                     AccountList(

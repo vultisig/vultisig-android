@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -136,7 +135,7 @@ internal fun VerifyDepositScreen(
                     modifier =
                         Modifier.background(
                                 color = Theme.v2.colors.backgrounds.secondary,
-                                shape = RoundedCornerShape(16.dp),
+                                shape = Theme.v2.radius.xl,
                             )
                             .padding(all = 24.dp)
                 ) {

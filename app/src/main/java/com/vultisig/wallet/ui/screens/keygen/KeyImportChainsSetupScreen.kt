@@ -338,6 +338,14 @@ private fun CustomizeChainsContent(
     }
 }
 
+/**
+ * Deliberately off the radius scale.
+ *
+ * The 20 below is a Figma value for this row specifically, and it is equidistant from `lg` and `xl`
+ * — no reading of the scale picks one over the other, so snapping it would be a guess rather than a
+ * standardisation. iOS reached the same conclusion for the same row. Left for a designer call
+ * rather than re-derived by the next sweep.
+ */
 @Composable
 private fun ActiveChainItem(chain: Chain) {
     Row(

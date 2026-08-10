@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.components.v2.containers
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -13,16 +12,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.Radius
 
+/**
+ * A card with a shine along its top edge.
+ *
+ * [radius] follows the same rule as [V2Container]: the container step by default, an explicitly
+ * smaller one where a call site renders this inside another container — the home screen nests one
+ * of these inside another via [NotEnabledContainer].
+ */
 @Composable
 internal fun TopShineContainer(
     modifier: Modifier = Modifier,
     backgroundColor: Color = Theme.v2.colors.backgrounds.secondary,
+    radius: Radius = Theme.v2.radius.xl,
     content: @Composable () -> Unit,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(size = 12.dp),
+        shape = radius,
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
     ) {
         FadingHorizontalDivider()

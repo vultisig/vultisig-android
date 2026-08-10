@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +33,7 @@ import com.vultisig.wallet.ui.models.passcode.PasscodeLockError
 import com.vultisig.wallet.ui.models.passcode.PasscodeLockUiModel
 import com.vultisig.wallet.ui.models.passcode.PasscodeLockViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.V2
 
 /** Full-screen gate shown whenever the app is locked behind a passcode. */
 @Composable
@@ -153,7 +153,7 @@ private val GLOW_RING_WIDTH = 1.dp
 
 /** Figma seats the content block this far above the frame's vertical midpoint. */
 private val FIGMA_CENTRE_OFFSET = 28.dp
-private val CardShape = RoundedCornerShape(12.dp)
+private val CardShape = V2.radius.xl
 
 /** Figma tints the card with 10% of the normal border blue; there is no background token for it. */
 private val CardBackground = Color(0xFF1B3F73).copy(alpha = 0.1f)

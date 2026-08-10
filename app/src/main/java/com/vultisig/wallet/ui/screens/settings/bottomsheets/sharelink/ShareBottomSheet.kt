@@ -99,6 +99,8 @@ private fun ShareLinkContent(
             modifier = Modifier.padding(horizontal = 20.dp),
             type = ContainerType.SECONDARY,
             borderType = ContainerBorderType.Bordered(),
+            // A read-only link with a copy button — the row a user acts on, not a card on a page.
+            radius = Theme.v2.radius.md,
         ) {
             Row(
                 modifier = Modifier.padding(16.dp),
