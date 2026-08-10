@@ -9,12 +9,14 @@ import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns.DISPLAY_NAME
+import android.provider.OpenableColumns.SIZE
 import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
 import com.vultisig.wallet.data.usecases.backup.FILE_ALLOWED_EXTENSIONS
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.InputStream
 import java.io.OutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -31,6 +33,16 @@ import timber.log.Timber
 private const val DIRECTORY_NAME = "Vultisig"
 private const val QRCODE_DIRECTORY_NAME = "QRCodes"
 const val QRCODE_DIRECTORY_NAME_FULL = "$DIRECTORY_NAME/$QRCODE_DIRECTORY_NAME"
+
+/**
+ * Upper bound for importable backup content, in bytes.
+ *
+ * A vault backup (`.vult`/`.bak`/`.dat`, or a single entry of a `.zip` backup) is tens of KB, so 5
+ * MB is roughly two orders of magnitude of headroom. The file picker accepts any URI the user
+ * selects and the extension gate bounds nothing, so without this cap a large (or maliciously
+ * crafted) file is read wholesale into the heap and kills the process with an [OutOfMemoryError].
+ */
+internal const val MAX_IMPORT_FILE_SIZE_BYTES = 5L * 1024 * 1024
 
 suspend fun Context.saveContentToUri(uri: Uri, content: String) = doFileOperation {
     try {
@@ -149,15 +161,75 @@ suspend fun Context.provideFileUri(file: File): Uri = doFileOperation {
 
 suspend fun Uri.fileContent(context: Context): String? = doFileOperation {
     try {
+        val reportedSize = reportedSize(context)
+        if (reportedSize != null && reportedSize > MAX_IMPORT_FILE_SIZE_BYTES) {
+            Timber.w(
+                "Refusing to read file of %d bytes, limit is %d",
+                reportedSize,
+                MAX_IMPORT_FILE_SIZE_BYTES,
+            )
+            return@doFileOperation null
+        }
         context.contentResolver.openInputStream(this@fileContent)?.use { input ->
-            input.readBytes().toString(Charsets.UTF_8)
+            val bytes = input.readBounded(MAX_IMPORT_FILE_SIZE_BYTES)
+            if (bytes == null) {
+                Timber.w("Refusing to read file over the %d byte limit", MAX_IMPORT_FILE_SIZE_BYTES)
+                null
+            } else {
+                bytes.toString(Charsets.UTF_8)
+            }
         }
     } catch (e: CancellationException) {
         throw e
+    } catch (e: OutOfMemoryError) {
+        Timber.e(e, "out of memory in fileContent")
+        null
     } catch (e: Exception) {
         Timber.e(e, "error in fileContent")
         null
     }
+}
+
+/**
+ * Reads the size this URI's provider reports via [SIZE].
+ *
+ * @return the size in bytes, or `null` when the provider does not expose it — callers must still
+ *   bound the read itself, since the reported value is neither guaranteed nor trustworthy.
+ */
+private fun Uri.reportedSize(context: Context): Long? =
+    try {
+        context.contentResolver.query(this, arrayOf(SIZE), null, null, null)?.use { cursor ->
+            val sizeColumnIndex = cursor.getColumnIndex(SIZE)
+            if (sizeColumnIndex < 0 || !cursor.moveToFirst() || cursor.isNull(sizeColumnIndex)) {
+                null
+            } else {
+                cursor.getLong(sizeColumnIndex).takeIf { it >= 0 }
+            }
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.w(e, "unable to query size, falling back to a bounded read")
+        null
+    }
+
+/**
+ * Reads this stream fully while refusing to allocate more than [maxBytes].
+ *
+ * @return the bytes read, or `null` as soon as the stream is known to exceed [maxBytes].
+ */
+private fun InputStream.readBounded(maxBytes: Long): ByteArray? {
+    val buffer = ByteArrayOutputStream()
+    val chunk = ByteArray(DEFAULT_BUFFER_SIZE)
+    var total = 0L
+    while (true) {
+        val count = read(chunk)
+        if (count == -1) break
+        total += count
+        if (total > maxBytes) return null
+        buffer.write(chunk, 0, count)
+    }
+    return buffer.toByteArray()
 }
 
 suspend fun Uri.fileName(context: Context): String? = doFileOperation {
@@ -188,17 +260,26 @@ suspend fun Uri.processZip(context: Context): List<AppZipEntry> = doFileOperatio
                     val ext = File(entryName).extension.lowercase()
                     if (FILE_ALLOWED_EXTENSIONS.contains(ext)) {
                         try {
-                            val buffer = ByteArrayOutputStream()
-                            val data = ByteArray(8192)
-                            var count: Int
-                            while (zipInputStream.read(data).also { count = it } != -1) {
-                                buffer.write(data, 0, count)
+                            // The declared entry size in the zip header is untrusted, so bound
+                            // against the bytes actually decompressed.
+                            val bytes = zipInputStream.readBounded(MAX_IMPORT_FILE_SIZE_BYTES)
+                            if (bytes == null) {
+                                Timber.w(
+                                    "Skipping zip entry over the %d byte limit: %s",
+                                    MAX_IMPORT_FILE_SIZE_BYTES,
+                                    entryName,
+                                )
+                            } else {
+                                val fileContent = bytes.toString(Charsets.UTF_8)
+                                coroutineContext.ensureActive()
+                                entries.add(AppZipEntry(entryName, fileContent))
                             }
-                            val fileContent = buffer.toString(Charsets.UTF_8.name())
-                            coroutineContext.ensureActive()
-                            entries.add(AppZipEntry(entryName, fileContent))
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: OutOfMemoryError) {
+                            Timber.e(e, "Out of memory processing file: %s", entryName)
                         } catch (e: Exception) {
-                            Timber.e(e, "Error processing file: $entryName")
+                            Timber.e(e, "Error processing file: %s", entryName)
                         }
                     }
                 }
