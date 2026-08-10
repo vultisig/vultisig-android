@@ -285,8 +285,9 @@ internal suspend fun Bitmap.compressPng(stream: OutputStream) = doFileOperation 
     compress(Bitmap.CompressFormat.PNG, 100, stream)
 }
 
-suspend fun Uri.processZip(context: Context): List<AppZipEntry> = doFileOperation {
+suspend fun Uri.processZip(context: Context): AppZipContents = doFileOperation {
     val entries = mutableListOf<AppZipEntry>()
+    var isComplete = true
     try {
         context.contentResolver.openInputStream(this@processZip)?.use { inputStream ->
             ZipInputStream(inputStream).use { zipInputStream ->
@@ -300,50 +301,58 @@ suspend fun Uri.processZip(context: Context): List<AppZipEntry> = doFileOperatio
                             "Stopping, the archive holds more than %d entries",
                             MAX_IMPORT_ARCHIVE_ENTRIES,
                         )
+                        isComplete = false
                         break@entryLoop
                     }
-                    if (!zipEntry.isDirectory) {
-                        val entryName = zipEntry.name
-                        val ext = File(entryName).extension.lowercase()
-                        if (FILE_ALLOWED_EXTENSIONS.contains(ext)) {
-                            try {
-                                // The declared entry size in the zip header is untrusted, so bound
-                                // against the bytes actually decompressed.
-                                val bytes = zipInputStream.readBounded(MAX_IMPORT_FILE_SIZE_BYTES)
-                                if (bytes == null) {
-                                    Timber.w(
-                                        "Stopping at a zip entry over the %d byte limit: %s",
-                                        MAX_IMPORT_FILE_SIZE_BYTES,
-                                        entryName,
-                                    )
-                                    // Advancing to the next entry inflates whatever is left of this
-                                    // one, so leave the archive alone instead of paying that cost.
-                                    break@entryLoop
-                                }
-                                inflatedBytes += bytes.size
-                                if (inflatedBytes > MAX_IMPORT_ARCHIVE_CONTENT_BYTES) {
-                                    Timber.w(
-                                        "Stopping at %s, the archive exceeds the %d byte limit",
-                                        entryName,
-                                        MAX_IMPORT_ARCHIVE_CONTENT_BYTES,
-                                    )
-                                    break@entryLoop
-                                }
-                                val fileContent = bytes.toString(Charsets.UTF_8)
-                                coroutineContext.ensureActive()
-                                entries.add(AppZipEntry(entryName, fileContent))
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (e: OutOfMemoryError) {
-                                Timber.e(e, "Out of memory processing file: %s", entryName)
-                                // Advancing past a half-read entry inflates the rest of it, so stop
-                                // here rather than pay that cost after a failure.
-                                break@entryLoop
-                            } catch (e: Exception) {
-                                Timber.e(e, "Error processing file: %s", entryName)
+                    val entryName = zipEntry.name
+                    val ext = File(entryName).extension.lowercase()
+                    // isDirectory only inspects the name, so an entry named like a directory can
+                    // still carry a payload. Everything that is not read goes through the bounded
+                    // skip below instead of being left for nextEntry to inflate unbounded.
+                    if (!zipEntry.isDirectory && FILE_ALLOWED_EXTENSIONS.contains(ext)) {
+                        try {
+                            // The declared entry size in the zip header is untrusted, so bound
+                            // against the bytes actually decompressed.
+                            val bytes = zipInputStream.readBounded(MAX_IMPORT_FILE_SIZE_BYTES)
+                            if (bytes == null) {
+                                Timber.w(
+                                    "Stopping at a zip entry over the %d byte limit: %s",
+                                    MAX_IMPORT_FILE_SIZE_BYTES,
+                                    entryName,
+                                )
+                                // Advancing to the next entry inflates whatever is left of this
+                                // one, so leave the archive alone instead of paying that cost.
+                                isComplete = false
                                 break@entryLoop
                             }
-                        } else {
+                            inflatedBytes += bytes.size
+                            if (inflatedBytes > MAX_IMPORT_ARCHIVE_CONTENT_BYTES) {
+                                Timber.w(
+                                    "Stopping at %s, the archive exceeds the %d byte limit",
+                                    entryName,
+                                    MAX_IMPORT_ARCHIVE_CONTENT_BYTES,
+                                )
+                                isComplete = false
+                                break@entryLoop
+                            }
+                            val fileContent = bytes.toString(Charsets.UTF_8)
+                            coroutineContext.ensureActive()
+                            entries.add(AppZipEntry(entryName, fileContent))
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: OutOfMemoryError) {
+                            Timber.e(e, "Out of memory processing file: %s", entryName)
+                            // Advancing past a half-read entry inflates the rest of it, so stop
+                            // here rather than pay that cost after a failure.
+                            isComplete = false
+                            break@entryLoop
+                        } catch (e: Exception) {
+                            Timber.e(e, "Error processing file: %s", entryName)
+                            isComplete = false
+                            break@entryLoop
+                        }
+                    } else {
+                        try {
                             // Skipping an entry still inflates it, so a disallowed extension is no
                             // protection against a zip bomb — bound that read as well.
                             val skipped = zipInputStream.skipBounded(MAX_IMPORT_FILE_SIZE_BYTES)
@@ -353,6 +362,7 @@ suspend fun Uri.processZip(context: Context): List<AppZipEntry> = doFileOperatio
                                     MAX_IMPORT_FILE_SIZE_BYTES,
                                     entryName,
                                 )
+                                isComplete = false
                                 break@entryLoop
                             }
                             inflatedBytes += skipped
@@ -362,8 +372,20 @@ suspend fun Uri.processZip(context: Context): List<AppZipEntry> = doFileOperatio
                                     entryName,
                                     MAX_IMPORT_ARCHIVE_CONTENT_BYTES,
                                 )
+                                isComplete = false
                                 break@entryLoop
                             }
+                            coroutineContext.ensureActive()
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: OutOfMemoryError) {
+                            Timber.e(e, "Out of memory skipping file: %s", entryName)
+                            isComplete = false
+                            break@entryLoop
+                        } catch (e: Exception) {
+                            Timber.e(e, "Error skipping file: %s", entryName)
+                            isComplete = false
+                            break@entryLoop
                         }
                     }
 
@@ -372,17 +394,23 @@ suspend fun Uri.processZip(context: Context): List<AppZipEntry> = doFileOperatio
                     zipEntry = zipInputStream.nextEntry
                 }
             }
-        } ?: run { Timber.w("Failed to open input stream for URI: $this") }
+        }
+            ?: run {
+                Timber.w("Failed to open input stream for URI: $this")
+                isComplete = false
+            }
     } catch (e: CancellationException) {
         throw e
     } catch (e: OutOfMemoryError) {
         // A corrupt or truncated archive throws while advancing between entries, outside the
         // per-entry guard, and would otherwise crash the import.
         Timber.e(e, "Out of memory reading zip: %s", this@processZip)
+        isComplete = false
     } catch (e: Exception) {
         Timber.e(e, "Error reading zip: %s", this@processZip)
+        isComplete = false
     }
-    return@doFileOperation entries
+    return@doFileOperation AppZipContents(entries = entries, isComplete = isComplete)
 }
 
 suspend fun Uri.isValidZipFile(context: Context) = doFileOperation {

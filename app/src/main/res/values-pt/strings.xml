@@ -247,6 +247,7 @@
     <string name="swap_form_minimum_amount">Valor de swap muito pequeno. Quantidade recomendada %1$s %2$s</string>
     <string name="backup_password_screen_title">Backup</string>
     <string name="import_file_not_supported">O tipo de ficheiro não é compatível</string>
+    <string name="import_file_zip_incomplete">Não foi possível ler algumas partes do cofre neste ficheiro</string>
     <string name="import_file_screen_password_error">Palavra-passe incorreta, tente novamente.</string>
     <string name="add_vault_save">Guardar</string>
     <string name="backup_password_screen_enter_password">Introduza a senha</string>

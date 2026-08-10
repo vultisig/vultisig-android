@@ -10,6 +10,8 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
@@ -43,8 +45,9 @@ internal class FileHelperProcessZipTest {
                 AppZipEntry("vault-a.vult", "content-a"),
                 AppZipEntry("vault-b.bak", "content-b"),
             ),
-            result,
+            result.entries,
         )
+        assertTrue(result.isComplete, "a fully traversed archive must report a complete extraction")
     }
 
     @Test
@@ -59,8 +62,12 @@ internal class FileHelperProcessZipTest {
 
         assertEquals(
             listOf(AppZipEntry("vault-a.vult", "content-a")),
-            result,
+            result.entries,
             "extraction must stop instead of inflating the rest of an oversized entry",
+        )
+        assertFalse(
+            result.isComplete,
+            "stopping early must be reported as an incomplete extraction",
         )
     }
 
@@ -74,8 +81,12 @@ internal class FileHelperProcessZipTest {
 
         assertEquals(
             entryCount - 1,
-            result.size,
+            result.entries.size,
             "the archive budget must stop extraction before the heap is exhausted",
+        )
+        assertFalse(
+            result.isComplete,
+            "stopping early must be reported as an incomplete extraction",
         )
     }
 
@@ -91,8 +102,33 @@ internal class FileHelperProcessZipTest {
 
         assertEquals(
             listOf(AppZipEntry("vault-a.vult", "content-a")),
-            result,
+            result.entries,
             "skipping a disallowed entry must not inflate it past the limit either",
+        )
+        assertFalse(
+            result.isComplete,
+            "stopping early must be reported as an incomplete extraction",
+        )
+    }
+
+    @Test
+    fun `stops at a directory named entry over the per entry limit`() = runTest {
+        zipOf(
+            "vault-a.vult" to "content-a",
+            "evil/" to filler(MAX_IMPORT_FILE_SIZE_BYTES + 1),
+            "vault-b.vult" to "content-b",
+        )
+
+        val result = uri.processZip(context)
+
+        assertEquals(
+            listOf(AppZipEntry("vault-a.vult", "content-a")),
+            result.entries,
+            "isDirectory is name only, so a directory named entry with a payload must be bounded too",
+        )
+        assertFalse(
+            result.isComplete,
+            "stopping early must be reported as an incomplete extraction",
         )
     }
 
@@ -106,8 +142,12 @@ internal class FileHelperProcessZipTest {
 
         assertEquals(
             listOf(AppZipEntry("vault-a.vult", "content-a")),
-            result,
+            result.entries,
             "a truncated archive must not propagate a ZipException to the caller",
+        )
+        assertFalse(
+            result.isComplete,
+            "a truncated archive must be reported as an incomplete extraction",
         )
     }
 
@@ -119,8 +159,12 @@ internal class FileHelperProcessZipTest {
 
         assertEquals(
             MAX_IMPORT_ARCHIVE_ENTRIES,
-            result.size,
+            result.entries.size,
             "empty entries add nothing to the byte budgets, so the entry count must bound them",
+        )
+        assertFalse(
+            result.isComplete,
+            "stopping early must be reported as an incomplete extraction",
         )
     }
 
@@ -133,8 +177,12 @@ internal class FileHelperProcessZipTest {
 
         assertEquals(
             emptyList<AppZipEntry>(),
-            result,
+            result.entries,
             "entries of a disallowed extension must count towards the entry limit too",
+        )
+        assertFalse(
+            result.isComplete,
+            "stopping early must be reported as an incomplete extraction",
         )
     }
 
@@ -148,8 +196,12 @@ internal class FileHelperProcessZipTest {
 
         assertEquals(
             listOf(AppZipEntry("vault-a.vult", "content-a")),
-            result,
+            result.entries,
             "a failed entry read must stop extraction instead of inflating the rest of the entry",
+        )
+        assertFalse(
+            result.isComplete,
+            "a failed entry read must be reported as an incomplete extraction",
         )
     }
 
