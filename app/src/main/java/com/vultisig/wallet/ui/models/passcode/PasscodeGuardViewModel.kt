@@ -27,6 +27,21 @@ internal data class PasscodeGuardUiModel(
     val isIdentityProven: Boolean = false,
 ) {
     /**
+     * True while a lock the user has to answer is up. Narrower than [isGateClosed], which also
+     * covers the not-yet-read moment every launch passes through, passcode or not.
+     */
+    val isLocked: Boolean
+        get() =
+            when (passcodeState) {
+                PasscodeState.Locked,
+                PasscodeState.KeyUnavailable,
+                PasscodeState.StoreUnavailable -> true
+                PasscodeState.Unknown,
+                PasscodeState.Unlocked,
+                PasscodeState.Disabled -> false
+            }
+
+    /**
      * True while the gate covers the app, including before the persisted state has been read.
      *
      * What is behind the cover is still composed and still in the semantics tree, so this decides
@@ -34,15 +49,7 @@ internal data class PasscodeGuardUiModel(
      * too, or the lock is only a lock to someone looking at the screen.
      */
     val isGateClosed: Boolean
-        get() =
-            when (passcodeState) {
-                PasscodeState.Unknown,
-                PasscodeState.Locked,
-                PasscodeState.KeyUnavailable,
-                PasscodeState.StoreUnavailable -> true
-                PasscodeState.Unlocked,
-                PasscodeState.Disabled -> false
-            }
+        get() = isLocked || passcodeState == PasscodeState.Unknown
 }
 
 /** Exposes the lock state that decides whether the app content or the lock screen is shown. */

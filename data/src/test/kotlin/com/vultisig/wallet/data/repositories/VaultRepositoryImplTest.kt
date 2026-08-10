@@ -587,6 +587,80 @@ internal class VaultRepositoryImplTest {
         assertEquals("ecdsa-vault-1", vault.pubKeyECDSA)
     }
 
+    /** Returns a stored vault carrying one plaintext row and one encrypted row, in that order. */
+    private fun vaultWithMixedKeyShares() =
+        makeVaultWithTokens()
+            .copy(
+                keyShares =
+                    listOf(
+                        KeyShareEntity(
+                            vaultId = "vault-1",
+                            pubKey = "pub-1",
+                            keyShare = "plaintext-share-1",
+                        ),
+                        KeyShareEntity(
+                            vaultId = "vault-1",
+                            pubKey = "pub-2",
+                            keyShare =
+                                keyShareCipher.encrypt(
+                                    "share-2",
+                                    dataKey,
+                                    KeyShareIdentity(vaultId = "vault-1", pubKey = "pub-2"),
+                                ),
+                        ),
+                    )
+            )
+
+    /**
+     * Verifies a table holding both plaintext and encrypted rows comes back with *no* shares while
+     * locked, not just the plaintext one that happened to be readable.
+     *
+     * That mix is a supported state — a `protectAll` interrupted by process death leaves exactly it
+     * — so the partial read was reachable in normal use. A vault carrying some of its shares is
+     * useless to every caller and indistinguishable from a complete one to all of them: export
+     * checks only for emptiness and would write a .vult that restores cleanly and can never sign.
+     */
+    @Test
+    fun `get drops every keyshare when only some can be read while locked`() = runTest {
+        coEvery { vaultDao.loadById("vault-1") } returns vaultWithMixedKeyShares()
+        passcode.dataKey = null
+        passcode.locked = true
+
+        val vault = repository.get("vault-1")
+
+        assertNotNull(vault)
+        assertEquals(emptyList(), vault.keyshares)
+        assertEquals("ecdsa-vault-1", vault.pubKeyECDSA)
+    }
+
+    /**
+     * Verifies the same mix loads complete once the key is available, so the all-or-nothing rule
+     * costs nothing in the state it exists to protect.
+     */
+    @Test
+    fun `get returns both rows of a mixed table while unlocked`() = runTest {
+        coEvery { vaultDao.loadById("vault-1") } returns vaultWithMixedKeyShares()
+        passcode.dataKey = dataKey
+
+        assertEquals(
+            listOf("plaintext-share-1", "share-2"),
+            repository.get("vault-1")?.keyshares?.map { it.keyShare },
+        )
+    }
+
+    /**
+     * Verifies a mixed table with the key in hand still fails loudly when a row will not open.
+     * Returning nothing there would hide a damaged row behind the same silence as a locked read.
+     */
+    @Test
+    fun `get fails when a mixed table has an undecryptable row and the key is available`() =
+        runTest {
+            coEvery { vaultDao.loadById("vault-1") } returns vaultWithMixedKeyShares()
+            passcode.dataKey = ByteArray(32) { (it + 1).toByte() }
+
+            assertFailsWith<IllegalStateException> { repository.get("vault-1") }
+        }
+
     /** Verifies keyshares are encrypted on the way into the database while unlocked. */
     @Test
     fun `add encrypts keyshares while unlocked`() = runTest {
