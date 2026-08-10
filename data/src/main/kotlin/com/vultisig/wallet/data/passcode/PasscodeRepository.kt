@@ -354,7 +354,19 @@ internal class PasscodeRepositoryImpl(
             verifyLocked(currentPasscode) { key ->
                 // The data key is unchanged, so stored keyshares stay valid: only the wrap is
                 // rewritten. This is why changing the passcode is instant on a large vault set.
-                persistWrappedKey(key, newPasscode)
+                //
+                // Nothing else has been touched yet, and the store puts back what it had, so a
+                // wrap that did not land leaves the old passcode in force.
+                try {
+                    persistWrappedKey(key, newPasscode)
+                } catch (e: CancellationException) {
+                    key.fill(0)
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to store the new passcode")
+                    key.fill(0)
+                    return@verifyLocked PasscodeUnlockResult.Failed
+                }
                 swapDataKey(key)
                 publishUnlockedUnlessLocked()
                 PasscodeUnlockResult.Success
@@ -381,11 +393,26 @@ internal class PasscodeRepositoryImpl(
                 // One unit, uncancellable. Stopping between the two leaves the key live and the
                 // state Unlocked with no wrap on disk: every keyshare written afterwards would be
                 // sealed under a key the next launch has no way to recover.
-                withContext(NonCancellable) {
-                    withContext(dispatcher) { store.clearCredentials() }
-                    swapDataKey(null)
+                try {
+                    withContext(NonCancellable) {
+                        withContext(dispatcher) { store.clearCredentials() }
+                        swapDataKey(null)
+                        _state.value = PasscodeState.Disabled
+                        key.fill(0)
+                    }
+                } catch (e: CancellationException) {
                     key.fill(0)
-                    _state.value = PasscodeState.Disabled
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e, "Refusing to disable the passcode: the credentials are still there")
+                    // unprotectAll has already put every share back in the clear, and the passcode
+                    // that guards them is still in force. Uncancellable because they stay exposed
+                    // until this finishes.
+                    withContext(NonCancellable) {
+                        protectAllOrLog(key)
+                        key.fill(0)
+                    }
+                    return@verifyLocked PasscodeUnlockResult.Failed
                 }
                 PasscodeUnlockResult.Success
             }

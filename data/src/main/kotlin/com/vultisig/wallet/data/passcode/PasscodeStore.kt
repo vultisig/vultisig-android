@@ -37,8 +37,10 @@ internal interface PasscodeStore {
 
     fun readCredentials(): PasscodeCredentials?
 
+    /** @throws IllegalStateException if the credentials did not reach the disk. */
     fun writeCredentials(credentials: PasscodeCredentials)
 
+    /** @throws IllegalStateException if the credentials are still on the disk afterwards. */
     fun clearCredentials()
 
     fun readLockout(): PasscodeLockoutState
@@ -63,28 +65,43 @@ constructor(private val prefs: SharedPreferences) : PasscodeStore {
     override fun readCredentials(): PasscodeCredentials? {
         val salt = prefs.getString(KEY_SALT, null)?.let(::decodeOrNull)
         val wrapped = prefs.getString(KEY_WRAPPED_KEY, null)?.let(::decodeOrNull)
-        if (salt == null || wrapped == null) {
-            // Half a credential is not a passcode, it is a torn write or a corrupted store. Drop
-            // the remaining half so the app reports "no passcode" consistently rather than leaving
-            // a stray salt that a later write would pair with a mismatched key.
-            if (salt != null || wrapped != null) clearCredentials()
-            return null
-        }
+        // A half that failed to decrypt is indistinguishable from one that was never stored, so it
+        // is never grounds for deleting the other.
+        if (salt == null || wrapped == null) return null
         return PasscodeCredentials(salt = salt, wrappedDataKey = wrapped)
     }
 
     override fun writeCredentials(credentials: PasscodeCredentials) {
-        prefs.edit {
+        // The wrap has to be on disk before setPasscode seals the keyshares under it.
+        commitBothHalves("Passcode credentials were not written to disk") {
             putString(KEY_SALT, encode(credentials.salt))
             putString(KEY_WRAPPED_KEY, encode(credentials.wrappedDataKey))
         }
     }
 
     override fun clearCredentials() {
-        prefs.edit {
+        // A clear that did not land brings back a passcode the user removed.
+        commitBothHalves("Passcode credentials were not removed from disk") {
             remove(KEY_SALT)
             remove(KEY_WRAPPED_KEY)
         }
+    }
+
+    /**
+     * Applies [mutation] to both halves, or puts back what they held and throws [failure].
+     *
+     * `commit` updates the in-memory map before it writes the file and leaves it updated when that
+     * write fails, while the file keeps its previous contents. Putting the map back is what makes a
+     * refused write change nothing.
+     */
+    private fun commitBothHalves(failure: String, mutation: SharedPreferences.Editor.() -> Unit) {
+        val salt = prefs.getString(KEY_SALT, null)
+        val wrapped = prefs.getString(KEY_WRAPPED_KEY, null)
+        val editor = prefs.edit()
+        editor.mutation()
+        if (editor.commit()) return
+        prefs.edit().putString(KEY_SALT, salt).putString(KEY_WRAPPED_KEY, wrapped).apply()
+        error(failure)
     }
 
     override fun readLockout(): PasscodeLockoutState =
