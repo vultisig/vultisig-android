@@ -54,6 +54,15 @@ internal const val MAX_IMPORT_FILE_SIZE_BYTES = 5L * 1024 * 1024
  */
 internal const val MAX_IMPORT_ARCHIVE_CONTENT_BYTES = 20L * 1024 * 1024
 
+/**
+ * Upper bound for the number of entries traversed in a single `.zip` backup.
+ *
+ * Empty entries add nothing to the byte budgets, so an archive of many zero-byte entries stays
+ * under both limits while still growing the returned list and the traversal time. A backup zip
+ * holds a handful of vault shares, so 1000 entries leaves ample headroom.
+ */
+internal const val MAX_IMPORT_ARCHIVE_ENTRIES = 1000
+
 suspend fun Context.saveContentToUri(uri: Uri, content: String) = doFileOperation {
     try {
         contentResolver.openOutputStream(uri).use { output ->
@@ -283,7 +292,16 @@ suspend fun Uri.processZip(context: Context): List<AppZipEntry> = doFileOperatio
             ZipInputStream(inputStream).use { zipInputStream ->
                 var zipEntry = zipInputStream.nextEntry
                 var inflatedBytes = 0L
+                var entryCount = 0
                 entryLoop@ while (zipEntry != null) {
+                    entryCount++
+                    if (entryCount > MAX_IMPORT_ARCHIVE_ENTRIES) {
+                        Timber.w(
+                            "Stopping, the archive holds more than %d entries",
+                            MAX_IMPORT_ARCHIVE_ENTRIES,
+                        )
+                        break@entryLoop
+                    }
                     if (!zipEntry.isDirectory) {
                         val entryName = zipEntry.name
                         val ext = File(entryName).extension.lowercase()
@@ -318,8 +336,12 @@ suspend fun Uri.processZip(context: Context): List<AppZipEntry> = doFileOperatio
                                 throw e
                             } catch (e: OutOfMemoryError) {
                                 Timber.e(e, "Out of memory processing file: %s", entryName)
+                                // Advancing past a half-read entry inflates the rest of it, so stop
+                                // here rather than pay that cost after a failure.
+                                break@entryLoop
                             } catch (e: Exception) {
                                 Timber.e(e, "Error processing file: %s", entryName)
+                                break@entryLoop
                             }
                         } else {
                             // Skipping an entry still inflates it, so a disallowed extension is no

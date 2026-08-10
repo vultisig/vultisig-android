@@ -111,19 +111,78 @@ internal class FileHelperProcessZipTest {
         )
     }
 
+    @Test
+    fun `stops once the archive holds too many entries`() = runTest {
+        zipOf(*Array(MAX_IMPORT_ARCHIVE_ENTRIES + 5) { "vault-$it.vult" to "" })
+
+        val result = uri.processZip(context)
+
+        assertEquals(
+            MAX_IMPORT_ARCHIVE_ENTRIES,
+            result.size,
+            "empty entries add nothing to the byte budgets, so the entry count must bound them",
+        )
+    }
+
+    @Test
+    fun `counts skipped entries towards the entry limit`() = runTest {
+        val skipped = Array(MAX_IMPORT_ARCHIVE_ENTRIES) { "notes-$it.png" to "" }
+        zipOf(*skipped, "vault-a.vult" to "content-a")
+
+        val result = uri.processZip(context)
+
+        assertEquals(
+            emptyList<AppZipEntry>(),
+            result,
+            "entries of a disallowed extension must count towards the entry limit too",
+        )
+    }
+
+    @Test
+    fun `returns the entries read so far when an entry read fails`() = runTest {
+        val bytes = zipBytes("vault-a.vult" to "content-a", "vault-b.vult" to filler(4096L))
+        every { contentResolver.openInputStream(uri) } returns
+            bytes.truncatedInsideSecondEntryData().inputStream()
+
+        val result = uri.processZip(context)
+
+        assertEquals(
+            listOf(AppZipEntry("vault-a.vult", "content-a")),
+            result,
+            "a failed entry read must stop extraction instead of inflating the rest of the entry",
+        )
+    }
+
     private fun filler(size: Long): String = "a".repeat(size.toInt())
 
     /**
      * Cuts the archive off part way through the second entry's local file header, the point at
      * which advancing to that entry throws instead of reporting a clean end of archive.
      */
-    private fun ByteArray.truncatedInsideSecondEntryHeader(): ByteArray {
+    private fun ByteArray.truncatedInsideSecondEntryHeader(): ByteArray =
+        copyOf(secondLocalHeaderIndex() + LOCAL_HEADER_SIZE + 4)
+
+    /**
+     * Cuts the archive off a couple of bytes into the second entry's deflated data, the point at
+     * which reading that entry throws part way through it.
+     */
+    private fun ByteArray.truncatedInsideSecondEntryData(): ByteArray {
+        val header = secondLocalHeaderIndex()
+        val nameLength = readShortLe(header + 26)
+        val extraLength = readShortLe(header + 28)
+        return copyOf(header + LOCAL_HEADER_SIZE + nameLength + extraLength + 2)
+    }
+
+    private fun ByteArray.readShortLe(index: Int): Int =
+        (this[index].toInt() and 0xFF) or ((this[index + 1].toInt() and 0xFF) shl 8)
+
+    private fun ByteArray.secondLocalHeaderIndex(): Int {
         val signature = byteArrayOf(0x50, 0x4B, 0x03, 0x04)
         var seen = 0
         for (index in 0..size - signature.size) {
             if (signature.indices.all { this[index + it] == signature[it] }) {
                 seen++
-                if (seen == 2) return copyOf(index + LOCAL_HEADER_SIZE + 4)
+                if (seen == 2) return index
             }
         }
         error("second local file header not found")
