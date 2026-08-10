@@ -139,7 +139,8 @@ internal class WithdrawUsdcCircleStrategy(
                     // estimate while this is the fee that gets signed. Re-check it, or an ETH
                     // balance that no longer covers gas reaches a full MPC keysign and only fails
                     // at broadcast (#5491).
-                    if (nonDeFiBalance < specific.signedGasFee(gasFee).value) {
+                    val signedGasFee = specific.signedGasFee(gasFee)
+                    if (nonDeFiBalance < signedGasFee.value) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_insufficient_balance)
                         )
@@ -158,10 +159,10 @@ internal class WithdrawUsdcCircleStrategy(
                                     ),
                             memo = memo,
                             srcTokenValue = TokenValue(value = BigInteger.ZERO, token = nativeCoin),
-                            estimatedFees = gasFee,
+                            estimatedFees = signedGasFee,
                             estimateFeesFiat =
                                 gasFeeToEstimatedFee
-                                    .fiatFeesFor(gasFee, selectedToken)
+                                    .fiatFeesFor(signedGasFee, selectedToken)
                                     .formattedFiatValue,
                             blockChainSpecific = specific.blockChainSpecific,
                             operation = OPERATION_CIRCLE_WITHDRAW,
