@@ -535,36 +535,35 @@ internal class VaultRepositoryImplTest {
     }
 
     /**
-     * Verifies a locked write fails loudly. Storing the share in the clear instead would silently
-     * undo the at-rest protection the user asked for.
+     * Verifies a locked write is no longer refused. A keygen ceremony cannot be replayed, so the
+     * share is stored as-is and the next unlock re-seals it.
      */
     @Test
-    fun `add refuses to persist keyshares while locked`() = runTest {
+    fun `add stores keyshares in the clear while locked`() = runTest {
         passcode.dataKey = null
         passcode.locked = true
+        val stored = slot<VaultWithKeySharesAndTokens>()
 
-        assertFailsWith<IllegalStateException> {
-            repository.add(makeVault().copy(keyshares = listOf(KeyShare("pub-1", "share-1"))))
-        }
+        repository.add(makeVault().copy(keyshares = listOf(KeyShare("pub-1", "share-1"))))
 
-        coVerify(exactly = 0) { vaultDao.insert(any()) }
+        coVerify { vaultDao.insert(capture(stored)) }
+        assertEquals("share-1", stored.captured.keyShares.single().keyShare)
     }
 
     /**
-     * Verifies a locked write is refused even when the vault carries no keyshares.
-     *
-     * That shape is exactly what a locked *read* produces — the shares are dropped on the way out —
-     * so it is the dangerous case, not the harmless one. Nothing reaches the per-share encryption
-     * on this path, so the refusal has to sit above it; previously only Room's habit of leaving
-     * keyshare rows alone on an empty upsert stood between this and erasing them.
+     * Verifies the reshare and migrate save path — upsert rather than insert — stores the share
+     * too. That is the path a ceremony behind the lock screen actually takes.
      */
     @Test
-    fun `upsert of a keyshare-free vault is refused while locked`() = runTest {
+    fun `upsert stores keyshares in the clear while locked`() = runTest {
+        passcode.dataKey = null
         passcode.locked = true
+        val stored = slot<VaultWithKeySharesAndTokens>()
+        coJustRun { vaultDao.upsert(capture(stored)) }
 
-        assertFailsWith<IllegalStateException> { repository.upsert(makeVault()) }
+        repository.upsert(makeVault().copy(keyshares = listOf(KeyShare("pub-1", "share-1"))))
 
-        coVerify(exactly = 0) { vaultDao.upsert(any()) }
+        assertEquals("share-1", stored.captured.keyShares.single().keyShare)
     }
 
     /** Returns a minimal domain [Vault]. */
