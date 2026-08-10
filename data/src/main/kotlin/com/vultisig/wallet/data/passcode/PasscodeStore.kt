@@ -72,21 +72,36 @@ constructor(private val prefs: SharedPreferences) : PasscodeStore {
     }
 
     override fun writeCredentials(credentials: PasscodeCredentials) {
-        // The wrap has to be on disk before setPasscode seals the keyshares under it. androidx's
-        // edit(commit = true) discards commit()'s result, so the editor is driven directly.
-        val committed =
-            prefs
-                .edit()
-                .putString(KEY_SALT, encode(credentials.salt))
-                .putString(KEY_WRAPPED_KEY, encode(credentials.wrappedDataKey))
-                .commit()
-        check(committed) { "Passcode credentials were not written to disk" }
+        // The wrap has to be on disk before setPasscode seals the keyshares under it.
+        commitBothHalves("Passcode credentials were not written to disk") {
+            putString(KEY_SALT, encode(credentials.salt))
+            putString(KEY_WRAPPED_KEY, encode(credentials.wrappedDataKey))
+        }
     }
 
     override fun clearCredentials() {
         // A clear that did not land brings back a passcode the user removed.
-        val committed = prefs.edit().remove(KEY_SALT).remove(KEY_WRAPPED_KEY).commit()
-        check(committed) { "Passcode credentials were not removed from disk" }
+        commitBothHalves("Passcode credentials were not removed from disk") {
+            remove(KEY_SALT)
+            remove(KEY_WRAPPED_KEY)
+        }
+    }
+
+    /**
+     * Applies [mutation] to both halves, or puts back what they held and throws [failure].
+     *
+     * `commit` updates the in-memory map before it writes the file and leaves it updated when that
+     * write fails, while the file keeps its previous contents. Putting the map back is what makes a
+     * refused write change nothing.
+     */
+    private fun commitBothHalves(failure: String, mutation: SharedPreferences.Editor.() -> Unit) {
+        val salt = prefs.getString(KEY_SALT, null)
+        val wrapped = prefs.getString(KEY_WRAPPED_KEY, null)
+        val editor = prefs.edit()
+        editor.mutation()
+        if (editor.commit()) return
+        prefs.edit().putString(KEY_SALT, salt).putString(KEY_WRAPPED_KEY, wrapped).apply()
+        error(failure)
     }
 
     override fun readLockout(): PasscodeLockoutState =

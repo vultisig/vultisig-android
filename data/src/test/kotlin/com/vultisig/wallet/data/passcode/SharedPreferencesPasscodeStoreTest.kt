@@ -39,6 +39,12 @@ internal class SharedPreferencesPasscodeStoreTest {
 
     private fun encode(bytes: ByteArray) = Base64.getEncoder().encodeToString(bytes)
 
+    private fun credentials(fill: Int = 0) =
+        PasscodeCredentials(
+            salt = ByteArray(16) { (it + fill).toByte() },
+            wrappedDataKey = ByteArray(60) { (it * 3 + fill).toByte() },
+        )
+
     private fun assertReadLeavesTheStoreAlone(salt: String?, wrapped: String?) {
         storedAs(salt, wrapped)
 
@@ -87,11 +93,7 @@ internal class SharedPreferencesPasscodeStoreTest {
         // clears.
         val flakyPrefs = FlakyPreferences(InMemorySharedPreferences(), KEY_WRAPPED_KEY)
         val flakyStore = SharedPreferencesPasscodeStore(flakyPrefs)
-        val credentials =
-            PasscodeCredentials(
-                salt = ByteArray(16) { it.toByte() },
-                wrappedDataKey = ByteArray(60) { (it * 3).toByte() },
-            )
+        val credentials = credentials()
         flakyStore.writeCredentials(credentials)
 
         flakyPrefs.failing = true
@@ -127,21 +129,51 @@ internal class SharedPreferencesPasscodeStoreTest {
     }
 
     @Test
-    fun `a write the disk refused is reported, not passed off as stored`() {
-        every { editor.commit() } returns false
+    fun `a write the disk refused is reported and changes nothing`() {
+        val stored = InMemorySharedPreferences()
+        val original = credentials()
+        SharedPreferencesPasscodeStore(stored).writeCredentials(original)
+        val refusing = SharedPreferencesPasscodeStore(RefusingPreferences(stored))
 
-        assertFailsWith<IllegalStateException> {
-            store.writeCredentials(
-                PasscodeCredentials(salt = ByteArray(16), wrappedDataKey = ByteArray(60))
-            )
-        }
+        assertFailsWith<IllegalStateException> { refusing.writeCredentials(credentials(fill = 9)) }
+
+        assertEquals(original, SharedPreferencesPasscodeStore(stored).readCredentials())
     }
 
     @Test
-    fun `a clear the disk refused is reported, not passed off as removed`() {
-        every { editor.commit() } returns false
+    fun `a clear the disk refused is reported and changes nothing`() {
+        val stored = InMemorySharedPreferences()
+        val original = credentials()
+        SharedPreferencesPasscodeStore(stored).writeCredentials(original)
+        val refusing = SharedPreferencesPasscodeStore(RefusingPreferences(stored))
 
-        assertFailsWith<IllegalStateException> { store.clearCredentials() }
+        assertFailsWith<IllegalStateException> { refusing.clearCredentials() }
+
+        assertEquals(original, SharedPreferencesPasscodeStore(stored).readCredentials())
+    }
+
+    /**
+     * Preferences that apply an edit to memory and then report the disk write as refused, the way
+     * `SharedPreferencesImpl.commit` does when the file cannot be written.
+     */
+    private class RefusingPreferences(private val delegate: SharedPreferences) :
+        SharedPreferences by delegate {
+        override fun edit(): SharedPreferences.Editor = RefusingEditor(delegate.edit())
+    }
+
+    /** The mutators return `this`, so a chained call cannot escape back to [editor]. */
+    private class RefusingEditor(private val editor: SharedPreferences.Editor) :
+        SharedPreferences.Editor by editor {
+        override fun putString(key: String, value: String?) = also { editor.putString(key, value) }
+
+        override fun remove(key: String) = also { editor.remove(key) }
+
+        override fun apply() = editor.apply()
+
+        override fun commit(): Boolean {
+            editor.commit()
+            return false
+        }
     }
 
     /** Preferences whose reads of [failingKey] come back empty while [failing] is set. */

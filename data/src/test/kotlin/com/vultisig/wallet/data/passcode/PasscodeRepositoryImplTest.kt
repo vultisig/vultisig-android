@@ -352,6 +352,7 @@ internal class PasscodeRepositoryImplTest {
         assertEquals(credentials, store.readCredentials())
         assertEquals(PasscodeState.Unlocked, repository.state.value)
         assertEquals(listOf("protect", "unprotect", "protect"), protection.calls)
+        assertContentEquals(repository.dataKeyOrNull(), protection.protectedWith)
     }
 
     @Test
