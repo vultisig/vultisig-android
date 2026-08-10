@@ -25,30 +25,46 @@ private val Context.dataStore by
 internal const val LEGACY_SELECTED_POSITIONS_PREFIX = "selected_positions_"
 private const val SELECTED_POSITIONS_PREFIX = "defi_selected_positions_"
 
+// Spelled out rather than imported from the DeFi screens that mint these keys: the screens live in
+// :app, and a migration has to keep reading the shape that was on disk when it was written even if
+// those constants are later renamed.
+private const val MAYA_POSITION_KEY_PREFIX = "maya:"
+private const val POOL_POSITION_KEY_SEPARATOR = "."
+
 private fun selectedPositionsKey(chain: Chain, vaultId: String) =
     stringSetPreferencesKey("$SELECTED_POSITIONS_PREFIX${chain.id}_$vaultId")
 
 /**
- * Moves every pre-upgrade selection onto the THORChain key so nobody's current choice is reset by
- * the upgrade.
+ * Splits every pre-upgrade selection into the two per-chain keys so nobody's current choice is
+ * reset by the upgrade.
  *
- * THORChain is where the value goes because it is the screen that writes the shared key on any
- * vault that has one: MayaChain only ever persisted through it after the user opened a second
- * screen, and a Maya-authored value read back on the Maya key would be indistinguishable from a
- * genuine Maya choice. A vault whose last write happened to come from the Maya screen loses that
- * one selection here — once, at upgrade — instead of carrying the ambiguity forward forever.
+ * The shared set can hold both screens' keys at once — the THORChain dialog seeds itself from the
+ * stored set and only ever toggles rows it owns, so `maya:` keys survive every later THORChain save
+ * — which is why ownership is read off each key rather than off whichever screen wrote last. A
+ * `maya:` key handed to THORChain would be worse than dropped: `hasBondPositions` matches it, so
+ * the Bonded tab and its header leg would stay on with no row in the dialog able to switch them
+ * off.
+ *
+ * Pool keys are the one thing the shape cannot attribute — both chains write `CHAIN.TICKER` and
+ * both list pools like `BTC.BTC` — so they go to both chains. Landing on a chain the user did not
+ * pick them on shows a pool card they can uncheck; dropping them would silently shorten the header
+ * total instead.
+ *
+ * MayaChain is only written when a `maya:` key proves a choice was made there. Writing it for a
+ * THORChain-only vault would leave a screen the user has never opened with nothing selected rather
+ * than with its defaults.
  */
 internal object SelectedPositionsPerChainMigration : DataMigration<Preferences> {
     override suspend fun shouldMigrate(currentData: Preferences): Boolean =
         currentData.asMap().keys.any { it.name.startsWith(LEGACY_SELECTED_POSITIONS_PREFIX) }
 
     override suspend fun migrate(currentData: Preferences): Preferences =
-        migrateSelectedPositionsToThorchain(currentData)
+        migrateSelectedPositionsPerChain(currentData)
 
     override suspend fun cleanUp() = Unit
 }
 
-internal fun migrateSelectedPositionsToThorchain(currentData: Preferences): Preferences {
+internal fun migrateSelectedPositionsPerChain(currentData: Preferences): Preferences {
     val migrated = currentData.toMutablePreferences()
     currentData.asMap().forEach { (key, value) ->
         if (!key.name.startsWith(LEGACY_SELECTED_POSITIONS_PREFIX)) return@forEach
@@ -56,12 +72,25 @@ internal fun migrateSelectedPositionsToThorchain(currentData: Preferences): Pref
 
         val vaultId = key.name.removePrefix(LEGACY_SELECTED_POSITIONS_PREFIX)
         val positions = (value as? Set<*>)?.filterIsInstance<String>()?.toSet()
-        if (vaultId.isNotEmpty() && positions != null) {
-            migrated[selectedPositionsKey(Chain.ThorChain, vaultId)] = positions
+        if (vaultId.isEmpty() || positions == null) return@forEach
+
+        val mayaPositions = positions.filterTo(mutableSetOf()) { it.isMayaPositionKey() }
+        val thorchainPositions = positions - mayaPositions
+
+        // Written even when empty: the user cleared every THORChain position on purpose, and an
+        // absent key would read back as "never chose" and hand them the defaults again.
+        migrated[selectedPositionsKey(Chain.ThorChain, vaultId)] = thorchainPositions
+        if (mayaPositions.isNotEmpty()) {
+            migrated[selectedPositionsKey(Chain.MayaChain, vaultId)] =
+                mayaPositions + thorchainPositions.filter { it.isPoolPositionKey() }
         }
     }
     return migrated
 }
+
+private fun String.isMayaPositionKey() = startsWith(MAYA_POSITION_KEY_PREFIX)
+
+private fun String.isPoolPositionKey() = contains(POOL_POSITION_KEY_SEPARATOR)
 
 @Singleton
 class DefiPositionsRepository
