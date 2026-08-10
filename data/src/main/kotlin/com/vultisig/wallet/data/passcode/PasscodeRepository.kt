@@ -144,7 +144,6 @@ internal interface PasscodeDataKeySource {
     /**
      * True when encrypted keyshares exist that this process cannot currently read — either the
      * passcode has not been entered this session, or the credentials that unwrap them are gone.
-     * Either way the storage layer must refuse to write a share in the clear beside them.
      */
     fun isLocked(): Boolean
 

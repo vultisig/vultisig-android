@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -165,11 +164,11 @@ internal fun FoldableDestinationAddressWidget(
                         .border(
                             border =
                                 BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = Theme.v2.radius.md,
                         )
                         .background(
                             color = Theme.v2.colors.backgrounds.secondary,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = Theme.v2.radius.md,
                         )
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp),

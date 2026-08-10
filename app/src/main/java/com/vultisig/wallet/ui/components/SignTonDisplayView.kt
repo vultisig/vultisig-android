@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -83,7 +82,7 @@ internal fun SignTonDisplayView(
                         .heightIn(max = 400.dp)
                         .background(
                             color = Theme.v2.colors.variables.bordersLight,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = Theme.v2.radius.md,
                         )
                         .padding(8.dp)
                         .verticalScroll(rememberScrollState()),
@@ -102,10 +101,7 @@ private fun TonMessageRow(message: TonMessageUiModel, index: Int) {
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .background(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Theme.v2.colors.backgrounds.dark,
-                )
+                .background(shape = Theme.v2.radius.sm, color = Theme.v2.colors.backgrounds.dark)
                 .padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {

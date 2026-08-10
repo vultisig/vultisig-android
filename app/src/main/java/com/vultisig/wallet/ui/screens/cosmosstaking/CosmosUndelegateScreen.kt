@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -145,11 +144,11 @@ private fun UnstakeAmountCard(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -221,7 +220,7 @@ private fun UnstakePercentSlider(percent: Float, onPercentChanged: (Float) -> Un
                                 .height(24.dp)
                                 .background(
                                     color = Theme.v2.colors.text.primary,
-                                    shape = RoundedCornerShape(100),
+                                    shape = Theme.v2.radius.pill,
                                 )
                     )
                 },
@@ -271,11 +270,11 @@ internal fun ValidatorReadonlyBlock(moniker: String, address: String) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(horizontal = 16.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -313,11 +312,11 @@ internal fun UnbondingLockNotice(message: String) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.alerts.warning,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,

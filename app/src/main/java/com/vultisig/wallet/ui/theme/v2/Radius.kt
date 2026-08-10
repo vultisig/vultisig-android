@@ -49,9 +49,20 @@ sealed class Radius(
      * Fully rounded, at every surface size the app can render.
      *
      * [CircleShape] is `RoundedCornerShape(percent = 50)` — it is defined relative to the surface,
-     * so unlike the "big number" idiom it cannot stop being round on a large surface. The app's
-     * fully-round literals (50, 70, 77, 88, 99, 100 dp and `percent = 50`) all mean this, and
-     * collapse onto it.
+     * so unlike the "big number" idiom it cannot stop being round on a large surface.
+     *
+     * Every fully-round literal in the app has been collapsed onto this. Two spellings existed. The
+     * obvious one is a number large enough to always clamp — 50, 60, 70, 77, 88, 99, 100, 999 dp,
+     * `percent = 50` and `percent = 100`. The other is a number that only *reads* as a radius: 30
+     * on a 50 dp-tall carousel item, 18 on a 32 dp box, 3 on a 6 dp dot, 100 on a 4 dp sheet
+     * grabber. Each of those exceeds half the surface's smaller side, so Compose scales it back to
+     * exactly half and draws a capsule — the author wrote "round", arithmetically. Both spellings
+     * are invisible to a grep for round numbers, which is why they are named here.
+     *
+     * The converse is the trap: a big number is *not* automatically this token. Compose only clamps
+     * while the surface's smaller dimension is under twice the radius, so
+     * `RoundedCornerShape(99.dp)` on a 320×240 surface really does draw 99. Check the surface
+     * before collapsing one.
      */
     @Immutable data object Pill : Radius(CircleShape)
 }
@@ -65,9 +76,9 @@ sealed class Radius(
  * token names would freeze a half-verified answer.
  *
  * [Radius.Pill] is the one semantic token, because "fully rounded" is not a number. The design file
- * expresses it as 50, 77 or 99 depending on the component and the app has 50, 70, 77, 88, 99 and
- * 100 in use; all of them mean the same thing, and the token collapses them so no call site imports
- * another magic number.
+ * expresses it as 50, 77 or 99 depending on the component, and the app had ten spellings of it; all
+ * of them mean the same thing, and the token has collapsed them so no call site imports another
+ * magic number.
  *
  * **There is deliberately no sheet token, and the scale stops at 24.** The two sheet frames in the
  * design file measure 38 and 28, but both are stock design-kit components dropped into the file

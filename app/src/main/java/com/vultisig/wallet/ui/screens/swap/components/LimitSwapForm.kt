@@ -291,9 +291,9 @@ private fun LimitPill(
     Box(
         modifier =
             modifier
-                .clip(RoundedCornerShape(100.dp))
+                .clip(Theme.v2.radius.pill)
                 .background(background)
-                .border(1.dp, borderColor, RoundedCornerShape(100.dp))
+                .border(1.dp, borderColor, Theme.v2.radius.pill)
                 .clickable(onClick = onClick)
                 .padding(horizontal = 12.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center,
@@ -348,7 +348,7 @@ private fun UnitToggleButton(
     Box(
         modifier =
             Modifier.size(32.dp)
-                .clip(RoundedCornerShape(18.dp))
+                .clip(Theme.v2.radius.pill)
                 .background(if (selected) colors.primary.accent3 else Color.Transparent)
                 .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,

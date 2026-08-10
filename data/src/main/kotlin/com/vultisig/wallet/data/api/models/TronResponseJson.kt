@@ -144,6 +144,15 @@ data class TronAccountJson(
 
     val unfreezingTotalSun: Long
         get() = unfrozenV2?.sumOf { it.unfreezeAmount ?: 0L } ?: 0L
+
+    /**
+     * TRX the vault holds in DeFi. Cooldown TRX still counts: `UnfreezeBalanceV2` moves it out of
+     * `frozenV2` but only `WithdrawExpireUnfreeze` returns it to the spendable `balance`, so
+     * dropping it here would make it vanish from the wallet entirely. Mirrors vultisig-ios
+     * `BalanceService.fetchStakedBalance` and vultisig-windows `useDefiChainPortfolios`.
+     */
+    val defiLockedTotalSun: Long
+        get() = frozenBandwidthSun + frozenEnergySun + unfreezingTotalSun
 }
 
 @Serializable

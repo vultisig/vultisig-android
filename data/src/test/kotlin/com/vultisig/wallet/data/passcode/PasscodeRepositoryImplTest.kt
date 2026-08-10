@@ -411,7 +411,7 @@ internal class PasscodeRepositoryImplTest {
         repository.initialize()
 
         assertEquals(PasscodeState.StoreUnavailable, repository.state.value)
-        assertEquals(true, repository.isLocked(), "keyshare writes must still be refused")
+        assertEquals(true, repository.isLocked(), "stored keyshares stay unreadable")
     }
 
     @Test
@@ -425,7 +425,7 @@ internal class PasscodeRepositoryImplTest {
         repository.initialize()
 
         assertEquals(PasscodeState.StoreUnavailable, repository.state.value)
-        assertEquals(true, repository.isLocked(), "keyshare writes must still be refused")
+        assertEquals(true, repository.isLocked(), "stored keyshares stay unreadable")
     }
 
     @Test
