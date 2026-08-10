@@ -83,8 +83,8 @@ internal class SharedPreferencesPasscodeStoreTest {
 
     @Test
     fun `a half that did not decrypt on one read still opens on the next`() {
-        // Over a store that remembers what it was given, so a read that deleted a half would show
-        // up as a wrap that is no longer there once the fault clears.
+        // A store that remembers what it was given, so a deleted half shows up once the fault
+        // clears.
         val flakyPrefs = FlakyPreferences(InMemorySharedPreferences(), KEY_WRAPPED_KEY)
         val flakyStore = SharedPreferencesPasscodeStore(flakyPrefs)
         val credentials =
@@ -112,8 +112,6 @@ internal class SharedPreferencesPasscodeStoreTest {
 
         verify { editor.putString(KEY_SALT, encode(salt)) }
         verify { editor.putString(KEY_WRAPPED_KEY, encode(wrapped)) }
-        // An apply() would let a process kill drop the wrap while the keyshare ciphertext
-        // setPasscode writes next survives.
         verify { editor.commit() }
         verify(exactly = 0) { editor.apply() }
     }
@@ -146,10 +144,7 @@ internal class SharedPreferencesPasscodeStoreTest {
         assertFailsWith<IllegalStateException> { store.clearCredentials() }
     }
 
-    /**
-     * Preferences whose reads of [failingKey] come back empty while [failing] is set, standing in
-     * for a keystore that decrypts one stored value this launch but not the other.
-     */
+    /** Preferences whose reads of [failingKey] come back empty while [failing] is set. */
     private class FlakyPreferences(
         private val delegate: SharedPreferences,
         private val failingKey: String,

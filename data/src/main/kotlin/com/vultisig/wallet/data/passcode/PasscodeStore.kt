@@ -65,17 +65,15 @@ constructor(private val prefs: SharedPreferences) : PasscodeStore {
     override fun readCredentials(): PasscodeCredentials? {
         val salt = prefs.getString(KEY_SALT, null)?.let(::decodeOrNull)
         val wrapped = prefs.getString(KEY_WRAPPED_KEY, null)?.let(::decodeOrNull)
-        // A read never deletes. A half that failed to decrypt this launch reads exactly like one
-        // that was never stored, and the wrap it pairs with opens every encrypted keyshare.
+        // A half that failed to decrypt is indistinguishable from one that was never stored, so it
+        // is never grounds for deleting the other.
         if (salt == null || wrapped == null) return null
         return PasscodeCredentials(salt = salt, wrappedDataKey = wrapped)
     }
 
     override fun writeCredentials(credentials: PasscodeCredentials) {
-        // commit, not apply, and the result is checked: setPasscode durably seals every keyshare
-        // under this key straight afterwards, so a write that was only queued — or refused
-        // outright — leaves ciphertext with no key. androidx's edit(commit = true) discards
-        // commit()'s result.
+        // The wrap has to be on disk before setPasscode seals the keyshares under it. androidx's
+        // edit(commit = true) discards commit()'s result, so the editor is driven directly.
         val committed =
             prefs
                 .edit()
@@ -86,8 +84,7 @@ constructor(private val prefs: SharedPreferences) : PasscodeStore {
     }
 
     override fun clearCredentials() {
-        // Checked for the same reason: a clear that did not land brings back a passcode the user
-        // removed.
+        // A clear that did not land brings back a passcode the user removed.
         val committed = prefs.edit().remove(KEY_SALT).remove(KEY_WRAPPED_KEY).commit()
         check(committed) { "Passcode credentials were not removed from disk" }
     }

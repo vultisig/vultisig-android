@@ -356,8 +356,8 @@ internal class PasscodeRepositoryImpl(
                 // The data key is unchanged, so stored keyshares stay valid: only the wrap is
                 // rewritten. This is why changing the passcode is instant on a large vault set.
                 //
-                // Nothing has changed yet at this point, so a wrap that never reached the disk
-                // simply leaves the old passcode in force.
+                // Nothing else has been touched yet, so a wrap that did not land leaves the old
+                // passcode in force.
                 val persisted = runCatching { persistWrappedKey(key, newPasscode) }
                 persisted.exceptionOrNull()?.let { cause ->
                     if (cause is CancellationException) throw cause
@@ -391,10 +391,6 @@ internal class PasscodeRepositoryImpl(
                 // One unit, uncancellable. Stopping between the two leaves the key live and the
                 // state Unlocked with no wrap on disk: every keyshare written afterwards would be
                 // sealed under a key the next launch has no way to recover.
-                //
-                // A clear that never reached the disk throws before any of this, so the passcode
-                // stays in force — but unprotectAll has already put every share back in the
-                // clear, so they have to be sealed again before the failure is reported.
                 val cleared = runCatching {
                     withContext(NonCancellable) {
                         withContext(dispatcher) { store.clearCredentials() }
@@ -409,6 +405,7 @@ internal class PasscodeRepositoryImpl(
                         cause,
                         "Refusing to disable the passcode: the credentials are still there",
                     )
+                    // The shares are already back in the clear under a passcode still in force.
                     protectAllOrLog(key)
                     key.fill(0)
                     return@verifyLocked PasscodeUnlockResult.Failed

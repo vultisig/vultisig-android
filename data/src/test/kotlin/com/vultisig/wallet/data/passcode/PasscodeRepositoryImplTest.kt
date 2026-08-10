@@ -341,8 +341,7 @@ internal class PasscodeRepositoryImplTest {
 
     @Test
     fun `disablePasscode reseals the keyshares when the credentials are not removed`() = runTest {
-        // The shares are decrypted before the credentials are dropped, so a passcode that stays in
-        // force must not be left guarding a table that is already in the clear.
+        // The shares are decrypted before the credentials are dropped.
         val repository = repository()
         repository.setPasscode("123456")
         val credentials = store.readCredentials()
