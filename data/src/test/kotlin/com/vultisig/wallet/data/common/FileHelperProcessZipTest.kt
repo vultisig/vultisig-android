@@ -19,6 +19,11 @@ import org.junit.jupiter.api.Test
  */
 internal class FileHelperProcessZipTest {
 
+    private companion object {
+        /** Size of a zip local file header, before the variable length name and extra fields. */
+        const val LOCAL_HEADER_SIZE = 30
+    }
+
     private val uri: Uri = mockk()
     private val context: Context = mockk()
     private val contentResolver: ContentResolver = mockk()
@@ -74,11 +79,63 @@ internal class FileHelperProcessZipTest {
         )
     }
 
+    @Test
+    fun `stops at a disallowed entry over the per entry limit`() = runTest {
+        zipOf(
+            "vault-a.vult" to "content-a",
+            "huge.png" to filler(MAX_IMPORT_FILE_SIZE_BYTES + 1),
+            "vault-b.vult" to "content-b",
+        )
+
+        val result = uri.processZip(context)
+
+        assertEquals(
+            listOf(AppZipEntry("vault-a.vult", "content-a")),
+            result,
+            "skipping a disallowed entry must not inflate it past the limit either",
+        )
+    }
+
+    @Test
+    fun `returns the entries read so far when the archive is truncated`() = runTest {
+        val bytes = zipBytes("vault-a.vult" to "content-a", "vault-b.vult" to "content-b")
+        every { contentResolver.openInputStream(uri) } returns
+            bytes.truncatedInsideSecondEntryHeader().inputStream()
+
+        val result = uri.processZip(context)
+
+        assertEquals(
+            listOf(AppZipEntry("vault-a.vult", "content-a")),
+            result,
+            "a truncated archive must not propagate a ZipException to the caller",
+        )
+    }
+
     private fun filler(size: Long): String = "a".repeat(size.toInt())
 
+    /**
+     * Cuts the archive off part way through the second entry's local file header, the point at
+     * which advancing to that entry throws instead of reporting a clean end of archive.
+     */
+    private fun ByteArray.truncatedInsideSecondEntryHeader(): ByteArray {
+        val signature = byteArrayOf(0x50, 0x4B, 0x03, 0x04)
+        var seen = 0
+        for (index in 0..size - signature.size) {
+            if (signature.indices.all { this[index + it] == signature[it] }) {
+                seen++
+                if (seen == 2) return copyOf(index + LOCAL_HEADER_SIZE + 4)
+            }
+        }
+        error("second local file header not found")
+    }
+
     private fun zipOf(vararg entries: Pair<String, String>) {
-        val bytes =
-            ByteArrayOutputStream().also { output ->
+        every { contentResolver.openInputStream(uri) } returns zipBytes(*entries).inputStream()
+    }
+
+    private fun zipBytes(vararg entries: Pair<String, String>): ByteArray =
+        ByteArrayOutputStream()
+            .also { output ->
                 ZipOutputStream(output).use { zip ->
                     entries.forEach { (name, content) ->
                         zip.putNextEntry(ZipEntry(name))
@@ -87,6 +144,5 @@ internal class FileHelperProcessZipTest {
                     }
                 }
             }
-        every { contentResolver.openInputStream(uri) } returns bytes.toByteArray().inputStream()
-    }
+            .toByteArray()
 }
