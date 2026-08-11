@@ -55,11 +55,15 @@ private fun selectedPositionsKey(chain: Chain, vaultId: String) =
  * would hand back every row the user had switched off.
  *
  * Pool keys are the one thing the shape cannot attribute — both chains write `CHAIN.TICKER` and
- * both list pools like `BTC.BTC` — so they ride along to MayaChain whenever a `maya:` key is
- * already carrying it, and a set of nothing but pools counts as a MayaChain choice on its own,
- * because that is exactly what the Maya dialog leaves behind when both Cacao rows are unchecked.
- * Alongside plain tickers the set reads as THORChain's, and MayaChain's own Bond and Staking
- * defaults serve that vault better than a lone pool card.
+ * both list pools like `BTC.BTC` — so every pool is kept on both chains, a pool-only set included.
+ * Landing on a chain the user did not pick it on shows a pool card they can uncheck; dropping it
+ * would move a THORChain LP position onto the Maya screen and take the header total with it.
+ *
+ * What a pool cannot settle by itself is whether MayaChain chose at all. It counts as MayaChain
+ * evidence only when the set holds nothing else, because that is exactly what the Maya dialog
+ * leaves behind when both Cacao rows are unchecked. Sitting next to plain tickers the set reads as
+ * THORChain's, and MayaChain's own Bond and Staking defaults serve that vault better than a lone
+ * pool card.
  *
  * What that costs is worth naming: the Maya dialog seeds itself from the stored set and only
  * toggles its own rows, so a Maya selection can end up as plain tickers it never picked, and
@@ -98,8 +102,10 @@ internal fun migrateSelectedPositionsPerChain(currentData: Preferences): Prefere
 
         // A `maya:` key is the only attribution the shape carries. Pools are the exception the
         // Maya dialog forces: unchecking both Cacao rows leaves a set with no `maya:` key at all,
-        // so a set of nothing but pools is a MayaChain choice too. Pools sitting next to plain
-        // tickers are not — that set reads as THORChain's, and Maya's defaults beat a lone pool.
+        // so a set of nothing but pools is a MayaChain choice too — a choice it shares with
+        // THORChain above, since the pool itself stays unattributable. Pools sitting next to plain
+        // tickers do not count — that set reads as THORChain's, and Maya's defaults beat a lone
+        // pool.
         val isPoolOnlySelection = positions.isNotEmpty() && positions == poolPositions
         if (positions.isEmpty() || mayaPositions.isNotEmpty() || isPoolOnlySelection) {
             migrated[selectedPositionsKey(Chain.MayaChain, vaultId)] = mayaPositions + poolPositions

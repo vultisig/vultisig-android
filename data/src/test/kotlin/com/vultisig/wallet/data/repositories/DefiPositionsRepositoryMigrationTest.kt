@@ -111,6 +111,11 @@ internal class DefiPositionsRepositoryMigrationTest {
         val after = migrateSelectedPositionsPerChain(before)
 
         after[mayachainKey(VAULT_ID)] shouldBe setOf("BTC.BTC")
+        // Counting for Maya does not make it Maya's alone: the key is as unattributable here as it
+        // is in any other set. Withholding it from Thorchain would move the LP position of a vault
+        // that cleared its tickers onto the other chain's screen, and hand it back the defaults it
+        // had just unchecked.
+        after[thorchainKey(VAULT_ID)] shouldBe setOf("BTC.BTC")
     }
 
     @Test
