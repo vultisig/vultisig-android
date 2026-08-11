@@ -74,7 +74,28 @@ internal class DefiPositionsRepositoryMigrationTest {
         val after = migrateSelectedPositionsPerChain(before)
 
         after[mayachainKey(VAULT_ID)] shouldBe setOf(MAYA_STAKE_CACAO_KEY, "BTC.BTC")
-        after[thorchainKey(VAULT_ID)] shouldBe setOf("BTC.BTC")
+        // Thorchain has no key of its own in this set, so the pool arrives next to its defaults
+        // rather than alone — alone it would read as a selection this vault never made and hide a
+        // bonded RUNE the pre-upgrade screen was showing.
+        after[thorchainKey(VAULT_ID)] shouldBe THORCHAIN_DEFAULTS + "BTC.BTC"
+    }
+
+    @Test
+    fun `a Maya picked pool does not silence the Thorchain screen`() = runTest {
+        // A Maya-first vault that ticked one LP pool never touched the Thorchain dialog. Reading
+        // its pool as Thorchain evidence would write a key holding only that pool, and
+        // hasBondPositions would stop matching the Cacao key that kept the bonded leg alive.
+        val before =
+            preferencesWithLegacySelection(
+                VAULT_ID,
+                setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, "BTC.BTC"),
+            )
+
+        val after = migrateSelectedPositionsPerChain(before)
+
+        after[thorchainKey(VAULT_ID)] shouldBe THORCHAIN_DEFAULTS + "BTC.BTC"
+        after[mayachainKey(VAULT_ID)] shouldBe
+            setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, "BTC.BTC")
     }
 
     @Test
@@ -90,15 +111,15 @@ internal class DefiPositionsRepositoryMigrationTest {
     }
 
     @Test
-    fun `a Thorchain pool next to tickers is not read as a Maya choice`() = runTest {
-        // Thorchain pool keys are dotted too, so a pool cannot stand as proof on its own. Handing
-        // Maya a key holding just that pool would drop the Bond leg it was showing off the header
-        // of a screen this vault never chose on.
+    fun `a pool next to tickers is kept on Maya without being read as its choice`() = runTest {
+        // Thorchain pool keys are dotted too, so a pool cannot stand as proof of a Maya choice.
+        // Handing Maya just that pool would drop the Bond leg off a screen this vault may never
+        // have chosen on; dropping it would empty an LP tab that had it, if the pool was Maya's.
         val before = preferencesWithLegacySelection(VAULT_ID, setOf("RUNE", "BTC.BTC"))
 
         val after = migrateSelectedPositionsPerChain(before)
 
-        after[mayachainKey(VAULT_ID)].shouldBeNull()
+        after[mayachainKey(VAULT_ID)] shouldBe MAYA_DEFAULTS + "BTC.BTC"
         after[thorchainKey(VAULT_ID)] shouldBe setOf("RUNE", "BTC.BTC")
     }
 
@@ -205,5 +226,8 @@ internal class DefiPositionsRepositoryMigrationTest {
         // migration spells out the prefix it matches on.
         const val MAYA_BOND_CACAO_KEY = "maya:bond:CACAO"
         const val MAYA_STAKE_CACAO_KEY = "maya:stake:CACAO"
+        // What each screen shows a vault that never chose, spelled out here for the same reason.
+        val MAYA_DEFAULTS = setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY)
+        val THORCHAIN_DEFAULTS = setOf("RUNE", "RUJI", "TCY", "sTCY", "yRUNE", "yTCY")
     }
 }

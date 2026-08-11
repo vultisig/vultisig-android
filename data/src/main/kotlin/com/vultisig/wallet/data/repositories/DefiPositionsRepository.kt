@@ -31,6 +31,13 @@ private const val SELECTED_POSITIONS_PREFIX = "defi_selected_positions_"
 private const val MAYA_POSITION_KEY_PREFIX = "maya:"
 private const val POOL_POSITION_KEY_SEPARATOR = "."
 
+// What each screen answers a vault that never chose with, frozen at the shape they had when this
+// migration shipped for the same reason the key prefixes are. Only ever written next to a pool: it
+// is how an unattributable pool is kept without the vault being recorded as having chosen anything
+// else, and a vault that reaches this migration with no pool at all is left without a key instead.
+private val MAYA_DEFAULT_POSITION_KEYS = setOf("maya:bond:CACAO", "maya:stake:CACAO")
+private val THORCHAIN_DEFAULT_POSITION_KEYS = setOf("RUNE", "RUJI", "TCY", "sTCY", "yRUNE", "yTCY")
+
 private fun selectedPositionsKey(chain: Chain, vaultId: String) =
     stringSetPreferencesKey("$SELECTED_POSITIONS_PREFIX${chain.id}_$vaultId")
 
@@ -45,30 +52,31 @@ private fun selectedPositionsKey(chain: Chain, vaultId: String) =
  * the Bonded tab and its header leg would stay on with no row in the dialog able to switch them
  * off.
  *
- * A chain's key is only written when the set holds something that chain can own. Left out, it reads
- * back as null — never chose — and the screen answers with its own defaults, which is what that
- * vault was already being shown. Writing an empty set instead would call it a clearing and blank a
- * screen the vault never configured: a set of only `maya:` keys lit both THORChain legs before the
- * upgrade, since `hasBondPositions` and `hasStakingPositions` match the Cacao keys too.
+ * Only the `maya:` keys and the plain tickers attribute themselves: the first pair can only have
+ * come from the Maya dialog, the second only from THORChain's. A chain with none of its own keys in
+ * the set has not been heard from, and its key is left unwritten, which reads back as null — never
+ * chose — so the screen answers with its own defaults. Writing an empty set instead would call it a
+ * clearing and blank a screen the vault never configured: a set of only `maya:` keys lit both
+ * THORChain legs before the upgrade, since `hasBondPositions` and `hasStakingPositions` match the
+ * Cacao keys too.
  *
  * An empty set is written to both. That one is a clearing both screens saw, and leaving it out
  * would hand back every row the user had switched off.
  *
- * Pool keys are the one thing the shape cannot attribute — both chains write `CHAIN.TICKER` and
- * both list pools like `BTC.BTC` — so every pool is kept on both chains, a pool-only set included.
- * Landing on a chain the user did not pick it on shows a pool card they can uncheck; dropping it
- * would move a THORChain LP position onto the Maya screen and take the header total with it.
+ * Pool keys attribute nothing — both chains write `CHAIN.TICKER` and both list pools like `BTC.BTC`
+ * — so a pool is never evidence that its chain chose, and never dropped either. It rides along to
+ * both, next to whatever each chain has of its own, or next to that chain's defaults where it has
+ * nothing. Landing on a chain the user did not pick it on shows a pool card they can uncheck;
+ * dropping it would empty an LP tab that was showing it before the upgrade.
  *
- * What a pool cannot settle by itself is whether MayaChain chose at all. It counts as MayaChain
- * evidence only when the set holds nothing else, because that is exactly what the Maya dialog
- * leaves behind when both Cacao rows are unchecked. Sitting next to plain tickers the set reads as
- * THORChain's, and MayaChain's own Bond and Staking defaults serve that vault better than a lone
- * pool card.
+ * A set of nothing but pools is the exception on both sides: it is the whole selection each screen
+ * had, and it is what the Maya dialog leaves behind when both Cacao rows are unchecked, so pairing
+ * it with the defaults would hand back the rows that had to come off to leave that shape.
  *
- * What that costs is worth naming: the Maya dialog seeds itself from the stored set and only
- * toggles its own rows, so a Maya selection can end up as plain tickers it never picked, and
- * nothing in the shape tells it apart from a THORChain-authored one. It gets MayaChain's defaults —
- * the same answer that screen's own read gave this shape before the upgrade.
+ * What that costs is worth naming: each dialog seeds itself from the stored set and only toggles
+ * its own rows, so a Maya selection can end up as plain tickers it never picked, and nothing in the
+ * shape tells it apart from a THORChain-authored one. It gets MayaChain's defaults — the same
+ * answer that screen's own read gave this shape before the upgrade.
  */
 internal object SelectedPositionsPerChainMigration : DataMigration<Preferences> {
     override suspend fun shouldMigrate(currentData: Preferences): Boolean =
@@ -93,26 +101,43 @@ internal fun migrateSelectedPositionsPerChain(currentData: Preferences): Prefere
         val mayaPositions = positions.filterTo(mutableSetOf()) { it.isMayaPositionKey() }
         val thorchainPositions = positions - mayaPositions
         val poolPositions = thorchainPositions.filterTo(mutableSetOf()) { it.isPoolPositionKey() }
+        val tickerPositions = thorchainPositions - poolPositions
 
-        // A set of only `maya:` keys says nothing about THORChain, and recording it as a clearing
-        // would blank a screen that was showing both its legs before the upgrade.
-        if (positions.isEmpty() || thorchainPositions.isNotEmpty()) {
-            migrated[selectedPositionsKey(Chain.ThorChain, vaultId)] = thorchainPositions
-        }
+        selectionFor(positions, tickerPositions, poolPositions, THORCHAIN_DEFAULT_POSITION_KEYS)
+            ?.let { migrated[selectedPositionsKey(Chain.ThorChain, vaultId)] = it }
 
-        // A `maya:` key is the only attribution the shape carries. Pools are the exception the
-        // Maya dialog forces: unchecking both Cacao rows leaves a set with no `maya:` key at all,
-        // so a set of nothing but pools is a MayaChain choice too — a choice it shares with
-        // THORChain above, since the pool itself stays unattributable. Pools sitting next to plain
-        // tickers do not count — that set reads as THORChain's, and Maya's defaults beat a lone
-        // pool.
-        val isPoolOnlySelection = positions.isNotEmpty() && positions == poolPositions
-        if (positions.isEmpty() || mayaPositions.isNotEmpty() || isPoolOnlySelection) {
-            migrated[selectedPositionsKey(Chain.MayaChain, vaultId)] = mayaPositions + poolPositions
+        selectionFor(positions, mayaPositions, poolPositions, MAYA_DEFAULT_POSITION_KEYS)?.let {
+            migrated[selectedPositionsKey(Chain.MayaChain, vaultId)] = it
         }
     }
     return migrated
 }
+
+/**
+ * What one chain takes from a pre-upgrade set, or null to leave its key unwritten so the screen
+ * answers with its own defaults. [ownKeys] is the part of the set only this chain can have written:
+ * the `maya:` keys for MayaChain, the plain tickers for THORChain. Pools belong to neither and are
+ * never evidence for either — they are only ever carried.
+ */
+private fun selectionFor(
+    positions: Set<String>,
+    ownKeys: Set<String>,
+    poolPositions: Set<String>,
+    defaults: Set<String>,
+): Set<String>? =
+    when {
+        // A clearing both screens saw.
+        positions.isEmpty() -> emptySet()
+        // Nothing but pools is the whole selection on both screens, and pairing it with the
+        // defaults would hand back the rows that had to be unchecked to leave this shape behind.
+        positions == poolPositions -> poolPositions
+        ownKeys.isNotEmpty() -> ownKeys + poolPositions
+        // No say of its own, but a pool that may still be this chain's. Dropping it would empty an
+        // LP tab that was showing it; keeping it alone would read as a choice this vault never
+        // made.
+        poolPositions.isNotEmpty() -> defaults + poolPositions
+        else -> null
+    }
 
 private fun String.isMayaPositionKey() = startsWith(MAYA_POSITION_KEY_PREFIX)
 
