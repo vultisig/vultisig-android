@@ -1109,6 +1109,14 @@ constructor(
         _uiState.update { it.copy(showAdvancedSettings = false) }
     }
 
+    /**
+     * Applies a manual route pick from the Select-route page of the Advanced sheet: the picked,
+     * already-fetched quote replaces the automatic winner until the next quote refresh.
+     */
+    fun selectRoute(provider: SwapProvider) {
+        quotePipeline.selectRoute(provider)
+    }
+
     fun dismissAdvancedSettingsGate() {
         _uiState.update { it.copy(advancedSettingsGate = null) }
     }

@@ -1086,6 +1086,10 @@
     <string name="swap_advanced_slippage_title">Slippage-tolerantie</string>
     <string name="swap_advanced_slippage_page_title">Slippage</string>
     <string name="swap_advanced_gas_limit_title">Gaslimiet</string>
+    <string name="swap_advanced_select_route_title">Route selecteren</string>
+    <string name="swap_select_route_helper">Routes gesorteerd op uitvoerbedrag. Een route selecteren overschrijft de automatische keuze.</string>
+    <string name="swap_route_fee_prefix">Kosten</string>
+    <string name="swap_route_eta">~%1$ds</string>
     <string name="swap_advanced_external_recipient_title">Externe ontvanger gebruiken</string>
     <string name="swap_advanced_locked_title">Geavanceerde swap-instellingen</string>
     <string name="swap_advanced_locked_subtitle">Stem slippage, gas, routering en ontvanger af voor elke swap.</string>
