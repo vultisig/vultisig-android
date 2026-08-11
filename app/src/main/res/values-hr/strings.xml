@@ -519,9 +519,27 @@
     <string name="defi_tab_staked">Uloženo</string>
     <string name="defi_tab_bonded">Vezano</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_tab_earn">Zarada</string>
     <string name="defi_bond">Bond</string>
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Pool likvidnosti</string>
+    <!-- Kamino Earn -->
+    <string name="kamino_earn_title">Kamino Earn</string>
+    <string name="kamino_earn_curated_by">Kurirao %1$s</string>
+    <string name="kamino_earn_deposited">Deponirano</string>
+    <string name="kamino_earn_apy_30d">APY (30 d)</string>
+    <string name="kamino_earn_pnl">Dobit i gubitak</string>
+    <string name="kamino_earn_risk_conservative">Konzervativno</string>
+    <string name="kamino_earn_risk_private_credit">Privatni krediti</string>
+    <string name="kamino_earn_deposit">Deponiraj</string>
+    <string name="kamino_earn_empty_title">Nema aktiviranih Earn pozicija</string>
+    <string name="kamino_earn_empty_description">Aktivirajte Kamino vault u „Upravljanje Pozicijama“ kako biste počeli zarađivati na svojoj Solana imovini.</string>
+    <string name="kamino_deposit_title">Deponiraj</string>
+    <string name="kamino_withdraw_title">Povući</string>
+    <string name="kamino_amount_exceeds_available">Iznos premašuje dostupno stanje</string>
+    <string name="kamino_amount_below_minimum">Minimum je %1$s %2$s</string>
+    <string name="kamino_error_unknown_vault">Aplikacija ne podržava ovaj vault</string>
+    <string name="kamino_error_load_failed">Trenutno nije moguće učitati ovaj vault</string>
     <!-- Tron DeFi -->
     <string name="tron_defi_freeze">Zamrzni</string>
     <string name="tron_defi_unfreeze">Odmrzni</string>

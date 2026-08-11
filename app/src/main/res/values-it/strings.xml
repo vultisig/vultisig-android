@@ -518,9 +518,27 @@
     <string name="defi_tab_staked">Staking</string>
     <string name="defi_tab_bonded">Vincolato</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_tab_earn">Guadagna</string>
     <string name="defi_bond">Bond</string>
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Pool di liquidità</string>
+    <!-- Kamino Earn -->
+    <string name="kamino_earn_title">Kamino Earn</string>
+    <string name="kamino_earn_curated_by">Curato da %1$s</string>
+    <string name="kamino_earn_deposited">Depositato</string>
+    <string name="kamino_earn_apy_30d">APY (30 g)</string>
+    <string name="kamino_earn_pnl">Profitti e perdite</string>
+    <string name="kamino_earn_risk_conservative">Conservativo</string>
+    <string name="kamino_earn_risk_private_credit">Credito privato</string>
+    <string name="kamino_earn_deposit">Deposita</string>
+    <string name="kamino_earn_empty_title">Nessuna posizione Earn attivata</string>
+    <string name="kamino_earn_empty_description">Attiva un vault Kamino in «Gestisci Posizioni» per iniziare a generare rendimento sui tuoi asset Solana.</string>
+    <string name="kamino_deposit_title">Deposita</string>
+    <string name="kamino_withdraw_title">Prelevare</string>
+    <string name="kamino_amount_exceeds_available">L\'importo supera il saldo disponibile</string>
+    <string name="kamino_amount_below_minimum">Il minimo è %1$s %2$s</string>
+    <string name="kamino_error_unknown_vault">Questo vault non è supportato dall\'app</string>
+    <string name="kamino_error_load_failed">Impossibile caricare questo vault in questo momento</string>
     <!-- Tron DeFi -->
     <string name="tron_defi_freeze">Congela</string>
     <string name="tron_defi_unfreeze">Scongela</string>

@@ -63,9 +63,27 @@
     <string name="defi_tab_staked">스테이킹됨</string>
     <string name="defi_tab_bonded">본딩됨</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_tab_earn">수익</string>
     <string name="defi_bond">본딩</string>
     <string name="defi_stake">스테이킹</string>
     <string name="liquidity_pool">유동성 풀</string>
+    <!-- Kamino Earn -->
+    <string name="kamino_earn_title">Kamino Earn</string>
+    <string name="kamino_earn_curated_by">%1$s 큐레이션</string>
+    <string name="kamino_earn_deposited">예치됨</string>
+    <string name="kamino_earn_apy_30d">APY (30일)</string>
+    <string name="kamino_earn_pnl">손익</string>
+    <string name="kamino_earn_risk_conservative">보수적</string>
+    <string name="kamino_earn_risk_private_credit">사모 신용</string>
+    <string name="kamino_earn_deposit">예치</string>
+    <string name="kamino_earn_empty_title">활성화된 Earn 포지션 없음</string>
+    <string name="kamino_earn_empty_description">‘포지션 관리’에서 Kamino 볼트를 활성화하면 Solana 자산으로 수익을 얻을 수 있습니다.</string>
+    <string name="kamino_deposit_title">예치</string>
+    <string name="kamino_withdraw_title">출금</string>
+    <string name="kamino_amount_exceeds_available">금액이 사용 가능한 잔액을 초과합니다</string>
+    <string name="kamino_amount_below_minimum">최소 %1$s %2$s</string>
+    <string name="kamino_error_unknown_vault">앱이 지원하지 않는 볼트입니다</string>
+    <string name="kamino_error_load_failed">지금은 이 볼트를 불러올 수 없습니다</string>
     <!-- Tron DeFi -->
     <string name="tron_defi_freeze">동결</string>
     <string name="tron_defi_unfreeze">동결 해제</string>

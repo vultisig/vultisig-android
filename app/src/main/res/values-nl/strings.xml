@@ -515,9 +515,27 @@
     <string name="defi_tab_staked">Gestaked</string>
     <string name="defi_tab_bonded">Gebonden</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_tab_earn">Verdienen</string>
     <string name="defi_bond">Bond</string>
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Liquiditeitspool</string>
+    <!-- Kamino Earn -->
+    <string name="kamino_earn_title">Kamino Earn</string>
+    <string name="kamino_earn_curated_by">Samengesteld door %1$s</string>
+    <string name="kamino_earn_deposited">Gestort</string>
+    <string name="kamino_earn_apy_30d">APY (30 d)</string>
+    <string name="kamino_earn_pnl">Winst &amp; verlies</string>
+    <string name="kamino_earn_risk_conservative">Conservatief</string>
+    <string name="kamino_earn_risk_private_credit">Privaat krediet</string>
+    <string name="kamino_earn_deposit">Storten</string>
+    <string name="kamino_earn_empty_title">Geen Earn-posities geactiveerd</string>
+    <string name="kamino_earn_empty_description">Activeer een Kamino-vault onder ‘Posities Beheren’ om rendement te behalen op je Solana-assets.</string>
+    <string name="kamino_deposit_title">Storten</string>
+    <string name="kamino_withdraw_title">Opnemen</string>
+    <string name="kamino_amount_exceeds_available">Bedrag is hoger dan het beschikbare saldo</string>
+    <string name="kamino_amount_below_minimum">Minimum is %1$s %2$s</string>
+    <string name="kamino_error_unknown_vault">Deze vault wordt niet ondersteund door de app</string>
+    <string name="kamino_error_load_failed">Kan deze vault nu niet laden</string>
     <!-- Tron DeFi -->
     <string name="tron_defi_freeze">Bevriezen</string>
     <string name="tron_defi_unfreeze">Ontdooien</string>
