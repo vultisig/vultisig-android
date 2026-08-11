@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicSecureTextField
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -119,7 +118,7 @@ internal fun VsTextInputField(
             }
         }
 
-        val textFieldBackgroundShape = RoundedCornerShape(12.dp)
+        val textFieldBackgroundShape = Theme.v2.radius.md
 
         Row(
             modifier =

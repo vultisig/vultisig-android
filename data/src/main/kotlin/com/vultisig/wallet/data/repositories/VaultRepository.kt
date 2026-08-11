@@ -169,16 +169,24 @@ constructor(
     }
 
     /**
-     * Decrypts stored keyshares, dropping any that cannot be opened *while the app is locked*.
+     * Decrypts stored keyshares, dropping *all* of them when any cannot be opened while the app is
+     * locked.
      *
      * A locked read is expected and harmless: background work (notifications, balance sync) still
      * reads vaults and only needs public keys and addresses. Returning the vault without its shares
-     * keeps that work alive, and the write path refuses to persist a vault in that state, so a
-     * locked read can never be echoed back as data loss.
+     * keeps that work alive. Callers that go on to write the vault back must await
+     * [VaultRepository.awaitKeySharesReadable] first, or they write back what the lock dropped.
+     *
+     * All-or-nothing, because a table holding both plaintext and encrypted rows is a state the app
+     * supports — a `protectAll` interrupted by process death leaves exactly that mix. Keeping the
+     * rows that happened to be readable would return a vault with *some* shares, which no caller
+     * can use and every caller mistakes for a complete one: export writes a .vult that restores
+     * cleanly and can never sign, and a reshare merges the survivors and writes the truncated set
+     * back over the real one. Empty is the shape callers already check for.
      *
      * A failure with the data key in hand is a different thing entirely — a damaged row, or one
-     * written for another vault — and returning a partial vault there would let the caller act as
-     * if the share simply did not exist. That fails loudly instead.
+     * written for another vault — and silently returning nothing there would hide a real defect.
+     * That fails loudly instead.
      */
     private fun List<KeyShareEntity>.toKeyShares(vaultId: VaultId): List<KeyShare> {
         val dataKey = passcodeDataKeySource.dataKeyOrNull()
@@ -191,27 +199,28 @@ constructor(
             check(dataKey == null) {
                 "Failed to decrypt ${size - shares.size} keyshare(s) for vault $vaultId"
             }
-            Timber.w("Dropped %d locked keyshare(s) for vault %s", size - shares.size, vaultId)
+            Timber.w(
+                "Dropped all %d keyshare(s) for vault %s: %d could not be read while locked",
+                size,
+                vaultId,
+                size - shares.size,
+            )
+            return emptyList()
         }
         return shares
     }
 
     /**
-     * Encrypts [keyShare] for storage when a passcode is active.
+     * Encrypts [keyShare] for storage while the data key is in hand, and stores it in the clear
+     * while it is not.
      *
-     * Refuses to write while locked rather than silently storing a share in the clear, which would
-     * quietly undo the at-rest protection the user asked for.
+     * A keygen ceremony cannot be replayed, so a share that arrives while the app is locked is
+     * written as-is rather than refused — losing it costs the user a vault the rest of the group
+     * already considers created. The next successful unlock sweeps every plaintext row back under
+     * the data key; the states that can never unlock leave it in the clear.
      */
-    private fun protect(
-        keyShare: String,
-        identity: KeyShareIdentity,
-        dataKey: ByteArray?,
-        isLocked: Boolean,
-    ): String {
-        if (dataKey != null) return keyShareCipher.encrypt(keyShare, dataKey, identity)
-        check(!isLocked) { "Refusing to persist a keyshare while the app is locked" }
-        return keyShare
-    }
+    private fun protect(keyShare: String, identity: KeyShareIdentity, dataKey: ByteArray?): String =
+        if (dataKey != null) keyShareCipher.encrypt(keyShare, dataKey, identity) else keyShare
 
     private suspend fun VaultWithKeySharesAndTokens.toVault(): Vault {
         val vault = this
@@ -280,17 +289,9 @@ constructor(
     private fun Vault.toVaultDb(): VaultWithKeySharesAndTokens {
         val vault = this
         val vaultId = vault.id
-        // One snapshot for the whole vault: reading the lock state per share would let a lock
-        // landing mid-loop write some rows encrypted and the rest in the clear.
+        // One snapshot for the whole vault: reading the key per share would let a lock landing
+        // mid-loop write some rows encrypted and the rest in the clear.
         val dataKey = passcodeDataKeySource.dataKeyOrNull()
-        val isLocked = passcodeDataKeySource.isLocked()
-        // Refuse here rather than inside the per-share mapping below. A vault read while locked
-        // comes back with its shares dropped, so that mapping is empty and never reaches protect()
-        // at all — the refusal would not fire, and only Room's habit of leaving keyshare rows
-        // alone on an empty upsert would stand between this and silently erasing them.
-        check(!(isLocked && dataKey == null)) {
-            "Refusing to persist vault $vaultId while its keyshares are unreadable"
-        }
         return VaultWithKeySharesAndTokens(
             vault =
                 VaultEntity(
@@ -310,7 +311,7 @@ constructor(
                     KeyShareEntity(
                         vaultId = vaultId,
                         pubKey = it.pubKey,
-                        keyShare = protect(it.keyShare, identity, dataKey, isLocked),
+                        keyShare = protect(it.keyShare, identity, dataKey),
                     )
                 },
             signers =

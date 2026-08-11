@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -44,11 +43,11 @@ internal fun TypeBadge(iconRes: Int, label: String, modifier: Modifier = Modifie
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.alerts.info,
-                    shape = RoundedCornerShape(size = 99.dp),
+                    shape = Theme.v2.radius.pill,
                 )
                 .background(
                     color = Theme.v2.colors.alerts.info.copy(alpha = 0.10f),
-                    shape = RoundedCornerShape(size = 99.dp),
+                    shape = Theme.v2.radius.pill,
                 )
                 .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -120,7 +119,7 @@ private fun InProgressPill(timestamp: Long, modifier: Modifier = Modifier) {
             modifier
                 .background(
                     color = Theme.v2.colors.backgrounds.primary,
-                    shape = RoundedCornerShape(100.dp),
+                    shape = Theme.v2.radius.pill,
                 )
                 .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,

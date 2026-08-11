@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -43,7 +42,7 @@ internal fun TronResourceTypeTab(
         Row(
             modifier =
                 Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(88.dp))
+                    .clip(Theme.v2.radius.pill)
                     .background(Theme.v2.colors.backgrounds.secondary)
                     .padding(4.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -86,7 +85,7 @@ private fun ResourceTypeSegment(
     Row(
         modifier =
             modifier
-                .clip(RoundedCornerShape(77.dp))
+                .clip(Theme.v2.radius.pill)
                 .background(background)
                 .semantics {
                     selected = isSelected

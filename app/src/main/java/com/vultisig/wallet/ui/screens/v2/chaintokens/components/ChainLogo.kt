@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.screens.v2.chaintokens.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,12 +18,12 @@ internal fun ChainLogo(name: String, logo: ImageModel?) {
     SubcomposeAsyncImage(
         model = logo,
         contentDescription = null,
-        modifier = Modifier.size(24.dp).clip(RoundedCornerShape(size = 8.dp)),
+        modifier = Modifier.size(24.dp).clip(Theme.v2.radius.sm),
         error = {
             Box(
                 modifier =
                     Modifier.size(24.dp)
-                        .clip(RoundedCornerShape(size = 8.dp))
+                        .clip(Theme.v2.radius.sm)
                         .background(color = Theme.v2.colors.backgrounds.tertiary_2),
                 contentAlignment = Alignment.Center,
             ) {

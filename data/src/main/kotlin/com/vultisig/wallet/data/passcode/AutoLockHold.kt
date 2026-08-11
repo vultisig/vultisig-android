@@ -13,9 +13,8 @@ import kotlinx.coroutines.flow.update
  *
  * A keygen ceremony cannot be paused. The other devices carry on and finish whether or not this one
  * is still awake, and this device only writes its own keyshare at the very end. Lock in between and
- * the write has no data key: it cannot encrypt the share, and it must not store it in the clear
- * beside a passcode the user has set — so the share is simply lost, and this device can never sign
- * for a vault the rest of the group now considers created.
+ * the write has no data key, so the share is stored in the clear until the next unlock re-seals it.
+ * Holding the lock off keeps it encrypted from the moment it is written.
  *
  * A hold does not cancel the lock, it postpones it: the timer still runs, and the lock lands as
  * soon as the last hold is released.

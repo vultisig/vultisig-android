@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
@@ -43,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.passcode.PASSCODE_LENGTH
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.V2
 
 /** Whether the field is showing a plain entry or flagging a rejected passcode. */
 internal enum class PasscodeInputFieldState {
@@ -162,7 +162,7 @@ internal fun PasscodeInputField(
 }
 
 private val PASSCODE_CELL_HEIGHT = 51.dp
-private val PasscodeCellShape = RoundedCornerShape(12.dp)
+private val PasscodeCellShape = V2.radius.md
 
 /** Figma uses a flat 10% white hairline on the idle cells rather than a theme border token. */
 private val PasscodeCellBorder = Color.White.copy(alpha = 0.1f)

@@ -27,15 +27,18 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
@@ -163,5 +166,25 @@ internal class KeygenViewModelTest {
             val vm = createViewModel()
             vm.tryAgain()
             coVerify { navigator.navigate(Destination.Back) }
+        }
+
+    /**
+     * Reshare, migrate and MLDSA keygen build on the vault's existing shares, and a read taken
+     * while the app is locked comes back without them.
+     */
+    @Test
+    fun `the ceremony waits until the existing keyshares can be read`() =
+        runTest(testDispatcher) {
+            val unlocked = CompletableDeferred<Unit>()
+            coEvery { vaultRepository.awaitKeySharesReadable() } coAnswers { unlocked.await() }
+
+            createViewModel()
+
+            coVerify(exactly = 0) { vaultRepository.get(any()) }
+
+            unlocked.complete(Unit)
+            runCurrent()
+
+            coVerify(exactly = 1) { vaultRepository.get("vault-1") }
         }
 }
