@@ -511,39 +511,60 @@ constructor(
             else selected
         }
 
+        val metric = rankingMetric(successes)
         return RankedQuotes(
             best = selectBestQuote(successes),
+            // Ordered by the same metric the winner is chosen with, so the picker can never rank a
+            // route above the one it puts the check on. The raw amount breaks a tie between two
+            // routes whose fiat rounds to the same figure.
             ranked =
                 successes.sortedWith(
-                    // Fiat first (matches the best-quote metric), then the raw destination amount —
-                    // every candidate quotes the same dst token, so amounts compare directly. The
-                    // tie-break keeps the list output-ordered when the dst token has no price and
-                    // comparableDstFiat collapses to zero for every candidate at once.
-                    compareByDescending<BestQuote> { it.result.comparableDstFiat }
-                        .thenByDescending { it.result.quote.expectedDstValue.decimal }
+                    compareByDescending<BestQuote>(metric).thenByDescending {
+                        it.result.quote.expectedDstValue.decimal
+                    }
                 ),
         )
     }
 
     /**
-     * Picks the winning quote across providers. The ranking metric is net destination output
-     * ([QuoteFetchResult.comparableDstFiat]) — every provider in a candidate set swaps to the same
-     * destination token, so the values are directly comparable. Among quotes within
-     * [PROVIDER_PREFERENCE_BAND] of the best net output (economically tied on rate) a banded
-     * preference picks the winner by the iOS canonical rule: source gas decides only when both
-     * quotes expose it (same-chain EVM aggregators), then provider priority, then higher net
-     * output. Only the aggregators expose gas and their priorities form one contiguous block, so no
-     * gas-unknown provider's priority falls between two gas-exposing ones — the comparator is a
-     * strict weak order for every realizable candidate set and the winner is independent of input
-     * order. Anything outside the band loses on output.
+     * What a candidate set is ranked by: net destination fiat
+     * ([QuoteFetchResult.comparableDstFiat]) whenever any candidate has one, else the raw
+     * destination amount.
+     *
+     * Every candidate quotes the same destination token, so the amount is directly comparable and
+     * says exactly what the fiat would have said. Without the fallback an unpriced destination
+     * collapses every candidate's metric to zero at once, which reads as "every route is
+     * economically tied" and hands the whole decision to provider priority — so the winner could be
+     * a route another one beats outright on output.
+     */
+    private fun rankingMetric(successes: List<BestQuote>): (BestQuote) -> BigDecimal =
+        if (successes.any { it.result.comparableDstFiat.signum() > 0 }) {
+            { it.result.comparableDstFiat }
+        } else {
+            { it.result.quote.expectedDstValue.decimal }
+        }
+
+    /**
+     * Picks the winning quote across providers. The ranking metric is [rankingMetric] — net
+     * destination output, in fiat where the destination has a price and in destination tokens where
+     * it doesn't. Every provider in a candidate set swaps to the same destination token, so the
+     * values are directly comparable either way. Among quotes within [PROVIDER_PREFERENCE_BAND] of
+     * the best net output (economically tied on rate) a banded preference picks the winner by the
+     * iOS canonical rule: source gas decides only when both quotes expose it (same-chain EVM
+     * aggregators), then provider priority, then higher net output. Only the aggregators expose gas
+     * and their priorities form one contiguous block, so no gas-unknown provider's priority falls
+     * between two gas-exposing ones — the comparator is a strict weak order for every realizable
+     * candidate set and the winner is independent of input order. Anything outside the band loses
+     * on output.
      *
      * Assumes [successes] is non-empty (the caller has already surfaced the all-failed case).
      */
     internal fun selectBestQuote(successes: List<BestQuote>): BestQuote {
-        val best = successes.maxBy { it.result.comparableDstFiat }
-        val floor = best.result.comparableDstFiat * (BigDecimal.ONE - PROVIDER_PREFERENCE_BAND)
+        val metric = rankingMetric(successes)
+        val best = successes.maxBy(metric)
+        val floor = metric(best) * (BigDecimal.ONE - PROVIDER_PREFERENCE_BAND)
         return successes
-            .filter { it.result.comparableDstFiat >= floor }
+            .filter { metric(it) >= floor }
             .minWithOrNull(
                 // Source gas decides only when both quotes expose it; otherwise this ties and
                 // selection falls through to provider priority, then higher net output.
@@ -553,7 +574,7 @@ constructor(
                         if (lhsGas != null && rhsGas != null) lhsGas.compareTo(rhsGas) else 0
                     }
                     .thenBy { providerPriority(it.candidate.provider) }
-                    .thenByDescending { it.result.comparableDstFiat }
+                    .thenByDescending(metric)
             ) ?: best
     }
 

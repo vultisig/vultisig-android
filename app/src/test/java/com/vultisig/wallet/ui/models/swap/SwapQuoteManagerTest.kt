@@ -460,6 +460,18 @@ internal class SwapQuoteManagerTest {
     }
 
     @Test
+    fun `fetchBestQuote wins on token amount when the dst token has no price`() = runTest {
+        // The winner must use the same fallback the ranked list does. On the fiat metric alone an
+        // unpriced destination reads as "every route is economically tied", so the band swallows
+        // the whole set and provider priority hands it to THORChain's 100 — while the picker draws
+        // SwapKit's 200 on the row above, checkmark pointing at the smaller output.
+        val fetched = rankTwoProviders(thorFiat = "0", swapKitFiat = "0")
+
+        assertEquals(SwapProvider.SWAPKIT, fetched.best.candidate.provider)
+        assertEquals(fetched.ranked.first().candidate.provider, fetched.best.candidate.provider)
+    }
+
+    @Test
     fun `fetchBestQuote keeps the materially-better quote when it is outside the 50bps band`() =
         runTest {
             // THORChain prices 0.8% below SwapKit (99.2 vs 100, floor = 99.5), outside the band, so

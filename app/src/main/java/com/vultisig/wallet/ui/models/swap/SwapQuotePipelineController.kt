@@ -27,6 +27,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.DecimalFormat
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -154,12 +155,14 @@ constructor(
     // reset cancels this first, keeping exactly one writer of quote state at a time.
     private var selectRouteJob: Job? = null
 
-    private data class RouteContext(val input: QuoteInput, val ranked: List<BestQuote>)
+    // Ticket taken by every writer of quote state — each pipeline apply, each manual pick, each
+    // reset. Cancelling the pick job only protects one direction: a pipeline apply that suspended
+    // in resolveNetworkFee resumes with no idea a pick has landed since, and would stamp its own
+    // network fee and isSwapDisabled over the quote now on screen. Whoever wrote the quote last
+    // owns its fee, so a writer resuming on a stale ticket drops its outcome.
+    private var quoteApplyGeneration = 0
 
-    // Route-row output formatter: full precision with grouping, unlike the display mapper, which
-    // abbreviates above 1e6 and would collapse the differences the picker column compares.
-    // Main-confined like the rest of this class (DecimalFormat is not thread-safe).
-    private val routeOutputFormat = DecimalFormat("#,##0.########")
+    private data class RouteContext(val input: QuoteInput, val ranked: List<BestQuote>)
 
     // Suppresses the quote-refresh timer while the form isn't the foreground screen. The form's
     // scope (= viewModelScope) stays alive on the back stack once the flow proceeds to
@@ -498,6 +501,7 @@ constructor(
 
         val (src, dst) = input.address
 
+        val generation = ++quoteApplyGeneration
         routeContext = RouteContext(input, result.rankedQuotes)
         val routeOptions =
             buildRouteOptions(
@@ -544,7 +548,7 @@ constructor(
             )
         }
 
-        applyNetworkFeeOutcome(
+        val networkFeeOutcome =
             swapQuotePipeline.resolveNetworkFee(
                 result = result,
                 src = src,
@@ -554,7 +558,11 @@ constructor(
                 networkFeeTokenValue = estimatedNetworkFeeTokenValue.value,
                 evmBaselineEstimate = evmBaselineEstimate,
             )
-        )
+        // resolveNetworkFee suspends (plan fetch, balance read). Another writer — a manual pick, a
+        // fresh pipeline result, a reset — may own the quote on screen by now, and it arms its own
+        // fee and timer; this outcome belongs to a quote that is no longer displayed.
+        if (generation != quoteApplyGeneration) return
+        applyNetworkFeeOutcome(networkFeeOutcome)
 
         quoteState.quote?.expiredAt?.let { launchRefreshQuoteTimer(it) }
     }
@@ -603,11 +611,10 @@ constructor(
                             UiText.FormattedText(R.string.swap_route_eta, listOf(it))
                         },
                     // Formatted from the raw quote amount, NOT estimatedDstTokenValue: the display
-                    // formatter abbreviates above 1e6 ("~1.1M"), which collapses the differences
-                    // this column exists to compare (iOS keeps full precision here).
+                    // formatter abbreviates from 1e6 with a single decimal ("~1.1M"), which
+                    // collapses the differences this column exists to compare.
                     outputText =
-                        "~${routeOutputFormat.format(fetch.quote.expectedDstValue.decimal)} " +
-                            dstTicker,
+                        "~${formatRouteOutput(fetch.quote.expectedDstValue.decimal)} $dstTicker",
                     outputFiatText = fetch.estimatedDstFiatValue,
                     isSelected = candidate.candidate.provider == activeProvider,
                 )
@@ -857,6 +864,9 @@ constructor(
         // The context a pending pick was built from is going away with the quote it belonged to.
         selectRouteJob?.cancel()
         selectRouteJob = null
+        // Clearing the quote invalidates any fee still resolving for it, the same way a newer
+        // apply does — otherwise it resumes and writes a network fee onto state with no quote.
+        quoteApplyGeneration++
         quoteState.reset()
         routeContext = null
         uiState.update {
@@ -895,6 +905,9 @@ constructor(
         // The context a pending pick was built from is going away with the quote it belonged to.
         selectRouteJob?.cancel()
         selectRouteJob = null
+        // Clearing the quote invalidates any fee still resolving for it, the same way a newer
+        // apply does — otherwise it resumes and writes a network fee onto state with no quote.
+        quoteApplyGeneration++
         // Clears quote/provider and the swap fee in one place. Resetting swapFeeFiat lets
         // collectTotalFee()'s filterNotNull() short-circuit so a later calculateGas() update can't
         // write a (newGas + staleSwap) combination back into state.totalFee — the same race that
@@ -926,5 +939,43 @@ constructor(
         if (cause != null) {
             Timber.e(cause, tag)
         }
+    }
+}
+
+// The thresholds iOS abbreviates a displayed amount at.
+private val ROUTE_OUTPUT_MILLION: BigDecimal = BigDecimal.ONE.movePointRight(6)
+private val ROUTE_OUTPUT_BILLION: BigDecimal = BigDecimal.ONE.movePointRight(9)
+private val ROUTE_OUTPUT_TRILLION: BigDecimal = BigDecimal.ONE.movePointRight(12)
+
+// Route-row output formatters, mirroring iOS `Decimal.formatForDisplay()`: grouped with up to eight
+// fraction digits below 1e6, abbreviated to two decimals from there up. Full precision where the
+// routes are actually compared digit by digit — the display mapper abbreviates from 1e6 with one
+// decimal and collapses the very differences this column exists to show — but bounded above it,
+// because the output Column carries no weight while the provider name carries weight(1f): an
+// unabbreviated nine-figure amount measures wider than the row's whole two-column budget and
+// squeezes the name to nothing. Truncating, never rounding up, so a row can't advertise more output
+// than the quote pays.
+// Main-confined like the controller that uses them (DecimalFormat is not thread-safe).
+private val routeOutputFormat =
+    DecimalFormat("#,##0.########").apply { roundingMode = RoundingMode.DOWN }
+
+private val routeAbbreviatedOutputFormat =
+    DecimalFormat("#,##0.##").apply { roundingMode = RoundingMode.DOWN }
+
+/**
+ * A Select-route row's output amount, formatted the way iOS formats its own (`formatForDisplay`):
+ * full precision below a million, abbreviated to two decimals from there up so the column stays
+ * inside the row.
+ */
+internal fun formatRouteOutput(amount: BigDecimal): String {
+    val magnitude = amount.abs()
+    return when {
+        magnitude >= ROUTE_OUTPUT_TRILLION ->
+            routeAbbreviatedOutputFormat.format(amount.movePointLeft(12)) + "T"
+        magnitude >= ROUTE_OUTPUT_BILLION ->
+            routeAbbreviatedOutputFormat.format(amount.movePointLeft(9)) + "B"
+        magnitude >= ROUTE_OUTPUT_MILLION ->
+            routeAbbreviatedOutputFormat.format(amount.movePointLeft(6)) + "M"
+        else -> routeOutputFormat.format(amount)
     }
 }
