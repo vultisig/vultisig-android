@@ -79,14 +79,27 @@ internal class DefiPositionsRepositoryMigrationTest {
 
     @Test
     fun `a vault that never chose on Maya is left without a Maya key`() = runTest {
-        // Plain tickers are the only shape the Maya screen cannot have written, and the one it
-        // already answered with its defaults before the upgrade. Writing a key for it would leave
-        // a screen the user has never opened with nothing selected.
+        // Plain tickers carry no attribution to Maya, and its own read already answered that shape
+        // with its defaults before the upgrade. Writing a key for it would leave a screen the user
+        // has never opened with nothing selected.
         val before = preferencesWithLegacySelection(VAULT_ID, setOf("RUNE", "TCY"))
 
         val after = migrateSelectedPositionsPerChain(before)
 
         after[mayachainKey(VAULT_ID)].shouldBeNull()
+    }
+
+    @Test
+    fun `a Thorchain pool next to tickers is not read as a Maya choice`() = runTest {
+        // Thorchain pool keys are dotted too, so a pool cannot stand as proof on its own. Handing
+        // Maya a key holding just that pool would drop the Bond leg it was showing off the header
+        // of a screen this vault never chose on.
+        val before = preferencesWithLegacySelection(VAULT_ID, setOf("RUNE", "BTC.BTC"))
+
+        val after = migrateSelectedPositionsPerChain(before)
+
+        after[mayachainKey(VAULT_ID)].shouldBeNull()
+        after[thorchainKey(VAULT_ID)] shouldBe setOf("RUNE", "BTC.BTC")
     }
 
     @Test
@@ -98,6 +111,23 @@ internal class DefiPositionsRepositoryMigrationTest {
         val after = migrateSelectedPositionsPerChain(before)
 
         after[mayachainKey(VAULT_ID)] shouldBe setOf("BTC.BTC")
+    }
+
+    @Test
+    fun `a vault that never chose on Thorchain is left without a Thorchain key`() = runTest {
+        // hasBondPositions and hasStakingPositions both match the Cacao keys, so this vault's
+        // Thorchain screen had both legs on before the upgrade. Recording an empty set would call
+        // that a clearing and blank it; absent leaves the screen its own defaults.
+        val before =
+            preferencesWithLegacySelection(
+                VAULT_ID,
+                setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY),
+            )
+
+        val after = migrateSelectedPositionsPerChain(before)
+
+        after[thorchainKey(VAULT_ID)].shouldBeNull()
+        after[mayachainKey(VAULT_ID)] shouldBe setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY)
     }
 
     @Test
