@@ -79,13 +79,25 @@ internal class DefiPositionsRepositoryMigrationTest {
 
     @Test
     fun `a vault that never chose on Maya is left without a Maya key`() = runTest {
-        // Writing one would leave the Maya screen with nothing selected on first open, where an
-        // absent key gives it the defaults it would have shown before the upgrade.
-        val before = preferencesWithLegacySelection(VAULT_ID, setOf("RUNE", "BTC.BTC"))
+        // Plain tickers are the only shape the Maya screen cannot have written, and the one it
+        // already answered with its defaults before the upgrade. Writing a key for it would leave
+        // a screen the user has never opened with nothing selected.
+        val before = preferencesWithLegacySelection(VAULT_ID, setOf("RUNE", "TCY"))
 
         val after = migrateSelectedPositionsPerChain(before)
 
         after[mayachainKey(VAULT_ID)].shouldBeNull()
+    }
+
+    @Test
+    fun `unchecking both Cacao rows is a Maya choice, not an absent one`() = runTest {
+        // A Maya selection down to a pool holds no maya: key at all. Reading that as "never chose"
+        // would revive Bond and Staking and drop the pool the user had kept.
+        val before = preferencesWithLegacySelection(VAULT_ID, setOf("BTC.BTC"))
+
+        val after = migrateSelectedPositionsPerChain(before)
+
+        after[mayachainKey(VAULT_ID)] shouldBe setOf("BTC.BTC")
     }
 
     @Test
@@ -97,7 +109,7 @@ internal class DefiPositionsRepositoryMigrationTest {
         val after = migrateSelectedPositionsPerChain(before)
 
         after[thorchainKey(VAULT_ID)] shouldBe emptySet()
-        after[mayachainKey(VAULT_ID)].shouldBeNull()
+        after[mayachainKey(VAULT_ID)] shouldBe emptySet()
     }
 
     @Test

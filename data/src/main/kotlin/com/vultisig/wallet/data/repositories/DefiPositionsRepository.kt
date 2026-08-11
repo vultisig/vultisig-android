@@ -50,9 +50,10 @@ private fun selectedPositionsKey(chain: Chain, vaultId: String) =
  * pick them on shows a pool card they can uncheck; dropping them would silently shorten the header
  * total instead.
  *
- * MayaChain is only written when a `maya:` key proves a choice was made there. Writing it for a
- * THORChain-only vault would leave a screen the user has never opened with nothing selected rather
- * than with its defaults.
+ * MayaChain is skipped for the one shape it cannot have authored: a set of plain tickers and
+ * nothing else, which is what that screen already answered with its defaults before the upgrade. An
+ * empty set is not that shape. It is a selection cleared on purpose, and leaving it out would hand
+ * back the Bond and Staking rows the user had switched off.
  */
 internal object SelectedPositionsPerChainMigration : DataMigration<Preferences> {
     override suspend fun shouldMigrate(currentData: Preferences): Boolean =
@@ -76,13 +77,17 @@ internal fun migrateSelectedPositionsPerChain(currentData: Preferences): Prefere
 
         val mayaPositions = positions.filterTo(mutableSetOf()) { it.isMayaPositionKey() }
         val thorchainPositions = positions - mayaPositions
+        val poolPositions = thorchainPositions.filterTo(mutableSetOf()) { it.isPoolPositionKey() }
 
         // Written even when empty: the user cleared every THORChain position on purpose, and an
         // absent key would read back as "never chose" and hand them the defaults again.
         migrated[selectedPositionsKey(Chain.ThorChain, vaultId)] = thorchainPositions
-        if (mayaPositions.isNotEmpty()) {
-            migrated[selectedPositionsKey(Chain.MayaChain, vaultId)] =
-                mayaPositions + thorchainPositions.filter { it.isPoolPositionKey() }
+
+        // Unchecking both Cacao rows leaves a set with no `maya:` key in it, so their presence
+        // cannot be what decides this. A pool or an emptied set is just as much a MayaChain choice,
+        // and only a set of plain tickers rules that screen out.
+        if (positions.isEmpty() || mayaPositions.isNotEmpty() || poolPositions.isNotEmpty()) {
+            migrated[selectedPositionsKey(Chain.MayaChain, vaultId)] = mayaPositions + poolPositions
         }
     }
     return migrated
