@@ -76,15 +76,15 @@ class SuiStatusProviderTest {
         assertEquals(TransactionResult.Pending, provider.checkStatus("h", Chain.Sui))
     }
 
-    // The core regression test for #5444: a terminal RPC error (any code other than the
-    // not-found one) must surface immediately as Failed, not be retried until the poll timeout.
+    // The core regression test for #5444, carried onto GraphQL (#5506): a node refusal must
+    // surface immediately as Failed, not be retried until the poll timeout.
     @Test
-    fun `terminal RPC error surfaces as Failed, not endless retry`() = runTest {
+    fun `node refusal surfaces as Failed, not endless retry`() = runTest {
         val client =
             MockHttpClient.respondingWith(
                 HttpStatusCode.OK,
                 body =
-                    """{"id":1,"result":null,"error":{"code":-32000,"message":"indexer outage"}}""",
+                    """{"data":null,"errors":[{"message":"indexer outage","extensions":{"code":"INTERNAL_SERVER_ERROR"}}]}""",
             )
         val realApi = SuiApiImpl(client, Json { ignoreUnknownKeys = true })
         val providerWithRealApi = SuiStatusProvider(realApi)
@@ -95,15 +95,15 @@ class SuiStatusProviderTest {
         )
     }
 
-    // The mirror case of the terminal-error test above, driven through the same real SuiApiImpl:
-    // the not-found code must still resolve to the retryable NotFound outcome, proving the two
-    // RPC error codes are not collapsed into the same result.
+    // The mirror case of the refusal test above, driven through the same real SuiApiImpl: a digest
+    // that hasn't landed resolves to a null transaction with no errors, and must still reach the
+    // retryable NotFound outcome rather than being collapsed into the terminal one.
     @Test
-    fun `not-found RPC code surfaces as NotFound through the real api`() = runTest {
+    fun `unlanded digest surfaces as NotFound through the real api`() = runTest {
         val client =
             MockHttpClient.respondingWith(
                 HttpStatusCode.OK,
-                body = """{"id":1,"result":null,"error":{"code":-32602,"message":"not found"}}""",
+                body = """{"data":{"transaction":null}}""",
             )
         val realApi = SuiApiImpl(client, Json { ignoreUnknownKeys = true })
         val providerWithRealApi = SuiStatusProvider(realApi)

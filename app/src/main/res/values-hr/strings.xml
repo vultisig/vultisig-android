@@ -288,6 +288,7 @@
     <string name="settings_screen_privacy_policy">Politika privatnosti</string>
     <string name="settings_screen_tos">Uvjeti usluge</string>
     <string name="import_file_not_supported">Vrsta datoteke nije podržana</string>
+    <string name="import_file_zip_incomplete">Neke dionice trezora u ovoj datoteci nije bilo moguće pročitati</string>
     <string name="failed_to_resolve_address">Neuspjelo rješavanje adrese</string>
     <string name="verify_transaction_network_fee">Mrežna naknada (automatski)</string>
     <string name="vault_settings_success_backup_message">Datoteka je uspješno spremljena</string>

@@ -329,7 +329,8 @@ constructor(
     }
 
     private suspend fun acceptZip(uri: Uri, fileName: String) {
-        val entries = uriFileReader.extractZipEntries(uri)
+        val contents = uriFileReader.extractZipEntries(uri)
+        val entries = contents.entries
         uiModel.update {
             it.copy(
                 fileUri = uri,
@@ -340,6 +341,14 @@ constructor(
                     UiText.StringResource(R.string.import_file_not_supported).takeIf {
                         entries.isEmpty()
                     },
+            )
+        }
+        if (entries.isNotEmpty() && !contents.isComplete) {
+            // Extraction stopped early, so the archive holds shares that were never read. Say so
+            // rather than silently offering a short list of vault shares.
+            showSnackBarMessage(
+                message = UiText.StringResource(R.string.import_file_zip_incomplete),
+                type = SnackbarType.Error,
             )
         }
     }

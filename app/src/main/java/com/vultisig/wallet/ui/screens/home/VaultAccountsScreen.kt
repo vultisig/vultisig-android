@@ -53,6 +53,7 @@ import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
+import com.vultisig.wallet.ui.screens.passcode.OnceUnlocked
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.NotificationsIntroBottomSheet
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.VaultNotificationOptInBottomSheet
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
@@ -87,30 +88,38 @@ internal fun VaultAccountsScreen(viewModel: VaultAccountsViewModel = hiltViewMod
         }
     }
 
+    // These three raise themselves off background work rather than off a tap, so each can open its
+    // window after the passcode lock has opened its own, and land above it.
     if (state.showMonthlyBackupReminder) {
-        MonthlyBackupReminder(
-            onDismiss = viewModel::dismissBackupReminder,
-            onBackup = viewModel::backupVault,
-            onDoNotRemind = viewModel::doNotRemindBackup,
-        )
+        OnceUnlocked {
+            MonthlyBackupReminder(
+                onDismiss = viewModel::dismissBackupReminder,
+                onBackup = viewModel::backupVault,
+                onDoNotRemind = viewModel::doNotRemindBackup,
+            )
+        }
     }
 
     if (state.showNotificationIntroSheet) {
-        NotificationsIntroBottomSheet(
-            onEnable = viewModel::onNotificationEnable,
-            onNotNow = viewModel::onNotificationNotNow,
-            onDismissRequest = viewModel::onNotificationNotNow,
-        )
+        OnceUnlocked {
+            NotificationsIntroBottomSheet(
+                onEnable = viewModel::onNotificationEnable,
+                onNotNow = viewModel::onNotificationNotNow,
+                onDismissRequest = viewModel::onNotificationNotNow,
+            )
+        }
     }
 
     if (state.showNotificationVaultSheet) {
-        VaultNotificationOptInBottomSheet(
-            vaults = state.notificationIntroVaults,
-            onEnableVault = viewModel::onNotificationVaultToggle,
-            onDismissRequest = viewModel::onNotificationVaultSheetDismiss,
-            onEnableAll = viewModel::onEnableAll,
-            onDone = viewModel::onNotificationVaultSheetDone,
-        )
+        OnceUnlocked {
+            VaultNotificationOptInBottomSheet(
+                vaults = state.notificationIntroVaults,
+                onEnableVault = viewModel::onNotificationVaultToggle,
+                onDismissRequest = viewModel::onNotificationVaultSheetDismiss,
+                onEnableAll = viewModel::onEnableAll,
+                onDone = viewModel::onNotificationVaultSheetDone,
+            )
+        }
     }
 
     VaultAccountsScreen(
