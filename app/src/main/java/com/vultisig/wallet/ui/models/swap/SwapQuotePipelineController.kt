@@ -510,6 +510,11 @@ constructor(
                 srcToken = src.account.token,
                 dstTicker = dst.account.token.ticker,
             )
+        // buildRouteOptions suspends too (fiatValueToString reads the currency from DataStore), so
+        // a writer can be overtaken before the display write below just like across
+        // resolveNetworkFee: without this check it would land its quote/display over the newer
+        // writer's and only its fee would be dropped by the later ticket check.
+        if (generation != quoteApplyGeneration) return
 
         quoteState.provider = result.provider
         quoteState.quote = result.quote
