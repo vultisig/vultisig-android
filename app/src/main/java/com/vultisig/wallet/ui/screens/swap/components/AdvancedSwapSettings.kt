@@ -282,7 +282,7 @@ internal fun SelectRoutePage(
         Column(
             modifier =
                 Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(Theme.v2.radius.md)
                     .background(Theme.v2.colors.backgrounds.secondary)
         ) {
             routeOptions.forEachIndexed { index, route ->
