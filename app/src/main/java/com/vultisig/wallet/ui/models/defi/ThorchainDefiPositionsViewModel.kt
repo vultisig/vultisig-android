@@ -845,6 +845,25 @@ constructor(
                 .collect { defaultPositions ->
                     val loadedPositions = defaultPositions.filter { it.coin.id in coinsToLoad }
 
+                    // sTCY, yTCY and yRUNE are position tokens, not wallet balances: unless the
+                    // user separately enabled them the vault does not hold them, and the periodic
+                    // price refresh only ever covers vault coins. Refresh them here — nothing else
+                    // will — or their cards fall through to a contract lookup with no cache row
+                    // behind it and render $0.00. Skipped when nothing loaded: refresh has no
+                    // empty-list guard of its own and would spend a live request on no ids.
+                    if (loadedPositions.isNotEmpty()) {
+                        withContext(ioDispatcher) {
+                            try {
+                                tokenPriceRepository.refresh(loadedPositions.map { it.coin })
+                            } catch (t: Throwable) {
+                                if (t is CancellationException) throw t
+                                // Pricing is cosmetic here: a failed refresh leaves the previous
+                                // cached price in place rather than blocking the cards.
+                                Timber.e(t, "Failed to refresh staking position prices")
+                            }
+                        }
+                    }
+
                     // Resolve currency and format once; the non-suspend .map below can't call
                     // suspend functions, so fiat strings are pre-computed here.
                     val currency = appCurrencyRepository.currency.first()
@@ -1138,7 +1157,9 @@ constructor(
 
         val assetPrice =
             assetCoin?.let { priceFor(it, currency) }
-                ?: assetChain?.let { priceForPoolAsset(it, assetContractAddress, currency) }
+                ?: assetChain?.let {
+                    priceForPoolAsset(it, assetTicker, assetContractAddress, currency)
+                }
                 ?: BigDecimal.ZERO
 
         val totalFiat =
@@ -1164,33 +1185,38 @@ constructor(
         )
     }
 
+    /**
+     * The price of one [coin], for the LP legs this screen totals itself rather than through
+     * [DefiFiatValueCalculator.createFiatValue]. The lookup order lives on the calculator: this
+     * screen used to carry its own copy, and the two drifted on which route a NAV-priced receipt
+     * may take. A failed lookup leaves the leg at zero rather than collapsing the whole card.
+     */
     private suspend fun priceFor(coin: Coin, currency: AppCurrency): BigDecimal =
         try {
-            tokenPriceRepository.getCachedPrice(tokenId = coin.id, appCurrency = currency)
-                ?: coin.priceProviderID
-                    .takeIf { it.isNotEmpty() }
-                    ?.let { tokenPriceRepository.getPriceByPriceProviderId(it) }
-                    ?.takeIf { it > BigDecimal.ZERO }
-                ?: tokenPriceRepository.getPriceByContactAddress(
-                    coin.chain.id,
-                    coin.contractAddress,
-                )
+            fiatValueCalculator.priceOf(coin, currency)
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            Timber.e(e, "Failed to fetch price for ${coin.id}")
+            Timber.e(e, "Failed to fetch price for %s", coin.id)
             BigDecimal.ZERO
         }
 
+    /**
+     * Prices an LP leg whose asset the vault doesn't hold. The pool names the asset by chain and
+     * ticker, which is enough to find its curated [Coin] and so its CoinGecko id — going straight
+     * to the contract route instead left every native pool asset (BTC, ETH, …) at $0.00, because a
+     * native asset has no contract address to look up.
+     */
     private suspend fun priceForPoolAsset(
         chain: Chain,
+        ticker: String,
         contractAddress: String,
         currency: AppCurrency,
     ): BigDecimal =
         try {
-            tokenPriceRepository.getPriceByContactAddress(chain.id, contractAddress)
+            fiatValueCalculator.priceOfPoolAsset(chain, ticker, contractAddress, currency)
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            Timber.e(e, "Failed to fetch price for $chain $contractAddress")
+            Timber.e(e, "Failed to fetch price for %s %s", chain, contractAddress)
             BigDecimal.ZERO
         }
 
