@@ -33,17 +33,35 @@ object SuiHelper {
      * stripped, lowercased); Move module and struct identifiers stay case-sensitive because
      * `::coin::USDC` and `::coin::usdc` are genuinely distinct Move types.
      *
+     * Every address in the type is normalized, not just the leading one. A coin type may itself be
+     * a generic instantiation (`…::spot_dex::LP<0x2::sui::SUI, …::coin::COIN>`), and Sui GraphQL
+     * zero-pads the nested addresses too, where JSON-RPC spelled all of them short. Normalizing
+     * only the head would leave the same LP token comparing unequal to the `contractAddress` a
+     * pre-migration node produced, and a token send then fails the coin-object check in
+     * [getPreSignedInputData]. Whitespace is dropped for the same reason: a `, ` separator between
+     * type arguments is one node's spelling of the `,` another returns.
+     *
      * Mirrors the SDK `normalizeSuiCoinType` (vultisig-sdk#1275), which is likewise case-sensitive
      * on the module/struct segments. This deliberately diverges from iOS `SuiCoinType.normalize`,
      * which lowercases the entire coin type and so compares module/struct case-insensitively —
      * matching iOS here would collapse those distinct Move types, which we do not want.
      */
     internal fun normalizeSuiCoinType(coinType: String): String {
-        val addressEnd = coinType.indexOf("::")
-        if (addressEnd < 0) return normalizeSuiAddress(coinType)
-        return normalizeSuiAddress(coinType.substring(0, addressEnd)) +
-            coinType.substring(addressEnd)
+        val compact = coinType.filterNot(Char::isWhitespace)
+        if (!compact.contains("::")) return normalizeSuiAddress(compact)
+        // Each run between the generic delimiters is one qualified type. A run with no `::` is a
+        // primitive type argument (`u64`, `vector`, `bool`) and carries no address to normalize.
+        return TYPE_ARGUMENT.replace(compact) { match ->
+            val segment = match.value
+            val addressEnd = segment.indexOf("::")
+            if (addressEnd < 0) segment
+            else
+                normalizeSuiAddress(segment.substring(0, addressEnd)) +
+                    segment.substring(addressEnd)
+        }
     }
+
+    private val TYPE_ARGUMENT = Regex("[^<>,]+")
 
     internal fun isSameSuiCoinType(lhs: String, rhs: String): Boolean =
         normalizeSuiCoinType(lhs) == normalizeSuiCoinType(rhs)
