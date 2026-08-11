@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -92,8 +91,8 @@ fun ResourceTwoCardsRow(
             modifier
                 .fillMaxWidth()
                 .height(96.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .border(1.dp, colors.variables.bordersLight, RoundedCornerShape(12.dp)),
+                .clip(Theme.v2.radius.md)
+                .border(1.dp, colors.variables.bordersLight, Theme.v2.radius.md),
         color = colors.variables.backgroundsSurface1,
     ) {
         var display by remember { mutableStateOf(false) }
@@ -179,7 +178,7 @@ fun ResourceCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier =
-                        Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(containerBg),
+                        Modifier.size(32.dp).clip(Theme.v2.radius.sm).background(containerBg),
                     contentAlignment = Alignment.Center,
                 ) {
                     Image(
@@ -236,14 +235,14 @@ fun AnimatedProgressBar(value: Float, accent: Color, height: Dp = 8.dp) {
         modifier =
             Modifier.fillMaxWidth()
                 .height(height)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(Theme.v2.radius.sm)
                 .background(colors.backgrounds.light)
     ) {
         Box(
             modifier =
                 Modifier.fillMaxHeight()
                     .fillMaxWidth(animated)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(Theme.v2.radius.sm)
                     .background(accent)
         )
     }
@@ -291,7 +290,7 @@ fun BandwidthEnergyContent() {
                     Box(
                         modifier =
                             Modifier.size(24.dp)
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(Theme.v2.radius.sm)
                                 .background(colors.backgrounds.red),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -386,7 +385,7 @@ fun BandwidthEnergyItem(
                         Box(
                             modifier =
                                 Modifier.size(32.dp)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(Theme.v2.radius.sm)
                                     .background(containerBg),
                             contentAlignment = Alignment.Center,
                         ) {

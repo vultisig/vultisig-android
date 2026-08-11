@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -370,7 +369,7 @@ private fun SelectedAssetFiltersRow(
 
 @Composable
 private fun AssetFilterChip(asset: TransactionAssetUiModel, onRemove: () -> Unit) {
-    val shape = RoundedCornerShape(100.dp)
+    val shape = Theme.v2.radius.pill
     Row(
         modifier =
             Modifier.background(color = Theme.v2.colors.backgrounds.tertiary_2, shape = shape)

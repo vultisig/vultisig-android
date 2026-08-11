@@ -172,7 +172,7 @@ private fun DappSummaryText(summary: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun SendAddressPill(address: String, modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(100.dp)
+    val shape = Theme.v2.radius.pill
     Text(
         text =
             buildAnnotatedString {

@@ -247,6 +247,7 @@
     <string name="swap_form_minimum_amount">El monto de intercambio es demasiado pequeño. El monto recomendado es %1$s %2$s</string>
     <string name="backup_password_screen_title">Respaldo</string>
     <string name="import_file_not_supported">El tipo de archivo no es compatible</string>
+    <string name="import_file_zip_incomplete">No se pudieron leer algunas partes de la bóveda de este archivo</string>
     <string name="import_file_screen_password_error">Contraseña incorrecta, inténtelo de nuevo.</string>
     <string name="add_vault_save">Guardar</string>
     <string name="backup_password_screen_enter_password">Introducir contraseña</string>

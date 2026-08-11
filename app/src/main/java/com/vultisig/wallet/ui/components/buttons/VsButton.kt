@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -137,15 +136,8 @@ fun VsButton(
         contentAlignment = Alignment.Center,
         modifier =
             modifier
-                .background(
-                    color = backgroundColor,
-                    shape = shape ?: RoundedCornerShape(percent = 100),
-                )
-                .border(
-                    width = 1.dp,
-                    color = borderColor,
-                    shape = shape ?: RoundedCornerShape(percent = 100),
-                )
+                .background(color = backgroundColor, shape = shape ?: Theme.v2.radius.pill)
+                .border(width = 1.dp, color = borderColor, shape = shape ?: Theme.v2.radius.pill)
                 .clickable(enabled = state != Disabled && !isLoading, onClick = onClick)
                 .then(
                     when (size) {

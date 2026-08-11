@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -91,7 +90,7 @@ internal fun TransactionDetailsSection(
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(top = 12.dp)
-                        .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(12.dp))
+                        .border(1.dp, Theme.v2.colors.border.light, Theme.v2.radius.md)
                         .padding(16.dp),
             ) {
                 functionSignature?.let {

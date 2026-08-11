@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.components.v2.bottomsheets
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.CacheDrawScope
@@ -11,7 +10,6 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 
@@ -20,16 +18,14 @@ import com.vultisig.wallet.ui.theme.v2.V2.colors
 internal fun Modifier.dottySurface(): Modifier {
     val surfaceColor = Theme.v2.colors.backgrounds.primary
     val fadeColor = colors.backgrounds.secondary
-    return clip(shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
-        .background(surfaceColor)
-        .drawWithCache {
-            val dots = rememberDotsPath(stepSize = 72f, dotRadius = 2.5f, dotColor = DotColor)
-            val fadeBrush = Brush.verticalGradient(colors = listOf(Color.Transparent, fadeColor))
-            onDrawBehind {
-                drawPath(dots.path, color = dots.color)
-                drawRect(brush = fadeBrush)
-            }
+    return clip(shape = V2SheetShape).background(surfaceColor).drawWithCache {
+        val dots = rememberDotsPath(stepSize = 72f, dotRadius = 2.5f, dotColor = DotColor)
+        val fadeBrush = Brush.verticalGradient(colors = listOf(Color.Transparent, fadeColor))
+        onDrawBehind {
+            drawPath(dots.path, color = dots.color)
+            drawRect(brush = fadeBrush)
         }
+    }
 }
 
 private val DotColor = Color(0xff172854)

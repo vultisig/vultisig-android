@@ -288,6 +288,7 @@
     <string name="settings_screen_privacy_policy">Informativa sulla privacy</string>
     <string name="settings_screen_tos">Termini di servizio</string>
     <string name="import_file_not_supported">Il tipo di file non è supportato</string>
+    <string name="import_file_zip_incomplete">Non è stato possibile leggere alcune quote del vault in questo file</string>
     <string name="failed_to_resolve_address">Errore nel risolvere l&#8217;indirizzo</string>
     <string name="verify_transaction_network_fee">Commissione di rete (automatica)</string>
     <string name="vault_settings_success_backup_message">File salvato con successo</string>

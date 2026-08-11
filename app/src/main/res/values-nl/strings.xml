@@ -287,6 +287,7 @@
     <string name="settings_screen_privacy_policy">Privacybeleid</string>
     <string name="settings_screen_tos">Servicevoorwaarden</string>
     <string name="import_file_not_supported">Bestandstype wordt niet ondersteund</string>
+    <string name="import_file_zip_incomplete">Sommige vault-aandelen in dit bestand konden niet worden gelezen</string>
     <string name="failed_to_resolve_address">Mislukt om adres op te lossen</string>
     <string name="verify_transaction_network_fee">Netwerkkosten (automatisch)</string>
     <string name="vault_settings_success_backup_message">Bestand succesvol opgeslagen</string>

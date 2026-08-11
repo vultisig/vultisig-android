@@ -494,6 +494,7 @@
 
     <!-- Import File -->
     <string name="import_file_not_supported">不支持的文件类型，请重试</string>
+    <string name="import_file_zip_incomplete">无法读取此文件中的部分保险库分片</string>
 
     <!-- Failed to Resolve Address -->
     <string name="failed_to_resolve_address">解析地址失败</string>

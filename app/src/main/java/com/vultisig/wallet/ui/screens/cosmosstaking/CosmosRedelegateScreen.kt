@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -154,11 +153,11 @@ private fun DstValidatorPickerRow(selected: CosmosValidator?, onClick: () -> Uni
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .clickable(onClick = onClick)
                 .padding(horizontal = 16.dp, vertical = 14.dp),

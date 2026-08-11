@@ -1273,7 +1273,7 @@ private fun SolanaDisplayPreview() {
                 .fillMaxSize()
                 .background(
                     color = Theme.v2.colors.variables.bordersLight,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -1323,10 +1323,7 @@ private fun SolanaInstructionMock(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .background(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Theme.v2.colors.backgrounds.dark,
-                )
+                .background(shape = Theme.v2.radius.sm, color = Theme.v2.colors.backgrounds.dark)
                 .padding(6.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -1676,7 +1673,7 @@ private fun DeFiAccountListPreview() {
             modifier =
                 Modifier.background(
                     color = Theme.v2.colors.backgrounds.secondary,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
         ) {
             AccountList(

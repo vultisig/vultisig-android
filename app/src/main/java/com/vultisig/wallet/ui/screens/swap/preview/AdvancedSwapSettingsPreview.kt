@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +25,7 @@ import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.ui.components.v2.bottomsheets.DragHandler
+import com.vultisig.wallet.ui.components.v2.bottomsheets.V2SheetShape
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
@@ -174,12 +174,7 @@ private fun PreviewAdvancedSheet(
         // Material's bottom-sheet scrim is black @ ~32% alpha.
         Box(modifier = Modifier.fillMaxSize().background(Color(0x52000000)))
 
-        Box(
-            modifier =
-                Modifier.fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
-        ) {
+        Box(modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter).clip(V2SheetShape)) {
             Column(
                 modifier =
                     Modifier.fillMaxWidth()

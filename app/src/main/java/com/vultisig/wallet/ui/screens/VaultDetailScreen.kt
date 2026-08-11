@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -238,15 +237,8 @@ private fun KeyItemPrev() {
 
 @Composable
 internal fun Modifier.itemModifier(): Modifier =
-    border(
-            width = 1.dp,
-            color = Theme.v2.colors.border.light,
-            shape = RoundedCornerShape(size = 12.dp),
-        )
-        .background(
-            shape = RoundedCornerShape(size = 12.dp),
-            color = Theme.v2.colors.backgrounds.disabled,
-        )
+    border(width = 1.dp, color = Theme.v2.colors.border.light, shape = Theme.v2.radius.md)
+        .background(shape = Theme.v2.radius.md, color = Theme.v2.colors.backgrounds.disabled)
         .padding(vertical = 24.dp, horizontal = 20.dp)
 
 @Composable

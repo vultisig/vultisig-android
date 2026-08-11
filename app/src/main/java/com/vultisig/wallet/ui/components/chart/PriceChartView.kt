@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -272,7 +271,7 @@ private fun PriceChartCanvas(
                         modifier =
                             Modifier.fillMaxWidth()
                                 .height(CHART_HEIGHT)
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(Theme.v2.radius.md)
                                 .background(Theme.v2.colors.backgrounds.primary.copy(alpha = 0.4f))
                     )
                 }
@@ -283,7 +282,7 @@ private fun PriceChartCanvas(
                     modifier =
                         Modifier.fillMaxWidth()
                             .height(CHART_HEIGHT)
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(Theme.v2.radius.md)
                             .background(placeholderColor)
                 )
             }
@@ -296,7 +295,7 @@ private fun PriceChartCanvas(
                     modifier =
                         Modifier.fillMaxWidth()
                             .height(CHART_HEIGHT)
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(Theme.v2.radius.md)
                             .background(placeholderColor)
                             .clickable(onClick = onRetry),
                     contentAlignment = Alignment.Center,
