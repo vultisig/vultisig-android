@@ -6,9 +6,12 @@ import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.getProviderLogo
+import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
@@ -132,6 +135,13 @@ constructor(
     private val refreshQuoteState = MutableStateFlow(0)
 
     private var refreshQuoteJob: Job? = null
+
+    // The input and ranked candidate set of the last applied quote, kept so a Select-route pick can
+    // rebuild and apply another already-fetched candidate without a network round-trip. Cleared on
+    // every reset/supersede path — a pick must never apply a quote for stale input.
+    private var routeContext: RouteContext? = null
+
+    private data class RouteContext(val input: QuoteInput, val ranked: List<BestQuote>)
 
     // Suppresses the quote-refresh timer while the form isn't the foreground screen. The form's
     // scope (= viewModelScope) stays alive on the back stack once the flow proceeds to
@@ -407,6 +417,7 @@ constructor(
     private suspend fun applyQuoteResult(
         input: QuoteInput,
         result: SwapQuotePipelineResult.Success,
+        isManualRoutePick: Boolean = false,
     ) {
         // isAmountFieldEmpty is read once when resolveQuote is called, but the live input can
         // change
@@ -444,7 +455,15 @@ constructor(
             return
         }
 
-        val (src, _) = input.address
+        val (src, dst) = input.address
+
+        routeContext = RouteContext(input, result.rankedQuotes)
+        val routeOptions =
+            buildRouteOptions(
+                ranked = result.rankedQuotes,
+                activeProvider = result.provider,
+                dstTicker = dst.account.token.ticker,
+            )
 
         quoteState.provider = result.provider
         quoteState.quote = result.quote
@@ -478,6 +497,8 @@ constructor(
                 formError = null,
                 isSwapDisabled = result.isUtxoSwap,
                 isLoading = false,
+                routeOptions = routeOptions,
+                isRouteManuallySelected = isManualRoutePick,
             )
         }
 
@@ -493,6 +514,82 @@ constructor(
         )
 
         quoteState.quote?.expiredAt?.let { launchRefreshQuoteTimer(it) }
+    }
+
+    /**
+     * Maps the ranked candidate set onto Select-route picker rows: the active route pinned to the
+     * top, the rest keeping their best→worst net-output order. Fewer than two routes means there is
+     * nothing to pick, so the list stays empty and the Select route row disables.
+     */
+    private suspend fun buildRouteOptions(
+        ranked: List<BestQuote>,
+        activeProvider: SwapProvider,
+        dstTicker: String,
+    ): List<SwapRouteUiModel> {
+        if (ranked.size < 2) return emptyList()
+        return ranked
+            .map { candidate ->
+                val fetch = candidate.result
+                // Only THORChain/Maya expose a completion estimate; aggregator rows render the fee
+                // alone.
+                val etaSeconds =
+                    when (val quote = fetch.quote) {
+                        is SwapQuote.ThorChain -> quote.data.totalSwapSeconds
+                        is SwapQuote.MayaChain -> quote.data.totalSwapSeconds
+                        else -> null
+                    }
+                SwapRouteUiModel(
+                    provider = candidate.candidate.provider,
+                    name = fetch.providerUiText,
+                    logo = getProviderLogo(candidate.candidate.provider.getSwapProviderId()),
+                    // 1inch bakes the affiliate fee into the quoted rate — there is no separate
+                    // amount to show, so the fee segment is dropped rather than showing "$0.00".
+                    feeText =
+                        if (fetch.swapFeeIncludedInRate) null
+                        else fiatValueToString(fetch.swapFeeFiat, asFee = true),
+                    etaText =
+                        etaSeconds?.let {
+                            UiText.FormattedText(R.string.swap_route_eta, listOf(it))
+                        },
+                    outputText = "~${fetch.estimatedDstTokenValue} $dstTicker",
+                    outputFiatText = fetch.estimatedDstFiatValue,
+                    isSelected = candidate.candidate.provider == activeProvider,
+                )
+            }
+            // Stable sort: pins the active route to the top, the rest keep their output ranking.
+            .sortedByDescending { it.isSelected }
+    }
+
+    /**
+     * Applies a manual route pick from the Select-route sheet: rebuilds the display state for the
+     * picked, already-fetched candidate and applies it through the same path as an auto-resolved
+     * quote, so fees, discounts, balance validation, and the refresh timer all follow the pick. No
+     * network fetch — the pick only chooses among the quotes of the last resolution, and the next
+     * refresh re-defaults the route to the automatic best (iOS parity).
+     */
+    fun selectRoute(provider: SwapProvider) {
+        val ctx = routeContext ?: return
+        if (quoteState.provider == provider) return
+        val candidate = ctx.ranked.firstOrNull { it.candidate.provider == provider } ?: return
+        scope.safeLaunch(onError = { Timber.e(it, "selectRoute") }) {
+            val (src, _) = ctx.input.address
+            val amount = ctx.input.amount ?: return@safeLaunch
+            val srcToken = src.account.token
+            val srcTokenValue = amount.movePointRight(srcToken.decimal).toBigInteger()
+            val tokenValue = convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
+            val result =
+                swapQuotePipeline.buildSuccess(
+                    bestQuote = candidate,
+                    src = src,
+                    srcTokenValue = srcTokenValue,
+                    tokenValue = tokenValue,
+                    currentDiscountInfo = uiState.value.discountInfo,
+                    rankedQuotes = ctx.ranked,
+                )
+            // applyQuoteResult re-runs the superseded/quotable guards against the live input, so a
+            // pick that lands after the user changed amount/pair/settings is dropped, not applied.
+            applyQuoteResult(ctx.input, result, isManualRoutePick = true)
+        }
     }
 
     /** Applies the UTXO plan-fee / balance outcome to the network-fee flows and form state. */
@@ -689,6 +786,7 @@ constructor(
         refreshQuoteJob?.cancel()
         refreshQuoteJob = null
         quoteState.reset()
+        routeContext = null
         uiState.update {
             it.copy(
                 srcFiatValue = "0",
@@ -698,6 +796,8 @@ constructor(
                         hasQuote = false,
                         expiredAt = null,
                     ),
+                routeOptions = emptyList(),
+                isRouteManuallySelected = false,
                 feeBreakdown =
                     it.feeBreakdown.copy(
                         fee = "0",
@@ -725,10 +825,13 @@ constructor(
         // write a (newGas + staleSwap) combination back into state.totalFee — the same race that
         // triggers on flipSelectedTokens since selectedSrc changes synchronously.
         quoteState.reset()
+        routeContext = null
         uiState.update {
             it.copy(
                 srcFiatValue = "0",
                 quoteDisplay = QuoteDisplay(),
+                routeOptions = emptyList(),
+                isRouteManuallySelected = false,
                 feeBreakdown =
                     it.feeBreakdown.copy(
                         fee = "0",

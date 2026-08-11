@@ -304,6 +304,7 @@ internal class SwapQuoteManagerTest {
                     currency = AppCurrency.USD,
                     amount = BigDecimal.ONE,
                 )
+                .best
 
         assertEquals(SwapProvider.SWAPKIT, best.candidate.provider)
         assertEquals(BigDecimal("200"), best.result.comparableDstFiat)
@@ -425,10 +426,24 @@ internal class SwapQuoteManagerTest {
             // THORChain (priority 0) prices the dst slightly lower than SwapKit (priority 2), but
             // within the 50bps band (99.7 vs 100, floor = 99.5). Both are in-band, so the banded
             // layer tilts to the higher-priority THORChain instead of the marginally larger output.
-            val best = rankTwoProviders(thorFiat = "99.7", swapKitFiat = "100")
+            val best = rankTwoProviders(thorFiat = "99.7", swapKitFiat = "100").best
 
             assertEquals(SwapProvider.THORCHAIN, best.candidate.provider)
             assertEquals(BigDecimal("99.7"), best.result.comparableDstFiat)
+        }
+
+    @Test
+    fun `fetchBestQuote ranks the full candidate set by net output regardless of the winner`() =
+        runTest {
+            // The banded preference makes THORChain the auto winner, but the Select-route list
+            // stays ordered by raw net output — SwapKit (100) above THORChain (99.7).
+            val fetched = rankTwoProviders(thorFiat = "99.7", swapKitFiat = "100")
+
+            assertEquals(SwapProvider.THORCHAIN, fetched.best.candidate.provider)
+            assertEquals(
+                listOf(SwapProvider.SWAPKIT, SwapProvider.THORCHAIN),
+                fetched.ranked.map { it.candidate.provider },
+            )
         }
 
     @Test
@@ -436,7 +451,7 @@ internal class SwapQuoteManagerTest {
         runTest {
             // THORChain prices 0.8% below SwapKit (99.2 vs 100, floor = 99.5), outside the band, so
             // the priority preference does not apply and the better-rate SwapKit wins.
-            val best = rankTwoProviders(thorFiat = "99.2", swapKitFiat = "100")
+            val best = rankTwoProviders(thorFiat = "99.2", swapKitFiat = "100").best
 
             assertEquals(SwapProvider.SWAPKIT, best.candidate.provider)
             assertEquals(BigDecimal("100"), best.result.comparableDstFiat)
@@ -448,7 +463,7 @@ internal class SwapQuoteManagerTest {
      * respectively. The raw dst token amounts are arbitrary; ranking is driven purely by the mocked
      * fiat values.
      */
-    private suspend fun rankTwoProviders(thorFiat: String, swapKitFiat: String): BestQuote {
+    private suspend fun rankTwoProviders(thorFiat: String, swapKitFiat: String): RankedQuotes {
         val btc = coin(Chain.Bitcoin, "BTC", address = "bc1qsrc", decimals = 8)
         val eth = coin(Chain.Ethereum, "ETH", address = "0xdst", decimals = 18)
 

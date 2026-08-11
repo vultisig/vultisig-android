@@ -22,17 +22,23 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.SwapProvider
+import com.vultisig.wallet.data.models.getProviderLogo
+import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.ui.components.v2.bottomsheets.DragHandler
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
+import com.vultisig.wallet.ui.models.swap.SwapRouteUiModel
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.components.AdvancedMenu
 import com.vultisig.wallet.ui.screens.swap.components.ExternalRecipientPage
 import com.vultisig.wallet.ui.screens.swap.components.GasLimitPage
+import com.vultisig.wallet.ui.screens.swap.components.SelectRoutePage
 import com.vultisig.wallet.ui.screens.swap.components.SlippagePage
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
 
 /**
  * Previews for the Advanced swap settings sheet (#4858). The real sheet is a
@@ -53,9 +59,12 @@ internal fun AdvancedMenuPreview() {
             slippageValue = stringResource(R.string.swap_advanced_value_auto),
             gasLimitValue = stringResource(R.string.swap_advanced_value_auto),
             isGasLimitApplicable = true,
+            routeValue = stringResource(R.string.swap_advanced_value_auto),
+            isRouteSelectable = true,
             externalRecipientValue = stringResource(R.string.swap_advanced_value_off),
             onSlippageClick = {},
             onGasLimitClick = {},
+            onSelectRouteClick = {},
             onExternalRecipientClick = {},
         )
     }
@@ -74,10 +83,47 @@ internal fun AdvancedMenuConfiguredPreview() {
             slippageValue = "1%",
             gasLimitValue = stringResource(R.string.swap_advanced_value_auto),
             isGasLimitApplicable = false,
+            routeValue = "THORChain",
+            isRouteSelectable = true,
             externalRecipientValue = stringResource(R.string.swap_advanced_value_on),
             onSlippageClick = {},
             onGasLimitClick = {},
+            onSelectRouteClick = {},
             onExternalRecipientClick = {},
+        )
+    }
+}
+
+// Select-route page mirroring the Figma reference: THORChain (active, pinned first) vs Maya.
+@Preview
+@Composable
+internal fun AdvancedSelectRoutePreview() {
+    PreviewAdvancedSheet(title = stringResource(R.string.swap_advanced_select_route_title)) {
+        SelectRoutePage(
+            routeOptions =
+                listOf(
+                    SwapRouteUiModel(
+                        provider = SwapProvider.THORCHAIN,
+                        name = UiText.DynamicString("THORChain"),
+                        logo = getProviderLogo(SwapProvider.THORCHAIN.getSwapProviderId()),
+                        feeText = "$0.00",
+                        etaText = UiText.DynamicString("~606s"),
+                        outputText = "~21.83561311 RUNE",
+                        outputFiatText = "$9.47",
+                        isSelected = true,
+                    ),
+                    SwapRouteUiModel(
+                        provider = SwapProvider.MAYA,
+                        name = UiText.DynamicString("Maya protocol"),
+                        logo = getProviderLogo(SwapProvider.MAYA.getSwapProviderId()),
+                        feeText = "$0.10",
+                        etaText = UiText.DynamicString("~600s"),
+                        outputText = "~21.610385 RUNE",
+                        outputFiatText = "$9.37",
+                        isSelected = false,
+                    ),
+                ),
+            onSelect = {},
         )
     }
 }

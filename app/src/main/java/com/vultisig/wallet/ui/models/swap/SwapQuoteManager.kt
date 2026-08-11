@@ -105,13 +105,21 @@ internal data class QuoteCandidate(
 internal data class BestQuote(val candidate: QuoteCandidate, val result: QuoteFetchResult)
 
 /**
+ * Every successfully fetched quote for one request: the banded-preference winner ([best]) plus the
+ * full candidate set ordered best→worst by net destination output ([ranked]). [ranked] always
+ * contains [best]; it drives the Select-route picker, where the user can override the automatic
+ * winner with any other fetched route.
+ */
+internal data class RankedQuotes(val best: BestQuote, val ranked: List<BestQuote>)
+
+/**
  * Outcome of resolving the best quote for a pair: either a [Success] holding the winning
  * [BestQuote], or a [Failure] whose typed swap error has already been mapped to a renderable
  * [Failure.formError] so the ViewModel only has to surface it.
  */
 internal sealed interface QuoteResolution {
-    /** A winning quote was fetched. */
-    data class Success(val best: BestQuote) : QuoteResolution
+    /** A winning quote was fetched; [ranked] is the full output-ordered candidate set. */
+    data class Success(val best: BestQuote, val ranked: List<BestQuote>) : QuoteResolution
 
     /** The fetch failed; [formError] is the mapped message, [cause]/[tag] are for logging. */
     data class Failure(val formError: UiText, val cause: Throwable, val tag: String) :
@@ -432,7 +440,7 @@ constructor(
         amount: BigDecimal,
         slippageBps: Int? = null,
         externalRecipient: String? = null,
-    ): BestQuote {
+    ): RankedQuotes {
         if (candidates.isEmpty()) {
             throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
         }
@@ -503,7 +511,10 @@ constructor(
             else selected
         }
 
-        return selectBestQuote(successes)
+        return RankedQuotes(
+            best = selectBestQuote(successes),
+            ranked = successes.sortedByDescending { it.result.comparableDstFiat },
+        )
     }
 
     /**
@@ -561,7 +572,7 @@ constructor(
         externalRecipient: String? = null,
     ): QuoteResolution =
         try {
-            QuoteResolution.Success(
+            val fetched =
                 fetchBestQuote(
                     candidates = candidates,
                     src = src,
@@ -575,7 +586,7 @@ constructor(
                     slippageBps = slippageBps,
                     externalRecipient = externalRecipient,
                 )
-            )
+            QuoteResolution.Success(best = fetched.best, ranked = fetched.ranked)
         } catch (e: SwapException) {
             QuoteResolution.Failure(
                 formError = mapSwapExceptionToFormError(e, srcToken, selectedSrcTokenTitle),

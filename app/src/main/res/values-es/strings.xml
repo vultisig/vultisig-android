@@ -1088,6 +1088,10 @@
     <string name="swap_advanced_slippage_title">Tolerancia de deslizamiento</string>
     <string name="swap_advanced_slippage_page_title">Deslizamiento</string>
     <string name="swap_advanced_gas_limit_title">Límite de gas</string>
+    <string name="swap_advanced_select_route_title">Seleccionar ruta</string>
+    <string name="swap_select_route_helper">Rutas ordenadas por importe de salida. Seleccionar una ruta anula el modo automático.</string>
+    <string name="swap_route_fee_prefix">Tarifa</string>
+    <string name="swap_route_eta">~%1$ds</string>
     <string name="swap_advanced_external_recipient_title">Usar destinatario externo</string>
     <string name="swap_advanced_locked_title">Ajustes avanzados de swap</string>
     <string name="swap_advanced_locked_subtitle">Ajusta el deslizamiento, el gas, la ruta y el destinatario en cada swap.</string>

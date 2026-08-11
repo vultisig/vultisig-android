@@ -4198,25 +4198,28 @@ internal class SwapFormViewModelTest {
         swapFeeFiat: FiatValue = FiatValue(BigDecimal.ZERO, "USD"),
         outboundFeeText: String? = null,
         swapFeePercent: String? = null,
-    ): BestQuote =
-        BestQuote(
-            candidate =
-                QuoteCandidate(provider = provider, vultBPSDiscount = null, referral = null),
-            result =
-                QuoteFetchResult(
-                    quote = quote,
-                    provider = provider,
-                    providerUiText = providerUiText,
-                    srcFiatValueText = srcFiatValueText,
-                    estimatedDstTokenValue = estimatedDstTokenValue,
-                    estimatedDstFiatValue = estimatedDstFiatValue,
-                    comparableDstFiat = comparableDstFiat,
-                    feeText = feeText,
-                    swapFeeFiat = swapFeeFiat,
-                    outboundFeeText = outboundFeeText,
-                    swapFeePercent = swapFeePercent,
-                ),
-        )
+    ): RankedQuotes {
+        val best =
+            BestQuote(
+                candidate =
+                    QuoteCandidate(provider = provider, vultBPSDiscount = null, referral = null),
+                result =
+                    QuoteFetchResult(
+                        quote = quote,
+                        provider = provider,
+                        providerUiText = providerUiText,
+                        srcFiatValueText = srcFiatValueText,
+                        estimatedDstTokenValue = estimatedDstTokenValue,
+                        estimatedDstFiatValue = estimatedDstFiatValue,
+                        comparableDstFiat = comparableDstFiat,
+                        feeText = feeText,
+                        swapFeeFiat = swapFeeFiat,
+                        outboundFeeText = outboundFeeText,
+                        swapFeePercent = swapFeePercent,
+                    ),
+            )
+        return RankedQuotes(best = best, ranked = listOf(best))
+    }
 
     private fun createThorChainQuote(
         expectedDstValue: TokenValue = TokenValue(value = BigInteger("95000000"), token = USDC_COIN)

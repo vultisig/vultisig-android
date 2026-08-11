@@ -121,6 +121,10 @@ internal sealed interface SwapQuotePipelineResult {
         val utxoDstAddress: String?,
         val utxoMemo: String?,
         val srcTokenValue: BigInteger,
+        // Full fetched candidate set, best→worst by net output. Drives the Select-route picker;
+        // [quote]/[provider] is one of these (the auto winner, or the user's manual pick when this
+        // Success was rebuilt by a route selection).
+        val rankedQuotes: List<BestQuote> = emptyList(),
     ) : SwapQuotePipelineResult
 }
 
@@ -250,7 +254,7 @@ internal class SwapQuotePipeline(
                 )
             // Map the sealed result: a typed fetch failure becomes a Failure carrying its
             // already-mapped error; only a Success continues into fee processing.
-            val bestQuote =
+            val resolved =
                 when (resolution) {
                     is QuoteResolution.Failure ->
                         return SwapQuotePipelineResult.Failure(
@@ -263,15 +267,16 @@ internal class SwapQuotePipeline(
                             cause = resolution.cause,
                             tag = resolution.tag,
                         )
-                    is QuoteResolution.Success -> resolution.best
+                    is QuoteResolution.Success -> resolution
                 }
 
             buildSuccess(
-                bestQuote = bestQuote,
+                bestQuote = resolved.best,
                 src = src,
                 srcTokenValue = srcTokenValue,
                 tokenValue = tokenValue,
                 currentDiscountInfo = currentDiscountInfo,
+                rankedQuotes = resolved.ranked,
             )
         } catch (e: SwapException) {
             SwapQuotePipelineResult.Failure(
@@ -331,13 +336,18 @@ internal class SwapQuotePipeline(
         }
     }
 
-    /** Builds the display-ready [SwapQuotePipelineResult.Success] from the winning quote. */
+    /**
+     * Builds the display-ready [SwapQuotePipelineResult.Success] from the winning quote.
+     * [rankedQuotes] is passed through untouched so the Select-route picker keeps the full
+     * candidate set both on a fresh fetch and when re-applying a manual route pick.
+     */
     internal suspend fun buildSuccess(
         bestQuote: BestQuote,
         src: SendSrc,
         srcTokenValue: BigInteger,
         tokenValue: TokenValue,
         currentDiscountInfo: DiscountInfo,
+        rankedQuotes: List<BestQuote> = emptyList(),
     ): SwapQuotePipelineResult.Success {
         val quoteResult = bestQuote.result
         val provider = quoteResult.provider
@@ -447,6 +457,7 @@ internal class SwapQuotePipeline(
             utxoDstAddress = utxoFeeData?.first,
             utxoMemo = utxoFeeData?.second,
             srcTokenValue = srcTokenValue,
+            rankedQuotes = rankedQuotes,
         )
     }
 
