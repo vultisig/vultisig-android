@@ -513,7 +513,15 @@ constructor(
 
         return RankedQuotes(
             best = selectBestQuote(successes),
-            ranked = successes.sortedByDescending { it.result.comparableDstFiat },
+            ranked =
+                successes.sortedWith(
+                    // Fiat first (matches the best-quote metric), then the raw destination amount —
+                    // every candidate quotes the same dst token, so amounts compare directly. The
+                    // tie-break keeps the list output-ordered when the dst token has no price and
+                    // comparableDstFiat collapses to zero for every candidate at once.
+                    compareByDescending<BestQuote> { it.result.comparableDstFiat }
+                        .thenByDescending { it.result.quote.expectedDstValue.decimal }
+                ),
         )
     }
 

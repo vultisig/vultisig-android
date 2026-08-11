@@ -477,6 +477,7 @@ internal class SwapQuotePipeline(
         gasFee: TokenValue?,
         gasFeeChain: Chain?,
         networkFeeTokenValue: TokenValue?,
+        evmBaselineEstimate: EstimatedGasFee? = null,
     ): NetworkFeeOutcome {
         val srcToken = src.account.token
         // Base state mirrors the display update: UTXO swaps stay disabled until the plan fee lands.
@@ -547,6 +548,18 @@ internal class SwapQuotePipeline(
                     networkFee = rebased.estimated.toNetworkFeeSet()
                     effectiveNetworkFeeTokenValue = rebased.estimated.tokenValue
                 }
+            }
+        } else if (srcToken.chain.standard == TokenStandard.EVM) {
+            // A non-aggregator quote (THORChain/Maya native EVM route) won or was picked: restore
+            // the gas-pass estimate the fee display started from ([evmBaselineEstimate], stamped
+            // by calculateGas). Without this, a fee previously re-based onto an aggregator's route
+            // gas lingers when the active route switches to one it never applied to — the same
+            // route then shows a different Network Fee than when it wins a fresh fetch. Restoring
+            // the stored estimate verbatim keeps it byte-identical to that fresh-fetch display.
+            val baseline = evmBaselineEstimate?.takeIf { gasFeeChain == srcToken.chain }
+            if (baseline != null) {
+                networkFee = baseline.toNetworkFeeSet()
+                effectiveNetworkFeeTokenValue = baseline.tokenValue
             }
         }
 
