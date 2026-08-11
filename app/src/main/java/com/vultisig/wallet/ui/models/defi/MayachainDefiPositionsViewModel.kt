@@ -819,7 +819,12 @@ constructor(
                         val assetCoin =
                             vault.coins.find {
                                 it.chain == assetChain &&
-                                    it.ticker == assetCoinTicker &&
+                                    // Case-insensitive, as the THORChain LP tab already matches:
+                                    // chain metadata is not uniformly uppercased the way the EVM
+                                    // token lists are, so an exact match dropped a held token
+                                    // whose case differed from the pool string and priced its leg
+                                    // at zero.
+                                    it.ticker.equals(assetCoinTicker, ignoreCase = true) &&
                                     (assetContractAddress.isEmpty() ||
                                         it.contractAddress.equals(
                                             assetContractAddress,
