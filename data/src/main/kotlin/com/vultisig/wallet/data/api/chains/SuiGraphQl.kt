@@ -57,10 +57,14 @@ private const val UNKNOWN_GRAPHQL_ERROR = "unknown error"
  * A Sui GraphQL application error — the node parsed the request and refused it (bad address,
  * undecodable transaction, indexer outage).
  *
- * Extends [IllegalStateException] because the JSON-RPC implementation this replaces reported the
- * same conditions through `error(...)`; callers that already catch [IllegalStateException] keep
- * working unchanged. [SuiStatusProvider][com.vultisig.wallet.data.api.txstatus.SuiStatusProvider]
- * catches the subtype specifically so a persistent node failure is reported immediately instead of
+ * Extends [IllegalStateException] because that is what the JSON-RPC implementation this replaces
+ * threw for these conditions: every read and broadcast reported a node refusal through
+ * `error(...)`, so callers that already catch [IllegalStateException] keep working unchanged.
+ *
+ * The one path that did not was `checkStatus`, whose terminal errors went through a class of this
+ * same name extending plain [Exception]. That is unaffected by the widening —
+ * [SuiStatusProvider][com.vultisig.wallet.data.api.txstatus.SuiStatusProvider] catches this type by
+ * name, not by supertype, so a persistent node failure is still reported immediately instead of
  * being masked as a retryable pending poll.
  */
 internal class SuiRpcException(

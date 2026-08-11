@@ -300,6 +300,49 @@ class SuiCoinSelectionTest {
         assertTrue(SuiHelper.isSameSuiCoinType(tokenType, padded))
     }
 
+    // An LP token's coin type is itself generic, and GraphQL zero-pads the nested addresses where
+    // JSON-RPC spelled them short. Comparing only the outermost address would read a stored
+    // pre-migration contractAddress as a different token than the coin objects now carry, and the
+    // send would fail with "No ... coin objects available".
+    @Test
+    fun `coin type comparison normalizes nested generic addresses`() {
+        val short = "0x2::spot_dex::LP<0x2::sui::SUI, 0x3::coin::COIN>"
+        val padded =
+            "0x" +
+                "0".repeat(63) +
+                "2::spot_dex::LP<0x" +
+                "0".repeat(63) +
+                "2::sui::SUI,0x" +
+                "0".repeat(63) +
+                "3::coin::COIN>"
+        assertTrue(SuiHelper.isSameSuiCoinType(short, padded))
+    }
+
+    // Only addresses are normalized inside the generic arguments too: two LP tokens over
+    // differently-cased struct names remain the distinct Move types they are.
+    @Test
+    fun `nested generic comparison keeps module and struct identifiers case-sensitive`() {
+        val upper = "0x2::spot_dex::LP<0x2::sui::SUI,0x3::coin::COIN>"
+        val lower = "0x2::spot_dex::LP<0x2::sui::SUI,0x3::coin::coin>"
+        assertFalse(SuiHelper.isSameSuiCoinType(upper, lower))
+    }
+
+    // A primitive type argument has no address to strip; rewriting `u64` as one would invent a
+    // type that names nothing.
+    @Test
+    fun `primitive type arguments survive normalization unchanged`() {
+        val withPrimitives = "0x2::table::Table<u64, 0x2::sui::SUI>"
+        assertTrue(
+            SuiHelper.isSameSuiCoinType(
+                withPrimitives,
+                "0x" + "0".repeat(63) + "2::table::Table<u64,0x" + "0".repeat(63) + "2::sui::SUI>",
+            )
+        )
+        assertFalse(
+            SuiHelper.isSameSuiCoinType(withPrimitives, "0x2::table::Table<u8,0x2::sui::SUI>")
+        )
+    }
+
     @Test
     fun `native selection matches long-form objects returned by the RPC`() {
         val longNativeType = "0x" + "0".repeat(63) + "2::sui::SUI"

@@ -47,8 +47,9 @@ class SuiApiTest {
         assertEquals(BigInteger.valueOf(42), api.getBalance("0xabc", ""))
     }
 
-    // A valid address that has never held the coin type resolves to null, which is a genuine zero.
-    // Reading it as a failure would surface an error banner for an ordinary empty balance.
+    // A null balance is the node reading with no checkpoint in scope — an absent reading, not a
+    // failed one. (A coin type the address has never held comes back as a real zero instead.)
+    // Raising here would surface an error banner in place of an ordinary empty balance.
     @Test
     fun `getBalance reads a null balance as zero, not an error`() = runTest {
         val api = api("""{"data":{"address":{"balance":null}}}""")
@@ -216,9 +217,10 @@ class SuiApiTest {
 
     // Termination must not rest on the node alone. A connection that keeps reporting hasNextPage
     // while handing back the same cursor would otherwise loop forever, growing the coin list until
-    // the process dies.
+    // the process dies. Ending the walk quietly is not enough either: the coins collected so far
+    // are not the wallet, and coin selection has no way to tell the difference.
     @Test
-    fun `getAllCoins stops when the endCursor does not advance`() = runTest {
+    fun `getAllCoins raises when the endCursor does not advance`() = runTest {
         // respondingWithSequence pins the last entry, so this page repeats indefinitely.
         val client =
             MockHttpClient.respondingWithSequence(
@@ -226,23 +228,114 @@ class SuiApiTest {
                     coinsPage(hasNextPage = true, objectId = "0xcoin1", endCursor = "stuck")
             )
 
-        val coins = SuiApiImpl(client, json).getAllCoins("0xabc")
-
-        // Page one is kept, page two repeats the cursor and ends the walk.
-        assertEquals(2, coins.size)
+        val e = assertFailsWith<SuiRpcException> { SuiApiImpl(client, json).getAllCoins("0xabc") }
+        assertTrue(e.errorMessage.contains("stalled"), e.errorMessage)
     }
 
-    // A node that advances the cursor forever is bounded by the page budget rather than by trust.
+    // A node that advances the cursor forever is bounded by the page budget rather than by trust,
+    // and exhausting that budget is reported rather than absorbed — 5000 coin objects is a
+    // misbehaving connection, and a send built from a truncated list fails as a bogus
+    // "insufficient balance" with nothing naming the real cause.
     @Test
-    fun `getAllCoins stops at the page budget when the cursor keeps advancing`() = runTest {
+    fun `getAllCoins raises at the page budget when the cursor keeps advancing`() = runTest {
         val client =
             MockHttpClient.respondingWithGenerated { page ->
                 coinsPage(hasNextPage = true, objectId = "0xcoin$page", endCursor = "cursor-$page")
             }
 
-        val coins = SuiApiImpl(client, json).getAllCoins("0xabc")
+        val e = assertFailsWith<SuiRpcException> { SuiApiImpl(client, json).getAllCoins("0xabc") }
+        assertTrue(e.errorMessage.contains("$SUI_MAX_COIN_PAGES page budget"), e.errorMessage)
+    }
 
-        assertEquals(SUI_MAX_COIN_PAGES, coins.size)
+    // The coin type of an LP or wrapper token is itself a generic instantiation, and GraphQL
+    // zero-pads its nested addresses too. Normalizing only the outermost one leaves the same token
+    // spelled differently than the pre-migration node spelled it, and the stored contractAddress
+    // then matches no coin object — which blocks that token's send outright.
+    @Test
+    fun `getAllCoins strips the zero padding from nested generic coin types`() = runTest {
+        val paddedTwoB = PADDED_TWO.dropLast(2) + "2b"
+        val nested =
+            "$PADDED_TWO::coin::Coin<$PADDED_TWO::spot_dex::LP<$PADDED_TWO::sui::SUI," +
+                "$paddedTwoB::coin::COIN>>"
+        val api = api(coinsPage(hasNextPage = false, repr = nested))
+
+        assertEquals(
+            "0x2::spot_dex::LP<0x2::sui::SUI,0x2b::coin::COIN>",
+            api.getAllCoins("0xabc").single().coinType,
+        )
+    }
+
+    // A primitive type argument carries no address, so it must survive normalization untouched —
+    // treating `u64` as an address would rewrite it into a type that names nothing.
+    @Test
+    fun `getAllCoins leaves primitive type arguments alone`() = runTest {
+        val api =
+            api(
+                coinsPage(
+                    hasNextPage = false,
+                    repr = "$PADDED_TWO::coin::Coin<$PADDED_TWO::table::Table<u64,bool>>",
+                )
+            )
+
+        assertEquals("0x2::table::Table<u64,bool>", api.getAllCoins("0xabc").single().coinType)
+    }
+
+    // objectId, version and digest are exactly the fields that become the signed Sui.ObjectRef.
+    // Substituting a blank for a missing one commits every device in the ceremony to bytes the
+    // network rejects at broadcast; a blank version does not even get that far, throwing on the
+    // toLong() inside SuiHelper.
+    @Test
+    fun `getAllCoins drops a coin object missing its version or digest`() = runTest {
+        val api =
+            api(
+                """
+                {"data":{"address":{"objects":{
+                  "pageInfo":{"hasNextPage":false,"endCursor":null},
+                  "nodes":[
+                    {"address":"0xcoin1","version":null,"digest":"d",
+                     "previousTransaction":{"digest":"p"},
+                     "contents":{"type":{"repr":"0x2::coin::Coin<0x2::sui::SUI>"},
+                     "json":{"balance":"1"}}},
+                    {"address":"0xcoin2","version":1,"digest":null,
+                     "previousTransaction":{"digest":"p"},
+                     "contents":{"type":{"repr":"0x2::coin::Coin<0x2::sui::SUI>"},
+                     "json":{"balance":"1"}}},
+                    {"address":null,"version":1,"digest":"d",
+                     "previousTransaction":{"digest":"p"},
+                     "contents":{"type":{"repr":"0x2::coin::Coin<0x2::sui::SUI>"},
+                     "json":{"balance":"1"}}},
+                    {"address":"0xcoin4","version":4,"digest":"d4",
+                     "previousTransaction":{"digest":"p"},
+                     "contents":{"type":{"repr":"0x2::coin::Coin<0x2::sui::SUI>"},
+                     "json":{"balance":"1"}}}
+                  ]
+                }}}}
+                """
+                    .trimIndent()
+            )
+
+        assertEquals(listOf("0xcoin4"), api.getAllCoins("0xabc").map { it.coinObjectId })
+    }
+
+    // A connection whose non-null pageInfo/nodes are absent is a malformed response, not an empty
+    // page. Decoding it into empty defaults would end the walk early and report a wallet's coins
+    // as the subset read so far.
+    @Test
+    fun `getAllCoins rejects a connection missing pageInfo or nodes`() = runTest {
+        val e =
+            assertFailsWith<SuiRpcException> {
+                api("""{"data":{"address":{"objects":{"nodes":[]}}}}""").getAllCoins("0xabc")
+            }
+        assertTrue(e.errorMessage.contains("unexpected response shape"), e.errorMessage)
+
+        val missingNodes =
+            assertFailsWith<SuiRpcException> {
+                api(
+                        """{"data":{"address":{"objects":{"pageInfo":{"hasNextPage":false,"endCursor":null}}}}}"""
+                    )
+                    .getAllCoins("0xabc")
+            }
+        assertTrue(missingNodes.errorMessage.contains("unexpected response shape"), e.errorMessage)
     }
 
     @Test
@@ -484,6 +577,7 @@ class SuiApiTest {
         hasNextPage: Boolean,
         objectId: String = "0xcoin1",
         endCursor: String = "cursor-1",
+        repr: String = "0x2::coin::Coin<0x2::sui::SUI>",
     ) =
         """
         {"data":{"address":{"objects":{
@@ -493,7 +587,7 @@ class SuiApiTest {
             "version":100,
             "digest":"digest-1",
             "previousTransaction":{"digest":"prev-1"},
-            "contents":{"type":{"repr":"0x2::coin::Coin<0x2::sui::SUI>"},"json":{"balance":"600"}}
+            "contents":{"type":{"repr":"$repr"},"json":{"balance":"600"}}
           }]
         }}}}
         """
@@ -502,5 +596,8 @@ class SuiApiTest {
     private companion object {
         const val COIN_TYPE =
             "0x0a2b3c4d5e6f7809000000000000000000000000000000000000000000000001::gold::GOLD"
+
+        /** The zero-padded `0x2` spelling GraphQL returns for every address in a type. */
+        const val PADDED_TWO = "0x0000000000000000000000000000000000000000000000000000000000000002"
     }
 }
