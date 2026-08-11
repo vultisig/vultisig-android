@@ -4515,4 +4515,26 @@ object Coins {
                     coin.chain == chain && coin.contractAddress.equals(address, ignoreCase = true)
                 }
             }
+
+    /**
+     * Whether [coin] is a THORChain denom priced off index NAV or RUNE parity rather than off any
+     * market quote — the staking receipts and the liquid-bonding denoms.
+     *
+     * These borrow the underlying asset's [Coin.priceProviderID]: sTCY carries TCY's `tcy`, so a
+     * price-provider lookup answers with raw TCY under sTCY's name, dropping everything the
+     * position has compounded. Only the contract route applies the NAV correction, so a caller
+     * pricing one of these denoms must send it there and skip the provider id.
+     *
+     * It lives on the catalogue rather than in the pricing repository because the repository and
+     * the position screens both have to agree on which denoms it covers, and two copies of the list
+     * would silently drift.
+     */
+    fun isNavPricedDenom(coin: Coin): Boolean {
+        if (coin.chain != Chain.ThorChain) return false
+        val denom = coin.contractAddress.lowercase()
+        return denom.startsWith("x/nami") ||
+            denom == ThorChain.sTCY.contractAddress ||
+            denom == ThorChain.bRUNE.contractAddress ||
+            denom == ThorChain.ybRUNE.contractAddress
+    }
 }

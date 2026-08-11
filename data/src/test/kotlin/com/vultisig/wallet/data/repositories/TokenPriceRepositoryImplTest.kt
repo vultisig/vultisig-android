@@ -552,6 +552,48 @@ internal class TokenPriceRepositoryImplTest {
     }
 
     @Test
+    fun `the NAV batch gives up on a missing FX rate before paying for a NAV call`() = runTest {
+        // Every price in the batch is multiplied by the FX rate, and a CoinGecko miss arrives as
+        // ZERO, so without it the batch can only produce zeros the filter discards — after a live
+        // NAV call per token. The guard the sibling call sites already had was missing here.
+        coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrency.EUR)
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { thorApi.getPools() } returns emptyList()
+
+        repository.refresh(listOf(sTcy))
+
+        coVerify(exactly = 0) { thorApi.getThorchainTokenPriceByContract(any()) }
+        coVerify(exactly = 0) { tokenPriceDao.insertTokenPrice(any()) }
+    }
+
+    @Test
+    fun `a contract lookup quotes in the currency the caller captured`() = runTest {
+        // The app currency can change while a lookup is in flight, and the caller labels both the
+        // number it renders and the row this writes with the currency it captured. Rereading the
+        // app currency here filed a price resolved in the newer currency under the older label.
+        coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery {
+            coinGeckoApi.getCryptoPrices(
+                match { it.contains("tether") },
+                match { it.contains("eur") },
+            )
+        } returns mapOf("tether" to mapOf("eur" to BigDecimal("0.5")))
+        coEvery { thorApi.getPools() } returns listOf(pool("THOR.RUJI", "150000000"))
+
+        val price =
+            repository.getPriceByContactAddress(
+                chainId = Chain.ThorChain.id,
+                contractAddress = Coins.ThorChain.RUJI.contractAddress,
+                appCurrency = AppCurrency.EUR,
+            )
+
+        // $1.50 × 0.5 EUR/USD, cached under "eur" rather than the app's "usd".
+        assertPriceEquals("0.75", price)
+        coVerify { tokenPriceDao.insertTokenPrice(match { it.currency == "eur" }) }
+    }
+
+    @Test
     fun `VaultRedemption response maps the liquid bond JSON fields`() = runTest {
         // Pins the @SerialName mapping for the {"status":{}} contract query: a renamed field would
         // otherwise deserialize to the empty-string default and silently price ybRUNE at parity.

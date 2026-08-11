@@ -77,4 +77,34 @@ internal class CoinsCuratedLookupTest {
             )
         )
     }
+
+    /**
+     * The receipts and liquid-bonding denoms borrow the underlying asset's price-provider id, so
+     * every caller has to route them past it. The predicate is shared between the pricing
+     * repository and the position screens precisely so the list can't drift; this pins its members.
+     */
+    @Test
+    fun `the NAV-priced denoms are exactly the receipts and the bonded RUNE`() {
+        val navPriced = Coins.allResolvable.filter(Coins::isNavPricedDenom).map { it.id }
+
+        assertEquals(
+            listOf(
+                    Coins.ThorChain.sTCY,
+                    Coins.ThorChain.bRUNE,
+                    Coins.ThorChain.ybRUNE,
+                    Coins.ThorChain.yTCY,
+                    Coins.ThorChain.yRUNE,
+                )
+                .map { it.id }
+                .sorted(),
+            navPriced.sorted(),
+        )
+    }
+
+    /** A market-quoted THORChain denom keeps its own id and must not be diverted. */
+    @Test
+    fun `a market-priced THORChain denom is not NAV-priced`() {
+        assertTrue(!Coins.isNavPricedDenom(Coins.ThorChain.RUJI))
+        assertTrue(!Coins.isNavPricedDenom(Coins.ThorChain.TCY))
+    }
 }

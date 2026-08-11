@@ -1182,20 +1182,18 @@ constructor(
         )
     }
 
+    /**
+     * The price of one [coin], for the LP legs this screen totals itself rather than through
+     * [DefiFiatValueCalculator.createFiatValue]. The lookup order lives on the calculator: this
+     * screen used to carry its own copy, and the two drifted on which route a NAV-priced receipt
+     * may take. A failed lookup leaves the leg at zero rather than collapsing the whole card.
+     */
     private suspend fun priceFor(coin: Coin, currency: AppCurrency): BigDecimal =
         try {
-            tokenPriceRepository.getCachedPrice(tokenId = coin.id, appCurrency = currency)
-                ?: coin.priceProviderID
-                    .takeIf { it.isNotEmpty() }
-                    ?.let { tokenPriceRepository.getPriceByPriceProviderId(it) }
-                    ?.takeIf { it > BigDecimal.ZERO }
-                ?: tokenPriceRepository.getPriceByContactAddress(
-                    coin.chain.id,
-                    coin.contractAddress,
-                )
+            fiatValueCalculator.priceOf(coin, currency)
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            Timber.e(e, "Failed to fetch price for ${coin.id}")
+            Timber.e(e, "Failed to fetch price for %s", coin.id)
             BigDecimal.ZERO
         }
 
@@ -1210,25 +1208,14 @@ constructor(
         ticker: String,
         contractAddress: String,
         currency: AppCurrency,
-    ): BigDecimal {
-        Coins.findCurated(chain, ticker, contractAddress)?.let {
-            return priceFor(it, currency)
-        }
-
-        return try {
-            // An asset the catalogue doesn't carry can still have a cache row under the id a coin
-            // of that chain and ticker would have had, so read that before paying for a live
-            // contract lookup — the same order [DefiFiatValueCalculator] uses for its pool assets.
-            tokenPriceRepository.getCachedPrice(
-                tokenId = "$ticker-${chain.id}",
-                appCurrency = currency,
-            ) ?: tokenPriceRepository.getPriceByContactAddress(chain.id, contractAddress)
+    ): BigDecimal =
+        try {
+            fiatValueCalculator.priceOfPoolAsset(chain, ticker, contractAddress, currency)
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
             Timber.e(e, "Failed to fetch price for %s %s", chain, contractAddress)
             BigDecimal.ZERO
         }
-    }
 
     fun onClickAddLp(poolId: String) {
         viewModelScope.safeLaunch {

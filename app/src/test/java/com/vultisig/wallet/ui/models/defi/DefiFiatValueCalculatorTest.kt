@@ -57,16 +57,21 @@ internal class DefiFiatValueCalculatorTest {
 
         assertEquals(BigDecimal.ZERO, fiat.value)
         coVerify(exactly = 0) { tokenPriceRepository.getCachedPrice(any(), any()) }
-        coVerify(exactly = 0) { tokenPriceRepository.getPriceByContactAddress(any(), any()) }
+        coVerify(exactly = 0) { tokenPriceRepository.getPriceByContactAddress(any(), any(), any()) }
     }
 
     @Test
     fun `falls back to the contract address when nothing is cached`() = runTest {
         coEvery { tokenPriceRepository.getCachedPrice(RUNE.id, AppCurrency.USD) } returns null
-        coEvery { tokenPriceRepository.getPriceByPriceProviderId(RUNE.priceProviderID) } returns
-            BigDecimal.ZERO
         coEvery {
-            tokenPriceRepository.getPriceByContactAddress(RUNE.chain.id, RUNE.contractAddress)
+            tokenPriceRepository.getPriceByPriceProviderId(RUNE.priceProviderID, AppCurrency.USD)
+        } returns BigDecimal.ZERO
+        coEvery {
+            tokenPriceRepository.getPriceByContactAddress(
+                RUNE.chain.id,
+                RUNE.contractAddress,
+                AppCurrency.USD,
+            )
         } returns BigDecimal("3")
 
         val fiat = calculator.createFiatValue(BigDecimal("2"), RUNE, AppCurrency.USD)
@@ -82,23 +87,37 @@ internal class DefiFiatValueCalculatorTest {
     fun `an uncached coin resolves through its price provider id before the contract address`() =
         runTest {
             coEvery { tokenPriceRepository.getCachedPrice(RUJI.id, AppCurrency.USD) } returns null
-            coEvery { tokenPriceRepository.getPriceByPriceProviderId(RUJI.priceProviderID) } returns
-                BigDecimal("0.18")
+            coEvery {
+                tokenPriceRepository.getPriceByPriceProviderId(
+                    RUJI.priceProviderID,
+                    AppCurrency.USD,
+                )
+            } returns BigDecimal("0.18")
 
             val fiat = calculator.createFiatValue(BigDecimal("2"), RUJI, AppCurrency.USD)
 
             assertEquals(BigDecimal("0.36"), fiat.value)
-            coVerify(exactly = 0) { tokenPriceRepository.getPriceByContactAddress(any(), any()) }
+            coVerify(exactly = 0) {
+                tokenPriceRepository.getPriceByContactAddress(any(), any(), any())
+            }
         }
 
     @Test
     fun `a price provider id that resolves to nothing still falls through to the contract`() =
         runTest {
             coEvery { tokenPriceRepository.getCachedPrice(RUJI.id, AppCurrency.USD) } returns null
-            coEvery { tokenPriceRepository.getPriceByPriceProviderId(RUJI.priceProviderID) } returns
-                BigDecimal.ZERO
             coEvery {
-                tokenPriceRepository.getPriceByContactAddress(RUJI.chain.id, RUJI.contractAddress)
+                tokenPriceRepository.getPriceByPriceProviderId(
+                    RUJI.priceProviderID,
+                    AppCurrency.USD,
+                )
+            } returns BigDecimal.ZERO
+            coEvery {
+                tokenPriceRepository.getPriceByContactAddress(
+                    RUJI.chain.id,
+                    RUJI.contractAddress,
+                    AppCurrency.USD,
+                )
             } returns BigDecimal("0.5")
 
             val fiat = calculator.createFiatValue(BigDecimal("2"), RUJI, AppCurrency.USD)
@@ -154,7 +173,10 @@ internal class DefiFiatValueCalculatorTest {
     fun `an uncached pool asset resolves through its curated coin's price provider id`() = runTest {
         coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns null
         coEvery {
-            tokenPriceRepository.getPriceByPriceProviderId(Coins.Ethereum.USDC.priceProviderID)
+            tokenPriceRepository.getPriceByPriceProviderId(
+                Coins.Ethereum.USDC.priceProviderID,
+                AppCurrency.USD,
+            )
         } returns BigDecimal("1.0")
 
         val fiat =
@@ -169,7 +191,7 @@ internal class DefiFiatValueCalculatorTest {
             )
 
         assertEquals(BigDecimal("3.00"), fiat.value)
-        coVerify(exactly = 0) { tokenPriceRepository.getPriceByContactAddress(any(), any()) }
+        coVerify(exactly = 0) { tokenPriceRepository.getPriceByContactAddress(any(), any(), any()) }
     }
 
     /** A native pool asset carries no contract address, so only the curated coin can price it. */
@@ -178,7 +200,10 @@ internal class DefiFiatValueCalculatorTest {
         runTest {
             coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns null
             coEvery {
-                tokenPriceRepository.getPriceByPriceProviderId(Coins.Bitcoin.BTC.priceProviderID)
+                tokenPriceRepository.getPriceByPriceProviderId(
+                    Coins.Bitcoin.BTC.priceProviderID,
+                    AppCurrency.USD,
+                )
             } returns BigDecimal("60000")
 
             val fiat =
@@ -197,7 +222,11 @@ internal class DefiFiatValueCalculatorTest {
     fun `a pool asset the catalogue doesn't carry falls back to its contract address`() = runTest {
         coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns null
         coEvery {
-            tokenPriceRepository.getPriceByContactAddress(Chain.Ethereum.id, UNKNOWN_CONTRACT)
+            tokenPriceRepository.getPriceByContactAddress(
+                Chain.Ethereum.id,
+                UNKNOWN_CONTRACT,
+                AppCurrency.USD,
+            )
         } returns BigDecimal("4")
 
         val fiat =
@@ -212,9 +241,50 @@ internal class DefiFiatValueCalculatorTest {
         assertEquals(BigDecimal("12.00"), fiat.value)
     }
 
+    /**
+     * sTCY carries TCY's `tcy` price-provider id, so the id route would price it at bare TCY parity
+     * — everything the staking position has compounded, silently dropped. Only the contract route
+     * applies the NAV correction.
+     */
+    @Test
+    fun `a NAV-priced receipt skips the borrowed price provider id`() = runTest {
+        coEvery { tokenPriceRepository.getCachedPrice(STCY.id, AppCurrency.USD) } returns null
+        coEvery {
+            tokenPriceRepository.getPriceByContactAddress(
+                STCY.chain.id,
+                STCY.contractAddress,
+                AppCurrency.USD,
+            )
+        } returns BigDecimal("1.4")
+
+        val fiat = calculator.createFiatValue(BigDecimal("2"), STCY, AppCurrency.USD)
+
+        assertEquals(BigDecimal("2.80"), fiat.value)
+        coVerify(exactly = 0) { tokenPriceRepository.getPriceByPriceProviderId(any(), any()) }
+    }
+
+    /**
+     * The lookup is quoted in the currency the caller captured, not in whatever the app currency
+     * happens to be by the time it resolves — the two disagree across a currency switch, and the
+     * contract route persists what it is handed.
+     */
+    @Test
+    fun `the captured currency travels down to every lookup`() = runTest {
+        coEvery { tokenPriceRepository.getCachedPrice(RUJI.id, AppCurrency.EUR) } returns null
+        coEvery {
+            tokenPriceRepository.getPriceByPriceProviderId(RUJI.priceProviderID, AppCurrency.EUR)
+        } returns BigDecimal("0.2")
+
+        val fiat = calculator.createFiatValue(BigDecimal("2"), RUJI, AppCurrency.EUR)
+
+        assertEquals(BigDecimal("0.40"), fiat.value)
+        assertEquals("EUR", fiat.currency)
+    }
+
     private companion object {
         val RUNE = Coins.ThorChain.RUNE
         val RUJI = Coins.ThorChain.RUJI
+        val STCY = Coins.ThorChain.sTCY
         const val UNKNOWN_CONTRACT = "0x00000000000000000000000000000000deadbeef"
     }
 }

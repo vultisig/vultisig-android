@@ -43,9 +43,25 @@ interface TokenPriceRepository {
 
     suspend fun refresh(tokens: List<Coin>)
 
-    suspend fun getPriceByContactAddress(chainId: String, contractAddress: String): BigDecimal
+    /**
+     * [appCurrency] is the currency the price is quoted in and cached under, all the way down. A
+     * caller that already captured a currency must pass it: the app currency can change while a
+     * lookup is in flight, and both the returned number and the row this writes are labelled with
+     * the caller's currency — resolving the rate independently here lets a price in the newer
+     * currency be filed and displayed under the older one. Null resolves the app currency at call
+     * time, for callers that have none of their own.
+     */
+    suspend fun getPriceByContactAddress(
+        chainId: String,
+        contractAddress: String,
+        appCurrency: AppCurrency? = null,
+    ): BigDecimal
 
-    suspend fun getPriceByPriceProviderId(priceProviderId: String): BigDecimal
+    /** [appCurrency] carries the caller's currency, as in [getPriceByContactAddress]. */
+    suspend fun getPriceByPriceProviderId(
+        priceProviderId: String,
+        appCurrency: AppCurrency? = null,
+    ): BigDecimal
 }
 
 internal class TokenPriceRepositoryImpl
@@ -94,7 +110,7 @@ constructor(
         // carries TCY's `tcy` priceProviderID: left in, the provider batch would cache raw TCY
         // under sTCY's row before the NAV correction runs, and leave it stuck at bare TCY parity
         // for the cycle whenever that correction fails.
-        val batchTokens = tokens.filterNot(::isNavPricedDenom)
+        val batchTokens = tokens.filterNot(Coins::isNavPricedDenom)
 
         val tokensByPriceProviderIds = batchTokens.groupBy { it.priceProviderID.lowercase() }
 
@@ -206,10 +222,11 @@ constructor(
     override suspend fun getPriceByContactAddress(
         chainId: String,
         contractAddress: String,
+        appCurrency: AppCurrency?,
     ): BigDecimal {
         if (contractAddress.isEmpty()) return BigDecimal.ZERO
         val chain = runCatching { Chain.fromRaw(chainId) }.getOrNull() ?: return BigDecimal.ZERO
-        val currency = appCurrencyRepository.currency.first().ticker.lowercase()
+        val currency = currencyTicker(appCurrency)
 
         val price =
             nativeChainContractPrice(chain, contractAddress, currency)
@@ -347,11 +364,22 @@ constructor(
         return mayaPoolPrice(token, appCurrency)
     }
 
-    override suspend fun getPriceByPriceProviderId(priceProviderId: String): BigDecimal {
-        val currency = appCurrencyRepository.currency.first().ticker.lowercase()
+    override suspend fun getPriceByPriceProviderId(
+        priceProviderId: String,
+        appCurrency: AppCurrency?,
+    ): BigDecimal {
+        val currency = currencyTicker(appCurrency)
         val cryptoPrices = coinGeckoApi.getCryptoPrices(listOf(priceProviderId), listOf(currency))
         return cryptoPrices.values.firstOrNull()?.values?.firstOrNull() ?: BigDecimal.ZERO
     }
+
+    /**
+     * The currency a lookup quotes in: the caller's, when it captured one, else the app currency as
+     * of now. Reading the app currency here for a caller that already has one is what lets a
+     * mid-flight currency switch mislabel the result.
+     */
+    private suspend fun currencyTicker(appCurrency: AppCurrency?): String =
+        (appCurrency ?: appCurrencyRepository.currency.first()).ticker.lowercase()
 
     private suspend fun savePrices(
         tokenIdToPrices: Map<TokenId, CurrencyToPrice>,
@@ -614,26 +642,16 @@ constructor(
         return (priceInCacao * cacaoPrice).takeIf { it.signum() > 0 }
     }
 
-    /**
-     * The THORChain denoms [fetchThorContractPrices] owns: priced off index NAV or RUNE parity
-     * rather than any market quote. Shared with [refresh] so the two lists can't drift apart — a
-     * denom this route claims must be excluded from the generic provider/contract batches there, or
-     * a borrowed priceProviderID writes the wrong price into its row first.
-     */
-    private fun isNavPricedDenom(coin: Coin): Boolean {
-        if (coin.chain != Chain.ThorChain) return false
-        val denom = coin.contractAddress.lowercase()
-        return denom.startsWith("x/nami") ||
-            denom == STAKING_TCY_DENOM ||
-            denom == BRUNE_DENOM ||
-            denom == YBRUNE_DENOM
-    }
-
     private suspend fun fetchThorContractPrices(tokenList: List<Coin>, currency: String) =
         supervisorScope {
             try {
+                // The denoms this route owns: priced off index NAV or RUNE parity rather than any
+                // market quote. The predicate is shared with [refresh] and with the position
+                // screens so the lists can't drift apart — a denom this route claims must be kept
+                // out of the generic provider batch, or a borrowed priceProviderID writes the
+                // wrong price into its row first.
                 val thorTokens =
-                    Coins.coins[Chain.ThorChain]?.filter(::isNavPricedDenom) ?: emptyList()
+                    Coins.coins[Chain.ThorChain]?.filter(Coins::isNavPricedDenom) ?: emptyList()
 
                 val matchingTokens =
                     tokenList.filter { token -> thorTokens.any { it.id.equals(token.id, true) } }
@@ -654,7 +672,18 @@ constructor(
 
                 val tokenIds = matchingTokens.map { it.id }
 
+                // Every price below is multiplied by this rate, and a CoinGecko miss arrives as
+                // ZERO, so without the rate the whole batch can only produce zeros — which the
+                // filter further down discards anyway, after paying for a NAV or RUNE call per
+                // token. Give up here instead, and leave the last-known prices in place.
                 val tetherPrice = tetherPriceFor(currency)
+                if (tetherPrice.signum() <= 0) {
+                    Timber.w(
+                        "No %s/USD rate available, leaving the NAV-priced denoms unresolved",
+                        currency,
+                    )
+                    return@supervisorScope
+                }
 
                 // bRUNE and ybRUNE both price off RUNE-in-USD. Fetch it once up front (only when a
                 // RUNE-backed denom is present) so concurrent per-token async blocks don't each
