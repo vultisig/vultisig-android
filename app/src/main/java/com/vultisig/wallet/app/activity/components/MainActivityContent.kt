@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -57,6 +58,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.screens.home.VaultAccountsScreen
+import com.vultisig.wallet.ui.screens.passcode.LocalIsGateClosed
 import com.vultisig.wallet.ui.screens.passcode.PasscodeGuard
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.SnackbarFlow
@@ -137,12 +139,19 @@ internal fun MainActivityContent(
                 onNavigationReady()
             }
 
-            Box(
-                modifier =
-                    Modifier.fillMaxSize()
-                        .then(if (isGateClosed) Modifier.clearAndSetSemantics {} else Modifier)
-            ) {
-                SetupNavGraph(navController = navController, startDestination = startDestination)
+            // Neither the cover nor the semantics reset below reaches a window of its own, so
+            // content that opens one holds itself back on this instead. See OnceUnlocked.
+            CompositionLocalProvider(LocalIsGateClosed provides isGateClosed) {
+                Box(
+                    modifier =
+                        Modifier.fillMaxSize()
+                            .then(if (isGateClosed) Modifier.clearAndSetSemantics {} else Modifier)
+                ) {
+                    SetupNavGraph(
+                        navController = navController,
+                        startDestination = startDestination,
+                    )
+                }
             }
         },
         overlayContent = {
