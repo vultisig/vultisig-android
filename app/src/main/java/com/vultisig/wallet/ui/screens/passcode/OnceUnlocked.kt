@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.screens.passcode
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,9 +28,8 @@ internal val LocalIsGateClosed = compositionLocalOf { false }
  */
 @Composable
 internal fun OnceUnlocked(content: @Composable () -> Unit) {
-    val isGateClosed = LocalIsGateClosed.current
-    var isReleased by remember { mutableStateOf(!isGateClosed) }
-    LaunchedEffect(isGateClosed) { if (!isGateClosed) isReleased = true }
+    var isReleased by remember { mutableStateOf(false) }
+    if (!LocalIsGateClosed.current) isReleased = true
 
     if (isReleased) {
         content()

@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.passcode
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,6 +11,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.test.platform.app.InstrumentationRegistry
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.screens.home.MonthlyBackupReminder
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
@@ -24,6 +26,9 @@ class OnceUnlockedTest {
 
     private var isGateClosed by mutableStateOf(false)
     private var isReminderWanted by mutableStateOf(false)
+
+    /** Counts entries into composition, so a held reminder can be asserted never to have run. */
+    private var reminderCompositions = 0
 
     @Test
     fun theReminderShowsWhileTheGateIsOpen() {
@@ -69,16 +74,17 @@ class OnceUnlockedTest {
         assertReminderShows()
     }
 
-    /** Held, not queued: what is no longer wanted by the time the gate opens is not raised. */
+    /** Held, not queued: what stops being wanted behind the gate is never raised at all. */
     @Test
-    fun theHeldReminderIsDroppedWhenItStopsBeingWanted() {
+    fun theHeldReminderIsNeverComposedIfItStopsBeingWanted() {
         start(gateClosed = true)
         wantReminder(true)
 
         wantReminder(false)
         setGateState(closed = false)
 
-        assertReminderHeld()
+        compose.waitForIdle()
+        assertEquals(0, reminderCompositions)
     }
 
     /**
@@ -103,6 +109,10 @@ class OnceUnlockedTest {
             CompositionLocalProvider(LocalIsGateClosed provides isGateClosed) {
                 if (isReminderWanted) {
                     OnceUnlocked {
+                        DisposableEffect(Unit) {
+                            reminderCompositions++
+                            onDispose {}
+                        }
                         MonthlyBackupReminder(onDismiss = {}, onBackup = {}, onDoNotRemind = {})
                     }
                 }
