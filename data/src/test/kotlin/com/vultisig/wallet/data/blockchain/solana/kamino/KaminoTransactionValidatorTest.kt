@@ -104,6 +104,26 @@ class KaminoTransactionValidatorTest {
     }
 
     @Test
+    fun `a memo naming accounts is refused, tag or no tag`() {
+        // A memo listing accounts is the Memo program attesting that they signed. Attribution is
+        // not
+        // that, and the app's own injection names none — so an account list means it came from
+        // somewhere else, even when the bytes happen to be right.
+        val reason =
+            rejection(
+                listOf(
+                    ix(KaminoVaultRegistry.PROGRAM_ID),
+                    KaminoTxInstruction(
+                        programId = KaminoAttributionMemo.MEMO_PROGRAM_ID,
+                        data = KaminoAttributionMemo.TAG.toByteArray(),
+                        accounts = listOf("9ceRgz579BcfWogs3RE11FKNQaWW7Lmtnev3MXspxUjF"),
+                    ),
+                )
+            )
+        assertTrue(reason.contains("name no accounts"), reason)
+    }
+
+    @Test
     fun `a memo that is not last is refused`() {
         val reason =
             rejection(

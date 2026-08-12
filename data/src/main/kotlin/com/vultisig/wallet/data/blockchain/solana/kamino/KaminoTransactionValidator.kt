@@ -100,6 +100,12 @@ object KaminoTransactionValidator {
         }
 
         val memo = memos.single()
+        // A memo naming accounts is the Memo program *attesting* that they signed. Attribution is
+        // not that, and the app's own injection names none, so an account list means this memo came
+        // from somewhere else.
+        if (memo.accounts.isNotEmpty()) {
+            reject("attribution memo must name no accounts, found ${memo.accounts.size}")
+        }
         if (!memo.data.contentEquals(TAG_BYTES)) {
             // Any memo other than the exact tag is a refusal: an arbitrary memo riding along on a
             // signed transaction is a channel the app did not open.

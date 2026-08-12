@@ -160,9 +160,13 @@ class KaminoTransactionPreparerTest {
     }
 
     @Test
-    fun a_withdraw_gets_the_withdraw_budget() {
+    fun a_withdraw_gets_a_budget_that_covers_the_farm_staked_shape() {
+        // Staked withdraws measure 283k-309k because of the two farms instructions ahead of the
+        // vault withdraw; at 220,000 every one of them aborted on compute exhaustion.
         val prepared = prepare(action = KaminoAction.WITHDRAW)
-        assertEquals(220_000L, SolanaTransaction.getComputeUnitLimit(prepared)?.toLong())
+        val limit = SolanaTransaction.getComputeUnitLimit(prepared)?.toLong() ?: 0L
+        assertEquals(400_000L, limit)
+        assertTrue("must clear the 309,310 staked-SOL measurement", limit > 309_310L)
     }
 
     @Test
@@ -273,7 +277,7 @@ class KaminoTransactionPreparerTest {
             instructions.none { it.programId == KaminoVaultRegistry.FARMS_PROGRAM_ID },
         )
         assertEquals(KaminoAttributionMemo.MEMO_PROGRAM_ID, instructions.last().programId)
-        assertEquals(220_000L, SolanaTransaction.getComputeUnitLimit(prepared)?.toLong() ?: 0L)
+        assertEquals(400_000L, SolanaTransaction.getComputeUnitLimit(prepared)?.toLong() ?: 0L)
     }
 
     @Test

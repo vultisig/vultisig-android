@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.blockchain.solana.kamino
 
 import com.vultisig.wallet.data.WalletCoreNative
 import java.util.Base64
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
@@ -202,6 +203,12 @@ class KaminoAttributionMemoTest {
 
     @Test
     fun memo_data_is_base58_encoded_and_the_transaction_stays_within_the_size_limit() {
+        // Pinned to the literal, not derived from the constant. Every other assertion here reads
+        // TAG, so a drift from `vs` to any other valid two-byte string would leave this whole suite
+        // agreeing with itself and green while the attribution it exists for matched nothing.
+        assertEquals("vs", KaminoAttributionMemo.TAG)
+        assertArrayEquals(byteArrayOf(0x76, 0x73), KaminoAttributionMemo.TAG.toByteArray())
+
         // WalletCore's JSON instruction format encodes `data` as base58, not base64. Pinning the
         // encoded form keeps the two on-chain bytes identical across platforms.
         assertEquals("A1p", Base58.encodeNoCheck(KaminoAttributionMemo.TAG.toByteArray()))

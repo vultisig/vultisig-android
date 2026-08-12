@@ -38,7 +38,23 @@ object KaminoComputeBudget {
     /** A SOL-vault deposit also creates the wSOL account, transfers into it and syncs it. */
     private const val NATIVE_DEPOSIT_UNIT_LIMIT = 350_000L
 
-    private const val WITHDRAW_UNIT_LIMIT = 220_000L
+    /**
+     * One limit for both withdraw shapes, sized for the expensive one.
+     *
+     * A withdraw of **farm-staked** shares runs two extra `farms` instructions and a second account
+     * creation ahead of the vault withdraw, costing about two-thirds more than the unstaked path:
+     * 283,786 (USDC, partial), 289,486 (USDC, at the maximum) and 309,310 (wrapped SOL, which also
+     * closes the payout account), against 173,385 unstaked. At 220,000 every staked shape aborted
+     * in simulation with `ProgramFailedToComplete — exceeded CUs meter`, so a staked withdraw —
+     * which is what essentially every real holder needs — could not be prepared at all.
+     *
+     * Deliberately not split per shape even though the caller knows which it is building. The
+     * priority fee is price × limit, so the unstaked path pays for headroom it does not use (about
+     * a third of a cent at the fallback price) and in exchange one value per operation can be
+     * pinned. A second value would have to be selected from the transaction's own shape, which is
+     * the sort of check that agrees with whatever it is shown.
+     */
+    private const val WITHDRAW_UNIT_LIMIT = 400_000L
 
     /**
      * Floor for the micro-lamports-per-unit price when the network's recent-fee sample is
