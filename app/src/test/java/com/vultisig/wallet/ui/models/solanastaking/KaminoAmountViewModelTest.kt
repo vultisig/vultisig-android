@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.solanastaking
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.KaminoApi
 import com.vultisig.wallet.data.api.KaminoUserPositionJson
 import com.vultisig.wallet.data.api.KaminoVaultMetricsJson
@@ -25,6 +26,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -294,10 +296,9 @@ internal class KaminoAmountViewModelTest {
     }
 
     @Test
-    fun `a withdraw of farm-staked shares is refused by name, not attempted`() = runTest {
-        // Every launch-vault deposit auto-stakes, and the transaction that spends staked shares has
-        // never been observed, so this is a named state rather than a guess at an instruction
-        // layout.
+    fun `a farm-staked position is offered, because Kamino releases it from the farm`() = runTest {
+        // Every launch-vault deposit auto-stakes, so refusing this would block the only withdraw
+        // path that exists in practice. The transaction releases the shares from the farm itself.
         givenTokenBalance("0")
         coEvery { kaminoApi.getUserPositions(WALLET) } returns
             listOf(
@@ -379,6 +380,27 @@ internal class KaminoAmountViewModelTest {
         assertEquals(OPERATION_KAMINO_DEPOSIT, captured.captured.operation)
         assertEquals("Steakhouse USDC", captured.captured.validatorName)
         assertEquals(STEAKHOUSE.address, captured.captured.dstAddress)
+    }
+
+    @Test
+    fun `a refusal reaches the user as a localised resource, not an exception message`() = runTest {
+        // The message belongs in the log; the user needs the same fact in their own language. A
+        // DynamicString carrying English prose reaches every locale untranslated.
+        givenTokenBalance("2500000000")
+
+        val vm = viewModel()
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("999999")
+        vm.submit()
+
+        val error = vm.state.value.error
+        assertTrue(
+            error is UiText.StringResource,
+            "expected a string resource, was ${error?.let { it::class.simpleName }}",
+        )
+        assertEquals(
+            R.string.kamino_amount_exceeds_available,
+            (error as UiText.StringResource).resId,
+        )
     }
 
     private companion object {

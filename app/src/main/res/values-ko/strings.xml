@@ -86,6 +86,10 @@
     <string name="kamino_amount_below_minimum">최소 %1$s %2$s</string>
     <string name="kamino_error_unknown_vault">앱이 지원하지 않는 볼트입니다</string>
     <string name="kamino_error_load_failed">지금은 이 볼트를 불러올 수 없습니다</string>
+    <string name="kamino_refusal_below_smallest_unit">금액이 이 자산의 최소 단위보다 작습니다</string>
+    <string name="kamino_refusal_below_minimum">금액이 이 볼트의 최소 금액보다 적습니다</string>
+    <string name="kamino_refusal_rate_unavailable">이 볼트의 지분 비율을 지금은 가져올 수 없습니다</string>
+    <string name="kamino_refusal_larger_than_position">이 금액은 보유 포지션보다 큽니다</string>
     <string name="verify_deposit_depositing">예치 중</string>
     <string name="verify_deposit_withdrawing">출금 중</string>
     <string name="kamino_verify_vault">볼트</string>

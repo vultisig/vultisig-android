@@ -5,6 +5,7 @@ import io.ktor.util.decodeBase64Bytes
 import java.math.BigInteger
 import javax.inject.Inject
 import wallet.core.jni.CoinType
+import wallet.core.jni.SolanaAddress
 import wallet.core.jni.SolanaTransaction
 import wallet.core.jni.TransactionDecoder
 import wallet.core.jni.proto.Solana
@@ -124,9 +125,25 @@ class KaminoTransactionPreparer @Inject constructor(private val kaminoApi: Kamin
             vault = vault,
             action = action,
             signerAddress = walletAddress,
+            wrappedSolAccount = wrappedSolAccountFor(vault, walletAddress),
         )
 
         return withMemo
+    }
+
+    /**
+     * The wrapped-SOL associated token account a wrap must pay into, derived from the signer and
+     * the vault's own mint rather than read out of the transaction being checked.
+     *
+     * Null for vaults whose underlying is a plain token, which have no wrap to make.
+     */
+    private fun wrappedSolAccountFor(vault: KaminoVault, walletAddress: String): String? {
+        if (vault.tokenMint != KaminoVaultRegistry.WRAPPED_SOL_MINT) return null
+        return runCatching {
+                SolanaAddress(walletAddress)
+                    .defaultTokenAddress(KaminoVaultRegistry.WRAPPED_SOL_MINT)
+            }
+            .getOrNull()
     }
 
     private fun injectComputeBudget(

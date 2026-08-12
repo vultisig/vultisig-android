@@ -212,6 +212,7 @@ class KaminoTransactionValidatorTest {
         // destination, which on a real wrap is the wSOL account the vault deposit also names — so
         // the
         // fixture has to say so, or the destination check refuses it for the right reason.
+        // Stands in for the address the preparer derives from the signer and the wSOL mint.
         val wrappedSolAccount = "AyY6VCkHfTWdFs7SqBbu6AnCqLUhgzVHBzW3WcJu5Jc8"
         val systemTransfer =
             KaminoTxInstruction(
@@ -236,6 +237,7 @@ class KaminoTransactionValidatorTest {
                 decoded(instructions),
                 KaminoVaultRegistry.ALLEZ_SOL,
                 KaminoAction.DEPOSIT,
+                wrappedSolAccount = wrappedSolAccount,
             )
         }
     }
@@ -311,11 +313,12 @@ class KaminoTransactionValidatorTest {
                         decoded(listOf(kvault, strayTransfer, memo)),
                         KaminoVaultRegistry.ALLEZ_SOL,
                         KaminoAction.DEPOSIT,
+                        wrappedSolAccount = "AyY6VCkHfTWdFs7SqBbu6AnCqLUhgzVHBzW3WcJu5Jc8",
                     )
                 }
                 .message
                 .orEmpty()
-        assertTrue(reason.contains("does not reference"), reason)
+        assertTrue(reason.contains("rather than to the wallet"), reason)
     }
 
     @Test
@@ -346,6 +349,65 @@ class KaminoTransactionValidatorTest {
                 .message
                 .orEmpty()
         assertTrue(reason.contains("authorised by"), reason)
+    }
+
+    @Test
+    fun `a lamport transfer is refused when the destination is only named by the kVault instruction`() {
+        // The check this replaced accepted any destination the kVault instruction also named, which
+        // a
+        // compromised response could satisfy by listing an attacker there — the same response
+        // chooses
+        // that account list. Only the locally derived wrapped-SOL address is accepted.
+        val attacker = OTHER_ACCOUNT
+        val kvault =
+            KaminoTxInstruction(
+                programId = KaminoVaultRegistry.PROGRAM_ID,
+                data = byteArrayOf(1),
+                accounts = listOf(attacker),
+            )
+        val transferToAttacker =
+            KaminoTxInstruction(
+                programId = "11111111111111111111111111111111",
+                data = byteArrayOf(2, 0, 0, 0, 1, 2, 3, 4),
+                accounts = listOf(DEFAULT_FEE_PAYER, attacker),
+            )
+
+        val reason =
+            assertThrows<KaminoTransactionRejected> {
+                    KaminoTransactionValidator.validate(
+                        decoded(listOf(kvault, transferToAttacker, memo)),
+                        KaminoVaultRegistry.ALLEZ_SOL,
+                        KaminoAction.DEPOSIT,
+                        wrappedSolAccount = "AyY6VCkHfTWdFs7SqBbu6AnCqLUhgzVHBzW3WcJu5Jc8",
+                    )
+                }
+                .message
+                .orEmpty()
+        assertTrue(reason.contains("rather than to the wallet"), reason)
+    }
+
+    @Test
+    fun `a wrap is refused outright when the expected account could not be derived`() {
+        // Unverifiable is not the same as fine: with no derived address there is nothing to compare
+        // the destination against.
+        val transfer =
+            KaminoTxInstruction(
+                programId = "11111111111111111111111111111111",
+                data = byteArrayOf(2, 0, 0, 0, 1, 2, 3, 4),
+                accounts = listOf(DEFAULT_FEE_PAYER, "AyY6VCkHfTWdFs7SqBbu6AnCqLUhgzVHBzW3WcJu5Jc8"),
+            )
+        val reason =
+            assertThrows<KaminoTransactionRejected> {
+                    KaminoTransactionValidator.validate(
+                        decoded(listOf(ix(KaminoVaultRegistry.PROGRAM_ID), transfer, memo)),
+                        KaminoVaultRegistry.ALLEZ_SOL,
+                        KaminoAction.DEPOSIT,
+                        wrappedSolAccount = null,
+                    )
+                }
+                .message
+                .orEmpty()
+        assertTrue(reason.contains("could not be derived"), reason)
     }
 
     @Test

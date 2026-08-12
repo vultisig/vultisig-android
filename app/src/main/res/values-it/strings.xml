@@ -541,6 +541,10 @@
     <string name="kamino_amount_below_minimum">Il minimo è %1$s %2$s</string>
     <string name="kamino_error_unknown_vault">Questo vault non è supportato dall\'app</string>
     <string name="kamino_error_load_failed">Impossibile caricare questo vault in questo momento</string>
+    <string name="kamino_refusal_below_smallest_unit">L\'importo è inferiore all\'unità minima di questo asset</string>
+    <string name="kamino_refusal_below_minimum">L\'importo è inferiore al minimo di questo vault</string>
+    <string name="kamino_refusal_rate_unavailable">Il tasso per quota di questo vault non è disponibile ora</string>
+    <string name="kamino_refusal_larger_than_position">Questo importo è superiore a questa posizione</string>
     <string name="verify_deposit_depositing">Stai depositando</string>
     <string name="verify_deposit_withdrawing">Stai prelevando</string>
     <string name="kamino_verify_vault">Vault</string>

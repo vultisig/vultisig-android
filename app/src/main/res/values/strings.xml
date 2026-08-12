@@ -89,6 +89,10 @@
     <string name="kamino_amount_below_minimum">Minimum is %1$s %2$s</string>
     <string name="kamino_error_unknown_vault">This vault is not one the app supports</string>
     <string name="kamino_error_load_failed">Could not load this vault right now</string>
+    <string name="kamino_refusal_below_smallest_unit">Amount is smaller than the smallest unit of this asset</string>
+    <string name="kamino_refusal_below_minimum">Amount is below this vault\'s minimum</string>
+    <string name="kamino_refusal_rate_unavailable">This vault\'s share rate is unavailable right now</string>
+    <string name="kamino_refusal_larger_than_position">That amount is larger than this position</string>
     <string name="verify_deposit_depositing">You\'re depositing</string>
     <string name="verify_deposit_withdrawing">You\'re withdrawing</string>
     <string name="kamino_verify_vault">Vault</string>

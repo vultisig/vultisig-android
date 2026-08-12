@@ -79,6 +79,7 @@ object KaminoTransactionValidator {
         vault: KaminoVault,
         action: KaminoAction,
         signerAddress: String? = null,
+        wrappedSolAccount: String? = null,
     ) {
         val instructions = decoded.instructions
         if (!KaminoVaultRegistry.isAllowed(vault.address)) {
@@ -127,7 +128,7 @@ object KaminoTransactionValidator {
             reject("memo must be the final instruction")
         }
 
-        rejectValueMovementAwayFromTheSigner(instructions, vault)
+        rejectValueMovementAwayFromTheSigner(instructions, vault, wrappedSolAccount)
         rejectAnotherAccountsAuthority(decoded.feePayer, signerAddress)
         rejectTheWithdrawEverythingSentinel(instructions)
     }
@@ -184,6 +185,7 @@ object KaminoTransactionValidator {
     private fun rejectValueMovementAwayFromTheSigner(
         instructions: List<KaminoTxInstruction>,
         vault: KaminoVault,
+        wrappedSolAccount: String?,
     ) {
         instructions.forEachIndexed { index, instruction ->
             when (instruction.programId) {
@@ -211,21 +213,26 @@ object KaminoTransactionValidator {
                                     "vault has cause to do"
                             )
                         }
-                        // Permitted, but not to anywhere: the only lamports a deposit moves go into
-                        // the wSOL account it is about to deposit from, which the kVault
-                        // instruction
-                        // therefore also names. A transfer to an address this transaction does not
-                        // otherwise touch is not a wrap.
+                        // Permitted, but only to one address: the wrapped-SOL account derived from
+                        // the signer and the vault's own mint.
+                        //
+                        // An earlier version accepted any destination the kVault instruction also
+                        // named, which is no check at all against a compromised response — the same
+                        // response chooses that instruction's account list, so it could name an
+                        // attacker there and have the transfer waved through. The expected address
+                        // is
+                        // derived locally by the caller and compared exactly.
                         val destination = instruction.accounts.getOrNull(1)
-                        val kvaultAccounts =
-                            instructions
-                                .filter { it.programId == KaminoVaultRegistry.PROGRAM_ID }
-                                .flatMap { it.accounts }
-                                .toSet()
-                        if (destination == null || destination !in kvaultAccounts) {
+                        if (wrappedSolAccount == null) {
                             reject(
-                                "instruction $index moves lamports to $destination, which the " +
-                                    "vault deposit does not reference"
+                                "instruction $index moves lamports but the wrapped-SOL account " +
+                                    "could not be derived, so its destination cannot be checked"
+                            )
+                        }
+                        if (destination != wrappedSolAccount) {
+                            reject(
+                                "instruction $index moves lamports to $destination rather than to " +
+                                    "the wallet's wrapped-SOL account"
                             )
                         }
                     }

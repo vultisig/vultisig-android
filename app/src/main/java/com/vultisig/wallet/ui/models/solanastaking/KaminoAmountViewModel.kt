@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.solanastaking
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -53,6 +54,26 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
+
+/**
+ * Why a Kamino form refused to build a transaction.
+ *
+ * A typed reason rather than an exception message: the message is for the log, and the user needs
+ * the same fact in their own language. Each case maps to one string resource.
+ */
+internal enum class KaminoAmountRefusal(@StringRes val messageRes: Int) {
+    BELOW_SMALLEST_UNIT(R.string.kamino_refusal_below_smallest_unit),
+    EXCEEDS_AVAILABLE(R.string.kamino_amount_exceeds_available),
+    BELOW_MINIMUM(R.string.kamino_refusal_below_minimum),
+    NOTHING_TO_WITHDRAW(R.string.kamino_withdraw_nothing),
+    POSITION_UNREADABLE(R.string.kamino_withdraw_unreadable),
+    RATE_UNAVAILABLE(R.string.kamino_refusal_rate_unavailable),
+    LARGER_THAN_POSITION(R.string.kamino_refusal_larger_than_position),
+}
+
+/** Thrown to carry a [KaminoAmountRefusal] out to the state, where it becomes localised text. */
+internal class KaminoAmountRefused(val refusal: KaminoAmountRefusal) :
+    IllegalStateException(refusal.name)
 
 internal data class KaminoAmountUiState(
     val isWithdraw: Boolean = false,
@@ -339,11 +360,14 @@ constructor(
                         // transaction means the app declined to sign something, which the user
                         // should be able to read. An exception carrying no message would otherwise
                         // render as a blank line.
+                        // A typed refusal carries its own localised text. Anything else is a fault
+                        // rather than a rejection, so it gets the generic message — with the real
+                        // exception already in the log above.
                         error =
-                            throwable.message
-                                ?.takeIf { message -> message.isNotBlank() }
-                                ?.let(UiText::DynamicString)
-                                ?: UiText.StringResource(R.string.kamino_error_build_failed),
+                            UiText.StringResource(
+                                (throwable as? KaminoAmountRefused)?.refusal?.messageRes
+                                    ?: R.string.kamino_error_build_failed
+                            ),
                     )
                 }
             }
@@ -353,14 +377,10 @@ constructor(
             // Sending an unrounded 1.0000009 while displaying 1.000000 would sign one thing and
             // show another.
             val amount = rawAmount.setScale(coin.decimal, RoundingMode.DOWN)
-            require(amount.signum() > 0) {
-                "Amount is smaller than the smallest unit of ${coin.ticker}"
-            }
-            require(amount <= _state.value.available) { "Amount exceeds the available balance" }
+            if (amount.signum() <= 0) refuse(KaminoAmountRefusal.BELOW_SMALLEST_UNIT)
+            if (amount > _state.value.available) refuse(KaminoAmountRefusal.EXCEEDS_AVAILABLE)
             _state.value.minimum?.let { minimum ->
-                require(amount >= minimum) {
-                    "Minimum is ${minimum.stripTrailingZeros().toPlainString()} ${coin.ticker}"
-                }
+                if (amount < minimum) refuse(KaminoAmountRefusal.BELOW_MINIMUM)
             }
 
             // The denomination the endpoint expects, sized here rather than anywhere downstream.
@@ -438,16 +458,19 @@ constructor(
      */
     private fun withdrawShares(amount: BigDecimal, coin: Coin): String {
         val eligibility = _state.value.eligibility
-        check(eligibility is KaminoWithdrawEligibility.Withdrawable) {
-            when (eligibility) {
-                KaminoWithdrawEligibility.Empty -> "There is nothing to withdraw from this vault"
-                else -> "This position could not be read, so no withdraw can be sized safely"
-            }
+        if (eligibility !is KaminoWithdrawEligibility.Withdrawable) {
+            refuse(
+                if (eligibility == KaminoWithdrawEligibility.Empty) {
+                    KaminoAmountRefusal.NOTHING_TO_WITHDRAW
+                } else {
+                    KaminoAmountRefusal.POSITION_UNREADABLE
+                }
+            )
         }
 
-        val rate = checkNotNull(withdrawRate) { "The vault's share rate is unavailable" }
+        val rate = withdrawRate ?: refuse(KaminoAmountRefusal.RATE_UNAVAILABLE)
         val held = eligibility.shares.maximum
-        val maximum = checkNotNull(withdrawMaximumTokens) { "The withdrawable balance is unknown" }
+        val maximum = withdrawMaximumTokens ?: refuse(KaminoAmountRefusal.RATE_UNAVAILABLE)
 
         val requested =
             KaminoTokenAmount(
@@ -463,10 +486,10 @@ constructor(
                 rate = rate,
                 shareDecimals = vault?.sharesDecimals ?: held.decimals,
             )
-        checkNotNull(shares) { "That amount is larger than this position" }
-        check(shares.baseUnits <= held.baseUnits) {
-            // Belt and braces on the one invariant that matters: never request more than is held.
-            "Refusing to request more shares than the position holds"
+        if (shares == null || shares.baseUnits > held.baseUnits) {
+            // The second half is belt and braces on the one invariant that matters: never request
+            // more shares than the position holds.
+            refuse(KaminoAmountRefusal.LARGER_THAN_POSITION)
         }
         return shares.apiString()
     }
@@ -491,6 +514,8 @@ constructor(
             _state.update { it.copy(liquidity = liquidity) }
         }
     }
+
+    private fun refuse(refusal: KaminoAmountRefusal): Nothing = throw KaminoAmountRefused(refusal)
 
     fun dismissError() {
         _state.update { it.copy(error = null) }

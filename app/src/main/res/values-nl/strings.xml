@@ -538,6 +538,10 @@
     <string name="kamino_amount_below_minimum">Minimum is %1$s %2$s</string>
     <string name="kamino_error_unknown_vault">Deze vault wordt niet ondersteund door de app</string>
     <string name="kamino_error_load_failed">Kan deze vault nu niet laden</string>
+    <string name="kamino_refusal_below_smallest_unit">Bedrag is kleiner dan de kleinste eenheid van dit asset</string>
+    <string name="kamino_refusal_below_minimum">Bedrag ligt onder het minimum van deze vault</string>
+    <string name="kamino_refusal_rate_unavailable">De koers per aandeel van deze vault is nu niet beschikbaar</string>
+    <string name="kamino_refusal_larger_than_position">Dat bedrag is groter dan deze positie</string>
     <string name="verify_deposit_depositing">Je stort</string>
     <string name="verify_deposit_withdrawing">Je neemt op</string>
     <string name="kamino_verify_vault">Vault</string>
