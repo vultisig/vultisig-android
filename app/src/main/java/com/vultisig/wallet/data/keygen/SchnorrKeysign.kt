@@ -332,13 +332,12 @@ class SchnorrKeysign(
             val localPartySlice = localPartyIDArr.toSchnorrGoSlice()
             val keyShareBytes = getKeyshareBytes()
             val keyshareSlice = keyShareBytes.toSchnorrGoSlice()
-            // keyshareHandle is never freed: goschnorr exports no schnorr_keyshare_free (see #5587)
             val keyshareHandle = Handle()
-            val result = schnorr_keyshare_from_bytes(keyshareSlice, keyshareHandle)
-            if (result != LIB_OK) {
-                throw RuntimeException("fail to create keyshare handle from bytes, $result")
-            }
             try {
+                val result = schnorr_keyshare_from_bytes(keyshareSlice, keyshareHandle)
+                if (result != LIB_OK) {
+                    throw RuntimeException("fail to create keyshare handle from bytes, $result")
+                }
                 val sessionResult =
                     schnorr_sign_session_from_setup(
                         decodedSetupMsg,
@@ -370,6 +369,9 @@ class SchnorrKeysign(
             } finally {
                 schnorr_sign_session_free(handler)
                 handler.delete()
+                // keyshareHandle wrapper deleted; the native keyshare itself still leaks:
+                // goschnorr exports no schnorr_keyshare_free (see #5587)
+                keyshareHandle.delete()
             }
         } catch (e: CancellationException) {
             throw e

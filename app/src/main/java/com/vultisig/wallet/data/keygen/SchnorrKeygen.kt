@@ -361,6 +361,7 @@ class SchnorrKeygen(
                         if (this.isInitiatingDevice) {
                             val (keyImportSetupMsg, keyImportHandler) =
                                 getDklsKeyImportSetupMessage(this.localUi, this.hexChainCode)
+                            handler.delete()
                             handler = keyImportHandler
                             sessionApi.uploadSetupMessage(
                                 serverUrl = mediatorURL,
@@ -382,7 +383,7 @@ class SchnorrKeygen(
                                         encryption.decrypt(
                                             Base64.decode(it),
                                             Numeric.hexStringToByteArray(encryptionKeyHex),
-                                        )!!
+                                        ) ?: error("fail to decrypt key import setup message")
                                     }
                                     .let { Base64.decode(it) }
                             val result =
