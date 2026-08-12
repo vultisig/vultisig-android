@@ -4000,6 +4000,7 @@ private val KAMINO_PREVIEW_ROWS =
             pnlDisplay = "54.427822 USDC",
             pnlDirection = KaminoEarnRow.PnlDirection.UP,
             fiatValue = java.math.BigDecimal("1054.22"),
+            hasPosition = true,
         ),
         KaminoEarnRow(
             vaultAddress = "A1so1bPD3W1TfeFwboDh8yfAAVaVtcdAYBYCjhg2mJQ",
@@ -4014,6 +4015,8 @@ private val KAMINO_PREVIEW_ROWS =
             pnlDisplay = "0 SOL",
             pnlDirection = KaminoEarnRow.PnlDirection.FLAT,
             fiatValue = java.math.BigDecimal.ZERO,
+            // Read, and holds nothing: the card drops its figure rows and offers only Deposit.
+            hasPosition = false,
         ),
         KaminoEarnRow(
             vaultAddress = "DWSXb18xZApz29vnQpgR2m6MynCT7PznaXt7Ut7M7KaP",

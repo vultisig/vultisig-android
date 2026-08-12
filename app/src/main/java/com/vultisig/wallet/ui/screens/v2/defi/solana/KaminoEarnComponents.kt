@@ -198,11 +198,19 @@ private fun KaminoVaultCard(
 
         UiHorizontalDivider()
 
-        DepositedRow(row = row, isBalanceVisible = isBalanceVisible)
+        // A vault read as holding nothing describes no position, and rows of zeros describe nothing
+        // — so the figures go and Deposit takes the full width, as the design draws an empty card.
+        // An *unread* position keeps them: not knowing is not the same as knowing there is nothing.
+        if (row.hasPosition) {
+            DepositedRow(row = row, isBalanceVisible = isBalanceVisible)
+        }
 
+        // APY is a property of the vault rather than of the position, so it stays either way.
         ApyRow(apyDisplay = row.apyDisplay, isLoading = isLoading)
 
-        PnlRow(row = row, isLoading = isLoading, isBalanceVisible = isBalanceVisible)
+        if (row.hasPosition) {
+            PnlRow(row = row, isLoading = isLoading, isBalanceVisible = isBalanceVisible)
+        }
 
         VaultActions(
             // Gated on the position itself, not its fiat value: a failed price lookup leaves
