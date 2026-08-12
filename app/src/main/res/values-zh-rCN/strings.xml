@@ -69,6 +69,7 @@
     <string name="kamino_earn_apy_30d">年化收益率（30天）</string>
     <string name="kamino_earn_pnl">盈亏</string>
     <string name="kamino_earn_lost">亏损</string>
+    <string name="kamino_earn_load_failed">暂时无法刷新这些金库</string>
     <string name="kamino_earn_risk_conservative">保守型</string>
     <string name="kamino_earn_risk_private_credit">私募信贷</string>
     <string name="kamino_earn_deposit">存入</string>

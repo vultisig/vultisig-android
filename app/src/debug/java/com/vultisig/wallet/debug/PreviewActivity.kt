@@ -4033,6 +4033,7 @@ private val KAMINO_PREVIEW_ROWS =
             pnlDisplay = "0 USDC",
             pnlDirection = KaminoEarnRow.PnlDirection.FLAT,
             fiatValue = java.math.BigDecimal.ZERO,
+            hasPosition = false,
         ),
     )
 
@@ -4071,7 +4072,7 @@ private fun SolanaDeFiPreview(tab: DeFiTab, hasEnabledVaults: Boolean = true) {
                 isLoading = false,
                 hasEnabledVaults = hasEnabledVaults,
                 rows = if (hasEnabledVaults) KAMINO_PREVIEW_ROWS else emptyList(),
-                totalFiat = "$1,054.22",
+                totalFiat = if (hasEnabledVaults) "$1,054.22" else "$0.00",
                 isBalanceVisible = true,
             ),
         selectedTab = tab,

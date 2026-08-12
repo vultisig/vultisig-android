@@ -57,20 +57,38 @@ internal class KaminoApiImpl @Inject constructor(private val httpClient: HttpCli
 
     override suspend fun getVaultState(vaultAddress: String): KaminoVaultStateJson =
         httpClient
-            .get(KAMINO_URL) { url { appendPathSegments("kvaults", "vaults", vaultAddress) } }
+            .get(KAMINO_URL) {
+                url { appendPathSegments("kvaults", "vaults", vaultAddress, encodeSlash = true) }
+            }
             .bodyOrThrow()
 
     override suspend fun getVaultMetrics(vaultAddress: String): KaminoVaultMetricsJson =
         httpClient
             .get(KAMINO_URL) {
-                url { appendPathSegments("kvaults", "vaults", vaultAddress, "metrics") }
+                url {
+                    appendPathSegments(
+                        "kvaults",
+                        "vaults",
+                        vaultAddress,
+                        "metrics",
+                        encodeSlash = true,
+                    )
+                }
             }
             .bodyOrThrow()
 
     override suspend fun getUserPositions(walletAddress: String): List<KaminoUserPositionJson> =
         httpClient
             .get(KAMINO_URL) {
-                url { appendPathSegments("kvaults", "users", walletAddress, "positions") }
+                url {
+                    appendPathSegments(
+                        "kvaults",
+                        "users",
+                        walletAddress,
+                        "positions",
+                        encodeSlash = true,
+                    )
+                }
             }
             .bodyOrThrow()
 
@@ -88,6 +106,10 @@ internal class KaminoApiImpl @Inject constructor(private val httpClient: HttpCli
                         "vaults",
                         vaultAddress,
                         "pnl",
+                        // Ktor leaves `/` unencoded, so a value that ever carried one could rewrite
+                        // the path. These are our own derived address and a registry base58 string,
+                        // but the encoding costs nothing and does not rely on that staying true.
+                        encodeSlash = true,
                     )
                 }
             }

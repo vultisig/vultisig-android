@@ -27,9 +27,22 @@ class KaminoTransactionValidatorTest {
             memoInstruction,
         )
 
+    /**
+     * Most rules do not care who pays, so the fee payer defaults to a benign value; the fee-payer
+     * test sets it explicitly.
+     */
+    private fun decoded(
+        instructions: List<KaminoTxInstruction>,
+        feePayer: String? = DEFAULT_FEE_PAYER,
+    ) = KaminoDecodedTransaction(feePayer = feePayer, instructions = instructions)
+
     private fun rejection(instructions: List<KaminoTxInstruction>): String =
         assertThrows<KaminoTransactionRejected> {
-                KaminoTransactionValidator.validate(instructions, vault, KaminoAction.DEPOSIT)
+                KaminoTransactionValidator.validate(
+                    decoded(instructions),
+                    vault,
+                    KaminoAction.DEPOSIT,
+                )
             }
             .message
             .orEmpty()
@@ -37,7 +50,11 @@ class KaminoTransactionValidatorTest {
     @Test
     fun `a well-formed deposit passes`() {
         assertDoesNotThrow {
-            KaminoTransactionValidator.validate(depositInstructions(), vault, KaminoAction.DEPOSIT)
+            KaminoTransactionValidator.validate(
+                decoded(depositInstructions()),
+                vault,
+                KaminoAction.DEPOSIT,
+            )
         }
     }
 
@@ -45,10 +62,12 @@ class KaminoTransactionValidatorTest {
     fun `a withdraw without the farms instructions passes`() {
         assertDoesNotThrow {
             KaminoTransactionValidator.validate(
-                listOf(
-                    ix(KaminoVaultRegistry.PROGRAM_ID, byteArrayOf(9)),
-                    ix("ComputeBudget111111111111111111111111111111"),
-                    memo,
+                decoded(
+                    listOf(
+                        ix(KaminoVaultRegistry.PROGRAM_ID, byteArrayOf(9)),
+                        ix("ComputeBudget111111111111111111111111111111"),
+                        memo,
+                    )
                 ),
                 vault,
                 KaminoAction.WITHDRAW,
@@ -147,7 +166,7 @@ class KaminoTransactionValidatorTest {
         val reason =
             assertThrows<KaminoTransactionRejected> {
                     KaminoTransactionValidator.validate(
-                        depositInstructions(),
+                        decoded(depositInstructions()),
                         uncurated,
                         KaminoAction.DEPOSIT,
                     )
@@ -189,10 +208,24 @@ class KaminoTransactionValidatorTest {
 
     @Test
     fun `moving lamports is refused for a token vault and allowed for the wrapped-SOL one`() {
-        // System `Transfer` is 2, little-endian over four bytes.
+        // System `Transfer` is 2, little-endian over four bytes. Its second account is the
+        // destination, which on a real wrap is the wSOL account the vault deposit also names — so
+        // the
+        // fixture has to say so, or the destination check refuses it for the right reason.
+        val wrappedSolAccount = "AyY6VCkHfTWdFs7SqBbu6AnCqLUhgzVHBzW3WcJu5Jc8"
         val systemTransfer =
-            ix("11111111111111111111111111111111", byteArrayOf(2, 0, 0, 0, 1, 2, 3, 4))
-        val instructions = listOf(ix(KaminoVaultRegistry.PROGRAM_ID), systemTransfer, memo)
+            KaminoTxInstruction(
+                programId = "11111111111111111111111111111111",
+                data = byteArrayOf(2, 0, 0, 0, 1, 2, 3, 4),
+                accounts = listOf(DEFAULT_FEE_PAYER, wrappedSolAccount),
+            )
+        val kvault =
+            KaminoTxInstruction(
+                programId = KaminoVaultRegistry.PROGRAM_ID,
+                data = byteArrayOf(1),
+                accounts = listOf(wrappedSolAccount),
+            )
+        val instructions = listOf(kvault, systemTransfer, memo)
 
         val reason = rejection(instructions)
         assertTrue(reason.contains("moves lamports"), reason)
@@ -200,7 +233,7 @@ class KaminoTransactionValidatorTest {
         // The SOL vault has to wrap, so the same instruction is expected there.
         assertDoesNotThrow {
             KaminoTransactionValidator.validate(
-                instructions,
+                decoded(instructions),
                 KaminoVaultRegistry.ALLEZ_SOL,
                 KaminoAction.DEPOSIT,
             )
@@ -223,7 +256,7 @@ class KaminoTransactionValidatorTest {
         val reason =
             assertThrows<KaminoTransactionRejected> {
                     KaminoTransactionValidator.validate(
-                        instructions,
+                        decoded(instructions, feePayer = OTHER_ACCOUNT),
                         vault,
                         KaminoAction.DEPOSIT,
                         signerAddress = signer,
@@ -236,19 +269,83 @@ class KaminoTransactionValidatorTest {
         // The wallet's own transaction passes.
         assertDoesNotThrow {
             KaminoTransactionValidator.validate(
-                listOf(
-                    KaminoTxInstruction(
-                        programId = KaminoVaultRegistry.PROGRAM_ID,
-                        data = byteArrayOf(1),
-                        accounts = listOf(signer),
+                decoded(
+                    listOf(
+                        KaminoTxInstruction(
+                            programId = KaminoVaultRegistry.PROGRAM_ID,
+                            data = byteArrayOf(1),
+                            accounts = listOf(signer),
+                        ),
+                        memo,
                     ),
-                    memo,
+                    feePayer = signer,
                 ),
                 vault,
                 KaminoAction.DEPOSIT,
                 signerAddress = signer,
             )
         }
+    }
+
+    @Test
+    fun `a lamport transfer to an address the deposit does not reference is refused`() {
+        // Allowed on the wrapped-SOL vault, but not to anywhere: the only lamports a deposit moves
+        // go
+        // into the wSOL account it then deposits from. A transfer somewhere else is not a wrap.
+        val kvault =
+            KaminoTxInstruction(
+                programId = KaminoVaultRegistry.PROGRAM_ID,
+                data = byteArrayOf(1),
+                accounts = listOf("AyY6VCkHfTWdFs7SqBbu6AnCqLUhgzVHBzW3WcJu5Jc8"),
+            )
+        val strayTransfer =
+            KaminoTxInstruction(
+                programId = "11111111111111111111111111111111",
+                data = byteArrayOf(2, 0, 0, 0, 1, 2, 3, 4),
+                accounts = listOf(DEFAULT_FEE_PAYER, OTHER_ACCOUNT),
+            )
+
+        val reason =
+            assertThrows<KaminoTransactionRejected> {
+                    KaminoTransactionValidator.validate(
+                        decoded(listOf(kvault, strayTransfer, memo)),
+                        KaminoVaultRegistry.ALLEZ_SOL,
+                        KaminoAction.DEPOSIT,
+                    )
+                }
+                .message
+                .orEmpty()
+        assertTrue(reason.contains("does not reference"), reason)
+    }
+
+    @Test
+    fun `a transaction paid for by another account is refused on the message, not an instruction`() {
+        // The earlier check read the first account of the first instruction, which says nothing
+        // about
+        // who authorises the transaction: this fixture names the wallet there while the message is
+        // paid for by someone else.
+        val instructions =
+            listOf(
+                KaminoTxInstruction(
+                    programId = KaminoVaultRegistry.PROGRAM_ID,
+                    data = byteArrayOf(1),
+                    accounts = listOf(DEFAULT_FEE_PAYER),
+                ),
+                memo,
+            )
+
+        val reason =
+            assertThrows<KaminoTransactionRejected> {
+                    KaminoTransactionValidator.validate(
+                        decoded(instructions, feePayer = OTHER_ACCOUNT),
+                        vault,
+                        KaminoAction.DEPOSIT,
+                        signerAddress = DEFAULT_FEE_PAYER,
+                    )
+                }
+                .message
+                .orEmpty()
+        assertTrue(reason.contains("authorised by"), reason)
     }
 
     @Test
@@ -279,7 +376,7 @@ class KaminoTransactionValidatorTest {
             }
         assertDoesNotThrow {
             KaminoTransactionValidator.validate(
-                listOf(ix(KaminoVaultRegistry.PROGRAM_ID, justUnder), memo),
+                decoded(listOf(ix(KaminoVaultRegistry.PROGRAM_ID, justUnder), memo)),
                 vault,
                 KaminoAction.WITHDRAW,
             )
@@ -290,7 +387,7 @@ class KaminoTransactionValidatorTest {
     fun `a short kVault instruction carrying no amount is not mistaken for the sentinel`() {
         assertDoesNotThrow {
             KaminoTransactionValidator.validate(
-                listOf(ix(KaminoVaultRegistry.PROGRAM_ID, byteArrayOf(1, 2, 3)), memo),
+                decoded(listOf(ix(KaminoVaultRegistry.PROGRAM_ID, byteArrayOf(1, 2, 3)), memo)),
                 vault,
                 KaminoAction.DEPOSIT,
             )
@@ -305,5 +402,10 @@ class KaminoTransactionValidatorTest {
             ix(KaminoAttributionMemo.MEMO_PROGRAM_ID, byteArrayOf(0x76, 0x73)),
             ix(KaminoAttributionMemo.MEMO_PROGRAM_ID, byteArrayOf(0x76, 0x73)),
         )
+    }
+
+    private companion object {
+        const val DEFAULT_FEE_PAYER = "9ceRgz579BcfWogs3RE11FKNQaWW7Lmtnev3MXspxUjF"
+        const val OTHER_ACCOUNT = "SomeoneElsesAccount11111111111111111111111"
     }
 }

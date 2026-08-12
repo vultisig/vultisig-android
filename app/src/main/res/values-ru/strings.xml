@@ -528,6 +528,7 @@
     <string name="kamino_earn_apy_30d">APY (30 дн.)</string>
     <string name="kamino_earn_pnl">Прибыль и убыток</string>
     <string name="kamino_earn_lost">Убыток</string>
+    <string name="kamino_earn_load_failed">Сейчас не удалось обновить эти vault‑ы</string>
     <string name="kamino_earn_risk_conservative">Консервативный</string>
     <string name="kamino_earn_risk_private_credit">Частный кредит</string>
     <string name="kamino_earn_deposit">Внести</string>
@@ -541,7 +542,7 @@
     <string name="kamino_error_load_failed">Сейчас не удалось загрузить этот vault</string>
     <string name="verify_deposit_depositing">Вы вносите</string>
     <string name="verify_deposit_withdrawing">Вы выводите</string>
-    <string name="kamino_verify_vault">Vault</string>
+    <string name="kamino_verify_vault">Vault Kamino</string>
     <string name="kamino_error_build_failed">Не удалось подготовить эту транзакцию</string>
     <string name="kamino_withdraw_nothing">Из этого vault‑а нечего выводить</string>
     <string name="kamino_withdraw_unreadable">Не удалось прочитать эту позицию, поэтому вывод невозможно подготовить</string>

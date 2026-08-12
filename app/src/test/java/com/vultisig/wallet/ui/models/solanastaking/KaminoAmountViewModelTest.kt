@@ -256,7 +256,7 @@ internal class KaminoAmountViewModelTest {
     }
 
     @Test
-    fun `a max SOL deposit reserves the wrapped-SOL account rent it has to create`() = runTest {
+    fun `a max SOL deposit reserves the wrapped-SOL rent and the priority fee`() = runTest {
         // The vault's underlying is wSOL, so the deposit creates a token account. Without reserving
         // its rent a Max deposit cannot fund that account and fails on chain.
         coEvery { balanceRepository.getTokenValue(any(), any()) } returns

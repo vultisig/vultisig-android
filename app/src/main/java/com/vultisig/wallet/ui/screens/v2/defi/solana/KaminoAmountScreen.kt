@@ -68,9 +68,9 @@ internal fun KaminoAmountContent(
 ) {
     val amount = amountFieldState.text.toString().toBigDecimalOrNull()
 
-    // Whether the request fits the vault's liquid buffer depends on the amount, so it is recomputed
-    // as the user types rather than only at submit.
-    LaunchedEffect(amount) { onAmountChanged(amount) }
+    // Recomputed as the user types, and again when the vault's figures land: keying only on the
+    // amount left a notice decided against a buffer that had not loaded yet.
+    LaunchedEffect(amount, state.isLoading, state.available) { onAmountChanged(amount) }
 
     // A staked position is withdrawable — Kamino releases the shares from the farm as part of the
     // transaction. What remains is about the read: nothing held, or figures that cannot be trusted.
@@ -87,6 +87,9 @@ internal fun KaminoAmountContent(
         when {
             amount == null -> null
             amount.signum() <= 0 -> null
+            // While the form is loading `available` is still zero, so validating against it would
+            // tell the user every amount exceeds their balance.
+            state.isLoading -> null
             amount > state.available -> stringResource(R.string.kamino_amount_exceeds_available)
             state.minimum != null && amount < state.minimum ->
                 stringResource(

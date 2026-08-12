@@ -72,8 +72,32 @@ constructor(
 
     fun setData(vaultId: String) {
         this.vaultId = vaultId
+        forgetStoredShareTokens()
         loadBalanceVisibility()
         observeSelection()
+    }
+
+    /**
+     * Removes any vault-share token a previous version auto-discovered as a wallet balance.
+     *
+     * Filtering discovery stops new ones arriving, but a wallet that already held shares when it
+     * last scanned has them saved — and left there they count the same deposit twice, once as a
+     * position and once as a token. Idempotent, and a no-op for everyone who never had one.
+     */
+    private fun forgetStoredShareTokens() {
+        viewModelScope.safeLaunch(
+            onError = { Timber.w(it, "Could not sweep stored Kamino share tokens") }
+        ) {
+            withContext(ioDispatcher) {
+                val vault = vaultRepository.get(vaultId) ?: return@withContext
+                vault.coins
+                    .filter { coin ->
+                        coin.chain == Chain.Solana &&
+                            coin.contractAddress in KaminoVaultRegistry.SHARES_MINTS
+                    }
+                    .forEach { coin -> vaultRepository.deleteTokenFromVault(vaultId, coin) }
+            }
+        }
     }
 
     fun refresh() {
@@ -173,7 +197,9 @@ constructor(
             viewModelScope.safeLaunch(
                 onError = { throwable ->
                     Timber.e(throwable, "Failed to load Kamino Earn positions")
-                    _state.update { it.copy(isLoading = false) }
+                    // Said on screen, not only in the log: a silent stop leaves the tab looking as
+                    // though the vaults simply hold nothing.
+                    _state.update { it.copy(isLoading = false, loadFailed = true) }
                 }
             ) {
                 val enabled = selected ?: selectionRepository.getSelectedVaults(vaultId).first()
@@ -191,7 +217,9 @@ constructor(
                     return@safeLaunch
                 }
 
-                _state.update { it.copy(isLoading = true, hasEnabledVaults = true) }
+                _state.update {
+                    it.copy(isLoading = true, hasEnabledVaults = true, loadFailed = false)
+                }
 
                 val walletAddress = resolveSolanaAddress()
                 val positions = fetchPositions(walletAddress)

@@ -217,8 +217,13 @@ constructor(
             )
         val wrappedSolRent =
             if (vault.tokenMint == KaminoVaultRegistry.WRAPPED_SOL_MINT) {
+                // Falling back to zero would quietly hand the whole balance to a Max deposit that
+                // then cannot fund the account it creates. The 165-byte token-account rent is a
+                // network constant in practice, so the known value is a far better answer than
+                // none.
                 runCatching { solanaApi.getMinimumBalanceForRentExemption() }
-                    .getOrElse { BigInteger.ZERO }
+                    .getOrNull()
+                    ?.takeIf { it.signum() > 0 } ?: SPL_TOKEN_ACCOUNT_RENT_LAMPORTS
             } else {
                 BigInteger.ZERO
             }
@@ -496,6 +501,12 @@ constructor(
     }
 
     private companion object {
+        /**
+         * Rent-exempt minimum for a 165-byte SPL token account. Used only when the live read fails
+         * — reserving nothing would be worse than reserving a value that has not moved in practice.
+         */
+        val SPL_TOKEN_ACCOUNT_RENT_LAMPORTS: BigInteger = BigInteger.valueOf(2_039_280)
+
         val ONE_HUNDRED = BigDecimal(100)
         const val DEFAULT_SCALE = 6
     }

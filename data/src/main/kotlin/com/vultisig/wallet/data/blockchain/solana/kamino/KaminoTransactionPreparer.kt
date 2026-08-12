@@ -9,10 +9,22 @@ import wallet.core.jni.SolanaTransaction
 import wallet.core.jni.TransactionDecoder
 import wallet.core.jni.proto.Solana
 
+/**
+ * A decoded transaction, reduced to what validation reasons about.
+ *
+ * [feePayer] is the message's own account key 0 — the fee payer and first required signer. It has
+ * to come from the message header rather than from any instruction's account list: an instruction
+ * that happens to name the wallet first says nothing about who is authorising the transaction.
+ */
+data class KaminoDecodedTransaction(
+    val feePayer: String?,
+    val instructions: List<KaminoTxInstruction>,
+)
+
 /** Decodes a base64 Solana transaction into the instructions validation reasons about. */
 object KaminoTransactionDecoder {
 
-    fun decode(base64Transaction: String): List<KaminoTxInstruction> {
+    fun decode(base64Transaction: String): KaminoDecodedTransaction {
         val decoded =
             TransactionDecoder.decode(CoinType.SOLANA, base64Transaction.decodeBase64Bytes())
         val output = Solana.DecodingTransactionOutput.parseFrom(decoded)
@@ -28,23 +40,32 @@ object KaminoTransactionDecoder {
                 else -> error("transaction is neither versioned nor legacy")
             }
 
-        return instructions.map { instruction ->
-            KaminoTxInstruction(
-                // A versioned message may not invoke a program loaded through a lookup table, so a
-                // program index always addresses the static keys.
-                programId = accountKeys.getOrNull(instruction.programId) ?: UNKNOWN_ACCOUNT,
-                data = instruction.programData.toByteArray(),
-                // Indices at or past the static keys address lookup-table-loaded accounts, which
-                // the
-                // decoder cannot resolve without fetching the tables. They are named as unresolved
-                // rather than silently dropped, so a check can tell "not the signer" from
-                // "unknown".
-                accounts =
-                    instruction.accountsList.map { index ->
-                        accountKeys.getOrNull(index) ?: UNKNOWN_ACCOUNT
-                    },
-            )
-        }
+        val decodedInstructions =
+            instructions.map { instruction ->
+                KaminoTxInstruction(
+                    // A versioned message may not invoke a program loaded through a lookup table,
+                    // so a
+                    // program index always addresses the static keys.
+                    programId = accountKeys.getOrNull(instruction.programId) ?: UNKNOWN_ACCOUNT,
+                    data = instruction.programData.toByteArray(),
+                    // Indices at or past the static keys address lookup-table-loaded accounts,
+                    // which
+                    // the
+                    // decoder cannot resolve without fetching the tables. They are named as
+                    // unresolved
+                    // rather than silently dropped, so a check can tell "not the signer" from
+                    // "unknown".
+                    accounts =
+                        instruction.accountsList.map { index ->
+                            accountKeys.getOrNull(index) ?: UNKNOWN_ACCOUNT
+                        },
+                )
+            }
+
+        return KaminoDecodedTransaction(
+            feePayer = accountKeys.firstOrNull(),
+            instructions = decodedInstructions,
+        )
     }
 
     /**
@@ -99,7 +120,7 @@ class KaminoTransactionPreparer @Inject constructor(private val kaminoApi: Kamin
         val withMemo = KaminoAttributionMemo.append(withBudget)
 
         KaminoTransactionValidator.validate(
-            instructions = KaminoTransactionDecoder.decode(withMemo),
+            decoded = KaminoTransactionDecoder.decode(withMemo),
             vault = vault,
             action = action,
             signerAddress = walletAddress,

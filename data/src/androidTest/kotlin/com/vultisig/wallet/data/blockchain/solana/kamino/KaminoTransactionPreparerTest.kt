@@ -129,7 +129,7 @@ class KaminoTransactionPreparerTest {
     @Test
     fun a_prepared_deposit_validates_and_its_memo_is_the_final_instruction() {
         val prepared = prepare()
-        val instructions = KaminoTransactionDecoder.decode(prepared)
+        val instructions = KaminoTransactionDecoder.decode(prepared).instructions
 
         // Not merely "passes validation" — assert the property the validator depends on, so a
         // reordering regression cannot hide behind a passing validator.
@@ -280,6 +280,7 @@ class KaminoTransactionPreparerTest {
         // decode rather than through prepare, which correctly refuses the sentinel above.
         val instructions =
             KaminoTransactionDecoder.decode(KaminoAttributionMemo.append(withdrawFixture))
+                .instructions
 
         assertTrue(
             "a withdraw must invoke the kVault program",
@@ -300,7 +301,7 @@ class KaminoTransactionPreparerTest {
         val rejection =
             assertThrows(KaminoTransactionRejected::class.java) {
                 KaminoTransactionValidator.validate(
-                    instructions =
+                    decoded =
                         KaminoTransactionDecoder.decode(
                             KaminoAttributionMemo.append(withdrawFixture)
                         ),

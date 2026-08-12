@@ -17,6 +17,8 @@ data class KaminoEarnUiModel(
     /** Summed across vaults in the user's currency; null while unresolved. */
     val totalFiat: String? = null,
     val isBalanceVisible: Boolean = true,
+    /** Whether the last load stopped on an error, so the tab can say so rather than look empty. */
+    val loadFailed: Boolean = false,
     val isShowingPicker: Boolean = false,
     /**
      * The selection being edited in the picker, which only becomes the saved one on Done — so

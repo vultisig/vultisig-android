@@ -530,6 +530,7 @@
     <string name="kamino_earn_apy_30d">APY (30 d)</string>
     <string name="kamino_earn_pnl">Dobit i gubitak</string>
     <string name="kamino_earn_lost">Izgubljeno</string>
+    <string name="kamino_earn_load_failed">Ove vaultove trenutno nije moguće osvježiti</string>
     <string name="kamino_earn_risk_conservative">Konzervativno</string>
     <string name="kamino_earn_risk_private_credit">Privatni krediti</string>
     <string name="kamino_earn_deposit">Deponiraj</string>

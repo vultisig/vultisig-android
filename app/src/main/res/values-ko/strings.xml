@@ -74,6 +74,7 @@
     <string name="kamino_earn_apy_30d">APY (30일)</string>
     <string name="kamino_earn_pnl">손익</string>
     <string name="kamino_earn_lost">손실</string>
+    <string name="kamino_earn_load_failed">지금은 이 볼트를 새로 고칠 수 없습니다</string>
     <string name="kamino_earn_risk_conservative">보수적</string>
     <string name="kamino_earn_risk_private_credit">사모 신용</string>
     <string name="kamino_earn_deposit">예치</string>

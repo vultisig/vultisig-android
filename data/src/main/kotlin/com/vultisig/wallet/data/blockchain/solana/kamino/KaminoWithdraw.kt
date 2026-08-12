@@ -424,6 +424,11 @@ object KaminoWithdrawMath {
         if (tokens.baseUnits.signum() <= 0 || held.baseUnits.signum() <= 0) return null
         if (tokens.baseUnits > maximumTokens.baseUnits) return null
         if (tokens.baseUnits == maximumTokens.baseUnits) return held
-        return tokens.shareAmount(rate, shareDecimals)
+        // A token amount smaller than one share is worth zero shares once truncated, and a request
+        // for zero is not a withdraw — it would build a transaction that moves nothing while
+        // telling
+        // the user it moves something. The vault minimum normally catches this, but it is only
+        // advisory when the vault state could not be read.
+        return tokens.shareAmount(rate, shareDecimals)?.takeIf { !it.isZero }
     }
 }

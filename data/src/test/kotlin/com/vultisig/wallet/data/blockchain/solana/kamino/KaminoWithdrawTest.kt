@@ -137,7 +137,14 @@ class KaminoWithdrawTest {
         val held = shares("1000000000")
         val maximum = KaminoWithdrawMath.maximumTokens(held, usdcRate, 6)!!
 
-        listOf("1", "1000000", "527213911", maximum.baseUnits.subtract(BigInteger.ONE).toString())
+        // Amounts worth at least one share; anything smaller truncates to zero shares and is
+        // refused by `a token amount worth less than one share is refused` below.
+        listOf(
+                "1054428",
+                "1000000000",
+                "527213911",
+                maximum.baseUnits.subtract(BigInteger.ONE).toString(),
+            )
             .forEach { raw ->
                 val sized =
                     KaminoWithdrawMath.sharesForTokens(tokens(raw, 6), held, maximum, usdcRate, 6)
@@ -147,6 +154,19 @@ class KaminoWithdrawTest {
                     "partial withdraw of $raw produced $sized, which is not below the balance",
                 )
             }
+    }
+
+    @Test
+    fun `a token amount worth less than one share is refused rather than sized to zero`() {
+        // One base unit of USDC is 0.000001, worth 0.00000094 shares at the Steakhouse rate, which
+        // truncates to nothing. A request for zero shares would build a transaction that moves
+        // nothing while the form said it moves something.
+        val held = shares("1000000000")
+        val maximum = KaminoWithdrawMath.maximumTokens(held, usdcRate, 6)!!
+        assertNull(
+            KaminoWithdrawMath.sharesForTokens(tokens("1", 6), held, maximum, usdcRate, 6),
+            "an amount below one share must not size to zero",
+        )
     }
 
     @Test

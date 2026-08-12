@@ -75,11 +75,12 @@ object KaminoTransactionValidator {
      *   to sign for [vault].
      */
     fun validate(
-        instructions: List<KaminoTxInstruction>,
+        decoded: KaminoDecodedTransaction,
         vault: KaminoVault,
         action: KaminoAction,
         signerAddress: String? = null,
     ) {
+        val instructions = decoded.instructions
         if (!KaminoVaultRegistry.isAllowed(vault.address)) {
             reject("${vault.address} is not a vault this app transacts with")
         }
@@ -126,7 +127,8 @@ object KaminoTransactionValidator {
             reject("memo must be the final instruction")
         }
 
-        rejectValueMovementAwayFromTheSigner(instructions, vault, signerAddress)
+        rejectValueMovementAwayFromTheSigner(instructions, vault)
+        rejectAnotherAccountsAuthority(decoded.feePayer, signerAddress)
         rejectTheWithdrawEverythingSentinel(instructions)
     }
 
@@ -182,7 +184,6 @@ object KaminoTransactionValidator {
     private fun rejectValueMovementAwayFromTheSigner(
         instructions: List<KaminoTxInstruction>,
         vault: KaminoVault,
-        signerAddress: String?,
     ) {
         instructions.forEachIndexed { index, instruction ->
             when (instruction.programId) {
@@ -203,27 +204,48 @@ object KaminoTransactionValidator {
                 SYSTEM_PROGRAM_ID -> {
                     // Lamports only ever move to wrap SOL, and only for the wrapped-SOL vault.
                     val discriminator = instruction.data.take(4).let(::littleEndianInt)
-                    if (
-                        discriminator == SYSTEM_TRANSFER &&
-                            vault.tokenMint != KaminoVaultRegistry.WRAPPED_SOL_MINT
-                    ) {
-                        reject(
-                            "instruction $index moves lamports, which only the wrapped-SOL vault " +
-                                "has cause to do"
-                        )
+                    if (discriminator == SYSTEM_TRANSFER) {
+                        if (vault.tokenMint != KaminoVaultRegistry.WRAPPED_SOL_MINT) {
+                            reject(
+                                "instruction $index moves lamports, which only the wrapped-SOL " +
+                                    "vault has cause to do"
+                            )
+                        }
+                        // Permitted, but not to anywhere: the only lamports a deposit moves go into
+                        // the wSOL account it is about to deposit from, which the kVault
+                        // instruction
+                        // therefore also names. A transfer to an address this transaction does not
+                        // otherwise touch is not a wrap.
+                        val destination = instruction.accounts.getOrNull(1)
+                        val kvaultAccounts =
+                            instructions
+                                .filter { it.programId == KaminoVaultRegistry.PROGRAM_ID }
+                                .flatMap { it.accounts }
+                                .toSet()
+                        if (destination == null || destination !in kvaultAccounts) {
+                            reject(
+                                "instruction $index moves lamports to $destination, which the " +
+                                    "vault deposit does not reference"
+                            )
+                        }
                     }
                 }
             }
         }
+    }
 
-        // The transaction must be the signer's own. Index 0 of a Solana message is the fee payer
-        // and
-        // first required signer, so anything else means signing on another account's behalf.
-        if (signerAddress != null) {
-            val feePayer = instructions.firstNotNullOfOrNull { it.accounts.firstOrNull() }
-            if (feePayer != null && feePayer != signerAddress) {
-                reject("transaction is authorised by $feePayer rather than the wallet")
-            }
+    /**
+     * The transaction must be the wallet's own.
+     *
+     * Read from the message's account key 0, which is the fee payer and first required signer. An
+     * earlier version of this took the first account of the first instruction, which is a different
+     * thing: an instruction that happens to name the wallet first says nothing about who authorises
+     * the transaction, so a message paid for by another account would have passed.
+     */
+    private fun rejectAnotherAccountsAuthority(feePayer: String?, signerAddress: String?) {
+        if (signerAddress == null || feePayer == null) return
+        if (feePayer != signerAddress) {
+            reject("transaction is authorised by $feePayer rather than by the wallet")
         }
     }
 

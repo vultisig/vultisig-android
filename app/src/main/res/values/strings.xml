@@ -77,6 +77,7 @@
     <string name="kamino_earn_apy_30d">APY (30d)</string>
     <string name="kamino_earn_pnl">Profit &amp; Loss</string>
     <string name="kamino_earn_lost">Lost</string>
+    <string name="kamino_earn_load_failed">Couldn\'t refresh these vaults just now</string>
     <string name="kamino_earn_risk_conservative">Conservative</string>
     <string name="kamino_earn_risk_private_credit">Private Credit</string>
     <string name="kamino_earn_deposit">Deposit</string>

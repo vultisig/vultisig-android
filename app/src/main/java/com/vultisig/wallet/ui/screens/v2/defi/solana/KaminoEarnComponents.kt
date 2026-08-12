@@ -139,6 +139,15 @@ internal fun KaminoEarnTabContent(
                     isBalanceVisible = state.isBalanceVisible,
                 )
 
+                if (state.loadFailed) {
+                    Text(
+                        text = stringResource(R.string.kamino_earn_load_failed),
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.v2.colors.alerts.warning,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                    )
+                }
+
                 state.rows.forEach { row ->
                     KaminoVaultCard(
                         row = row,
