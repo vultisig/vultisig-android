@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.v2.defi.FIAT_VALUE_UNAVAILABLE
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -206,7 +207,8 @@ constructor(
                                         buildRow(
                                             vault = vault,
                                             walletAddress = walletAddress,
-                                            position = positions[vault.address],
+                                            position = positions?.get(vault.address),
+                                            positionsAreKnown = positions != null,
                                         )
                                     }
                                     .getOrElse { throwable ->
@@ -227,8 +229,12 @@ constructor(
                     current.copy(
                         isLoading = false,
                         // Keep the previous rows if every vault failed, rather than blanking
-                        // positions the user holds because one refresh did not land.
-                        rows = resolved.ifEmpty { current.rows },
+                        // positions the user holds because one refresh did not land — but only for
+                        // vaults still enabled, or disabling one would leave its card on screen.
+                        rows =
+                            resolved.ifEmpty {
+                                current.rows.filter { row -> row.vaultAddress in enabled }
+                            },
                         totalFiat =
                             resolved
                                 .takeIf { it.isNotEmpty() }
@@ -243,20 +249,27 @@ constructor(
      * Positions for the whole wallet in one call, keyed by vault. An address holding nothing
      * returns an empty list, which is a real answer rather than a failure.
      */
-    private suspend fun fetchPositions(walletAddress: String): Map<String, KaminoUserPositionJson> =
+    private suspend fun fetchPositions(
+        walletAddress: String
+    ): Map<String, KaminoUserPositionJson>? =
         withContext(ioDispatcher) {
+            // Null, not empty: an empty list is the wallet genuinely holding nothing, while a
+            // failed
+            // call is not knowing. Collapsing the two would render a real position as "0 USDC",
+            // which reads as a lost deposit.
             runCatching { kaminoApi.getUserPositions(walletAddress) }
                 .getOrElse { throwable ->
                     Timber.e(throwable, "Failed to load Kamino positions")
-                    emptyList()
+                    null
                 }
-                .associateBy { it.vaultAddress }
+                ?.associateBy { it.vaultAddress }
         }
 
     private suspend fun buildRow(
         vault: KaminoVault,
         walletAddress: String,
         position: KaminoUserPositionJson?,
+        positionsAreKnown: Boolean,
     ): KaminoEarnRow = supervisorScope {
         val stateDeferred = async {
             runCatching { kaminoApi.getVaultState(vault.address) }.getOrNull()
@@ -272,11 +285,18 @@ constructor(
         val metrics = metricsDeferred.await()
         val pnl = pnlDeferred.await()
 
-        val shares = KaminoPositionMath.decimalOrNull(position?.totalShares) ?: BigDecimal.ZERO
+        // A position that could not be read is not a zero one. Null keeps the balance blank rather
+        // than asserting "0", which on a real deposit reads as though it had gone.
+        val shares =
+            if (positionsAreKnown) {
+                KaminoPositionMath.decimalOrNull(position?.totalShares) ?: BigDecimal.ZERO
+            } else {
+                null
+            }
         val tokensPerShare = KaminoPositionMath.decimalOrNull(metrics?.tokensPerShare)
         val tokenAmount =
-            if (tokensPerShare == null) {
-                BigDecimal.ZERO.setScale(vault.tokenDecimals)
+            if (tokensPerShare == null || shares == null) {
+                null
             } else {
                 KaminoPositionMath.tokenAmount(shares, tokensPerShare, vault.tokenDecimals)
             }
@@ -294,9 +314,10 @@ constructor(
             tokenLogo = coin?.logo.orEmpty(),
             tokenTicker = coin?.ticker.orEmpty(),
             depositedDisplay =
-                "${tokenAmount.stripTrailingZeros().toPlainString()} ${coin?.ticker.orEmpty()}"
-                    .trim(),
-            depositedFiat = coin?.let { fiatOrNull(tokenAmount, it) },
+                tokenAmount?.let {
+                    "${it.stripTrailingZeros().toPlainString()} ${coin?.ticker.orEmpty()}".trim()
+                } ?: FIAT_VALUE_UNAVAILABLE,
+            depositedFiat = tokenAmount?.let { amount -> coin?.let { fiatOrNull(amount, it) } },
             apyDisplay = apy?.let { "${it.toPlainString()}%" },
             pnlDisplay =
                 pnlToken?.let {
@@ -311,7 +332,11 @@ constructor(
                     pnlToken.signum() < 0 -> KaminoEarnRow.PnlDirection.DOWN
                     else -> KaminoEarnRow.PnlDirection.FLAT
                 },
-            fiatValue = coin?.let { fiatValueOrNull(tokenAmount, it) } ?: BigDecimal.ZERO,
+            fiatValue =
+                tokenAmount?.let { amount -> coin?.let { fiatValueOrNull(amount, it) } }
+                    ?: BigDecimal.ZERO,
+            // Derived from the shares, so a vault that could not be priced still offers Withdraw.
+            hasPosition = (shares?.signum() ?: 0) > 0,
         )
     }
 

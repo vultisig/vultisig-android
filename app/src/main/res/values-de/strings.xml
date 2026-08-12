@@ -539,6 +539,11 @@
     <string name="kamino_amount_below_minimum">Mindestens %1$s %2$s</string>
     <string name="kamino_error_unknown_vault">Dieser Vault wird von der App nicht unterstützt</string>
     <string name="kamino_error_load_failed">Dieser Vault konnte gerade nicht geladen werden</string>
+    <string name="kamino_error_build_failed">Diese Transaktion konnte nicht vorbereitet werden</string>
+    <string name="kamino_withdraw_farm_staked">Diese Anteile sind in der Farm des Vaults gestaked und können noch nicht abgehoben werden</string>
+    <string name="kamino_withdraw_nothing">Aus diesem Vault gibt es nichts abzuheben</string>
+    <string name="kamino_withdraw_unreadable">Diese Position konnte nicht gelesen werden, daher ist keine Abhebung möglich</string>
+    <string name="kamino_withdraw_delayed">Über der Sofort-Liquidität des Vaults von %1$s %2$s. Diese Abhebung kann sich verzögern.</string>
     <!-- Tron DeFi -->
     <string name="tron_defi_freeze">Einfrieren</string>
     <string name="tron_defi_unfreeze">Entfrieren</string>

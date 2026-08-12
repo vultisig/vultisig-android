@@ -123,11 +123,11 @@ class KaminoTransactionPreparerTest {
     fun the_compute_unit_limit_is_well_above_the_app_s_default_which_these_transactions_exceed() {
         val prepared = prepare()
 
-        val limit = SolanaTransaction.getComputeUnitLimit(prepared)?.toLong()
+        val limit = SolanaTransaction.getComputeUnitLimit(prepared)?.toLong() ?: 0L
         assertEquals(320_000L, limit)
         // The app-wide Solana limit is 100,000 units; a USDC deposit measures ~252,000 and would
         // abort on compute exhaustion if that constant were reused here.
-        assertTrue("limit must exceed the 100,000 default (was $limit)", limit!! > 100_000L)
+        assertTrue("limit must exceed the 100,000 default (was $limit)", limit > 100_000L)
     }
 
     @Test
@@ -222,13 +222,13 @@ class KaminoTransactionPreparerTest {
         // The message must begin immediately after the signature slots, still marked versioned v0.
         val messageOffset = 1 + 64
         assertEquals(
-            "message must start right after the signature slot",
+            "message must start right after the signature slot, marked versioned v0",
             0x80,
-            after[messageOffset].toInt() and 0xFF and 0x80,
+            after[messageOffset].toInt() and 0xFF,
         )
         assertTrue(
-            "message must be longer than the original (a memo and compute budget were added)",
-            after.size - messageOffset > before.size - messageOffset,
+            "a memo and compute budget were added, so it must have grown",
+            after.size > before.size,
         )
     }
 

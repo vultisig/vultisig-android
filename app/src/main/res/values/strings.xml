@@ -87,6 +87,11 @@
     <string name="kamino_amount_below_minimum">Minimum is %1$s %2$s</string>
     <string name="kamino_error_unknown_vault">This vault is not one the app supports</string>
     <string name="kamino_error_load_failed">Could not load this vault right now</string>
+    <string name="kamino_error_build_failed">Couldn\'t prepare this transaction</string>
+    <string name="kamino_withdraw_farm_staked">These shares are staked in the vault\'s farm and can\'t be withdrawn yet</string>
+    <string name="kamino_withdraw_nothing">Nothing to withdraw from this vault</string>
+    <string name="kamino_withdraw_unreadable">This position couldn\'t be read, so no withdrawal can be prepared</string>
+    <string name="kamino_withdraw_delayed">Above the vault\'s instant liquidity of %1$s %2$s. This withdrawal may settle with a delay.</string>
     <!-- Tron DeFi -->
     <string name="tron_defi_freeze">Freeze</string>
     <string name="tron_defi_unfreeze">Unfreeze</string>

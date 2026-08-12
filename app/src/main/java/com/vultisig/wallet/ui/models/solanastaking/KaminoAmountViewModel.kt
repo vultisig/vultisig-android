@@ -14,8 +14,14 @@ import com.vultisig.wallet.data.blockchain.solana.kamino.BuildKaminoKeysignPaylo
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoAction
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoComputeBudget
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoPositionMath
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRate
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoShareAmount
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoTokenAmount
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVault
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawEligibility
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawLiquidity
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawMath
 import com.vultisig.wallet.data.blockchain.solana.kamino.coin
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.Chain
@@ -60,6 +66,18 @@ internal data class KaminoAmountUiState(
     val isLoading: Boolean = true,
     val isSubmitting: Boolean = false,
     val error: UiText? = null,
+    /**
+     * Why a withdraw is or is not possible. Null for a deposit. `FarmStaked` is a real, expected
+     * state rather than a failure: every deposit auto-stakes, and the transaction that spends
+     * staked shares has never been observed, so the app refuses it by name instead of guessing a
+     * layout.
+     */
+    val eligibility: KaminoWithdrawEligibility? = null,
+    /**
+     * Whether the requested withdraw fits the vault's liquid buffer. Ordinary information, not an
+     * error — the buffer is well under 1% of assets, so exceeding it is the common case.
+     */
+    val liquidity: KaminoWithdrawLiquidity = KaminoWithdrawLiquidity.Instant,
 )
 
 /**
@@ -101,6 +119,13 @@ constructor(
 
     private var tokenCoin: Coin? = null
 
+    // Withdraw sizing state, read at load and reused at submit so the form's maximum, its gate and
+    // the amount actually sent cannot disagree.
+    private var withdrawRate: KaminoRate? = null
+    private var withdrawHeldShares: KaminoShareAmount? = null
+    private var withdrawMaximumTokens: KaminoTokenAmount? = null
+    private var liquidBuffer: KaminoTokenAmount? = null
+
     private val action: KaminoAction
         get() = if (route.isWithdraw) KaminoAction.WITHDRAW else KaminoAction.DEPOSIT
 
@@ -138,17 +163,13 @@ constructor(
             val coin = resolveCoin(vault)
             tokenCoin = coin
 
-            val available =
-                if (route.isWithdraw) withdrawableAmount(vault, coin)
-                else spendableBalance(vault, coin)
+            if (route.isWithdraw) {
+                loadWithdrawState(vault, coin)
+                return@safeLaunch
+            }
 
+            val available = spendableBalance(vault, coin)
             val vaultState = runCatching { kaminoApi.getVaultState(vault.address) }.getOrNull()
-            val minimumField =
-                if (route.isWithdraw) {
-                    vaultState?.state?.minWithdrawAmount
-                } else {
-                    vaultState?.state?.minDepositAmount
-                }
 
             _state.update {
                 it.copy(
@@ -158,9 +179,12 @@ constructor(
                             ?: vault.fallbackName,
                     ticker = coin.ticker,
                     available = available,
-                    // The one Kamino field in base units rather than decimals.
+                    // Token base units for a deposit — the endpoint's own denomination.
                     minimum =
-                        KaminoPositionMath.baseUnitsToDecimal(minimumField, vault.tokenDecimals),
+                        KaminoPositionMath.baseUnitsToDecimal(
+                            vaultState?.state?.minDepositAmount,
+                            vault.tokenDecimals,
+                        ),
                 )
             }
         }
@@ -202,22 +226,73 @@ constructor(
             .movePointLeft(coin.decimal)
     }
 
-    /** What the position is actually worth in tokens — shares times the live share ratio. */
-    private suspend fun withdrawableAmount(vault: KaminoVault, coin: Coin): BigDecimal {
-        val walletAddress = coin.address
-        val position =
-            runCatching { kaminoApi.getUserPositions(walletAddress) }
-                .getOrNull()
-                .orEmpty()
-                .firstOrNull { it.vaultAddress == vault.address }
-        val shares = KaminoPositionMath.decimalOrNull(position?.totalShares) ?: BigDecimal.ZERO
-        if (shares.signum() == 0) return BigDecimal.ZERO
+    /**
+     * Resolves what the withdraw form may offer, in shares first and tokens only as a projection.
+     *
+     * Shares are the primary unit throughout: the endpoint takes shares, the vault's minimum is in
+     * shares, and a full withdraw must send the exact held share count. The token figure the form
+     * is denominated in is derived from those, never the other way round.
+     */
+    private suspend fun loadWithdrawState(vault: KaminoVault, coin: Coin) {
+        val positions = runCatching { kaminoApi.getUserPositions(coin.address) }.getOrNull()
+        val eligibility =
+            if (positions == null) {
+                // A failed read is neither "nothing to withdraw" nor "everything": refuse it.
+                KaminoWithdrawEligibility.Unreadable
+            } else {
+                KaminoWithdrawEligibility.resolve(
+                    response = positions.firstOrNull { it.vaultAddress == vault.address },
+                    shareDecimals = vault.sharesDecimals,
+                )
+            }
 
         val metrics = runCatching { kaminoApi.getVaultMetrics(vault.address) }.getOrNull()
-        val tokensPerShare =
-            KaminoPositionMath.decimalOrNull(metrics?.tokensPerShare) ?: return BigDecimal.ZERO
-        return KaminoPositionMath.tokenAmount(shares, tokensPerShare, vault.tokenDecimals)
+        val rate = KaminoRate.parse(metrics?.tokensPerShare)
+        val held = eligibility.withdrawableShares
+
+        val maximum =
+            if (held != null && rate != null) {
+                KaminoWithdrawMath.maximumTokens(held, rate, vault.tokenDecimals)
+            } else {
+                null
+            }
+
+        val vaultState = runCatching { kaminoApi.getVaultState(vault.address) }.getOrNull()
+        // Share base units, not token — comparing it against a token amount would be wrong by the
+        // whole share rate (about 930x on the SOL vault).
+        val minimumShares =
+            vaultState?.state?.minWithdrawAmount?.let { raw ->
+                runCatching { KaminoShareAmount(BigInteger(raw), vault.sharesDecimals) }.getOrNull()
+            }
+        val minimum =
+            if (minimumShares != null && rate != null) {
+                KaminoWithdrawMath.minimumTokens(minimumShares, rate, vault.tokenDecimals)
+            } else {
+                null
+            }
+
+        withdrawRate = rate
+        withdrawHeldShares = held
+        withdrawMaximumTokens = maximum
+        liquidBuffer = KaminoTokenAmount.parse(metrics?.tokensAvailable, vault.tokenDecimals)
+
+        _state.update {
+            it.copy(
+                isLoading = false,
+                vaultName =
+                    vaultState?.state?.name?.takeIf { name -> name.isNotBlank() }
+                        ?: vault.fallbackName,
+                ticker = coin.ticker,
+                available = maximum.toDecimalOrZero(vault.tokenDecimals),
+                minimum = minimum?.let { m -> BigDecimal(m.baseUnits).movePointLeft(m.decimals) },
+                eligibility = eligibility,
+            )
+        }
     }
+
+    private fun KaminoTokenAmount?.toDecimalOrZero(decimals: Int): BigDecimal =
+        if (this == null) BigDecimal.ZERO.setScale(decimals)
+        else BigDecimal(baseUnits).movePointLeft(this.decimals)
 
     private suspend fun resolveCoin(vault: KaminoVault): Coin {
         val template =
@@ -243,7 +318,7 @@ constructor(
     fun submit() {
         val vault = vault ?: return
         val coin = tokenCoin ?: return
-        val amount = amountFieldState.text.toString().toBigDecimalOrNull() ?: return
+        val rawAmount = amountFieldState.text.toString().toBigDecimalOrNull() ?: return
 
         _state.update { it.copy(isSubmitting = true, error = null) }
 
@@ -255,19 +330,36 @@ constructor(
                         isSubmitting = false,
                         // Surface the refusal reason rather than a generic failure: a rejected
                         // transaction means the app declined to sign something, which the user
-                        // should be able to read.
-                        error = UiText.DynamicString(throwable.message ?: ""),
+                        // should be able to read. An exception carrying no message would otherwise
+                        // render as a blank line.
+                        error =
+                            throwable.message
+                                ?.takeIf { message -> message.isNotBlank() }
+                                ?.let(UiText::DynamicString)
+                                ?: UiText.StringResource(R.string.kamino_error_build_failed),
                     )
                 }
             }
         ) {
-            require(amount.signum() > 0) { "Amount must be greater than zero" }
+            // Quantised to the token's own precision first, so the amount sent, the amount shown on
+            // the verify screen and the amount checked against the balance are the same number.
+            // Sending an unrounded 1.0000009 while displaying 1.000000 would sign one thing and
+            // show another.
+            val amount = rawAmount.setScale(coin.decimal, RoundingMode.DOWN)
+            require(amount.signum() > 0) {
+                "Amount is smaller than the smallest unit of ${coin.ticker}"
+            }
             require(amount <= _state.value.available) { "Amount exceeds the available balance" }
             _state.value.minimum?.let { minimum ->
                 require(amount >= minimum) {
                     "Minimum is ${minimum.stripTrailingZeros().toPlainString()} ${coin.ticker}"
                 }
             }
+
+            // The denomination the endpoint expects, sized here rather than anywhere downstream.
+            val apiAmount =
+                if (route.isWithdraw) withdrawShares(amount, coin)
+                else amount.stripTrailingZeros().toPlainString()
 
             val storedVault =
                 vaultRepository.get(route.vaultId) ?: error("Vault ${route.vaultId} not found")
@@ -289,7 +381,8 @@ constructor(
                 buildKeysignPayload(
                     vault = vault,
                     action = action,
-                    amount = amount,
+                    apiAmount = apiAmount,
+                    tokenAmount = amount,
                     coin = coin,
                     blockChainSpecific = specific.blockChainSpecific,
                     vaultPublicKeyECDSA = storedVault.pubKeyECDSA,
@@ -319,6 +412,74 @@ constructor(
             navigator.route(
                 Route.VerifyDeposit(vaultId = route.vaultId, transactionId = depositTx.id)
             )
+        }
+    }
+
+    /**
+     * Converts the entered token amount into the share quantity the withdraw endpoint expects.
+     *
+     * Everything hazardous about a withdraw lives here. The endpoint validates nothing: naming more
+     * shares than the wallet holds is silently rewritten to `u64::MAX`, meaning *withdraw
+     * everything*. So an over-request by a single base unit turns a partial withdraw into a full
+     * exit, which is why an amount above the maximum is refused outright rather than clamped, and
+     * why a withdraw of exactly the maximum sends the held balance verbatim instead of a number
+     * round-tripped through tokens.
+     */
+    private fun withdrawShares(amount: BigDecimal, coin: Coin): String {
+        val eligibility = _state.value.eligibility
+        check(eligibility is KaminoWithdrawEligibility.Withdrawable) {
+            when (eligibility) {
+                is KaminoWithdrawEligibility.FarmStaked ->
+                    "These shares are staked in the vault's farm and cannot be withdrawn yet"
+                KaminoWithdrawEligibility.Empty -> "There is nothing to withdraw from this vault"
+                else -> "This position could not be read, so no withdraw can be sized safely"
+            }
+        }
+
+        val rate = checkNotNull(withdrawRate) { "The vault's share rate is unavailable" }
+        val held = eligibility.shares
+        val maximum = checkNotNull(withdrawMaximumTokens) { "The withdrawable balance is unknown" }
+
+        val requested =
+            KaminoTokenAmount(
+                baseUnits = amount.movePointRight(coin.decimal).toBigIntegerExact(),
+                decimals = coin.decimal,
+            )
+
+        val shares =
+            KaminoWithdrawMath.sharesForTokens(
+                tokens = requested,
+                held = held,
+                maximumTokens = maximum,
+                rate = rate,
+                shareDecimals = vault?.sharesDecimals ?: held.decimals,
+            )
+        checkNotNull(shares) { "That amount is larger than this position" }
+        check(shares.baseUnits <= held.baseUnits) {
+            // Belt and braces on the one invariant that matters: never request more than is held.
+            "Refusing to request more shares than the position holds"
+        }
+        return shares.apiString()
+    }
+
+    /** Recomputes whether the entered amount fits the vault's liquid buffer. */
+    fun onAmountChanged(amount: BigDecimal?) {
+        if (!route.isWithdraw) return
+        val decimals = tokenCoin?.decimal ?: return
+        val requested =
+            amount
+                ?.takeIf { it.signum() > 0 }
+                ?.let {
+                    runCatching {
+                            KaminoTokenAmount(it.movePointRight(decimals).toBigInteger(), decimals)
+                        }
+                        .getOrNull()
+                }
+        val liquidity =
+            if (requested == null) KaminoWithdrawLiquidity.Instant
+            else KaminoWithdrawLiquidity.resolve(requested, liquidBuffer)
+        if (liquidity != _state.value.liquidity) {
+            _state.update { it.copy(liquidity = liquidity) }
         }
     }
 

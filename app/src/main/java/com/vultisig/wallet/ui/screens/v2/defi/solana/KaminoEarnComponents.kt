@@ -2,13 +2,13 @@ package com.vultisig.wallet.ui.screens.v2.defi.solana
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -76,7 +77,11 @@ internal fun KaminoVaultPickerSheet(
                     modifier =
                         Modifier.fillMaxWidth()
                             .kaminoCard()
-                            .clickable { onToggle(vault.address, !isSelected) }
+                            .toggleable(
+                                value = isSelected,
+                                role = Role.Checkbox,
+                                onValueChange = { onToggle(vault.address, it) },
+                            )
                             .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -200,7 +205,9 @@ private fun KaminoVaultCard(
         PnlRow(row = row, isLoading = isLoading, isBalanceVisible = isBalanceVisible)
 
         VaultActions(
-            hasPosition = row.fiatValue.signum() > 0,
+            // Gated on the position itself, not its fiat value: a failed price lookup leaves
+            // fiatValue at zero, and hiding Withdraw then would strand a real balance.
+            hasPosition = row.hasPosition,
             onDeposit = onDeposit,
             onWithdraw = onWithdraw,
         )

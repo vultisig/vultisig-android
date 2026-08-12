@@ -26,7 +26,12 @@ class BuildKaminoKeysignPayloadUseCase
 constructor(private val preparer: KaminoTransactionPreparer) {
 
     /**
-     * @param amount decimal token amount the user entered
+     * @param apiAmount the decimal amount in the denomination the action's endpoint expects — the
+     *   underlying **token** for a deposit, vault **shares** for a withdraw. Passed pre-sized by
+     *   the caller rather than derived here, because sizing a withdraw safely needs the held share
+     *   balance: the endpoint rewrites an over-request to `u64::MAX`, meaning withdraw everything.
+     * @param tokenAmount what the user is moving, in the underlying token — display only, for the
+     *   verify screen. Never used to size the request.
      * @param coin the wallet coin for the vault's underlying token — supplies the signer address,
      *   public key and scale
      * @throws KaminoTransactionRejected if the assembled transaction is not one the app will sign
@@ -34,14 +39,16 @@ constructor(private val preparer: KaminoTransactionPreparer) {
     suspend operator fun invoke(
         vault: KaminoVault,
         action: KaminoAction,
-        amount: BigDecimal,
+        apiAmount: String,
+        tokenAmount: BigDecimal,
         coin: Coin,
         blockChainSpecific: BlockChainSpecific,
         vaultPublicKeyECDSA: String,
         vaultLocalPartyID: String,
         libType: SigningLibType?,
     ): KeysignPayload {
-        require(amount.signum() > 0) { "Amount must be greater than zero" }
+        require(tokenAmount.signum() > 0) { "Amount must be greater than zero" }
+        require(apiAmount.isNotBlank()) { "Kamino amount must not be blank" }
 
         val solanaSpecific =
             blockChainSpecific as? BlockChainSpecific.Solana
@@ -52,9 +59,7 @@ constructor(private val preparer: KaminoTransactionPreparer) {
                 vault = vault,
                 action = action,
                 walletAddress = coin.address,
-                // Kamino's endpoints take decimals, not base units. `toPlainString` matters:
-                // scientific notation would be rejected, and a small amount can reach it that way.
-                amount = amount.stripTrailingZeros().toPlainString(),
+                amount = apiAmount,
                 networkUnitPrice = solanaSpecific.priorityFee,
             )
 
@@ -64,7 +69,7 @@ constructor(private val preparer: KaminoTransactionPreparer) {
             // by this field.
             toAddress = vault.address,
             toAmount =
-                amount
+                tokenAmount
                     .movePointRight(coin.decimal)
                     // Sub-unit precision from manual entry rounds down rather than throwing,
                     // matching

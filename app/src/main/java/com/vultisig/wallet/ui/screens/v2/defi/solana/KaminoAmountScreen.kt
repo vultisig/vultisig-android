@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -17,6 +18,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawEligibility
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawLiquidity
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
@@ -26,6 +29,7 @@ import com.vultisig.wallet.ui.models.solanastaking.KaminoAmountViewModel
 import com.vultisig.wallet.ui.screens.cosmosstaking.StakingAmountCard
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
+import java.math.BigDecimal
 
 /**
  * Amount entry for a Kamino Earn deposit or withdraw: the shared amount card with 25/50/75/Max
@@ -48,6 +52,7 @@ internal fun KaminoAmountScreen(viewModel: KaminoAmountViewModel = hiltViewModel
             state = state,
             amountFieldState = viewModel.amountFieldState,
             onPercentage = viewModel::onPercentageChange,
+            onAmountChanged = viewModel::onAmountChanged,
             onSubmit = viewModel::submit,
         )
     }
@@ -58,9 +63,26 @@ internal fun KaminoAmountContent(
     state: KaminoAmountUiState,
     amountFieldState: TextFieldState,
     onPercentage: (Int) -> Unit,
+    onAmountChanged: (BigDecimal?) -> Unit = {},
     onSubmit: () -> Unit,
 ) {
     val amount = amountFieldState.text.toString().toBigDecimalOrNull()
+
+    // Whether the request fits the vault's liquid buffer depends on the amount, so it is recomputed
+    // as the user types rather than only at submit.
+    LaunchedEffect(amount) { onAmountChanged(amount) }
+
+    // A withdraw is only possible from unstaked shares. Every other state is a fact about the
+    // position, not a validation failure, so it reads as a message rather than an error.
+    val blockingReason: String? =
+        when (state.eligibility) {
+            is KaminoWithdrawEligibility.FarmStaked ->
+                stringResource(R.string.kamino_withdraw_farm_staked)
+            KaminoWithdrawEligibility.Empty -> stringResource(R.string.kamino_withdraw_nothing)
+            KaminoWithdrawEligibility.Unreadable ->
+                stringResource(R.string.kamino_withdraw_unreadable)
+            else -> null
+        }
 
     // Over-balance first, then the vault's own floor — the order the user hits them in.
     val validationError: String? =
@@ -81,6 +103,7 @@ internal fun KaminoAmountContent(
         amount != null &&
             amount.signum() > 0 &&
             validationError == null &&
+            blockingReason == null &&
             !state.isSubmitting &&
             !state.isLoading
 
@@ -104,11 +127,30 @@ internal fun KaminoAmountContent(
                 modifier = Modifier.weight(1f),
             )
 
-            (validationError ?: state.error?.asString())?.let { error ->
+            (blockingReason ?: validationError ?: state.error?.asString())?.let { message ->
                 Text(
-                    text = error,
+                    text = message,
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.alerts.error,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                )
+            }
+
+            // Ordinary information about the vault, not a failure: the liquid buffer is well under
+            // 1% of assets, so a withdraw exceeding it is the common case.
+            (state.liquidity as? KaminoWithdrawLiquidity.Delayed)?.let { delayed ->
+                Text(
+                    text =
+                        stringResource(
+                            R.string.kamino_withdraw_delayed,
+                            BigDecimal(delayed.available.baseUnits)
+                                .movePointLeft(delayed.available.decimals)
+                                .stripTrailingZeros()
+                                .toPlainString(),
+                            state.ticker,
+                        ),
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.alerts.warning,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                 )
             }

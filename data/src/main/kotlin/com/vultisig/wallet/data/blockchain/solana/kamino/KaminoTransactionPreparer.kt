@@ -32,11 +32,26 @@ object KaminoTransactionDecoder {
             KaminoTxInstruction(
                 // A versioned message may not invoke a program loaded through a lookup table, so a
                 // program index always addresses the static keys.
-                programId = accountKeys.getOrNull(instruction.programId) ?: "unknown",
+                programId = accountKeys.getOrNull(instruction.programId) ?: UNKNOWN_ACCOUNT,
                 data = instruction.programData.toByteArray(),
+                // Indices at or past the static keys address lookup-table-loaded accounts, which
+                // the
+                // decoder cannot resolve without fetching the tables. They are named as unresolved
+                // rather than silently dropped, so a check can tell "not the signer" from
+                // "unknown".
+                accounts =
+                    instruction.accountsList.map { index ->
+                        accountKeys.getOrNull(index) ?: UNKNOWN_ACCOUNT
+                    },
             )
         }
     }
+
+    /**
+     * Stands in for an account the decode cannot name, rather than an empty string that reads as
+     * absent.
+     */
+    const val UNKNOWN_ACCOUNT = "unknown"
 }
 
 /**
@@ -57,7 +72,10 @@ object KaminoTransactionDecoder {
 class KaminoTransactionPreparer @Inject constructor(private val kaminoApi: KaminoApi) {
 
     /**
-     * @param amount decimal token amount, as Kamino's endpoints expect
+     * @param amount the decimal amount in the denomination the chosen endpoint expects — the
+     *   underlying **token** for a deposit, vault **shares** for a withdraw. They are not
+     *   interchangeable: confusing them is off by the share rate, which on the SOL vault is enough
+     *   to exceed the held balance and trip the `u64::MAX` full-exit rewrite.
      * @param networkUnitPrice the app's current micro-lamports-per-unit sample, or null to use the
      *   floor
      * @return base64 transaction with a zeroed signature envelope, ready for the raw-signing path
@@ -84,6 +102,7 @@ class KaminoTransactionPreparer @Inject constructor(private val kaminoApi: Kamin
             instructions = KaminoTransactionDecoder.decode(withMemo),
             vault = vault,
             action = action,
+            signerAddress = walletAddress,
         )
 
         return withMemo

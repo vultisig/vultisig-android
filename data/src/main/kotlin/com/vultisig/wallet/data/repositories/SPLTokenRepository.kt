@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.models.JupiterTokenResponseJson
 import com.vultisig.wallet.data.api.models.SplTokenJson
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.models.TokenValueEntity
 import com.vultisig.wallet.data.mappers.SplResponseAccountJsonMapper
@@ -51,7 +52,14 @@ constructor(
 
     private suspend fun fetchTokens(address: String): List<Pair<SplTokenResponse, Coin>?> {
         val rawSPLTokens = solanaApi.getSPLTokens(address) ?: return emptyList()
-        val splTokenResponse = rawSPLTokens.map(mapSplAccountJsonToSplToken)
+        val splTokenResponse =
+            rawSPLTokens.map(mapSplAccountJsonToSplToken).filterNot {
+                // A Kamino vault's shares are a receipt for a DeFi position the Earn tab already
+                // shows and values. Discovering them as wallet tokens too would count the same
+                // deposit twice in the total, and offer a "send" on a receipt that is not spendable
+                // as one.
+                it.mint in KaminoVaultRegistry.SHARES_MINTS
+            }
         val result = getSplTokensByContractAddress(splTokenResponse.map { it.mint })
         return splTokenResponse.map { key ->
             result

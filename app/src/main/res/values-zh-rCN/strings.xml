@@ -79,6 +79,11 @@
     <string name="kamino_amount_below_minimum">最低 %1$s %2$s</string>
     <string name="kamino_error_unknown_vault">应用不支持该金库</string>
     <string name="kamino_error_load_failed">暂时无法加载该金库</string>
+    <string name="kamino_error_build_failed">无法准备此交易</string>
+    <string name="kamino_withdraw_farm_staked">这些份额已质押在金库的farm中，暂时无法提取</string>
+    <string name="kamino_withdraw_nothing">该金库没有可提取的资产</string>
+    <string name="kamino_withdraw_unreadable">无法读取该仓位，因此无法准备提取</string>
+    <string name="kamino_withdraw_delayed">超出金库的即时流动性 %1$s %2$s。此次提取可能会延迟。</string>
     <!-- Tron DeFi -->
     <string name="tron_defi_freeze">冻结</string>
     <string name="tron_defi_unfreeze">解冻</string>

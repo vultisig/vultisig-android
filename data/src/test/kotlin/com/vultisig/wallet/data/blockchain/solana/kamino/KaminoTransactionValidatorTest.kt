@@ -138,6 +138,100 @@ class KaminoTransactionValidatorTest {
     }
 
     @Test
+    fun `a smuggled SPL token transfer is refused even though the transaction is otherwise valid`() {
+        // The hole that program allow-listing alone leaves: a deposit legitimately needs the Token
+        // program, so an added transfer would pass a check that only asks which programs run.
+        val reason =
+            rejection(
+                listOf(
+                    ix(KaminoVaultRegistry.PROGRAM_ID),
+                    // SPL Token `Transfer` is discriminator 3.
+                    ix("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", byteArrayOf(3, 0, 0, 0)),
+                    memo,
+                )
+            )
+        assertTrue(reason.contains("top-level SPL token transfer"), reason)
+    }
+
+    @Test
+    fun `TransferChecked is refused too, not just the bare transfer`() {
+        val reason =
+            rejection(
+                listOf(
+                    ix(KaminoVaultRegistry.PROGRAM_ID),
+                    // `TransferChecked` is discriminator 12.
+                    ix("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", byteArrayOf(12, 0)),
+                    memo,
+                )
+            )
+        assertTrue(reason.contains("top-level SPL token transfer"), reason)
+    }
+
+    @Test
+    fun `moving lamports is refused for a token vault and allowed for the wrapped-SOL one`() {
+        // System `Transfer` is 2, little-endian over four bytes.
+        val systemTransfer =
+            ix("11111111111111111111111111111111", byteArrayOf(2, 0, 0, 0, 1, 2, 3, 4))
+        val instructions = listOf(ix(KaminoVaultRegistry.PROGRAM_ID), systemTransfer, memo)
+
+        val reason = rejection(instructions)
+        assertTrue(reason.contains("moves lamports"), reason)
+
+        // The SOL vault has to wrap, so the same instruction is expected there.
+        assertDoesNotThrow {
+            KaminoTransactionValidator.validate(
+                instructions,
+                KaminoVaultRegistry.ALLEZ_SOL,
+                KaminoAction.DEPOSIT,
+            )
+        }
+    }
+
+    @Test
+    fun `a transaction authorised by someone other than the wallet is refused`() {
+        val signer = "9ceRgz579BcfWogs3RE11FKNQaWW7Lmtnev3MXspxUjF"
+        val instructions =
+            listOf(
+                KaminoTxInstruction(
+                    programId = KaminoVaultRegistry.PROGRAM_ID,
+                    data = byteArrayOf(1),
+                    accounts = listOf("SomeoneElsesAccount11111111111111111111111"),
+                ),
+                memo,
+            )
+
+        val reason =
+            assertThrows<KaminoTransactionRejected> {
+                    KaminoTransactionValidator.validate(
+                        instructions,
+                        vault,
+                        KaminoAction.DEPOSIT,
+                        signerAddress = signer,
+                    )
+                }
+                .message
+                .orEmpty()
+        assertTrue(reason.contains("authorised by"), reason)
+
+        // The wallet's own transaction passes.
+        assertDoesNotThrow {
+            KaminoTransactionValidator.validate(
+                listOf(
+                    KaminoTxInstruction(
+                        programId = KaminoVaultRegistry.PROGRAM_ID,
+                        data = byteArrayOf(1),
+                        accounts = listOf(signer),
+                    ),
+                    memo,
+                ),
+                vault,
+                KaminoAction.DEPOSIT,
+                signerAddress = signer,
+            )
+        }
+    }
+
+    @Test
     fun `instruction value semantics do not depend on array identity`() {
         // Guards the hand-written equals: without it, structurally identical instructions would
         // compare unequal and the memo checks would silently stop matching.

@@ -42,8 +42,15 @@ interface KaminoApi {
      */
     suspend fun buildDeposit(walletAddress: String, vaultAddress: String, amount: String): String
 
-    /** Builds an unsigned withdraw transaction. [amount] is decimal, as for [buildDeposit]. */
-    suspend fun buildWithdraw(walletAddress: String, vaultAddress: String, amount: String): String
+    /**
+     * Builds an unsigned withdraw transaction.
+     *
+     * [shares] is a decimal quantity of **vault shares** — the inverse of [buildDeposit]'s units.
+     * The endpoint validates nothing: naming more shares than the wallet holds is silently
+     * rewritten to `u64::MAX`, meaning withdraw everything, so the caller must have sized this
+     * against the held balance rather than converted it hopefully.
+     */
+    suspend fun buildWithdraw(walletAddress: String, vaultAddress: String, shares: String): String
 }
 
 internal class KaminoApiImpl @Inject constructor(private val httpClient: HttpClient) : KaminoApi {
@@ -95,8 +102,8 @@ internal class KaminoApiImpl @Inject constructor(private val httpClient: HttpCli
     override suspend fun buildWithdraw(
         walletAddress: String,
         vaultAddress: String,
-        amount: String,
-    ): String = buildAction("withdraw", walletAddress, vaultAddress, amount)
+        shares: String,
+    ): String = buildAction("withdraw", walletAddress, vaultAddress, shares)
 
     private suspend fun buildAction(
         action: String,
@@ -151,8 +158,12 @@ data class KaminoVaultStateJson(
         @SerialName("tokenMintDecimals") val tokenDecimals: Int,
         @SerialName("sharesMint") val sharesMint: String,
         @SerialName("sharesMintDecimals") val sharesDecimals: Int,
-        /** In the token's base units, not decimal — 100000 is 0.1 USDC at 6 decimals. */
+        /** In the **token's** base units, not decimal — 100000 is 0.1 USDC at 6 decimals. */
         @SerialName("minDepositAmount") val minDepositAmount: String? = null,
+        /**
+         * In the **share** base units, matching the withdraw endpoint's own denomination — not the
+         * token's. Comparing it against a token amount is wrong by the share rate.
+         */
         @SerialName("minWithdrawAmount") val minWithdrawAmount: String? = null,
         @SerialName("performanceFeeBps") val performanceFeeBps: Int? = null,
         @SerialName("managementFeeBps") val managementFeeBps: Int? = null,
@@ -175,6 +186,12 @@ data class KaminoVaultMetricsJson(
     @SerialName("sharePrice") val sharePrice: String? = null,
     /** The underlying token's price in USD. */
     @SerialName("tokenPrice") val tokenPrice: String? = null,
+    /**
+     * Decimal token amount the vault holds liquid. A withdraw above this cannot settle instantly —
+     * and since the buffer measures well under 1% of assets, that is the common case rather than an
+     * edge one.
+     */
+    @SerialName("tokensAvailable") val tokensAvailable: String? = null,
 )
 
 @Serializable

@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.api.KaminoVaultStateJson
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.blockchain.solana.kamino.BuildKaminoKeysignPayloadUseCase
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawEligibility
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TokenValue
@@ -159,7 +160,8 @@ internal class KaminoAmountViewModelTest {
             listOf(
                 KaminoUserPositionJson(
                     vaultAddress = STEAKHOUSE.address,
-                    stakedShares = "1000",
+                    stakedShares = "0",
+                    unstakedShares = "1000",
                     totalShares = "1000",
                 )
             )
@@ -171,7 +173,9 @@ internal class KaminoAmountViewModelTest {
         assertTrue(state.isWithdraw)
         // 1000 shares × 1.0544278224860290217, rounded down to the token's 6 decimals.
         assertEquals(0, BigDecimal("1054.427822").compareTo(state.available))
-        assertEquals(0, BigDecimal("0.001").compareTo(state.minimum!!))
+        // minWithdrawAmount is 1000 SHARE base units, so in tokens it is 0.001055 rounded up — not
+        // the 0.001 a token-denominated reading would give.
+        assertEquals(0, BigDecimal("0.001055").compareTo(state.minimum!!))
     }
 
     @Test
@@ -282,6 +286,64 @@ internal class KaminoAmountViewModelTest {
         // The fee and any account rent are paid in SOL, so the whole USDC balance is spendable.
         givenTokenBalance("2500000000")
         assertEquals(0, BigDecimal("2500").compareTo(viewModel().state.value.available))
+    }
+
+    @Test
+    fun `a withdraw of farm-staked shares is refused by name, not attempted`() = runTest {
+        // Every launch-vault deposit auto-stakes, and the transaction that spends staked shares has
+        // never been observed, so this is a named state rather than a guess at an instruction
+        // layout.
+        givenTokenBalance("0")
+        coEvery { kaminoApi.getUserPositions(WALLET) } returns
+            listOf(
+                KaminoUserPositionJson(
+                    vaultAddress = STEAKHOUSE.address,
+                    stakedShares = "1000",
+                    unstakedShares = "0",
+                    totalShares = "1000",
+                )
+            )
+        coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0544278224860290217")
+
+        val state = viewModel(isWithdraw = true).state.value
+
+        assertTrue(state.eligibility is KaminoWithdrawEligibility.FarmStaked)
+        // Nothing may be offered against it.
+        assertEquals(0, BigDecimal.ZERO.compareTo(state.available))
+    }
+
+    @Test
+    fun `a failed positions read refuses the withdraw instead of offering zero`() = runTest {
+        givenTokenBalance("0")
+        coEvery { kaminoApi.getUserPositions(WALLET) } throws RuntimeException("503")
+        coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0")
+
+        val state = viewModel(isWithdraw = true).state.value
+
+        assertEquals(KaminoWithdrawEligibility.Unreadable, state.eligibility)
+    }
+
+    @Test
+    fun `the withdraw minimum is read as shares, not as the token amount`() = runTest {
+        // minWithdrawAmount is 1000 SHARE base units. Treated as token base units it would be
+        // 0.001 USDC; converted properly at the Steakhouse rate it is 0.001055.
+        givenTokenBalance("0")
+        coEvery { kaminoApi.getUserPositions(WALLET) } returns
+            listOf(
+                KaminoUserPositionJson(
+                    vaultAddress = STEAKHOUSE.address,
+                    stakedShares = "0",
+                    unstakedShares = "1000",
+                    totalShares = "1000",
+                )
+            )
+        coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0544278224860290217")
+
+        val minimum = viewModel(isWithdraw = true).state.value.minimum
+        assertEquals(0, BigDecimal("0.001055").compareTo(minimum!!))
     }
 
     private companion object {

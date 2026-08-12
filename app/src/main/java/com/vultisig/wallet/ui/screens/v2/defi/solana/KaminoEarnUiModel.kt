@@ -51,6 +51,12 @@ data class KaminoEarnRow(
      * without re-parsing display strings. Zero when the position or its price is unresolved.
      */
     val fiatValue: BigDecimal = BigDecimal.ZERO,
+    /**
+     * Whether the wallet actually holds shares here. Kept separate from [fiatValue] because a
+     * failed price lookup leaves that at zero, and a position must not disappear because it could
+     * not be priced.
+     */
+    val hasPosition: Boolean = false,
 ) {
     /**
      * Which way the position moved, kept out of the view so the zero case is decided once.

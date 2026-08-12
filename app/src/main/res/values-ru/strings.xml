@@ -531,13 +531,18 @@
     <string name="kamino_earn_risk_private_credit">Частный кредит</string>
     <string name="kamino_earn_deposit">Внести</string>
     <string name="kamino_earn_empty_title">Нет активных позиций Earn</string>
-    <string name="kamino_earn_empty_description">Включите хранилище Kamino в разделе «Управление Позициями», чтобы начать получать доход от своих активов Solana.</string>
+    <string name="kamino_earn_empty_description">Включите vault Kamino в разделе «Управление Позициями», чтобы начать получать доход от своих активов Solana.</string>
     <string name="kamino_deposit_title">Внести</string>
     <string name="kamino_withdraw_title">Вывести</string>
     <string name="kamino_amount_exceeds_available">Сумма превышает доступный баланс</string>
     <string name="kamino_amount_below_minimum">Минимум — %1$s %2$s</string>
-    <string name="kamino_error_unknown_vault">Это хранилище не поддерживается приложением</string>
-    <string name="kamino_error_load_failed">Сейчас не удалось загрузить это хранилище</string>
+    <string name="kamino_error_unknown_vault">Этот vault не поддерживается приложением</string>
+    <string name="kamino_error_load_failed">Сейчас не удалось загрузить этот vault</string>
+    <string name="kamino_error_build_failed">Не удалось подготовить эту транзакцию</string>
+    <string name="kamino_withdraw_farm_staked">Эти доли размещены в фарме vault‑а и пока не могут быть выведены</string>
+    <string name="kamino_withdraw_nothing">Из этого vault‑а нечего выводить</string>
+    <string name="kamino_withdraw_unreadable">Не удалось прочитать эту позицию, поэтому вывод невозможно подготовить</string>
+    <string name="kamino_withdraw_delayed">Превышает мгновенную ликвидность vault‑а %1$s %2$s. Этот вывод может задержаться.</string>
     <!-- Tron DeFi -->
     <string name="tron_defi_freeze">Заморозить</string>
     <string name="tron_defi_unfreeze">Разморозить</string>
