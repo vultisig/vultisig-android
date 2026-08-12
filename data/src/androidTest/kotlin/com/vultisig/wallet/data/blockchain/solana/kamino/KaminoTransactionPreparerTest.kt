@@ -37,13 +37,19 @@ class KaminoTransactionPreparerTest {
             "HBu0d9Dar60DX6fr5AkFNTElLzITCQEJJxUECwI3BwYD"
 
     /**
-     * A live `POST /ktx/kvault/withdraw` response for the same vault. Two instructions — create the
-     * destination token account, then `kVault::withdraw` — and notably **no farms instructions**,
-     * which is why this shape can only spend unstaked shares and why a farm-staked position is
-     * refused rather than guessed at.
+     * A live `POST /ktx/kvault/withdraw` response for the same vault: create the destination token
+     * account, then `kVault::withdraw`.
      *
-     * Kamino built this for a wallet holding no position at all, which is the clearest evidence
-     * that the endpoint validates nothing about the amount it is given.
+     * Kamino built it for a wallet holding no position at all — the clearest evidence that the
+     * endpoint validates nothing about the amount it is handed, and also why there is nothing
+     * staked to release here.
+     *
+     * **This is therefore the UNSTAKED shape, which is not the one most holders will send.** A
+     * withdraw against a staked position carries two extra `farms` instructions and a second
+     * account creation ahead of the vault withdraw. Capturing that needs a wallet actually holding
+     * a staked position, which these vaults only produce by depositing real funds, so the limit
+     * sized for it rests on the iOS mainnet measurements (283,786 / 289,486 / 309,310) rather than
+     * on anything this suite proves.
      */
     private val withdrawFixture =
         "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACA" +
@@ -260,20 +266,19 @@ class KaminoTransactionPreparerTest {
     }
 
     @Test
-    fun a_prepared_withdraw_validates_and_spends_no_farm_staked_shares() {
+    fun a_prepared_unstaked_withdraw_validates() {
         val prepared = prepare(action = KaminoAction.WITHDRAW)
         val instructions = KaminoTransactionDecoder.decode(prepared)
 
-        // The kVault program does the work; the farms program is absent, so this transaction cannot
-        // be moving shares out of the farm. That is the on-chain reason a staked position is
-        // refused
-        // rather than attempted.
         assertTrue(
             "a withdraw must invoke the kVault program",
             instructions.any { it.programId == KaminoVaultRegistry.PROGRAM_ID },
         )
+        // No farms instruction, because Kamino built this for a wallet holding nothing and so had
+        // nothing to release. That makes this the unstaked shape — see the fixture's own note; the
+        // staked shape most holders send is not covered here.
         assertTrue(
-            "a withdraw of unstaked shares touches no farm",
+            "this fixture is the unstaked shape",
             instructions.none { it.programId == KaminoVaultRegistry.FARMS_PROGRAM_ID },
         )
         assertEquals(KaminoAttributionMemo.MEMO_PROGRAM_ID, instructions.last().programId)
