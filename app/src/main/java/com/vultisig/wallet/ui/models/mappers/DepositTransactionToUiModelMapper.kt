@@ -85,6 +85,7 @@ constructor(
             pairedAddress = from.pairedAddress,
             pool = from.pool,
             validatorName = from.validatorName.orEmpty(),
+            signSolana = from.signSolana?.rawTransactions.orEmpty(),
             titleRes = depositVerifyTitleRes(from.operation, from.memo),
             limitCancelPair = LimitOrderCancelPresentation.pairCaption(from.memo),
             limitCancelDonatesDust =

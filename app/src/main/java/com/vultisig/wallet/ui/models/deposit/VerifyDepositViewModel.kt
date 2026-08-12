@@ -53,6 +53,13 @@ internal data class DepositTransactionUiModel(
     val pairedAddress: String = "",
     val pool: String = "",
     val validatorName: String = "",
+    /**
+     * Base64 raw transactions when the deposit carries pre-built Solana bytes (Kamino Earn, native
+     * staking). Rendered as a decoded instruction list, so the device approving the transaction —
+     * either device, in a co-signed vault — can see what it actually does rather than only its
+     * amount and destination.
+     */
+    val signSolana: List<String> = emptyList(),
     @StringRes val titleRes: Int = R.string.verify_deposit_sending,
     /**
      * `SRC → TGT` of the limit order a `m=<` cancel closes, parsed straight out of the memo. Null

@@ -37,6 +37,7 @@ import com.vultisig.wallet.data.models.OPERATION_KAMINO_WITHDRAW
 import com.vultisig.wallet.data.models.OPERATION_MINT
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
+import com.vultisig.wallet.ui.components.SignSolanaDisplayView
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
@@ -246,6 +247,17 @@ internal fun VerifyDepositScreen(
                         VerifyCardDetails(title = stringResource(R.string.pool), subtitle = tx.pool)
                         VerifyCardDivider(0.dp)
                     }
+                    // A pre-built Solana transaction — Kamino Earn, native staking — does its work
+                    // in
+                    // instructions the amount and destination rows say nothing about. Decoding them
+                    // here is what lets the person approving it, on either device of a co-signed
+                    // vault, see which programs it invokes.
+                    tx.signSolana
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { rawTransactions ->
+                            SignSolanaDisplayView(rawTransactions = rawTransactions)
+                            VerifyCardDivider(0.dp)
+                        }
                     // Unbond sets dstAddress and nodeAddress to the same node address, so it
                     // already
                     // renders as the "To" row above; only show the Node address row when it adds a

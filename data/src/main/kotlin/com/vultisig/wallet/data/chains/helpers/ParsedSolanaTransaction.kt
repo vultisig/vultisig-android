@@ -24,6 +24,11 @@ object SolanaTransactionParser {
             "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb" to "Token-2022 Program",
             "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL" to "Associated Token Program",
             "ComputeBudget111111111111111111111111111111" to "Compute Budget Program",
+            // Kamino Earn. Without these a deposit or withdraw renders as rows of unnamed programs
+            // on the very screen where the transaction is being approved.
+            "KvauGMspG5k6rtzrqqn7WNn3oZdyKqLKwK2XWQ8FLjd" to "Kamino kVault Program",
+            "FarmsPZpWu9i7Kky8tPN37rs2TpmMrAZrC7S7vJa91Hr" to "Kamino Farms Program",
+            "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr" to "SPL Memo Program",
         )
 
     fun parse(base64Transaction: String): ParsedSolanaTransaction {
