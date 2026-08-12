@@ -1446,6 +1446,10 @@
     <string name="swap_advanced_slippage_title">滑点容差</string>
     <string name="swap_advanced_slippage_page_title">滑点</string>
     <string name="swap_advanced_gas_limit_title">燃料限制</string>
+    <string name="swap_advanced_select_route_title">选择路线</string>
+    <string name="swap_select_route_helper">路线按输出金额排序。选择路线将覆盖自动选择。</string>
+    <string name="swap_route_fee_prefix">手续费</string>
+    <string name="swap_route_eta">~%1$ds</string>
     <string name="swap_advanced_external_recipient_title">使用外部接收方</string>
     <string name="swap_advanced_locked_title">高级兑换设置</string>
     <string name="swap_advanced_locked_subtitle">为每次兑换精细调整滑点、Gas、路由和收款人。</string>

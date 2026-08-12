@@ -45,6 +45,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
@@ -119,6 +120,7 @@ internal fun NavGraphBuilder.swapScreen(navController: NavHostController) {
             onSlippageSelected = model::setSlippageBps,
             onGasLimitSelected = model::setGasLimit,
             onExternalRecipientSelected = model::setExternalRecipient,
+            onRouteSelected = model::selectRoute,
             onAdvancedSettingsClick = model::onAdvancedSettingsClicked,
             onDismissAdvancedSettings = model::dismissAdvancedSettings,
             onDismissAdvancedSettingsGate = model::dismissAdvancedSettingsGate,
@@ -155,6 +157,7 @@ internal fun SwapScreen(
     onSlippageSelected: (Int?) -> Unit = {},
     onGasLimitSelected: (Long?) -> Unit = {},
     onExternalRecipientSelected: (String?) -> Unit = {},
+    onRouteSelected: (SwapProvider) -> Unit = {},
     onAdvancedSettingsClick: () -> Unit = {},
     onDismissAdvancedSettings: () -> Unit = {},
     onDismissAdvancedSettingsGate: () -> Unit = {},
@@ -418,6 +421,9 @@ internal fun SwapScreen(
                         externalRecipient = state.externalRecipient,
                         externalRecipientError = state.externalRecipientError?.asString(),
                         onExternalRecipientSelected = onExternalRecipientSelected,
+                        routeOptions = state.routeOptions,
+                        isRouteManuallySelected = state.isRouteManuallySelected,
+                        onRouteSelected = onRouteSelected,
                         onDismiss = onDismissAdvancedSettings,
                     )
                 }

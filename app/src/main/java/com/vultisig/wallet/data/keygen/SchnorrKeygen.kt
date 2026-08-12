@@ -9,6 +9,7 @@ import com.silencelaboratories.goschnorr.goschnorr.schnorr_key_import_initiator_
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_key_importer_new
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_key_migration_session_from_setup
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_keygen_session_finish
+import com.silencelaboratories.goschnorr.goschnorr.schnorr_keygen_session_free
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_keygen_session_from_setup
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_keygen_session_input_message
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_keygen_session_message_receiver
@@ -17,6 +18,7 @@ import com.silencelaboratories.goschnorr.goschnorr.schnorr_keyshare_from_bytes
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_keyshare_public_key
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_keyshare_to_bytes
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_qc_session_finish
+import com.silencelaboratories.goschnorr.goschnorr.schnorr_qc_session_free
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_qc_session_from_setup
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_qc_session_input_message
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_qc_session_message_receiver
@@ -307,114 +309,126 @@ class SchnorrKeygen(
             val localPartyIDArr = localPartyId.toByteArray()
             val localPartySlice = localPartyIDArr.toSchnorrGoSlice()
 
-            when (action) {
-                TssAction.KEYGEN -> {
-                    val decodedSetupMsg = getSharedSetupMessage().toSchnorrGoSlice()
-                    val result =
-                        schnorr_keygen_session_from_setup(decodedSetupMsg, localPartySlice, handler)
-                    if (result != LIB_OK) {
-                        error("fail to create session from setup message, error: $result")
-                    }
-                }
-
-                TssAction.Migrate -> {
-                    val decodedSetupMsg = getSharedSetupMessage().toSchnorrGoSlice()
-                    if (this.localUi.isEmpty()) {
-                        throw RuntimeException("can't migrate, local UI is empty")
-                    }
-                    val localUI = this.localUi
-                    val publicKeyArray = Numeric.hexStringToByteArray(vault.pubKeyEDDSA)
-                    val publicKeySlice = publicKeyArray.toSchnorrGoSlice()
-                    val chainCodeArray = Numeric.hexStringToByteArray(this.hexChainCode)
-                    val chainCodeSlice = chainCodeArray.toSchnorrGoSlice()
-                    val localUIArray = Numeric.hexStringToByteArray(localUI)
-                    val localUISlice = localUIArray.toSchnorrGoSlice()
-
-                    val result =
-                        schnorr_key_migration_session_from_setup(
-                            decodedSetupMsg,
-                            localPartySlice,
-                            publicKeySlice,
-                            chainCodeSlice,
-                            localUISlice,
-                            handler,
-                        )
-
-                    if (result != LIB_OK) {
-                        throw RuntimeException(
-                            "fail to create migration session from setup message, error: $result"
-                        )
-                    }
-                }
-
-                TssAction.KeyImport -> {
-                    // setupMessageId namespaces the setup message on the relay server so
-                    // per-chain sessions (e.g. "Solana") don't collide with the root EdDSA one.
-                    val eddsaHeader = routing.setupMessageId ?: "eddsa_key_import"
-                    if (this.isInitiatingDevice) {
-                        val (keyImportSetupMsg, keyImportHandler) =
-                            getDklsKeyImportSetupMessage(this.localUi, this.hexChainCode)
-                        handler = keyImportHandler
-                        sessionApi.uploadSetupMessage(
-                            serverUrl = mediatorURL,
-                            sessionId = sessionID,
-                            message =
-                                Base64.encode(
-                                    encryption.encrypt(
-                                        Base64.encodeToByteArray(keyImportSetupMsg),
-                                        Numeric.hexStringToByteArray(encryptionKeyHex),
-                                    )
-                                ),
-                            messageId = eddsaHeader,
-                        )
-                    } else {
-                        val keygenSetupMsg =
-                            sessionApi
-                                .getSetupMessage(mediatorURL, sessionID, eddsaHeader)
-                                .let {
-                                    encryption.decrypt(
-                                        Base64.decode(it),
-                                        Numeric.hexStringToByteArray(encryptionKeyHex),
-                                    )!!
-                                }
-                                .let { Base64.decode(it) }
+            try {
+                when (action) {
+                    TssAction.KEYGEN -> {
+                        val decodedSetupMsg = getSharedSetupMessage().toSchnorrGoSlice()
                         val result =
-                            schnorr_key_importer_new(
-                                keygenSetupMsg.toSchnorrGoSlice(),
+                            schnorr_keygen_session_from_setup(
+                                decodedSetupMsg,
                                 localPartySlice,
                                 handler,
                             )
                         if (result != LIB_OK) {
+                            error("fail to create session from setup message, error: $result")
+                        }
+                    }
+
+                    TssAction.Migrate -> {
+                        val decodedSetupMsg = getSharedSetupMessage().toSchnorrGoSlice()
+                        if (this.localUi.isEmpty()) {
+                            throw RuntimeException("can't migrate, local UI is empty")
+                        }
+                        val localUI = this.localUi
+                        val publicKeyArray = Numeric.hexStringToByteArray(vault.pubKeyEDDSA)
+                        val publicKeySlice = publicKeyArray.toSchnorrGoSlice()
+                        val chainCodeArray = Numeric.hexStringToByteArray(this.hexChainCode)
+                        val chainCodeSlice = chainCodeArray.toSchnorrGoSlice()
+                        val localUIArray = Numeric.hexStringToByteArray(localUI)
+                        val localUISlice = localUIArray.toSchnorrGoSlice()
+
+                        val result =
+                            schnorr_key_migration_session_from_setup(
+                                decodedSetupMsg,
+                                localPartySlice,
+                                publicKeySlice,
+                                chainCodeSlice,
+                                localUISlice,
+                                handler,
+                            )
+
+                        if (result != LIB_OK) {
                             throw RuntimeException(
-                                "fail to create key import session from setup message, error: $result"
+                                "fail to create migration session from setup message, error: $result"
                             )
                         }
                     }
+
+                    TssAction.KeyImport -> {
+                        // setupMessageId namespaces the setup message on the relay server so
+                        // per-chain sessions (e.g. "Solana") don't collide with the root EdDSA one.
+                        val eddsaHeader = routing.setupMessageId ?: "eddsa_key_import"
+                        if (this.isInitiatingDevice) {
+                            val (keyImportSetupMsg, keyImportHandler) =
+                                getDklsKeyImportSetupMessage(this.localUi, this.hexChainCode)
+                            handler.delete()
+                            handler = keyImportHandler
+                            sessionApi.uploadSetupMessage(
+                                serverUrl = mediatorURL,
+                                sessionId = sessionID,
+                                message =
+                                    Base64.encode(
+                                        encryption.encrypt(
+                                            Base64.encodeToByteArray(keyImportSetupMsg),
+                                            Numeric.hexStringToByteArray(encryptionKeyHex),
+                                        )
+                                    ),
+                                messageId = eddsaHeader,
+                            )
+                        } else {
+                            val keygenSetupMsg =
+                                sessionApi
+                                    .getSetupMessage(mediatorURL, sessionID, eddsaHeader)
+                                    .let {
+                                        encryption.decrypt(
+                                            Base64.decode(it),
+                                            Numeric.hexStringToByteArray(encryptionKeyHex),
+                                        ) ?: error("fail to decrypt key import setup message")
+                                    }
+                                    .let { Base64.decode(it) }
+                            val result =
+                                schnorr_key_importer_new(
+                                    keygenSetupMsg.toSchnorrGoSlice(),
+                                    localPartySlice,
+                                    handler,
+                                )
+                            if (result != LIB_OK) {
+                                throw RuntimeException(
+                                    "fail to create key import session from setup message, error: $result"
+                                )
+                            }
+                        }
+                    }
+
+                    TssAction.ReShare -> error("This method shouldn't be used with $action")
+                    TssAction.SingleKeygen -> error("SingleKeygen is handled separately")
                 }
 
-                TssAction.ReShare -> error("This method shouldn't be used with $action")
-                TssAction.SingleKeygen -> error("SingleKeygen is handled separately")
-            }
-
-            processSchnorrOutboundMessage(handler)
-            val isFinished = pullInboundMessages(handler)
-            if (isFinished) {
-                val keyshareHandler = Handle()
-                val keyShareResult = schnorr_keygen_session_finish(handler, keyshareHandler)
-                if (keyShareResult != LIB_OK) {
-                    error("Failed to get keyshare for $action, $keyShareResult")
+                processSchnorrOutboundMessage(handler)
+                val isFinished = pullInboundMessages(handler)
+                if (isFinished) {
+                    // keyshareHandler is never freed: goschnorr exports no schnorr_keyshare_free
+                    // (see #5587)
+                    val keyshareHandler = Handle()
+                    val keyShareResult = schnorr_keygen_session_finish(handler, keyshareHandler)
+                    if (keyShareResult != LIB_OK) {
+                        error("Failed to get keyshare for $action, $keyShareResult")
+                    }
+                    val keyshareBytes = getKeyshareBytes(keyshareHandler)
+                    val publicKeyEdDSA = getPublicKeyBytes(keyshareHandler)
+                    keyshare =
+                        DKLSKeyshare(
+                            pubKey = publicKeyEdDSA.toHexString(),
+                            keyshare = Base64.encode(keyshareBytes),
+                            chaincode = "",
+                        )
+                    Timber.d("publicKeyEdDSA: ${publicKeyEdDSA.toHexString()}")
+                    // slightly delay to give local party time to process outbound messages
+                    delay(500)
                 }
-                val keyshareBytes = getKeyshareBytes(keyshareHandler)
-                val publicKeyEdDSA = getPublicKeyBytes(keyshareHandler)
-                keyshare =
-                    DKLSKeyshare(
-                        pubKey = publicKeyEdDSA.toHexString(),
-                        keyshare = Base64.encode(keyshareBytes),
-                        chaincode = "",
-                    )
-                Timber.d("publicKeyEdDSA: ${publicKeyEdDSA.toHexString()}")
-                // slightly delay to give local party time to process outbound messages
-                delay(500)
+            } finally {
+                schnorr_keygen_session_free(handler)
+                handler.delete()
             }
         }
     }
@@ -520,6 +534,7 @@ class SchnorrKeygen(
                 schnorrReshareWithRetry(nextAttempt, routing)
             },
         ) {
+            // keyshareHandle is never freed: goschnorr exports no schnorr_keyshare_free (see #5587)
             val keyshareHandle = Handle()
             if (vault.pubKeyEDDSA.isNotEmpty()) {
                 val keyshareBytes = getKeyshareBytesFromVault()
@@ -565,35 +580,44 @@ class SchnorrKeygen(
             val localPartyIDArr = localPartyId.toByteArray()
             val localPartySlice = localPartyIDArr.toSchnorrGoSlice()
 
-            val sessionResult =
-                schnorr_qc_session_from_setup(
-                    decodedSetupMsg,
-                    localPartySlice,
-                    keyshareHandle,
-                    handler,
-                )
-            if (sessionResult != LIB_OK) {
-                error("fail to create session from reshare setup message, error: $sessionResult")
-            }
-
-            processSchnorrOutboundMessage(handler)
-            val isFinished = pullInboundMessages(handler)
-            if (isFinished) {
-                val newKeyshareHandler = Handle()
-                val keyShareResult = schnorr_qc_session_finish(handler, newKeyshareHandler)
-                if (keyShareResult != LIB_OK) {
-                    error("fail to get new keyshare, $keyShareResult")
-                }
-                val keyshareBytes = getKeyshareBytes(newKeyshareHandler)
-                val publicKeyEdDSA = getPublicKeyBytes(newKeyshareHandler)
-                keyshare =
-                    DKLSKeyshare(
-                        pubKey = publicKeyEdDSA.toHexString(),
-                        keyshare = Base64.encode(keyshareBytes),
-                        chaincode = "",
+            try {
+                val sessionResult =
+                    schnorr_qc_session_from_setup(
+                        decodedSetupMsg,
+                        localPartySlice,
+                        keyshareHandle,
+                        handler,
                     )
-                Timber.d("reshare EdDSA key successfully")
-                delay(500)
+                if (sessionResult != LIB_OK) {
+                    error(
+                        "fail to create session from reshare setup message, error: $sessionResult"
+                    )
+                }
+
+                processSchnorrOutboundMessage(handler)
+                val isFinished = pullInboundMessages(handler)
+                if (isFinished) {
+                    // newKeyshareHandler is never freed: goschnorr exports no
+                    // schnorr_keyshare_free (see #5587)
+                    val newKeyshareHandler = Handle()
+                    val keyShareResult = schnorr_qc_session_finish(handler, newKeyshareHandler)
+                    if (keyShareResult != LIB_OK) {
+                        error("fail to get new keyshare, $keyShareResult")
+                    }
+                    val keyshareBytes = getKeyshareBytes(newKeyshareHandler)
+                    val publicKeyEdDSA = getPublicKeyBytes(newKeyshareHandler)
+                    keyshare =
+                        DKLSKeyshare(
+                            pubKey = publicKeyEdDSA.toHexString(),
+                            keyshare = Base64.encode(keyshareBytes),
+                            chaincode = "",
+                        )
+                    Timber.d("reshare EdDSA key successfully")
+                    delay(500)
+                }
+            } finally {
+                schnorr_qc_session_free(handler)
+                handler.delete()
             }
         }
     }

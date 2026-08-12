@@ -1114,6 +1114,10 @@
     <string name="swap_advanced_slippage_title">Tolerância de derrapagem</string>
     <string name="swap_advanced_slippage_page_title">Derrapagem</string>
     <string name="swap_advanced_gas_limit_title">Limite de Gás</string>
+    <string name="swap_advanced_select_route_title">Selecionar rota</string>
+    <string name="swap_select_route_helper">Rotas ordenadas por valor de saída. Selecionar uma rota substitui o modo automático.</string>
+    <string name="swap_route_fee_prefix">Taxa</string>
+    <string name="swap_route_eta">~%1$ds</string>
     <string name="swap_advanced_external_recipient_title">Usar destinatário externo</string>
     <string name="swap_advanced_locked_title">Configurações avançadas de swap</string>
     <string name="swap_advanced_locked_subtitle">Ajuste slippage, gas, rota e destinatário em cada swap.</string>
