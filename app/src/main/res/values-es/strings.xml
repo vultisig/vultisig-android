@@ -539,6 +539,9 @@
     <string name="kamino_amount_below_minimum">El mínimo es %1$s %2$s</string>
     <string name="kamino_error_unknown_vault">Este vault no es compatible con la app</string>
     <string name="kamino_error_load_failed">No se pudo cargar este vault ahora mismo</string>
+    <string name="verify_deposit_depositing">Estás depositando</string>
+    <string name="verify_deposit_withdrawing">Estás retirando</string>
+    <string name="kamino_verify_vault">Vault</string>
     <string name="kamino_error_build_failed">No se pudo preparar esta transacción</string>
     <string name="kamino_withdraw_farm_staked">Estas participaciones están en staking en la granja del vault y aún no se pueden retirar</string>
     <string name="kamino_withdraw_nothing">No hay nada que retirar de este vault</string>

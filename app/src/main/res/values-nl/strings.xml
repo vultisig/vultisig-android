@@ -536,6 +536,9 @@
     <string name="kamino_amount_below_minimum">Minimum is %1$s %2$s</string>
     <string name="kamino_error_unknown_vault">Deze vault wordt niet ondersteund door de app</string>
     <string name="kamino_error_load_failed">Kan deze vault nu niet laden</string>
+    <string name="verify_deposit_depositing">Je stort</string>
+    <string name="verify_deposit_withdrawing">Je neemt op</string>
+    <string name="kamino_verify_vault">Vault</string>
     <string name="kamino_error_build_failed">Kan deze transactie niet voorbereiden</string>
     <string name="kamino_withdraw_farm_staked">Deze aandelen staan gestaked in de farm van de vault en kunnen nog niet worden opgenomen</string>
     <string name="kamino_withdraw_nothing">Er is niets op te nemen uit deze vault</string>

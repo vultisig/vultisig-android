@@ -32,6 +32,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.OPERATION_KAMINO_DEPOSIT
+import com.vultisig.wallet.data.models.OPERATION_KAMINO_WITHDRAW
 import com.vultisig.wallet.data.models.OPERATION_MINT
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
@@ -213,7 +215,20 @@ internal fun VerifyDepositScreen(
 
                     if (tx.validatorName.isNotEmpty()) {
                         VerifyCardDetails(
-                            title = stringResource(R.string.solana_delegate_validator),
+                            // The same field carries a validator for native staking and a vault
+                            // name
+                            // for Kamino Earn; labelling both "Validator" would misname the vault.
+                            title =
+                                stringResource(
+                                    if (
+                                        tx.operation == OPERATION_KAMINO_DEPOSIT ||
+                                            tx.operation == OPERATION_KAMINO_WITHDRAW
+                                    ) {
+                                        R.string.kamino_verify_vault
+                                    } else {
+                                        R.string.solana_delegate_validator
+                                    }
+                                ),
                             subtitle = tx.validatorName,
                         )
                         VerifyCardDivider(0.dp)

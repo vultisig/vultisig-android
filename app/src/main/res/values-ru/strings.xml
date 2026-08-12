@@ -538,6 +538,9 @@
     <string name="kamino_amount_below_minimum">Минимум — %1$s %2$s</string>
     <string name="kamino_error_unknown_vault">Этот vault не поддерживается приложением</string>
     <string name="kamino_error_load_failed">Сейчас не удалось загрузить этот vault</string>
+    <string name="verify_deposit_depositing">Вы вносите</string>
+    <string name="verify_deposit_withdrawing">Вы выводите</string>
+    <string name="kamino_verify_vault">Vault</string>
     <string name="kamino_error_build_failed">Не удалось подготовить эту транзакцию</string>
     <string name="kamino_withdraw_farm_staked">Эти доли размещены в фарме vault‑а и пока не могут быть выведены</string>
     <string name="kamino_withdraw_nothing">Из этого vault‑а нечего выводить</string>

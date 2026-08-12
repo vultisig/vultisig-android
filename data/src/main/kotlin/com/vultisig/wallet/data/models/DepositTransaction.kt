@@ -74,3 +74,10 @@ const val OPERATION_LEAVE = "Leave"
 const val OPERATION_LOAN_OPEN = "Loan Open"
 const val OPERATION_LOAN_CLOSE = "Loan Close"
 const val OPERATION_CIRCLE_WITHDRAW = "DepositUSDCCircle"
+
+/**
+ * Kamino Earn. Distinguished from the generic operations so the verify screen can say which
+ * direction the transaction goes and label its destination as a vault rather than a validator.
+ */
+const val OPERATION_KAMINO_DEPOSIT = "KaminoDeposit"
+const val OPERATION_KAMINO_WITHDRAW = "KaminoWithdraw"

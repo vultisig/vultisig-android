@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.solanastaking
 
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.api.KaminoApi
@@ -11,6 +12,8 @@ import com.vultisig.wallet.data.blockchain.solana.kamino.BuildKaminoKeysignPaylo
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawEligibility
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.OPERATION_KAMINO_DEPOSIT
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
@@ -26,6 +29,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkStatic
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -344,6 +348,37 @@ internal class KaminoAmountViewModelTest {
 
         val minimum = viewModel(isWithdraw = true).state.value.minimum
         assertEquals(0, BigDecimal("0.001055").compareTo(minimum!!))
+    }
+
+    @Test
+    fun `the transaction is marked so verify names the direction and the vault`() = runTest {
+        // Without the marker the verify screen falls through to "You're sending" for a withdraw,
+        // and
+        // labels the vault name as a "Validator".
+        givenTokenBalance("2500000000")
+        val captured = slot<DepositTransaction>()
+        coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+        coEvery {
+            buildKeysignPayload(
+                vault = any(),
+                action = any(),
+                apiAmount = any(),
+                tokenAmount = any(),
+                coin = any(),
+                blockChainSpecific = any(),
+                vaultPublicKeyECDSA = any(),
+                vaultLocalPartyID = any(),
+                libType = any(),
+            )
+        } returns mockk(relaxed = true)
+
+        val vm = viewModel()
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
+        vm.submit()
+
+        assertEquals(OPERATION_KAMINO_DEPOSIT, captured.captured.operation)
+        assertEquals("Steakhouse USDC", captured.captured.validatorName)
+        assertEquals(STEAKHOUSE.address, captured.captured.dstAddress)
     }
 
     private companion object {

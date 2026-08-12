@@ -27,6 +27,8 @@ import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.OPERATION_KAMINO_DEPOSIT
+import com.vultisig.wallet.data.models.OPERATION_KAMINO_WITHDRAW
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
@@ -402,6 +404,10 @@ constructor(
                     estimatedFees = gasFee,
                     estimateFeesFiat = "",
                     blockChainSpecific = specific.blockChainSpecific,
+                    operation =
+                        if (route.isWithdraw) OPERATION_KAMINO_WITHDRAW
+                        else OPERATION_KAMINO_DEPOSIT,
+                    // Shown on verify as the destination vault, not as a validator.
                     validatorName = _state.value.vaultName,
                     signSolana = keysignPayload.signSolana,
                 )

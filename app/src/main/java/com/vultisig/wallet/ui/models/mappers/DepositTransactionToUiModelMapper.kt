@@ -4,6 +4,8 @@ import androidx.annotation.StringRes
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.OPERATION_KAMINO_DEPOSIT
+import com.vultisig.wallet.data.models.OPERATION_KAMINO_WITHDRAW
 import com.vultisig.wallet.data.models.OPERATION_UNBOND
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
@@ -35,6 +37,8 @@ internal interface DepositTransactionToUiModelMapper :
 internal fun depositVerifyTitleRes(operation: String, memo: String = ""): Int =
     when {
         LimitOrderCancelPresentation.isCancel(memo) -> R.string.verify_limit_order_cancel_title
+        operation == OPERATION_KAMINO_DEPOSIT -> R.string.verify_deposit_depositing
+        operation == OPERATION_KAMINO_WITHDRAW -> R.string.verify_deposit_withdrawing
         operation == OPERATION_UNBOND -> R.string.verify_deposit_unbonding
         else -> R.string.verify_deposit_sending
     }

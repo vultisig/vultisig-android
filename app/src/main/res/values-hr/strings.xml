@@ -540,6 +540,9 @@
     <string name="kamino_amount_below_minimum">Minimum je %1$s %2$s</string>
     <string name="kamino_error_unknown_vault">Aplikacija ne podržava ovaj vault</string>
     <string name="kamino_error_load_failed">Trenutno nije moguće učitati ovaj vault</string>
+    <string name="verify_deposit_depositing">Deponirate</string>
+    <string name="verify_deposit_withdrawing">Povlačite</string>
+    <string name="kamino_verify_vault">Vault</string>
     <string name="kamino_error_build_failed">Ovu transakciju nije bilo moguće pripremiti</string>
     <string name="kamino_withdraw_farm_staked">Ovi udjeli uloženi su u farmu vaulta i još se ne mogu povući</string>
     <string name="kamino_withdraw_nothing">Iz ovog vaulta nema se što povući</string>
