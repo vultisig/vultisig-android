@@ -9,6 +9,7 @@ import com.silencelaboratories.goschnorr.goschnorr.schnorr_decode_message
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_keyshare_from_bytes
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_keyshare_key_id
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_sign_session_finish
+import com.silencelaboratories.goschnorr.goschnorr.schnorr_sign_session_free
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_sign_session_from_setup
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_sign_session_input_message
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_sign_session_message_receiver
@@ -106,6 +107,7 @@ class SchnorrKeysign(
         try {
             val keyShareBytes = getKeyshareBytes()
             val keyshareSlice = keyShareBytes.toSchnorrGoSlice()
+            // h is never freed: goschnorr exports no schnorr_keyshare_free (see #5587)
             val h = Handle()
             val result = schnorr_keyshare_from_bytes(keyshareSlice, h)
             if (result != LIB_OK) {
@@ -331,36 +333,45 @@ class SchnorrKeysign(
             val keyShareBytes = getKeyshareBytes()
             val keyshareSlice = keyShareBytes.toSchnorrGoSlice()
             val keyshareHandle = Handle()
-            val result = schnorr_keyshare_from_bytes(keyshareSlice, keyshareHandle)
-            if (result != LIB_OK) {
-                throw RuntimeException("fail to create keyshare handle from bytes, $result")
-            }
-            val sessionResult =
-                schnorr_sign_session_from_setup(
-                    decodedSetupMsg,
-                    localPartySlice,
-                    keyshareHandle,
-                    handler,
-                )
-            if (sessionResult != LIB_OK) {
-                throw RuntimeException(
-                    "fail to create sign session from setup message, error: $sessionResult"
-                )
-            }
-            processSchnorrOutboundMessage(handler)
-            val isFinished = poller.poll(msgHash) { processInboundMessage(handler, it, msgHash) }
-            if (isFinished) {
-                val sig = signSessionFinish(handler)
-                val resp = KeysignResponse()
-                resp.msg = messageToSign
-                val r = sig.copyOfRange(0, 32).reversedArray()
-                val s = sig.copyOfRange(32, 64).reversedArray()
-                resp.r = r.toHexString()
-                resp.s = s.toHexString()
-                resp.derSignature = DklsHelper.createDERSignature(r, s).toHexString()
-                val keySignVerify = KeysignVerify(mediatorURL, sessionID, sessionApi)
-                keySignVerify.markLocalPartyKeysignComplete(msgHash, resp)
-                signatures[messageToSign] = resp
+            try {
+                val result = schnorr_keyshare_from_bytes(keyshareSlice, keyshareHandle)
+                if (result != LIB_OK) {
+                    throw RuntimeException("fail to create keyshare handle from bytes, $result")
+                }
+                val sessionResult =
+                    schnorr_sign_session_from_setup(
+                        decodedSetupMsg,
+                        localPartySlice,
+                        keyshareHandle,
+                        handler,
+                    )
+                if (sessionResult != LIB_OK) {
+                    throw RuntimeException(
+                        "fail to create sign session from setup message, error: $sessionResult"
+                    )
+                }
+                processSchnorrOutboundMessage(handler)
+                val isFinished =
+                    poller.poll(msgHash) { processInboundMessage(handler, it, msgHash) }
+                if (isFinished) {
+                    val sig = signSessionFinish(handler)
+                    val resp = KeysignResponse()
+                    resp.msg = messageToSign
+                    val r = sig.copyOfRange(0, 32).reversedArray()
+                    val s = sig.copyOfRange(32, 64).reversedArray()
+                    resp.r = r.toHexString()
+                    resp.s = s.toHexString()
+                    resp.derSignature = DklsHelper.createDERSignature(r, s).toHexString()
+                    val keySignVerify = KeysignVerify(mediatorURL, sessionID, sessionApi)
+                    keySignVerify.markLocalPartyKeysignComplete(msgHash, resp)
+                    signatures[messageToSign] = resp
+                }
+            } finally {
+                schnorr_sign_session_free(handler)
+                handler.delete()
+                // keyshareHandle wrapper deleted; the native keyshare itself still leaks:
+                // goschnorr exports no schnorr_keyshare_free (see #5587)
+                keyshareHandle.delete()
             }
         } catch (e: CancellationException) {
             throw e
