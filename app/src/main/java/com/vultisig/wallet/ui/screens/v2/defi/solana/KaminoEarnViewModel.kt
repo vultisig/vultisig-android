@@ -321,7 +321,9 @@ constructor(
             apyDisplay = apy?.let { "${it.toPlainString()}%" },
             pnlDisplay =
                 pnlToken?.let {
-                    val amount = it.setScale(vault.tokenDecimals, RoundingMode.DOWN)
+                    // Unsigned: the row's label already says whether this was earned or lost, so a
+                    // minus sign in front of "Lost" would state it twice.
+                    val amount = it.abs().setScale(vault.tokenDecimals, RoundingMode.DOWN)
                     "${amount.stripTrailingZeros().toPlainString()} ${coin?.ticker.orEmpty()}"
                         .trim()
                 },
@@ -335,8 +337,14 @@ constructor(
             fiatValue =
                 tokenAmount?.let { amount -> coin?.let { fiatValueOrNull(amount, it) } }
                     ?: BigDecimal.ZERO,
-            // Derived from the shares, so a vault that could not be priced still offers Withdraw.
-            hasPosition = (shares?.signum() ?: 0) > 0,
+            // Two different claims live in a zero here: "read, and holds nothing" and "not read
+            // yet". Only the first may remove Withdraw. Hiding it on an unread position strands a
+            // user who deposited on another device, or whose refresh failed right after depositing
+            // —
+            // the way out of a position is never removed on the strength of a read that has not
+            // happened. The withdraw form reads the position itself and can say "nothing to
+            // withdraw" truthfully.
+            hasPosition = shares == null || shares.signum() > 0,
         )
     }
 

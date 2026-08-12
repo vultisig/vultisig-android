@@ -526,6 +526,7 @@
     <string name="kamino_earn_deposited">Depositado</string>
     <string name="kamino_earn_apy_30d">APY (30 d)</string>
     <string name="kamino_earn_pnl">Lucros e perdas</string>
+    <string name="kamino_earn_lost">Perdido</string>
     <string name="kamino_earn_risk_conservative">Conservador</string>
     <string name="kamino_earn_risk_private_credit">Crédito privado</string>
     <string name="kamino_earn_deposit">Depositar</string>

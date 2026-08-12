@@ -527,6 +527,7 @@
     <string name="kamino_earn_deposited">Депонировано</string>
     <string name="kamino_earn_apy_30d">APY (30 дн.)</string>
     <string name="kamino_earn_pnl">Прибыль и убыток</string>
+    <string name="kamino_earn_lost">Убыток</string>
     <string name="kamino_earn_risk_conservative">Консервативный</string>
     <string name="kamino_earn_risk_private_credit">Частный кредит</string>
     <string name="kamino_earn_deposit">Внести</string>

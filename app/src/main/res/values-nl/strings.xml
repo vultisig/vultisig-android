@@ -525,6 +525,7 @@
     <string name="kamino_earn_deposited">Gestort</string>
     <string name="kamino_earn_apy_30d">APY (30 d)</string>
     <string name="kamino_earn_pnl">Winst &amp; verlies</string>
+    <string name="kamino_earn_lost">Verloren</string>
     <string name="kamino_earn_risk_conservative">Conservatief</string>
     <string name="kamino_earn_risk_private_credit">Privaat krediet</string>
     <string name="kamino_earn_deposit">Storten</string>

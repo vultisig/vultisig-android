@@ -337,7 +337,17 @@ private fun ApyRow(apyDisplay: String?, isLoading: Boolean) {
 private fun PnlRow(row: KaminoEarnRow, isLoading: Boolean, isBalanceVisible: Boolean) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(
-            text = stringResource(R.string.kamino_earn_pnl),
+            // Below zero this reads "Lost", not "Earned": the source is totalPnl, which goes
+            // negative, and "Earned: -3 USDC" asserts the loss was earned and leaves the colour to
+            // correct it.
+            text =
+                stringResource(
+                    if (row.pnlDirection == KaminoEarnRow.PnlDirection.DOWN) {
+                        R.string.kamino_earn_lost
+                    } else {
+                        R.string.kamino_earn_pnl
+                    }
+                ),
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.tertiary,
         )

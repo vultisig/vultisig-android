@@ -528,6 +528,7 @@
     <string name="kamino_earn_deposited">Eingezahlt</string>
     <string name="kamino_earn_apy_30d">APY (30 Tage)</string>
     <string name="kamino_earn_pnl">Gewinn &amp; Verlust</string>
+    <string name="kamino_earn_lost">Verloren</string>
     <string name="kamino_earn_risk_conservative">Konservativ</string>
     <string name="kamino_earn_risk_private_credit">Privatkredite</string>
     <string name="kamino_earn_deposit">Einzahlen</string>

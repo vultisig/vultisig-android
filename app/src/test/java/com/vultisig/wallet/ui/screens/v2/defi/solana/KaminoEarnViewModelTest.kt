@@ -333,6 +333,56 @@ internal class KaminoEarnViewModelTest {
         assertTrue(vm.state.value.pendingSelection.isEmpty())
     }
 
+    @Test
+    fun `an unread position keeps Withdraw available rather than hiding the way out`() = runTest {
+        // A zero carries two different claims: "read, and holds nothing" and "not read yet". Only
+        // the first may remove Withdraw — hiding it on an unread position strands a user who
+        // deposited on another device or whose refresh failed straight after depositing.
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flowOf(setOf(STEAKHOUSE.address))
+        coEvery { kaminoApi.getUserPositions(any()) } throws RuntimeException("503")
+        coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Steakhouse USDC")
+        coEvery { kaminoApi.getVaultMetrics(any()) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0")
+
+        val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
+
+        assertTrue(row.hasPosition, "an unread position must not hide Withdraw")
+        // The figures stay off the card either way — the form reads the position itself.
+        assertNull(row.depositedFiat)
+    }
+
+    @Test
+    fun `a read position holding nothing does hide Withdraw`() = runTest {
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flowOf(setOf(STEAKHOUSE.address))
+        coEvery { kaminoApi.getUserPositions(any()) } returns emptyList()
+        coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Steakhouse USDC")
+        coEvery { kaminoApi.getVaultMetrics(any()) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0")
+
+        val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
+
+        assertFalse(row.hasPosition)
+    }
+
+    @Test
+    fun `a loss is reported unsigned, because the label says it was lost`() = runTest {
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flowOf(setOf(STEAKHOUSE.address))
+        coEvery { kaminoApi.getUserPositions(any()) } returns emptyList()
+        coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Steakhouse USDC")
+        coEvery { kaminoApi.getVaultMetrics(any()) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0")
+        coEvery { kaminoApi.getPositionPnl(any(), any()) } returns
+            KaminoPnlJson(totalPnl = KaminoPnlJson.Amounts(token = "-3"))
+
+        val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
+
+        assertEquals(KaminoEarnRow.PnlDirection.DOWN, row.pnlDirection)
+        assertEquals("3 USDC", row.pnlDisplay)
+    }
+
     private companion object {
         const val VAULT_ID = "vault-id"
         const val WALLET_ADDRESS = "9ceRgz579BcfWogs3RE11FKNQaWW7Lmtnev3MXspxUjF"
