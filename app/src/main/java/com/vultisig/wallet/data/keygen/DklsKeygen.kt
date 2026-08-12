@@ -78,10 +78,9 @@ class DKLSKeygen(
     @Throws(Exception::class)
     private fun getDklsSetupMessage(): ByteArray {
         val buf = tss_buffer()
+        val ids = DklsHelper.arrayToBytes(keygenCommittee).toDklsGoSlice()
         try {
             val threshold = DklsHelper.getThreshold(keygenCommittee.size)
-            val byteArray = DklsHelper.arrayToBytes(keygenCommittee)
-            val ids = byteArray.toDklsGoSlice()
             val err = dkls_keygen_setupmsg_new(threshold, null, ids, buf)
             if (err != LIB_OK) {
                 error("fail to setup keygen message, dkls error: $err")
@@ -90,6 +89,7 @@ class DKLSKeygen(
             return setupMessage
         } finally {
             tss_buffer_free(buf)
+            ids.free()
         }
     }
 
@@ -100,14 +100,11 @@ class DKLSKeygen(
     ): Pair<ByteArray, Handle> {
         val buf = tss_buffer()
         val handler = Handle()
+        val chainCodeSlice = Numeric.hexStringToByteArray(hexRootChainCode).toDklsGoSlice()
+        val localUISlice = Numeric.hexStringToByteArray(hexPrivateKey).toDklsGoSlice()
+        val ids = DklsHelper.arrayToBytes(keygenCommittee).toDklsGoSlice()
         try {
-            val chainCodeArray = Numeric.hexStringToByteArray(hexRootChainCode)
-            val chainCodeSlice = chainCodeArray.toDklsGoSlice()
-            val localUIArray = Numeric.hexStringToByteArray(hexPrivateKey)
-            val localUISlice = localUIArray.toDklsGoSlice()
             val threshold = DklsHelper.getThreshold(keygenCommittee.size)
-            val byteArray = DklsHelper.arrayToBytes(keygenCommittee)
-            val ids = byteArray.toDklsGoSlice()
             val err =
                 dkls_key_import_initiator_new(
                     localUISlice,
@@ -124,6 +121,9 @@ class DKLSKeygen(
             return Pair(setupMessage, handler)
         } finally {
             tss_buffer_free(buf)
+            chainCodeSlice.free()
+            localUISlice.free()
+            ids.free()
         }
     }
 
@@ -191,16 +191,20 @@ class DKLSKeygen(
             }
 
             val message = outboundMessage.toDklsGoSlice()
-            val encodedOutboundMessage = Base64.encode(outboundMessage)
-            for (i in keygenCommittee.indices) {
-                val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
-                if (receiverArray.isEmpty()) {
-                    break
-                }
-                val receiverString = receiverArray.toString(Charsets.UTF_8)
-                Timber.d("sending message from ${this.localPartyId} to: $receiverString")
+            try {
+                val encodedOutboundMessage = Base64.encode(outboundMessage)
+                for (i in keygenCommittee.indices) {
+                    val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
+                    if (receiverArray.isEmpty()) {
+                        break
+                    }
+                    val receiverString = receiverArray.toString(Charsets.UTF_8)
+                    Timber.d("sending message from ${this.localPartyId} to: $receiverString")
 
-                messenger.send(this.localPartyId, receiverString, encodedOutboundMessage)
+                    messenger.send(this.localPartyId, receiverString, encodedOutboundMessage)
+                }
+            } finally {
+                message.free()
             }
         }
     }
@@ -266,15 +270,23 @@ class DKLSKeygen(
             val isFinished = intArrayOf(0)
 
             val result =
-                when (action) {
-                    TssAction.KEYGEN,
-                    TssAction.Migrate,
-                    TssAction.KeyImport ->
-                        dkls_keygen_session_input_message(handle, decryptedBodySlice, isFinished)
+                try {
+                    when (action) {
+                        TssAction.KEYGEN,
+                        TssAction.Migrate,
+                        TssAction.KeyImport ->
+                            dkls_keygen_session_input_message(
+                                handle,
+                                decryptedBodySlice,
+                                isFinished,
+                            )
 
-                    TssAction.ReShare ->
-                        dkls_qc_session_input_message(handle, decryptedBodySlice, isFinished)
-                    TssAction.SingleKeygen -> error("SingleKeygen is handled separately")
+                        TssAction.ReShare ->
+                            dkls_qc_session_input_message(handle, decryptedBodySlice, isFinished)
+                        TssAction.SingleKeygen -> error("SingleKeygen is handled separately")
+                    }
+                } finally {
+                    decryptedBodySlice.free()
                 }
 
             if (result != LIB_OK) {
@@ -365,58 +377,72 @@ class DKLSKeygen(
             val localPartyIDArr = this.localPartyId.toByteArray()
             val localPartySlice = localPartyIDArr.toDklsGoSlice()
 
-            when (action) {
-                TssAction.KEYGEN -> {
-                    val result =
-                        dkls_keygen_session_from_setup(decodedSetupMsg, localPartySlice, handler)
-                    if (result != LIB_OK) {
-                        error("fail to create session from setup message, error: $result")
-                    }
-                }
-
-                TssAction.Migrate -> {
-                    if (this.localUi.isEmpty()) {
-                        error("can't migrate, local UI is empty")
-                    }
-                    val localUI = this.localUi
-                    val publicKeyArray = Numeric.hexStringToByteArray(vault.pubKeyECDSA)
-                    val publicKeySlice = publicKeyArray.toDklsGoSlice()
-                    val chainCodeArray = Numeric.hexStringToByteArray(this.hexChainCode)
-                    val chainCodeSlice = chainCodeArray.toDklsGoSlice()
-                    val localUIArray = Numeric.hexStringToByteArray(localUI)
-                    val localUISlice = localUIArray.toDklsGoSlice()
-
-                    val result =
-                        dkls_key_migration_session_from_setup(
-                            decodedSetupMsg,
-                            localPartySlice,
-                            publicKeySlice,
-                            chainCodeSlice,
-                            localUISlice,
-                            handler,
-                        )
-
-                    if (result != LIB_OK) {
-                        throw RuntimeException(
-                            "fail to create migration session from setup message, error: $result"
-                        )
-                    }
-                }
-
-                TssAction.KeyImport -> {
-                    if (!this.isInitiateDevice || attempt > 0) {
+            try {
+                when (action) {
+                    TssAction.KEYGEN -> {
                         val result =
-                            dkls_key_importer_new(decodedSetupMsg, localPartySlice, handler)
+                            dkls_keygen_session_from_setup(
+                                decodedSetupMsg,
+                                localPartySlice,
+                                handler,
+                            )
+                        if (result != LIB_OK) {
+                            error("fail to create session from setup message, error: $result")
+                        }
+                    }
+
+                    TssAction.Migrate -> {
+                        if (this.localUi.isEmpty()) {
+                            error("can't migrate, local UI is empty")
+                        }
+                        val localUI = this.localUi
+                        val publicKeySlice =
+                            Numeric.hexStringToByteArray(vault.pubKeyECDSA).toDklsGoSlice()
+                        val chainCodeSlice =
+                            Numeric.hexStringToByteArray(this.hexChainCode).toDklsGoSlice()
+                        val localUISlice = Numeric.hexStringToByteArray(localUI).toDklsGoSlice()
+
+                        val result =
+                            try {
+                                dkls_key_migration_session_from_setup(
+                                    decodedSetupMsg,
+                                    localPartySlice,
+                                    publicKeySlice,
+                                    chainCodeSlice,
+                                    localUISlice,
+                                    handler,
+                                )
+                            } finally {
+                                publicKeySlice.free()
+                                chainCodeSlice.free()
+                                localUISlice.free()
+                            }
+
                         if (result != LIB_OK) {
                             throw RuntimeException(
-                                "fail to create key import session from setup message, error: $result"
+                                "fail to create migration session from setup message, error: $result"
                             )
                         }
                     }
-                }
 
-                TssAction.ReShare -> error("Shouldn't use this method with $action")
-                TssAction.SingleKeygen -> error("SingleKeygen is handled separately")
+                    TssAction.KeyImport -> {
+                        if (!this.isInitiateDevice || attempt > 0) {
+                            val result =
+                                dkls_key_importer_new(decodedSetupMsg, localPartySlice, handler)
+                            if (result != LIB_OK) {
+                                throw RuntimeException(
+                                    "fail to create key import session from setup message, error: $result"
+                                )
+                            }
+                        }
+                    }
+
+                    TssAction.ReShare -> error("Shouldn't use this method with $action")
+                    TssAction.SingleKeygen -> error("SingleKeygen is handled separately")
+                }
+            } finally {
+                decodedSetupMsg.free()
+                localPartySlice.free()
             }
 
             processDKLSOutboundMessage(handler)
@@ -488,14 +514,13 @@ class DKLSKeygen(
     @Throws(Exception::class)
     private fun getDklsReshareSetupMessage(keyshareHandle: Handle): ByteArray {
         val buf = tss_buffer()
+        val (allParties, newPartiesIdx, oldPartiesIdx) =
+            processReshareCommittee(oldCommittee, keygenCommittee)
+        val ids = DklsHelper.arrayToBytes(allParties).toDklsGoSlice()
+        val newPartiesIdxSlice = newPartiesIdx.toByteArray().toDklsGoSlice()
+        val oldPartiesIdxSlice = oldPartiesIdx.toByteArray().toDklsGoSlice()
         return try {
             val threshold = DklsHelper.getThreshold(keygenCommittee.size)
-            val (allParties, newPartiesIdx, oldPartiesIdx) =
-                processReshareCommittee(oldCommittee, keygenCommittee)
-            val byteArray = DklsHelper.arrayToBytes(allParties)
-            val ids = byteArray.toDklsGoSlice()
-            val newPartiesIdxSlice = newPartiesIdx.toByteArray().toDklsGoSlice()
-            val oldPartiesIdxSlice = oldPartiesIdx.toByteArray().toDklsGoSlice()
             val result =
                 dkls_qc_setupmsg_new(
                     keyshareHandle,
@@ -511,6 +536,9 @@ class DKLSKeygen(
             BufferUtilJNI.get_bytes_from_tss_buffer(buf)
         } finally {
             tss_buffer_free(buf)
+            ids.free()
+            newPartiesIdxSlice.free()
+            oldPartiesIdxSlice.free()
         }
     }
 
@@ -543,7 +571,12 @@ class DKLSKeygen(
             if (vault.pubKeyECDSA.isNotEmpty()) {
                 val keyshareBytes = getKeyshareBytesFromVault()
                 val keyshareSlice = keyshareBytes.toDklsGoSlice()
-                val result = dkls_keyshare_from_bytes(keyshareSlice, keyshareHandle)
+                val result =
+                    try {
+                        dkls_keyshare_from_bytes(keyshareSlice, keyshareHandle)
+                    } finally {
+                        keyshareSlice.free()
+                    }
                 if (result != LIB_OK) {
                     error("fail to get keyshare, $result")
                 }
@@ -583,12 +616,17 @@ class DKLSKeygen(
             val localPartySlice = localPartyIDArr.toDklsGoSlice()
 
             val sessionResult =
-                dkls_qc_session_from_setup(
-                    decodedSetupMsg,
-                    localPartySlice,
-                    keyshareHandle,
-                    handler,
-                )
+                try {
+                    dkls_qc_session_from_setup(
+                        decodedSetupMsg,
+                        localPartySlice,
+                        keyshareHandle,
+                        handler,
+                    )
+                } finally {
+                    decodedSetupMsg.free()
+                    localPartySlice.free()
+                }
             if (sessionResult != LIB_OK) {
                 error("fail to create session from reshare setup message, error: $sessionResult")
             }
