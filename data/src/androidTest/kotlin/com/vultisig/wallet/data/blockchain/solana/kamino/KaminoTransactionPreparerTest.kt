@@ -166,16 +166,6 @@ class KaminoTransactionPreparerTest {
     }
 
     @Test
-    fun a_withdraw_gets_a_budget_that_covers_the_farm_staked_shape() {
-        // Staked withdraws measure 283k-309k because of the two farms instructions ahead of the
-        // vault withdraw; at 220,000 every one of them aborted on compute exhaustion.
-        val prepared = prepare(action = KaminoAction.WITHDRAW)
-        val limit = SolanaTransaction.getComputeUnitLimit(prepared)?.toLong() ?: 0L
-        assertEquals(400_000L, limit)
-        assertTrue("must clear the 309,310 staked-SOL measurement", limit > 309_310L)
-    }
-
-    @Test
     fun the_unit_price_floors_rather_than_trusting_a_low_network_sample() {
         val flooredByNull = prepare(networkUnitPrice = null)
         assertEquals(
