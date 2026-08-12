@@ -1094,6 +1094,10 @@
     <string name="swap_advanced_slippage_title">Tolerancija proklizavanja</string>
     <string name="swap_advanced_slippage_page_title">Proklizavanje</string>
     <string name="swap_advanced_gas_limit_title">Ograničenje plina</string>
+    <string name="swap_advanced_select_route_title">Odaberi rutu</string>
+    <string name="swap_select_route_helper">Rute su poredane prema izlaznom iznosu. Odabir rute poništava automatski odabir.</string>
+    <string name="swap_route_fee_prefix">Naknada</string>
+    <string name="swap_route_eta">~%1$ds</string>
     <string name="swap_advanced_external_recipient_title">Koristi vanjskog primatelja</string>
     <string name="swap_advanced_locked_title">Napredne postavke zamjene</string>
     <string name="swap_advanced_locked_subtitle">Precizno podesite slippage, gas, rutu i primatelja za svaku zamjenu.</string>

@@ -201,6 +201,7 @@ import com.vultisig.wallet.ui.screens.swap.preview.AdvancedExternalRecipientPrev
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedGasLimitPreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedMenuConfiguredPreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedMenuPreview
+import com.vultisig.wallet.ui.screens.swap.preview.AdvancedSelectRoutePreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedSlippagePreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapFormProviderPreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapFormQuoteLoadingPreview
@@ -352,6 +353,7 @@ class PreviewActivity : ComponentActivity() {
                     "swap_advanced_menu_configured" -> AdvancedMenuConfiguredPreview()
                     "swap_advanced_slippage" -> AdvancedSlippagePreview()
                     "swap_advanced_gas_limit" -> AdvancedGasLimitPreview()
+                    "swap_advanced_select_route" -> AdvancedSelectRoutePreview()
                     "swap_advanced_external_recipient" -> AdvancedExternalRecipientPreview()
                     "select_asset_secured_before" -> SelectAssetSecuredPreview(showSecured = false)
                     "select_asset_secured_after" -> SelectAssetSecuredPreview(showSecured = true)

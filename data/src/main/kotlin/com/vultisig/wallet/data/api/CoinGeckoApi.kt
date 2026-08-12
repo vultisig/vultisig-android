@@ -70,10 +70,15 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
         contractAddresses: List<String>,
         currencies: List<String>,
     ): Map<String, CurrencyToPrice> {
+        // CoinGecko's contract endpoint only covers the platforms it indexes. A chain it doesn't
+        // (THORChain, Maya, the Cosmos chains, TON…) is an ordinary miss, not a failure: report no
+        // prices so the caller falls through to a source that does cover the chain, instead of
+        // throwing an id-lookup error that reads like the request itself broke.
+        val platformId = chain.coinGeckoAssetPlatformId() ?: return emptyMap()
         val priceProviderIdsParam = contractAddresses.joinToString(",")
         val currenciesParam = currencies.joinToString(",")
         return try {
-            fetchContractPrices(chain.coinGeckoAssetId, priceProviderIdsParam, currenciesParam)
+            fetchContractPrices(platformId, priceProviderIdsParam, currenciesParam)
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.d(e, "error occurred in getContractsPrice")

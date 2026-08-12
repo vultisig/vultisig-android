@@ -5,10 +5,14 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.getProviderLogo
+import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
@@ -23,6 +27,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
+import java.math.RoundingMode
+import java.text.DecimalFormat
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -129,9 +135,34 @@ constructor(
     val gasFeeChain = MutableStateFlow<Chain?>(null)
     val estimatedNetworkFeeFiatValue = MutableStateFlow<FiatValue?>(null)
 
+    // The last gas-pass display estimate from calculateGas, for the chain in [gasFeeChain]. An
+    // EVM-aggregator quote overwrites the display with a route-gas re-base; this is what
+    // resolveNetworkFee restores when a non-aggregator (THOR/Maya) route becomes active on an EVM
+    // source, so the fee matches what a fresh fetch with that winner shows.
+    private var evmBaselineEstimate: EstimatedGasFee? = null
+
     private val refreshQuoteState = MutableStateFlow(0)
 
     private var refreshQuoteJob: Job? = null
+
+    // The input and ranked candidate set of the last applied quote, kept so a Select-route pick can
+    // rebuild and apply another already-fetched candidate without a network round-trip. Cleared on
+    // every reset/supersede path — a pick must never apply a quote for stale input.
+    private var routeContext: RouteContext? = null
+
+    // The in-flight manual route pick. The quote pipeline's collectLatest serializes its own
+    // applies, but a pick runs on an independent coroutine — so every pipeline-owned apply and
+    // reset cancels this first, keeping exactly one writer of quote state at a time.
+    private var selectRouteJob: Job? = null
+
+    // Ticket taken by every writer of quote state — each pipeline apply, each manual pick, each
+    // reset. Cancelling the pick job only protects one direction: a pipeline apply that suspended
+    // in resolveNetworkFee resumes with no idea a pick has landed since, and would stamp its own
+    // network fee and isSwapDisabled over the quote now on screen. Whoever wrote the quote last
+    // owns its fee, so a writer resuming on a stale ticket drops its outcome.
+    private var quoteApplyGeneration = 0
+
+    private data class RouteContext(val input: QuoteInput, val ranked: List<BestQuote>)
 
     // Suppresses the quote-refresh timer while the form isn't the foreground screen. The form's
     // scope (= viewModelScope) stays alive on the back stack once the flow proceeds to
@@ -214,6 +245,11 @@ constructor(
                     // a slow gas fetch can't overwrite the plan fee with a dust estimate.
                     if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano) {
                         try {
+                            // Kept as the restore point for non-aggregator EVM routes: an
+                            // aggregator quote re-bases the displayed fee onto its route gas, and
+                            // resolveNetworkFee restores this exact estimate when a THOR/Maya
+                            // route becomes active again.
+                            evmBaselineEstimate = result.estimated
                             estimatedNetworkFeeFiatValue.value = result.estimated.fiatValue
                             estimatedNetworkFeeTokenValue.value = result.estimated.tokenValue
 
@@ -241,6 +277,7 @@ constructor(
                         // selectSrcPercentage() doesn't subtract a cross-chain fee value
                         // (e.g. ETH wei subtracted from ZEC satoshis) before calculateFees()
                         // can compute the correct UTXO plan fee.
+                        evmBaselineEstimate = null
                         estimatedNetworkFeeTokenValue.value = null
                         estimatedNetworkFeeFiatValue.value = null
                         uiState.update {
@@ -407,6 +444,7 @@ constructor(
     private suspend fun applyQuoteResult(
         input: QuoteInput,
         result: SwapQuotePipelineResult.Success,
+        isManualRoutePick: Boolean = false,
     ) {
         // isAmountFieldEmpty is read once when resolveQuote is called, but the live input can
         // change
@@ -424,7 +462,18 @@ constructor(
         // be applied — and then signed with a mismatched memo / slippage floor — over the new one
         // (#5310). Match the source/destination quote endpoints as well: changing to another
         // routable pair with the same amount creates the same pre-debounce landing window.
+        // A pipeline-owned result supersedes any pick still applying: cancel it so a pick
+        // suspended in resolveNetworkFee can't write its network fee / isSwapDisabled over the
+        // quote this fresh result is about to apply.
+        if (!isManualRoutePick) {
+            selectRouteJob?.cancel()
+            selectRouteJob = null
+        }
+
         if (!isLiveInputQuotable) {
+            // A stale pick must not clear the live request's state — the reset for the changed
+            // input already ran (or will) on the pipeline path that owns it.
+            if (isManualRoutePick) return
             resetQuoteState()
             return
         }
@@ -440,11 +489,32 @@ constructor(
                 input.slippageBps != slippageBps.value ||
                 input.externalRecipient != externalRecipient.value
         if (isSuperseded) {
+            // The discard path exists for pipeline-owned results, where this result IS the stale
+            // state on screen. A pick's input was captured at fetch time, so when it trips this
+            // guard the state on screen belongs to a NEWER request — dropping the pick silently is
+            // the only safe move; discarding would strip the newer quote with no error, no spinner
+            // and no armed refresh.
+            if (isManualRoutePick) return
             discardSupersededQuoteResult()
             return
         }
 
-        val (src, _) = input.address
+        val (src, dst) = input.address
+
+        val generation = ++quoteApplyGeneration
+        routeContext = RouteContext(input, result.rankedQuotes)
+        val routeOptions =
+            buildRouteOptions(
+                ranked = result.rankedQuotes,
+                activeProvider = result.provider,
+                srcToken = src.account.token,
+                dstTicker = dst.account.token.ticker,
+            )
+        // buildRouteOptions suspends too (fiatValueToString reads the currency from DataStore), so
+        // a writer can be overtaken before the display write below just like across
+        // resolveNetworkFee: without this check it would land its quote/display over the newer
+        // writer's and only its fee would be dropped by the later ticket check.
+        if (generation != quoteApplyGeneration) return
 
         quoteState.provider = result.provider
         quoteState.quote = result.quote
@@ -478,10 +548,12 @@ constructor(
                 formError = null,
                 isSwapDisabled = result.isUtxoSwap,
                 isLoading = false,
+                routeOptions = routeOptions,
+                isRouteManuallySelected = isManualRoutePick,
             )
         }
 
-        applyNetworkFeeOutcome(
+        val networkFeeOutcome =
             swapQuotePipeline.resolveNetworkFee(
                 result = result,
                 src = src,
@@ -489,10 +561,116 @@ constructor(
                 gasFee = gasFee.value,
                 gasFeeChain = gasFeeChain.value,
                 networkFeeTokenValue = estimatedNetworkFeeTokenValue.value,
+                evmBaselineEstimate = evmBaselineEstimate,
             )
-        )
+        // resolveNetworkFee suspends (plan fetch, balance read). Another writer — a manual pick, a
+        // fresh pipeline result, a reset — may own the quote on screen by now, and it arms its own
+        // fee and timer; this outcome belongs to a quote that is no longer displayed.
+        if (generation != quoteApplyGeneration) return
+        applyNetworkFeeOutcome(networkFeeOutcome)
 
         quoteState.quote?.expiredAt?.let { launchRefreshQuoteTimer(it) }
+    }
+
+    /**
+     * Maps the ranked candidate set onto Select-route picker rows: the active route pinned to the
+     * top, the rest keeping their best→worst net-output order. Fewer than two routes means there is
+     * nothing to pick, so the list stays empty and the Select route row disables.
+     */
+    private suspend fun buildRouteOptions(
+        ranked: List<BestQuote>,
+        activeProvider: SwapProvider,
+        srcToken: Coin,
+        dstTicker: String,
+    ): List<SwapRouteUiModel> {
+        if (ranked.size < 2) return emptyList()
+        return ranked
+            .map { candidate ->
+                val fetch = candidate.result
+                // Only THORChain/Maya expose a completion estimate; aggregator rows render the fee
+                // alone.
+                val etaSeconds =
+                    when (val quote = fetch.quote) {
+                        is SwapQuote.ThorChain -> quote.data.totalSwapSeconds
+                        is SwapQuote.MayaChain -> quote.data.totalSwapSeconds
+                        else -> null
+                    }
+                // Mirrors buildSuccess's fee treatment so a row never advertises a fee that
+                // vanishes from the breakdown the moment the route is picked: SwapKit UTXO-family
+                // deposits surface their cost once as the Network Fee (the wire inbound fee would
+                // double-count it), and 1inch bakes the affiliate fee into the quoted rate — in
+                // both cases there is no separate amount to show, so the segment is dropped.
+                val hidesSwapFee =
+                    fetch.swapFeeIncludedInRate ||
+                        (fetch.quote is SwapQuote.SwapKit &&
+                            srcToken.chain.standard == TokenStandard.UTXO)
+                SwapRouteUiModel(
+                    provider = candidate.candidate.provider,
+                    name = fetch.providerUiText,
+                    logo = getProviderLogo(candidate.candidate.provider.getSwapProviderId()),
+                    feeText =
+                        if (hidesSwapFee) null
+                        else fiatValueToString(fetch.swapFeeFiat, asFee = true),
+                    etaText =
+                        etaSeconds?.let {
+                            UiText.FormattedText(R.string.swap_route_eta, listOf(it))
+                        },
+                    // Formatted from the raw quote amount, NOT estimatedDstTokenValue: the display
+                    // formatter abbreviates from 1e6 with a single decimal ("~1.1M"), which
+                    // collapses the differences this column exists to compare.
+                    outputText =
+                        "~${formatRouteOutput(fetch.quote.expectedDstValue.decimal)} $dstTicker",
+                    outputFiatText = fetch.estimatedDstFiatValue,
+                    isSelected = candidate.candidate.provider == activeProvider,
+                )
+            }
+            // Stable sort: pins the active route to the top, the rest keep their output ranking.
+            .sortedByDescending { it.isSelected }
+    }
+
+    /**
+     * Applies a manual route pick from the Select-route sheet: rebuilds the display state for the
+     * picked, already-fetched candidate and applies it through the same path as an auto-resolved
+     * quote, so fees, discounts, balance validation, and the refresh timer all follow the pick. No
+     * network fetch — the pick only chooses among the quotes of the last resolution, and the next
+     * refresh re-defaults the route to the automatic best (iOS parity).
+     */
+    fun selectRoute(provider: SwapProvider) {
+        val ctx = routeContext ?: return
+        if (quoteState.provider == provider) return
+        val candidate = ctx.ranked.firstOrNull { it.candidate.provider == provider } ?: return
+        // A row that lapsed while the sheet was open can no longer be signed at its quoted rate:
+        // don't apply it (Swap would stay enabled against an expired quote) — refresh instead, so
+        // a fresh candidate set replaces the whole list.
+        if (Clock.System.now() >= candidate.result.quote.expiredAt) {
+            refreshQuoteState.value++
+            return
+        }
+        selectRouteJob?.cancel()
+        selectRouteJob =
+            scope.safeLaunch(onError = { Timber.e(it, "selectRoute") }) {
+                val (src, _) = ctx.input.address
+                val amount = ctx.input.amount ?: return@safeLaunch
+                val srcToken = src.account.token
+                val srcTokenValue = amount.movePointRight(srcToken.decimal).toBigInteger()
+                val tokenValue = convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
+                val result =
+                    swapQuotePipeline.buildSuccess(
+                        bestQuote = candidate,
+                        src = src,
+                        srcTokenValue = srcTokenValue,
+                        tokenValue = tokenValue,
+                        currentDiscountInfo = uiState.value.discountInfo,
+                        rankedQuotes = ctx.ranked,
+                    )
+                // buildSuccess suspends (discount checks); a refresh or reset may have replaced or
+                // cleared the context meanwhile. That newer state wins — drop the pick.
+                if (routeContext !== ctx) return@safeLaunch
+                // applyQuoteResult re-runs the superseded/quotable guards against the live input;
+                // on the manual path a trip drops the pick silently instead of resetting state
+                // owned by a newer request.
+                applyQuoteResult(ctx.input, result, isManualRoutePick = true)
+            }
     }
 
     /** Applies the UTXO plan-fee / balance outcome to the network-fee flows and form state. */
@@ -688,7 +866,14 @@ constructor(
     private fun discardSupersededQuoteResult() {
         refreshQuoteJob?.cancel()
         refreshQuoteJob = null
+        // The context a pending pick was built from is going away with the quote it belonged to.
+        selectRouteJob?.cancel()
+        selectRouteJob = null
+        // Clearing the quote invalidates any fee still resolving for it, the same way a newer
+        // apply does — otherwise it resumes and writes a network fee onto state with no quote.
+        quoteApplyGeneration++
         quoteState.reset()
+        routeContext = null
         uiState.update {
             it.copy(
                 srcFiatValue = "0",
@@ -698,6 +883,8 @@ constructor(
                         hasQuote = false,
                         expiredAt = null,
                     ),
+                routeOptions = emptyList(),
+                isRouteManuallySelected = false,
                 feeBreakdown =
                     it.feeBreakdown.copy(
                         fee = "0",
@@ -720,15 +907,24 @@ constructor(
         // quote pipeline against the same invalid amount, briefly re-exposing the fee block.
         refreshQuoteJob?.cancel()
         refreshQuoteJob = null
+        // The context a pending pick was built from is going away with the quote it belonged to.
+        selectRouteJob?.cancel()
+        selectRouteJob = null
+        // Clearing the quote invalidates any fee still resolving for it, the same way a newer
+        // apply does — otherwise it resumes and writes a network fee onto state with no quote.
+        quoteApplyGeneration++
         // Clears quote/provider and the swap fee in one place. Resetting swapFeeFiat lets
         // collectTotalFee()'s filterNotNull() short-circuit so a later calculateGas() update can't
         // write a (newGas + staleSwap) combination back into state.totalFee — the same race that
         // triggers on flipSelectedTokens since selectedSrc changes synchronously.
         quoteState.reset()
+        routeContext = null
         uiState.update {
             it.copy(
                 srcFiatValue = "0",
                 quoteDisplay = QuoteDisplay(),
+                routeOptions = emptyList(),
+                isRouteManuallySelected = false,
                 feeBreakdown =
                     it.feeBreakdown.copy(
                         fee = "0",
@@ -748,5 +944,43 @@ constructor(
         if (cause != null) {
             Timber.e(cause, tag)
         }
+    }
+}
+
+// The thresholds iOS abbreviates a displayed amount at.
+private val ROUTE_OUTPUT_MILLION: BigDecimal = BigDecimal.ONE.movePointRight(6)
+private val ROUTE_OUTPUT_BILLION: BigDecimal = BigDecimal.ONE.movePointRight(9)
+private val ROUTE_OUTPUT_TRILLION: BigDecimal = BigDecimal.ONE.movePointRight(12)
+
+// Route-row output formatters, mirroring iOS `Decimal.formatForDisplay()`: grouped with up to eight
+// fraction digits below 1e6, abbreviated to two decimals from there up. Full precision where the
+// routes are actually compared digit by digit — the display mapper abbreviates from 1e6 with one
+// decimal and collapses the very differences this column exists to show — but bounded above it,
+// because the output Column carries no weight while the provider name carries weight(1f): an
+// unabbreviated nine-figure amount measures wider than the row's whole two-column budget and
+// squeezes the name to nothing. Truncating, never rounding up, so a row can't advertise more output
+// than the quote pays.
+// Main-confined like the controller that uses them (DecimalFormat is not thread-safe).
+private val routeOutputFormat =
+    DecimalFormat("#,##0.########").apply { roundingMode = RoundingMode.DOWN }
+
+private val routeAbbreviatedOutputFormat =
+    DecimalFormat("#,##0.##").apply { roundingMode = RoundingMode.DOWN }
+
+/**
+ * A Select-route row's output amount, formatted the way iOS formats its own (`formatForDisplay`):
+ * full precision below a million, abbreviated to two decimals from there up so the column stays
+ * inside the row.
+ */
+internal fun formatRouteOutput(amount: BigDecimal): String {
+    val magnitude = amount.abs()
+    return when {
+        magnitude >= ROUTE_OUTPUT_TRILLION ->
+            routeAbbreviatedOutputFormat.format(amount.movePointLeft(12)) + "T"
+        magnitude >= ROUTE_OUTPUT_BILLION ->
+            routeAbbreviatedOutputFormat.format(amount.movePointLeft(9)) + "B"
+        magnitude >= ROUTE_OUTPUT_MILLION ->
+            routeAbbreviatedOutputFormat.format(amount.movePointLeft(6)) + "M"
+        else -> routeOutputFormat.format(amount)
     }
 }

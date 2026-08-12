@@ -304,6 +304,7 @@ internal class SwapQuoteManagerTest {
                     currency = AppCurrency.USD,
                     amount = BigDecimal.ONE,
                 )
+                .best
 
         assertEquals(SwapProvider.SWAPKIT, best.candidate.provider)
         assertEquals(BigDecimal("200"), best.result.comparableDstFiat)
@@ -425,18 +426,57 @@ internal class SwapQuoteManagerTest {
             // THORChain (priority 0) prices the dst slightly lower than SwapKit (priority 2), but
             // within the 50bps band (99.7 vs 100, floor = 99.5). Both are in-band, so the banded
             // layer tilts to the higher-priority THORChain instead of the marginally larger output.
-            val best = rankTwoProviders(thorFiat = "99.7", swapKitFiat = "100")
+            val best = rankTwoProviders(thorFiat = "99.7", swapKitFiat = "100").best
 
             assertEquals(SwapProvider.THORCHAIN, best.candidate.provider)
             assertEquals(BigDecimal("99.7"), best.result.comparableDstFiat)
         }
 
     @Test
+    fun `fetchBestQuote ranks the full candidate set by net output regardless of the winner`() =
+        runTest {
+            // The banded preference makes THORChain the auto winner, but the Select-route list
+            // stays ordered by raw net output — SwapKit (100) above THORChain (99.7).
+            val fetched = rankTwoProviders(thorFiat = "99.7", swapKitFiat = "100")
+
+            assertEquals(SwapProvider.THORCHAIN, fetched.best.candidate.provider)
+            assertEquals(
+                listOf(SwapProvider.SWAPKIT, SwapProvider.THORCHAIN),
+                fetched.ranked.map { it.candidate.provider },
+            )
+        }
+
+    @Test
+    fun `fetchBestQuote ranks by token amount when the dst token has no price`() = runTest {
+        // An unpriced destination collapses comparableDstFiat to zero for every candidate at
+        // once; the ranked list must fall back to the raw destination amount (SwapKit's dst is
+        // 200 raw units vs THORChain's 100 in the helper) instead of provider-table order.
+        val fetched = rankTwoProviders(thorFiat = "0", swapKitFiat = "0")
+
+        assertEquals(
+            listOf(SwapProvider.SWAPKIT, SwapProvider.THORCHAIN),
+            fetched.ranked.map { it.candidate.provider },
+        )
+    }
+
+    @Test
+    fun `fetchBestQuote wins on token amount when the dst token has no price`() = runTest {
+        // The winner must use the same fallback the ranked list does. On the fiat metric alone an
+        // unpriced destination reads as "every route is economically tied", so the band swallows
+        // the whole set and provider priority hands it to THORChain's 100 — while the picker draws
+        // SwapKit's 200 on the row above, checkmark pointing at the smaller output.
+        val fetched = rankTwoProviders(thorFiat = "0", swapKitFiat = "0")
+
+        assertEquals(SwapProvider.SWAPKIT, fetched.best.candidate.provider)
+        assertEquals(fetched.ranked.first().candidate.provider, fetched.best.candidate.provider)
+    }
+
+    @Test
     fun `fetchBestQuote keeps the materially-better quote when it is outside the 50bps band`() =
         runTest {
             // THORChain prices 0.8% below SwapKit (99.2 vs 100, floor = 99.5), outside the band, so
             // the priority preference does not apply and the better-rate SwapKit wins.
-            val best = rankTwoProviders(thorFiat = "99.2", swapKitFiat = "100")
+            val best = rankTwoProviders(thorFiat = "99.2", swapKitFiat = "100").best
 
             assertEquals(SwapProvider.SWAPKIT, best.candidate.provider)
             assertEquals(BigDecimal("100"), best.result.comparableDstFiat)
@@ -448,7 +488,7 @@ internal class SwapQuoteManagerTest {
      * respectively. The raw dst token amounts are arbitrary; ranking is driven purely by the mocked
      * fiat values.
      */
-    private suspend fun rankTwoProviders(thorFiat: String, swapKitFiat: String): BestQuote {
+    private suspend fun rankTwoProviders(thorFiat: String, swapKitFiat: String): RankedQuotes {
         val btc = coin(Chain.Bitcoin, "BTC", address = "bc1qsrc", decimals = 8)
         val eth = coin(Chain.Ethereum, "ETH", address = "0xdst", decimals = 18)
 
