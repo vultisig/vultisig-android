@@ -108,7 +108,12 @@ class DKLSKeysign(
             val keyShareBytes = getKeyshareBytes()
             val keyshareSlice = keyShareBytes.toDklsGoSlice()
             val h = Handle()
-            val result = dkls_keyshare_from_bytes(keyshareSlice, h)
+            val result =
+                try {
+                    dkls_keyshare_from_bytes(keyshareSlice, h)
+                } finally {
+                    keyshareSlice.free()
+                }
             if (result != LIB_OK) {
                 error("fail to create keyshare handle from bytes, $result")
             }
@@ -125,12 +130,15 @@ class DKLSKeysign(
     @Throws(Exception::class)
     private fun getDKLSKeysignSetupMessage(message: String): ByteArray {
         val buf = tss_buffer()
+        var keyIdSlice: go_slice? = null
+        var ids: go_slice? = null
+        var chainPathSlice: go_slice? = null
+        var msgSlice: go_slice? = null
         try {
             val keyIdArr = getDKLSKeyshareID()
-            val keyIdSlice = keyIdArr.toDklsGoSlice()
+            keyIdSlice = keyIdArr.toDklsGoSlice()
             val byteArray = DklsHelper.arrayToBytes(keysignCommittee)
-            val ids = byteArray.toDklsGoSlice()
-            var chainPathSlice: go_slice?
+            ids = byteArray.toDklsGoSlice()
             when (vault.libType) {
                 SigningLibType.DKLS -> {
                     val chainPathArr = chainPath.replace("'", "").toByteArray(Charsets.UTF_8)
@@ -147,7 +155,7 @@ class DKLSKeysign(
             }
 
             val decodedMsgData = message.hexToByteArray()
-            val msgSlice = decodedMsgData.toDklsGoSlice()
+            msgSlice = decodedMsgData.toDklsGoSlice()
             val err = dkls_sign_setupmsg_new(keyIdSlice, chainPathSlice, msgSlice, ids, buf)
             if (err != LIB_OK) {
                 error("fail to setup keysign message, dkls error: $err")
@@ -155,14 +163,18 @@ class DKLSKeysign(
             return BufferUtilJNI.get_bytes_from_tss_buffer(buf)
         } finally {
             tss_buffer_free(buf)
+            keyIdSlice?.free()
+            ids?.free()
+            chainPathSlice?.free()
+            msgSlice?.free()
         }
     }
 
     @Throws(Exception::class)
     private fun decodeMessage(setupMsg: ByteArray): String {
         val buf = tss_buffer()
+        val setupMsgSlice = setupMsg.toDklsGoSlice()
         try {
-            val setupMsgSlice = setupMsg.toDklsGoSlice()
             val result = dkls_decode_message(setupMsgSlice, buf)
             if (result != LIB_OK) {
                 error("fail to extract message from setup message: $result")
@@ -170,6 +182,7 @@ class DKLSKeysign(
             return BufferUtilJNI.get_bytes_from_tss_buffer(buf).toHexString()
         } finally {
             tss_buffer_free(buf)
+            setupMsgSlice.free()
         }
     }
 
@@ -216,17 +229,21 @@ class DKLSKeysign(
                 return
             }
             val message = outboundMessage.toDklsGoSlice()
-            val encodedOutboundMessage = Base64.encode(outboundMessage)
-            for (i in keysignCommittee.indices) {
-                val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
-                if (receiverArray.isEmpty()) {
-                    break
+            try {
+                val encodedOutboundMessage = Base64.encode(outboundMessage)
+                for (i in keysignCommittee.indices) {
+                    val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
+                    if (receiverArray.isEmpty()) {
+                        break
+                    }
+                    val receiverString = String(receiverArray, Charsets.UTF_8)
+                    println(
+                        "sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}"
+                    )
+                    messenger.send(localPartyID, receiverString, encodedOutboundMessage)
                 }
-                val receiverString = String(receiverArray, Charsets.UTF_8)
-                println(
-                    "sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}"
-                )
-                messenger.send(localPartyID, receiverString, encodedOutboundMessage)
+            } finally {
+                message.free()
             }
         }
     }
@@ -256,7 +273,12 @@ class DKLSKeysign(
             val decodedMsg = Base64.decode(decryptedBody)
             val decryptedBodySlice = decodedMsg.toDklsGoSlice()
             val isFinished = intArrayOf(0)
-            val result = dkls_sign_session_input_message(handle, decryptedBodySlice, isFinished)
+            val result =
+                try {
+                    dkls_sign_session_input_message(handle, decryptedBodySlice, isFinished)
+                } finally {
+                    decryptedBodySlice.free()
+                }
             if (result != LIB_OK) {
                 error("fail to apply message to dkls, $result")
             }
@@ -335,17 +357,27 @@ class DKLSKeysign(
             val keyShareBytes = getKeyshareBytes()
             val keyshareSlice = keyShareBytes.toDklsGoSlice()
             val keyshareHandle = Handle()
-            val result = dkls_keyshare_from_bytes(keyshareSlice, keyshareHandle)
+            val result =
+                try {
+                    dkls_keyshare_from_bytes(keyshareSlice, keyshareHandle)
+                } finally {
+                    keyshareSlice.free()
+                }
             if (result != LIB_OK) {
                 error("fail to create keyshare handle from bytes, $result")
             }
             val sessionResult =
-                dkls_sign_session_from_setup(
-                    decodedSetupMsg,
-                    localPartySlice,
-                    keyshareHandle,
-                    handler,
-                )
+                try {
+                    dkls_sign_session_from_setup(
+                        decodedSetupMsg,
+                        localPartySlice,
+                        keyshareHandle,
+                        handler,
+                    )
+                } finally {
+                    decodedSetupMsg.free()
+                    localPartySlice.free()
+                }
             if (sessionResult != LIB_OK) {
                 error("fail to create sign session from setup message, error: $sessionResult")
             }

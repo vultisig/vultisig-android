@@ -109,7 +109,12 @@ class SchnorrKeysign(
             val keyshareSlice = keyShareBytes.toSchnorrGoSlice()
             // h is never freed: goschnorr exports no schnorr_keyshare_free (see #5587)
             val h = Handle()
-            val result = schnorr_keyshare_from_bytes(keyshareSlice, h)
+            val result =
+                try {
+                    schnorr_keyshare_from_bytes(keyshareSlice, h)
+                } finally {
+                    keyshareSlice.free()
+                }
             if (result != LIB_OK) {
                 throw RuntimeException("fail to create keyshare handle from bytes, $result")
             }
@@ -127,13 +132,10 @@ class SchnorrKeysign(
     @Throws(Exception::class)
     fun getKeysignSetupMessage(message: String): ByteArray {
         val buf = tss_buffer()
+        val keyIdSlice = getKeyshareID().toSchnorrGoSlice()
+        val ids = DklsHelper.arrayToBytes(keysignCommittee).toSchnorrGoSlice()
+        val msgSlice = message.hexToByteArray().toSchnorrGoSlice()
         try {
-            val keyIdArr = getKeyshareID()
-            val keyIdSlice = keyIdArr.toSchnorrGoSlice()
-            val byteArray = DklsHelper.arrayToBytes(keysignCommittee)
-            val ids = byteArray.toSchnorrGoSlice()
-            val decodedMsgData = message.hexToByteArray()
-            val msgSlice = decodedMsgData.toSchnorrGoSlice()
             val err = schnorr_sign_setupmsg_new(keyIdSlice, null, msgSlice, ids, buf)
             if (err != LIB_OK) {
                 throw RuntimeException("fail to setup keysign message, error: $err")
@@ -141,14 +143,17 @@ class SchnorrKeysign(
             return BufferUtilJNI.get_bytes_from_tss_buffer(buf)
         } finally {
             tss_buffer_free(buf)
+            keyIdSlice.free()
+            ids.free()
+            msgSlice.free()
         }
     }
 
     @Throws(Exception::class)
     private fun decodeMessage(setupMsg: ByteArray): String {
         val buf = tss_buffer()
+        val setupMsgSlice = setupMsg.toSchnorrGoSlice()
         try {
-            val setupMsgSlice = setupMsg.toSchnorrGoSlice()
             val result = schnorr_decode_message(setupMsgSlice, buf)
             if (result != LIB_OK) {
                 throw RuntimeException("fail to extract message from setup message: $result")
@@ -156,6 +161,7 @@ class SchnorrKeysign(
             return BufferUtilJNI.get_bytes_from_tss_buffer(buf).toHexString()
         } finally {
             tss_buffer_free(buf)
+            setupMsgSlice.free()
         }
     }
 
@@ -203,17 +209,21 @@ class SchnorrKeysign(
                 return
             }
             val message = outboundMessage.toSchnorrGoSlice()
-            val encodedOutboundMessage = Base64.encode(outboundMessage)
-            for (i in keysignCommittee.indices) {
-                val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
-                if (receiverArray.isEmpty()) {
-                    break
+            try {
+                val encodedOutboundMessage = Base64.encode(outboundMessage)
+                for (i in keysignCommittee.indices) {
+                    val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
+                    if (receiverArray.isEmpty()) {
+                        break
+                    }
+                    val receiverString = String(receiverArray, Charsets.UTF_8)
+                    Timber.d(
+                        "sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}"
+                    )
+                    messenger?.send(localPartyID, receiverString, encodedOutboundMessage)
                 }
-                val receiverString = String(receiverArray, Charsets.UTF_8)
-                Timber.d(
-                    "sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}"
-                )
-                messenger?.send(localPartyID, receiverString, encodedOutboundMessage)
+            } finally {
+                message.free()
             }
         }
     }
@@ -248,7 +258,12 @@ class SchnorrKeysign(
             val decodedMsg = Base64.decode(decryptedBody)
             val decryptedBodySlice = decodedMsg.toSchnorrGoSlice()
             val isFinished = intArrayOf(0)
-            val result = schnorr_sign_session_input_message(handle, decryptedBodySlice, isFinished)
+            val result =
+                try {
+                    schnorr_sign_session_input_message(handle, decryptedBodySlice, isFinished)
+                } finally {
+                    decryptedBodySlice.free()
+                }
             if (result != LIB_OK) {
                 throw RuntimeException("fail to apply message to dkls, $result")
             }
@@ -334,17 +349,27 @@ class SchnorrKeysign(
             val keyshareSlice = keyShareBytes.toSchnorrGoSlice()
             val keyshareHandle = Handle()
             try {
-                val result = schnorr_keyshare_from_bytes(keyshareSlice, keyshareHandle)
+                val result =
+                    try {
+                        schnorr_keyshare_from_bytes(keyshareSlice, keyshareHandle)
+                    } finally {
+                        keyshareSlice.free()
+                    }
                 if (result != LIB_OK) {
                     throw RuntimeException("fail to create keyshare handle from bytes, $result")
                 }
                 val sessionResult =
-                    schnorr_sign_session_from_setup(
-                        decodedSetupMsg,
-                        localPartySlice,
-                        keyshareHandle,
-                        handler,
-                    )
+                    try {
+                        schnorr_sign_session_from_setup(
+                            decodedSetupMsg,
+                            localPartySlice,
+                            keyshareHandle,
+                            handler,
+                        )
+                    } finally {
+                        decodedSetupMsg.free()
+                        localPartySlice.free()
+                    }
                 if (sessionResult != LIB_OK) {
                     throw RuntimeException(
                         "fail to create sign session from setup message, error: $sessionResult"
