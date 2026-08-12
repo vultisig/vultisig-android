@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.blockchain.solana.kamino
 
+import java.math.BigInteger
+
 /**
  * One decoded instruction, reduced to what validation reasons about.
  *
@@ -65,6 +67,9 @@ object KaminoTransactionValidator {
     /** `SystemInstruction::Transfer`. */
     private const val SYSTEM_TRANSFER = 2
 
+    /** What the kVault program reads as "withdraw everything". */
+    private val U64_MAX = BigInteger("18446744073709551615")
+
     /**
      * @throws KaminoTransactionRejected if [instructions] is not a transaction the app is willing
      *   to sign for [vault].
@@ -122,6 +127,47 @@ object KaminoTransactionValidator {
         }
 
         rejectValueMovementAwayFromTheSigner(instructions, vault, signerAddress)
+        rejectTheWithdrawEverythingSentinel(instructions)
+    }
+
+    /**
+     * Refuses a kVault instruction whose amount argument is `u64::MAX`, which the program reads as
+     * *withdraw everything* rather than as a share count.
+     *
+     * **This app cannot produce one.** The withdraw form's maximum is derived to sit strictly below
+     * the balance precisely so the API never answers with the sentinel, and an over-request is
+     * refused rather than clamped. So a transaction carrying it did not come from here — and it is
+     * the one amount whose consequence is the entire position rather than the figure on screen.
+     * Refused on every device, initiating or co-signing: disclosing it while allowing the signature
+     * would put the whole position behind a label.
+     *
+     * Confirmed empirically: asking Kamino to withdraw 0.5 shares from a wallet holding nothing
+     * returns an instruction carrying exactly this.
+     */
+    private fun rejectTheWithdrawEverythingSentinel(instructions: List<KaminoTxInstruction>) {
+        instructions.forEachIndexed { index, instruction ->
+            if (instruction.programId != KaminoVaultRegistry.PROGRAM_ID) return@forEachIndexed
+            val amount = kvaultAmount(instruction.data) ?: return@forEachIndexed
+            if (amount == U64_MAX) {
+                reject(
+                    "instruction $index carries the withdraw-everything sentinel, which this app " +
+                        "never produces"
+                )
+            }
+        }
+    }
+
+    /**
+     * The `u64` amount argument of a kVault instruction: an 8-byte Anchor discriminator followed by
+     * the amount, little-endian. Null when the instruction is too short to carry one.
+     */
+    private fun kvaultAmount(data: ByteArray): BigInteger? {
+        if (data.size < 16) return null
+        var value = BigInteger.ZERO
+        for (offset in 7 downTo 0) {
+            value = value.shiftLeft(8).or(BigInteger.valueOf((data[8 + offset].toLong() and 0xFF)))
+        }
+        return value
     }
 
     /**

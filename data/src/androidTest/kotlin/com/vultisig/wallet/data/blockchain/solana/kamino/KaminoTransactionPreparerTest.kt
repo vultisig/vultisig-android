@@ -266,23 +266,40 @@ class KaminoTransactionPreparerTest {
     }
 
     @Test
-    fun a_prepared_unstaked_withdraw_validates() {
-        val prepared = prepare(action = KaminoAction.WITHDRAW)
-        val instructions = KaminoTransactionDecoder.decode(prepared)
+    fun the_captured_withdraw_is_refused_because_it_carries_the_sentinel() {
+        // Kamino built this fixture for a wallet holding nothing, and rather than rejecting the
+        // request it rewrote the amount to u64::MAX — "withdraw everything". That is the rewrite
+        // the
+        // whole withdraw design exists to stay away from, so the pipeline must refuse to prepare it
+        // on any device. This is also direct evidence the rewrite is real, not merely documented.
+        val rejection =
+            assertThrows(KaminoTransactionRejected::class.java) {
+                prepare(action = KaminoAction.WITHDRAW)
+            }
+        assertTrue(
+            "unexpected reason: ${rejection.message}",
+            rejection.message.orEmpty().contains("withdraw-everything sentinel"),
+        )
+    }
+
+    @Test
+    fun the_captured_withdraw_is_otherwise_the_shape_the_validator_expects() {
+        // Everything except the amount: the instructions decode, invoke the kVault program, and
+        // carry
+        // no farms instruction (nothing was staked, so nothing had to be released). Asserted on the
+        // decode rather than through prepare, which correctly refuses the sentinel above.
+        val instructions =
+            KaminoTransactionDecoder.decode(KaminoAttributionMemo.append(withdrawFixture))
 
         assertTrue(
             "a withdraw must invoke the kVault program",
             instructions.any { it.programId == KaminoVaultRegistry.PROGRAM_ID },
         )
-        // No farms instruction, because Kamino built this for a wallet holding nothing and so had
-        // nothing to release. That makes this the unstaked shape — see the fixture's own note; the
-        // staked shape most holders send is not covered here.
         assertTrue(
             "this fixture is the unstaked shape",
             instructions.none { it.programId == KaminoVaultRegistry.FARMS_PROGRAM_ID },
         )
         assertEquals(KaminoAttributionMemo.MEMO_PROGRAM_ID, instructions.last().programId)
-        assertEquals(400_000L, SolanaTransaction.getComputeUnitLimit(prepared)?.toLong() ?: 0L)
     }
 
     @Test
@@ -294,7 +311,9 @@ class KaminoTransactionPreparerTest {
             assertThrows(KaminoTransactionRejected::class.java) {
                 KaminoTransactionValidator.validate(
                     instructions =
-                        KaminoTransactionDecoder.decode(prepare(action = KaminoAction.WITHDRAW)),
+                        KaminoTransactionDecoder.decode(
+                            KaminoAttributionMemo.append(withdrawFixture)
+                        ),
                     vault = KaminoVaultRegistry.STEAKHOUSE_USDC,
                     action = KaminoAction.WITHDRAW,
                     signerAddress = other,

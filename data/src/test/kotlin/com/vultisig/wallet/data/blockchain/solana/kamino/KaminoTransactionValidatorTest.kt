@@ -252,6 +252,52 @@ class KaminoTransactionValidatorTest {
     }
 
     @Test
+    fun `the withdraw-everything sentinel is refused on any device`() {
+        // u64::MAX is what the kVault program reads as "withdraw everything". This app never
+        // produces
+        // one — the form's maximum sits strictly below the balance so the API cannot answer with
+        // it,
+        // and an over-request is refused rather than clamped — so a transaction carrying it did not
+        // come from here. It is also the one amount whose consequence is the whole position rather
+        // than the figure on screen, which is why it is refused rather than merely disclosed.
+        val sentinel =
+            ByteArray(16).also { data ->
+                // 8-byte Anchor discriminator, then the amount little-endian.
+                for (i in 8 until 16) data[i] = 0xFF.toByte()
+            }
+        val reason = rejection(listOf(ix(KaminoVaultRegistry.PROGRAM_ID, sentinel), memo))
+        assertTrue(reason.contains("withdraw-everything sentinel"), reason)
+    }
+
+    @Test
+    fun `an ordinary amount one below the sentinel is allowed`() {
+        // The guard must key on the sentinel exactly, not on "a large amount".
+        val justUnder =
+            ByteArray(16).also { data ->
+                for (i in 8 until 15) data[i] = 0xFF.toByte()
+                data[15] = 0xFE.toByte()
+            }
+        assertDoesNotThrow {
+            KaminoTransactionValidator.validate(
+                listOf(ix(KaminoVaultRegistry.PROGRAM_ID, justUnder), memo),
+                vault,
+                KaminoAction.WITHDRAW,
+            )
+        }
+    }
+
+    @Test
+    fun `a short kVault instruction carrying no amount is not mistaken for the sentinel`() {
+        assertDoesNotThrow {
+            KaminoTransactionValidator.validate(
+                listOf(ix(KaminoVaultRegistry.PROGRAM_ID, byteArrayOf(1, 2, 3)), memo),
+                vault,
+                KaminoAction.DEPOSIT,
+            )
+        }
+    }
+
+    @Test
     fun `instruction value semantics do not depend on array identity`() {
         // Guards the hand-written equals: without it, structurally identical instructions would
         // compare unequal and the memo checks would silently stop matching.
