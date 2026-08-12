@@ -472,12 +472,15 @@ constructor(
 
     private fun loadSavedPositions() {
         viewModelScope.launch {
-            val savedPositions = defiPositionsRepository.getSelectedPositions(vaultId).first()
+            // Null is a vault that has never chosen on this chain, which is the only case the
+            // defaults belong to — an empty set is a selection the user cleared on purpose.
+            val savedPositions =
+                defiPositionsRepository
+                    .getSelectedPositions(Chain.ThorChain, vaultId)
+                    .first()
+                    ?.toList() ?: defaultSelectedPositionsDialog()
             state.update {
-                it.copy(
-                    selectedPositions = savedPositions.toList(),
-                    tempSelectedPositions = savedPositions.toList(),
-                )
+                it.copy(selectedPositions = savedPositions, tempSelectedPositions = savedPositions)
             }
 
             loadBondedNodes()
@@ -1292,7 +1295,11 @@ constructor(
 
             launch {
                 withContext(ioDispatcher) {
-                    defiPositionsRepository.saveSelectedPositions(vaultId, selectedPositions)
+                    defiPositionsRepository.saveSelectedPositions(
+                        Chain.ThorChain,
+                        vaultId,
+                        selectedPositions,
+                    )
                 }
             }
 
