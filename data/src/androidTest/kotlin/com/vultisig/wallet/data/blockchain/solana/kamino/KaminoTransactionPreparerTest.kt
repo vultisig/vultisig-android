@@ -36,6 +36,24 @@ class KaminoTransactionPreparerTest {
             "AAAAAgsEGQhvEbn6PHom/gcIAAILDgMJBxoQzrDKEsjRs2z//////////wGC6dRmw0Z9LrKw2cy+tHvb9JXu" +
             "HBu0d9Dar60DX6fr5AkFNTElLzITCQEJJxUECwI3BwYD"
 
+    /**
+     * A live `POST /ktx/kvault/withdraw` response for the same vault. Two instructions — create the
+     * destination token account, then `kVault::withdraw` — and notably **no farms instructions**,
+     * which is why this shape can only spend unstaked shares and why a farm-staked position is
+     * refused rather than guessed at.
+     *
+     * Kamino built this for a wallet holding no position at all, which is the clearest evidence
+     * that the endpoint validates nothing about the amount it is given.
+     */
+    private val withdrawFixture =
+        "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACA" +
+            "AQAFCH//JB25KLX6LxwUe5Pw/FGXqeETK7Jj6GQYPDbOSuemOEsQm7A2IghRdbzU0ar6Q7dIhEJA6xfcD32XM4Yw" +
+            "fPTlbTyv/0d12pxZLb6myiG7I2gKyRGc5alr3GsSn7RxYQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "D9ps6fZhmN2HDYqYbzBnXEb4Pi9Sg0h5UvXVBWPj73qMlyWPTiSJ8bs9ECkUjg2DC1oTmdr/EIQEjnvY2+n4WZlx" +
+            "KXooAEJJPkJxkMd7ZH6G99GZch/RVimWXJ1rZZT4BNkK8duJOew1/5TZZA1X3MMnlLs+G7Zv066EmoTc25TcFsAN" +
+            "s3q6CtgzQiIGiofmyao3Sh0Dq7RowlSc92jsQgIFBgABAA0DFgEBBxYADwYLEgENAggWFhUEBw4MCQoTERQQEBOD" +
+            "cJuq3CI5//////////8BgunUZsNGfS6ysNnMvrR72/SV7hwbtHfQ2q+tA1+n6+QIBTUlLxMCCQEHJxUECzcHAw=="
+
     private val wallet = "9ceRgz579BcfWogs3RE11FKNQaWW7Lmtnev3MXspxUjF"
 
     /**
@@ -82,12 +100,17 @@ class KaminoTransactionPreparerTest {
     }
 
     private fun prepare(
-        api: KaminoApi = FixtureApi(),
+        api: KaminoApi? = null,
         vault: KaminoVault = KaminoVaultRegistry.STEAKHOUSE_USDC,
         action: KaminoAction = KaminoAction.DEPOSIT,
         networkUnitPrice: BigInteger? = null,
     ): String = runBlocking {
-        KaminoTransactionPreparer(api)
+        val resolved =
+            api
+                ?: FixtureApi(
+                    if (action == KaminoAction.WITHDRAW) withdrawFixture else depositFixture
+                )
+        KaminoTransactionPreparer(resolved)
             .prepare(
                 vault = vault,
                 action = action,
@@ -229,6 +252,48 @@ class KaminoTransactionPreparerTest {
         assertTrue(
             "a memo and compute budget were added, so it must have grown",
             after.size > before.size,
+        )
+    }
+
+    @Test
+    fun a_prepared_withdraw_validates_and_spends_no_farm_staked_shares() {
+        val prepared = prepare(action = KaminoAction.WITHDRAW)
+        val instructions = KaminoTransactionDecoder.decode(prepared)
+
+        // The kVault program does the work; the farms program is absent, so this transaction cannot
+        // be moving shares out of the farm. That is the on-chain reason a staked position is
+        // refused
+        // rather than attempted.
+        assertTrue(
+            "a withdraw must invoke the kVault program",
+            instructions.any { it.programId == KaminoVaultRegistry.PROGRAM_ID },
+        )
+        assertTrue(
+            "a withdraw of unstaked shares touches no farm",
+            instructions.none { it.programId == KaminoVaultRegistry.FARMS_PROGRAM_ID },
+        )
+        assertEquals(KaminoAttributionMemo.MEMO_PROGRAM_ID, instructions.last().programId)
+        assertEquals(220_000L, SolanaTransaction.getComputeUnitLimit(prepared)?.toLong() ?: 0L)
+    }
+
+    @Test
+    fun a_withdraw_is_refused_when_it_is_not_the_wallet_s_own_transaction() {
+        // The fixture's fee payer is ; validating it against a different signer must fail,
+        // which is what stops the app signing on another account's behalf.
+        val other = "HDsayqAsDWy3QvANGqh2yNraqcD8Fnjgh73Mhb3WRS5E"
+        val rejection =
+            assertThrows(KaminoTransactionRejected::class.java) {
+                KaminoTransactionValidator.validate(
+                    instructions =
+                        KaminoTransactionDecoder.decode(prepare(action = KaminoAction.WITHDRAW)),
+                    vault = KaminoVaultRegistry.STEAKHOUSE_USDC,
+                    action = KaminoAction.WITHDRAW,
+                    signerAddress = other,
+                )
+            }
+        assertTrue(
+            "unexpected reason: ${rejection.message}",
+            rejection.message.orEmpty().contains("authorised by"),
         )
     }
 
