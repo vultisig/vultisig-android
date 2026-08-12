@@ -542,7 +542,6 @@
     <string name="verify_deposit_withdrawing">Вы выводите</string>
     <string name="kamino_verify_vault">Vault</string>
     <string name="kamino_error_build_failed">Не удалось подготовить эту транзакцию</string>
-    <string name="kamino_withdraw_farm_staked">Эти доли размещены в фарме vault‑а и пока не могут быть выведены</string>
     <string name="kamino_withdraw_nothing">Из этого vault‑а нечего выводить</string>
     <string name="kamino_withdraw_unreadable">Не удалось прочитать эту позицию, поэтому вывод невозможно подготовить</string>
     <string name="kamino_withdraw_delayed">Превышает мгновенную ликвидность vault‑а %1$s %2$s. Этот вывод может задержаться.</string>

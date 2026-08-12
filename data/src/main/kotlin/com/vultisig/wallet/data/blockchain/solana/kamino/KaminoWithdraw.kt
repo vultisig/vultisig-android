@@ -165,11 +165,47 @@ data class KaminoTokenAmount(val baseUnits: BigInteger, val decimals: Int) {
     }
 }
 
+/** A rate scaled to a mint's precision, remembering whether anything was thrown away. */
+private data class ScaledAmount(val baseUnits: BigInteger, val isExact: Boolean)
+
+/**
+ * Scales [rate] to [decimals] base units, reporting whether the conversion was lossless.
+ *
+ * Exactness is what decides the step back from the API's sentinel: when digits had to be discarded
+ * the truncated value is already strictly below the balance, and when it did not the value *is* the
+ * balance and has to give up a unit.
+ */
+private fun scaleReportingExactness(rate: KaminoRate, decimals: Int): ScaledAmount? {
+    if (!scalesAreSane(decimals) || rate.scale > MAX_DECIMALS * 4) return null
+    return if (rate.scale <= decimals) {
+        ScaledAmount(rate.numerator.multiply(tenPow(decimals - rate.scale)), isExact = true)
+    } else {
+        val divisor = tenPow(rate.scale - decimals)
+        val (quotient, remainder) = rate.numerator.divideAndRemainder(divisor)
+        ScaledAmount(quotient, isExact = remainder.signum() == 0)
+    }
+}
+
+/** The share balance a withdraw may spend, and how the vault currently holds it. */
+data class KaminoWithdrawableShares(
+    /**
+     * The most a withdraw may name — the position stepped back from the API's `u64::MAX` sentinel.
+     */
+    val maximum: KaminoShareAmount,
+    /**
+     * The part already sitting in the user's own share account, which a withdraw spends without
+     * touching the farm. The remainder is what the farm has to release first.
+     */
+    val unstaked: KaminoShareAmount,
+)
+
 /** The user's share balance in one vault, split the way `/positions` reports it. */
 data class KaminoSharePosition(
     val staked: KaminoShareAmount,
     val unstaked: KaminoShareAmount,
     val total: KaminoShareAmount,
+    private val spendableShares: KaminoShareAmount,
+    private val partsSumToTotal: Boolean,
 ) {
     /**
      * Whether the three reported numbers can all be true at once. A response claiming more of
@@ -184,23 +220,67 @@ data class KaminoSharePosition(
                 unstaked.baseUnits <= total.baseUnits
 
     /**
-     * Whether the position is unstaked shares and nothing else.
+     * The most a withdraw may name: the total, stepped back from the API's sentinel.
      *
-     * Stated as `unstaked == total` rather than `staked + unstaked == total`: both hold for a
-     * wholly unstaked position, but the sum can disagree by a base unit purely from truncating two
-     * different decimal strings, which would refuse a real position over its last decimal place.
+     * A request naming more shares than are held is rewritten to `u64::MAX` — withdraw everything —
+     * so the balance itself is indistinguishable, in the bytes, from an amount nobody asked for.
+     * The maximum therefore has to be the largest amount strictly beneath it. Truncating the
+     * reported string is necessary but not sufficient: it lands strictly below only when there were
+     * digits past the mint's scale to discard, so the exact case gives up one base unit — 10^-6 of
+     * a share, about a ten-thousandth of a cent on these vaults — and the inexact case does not
+     * have to.
      */
-    val holdsOnlyUnstakedShares: Boolean
-        get() = unstaked.baseUnits == total.baseUnits
+    val spendable: KaminoShareAmount
+        get() = spendableShares
+
+    /**
+     * Whether the two reported parts add up to the reported total.
+     *
+     * Compared at the API's **own** precision, never at the share mint's scale. Truncating three
+     * strings to six decimals and adding two of them can miss the third by a base unit with nothing
+     * wrong — `0.9445485 + 0.9595935` truncates to `944548 + 959593`, one short of `1904142` — and
+     * refusing a real position over a last decimal place is not a guard, it is a bug.
+     */
+    val accountsForItsTotal: Boolean
+        get() = partsSumToTotal
 
     companion object {
         fun parse(response: KaminoUserPositionJson, shareDecimals: Int): KaminoSharePosition? {
+            val stakedRate = KaminoRate.parse(response.stakedShares) ?: return null
+            val unstakedRate = KaminoRate.parse(response.unstakedShares) ?: return null
+            val totalRate = KaminoRate.parse(response.totalShares) ?: return null
+
             val staked =
                 KaminoShareAmount.parse(response.stakedShares, shareDecimals) ?: return null
             val unstaked =
                 KaminoShareAmount.parse(response.unstakedShares, shareDecimals) ?: return null
             val total = KaminoShareAmount.parse(response.totalShares, shareDecimals) ?: return null
-            return KaminoSharePosition(staked, unstaked, total)
+
+            val scaledTotal = scaleReportingExactness(totalRate, shareDecimals) ?: return null
+            val spendableUnits =
+                if (scaledTotal.isExact) scaledTotal.baseUnits.subtract(BigInteger.ONE)
+                else scaledTotal.baseUnits
+
+            return KaminoSharePosition(
+                staked = staked,
+                unstaked = unstaked,
+                total = total,
+                spendableShares =
+                    KaminoShareAmount(spendableUnits.max(BigInteger.ZERO), shareDecimals),
+                partsSumToTotal = sumsExactly(stakedRate, unstakedRate, totalRate),
+            )
+        }
+
+        /** Adds the two parts and compares them to the total at whatever precision the API used. */
+        private fun sumsExactly(
+            staked: KaminoRate,
+            unstaked: KaminoRate,
+            total: KaminoRate,
+        ): Boolean {
+            val scale = maxOf(staked.scale, unstaked.scale, total.scale)
+            if (scale > MAX_DECIMALS * 4) return false
+            fun at(rate: KaminoRate) = rate.numerator.multiply(tenPow(scale - rate.scale))
+            return at(staked).add(at(unstaked)) == at(total)
         }
     }
 }
@@ -208,19 +288,20 @@ data class KaminoSharePosition(
 /**
  * What a withdraw from one vault may do right now.
  *
- * [FarmStaked] is the reason this exists. Every deposit into the launch vaults auto-stakes its
- * shares into the vault's farm, and the transaction that spends *staked* shares has never been
- * observed — so the validator has no template for it and building one would mean asserting against
- * a guessed instruction layout. This makes that a named, user-visible state instead of a refusal
- * deep inside the pipeline.
+ * Every deposit into the launch vaults auto-stakes its shares into the vault's farm, so a staked
+ * position is not an edge case — it is what essentially every real holder is in. The transaction
+ * that spends those shares releases them from the farm first (`farms::unstake`, then
+ * `farms::withdraw_unstaked_deposits`, both ahead of the vault withdraw), which Kamino builds, so a
+ * staked balance is withdrawable rather than refused.
+ *
+ * The refusals that remain are about the READ, not the shape: a response whose figures contradict
+ * each other, and one whose parts do not add up to its total. Neither describes a position a
+ * request can be sized against.
  */
 sealed interface KaminoWithdrawEligibility {
 
-    /** The observed path. A full withdraw sends precisely [shares], never a converted number. */
-    data class Withdrawable(val shares: KaminoShareAmount) : KaminoWithdrawEligibility
-
-    /** Shares are staked in the vault's farm. Nothing is built. */
-    data class FarmStaked(val shares: KaminoShareAmount) : KaminoWithdrawEligibility
+    /** The user holds shares that can be withdrawn, staked or not. */
+    data class Withdrawable(val shares: KaminoWithdrawableShares) : KaminoWithdrawEligibility
 
     /** The user holds no shares in this vault. */
     data object Empty : KaminoWithdrawEligibility
@@ -231,7 +312,7 @@ sealed interface KaminoWithdrawEligibility {
      */
     data object Unreadable : KaminoWithdrawEligibility
 
-    val withdrawableShares: KaminoShareAmount?
+    val withdrawableShares: KaminoWithdrawableShares?
         get() = (this as? Withdrawable)?.shares
 
     companion object {
@@ -248,16 +329,19 @@ sealed interface KaminoWithdrawEligibility {
                 KaminoSharePosition.parse(response, shareDecimals)?.takeIf { it.isPlausible }
                     ?: return Unreadable
 
-            // Staked first and unconditionally: a position even partly staked cannot be fully
-            // withdrawn by the transaction shape this app knows, and offering to spend only the
-            // unstaked remainder would quietly under-withdraw.
-            if (!position.staked.isZero) return FarmStaked(position.staked)
-            // `staked == 0` means nothing was *reported* as staked; a total larger than the parts
-            // is
-            // a position this app cannot describe, and an unaccounted share may well be staked.
-            if (!position.holdsOnlyUnstakedShares) return Unreadable
-            if (position.unstaked.isZero) return Empty
-            return Withdrawable(position.unstaked)
+            // A total larger than its parts is a position this app cannot describe: it would have
+            // to
+            // guess how much of the remainder is staked, and that guess is the argument of an
+            // instruction it then claims to have verified.
+            if (!position.accountsForItsTotal) return Unreadable
+            // Nothing left once the maximum has stepped back from the sentinel. A position of a
+            // single base unit lands here, and "nothing to withdraw" is the true statement about
+            // it.
+            if (position.spendable.isZero) return Empty
+
+            return Withdrawable(
+                KaminoWithdrawableShares(maximum = position.spendable, unstaked = position.unstaked)
+            )
         }
     }
 }

@@ -175,8 +175,9 @@ internal class KaminoAmountViewModelTest {
         val state = viewModel(isWithdraw = true).state.value
 
         assertTrue(state.isWithdraw)
-        // 1000 shares × 1.0544278224860290217, rounded down to the token's 6 decimals.
-        assertEquals(0, BigDecimal("1054.427822").compareTo(state.available))
+        // 999999999 share base units (one below the balance, stepping back from the API's sentinel)
+        // × 1.0544278224860290217, truncated to the token's 6 decimals.
+        assertEquals(0, BigDecimal("1054.427821").compareTo(state.available))
         // minWithdrawAmount is 1000 SHARE base units, so in tokens it is 0.001055 rounded up — not
         // the 0.001 a token-denominated reading would give.
         assertEquals(0, BigDecimal("0.001055").compareTo(state.minimum!!))
@@ -312,9 +313,8 @@ internal class KaminoAmountViewModelTest {
 
         val state = viewModel(isWithdraw = true).state.value
 
-        assertTrue(state.eligibility is KaminoWithdrawEligibility.FarmStaked)
-        // Nothing may be offered against it.
-        assertEquals(0, BigDecimal.ZERO.compareTo(state.available))
+        assertTrue(state.eligibility is KaminoWithdrawEligibility.Withdrawable)
+        assertTrue(state.available.signum() > 0, "a staked position must still be withdrawable")
     }
 
     @Test

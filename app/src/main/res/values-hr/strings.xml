@@ -544,7 +544,6 @@
     <string name="verify_deposit_withdrawing">Povlačite</string>
     <string name="kamino_verify_vault">Vault</string>
     <string name="kamino_error_build_failed">Ovu transakciju nije bilo moguće pripremiti</string>
-    <string name="kamino_withdraw_farm_staked">Ovi udjeli uloženi su u farmu vaulta i još se ne mogu povući</string>
     <string name="kamino_withdraw_nothing">Iz ovog vaulta nema se što povući</string>
     <string name="kamino_withdraw_unreadable">Ovu poziciju nije bilo moguće pročitati, pa se povlačenje ne može pripremiti</string>
     <string name="kamino_withdraw_delayed">Iznad trenutne likvidnosti vaulta od %1$s %2$s. Ovo povlačenje može biti odgođeno.</string>

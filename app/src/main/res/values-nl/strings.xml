@@ -540,7 +540,6 @@
     <string name="verify_deposit_withdrawing">Je neemt op</string>
     <string name="kamino_verify_vault">Vault</string>
     <string name="kamino_error_build_failed">Kan deze transactie niet voorbereiden</string>
-    <string name="kamino_withdraw_farm_staked">Deze aandelen staan gestaked in de farm van de vault en kunnen nog niet worden opgenomen</string>
     <string name="kamino_withdraw_nothing">Er is niets op te nemen uit deze vault</string>
     <string name="kamino_withdraw_unreadable">Deze positie kon niet worden gelezen, dus er kan geen opname worden voorbereid</string>
     <string name="kamino_withdraw_delayed">Boven de directe liquiditeit van de vault van %1$s %2$s. Deze opname kan vertraging oplopen.</string>

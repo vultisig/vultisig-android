@@ -541,7 +541,6 @@
     <string name="verify_deposit_withdrawing">Você está retirando</string>
     <string name="kamino_verify_vault">Vault</string>
     <string name="kamino_error_build_failed">Não foi possível preparar esta transação</string>
-    <string name="kamino_withdraw_farm_staked">Estas cotas estão em staking na farm do vault e ainda não podem ser retiradas</string>
     <string name="kamino_withdraw_nothing">Não há nada a retirar deste vault</string>
     <string name="kamino_withdraw_unreadable">Não foi possível ler esta posição, então a retirada não pode ser preparada</string>
     <string name="kamino_withdraw_delayed">Acima da liquidez imediata do vault de %1$s %2$s. Esta retirada pode demorar.</string>

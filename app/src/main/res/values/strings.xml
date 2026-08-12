@@ -91,7 +91,6 @@
     <string name="verify_deposit_withdrawing">You\'re withdrawing</string>
     <string name="kamino_verify_vault">Vault</string>
     <string name="kamino_error_build_failed">Couldn\'t prepare this transaction</string>
-    <string name="kamino_withdraw_farm_staked">These shares are staked in the vault\'s farm and can\'t be withdrawn yet</string>
     <string name="kamino_withdraw_nothing">Nothing to withdraw from this vault</string>
     <string name="kamino_withdraw_unreadable">This position couldn\'t be read, so no withdrawal can be prepared</string>
     <string name="kamino_withdraw_delayed">Above the vault\'s instant liquidity of %1$s %2$s. This withdrawal may settle with a delay.</string>

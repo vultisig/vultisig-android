@@ -543,7 +543,6 @@
     <string name="verify_deposit_withdrawing">Du hebst ab</string>
     <string name="kamino_verify_vault">Vault</string>
     <string name="kamino_error_build_failed">Diese Transaktion konnte nicht vorbereitet werden</string>
-    <string name="kamino_withdraw_farm_staked">Diese Anteile sind in der Farm des Vaults gestaked und können noch nicht abgehoben werden</string>
     <string name="kamino_withdraw_nothing">Aus diesem Vault gibt es nichts abzuheben</string>
     <string name="kamino_withdraw_unreadable">Diese Position konnte nicht gelesen werden, daher ist keine Abhebung möglich</string>
     <string name="kamino_withdraw_delayed">Über der Sofort-Liquidität des Vaults von %1$s %2$s. Diese Abhebung kann sich verzögern.</string>

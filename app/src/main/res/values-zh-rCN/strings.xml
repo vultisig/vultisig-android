@@ -83,7 +83,6 @@
     <string name="verify_deposit_withdrawing">正在提取</string>
     <string name="kamino_verify_vault">金库</string>
     <string name="kamino_error_build_failed">无法准备此交易</string>
-    <string name="kamino_withdraw_farm_staked">这些份额已质押在金库的farm中，暂时无法提取</string>
     <string name="kamino_withdraw_nothing">该金库没有可提取的资产</string>
     <string name="kamino_withdraw_unreadable">无法读取该仓位，因此无法准备提取</string>
     <string name="kamino_withdraw_delayed">超出金库的即时流动性 %1$s %2$s。此次提取可能会延迟。</string>

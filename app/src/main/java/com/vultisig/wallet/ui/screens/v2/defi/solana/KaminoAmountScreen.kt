@@ -72,12 +72,10 @@ internal fun KaminoAmountContent(
     // as the user types rather than only at submit.
     LaunchedEffect(amount) { onAmountChanged(amount) }
 
-    // A withdraw is only possible from unstaked shares. Every other state is a fact about the
-    // position, not a validation failure, so it reads as a message rather than an error.
+    // A staked position is withdrawable — Kamino releases the shares from the farm as part of the
+    // transaction. What remains is about the read: nothing held, or figures that cannot be trusted.
     val blockingReason: String? =
         when (state.eligibility) {
-            is KaminoWithdrawEligibility.FarmStaked ->
-                stringResource(R.string.kamino_withdraw_farm_staked)
             KaminoWithdrawEligibility.Empty -> stringResource(R.string.kamino_withdraw_nothing)
             KaminoWithdrawEligibility.Unreadable ->
                 stringResource(R.string.kamino_withdraw_unreadable)

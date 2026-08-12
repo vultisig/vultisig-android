@@ -543,7 +543,6 @@
     <string name="verify_deposit_withdrawing">Stai prelevando</string>
     <string name="kamino_verify_vault">Vault</string>
     <string name="kamino_error_build_failed">Impossibile preparare questa transazione</string>
-    <string name="kamino_withdraw_farm_staked">Queste quote sono in staking nella farm del vault e non possono ancora essere prelevate</string>
     <string name="kamino_withdraw_nothing">Non c\'è nulla da prelevare da questo vault</string>
     <string name="kamino_withdraw_unreadable">Impossibile leggere questa posizione, quindi il prelievo non può essere preparato</string>
     <string name="kamino_withdraw_delayed">Oltre la liquidità immediata del vault di %1$s %2$s. Questo prelievo potrebbe subire ritardi.</string>

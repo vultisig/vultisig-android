@@ -250,7 +250,7 @@ constructor(
 
         val metrics = runCatching { kaminoApi.getVaultMetrics(vault.address) }.getOrNull()
         val rate = KaminoRate.parse(metrics?.tokensPerShare)
-        val held = eligibility.withdrawableShares
+        val held = eligibility.withdrawableShares?.maximum
 
         val maximum =
             if (held != null && rate != null) {
@@ -435,15 +435,13 @@ constructor(
         val eligibility = _state.value.eligibility
         check(eligibility is KaminoWithdrawEligibility.Withdrawable) {
             when (eligibility) {
-                is KaminoWithdrawEligibility.FarmStaked ->
-                    "These shares are staked in the vault's farm and cannot be withdrawn yet"
                 KaminoWithdrawEligibility.Empty -> "There is nothing to withdraw from this vault"
                 else -> "This position could not be read, so no withdraw can be sized safely"
             }
         }
 
         val rate = checkNotNull(withdrawRate) { "The vault's share rate is unavailable" }
-        val held = eligibility.shares
+        val held = eligibility.shares.maximum
         val maximum = checkNotNull(withdrawMaximumTokens) { "The withdrawable balance is unknown" }
 
         val requested =

@@ -182,30 +182,78 @@ class KaminoWithdrawTest {
     }
 
     @Test
-    fun `a wholly unstaked position is withdrawable`() {
+    fun `a wholly unstaked position is withdrawable, one base unit below the balance`() {
         val eligibility =
             KaminoWithdrawEligibility.resolve(position("0", "1000", "1000"), shareDecimals = 6)
         assertTrue(eligibility is KaminoWithdrawEligibility.Withdrawable)
-        assertEquals(BigInteger("1000000000"), eligibility.shares.baseUnits)
+        // "1000" scales exactly to 1000000000 base units, so the maximum steps back one unit: the
+        // API cannot tell a request for the whole balance from a request for more than it, and the
+        // latter it answers by withdrawing everything.
+        assertEquals(BigInteger("999999999"), eligibility.shares.maximum.baseUnits)
+        assertEquals(BigInteger("1000000000"), eligibility.shares.unstaked.baseUnits)
     }
 
     @Test
-    fun `any staked share refuses the withdraw by name instead of guessing`() {
-        // Every launch-vault deposit auto-stakes, and the transaction that spends staked shares has
-        // never been observed — so this is a named state, not a failure deep in the pipeline.
+    fun `a staked position is withdrawable — Kamino releases it from the farm`() {
+        // Every launch-vault deposit auto-stakes, so this is what essentially every real holder is
+        // in. The withdraw transaction does farms::unstake then farms::withdraw_unstaked_deposits
+        // ahead of the vault withdraw, so refusing it would block the only path that exists.
         val eligibility =
             KaminoWithdrawEligibility.resolve(position("400", "600", "1000"), shareDecimals = 6)
-        assertTrue(eligibility is KaminoWithdrawEligibility.FarmStaked)
-        assertNull(eligibility.withdrawableShares, "nothing may be sized against a staked position")
+        assertTrue(eligibility is KaminoWithdrawEligibility.Withdrawable)
+        assertEquals(BigInteger("999999999"), eligibility.shares.maximum.baseUnits)
+        // The unstaked half travels with it: it decides how much the farm has to release.
+        assertEquals(BigInteger("600000000"), eligibility.shares.unstaked.baseUnits)
     }
 
     @Test
-    fun `a total larger than its parts is unreadable, not partially withdrawable`() {
-        // Offering to spend only the reported unstaked remainder would present a partial exit as a
-        // complete one, and an unaccounted share may well be a staked one.
+    fun `an inexact total needs no step back, because truncating already went below it`() {
+        // "1.9999999" at 6 decimals truncates to 1999999, which is already strictly under the
+        // balance, so no unit is given up on top.
         val eligibility =
-            KaminoWithdrawEligibility.resolve(position("0", "600", "1000"), shareDecimals = 6)
-        assertEquals(KaminoWithdrawEligibility.Unreadable, eligibility)
+            KaminoWithdrawEligibility.resolve(
+                position("0", "1.9999999", "1.9999999"),
+                shareDecimals = 6,
+            )
+        assertTrue(eligibility is KaminoWithdrawEligibility.Withdrawable)
+        assertEquals(BigInteger("1999999"), eligibility.shares.maximum.baseUnits)
+    }
+
+    @Test
+    fun `a position of a single base unit has nothing to withdraw`() {
+        // Stepping back from the sentinel leaves zero, and that is the true statement about it.
+        assertEquals(
+            KaminoWithdrawEligibility.Empty,
+            KaminoWithdrawEligibility.resolve(position("0", "0.000001", "0.000001"), 6),
+        )
+    }
+
+    @Test
+    fun `parts are summed at the API's precision, not the mint's`() {
+        // Truncating each string to six decimals and adding two of them misses the third by a base
+        // unit with nothing wrong: 944548 + 959593 is one short of 1904142. Refusing a real
+        // position
+        // over its last decimal place would be a bug, not a guard.
+        val eligibility =
+            KaminoWithdrawEligibility.resolve(
+                position("0.9445485", "0.9595935", "1.904142"),
+                shareDecimals = 6,
+            )
+        assertTrue(
+            eligibility is KaminoWithdrawEligibility.Withdrawable,
+            "summing at full precision must accept this position, was $eligibility",
+        )
+    }
+
+    @Test
+    fun `parts that genuinely do not add up are refused`() {
+        // Not a truncation artefact — the response has shares it has not accounted for, and how
+        // much
+        // of the remainder is staked would have to be guessed.
+        assertEquals(
+            KaminoWithdrawEligibility.Unreadable,
+            KaminoWithdrawEligibility.resolve(position("0", "600", "1000"), 6),
+        )
     }
 
     @Test
