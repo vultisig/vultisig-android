@@ -32,9 +32,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.OPERATION_KAMINO_DEPOSIT
+import com.vultisig.wallet.data.models.OPERATION_KAMINO_WITHDRAW
 import com.vultisig.wallet.data.models.OPERATION_MINT
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
+import com.vultisig.wallet.ui.components.SignSolanaDisplayView
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
@@ -213,7 +216,20 @@ internal fun VerifyDepositScreen(
 
                     if (tx.validatorName.isNotEmpty()) {
                         VerifyCardDetails(
-                            title = stringResource(R.string.solana_delegate_validator),
+                            // The same field carries a validator for native staking and a vault
+                            // name
+                            // for Kamino Earn; labelling both "Validator" would misname the vault.
+                            title =
+                                stringResource(
+                                    if (
+                                        tx.operation == OPERATION_KAMINO_DEPOSIT ||
+                                            tx.operation == OPERATION_KAMINO_WITHDRAW
+                                    ) {
+                                        R.string.kamino_verify_vault
+                                    } else {
+                                        R.string.solana_delegate_validator
+                                    }
+                                ),
                             subtitle = tx.validatorName,
                         )
                         VerifyCardDivider(0.dp)
@@ -231,6 +247,17 @@ internal fun VerifyDepositScreen(
                         VerifyCardDetails(title = stringResource(R.string.pool), subtitle = tx.pool)
                         VerifyCardDivider(0.dp)
                     }
+                    // A pre-built Solana transaction — Kamino Earn, native staking — does its work
+                    // in
+                    // instructions the amount and destination rows say nothing about. Decoding them
+                    // here is what lets the person approving it, on either device of a co-signed
+                    // vault, see which programs it invokes.
+                    tx.signSolana
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { rawTransactions ->
+                            SignSolanaDisplayView(rawTransactions = rawTransactions)
+                            VerifyCardDivider(0.dp)
+                        }
                     // Unbond sets dstAddress and nodeAddress to the same node address, so it
                     // already
                     // renders as the "To" row above; only show the Node address row when it adds a

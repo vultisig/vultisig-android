@@ -472,6 +472,16 @@ internal sealed class Route {
     @Serializable data class SolanaDelegate(val vaultId: String)
 
     /**
+     * Kamino Earn deposit or withdraw: enter an amount for one curated vault.
+     *
+     * [vaultAddress] is the kVault, resolved against the local allow-list rather than trusted from
+     * the argument. [isWithdraw] picks the direction, since the two forms differ only in which
+     * balance they cap against and which label they carry.
+     */
+    @Serializable
+    data class KaminoAmount(val vaultId: String, val vaultAddress: String, val isWithdraw: Boolean)
+
+    /**
      * Solana "Unstake SOL" confirmation: read-only source stake account + a cooldown notice.
      * Continue deactivates the account (~1-epoch cooldown before withdraw). [delegatedStake] is the
      * account's delegated lamports (raw), shown as the amount on verify.

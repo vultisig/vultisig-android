@@ -36,6 +36,13 @@ android {
     sourceSets.getByName("main") {
         proto { srcDir("${project.rootProject.rootDir}/commondata/proto") }
     }
+    packaging {
+        resources {
+            // bcprov and jspecify both ship this file, which collides when the instrumented-test
+            // APK is assembled. Mirrors the exclude :app already carries.
+            excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
+        }
+    }
     tasks.withType<Test> { useJUnitPlatform() }
     lint {
         abortOnError = true
@@ -130,4 +137,7 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(kotlin("test"))
     androidTestImplementation(libs.wallet.core)
+    // `testInstrumentationRunner` above names AndroidJUnitRunner, but nothing put it on the
+    // classpath, so every instrumented test in this module failed to start.
+    androidTestImplementation(libs.androidx.test.runner)
 }
