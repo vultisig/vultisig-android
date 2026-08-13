@@ -352,8 +352,10 @@ class EvmApiImp(
                 },
             )
         if (rpcResp.error != null) {
-            Timber.d("get nonce ,address: $address error: ${rpcResp.error.message}")
-            return BigInteger.ZERO
+            throw NetworkException(
+                httpStatusCode = 0,
+                message = "get nonce rpc error, address=$address: ${rpcResp.error.message}",
+            )
         }
 
         return BigInteger(rpcResp.result?.removePrefix("0x") ?: "0", 16)
