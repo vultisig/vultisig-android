@@ -49,7 +49,14 @@ android {
         }
         jniLibs { keepDebugSymbols += "**/*.so" }
     }
-    tasks.withType<Test> { useJUnitPlatform() }
+    tasks.withType<Test> {
+        useJUnitPlatform()
+        // Amount and APY rendering follows the user's locale, so assertions on formatted strings
+        // are only stable once the JVM the tests run on has one. Tests that care about another
+        // locale set it themselves.
+        systemProperty("user.language", "en")
+        systemProperty("user.country", "US")
+    }
     lint {
         abortOnError = true
         absolutePaths = false

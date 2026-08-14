@@ -41,6 +41,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState.Companion.from
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -500,7 +501,9 @@ constructor(
                             stakeAssetHeader = UiText.StringResource(R.string.cacao_pool),
                             stakeAmount = stakeAmount,
                             stakedAmountDisplay =
-                                "${stakeAmount.setScale(4, RoundingMode.DOWN).toPlainString()} CACAO",
+                                stakeAmount
+                                    .setScale(4, RoundingMode.DOWN)
+                                    .formatTokenAmount("CACAO"),
                             stakedFiatDisplay = stakedFiat,
                             apy = details.apr?.formatPercentage(),
                             isLoading = false,
@@ -865,7 +868,15 @@ constructor(
                             assetTicker = assetCoinTicker,
                             apr = apr?.formatPercentage(),
                             position =
-                                "${cacaoAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} CACAO + ${assetAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} $assetCoinTicker",
+                                cacaoAmount
+                                    .setScale(4, RoundingMode.DOWN)
+                                    .stripTrailingZeros()
+                                    .formatTokenAmount("CACAO") +
+                                    " + " +
+                                    assetAmount
+                                        .setScale(4, RoundingMode.DOWN)
+                                        .stripTrailingZeros()
+                                        .formatTokenAmount(assetCoinTicker),
                             positionKey = pool.positionKey,
                             canRemove = liquidityUnits > BigDecimal.ZERO,
                             chainLogo = assetChain?.monoToneLogo,
@@ -1025,5 +1036,5 @@ private fun mayaPoolChainPrefixToChain(prefix: String): Chain? =
 private fun formatCacaoReward(reward: Double): String {
     val rewardBase = BigDecimal.valueOf(reward).setScale(0, RoundingMode.DOWN).toBigInteger()
     val cacaoAmount = rewardBase.toValue(10).setScale(4, RoundingMode.DOWN)
-    return "${cacaoAmount.toPlainString()} ${Coins.MayaChain.CACAO.ticker}"
+    return cacaoAmount.formatTokenAmount(Coins.MayaChain.CACAO.ticker)
 }

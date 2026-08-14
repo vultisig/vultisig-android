@@ -4,6 +4,8 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
+import com.vultisig.wallet.ui.utils.formatPercent
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -33,7 +35,7 @@ internal fun BigInteger.formatAmount(coinType: CoinType, symbol: String? = null)
     }
     val chainAmount = coinType.toValue(this)
     val rounded = chainAmount.setScale(8, RoundingMode.DOWN)
-    return "${rounded.toPlainString()} ${symbol ?: coinType.symbol}"
+    return rounded.formatTokenAmount(symbol ?: coinType.symbol)
 }
 
 internal fun BigInteger.formatAmount(decimals: Int, symbol: String): String {
@@ -42,20 +44,28 @@ internal fun BigInteger.formatAmount(decimals: Int, symbol: String): String {
     }
     val chainAmount = this.toBigDecimal().divide(java.math.BigDecimal.TEN.pow(decimals))
     val rounded = chainAmount.setScale(8, RoundingMode.DOWN)
-    return "${rounded.toPlainString()} $symbol"
+    return rounded.formatTokenAmount(symbol)
 }
 
-internal fun Double.formatPercentage(): String {
-    return "%.2f%%".format(Locale.US, this * 100)
-}
+internal fun Double.formatPercentage(): String =
+    // BigDecimal cannot hold NaN or an infinity, which an APY read straight off the wire can be.
+    if (!isFinite()) "$this%"
+    else
+        BigDecimal.valueOf(this)
+            .multiply(ONE_HUNDRED)
+            .setScale(PERCENTAGE_DECIMALS, RoundingMode.HALF_UP)
+            .formatPercent()
 
 internal fun Double.formatRuneReward(): String {
     val rewardBase = BigDecimal.valueOf(this).setScale(0, RoundingMode.DOWN).toBigInteger()
     val runeAmount = Chain.ThorChain.coinType.toValue(rewardBase).setScale(4, RoundingMode.DOWN)
-    return "${runeAmount.toPlainString()} ${Chain.ThorChain.coinType.symbol}"
+    return runeAmount.formatTokenAmount(Chain.ThorChain.coinType.symbol)
 }
 
 internal fun Double.formatToString(): String {
     val value = BigDecimal.valueOf(this).setScale(6, RoundingMode.DOWN)
-    return "${value.toPlainString()} ${Chain.ThorChain.coinType.symbol}"
+    return value.formatTokenAmount(Chain.ThorChain.coinType.symbol)
 }
+
+private const val PERCENTAGE_DECIMALS = 2
+private val ONE_HUNDRED = BigDecimal(100)

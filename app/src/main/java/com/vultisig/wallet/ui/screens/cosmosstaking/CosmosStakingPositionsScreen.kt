@@ -66,6 +66,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.formatPercent
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -568,7 +569,9 @@ private fun PositionRow(
                 )
                 Text(
                     text =
-                        "${apy.multiply(java.math.BigDecimal(100)).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString()}%",
+                        apy.multiply(BigDecimal(100))
+                            .setScale(2, RoundingMode.HALF_UP)
+                            .formatPercent(),
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.alerts.success,
                 )
@@ -719,7 +722,7 @@ private fun UnbondingCard(unbonding: CosmosUnbondingDelegation) {
                 text =
                     stringResource(
                         R.string.cosmos_staking_unbonding_entry_format,
-                        entry.balance.toPlainString(),
+                        formatStakeAmount(entry.balance),
                         completion,
                     ),
                 style = Theme.brockmann.body.s.medium,

@@ -31,6 +31,8 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.formatPercent
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -342,7 +344,7 @@ constructor(
                         isBalanceVisible = isBalanceVisible,
                         totalStakedFiatDisplay = totalFiat,
                         totalStakedSolDisplay =
-                            "${totalStakedSolAmount.stripTrailingZeros().toPlainString()} $SOL_TICKER",
+                            totalStakedSolAmount.stripTrailingZeros().formatTokenAmount(SOL_TICKER),
                         positions = rows,
                         error = null,
                     )
@@ -376,16 +378,15 @@ constructor(
             validatorAddressDisplay = shortAddress(account.stakePubkey),
             validatorLogoUrl = metadata?.logoUrl,
             votePubkey = account.voter,
-            stakedDisplay = "${stakedSol.toPlainString()} ${SOL_TICKER}",
+            stakedDisplay = stakedSol.formatTokenAmount(SOL_TICKER),
             stakedFiatDisplay = stakedFiat,
-            rentReserveDisplay = "${rentReserveSol.toPlainString()} $SOL_TICKER",
+            rentReserveDisplay = rentReserveSol.formatTokenAmount(SOL_TICKER),
             state = account.state,
             stateLabel = stateLabel(account.state),
             // metadata.apyEstimate is a fraction (0.0572); render as a percentage.
             apyDisplay =
                 metadata?.apyEstimate?.let {
-                    it.multiply(BigDecimal(100)).setScale(2, RoundingMode.HALF_UP).toPlainString() +
-                        "%"
+                    it.multiply(BigDecimal(100)).setScale(2, RoundingMode.HALF_UP).formatPercent()
                 },
             canManage =
                 account.state == SolanaStakeState.Active ||
