@@ -31,7 +31,7 @@ internal fun Date?.formatDate(): String {
 
 internal fun BigInteger.formatAmount(coinType: CoinType, symbol: String? = null): String {
     if (this == BigInteger.ZERO) {
-        return "0.0 ${symbol ?: coinType.symbol}"
+        return ZERO_AMOUNT.formatTokenAmount(symbol ?: coinType.symbol)
     }
     val chainAmount = coinType.toValue(this)
     val rounded = chainAmount.setScale(8, RoundingMode.DOWN)
@@ -40,7 +40,7 @@ internal fun BigInteger.formatAmount(coinType: CoinType, symbol: String? = null)
 
 internal fun BigInteger.formatAmount(decimals: Int, symbol: String): String {
     if (this == BigInteger.ZERO) {
-        return "0.0 $symbol"
+        return ZERO_AMOUNT.formatTokenAmount(symbol)
     }
     val chainAmount = this.toBigDecimal().divide(java.math.BigDecimal.TEN.pow(decimals))
     val rounded = chainAmount.setScale(8, RoundingMode.DOWN)
@@ -69,3 +69,6 @@ internal fun Double.formatToString(): String {
 
 private const val PERCENTAGE_DECIMALS = 2
 private val ONE_HUNDRED = BigDecimal(100)
+
+/** Scale 1 so an empty position keeps reading "0.0", separator aside, as it always has. */
+private val ZERO_AMOUNT = BigDecimal.ZERO.setScale(1)
