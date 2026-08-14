@@ -17,7 +17,7 @@ import wallet.core.jni.TransactionDecoder
 import wallet.core.jni.proto.Solana
 
 /**
- * Golden coverage for the `vs` attribution memo against a real Kamino deposit.
+ * Golden coverage for the `8k2mz` attribution memo against a real Kamino deposit.
  *
  * The fixture is a live `POST /ktx/kvault/deposit` response for the Steakhouse USDC vault: a v0
  * versioned transaction whose four instructions address 9 static account keys plus 18 loaded
@@ -204,14 +204,18 @@ class KaminoAttributionMemoTest {
     @Test
     fun memo_data_is_base58_encoded_and_the_transaction_stays_within_the_size_limit() {
         // Pinned to the literal, not derived from the constant. Every other assertion here reads
-        // TAG, so a drift from `vs` to any other valid two-byte string would leave this whole suite
-        // agreeing with itself and green while the attribution it exists for matched nothing.
-        assertEquals("vs", KaminoAttributionMemo.TAG)
-        assertArrayEquals(byteArrayOf(0x76, 0x73), KaminoAttributionMemo.TAG.toByteArray())
+        // TAG, so a drift from `8k2mz` to any other valid string would leave this whole suite
+        // agreeing with itself and green while the attribution it exists for matched nothing. The
+        // tag is case-sensitive — it is filtered as bytes, so `8K2MZ` counts as nothing.
+        assertEquals("8k2mz", KaminoAttributionMemo.TAG)
+        assertArrayEquals(
+            byteArrayOf(0x38, 0x6b, 0x32, 0x6d, 0x7a),
+            KaminoAttributionMemo.TAG.toByteArray(),
+        )
 
         // WalletCore's JSON instruction format encodes `data` as base58, not base64. Pinning the
-        // encoded form keeps the two on-chain bytes identical across platforms.
-        assertEquals("A1p", Base58.encodeNoCheck(KaminoAttributionMemo.TAG.toByteArray()))
+        // encoded form keeps the five on-chain bytes identical across platforms.
+        assertEquals("7NBh6Z7", Base58.encodeNoCheck(KaminoAttributionMemo.TAG.toByteArray()))
 
         val before = Base64.getDecoder().decode(depositTransaction).size
         val after =

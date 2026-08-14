@@ -110,7 +110,9 @@ class KaminoTransactionValidatorTest {
     @Test
     fun `a memo carrying anything other than the tag is refused`() {
         // An arbitrary memo riding along on a signed transaction is a channel the app did not open.
-        listOf("vs ", " vs", "VS", "vsx", "", "vultisig").forEach { payload ->
+        // The tag is matched whole and case-sensitively: a memo that merely starts with it, or that
+        // differs only in case, is a different memo that the attribution filter would not count.
+        listOf("8k2m", "8k2mz1", "8k2mz ", " 8k2mz", "8K2MZ", "", "vultisig").forEach { payload ->
             val reason =
                 rejection(
                     depositInstructions(
@@ -461,8 +463,8 @@ class KaminoTransactionValidatorTest {
         // Guards the hand-written equals: without it, structurally identical instructions would
         // compare unequal and the memo checks would silently stop matching.
         assertEquals(
-            ix(KaminoAttributionMemo.MEMO_PROGRAM_ID, byteArrayOf(0x76, 0x73)),
-            ix(KaminoAttributionMemo.MEMO_PROGRAM_ID, byteArrayOf(0x76, 0x73)),
+            ix(KaminoAttributionMemo.MEMO_PROGRAM_ID, byteArrayOf(0x38, 0x6b, 0x32, 0x6d, 0x7a)),
+            ix(KaminoAttributionMemo.MEMO_PROGRAM_ID, byteArrayOf(0x38, 0x6b, 0x32, 0x6d, 0x7a)),
         )
     }
 

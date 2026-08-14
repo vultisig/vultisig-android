@@ -10,9 +10,10 @@ import wallet.core.jni.SolanaTransaction
  * Appends Vultisig's attribution memo to a Kamino transaction.
  *
  * Kamino's kVault endpoints take no referrer or partner parameter, so attribution is client-side: a
- * single SPL Memo instruction carrying the literal bytes `vs` rides along with every deposit and
- * withdraw. That tag is the analytics filter used to measure Vultisig's deposit flow, so it must be
- * byte-identical on every platform — hence the exact two bytes, and nothing else, in the data
+ * single SPL Memo instruction carrying the literal bytes `8k2mz` rides along with every deposit and
+ * withdraw. That tag is the filter every downstream measurement of Vultisig-originated deposits
+ * keys on — Kamino's own attribution and the public Dune queries alike — so it must be
+ * byte-identical here, on iOS and on Windows: the exact five bytes, and nothing else, in the data
  * field.
  *
  * The memo takes no accounts and adds no signer. Only its program has to enter the message's
@@ -27,8 +28,12 @@ object KaminoAttributionMemo {
     /** SPL Memo v2. */
     const val MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
 
-    /** The attribution tag itself. Two ASCII bytes, never localised, never padded. */
-    const val TAG = "vs"
+    /**
+     * The attribution tag itself. Five ASCII bytes, case-sensitive, never localised, never padded:
+     * it is compared and filtered as bytes, so `8K2MZ` is a different memo that nothing downstream
+     * would count.
+     */
+    const val TAG = "8k2mz"
 
     /**
      * Appends the memo to [base64Transaction] and returns the updated base64 transaction.
