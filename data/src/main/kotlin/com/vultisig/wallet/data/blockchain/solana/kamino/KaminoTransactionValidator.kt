@@ -49,7 +49,7 @@ object KaminoTransactionValidator {
             "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", // Token
             "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", // Token-2022
             "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL", // Associated Token
-            "ComputeBudget111111111111111111111111111111",
+            KaminoComputeBudget.PROGRAM_ID,
             KaminoVaultRegistry.PROGRAM_ID,
             KaminoVaultRegistry.FARMS_PROGRAM_ID,
             KaminoAttributionMemo.MEMO_PROGRAM_ID,

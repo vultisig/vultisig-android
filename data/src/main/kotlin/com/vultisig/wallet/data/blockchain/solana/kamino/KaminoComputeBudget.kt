@@ -1,6 +1,10 @@
 package com.vultisig.wallet.data.blockchain.solana.kamino
 
 import java.math.BigInteger
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import wallet.core.jni.Base58
 
 /**
  * Which side of a vault a transaction is on. Selects the compute-unit budget and the validator's
@@ -21,6 +25,15 @@ enum class KaminoAction {
  * the transaction actually needs.
  */
 object KaminoComputeBudget {
+
+    /** The ComputeBudget program both injected instructions invoke. */
+    const val PROGRAM_ID = "ComputeBudget111111111111111111111111111111"
+
+    /** `ComputeBudgetInstruction::SetComputeUnitLimit`, borsh discriminator 2, then a `u32`. */
+    const val SET_UNIT_LIMIT_DISCRIMINATOR = 2
+
+    /** `ComputeBudgetInstruction::SetComputeUnitPrice`, borsh discriminator 3, then a `u64`. */
+    const val SET_UNIT_PRICE_DISCRIMINATOR = 3
 
     /**
      * Compute units these transactions actually consume, measured on mainnet via
@@ -95,4 +108,44 @@ object KaminoComputeBudget {
     }
 
     private val MICRO_LAMPORTS_PER_LAMPORT = BigInteger.valueOf(1_000_000)
+
+    /**
+     * The `SetComputeUnitPrice` instruction as WalletCore's JSON instruction format, ready to
+     * insert at a chosen position.
+     *
+     * Built here rather than left to `SolanaTransaction.setComputeUnitPrice`, which appends: the
+     * two budget instructions have to sit together at the front, and the helper would leave the
+     * price behind every instruction Kamino built. See [KaminoTransactionPreparer] for why the
+     * position is part of the cross-platform contract.
+     *
+     * The instruction takes no accounts, and `data` is base58 — the encoding WalletCore's JSON
+     * format expects, not base64.
+     */
+    fun setUnitPriceInstructionJson(price: BigInteger): String =
+        buildJsonObject {
+                put("programId", PROGRAM_ID)
+                put("accounts", JsonArray(emptyList()))
+                put("data", Base58.encodeNoCheck(setUnitPriceData(price)))
+            }
+            .toString()
+
+    /**
+     * Borsh-encoded `SetComputeUnitPrice`: the discriminator byte followed by the micro-lamport
+     * price as a little-endian `u64`.
+     */
+    fun setUnitPriceData(price: BigInteger): ByteArray {
+        require(price.signum() >= 0 && price.bitLength() <= 64) {
+            "compute-unit price $price does not fit a u64"
+        }
+        val data = ByteArray(9)
+        data[0] = SET_UNIT_PRICE_DISCRIMINATOR.toByte()
+        var remaining = price
+        for (offset in 1..8) {
+            data[offset] = remaining.and(BYTE_MASK).toInt().toByte()
+            remaining = remaining.shiftRight(8)
+        }
+        return data
+    }
+
+    private val BYTE_MASK = BigInteger.valueOf(0xFF)
 }

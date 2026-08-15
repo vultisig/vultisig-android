@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.KaminoVaultMetricsJson
 import java.math.BigInteger
 import java.util.Base64
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -19,9 +20,11 @@ import wallet.core.jni.SolanaTransaction
  * End-to-end coverage of the prepare pipeline on a real Kamino deposit: compute budget in, memo on
  * top, decode, validate.
  *
- * The ordering here is load-bearing rather than incidental. WalletCore appends a compute-budget
- * instruction when none exists — the same append the memo uses — so injecting the budget after the
- * memo would leave the memo mid-list and the validator would refuse it. These tests pin that.
+ * The ordering here is load-bearing rather than incidental, in two directions. The memo is
+ * appended, so injecting the budget after it would leave the memo mid-list and the validator would
+ * refuse it. And the budget pair has to lead the transaction as limit-then-price, because an iPhone
+ * co-signer emits the same two at 0 and 1 and matches everything after them by position. These
+ * tests pin both.
  */
 class KaminoTransactionPreparerTest {
 
@@ -145,6 +148,49 @@ class KaminoTransactionPreparerTest {
         assertTrue(
             "the kVault program must still be invoked",
             instructions.any { it.programId == KaminoVaultRegistry.PROGRAM_ID },
+        )
+    }
+
+    @Test
+    fun the_compute_budget_leads_the_transaction_as_limit_then_price() {
+        // The layout an iPhone co-signer matches against positionally: limit at 0, price at 1,
+        // everything Kamino built after them, memo last. WalletCore's own `setComputeUnitPrice`
+        // appends instead, which put the price after the ATA creation and the vault deposit and
+        // made
+        // every Android-initiated Kamino transaction unjoinable from iOS.
+        val instructions = KaminoTransactionDecoder.decode(prepare()).instructions
+
+        assertEquals(KaminoComputeBudget.PROGRAM_ID, instructions[0].programId)
+        assertEquals(
+            KaminoComputeBudget.SET_UNIT_LIMIT_DISCRIMINATOR,
+            instructions[0].data.first().toInt() and 0xFF,
+        )
+
+        assertEquals(KaminoComputeBudget.PROGRAM_ID, instructions[1].programId)
+        assertEquals(
+            KaminoComputeBudget.SET_UNIT_PRICE_DISCRIMINATOR,
+            instructions[1].data.first().toInt() and 0xFF,
+        )
+        // The exact bytes the app encoded, so a re-encoding regression cannot pass by carrying some
+        // other price at the right position.
+        assertArrayEquals(
+            KaminoComputeBudget.setUnitPriceData(KaminoComputeBudget.FALLBACK_UNIT_PRICE),
+            instructions[1].data,
+        )
+
+        // Nothing else invokes ComputeBudget: a stray third would mean the append is still
+        // happening
+        // somewhere.
+        assertEquals(2, instructions.count { it.programId == KaminoComputeBudget.PROGRAM_ID })
+        assertEquals(KaminoAttributionMemo.MEMO_PROGRAM_ID, instructions.last().programId)
+        // The instructions Kamino built sit between the budget and the memo, in the order it
+        // returned them — which is what makes matching them by position meaningful at all.
+        assertTrue(
+            "Kamino's own instructions must sit between the budget and the memo",
+            instructions.subList(2, instructions.size - 1).none {
+                it.programId == KaminoComputeBudget.PROGRAM_ID ||
+                    it.programId == KaminoAttributionMemo.MEMO_PROGRAM_ID
+            },
         )
     }
 

@@ -4,6 +4,7 @@ import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 /**
  * The limits here have a direct on-chain consequence: too low and the transaction aborts on compute
@@ -128,5 +129,37 @@ class KaminoComputeBudgetTest {
             )
         // 20,001 x 320,000 = 6,400,320,000 micro-lamports = 6,400.32 lamports, rounded up.
         assertEquals(BigInteger.valueOf(6_401), odd)
+    }
+
+    @Test
+    fun `SetComputeUnitPrice is borsh - discriminator 3 then a little-endian u64`() {
+        // Hand-encoded because the app now builds this instruction itself rather than letting
+        // WalletCore append one. Getting the width or the endianness wrong would price the fee at
+        // some other number entirely, and nothing downstream would say so.
+        assertEquals(
+            listOf(3, 0x20, 0x4E, 0, 0, 0, 0, 0, 0),
+            KaminoComputeBudget.setUnitPriceData(BigInteger.valueOf(20_000)).map {
+                it.toInt() and 0xFF
+            },
+        )
+
+        assertEquals(
+            listOf(3, 0, 0, 0, 0, 0, 0, 0, 0),
+            KaminoComputeBudget.setUnitPriceData(BigInteger.ZERO).map { it.toInt() and 0xFF },
+        )
+
+        // The full u64 range is representable; one past it is not a price the instruction can
+        // carry.
+        val maxU64 = BigInteger.TWO.pow(64).subtract(BigInteger.ONE)
+        assertEquals(
+            List(9) { if (it == 0) 3 else 0xFF },
+            KaminoComputeBudget.setUnitPriceData(maxU64).map { it.toInt() and 0xFF },
+        )
+        assertThrows<IllegalArgumentException> {
+            KaminoComputeBudget.setUnitPriceData(maxU64.add(BigInteger.ONE))
+        }
+        assertThrows<IllegalArgumentException> {
+            KaminoComputeBudget.setUnitPriceData(BigInteger.valueOf(-1))
+        }
     }
 }
