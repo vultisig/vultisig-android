@@ -27,6 +27,7 @@ import com.vultisig.wallet.data.blockchain.solana.kamino.coin
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.OPERATION_KAMINO_DEPOSIT
 import com.vultisig.wallet.data.models.OPERATION_KAMINO_WITHDRAW
@@ -395,9 +396,14 @@ constructor(
             // The fee is paid in SOL, never in the vault's underlying token. Denominating it in
             // `coin` rendered a lamport count against USDC's six decimals, so the verify screen
             // read "1 USDC" for a fee of 0.001 SOL. Every sibling Solana flow uses the native coin.
+            //
+            // Falls back to the coin definition rather than refusing when the vault has no native
+            // SOL enabled — the fee is paid out of the same wallet either way, this value is only
+            // ever displayed, and a deposit the user can otherwise afford must not be blocked by
+            // which tokens they happen to have switched on.
             val solCoin =
                 storedVault.coins.firstOrNull { it.chain == Chain.Solana && it.isNativeToken }
-                    ?: error("SOL is not enabled in vault ${route.vaultId}")
+                    ?: Coins.Solana.SOL.copy(address = coin.address)
 
             val specific =
                 blockChainSpecificRepository.getSpecific(

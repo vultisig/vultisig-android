@@ -130,6 +130,12 @@ class KaminoTransactionPreparerTest {
 
     @Test
     fun a_SOL_vault_deposit_gets_the_larger_budget_it_needs_to_wrap_first() {
+        // Note the fixture: this is the captured **USDC** deposit prepared against the SOL vault,
+        // because no ALLEZ_SOL response has been captured — doing so needs a wallet depositing real
+        // SOL. So what this pins is that the vault selects the larger limit and that the limit
+        // reaches the wire; the wrap-and-sync instruction shape a real SOL deposit carries is not
+        // exercised here. Inventing bytes for it would assert against a transaction Kamino never
+        // sent. The 350,000 value itself rests on the iOS mainnet measurement of 287,029.
         val prepared = prepare(vault = KaminoVaultRegistry.ALLEZ_SOL)
         assertEquals(350_000L, SolanaTransaction.getComputeUnitLimit(prepared)?.toLong())
     }

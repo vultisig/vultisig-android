@@ -140,4 +140,5 @@ dependencies {
     // `testInstrumentationRunner` above names AndroidJUnitRunner, but nothing put it on the
     // classpath, so every instrumented test in this module failed to start.
     androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
 }

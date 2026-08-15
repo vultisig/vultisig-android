@@ -5,9 +5,10 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import java.math.BigDecimal
 import java.math.BigInteger
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
@@ -55,13 +56,13 @@ class BuildKaminoKeysignPayloadUseCaseTest {
         WalletCoreNative.ensureLoaded()
     }
 
-    private fun build(action: KaminoAction = KaminoAction.DEPOSIT) = runBlocking {
+    private suspend fun build(action: KaminoAction = KaminoAction.DEPOSIT): KeysignPayload {
         val api =
             KaminoFixtureApi(
                 if (action == KaminoAction.WITHDRAW) KaminoFixtures.WITHDRAW
                 else KaminoFixtures.DEPOSIT
             )
-        BuildKaminoKeysignPayloadUseCase(KaminoTransactionPreparer(api))
+        return BuildKaminoKeysignPayloadUseCase(KaminoTransactionPreparer(api))
             .invoke(
                 vault = vault,
                 action = action,
@@ -86,9 +87,9 @@ class BuildKaminoKeysignPayloadUseCaseTest {
     }
 
     @Test
-    fun the_recorded_compute_budget_is_the_one_inside_the_transaction() {
+    fun the_recorded_compute_budget_is_the_one_inside_the_transaction() = runTest {
         val payload = build()
-        val raw = payload.signSolana!!.rawTransactions.single()
+        val raw = checkNotNull(payload.signSolana).rawTransactions.single()
         val specific = payload.blockChainSpecific as BlockChainSpecific.Solana
 
         // Exactly the comparison iOS makes before it will join.
@@ -105,7 +106,7 @@ class BuildKaminoKeysignPayloadUseCaseTest {
     }
 
     @Test
-    fun the_generic_solana_values_are_replaced_rather_than_relayed() {
+    fun the_generic_solana_values_are_replaced_rather_than_relayed() = runTest {
         val specific = build().blockChainSpecific as BlockChainSpecific.Solana
 
         // Both differ from what came in, which is the whole bug: relaying either unchanged is what
@@ -121,7 +122,7 @@ class BuildKaminoKeysignPayloadUseCaseTest {
     }
 
     @Test
-    fun the_token_account_hints_are_cleared_so_no_phantom_ATA_rent_is_added() {
+    fun the_token_account_hints_are_cleared_so_no_phantom_ATA_rent_is_added() = runTest {
         val specific = build().blockChainSpecific as BlockChainSpecific.Solana
 
         // iOS does not relay an ATA rent figure, it infers one: a named from-account with no
@@ -132,7 +133,7 @@ class BuildKaminoKeysignPayloadUseCaseTest {
     }
 
     @Test
-    fun the_recorded_fee_is_what_the_user_will_actually_be_charged() {
+    fun the_recorded_fee_is_what_the_user_will_actually_be_charged() = runTest {
         val specific = build().blockChainSpecific as BlockChainSpecific.Solana
 
         // price x limit / 1e6. Against the generic pair this term was 100,000 lamports for a
