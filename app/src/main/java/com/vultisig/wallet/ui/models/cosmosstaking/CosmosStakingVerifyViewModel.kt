@@ -22,6 +22,8 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.formatPercent
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -125,9 +127,12 @@ constructor(
                 BigDecimal(tx.srcTokenValue.value)
                     .movePointLeft(coin.decimal)
                     .stripTrailingZeros()
-                    .toPlainString()
+                    .formatTokenAmount()
             val feeCrypto =
-                "${BigDecimal(tx.estimatedFees.value).movePointLeft(coin.decimal).stripTrailingZeros().toPlainString()} ${coin.ticker}"
+                BigDecimal(tx.estimatedFees.value)
+                    .movePointLeft(coin.decimal)
+                    .stripTrailingZeros()
+                    .formatTokenAmount(coin.ticker)
 
             // Render with truncated valopers first, then enrich with monikers + commission.
             _state.update {
@@ -216,8 +221,8 @@ constructor(
     private fun resolve(valoper: String, byAddress: Map<String, CosmosValidator>): String {
         val v = byAddress[valoper] ?: return truncated(valoper)
         val display = v.moniker.ifEmpty { truncated(valoper) }
-        val pct = v.commission.movePointRight(2).stripTrailingZeros().toPlainString()
-        return "$display ($pct% commission)"
+        val pct = v.commission.movePointRight(2).stripTrailingZeros().formatPercent()
+        return "$display ($pct commission)"
     }
 
     private fun truncated(value: String): String =

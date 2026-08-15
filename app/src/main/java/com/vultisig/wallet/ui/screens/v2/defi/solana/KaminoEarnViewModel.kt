@@ -22,6 +22,8 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.FIAT_VALUE_UNAVAILABLE
+import com.vultisig.wallet.ui.utils.formatPercent
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -342,18 +344,16 @@ constructor(
             tokenLogo = coin?.logo.orEmpty(),
             tokenTicker = coin?.ticker.orEmpty(),
             depositedDisplay =
-                tokenAmount?.let {
-                    "${it.stripTrailingZeros().toPlainString()} ${coin?.ticker.orEmpty()}".trim()
-                } ?: FIAT_VALUE_UNAVAILABLE,
+                tokenAmount?.let { it.stripTrailingZeros().formatTokenAmount(coin?.ticker).trim() }
+                    ?: FIAT_VALUE_UNAVAILABLE,
             depositedFiat = tokenAmount?.let { amount -> coin?.let { fiatOrNull(amount, it) } },
-            apyDisplay = apy?.let { "${it.toPlainString()}%" },
+            apyDisplay = apy?.formatPercent(),
             pnlDisplay =
                 pnlToken?.let {
                     // Unsigned: the row's label already says whether this was earned or lost, so a
                     // minus sign in front of "Lost" would state it twice.
                     val amount = it.abs().setScale(vault.tokenDecimals, RoundingMode.DOWN)
-                    "${amount.stripTrailingZeros().toPlainString()} ${coin?.ticker.orEmpty()}"
-                        .trim()
+                    amount.stripTrailingZeros().formatTokenAmount(coin?.ticker).trim()
                 },
             pnlDirection =
                 when {

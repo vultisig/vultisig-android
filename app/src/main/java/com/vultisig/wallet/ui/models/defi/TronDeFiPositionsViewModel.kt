@@ -29,6 +29,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -225,7 +226,7 @@ constructor(
         return TronStakingUiModel(
             totalAmountPrice = currencyFormat.format(defiTotal.multiply(trxPrice)),
             frozenTotalPrice = currencyFormat.format(frozenTotal.multiply(trxPrice)),
-            frozenTotalTrx = frozenTotal.stripTrailingZeros().toPlainString(),
+            frozenTotalTrx = frozenTotal.stripTrailingZeros().formatTokenAmount(),
             availableBandwidth = stats.availableBandwidth,
             totalBandwidth = stats.totalBandwidth,
             availableEnergy = stats.availableEnergy,
@@ -244,7 +245,7 @@ constructor(
                 val amountSun = entry.unfreezeAmount ?: return@mapNotNull null
                 val expireTimeMs = entry.unfreezeExpireTime ?: return@mapNotNull null
                 TronPendingWithdrawalUiModel(
-                    amountTrx = amountSun.sunToTrx().toPlainString(),
+                    amountTrx = amountSun.sunToTrx().formatTokenAmount(),
                     expiryEpochMs = expireTimeMs,
                     resourceType = entry.type.toTronResourceType(),
                 )

@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import java.math.BigDecimal
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -130,7 +131,7 @@ internal class TronStakingService(
         uiState.update {
             it.copy(
                 tronBalanceAvailableOverride =
-                    balances.forResource(type).stripTrailingZeros().toPlainString()
+                    balances.forResource(type).stripTrailingZeros().formatTokenAmount()
             )
         }
     }

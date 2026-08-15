@@ -54,6 +54,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.defi.thorchainSupportStakingDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -746,14 +747,14 @@ constructor(
     private suspend fun rujiPositionUiModel(details: StakingDetails): StakePositionUiModel {
         val isAutoCompound = details.coin.id == Coins.ThorChain.sRUJI.id
         val stakedAmount = Chain.ThorChain.coinType.toValue(details.stakeAmount)
-        val formattedAmount = "${stakedAmount.toPlainString()} $RUJI_SYMBOL"
+        val formattedAmount = stakedAmount.formatTokenAmount(RUJI_SYMBOL)
         val stakedFiat = calculateStakingFiatPrice(stakedAmount, Coins.ThorChain.RUJI)
 
         val rewards =
             details.rewards?.let { rewardAmount ->
                 val rewardAmountFormatted = Chain.ThorChain.coinType.toValue(rewardAmount)
                 val rewardValue = rewardAmountFormatted.setScale(6, RoundingMode.DOWN)
-                "${rewardValue.toPlainString()} ${details.rewardsCoin?.ticker ?: RUJI_REWARDS_SYMBOL}"
+                rewardValue.formatTokenAmount(details.rewardsCoin?.ticker ?: RUJI_REWARDS_SYMBOL)
             }
 
         return StakePositionUiModel(
@@ -793,7 +794,7 @@ constructor(
                 }
                 .collect { position ->
                     val stakedAmount = Chain.ThorChain.coinType.toValue(position.stakeAmount)
-                    val formattedAmount = "${stakedAmount.toPlainString()} TCY"
+                    val formattedAmount = stakedAmount.formatTokenAmount("TCY")
                     val stakedFiat = calculateStakingFiatPrice(stakedAmount, position.coin)
 
                     // Create and return the UI model
@@ -903,7 +904,7 @@ constructor(
                                     stakeAssetHeader =
                                         UiText.FormattedText(headerResId, listOf(coin.ticker)),
                                     stakedAmountDisplay =
-                                        "${stakeAmount.toPlainString()} ${coin.ticker}",
+                                        stakeAmount.formatTokenAmount(coin.ticker),
                                     // No .orEmpty(): a missed lookup means "we have no price",
                                     // which the card states as unavailable. Coercing it to "" would
                                     // drop the fiat line instead.
@@ -1178,8 +1179,9 @@ constructor(
             assetTicker = assetTicker,
             apr = annualPercentageRate?.formatPercentage(),
             position =
-                "${runeAmount.stripTrailingZeros().toPlainString()} ${Coins.ThorChain.RUNE.ticker} + " +
-                    "${assetAmount.stripTrailingZeros().toPlainString()} $assetTicker",
+                runeAmount.stripTrailingZeros().formatTokenAmount(Coins.ThorChain.RUNE.ticker) +
+                    " + " +
+                    assetAmount.stripTrailingZeros().formatTokenAmount(assetTicker),
             positionKey = pool,
             chainLogo = assetChain?.monoToneLogo,
         )

@@ -23,6 +23,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigInteger
+import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -126,15 +127,23 @@ internal class StakeStrategyTest {
 
     @Test
     fun `deposit below pool minimum is rejected`() = runTest {
-        givenPool(implementation = "whales", minStake = 50_000_000_000)
-        givenAccounts()
-        givenSpecific()
-        nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
-        // 50 TON < min_stake (50) + 1 TON commission.
-        tokenAmount.setTextAndPlaceCursorAtEnd("50")
+        val previousLocale = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.GERMANY)
+            givenPool(implementation = "whales", minStake = 50_500_000_000)
+            givenAccounts()
+            givenSpecific()
+            nodeAddress.setTextAndPlaceCursorAtEnd("0:pool")
+            // 51 TON < min_stake (50.5) + 1 TON commission.
+            tokenAmount.setTextAndPlaceCursorAtEnd("51")
 
-        val ex = assertFailsWith<InvalidTransactionDataException> { stake().build() }
-        assertEquals(R.string.ton_stake_error_min_amount, (ex.text as UiText.FormattedText).resId)
+            val ex = assertFailsWith<InvalidTransactionDataException> { stake().build() }
+            val text = ex.text as UiText.FormattedText
+            assertEquals(R.string.ton_stake_error_min_amount, text.resId)
+            assertEquals(listOf("51,5", "TON"), text.formatArgs)
+        } finally {
+            Locale.setDefault(previousLocale)
+        }
     }
 
     @Test

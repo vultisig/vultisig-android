@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.models.defi.TonStakeViewModel
 import com.vultisig.wallet.ui.screens.cosmosstaking.StakingAmountCard
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import java.math.BigDecimal
 import java.text.DecimalFormat
 
@@ -86,7 +87,7 @@ internal fun TonStakeScreen(viewModel: TonStakeViewModel = hiltViewModel()) {
                         text =
                             stringResource(
                                 R.string.ton_stake_error_min_amount,
-                                state.requiredMinStake.stripTrailingZeros().toPlainString(),
+                                state.requiredMinStake.stripTrailingZeros().formatTokenAmount(),
                                 ticker,
                             ),
                         style = Theme.brockmann.supplementary.caption,
@@ -389,6 +390,6 @@ private fun PoolMonogram(letter: String, size: Int) {
 }
 
 private fun formatMinStake(minStake: BigDecimal): String =
-    minStake.stripTrailingZeros().toPlainString()
+    minStake.stripTrailingZeros().formatTokenAmount()
 
 private fun formatApy(apy: Double): String = DecimalFormat("0.##").format(apy)

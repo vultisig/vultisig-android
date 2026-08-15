@@ -52,7 +52,10 @@ import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosDelegateUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosDelegateViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.formatPercent
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Stake form for LUNA / LUNC — mirrors iOS `CosmosDelegateTransactionScreen`: centered amount
@@ -226,7 +229,7 @@ internal fun BalanceAvailableRow(ticker: String, available: BigDecimal) {
             color = Theme.v2.colors.text.primary,
         )
         Text(
-            text = "${available.stripTrailingZeros().toPlainString()} $ticker",
+            text = available.stripTrailingZeros().formatTokenAmount(ticker),
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.secondary,
             textAlign = TextAlign.End,
@@ -557,7 +560,7 @@ private fun ValidatorPickerRow(
             UiSpacer(size = 8.dp)
         }
         Text(
-            text = "${formatCommissionPercent(validator.commission)}%",
+            text = formatCommissionPercent(validator.commission),
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
             maxLines = 1,
@@ -573,9 +576,9 @@ private fun ValidatorPickerRow(
 private fun formatCommissionPercent(commission: BigDecimal): String =
     commission
         .movePointRight(2)
-        .setScale(2, java.math.RoundingMode.HALF_UP)
+        .setScale(2, RoundingMode.HALF_UP)
         .stripTrailingZeros()
-        .toPlainString()
+        .formatPercent()
 
 /**
  * Voting power arrives as bond-denom base units (uint string). Render it in whole-token units with

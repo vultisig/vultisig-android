@@ -29,6 +29,7 @@ import com.vultisig.wallet.ui.models.solanastaking.KaminoAmountViewModel
 import com.vultisig.wallet.ui.screens.cosmosstaking.StakingAmountCard
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import java.math.BigDecimal
 
 /**
@@ -94,7 +95,7 @@ internal fun KaminoAmountContent(
             state.minimum != null && amount < state.minimum ->
                 stringResource(
                     R.string.kamino_amount_below_minimum,
-                    state.minimum.stripTrailingZeros().toPlainString(),
+                    state.minimum.stripTrailingZeros().formatTokenAmount(),
                     state.ticker,
                 )
             else -> null
@@ -147,7 +148,7 @@ internal fun KaminoAmountContent(
                             BigDecimal(delayed.available.baseUnits)
                                 .movePointLeft(delayed.available.decimals)
                                 .stripTrailingZeros()
-                                .toPlainString(),
+                                .formatTokenAmount(),
                             state.ticker,
                         ),
                     style = Theme.brockmann.supplementary.caption,

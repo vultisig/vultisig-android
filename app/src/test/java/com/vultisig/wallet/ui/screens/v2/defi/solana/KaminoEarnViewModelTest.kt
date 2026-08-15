@@ -56,9 +56,14 @@ internal class KaminoEarnViewModelTest {
     private lateinit var appCurrencyRepository: AppCurrencyRepository
     private lateinit var balanceVisibilityRepository: BalanceVisibilityRepository
 
+    private val defaultLocale = Locale.getDefault()
+
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        // Amount rendering follows the user's locale, so the expected strings below only hold once
+        // the locale the test runs under is pinned.
+        Locale.setDefault(Locale.US)
         navigator = mockk(relaxed = true)
         kaminoApi = mockk(relaxed = true)
         selectionRepository = mockk(relaxed = true)
@@ -81,6 +86,7 @@ internal class KaminoEarnViewModelTest {
     @AfterEach
     fun tearDown() {
         Dispatchers.resetMain()
+        Locale.setDefault(defaultLocale)
     }
 
     private fun viewModel() =
@@ -170,10 +176,40 @@ internal class KaminoEarnViewModelTest {
 
         val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
 
-        assertEquals("1054.427822 USDC", row.depositedDisplay)
+        assertEquals("1,054.427822 USDC", row.depositedDisplay)
         assertEquals("54.427822 USDC", row.pnlDisplay)
         assertEquals(KaminoEarnRow.PnlDirection.UP, row.pnlDirection)
         assertNotNull(row.depositedFiat)
+    }
+
+    @Test
+    fun `a locale that writes decimals with a comma gets its own separators`() = runTest {
+        Locale.setDefault(Locale.forLanguageTag("ru-RU"))
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flowOf(setOf(STEAKHOUSE.address))
+        coEvery { kaminoApi.getUserPositions(WALLET_ADDRESS) } returns
+            listOf(
+                KaminoUserPositionJson(
+                    vaultAddress = STEAKHOUSE.address,
+                    stakedShares = "1000",
+                    unstakedShares = "0",
+                    totalShares = "1000",
+                )
+            )
+        coEvery { kaminoApi.getVaultState(STEAKHOUSE.address) } returns stubVault("Steakhouse USDC")
+        coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } returns
+            KaminoVaultMetricsJson(
+                apy30d = "0.039967764404019690278",
+                tokensPerShare = "1.0544278224860290217",
+            )
+        coEvery { kaminoApi.getPositionPnl(WALLET_ADDRESS, STEAKHOUSE.address) } returns
+            KaminoPnlJson(totalPnl = KaminoPnlJson.Amounts(token = "54.427822"))
+
+        val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
+
+        assertEquals("1\u00A0054,427822 USDC", row.depositedDisplay)
+        assertEquals("54,427822 USDC", row.pnlDisplay)
+        assertEquals("4,00%", row.apyDisplay)
     }
 
     @Test
