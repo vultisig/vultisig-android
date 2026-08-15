@@ -10,6 +10,7 @@ import java.math.BigInteger
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import wallet.core.jni.SolanaTransaction
@@ -72,6 +73,11 @@ class BuildKaminoKeysignPayloadUseCaseTest {
                         recentBlockHash = "",
                         priorityFee = networkSample,
                         priorityLimit = genericLimit,
+                        // The shape a token deposit produces: the sender's token account is known,
+                        // the destination's is not. iOS reads exactly this as "an ATA must be
+                        // created" and adds rent for it.
+                        fromAddressPubKey = "6dqjbdM6yEkT1x4LcvMRxr5vfnKvUyBUsHqBcxYRJmVW",
+                        toAddressPubKey = null,
                     ),
                 vaultPublicKeyECDSA = "",
                 vaultLocalPartyID = "",
@@ -115,12 +121,23 @@ class BuildKaminoKeysignPayloadUseCaseTest {
     }
 
     @Test
+    fun the_token_account_hints_are_cleared_so_no_phantom_ATA_rent_is_added() {
+        val specific = build().blockChainSpecific as BlockChainSpecific.Solana
+
+        // iOS does not relay an ATA rent figure, it infers one: a named from-account with no
+        // to-account means "create an ATA", worth 2,039,280 lamports. Kamino's bytes create
+        // whatever they need internally, so relaying these overstated the fee by 0.00204 SOL.
+        assertNull(specific.fromAddressPubKey)
+        assertNull(specific.toAddressPubKey)
+    }
+
+    @Test
     fun the_recorded_fee_is_what_the_user_will_actually_be_charged() {
         val specific = build().blockChainSpecific as BlockChainSpecific.Solana
 
-        // price x limit / 1e6. Against the generic pair the verify screen showed 3,134,280
-        // lamports of priority fee for a transaction that reserves 320,000 — off by an order of
-        // magnitude, in the direction that overstates the cost.
+        // price x limit / 1e6. Against the generic pair this term was 100,000 lamports for a
+        // transaction that reserves 320,000 — and the co-signer quoted 0.00313928 SOL overall:
+        // 1,000,000 base + 2,039,280 of ATA rent it inferred + those 100,000.
         val lamports =
             specific.priorityFee
                 .multiply(specific.priorityLimit)

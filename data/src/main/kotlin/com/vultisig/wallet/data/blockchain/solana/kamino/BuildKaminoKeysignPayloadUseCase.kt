@@ -79,6 +79,14 @@ constructor(private val preparer: KaminoTransactionPreparer) {
             solanaSpecific.copy(
                 priorityFee = KaminoComputeBudget.unitPriceFor(solanaSpecific.priorityFee),
                 priorityLimit = KaminoComputeBudget.unitLimitFor(vault, action),
+                // Cleared, not carried. iOS does not relay an ATA rent figure — it *infers* one,
+                // adding 2,039,280 lamports whenever the from-address token account is named and
+                // the to-address one is not, which is exactly the shape a token deposit produces
+                // here. Kamino's own transaction creates whatever accounts it needs inside the
+                // bytes, so that surcharge describes a transfer this is not. iOS's own Kamino
+                // factory sets both to nil for the same reason.
+                fromAddressPubKey = null,
+                toAddressPubKey = null,
             )
 
         return KeysignPayload(
