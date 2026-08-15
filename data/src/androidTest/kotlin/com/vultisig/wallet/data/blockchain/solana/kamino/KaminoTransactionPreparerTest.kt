@@ -2,9 +2,6 @@ package com.vultisig.wallet.data.blockchain.solana.kamino
 
 import com.vultisig.wallet.data.WalletCoreNative
 import com.vultisig.wallet.data.api.KaminoApi
-import com.vultisig.wallet.data.api.KaminoPnlJson
-import com.vultisig.wallet.data.api.KaminoUserPositionJson
-import com.vultisig.wallet.data.api.KaminoVaultMetricsJson
 import java.math.BigInteger
 import java.util.Base64
 import kotlinx.coroutines.runBlocking
@@ -28,81 +25,6 @@ import wallet.core.jni.SolanaTransaction
  */
 class KaminoTransactionPreparerTest {
 
-    private val depositFixture =
-        "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACA" +
-            "AQAFCX//JB25KLX6LxwUe5Pw/FGXqeETK7Jj6GQYPDbOSuemOEsQm7A2IghRdbzU0ar6Q7dIhEJA6xfcD32X" +
-            "M4YwfPSF38N5IeLVVX5/3BJfld0IR08X1RB7fe6uQkeVw/nk3uVtPK//R3XanFktvqbKIbsjaArJEZzlqWvc" +
-            "axKftHFhAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP2mzp9mGY3YcNiphvMGdcRvg+L1KDSHlS" +
-            "9dUFY+PveoyXJY9OJInxuz0QKRSODYMLWhOZ2v8QhASOe9jb6fhZ2LAQF2PT5R8SbmFW3oXejGEwWbhEaNDa" +
-            "P+iioiUcxwEE2Qrx24k57DX/lNlkDVfcwyeUuz4btm/TroSahNzblDJCgcwkFVHRKh2nMxb4pfSsIMN/m4f+" +
-            "R1HblBX15CRABAYGAAMACQQaAQEIFQARDRYUCQEDGBoaBQgQDwoMFRMXEhDyI8aJUuHytkBCDwAAAAAABwgA" +
-            "AAAAAgsEGQhvEbn6PHom/gcIAAILDgMJBxoQzrDKEsjRs2z//////////wGC6dRmw0Z9LrKw2cy+tHvb9JXu" +
-            "HBu0d9Dar60DX6fr5AkFNTElLzITCQEJJxUECwI3BwYD"
-
-    /**
-     * A live `POST /ktx/kvault/withdraw` response for the same vault: create the destination token
-     * account, then `kVault::withdraw`.
-     *
-     * Kamino built it for a wallet holding no position at all — the clearest evidence that the
-     * endpoint validates nothing about the amount it is handed, and also why there is nothing
-     * staked to release here.
-     *
-     * **This is therefore the UNSTAKED shape, which is not the one most holders will send.** A
-     * withdraw against a staked position carries two extra `farms` instructions and a second
-     * account creation ahead of the vault withdraw. Capturing that needs a wallet actually holding
-     * a staked position, which these vaults only produce by depositing real funds, so the limit
-     * sized for it rests on the iOS mainnet measurements (283,786 / 289,486 / 309,310) rather than
-     * on anything this suite proves.
-     */
-    private val withdrawFixture =
-        "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACA" +
-            "AQAFCH//JB25KLX6LxwUe5Pw/FGXqeETK7Jj6GQYPDbOSuemOEsQm7A2IghRdbzU0ar6Q7dIhEJA6xfcD32XM4Yw" +
-            "fPTlbTyv/0d12pxZLb6myiG7I2gKyRGc5alr3GsSn7RxYQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
-            "D9ps6fZhmN2HDYqYbzBnXEb4Pi9Sg0h5UvXVBWPj73qMlyWPTiSJ8bs9ECkUjg2DC1oTmdr/EIQEjnvY2+n4WZlx" +
-            "KXooAEJJPkJxkMd7ZH6G99GZch/RVimWXJ1rZZT4BNkK8duJOew1/5TZZA1X3MMnlLs+G7Zv066EmoTc25TcFsAN" +
-            "s3q6CtgzQiIGiofmyao3Sh0Dq7RowlSc92jsQgIFBgABAA0DFgEBBxYADwYLEgENAggWFhUEBw4MCQoTERQQEBOD" +
-            "cJuq3CI5//////////8BgunUZsNGfS6ysNnMvrR72/SV7hwbtHfQ2q+tA1+n6+QIBTUlLxMCCQEHJxUECzcHAw=="
-
-    private val wallet = "9ceRgz579BcfWogs3RE11FKNQaWW7Lmtnev3MXspxUjF"
-
-    /**
-     * Returns the captured transaction for whatever is asked, so the pipeline is what's under test.
-     */
-    private inner class FixtureApi(private val transaction: String = depositFixture) : KaminoApi {
-        var lastAmount: String? = null
-        var lastVault: String? = null
-
-        override suspend fun getVaultState(vaultAddress: String) = error("not used")
-
-        override suspend fun getVaultMetrics(vaultAddress: String) = KaminoVaultMetricsJson()
-
-        override suspend fun getUserPositions(walletAddress: String): List<KaminoUserPositionJson> =
-            emptyList()
-
-        override suspend fun getPositionPnl(walletAddress: String, vaultAddress: String) =
-            KaminoPnlJson()
-
-        override suspend fun buildDeposit(
-            walletAddress: String,
-            vaultAddress: String,
-            amount: String,
-        ): String {
-            lastAmount = amount
-            lastVault = vaultAddress
-            return transaction
-        }
-
-        override suspend fun buildWithdraw(
-            walletAddress: String,
-            vaultAddress: String,
-            amount: String,
-        ): String {
-            lastAmount = amount
-            lastVault = vaultAddress
-            return transaction
-        }
-    }
-
     @Before
     fun loadWalletCore() {
         WalletCoreNative.ensureLoaded()
@@ -116,14 +38,15 @@ class KaminoTransactionPreparerTest {
     ): String = runBlocking {
         val resolved =
             api
-                ?: FixtureApi(
-                    if (action == KaminoAction.WITHDRAW) withdrawFixture else depositFixture
+                ?: KaminoFixtureApi(
+                    if (action == KaminoAction.WITHDRAW) KaminoFixtures.WITHDRAW
+                    else KaminoFixtures.DEPOSIT
                 )
         KaminoTransactionPreparer(resolved)
             .prepare(
                 vault = vault,
                 action = action,
-                walletAddress = wallet,
+                walletAddress = KaminoFixtures.WALLET,
                 amount = "1",
                 networkUnitPrice = networkUnitPrice,
             )
@@ -250,7 +173,7 @@ class KaminoTransactionPreparerTest {
         val alreadyPriced =
             checkNotNull(
                 SolanaTransaction.insertInstruction(
-                    depositFixture,
+                    KaminoFixtures.DEPOSIT,
                     -1,
                     KaminoComputeBudget.setUnitPriceInstructionJson(BigInteger.valueOf(7_000)),
                 )
@@ -258,7 +181,7 @@ class KaminoTransactionPreparerTest {
 
         val rejection =
             assertThrows(IllegalStateException::class.java) {
-                prepare(api = FixtureApi(alreadyPriced))
+                prepare(api = KaminoFixtureApi(alreadyPriced))
             }
         assertTrue(
             "unexpected reason: ${rejection.message}",
@@ -276,7 +199,7 @@ class KaminoTransactionPreparerTest {
     fun the_decimal_amount_reaches_Kamino_unscaled() {
         // Kamino wants decimals on the way in; sending base units would deposit a millionth of the
         // intended amount.
-        val api = FixtureApi()
+        val api = KaminoFixtureApi()
         prepare(api = api)
         assertEquals("1", api.lastAmount)
         assertEquals(KaminoVaultRegistry.STEAKHOUSE_USDC.address, api.lastVault)
@@ -290,7 +213,7 @@ class KaminoTransactionPreparerTest {
         val foreign =
             checkNotNull(
                 SolanaTransaction.insertInstruction(
-                    depositFixture,
+                    KaminoFixtures.DEPOSIT,
                     -1,
                     """{"programId":"${KaminoAttributionMemo.MEMO_PROGRAM_ID}","accounts":[],"data":"3yZe7d"}""",
                 )
@@ -298,7 +221,7 @@ class KaminoTransactionPreparerTest {
 
         val rejection =
             assertThrows(KaminoTransactionRejected::class.java) {
-                prepare(api = FixtureApi(foreign))
+                prepare(api = KaminoFixtureApi(foreign))
             }
         assertTrue(
             "unexpected reason: ${rejection.message}",
@@ -313,7 +236,7 @@ class KaminoTransactionPreparerTest {
         // slots as the message to hash. Three WalletCore mutations happen before that, so the
         // envelope has to come out the far side with the same shape or signing writes to the wrong
         // bytes and the co-signers hash different messages.
-        val before = Base64.getDecoder().decode(depositFixture)
+        val before = Base64.getDecoder().decode(KaminoFixtures.DEPOSIT)
         val after = Base64.getDecoder().decode(prepare())
 
         assertEquals("signature count must stay 1", 1, before[0].toInt())
@@ -362,7 +285,7 @@ class KaminoTransactionPreparerTest {
         // no farms instruction (nothing was staked, so nothing had to be released). Asserted on the
         // decode rather than through prepare, which correctly refuses the sentinel above.
         val instructions =
-            KaminoTransactionDecoder.decode(KaminoAttributionMemo.append(withdrawFixture))
+            KaminoTransactionDecoder.decode(KaminoAttributionMemo.append(KaminoFixtures.WITHDRAW))
                 .instructions
 
         assertTrue(
@@ -386,7 +309,7 @@ class KaminoTransactionPreparerTest {
                 KaminoTransactionValidator.validate(
                     decoded =
                         KaminoTransactionDecoder.decode(
-                            KaminoAttributionMemo.append(withdrawFixture)
+                            KaminoAttributionMemo.append(KaminoFixtures.WITHDRAW)
                         ),
                     vault = KaminoVaultRegistry.STEAKHOUSE_USDC,
                     action = KaminoAction.WITHDRAW,
@@ -402,7 +325,7 @@ class KaminoTransactionPreparerTest {
     @Test
     fun a_malformed_response_from_Kamino_fails_loudly_instead_of_reaching_keysign() {
         assertThrows(IllegalStateException::class.java) {
-            prepare(api = FixtureApi("not-base64-tx"))
+            prepare(api = KaminoFixtureApi("not-base64-tx"))
         }
     }
 }
