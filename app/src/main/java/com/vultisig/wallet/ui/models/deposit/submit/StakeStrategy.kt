@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.UUID
@@ -213,7 +214,7 @@ private fun resolveDepositAmount(
         throw InvalidTransactionDataException(
             UiText.FormattedText(
                 R.string.ton_stake_error_min_amount,
-                listOf(minDepositTon.toPlainString(), token.ticker),
+                listOf(minDepositTon.formatTokenAmount(), token.ticker),
             )
         )
     }
