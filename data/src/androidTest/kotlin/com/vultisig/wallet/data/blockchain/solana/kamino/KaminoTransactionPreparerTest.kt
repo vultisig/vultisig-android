@@ -230,6 +230,43 @@ class KaminoTransactionPreparerTest {
     }
 
     @Test
+    fun the_unit_price_is_capped_at_the_ceiling_an_iPhone_co_signer_will_accept() {
+        // iOS clamps the sample into the same range and its decoder refuses a transaction priced
+        // outside it, so an uncapped price is one no iPhone will join. The sample reaching here
+        // comes from `getMedianPriorityFee`, which already floors at 1,000,000 and caps at
+        // 100,000,000 — every congested-network reading is above the ceiling, not an edge case.
+        val capped = prepare(networkUnitPrice = BigInteger.valueOf(100_000_000))
+        assertEquals(
+            KaminoComputeBudget.MAX_UNIT_PRICE.toString(),
+            SolanaTransaction.getComputeUnitPrice(capped),
+        )
+    }
+
+    @Test
+    fun a_response_that_already_carries_a_compute_budget_is_refused_rather_than_double_priced() {
+        // The price is now inserted rather than set, and an insert cannot overwrite. If Kamino ever
+        // starts returning its own `SetComputeUnitPrice`, ours would be a second one and the chain
+        // would reject the transaction — after a full signing ceremony had been spent on it.
+        val alreadyPriced =
+            checkNotNull(
+                SolanaTransaction.insertInstruction(
+                    depositFixture,
+                    -1,
+                    KaminoComputeBudget.setUnitPriceInstructionJson(BigInteger.valueOf(7_000)),
+                )
+            )
+
+        val rejection =
+            assertThrows(IllegalStateException::class.java) {
+                prepare(api = FixtureApi(alreadyPriced))
+            }
+        assertTrue(
+            "unexpected reason: ${rejection.message}",
+            rejection.message.orEmpty().contains("ComputeBudget instructions at"),
+        )
+    }
+
+    @Test
     fun preparing_stays_within_the_transaction_size_limit() {
         val size = Base64.getDecoder().decode(prepare()).size
         assertTrue("prepared transaction was $size bytes", size <= 1232)

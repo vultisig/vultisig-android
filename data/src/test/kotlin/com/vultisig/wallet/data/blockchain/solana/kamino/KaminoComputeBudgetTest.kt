@@ -98,6 +98,34 @@ class KaminoComputeBudgetTest {
     }
 
     @Test
+    fun `the unit price is capped, because iOS refuses anything above the ceiling`() {
+        // Not merely a spend cap. iOS clamps into the same range and its decoder rejects a
+        // transaction priced outside it, so an uncapped price is a transaction an iPhone co-signer
+        // will not join. And the sample this receives comes from `getMedianPriorityFee`, which
+        // already floors at the app-wide 1,000,000 and caps at 100,000,000 — so without this every
+        // congested-network sample would sail past the ceiling.
+        val ceiling = KaminoComputeBudget.MAX_UNIT_PRICE
+        assertEquals(BigInteger.valueOf(1_000_000), ceiling)
+        assertEquals(ceiling, KaminoComputeBudget.unitPriceFor(ceiling))
+        assertEquals(ceiling, KaminoComputeBudget.unitPriceFor(ceiling.add(BigInteger.ONE)))
+        assertEquals(ceiling, KaminoComputeBudget.unitPriceFor(BigInteger.valueOf(100_000_000)))
+
+        // Just below stays exactly where it is: the clamp must not round anything in range.
+        val below = ceiling.subtract(BigInteger.ONE)
+        assertEquals(below, KaminoComputeBudget.unitPriceFor(below))
+
+        // The ceiling bounds the worst fee too: 1,000,000 x 400,000 / 1e6 = 400,000 lamports.
+        assertEquals(
+            BigInteger.valueOf(400_000),
+            KaminoComputeBudget.priorityFeeLamports(
+                usdcVault,
+                KaminoAction.WITHDRAW,
+                BigInteger.valueOf(100_000_000),
+            ),
+        )
+    }
+
+    @Test
     fun `the priority fee is price times limit, in lamports`() {
         // 20,000 micro-lamports per unit x 320,000 units = 6,400,000,000 micro-lamports = 6,400
         // lamports, which is what bounds the cost of these limits.

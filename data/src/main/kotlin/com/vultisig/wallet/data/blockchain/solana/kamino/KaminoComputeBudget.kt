@@ -75,6 +75,22 @@ object KaminoComputeBudget {
      */
     val FALLBACK_UNIT_PRICE: BigInteger = BigInteger.valueOf(20_000)
 
+    /**
+     * Ceiling on the sampled price, in micro-lamports per compute unit.
+     *
+     * The sample is a number a remote node hands us, multiplied by a six-figure limit to produce
+     * lamports the user pays, so unbounded it is an unbounded fee. At this ceiling and the largest
+     * limit the priority fee tops out at 400,000 lamports (0.0004 SOL).
+     *
+     * It is also a cross-platform contract, not just a spend cap: iOS clamps into the same `[floor,
+     * ceiling]` range and its decoder *refuses* a transaction priced outside it
+     * (`KaminoTransactionDecoder.swift`), so anything above this is a transaction an iPhone
+     * co-signer will not join. That is not a hypothetical here — the sample this receives comes
+     * from `SolanaApi.getMedianPriorityFee`, which floors at the app-wide 1,000,000 and caps at
+     * 100,000,000, so every congested-network sample would land above the ceiling unclamped.
+     */
+    val MAX_UNIT_PRICE: BigInteger = BigInteger.valueOf(1_000_000)
+
     fun unitLimitFor(vault: KaminoVault, action: KaminoAction): BigInteger =
         when (action) {
             KaminoAction.WITHDRAW -> WITHDRAW_UNIT_LIMIT
@@ -86,9 +102,15 @@ object KaminoComputeBudget {
                 }
         }.let(BigInteger::valueOf)
 
-    /** Never price below the floor, however stale or absent the network sample is. */
+    /**
+     * Brings a sampled network price inside `[FALLBACK_UNIT_PRICE, MAX_UNIT_PRICE]`, the same range
+     * iOS clamps into and the only range its decoder accepts.
+     *
+     * The floor is a floor rather than a default: a sample below it would under-tip a transaction
+     * that has to land before its blockhash expires.
+     */
     fun unitPriceFor(networkPrice: BigInteger?): BigInteger =
-        networkPrice?.takeIf { it > FALLBACK_UNIT_PRICE } ?: FALLBACK_UNIT_PRICE
+        (networkPrice ?: FALLBACK_UNIT_PRICE).coerceIn(FALLBACK_UNIT_PRICE, MAX_UNIT_PRICE)
 
     /**
      * The priority fee this transaction will actually be charged, in lamports.
@@ -134,18 +156,11 @@ object KaminoComputeBudget {
      * price as a little-endian `u64`.
      */
     fun setUnitPriceData(price: BigInteger): ByteArray {
-        require(price.signum() >= 0 && price.bitLength() <= 64) {
+        // The sign is checked separately: `bitLength` ignores it, so -1 would clear the bound.
+        require(price.signum() >= 0 && price.bitLength() <= Long.SIZE_BITS) {
             "compute-unit price $price does not fit a u64"
         }
-        val data = ByteArray(9)
-        data[0] = SET_UNIT_PRICE_DISCRIMINATOR.toByte()
-        var remaining = price
-        for (offset in 1..8) {
-            data[offset] = remaining.and(BYTE_MASK).toInt().toByte()
-            remaining = remaining.shiftRight(8)
-        }
-        return data
+        return byteArrayOf(SET_UNIT_PRICE_DISCRIMINATOR.toByte()) +
+            ByteArray(Long.SIZE_BYTES) { byte -> price.shiftRight(8 * byte).toInt().toByte() }
     }
-
-    private val BYTE_MASK = BigInteger.valueOf(0xFF)
 }

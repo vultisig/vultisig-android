@@ -169,17 +169,26 @@ class KaminoTransactionPreparer @Inject constructor(private val kaminoApi: Kamin
                 "WalletCore could not set the Kamino compute-unit limit"
             }
 
-        // WalletCore chooses where the limit goes — index 0, unless the first instruction is
-        // `AdvanceNonceAccount`, which Kamino never builds — so the position is observed rather
-        // than
-        // assumed. Anything but 0 is not the layout iOS emits, and is refused here rather than sent
-        // to a co-signer that would silently decline it.
-        val limitIndex =
-            KaminoTransactionDecoder.decode(withLimit).instructions.indexOfFirst {
-                it.programId == KaminoComputeBudget.PROGRAM_ID
+        // Two assumptions are read back here rather than trusted, because the insert below adds a
+        // price unconditionally where `setComputeUnitPrice` used to overwrite one in place.
+        //
+        // Where the limit landed: WalletCore chooses that — index 0, unless the first instruction
+        // is `AdvanceNonceAccount`, which Kamino never builds. Anything but 0 is not the layout iOS
+        // emits, and is refused here rather than sent to a co-signer that would silently decline
+        // it.
+        //
+        // That it is the only one: Kamino's responses carry no compute budget today. Should one
+        // ever arrive carrying its own *price*, `setComputeUnitLimit` would leave it untouched and
+        // the insert below would make two `SetComputeUnitPrice` instructions — which the chain
+        // rejects, after a full signing ceremony has already been spent on it.
+        val instructions = KaminoTransactionDecoder.decode(withLimit).instructions
+        val budgetIndices =
+            instructions.indices.filter {
+                instructions[it].programId == KaminoComputeBudget.PROGRAM_ID
             }
-        check(limitIndex == UNIT_LIMIT_INDEX) {
-            "WalletCore put the Kamino compute-unit limit at index $limitIndex, not $UNIT_LIMIT_INDEX"
+        check(budgetIndices == listOf(UNIT_LIMIT_INDEX)) {
+            "expected the app's compute-unit limit alone at index $UNIT_LIMIT_INDEX, " +
+                "found ComputeBudget instructions at $budgetIndices"
         }
 
         // Deliberately not `SolanaTransaction.setComputeUnitPrice`. The two helpers place their
