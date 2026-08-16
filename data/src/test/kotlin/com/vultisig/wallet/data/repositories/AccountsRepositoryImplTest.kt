@@ -27,6 +27,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -375,6 +376,141 @@ internal class AccountsRepositoryImplTest {
         )
     }
 
+    @Test
+    fun `cached DeFi addresses carry the auto-compounding RUJI position`() = runTest {
+        val rune = Coins.ThorChain.RUNE.copy(address = THOR_ADDRESS)
+        val ruji = Coins.ThorChain.RUJI.copy(address = THOR_ADDRESS)
+        coEvery { vaultRepository.get(VAULT_ID) } returns
+            Vault(id = VAULT_ID, name = "Test Vault", coins = listOf(rune, ruji))
+
+        // What THORChain reports for a staker who only auto-compounds: nothing bonded, nothing on
+        // the bonded RUJI position, and the whole holding under the sRUJI receipt.
+        coEvery {
+            balanceRepository.getDeFiCachedTokeBalanceAndPrice(THOR_ADDRESS, any(), VAULT_ID)
+        } returns
+            listOf(
+                defiBalance(Coins.ThorChain.RUNE, amount = 0L, fiat = 0L),
+                defiBalance(Coins.ThorChain.RUJI, amount = 0L, fiat = 0L),
+                defiBalance(Coins.ThorChain.sRUJI, amount = STAKED, fiat = STAKED_FIAT),
+            )
+
+        val thorchain =
+            repository.loadDeFiAddresses(VAULT_ID, isRefresh = false).toList().last().first {
+                it.chain == Chain.ThorChain
+            }
+
+        val compounding = thorchain.accounts.firstOrNull { it.token.id == Coins.ThorChain.sRUJI.id }
+        assertNotNull(compounding, "the DeFi row must carry an account for the sRUJI receipt")
+        assertEquals(STAKED, compounding.tokenValue?.value?.toLong())
+        // The row and the portfolio header above it both sum these accounts, so the position has to
+        // reach them or a funded vault reads $0.00 (reported on v1.0.116/117).
+        assertEquals(
+            STAKED_FIAT,
+            thorchain.accounts.sumOf { it.fiatValue?.value?.toLong() ?: 0L },
+            "the chain's DeFi total must include the auto-compounding position",
+        )
+    }
+
+    @Test
+    fun `refreshed DeFi addresses fetch and price the auto-compounding RUJI position`() = runTest {
+        val rune = Coins.ThorChain.RUNE.copy(address = THOR_ADDRESS)
+        coEvery { vaultRepository.get(VAULT_ID) } returns
+            Vault(id = VAULT_ID, name = "Test Vault", coins = listOf(rune))
+        coJustRun { tokenPriceRepository.refresh(any()) }
+        coEvery { balanceRepository.getDeFiCachedTokeBalanceAndPrice(any(), any(), any()) } returns
+            emptyList()
+        every {
+            balanceRepository.getDefiTokenBalanceAndPrice(THOR_ADDRESS, any(), VAULT_ID)
+        } returns flowOf(defiBalance(Coins.ThorChain.RUNE, amount = 0L, fiat = 0L))
+        every {
+            balanceRepository.getDefiTokenBalanceAndPrice(
+                THOR_ADDRESS,
+                match { it.id == Coins.ThorChain.sRUJI.id },
+                VAULT_ID,
+            )
+        } returns flowOf(defiBalance(Coins.ThorChain.sRUJI, amount = STAKED, fiat = STAKED_FIAT))
+
+        val thorchain =
+            repository.loadDeFiAddresses(VAULT_ID, isRefresh = true).toList().last().first {
+                it.chain == Chain.ThorChain
+            }
+
+        assertEquals(
+            STAKED_FIAT,
+            thorchain.accounts.sumOf { it.fiatValue?.value?.toLong() ?: 0L },
+            "the refreshed total must include the auto-compounding position",
+        )
+        // Its price is cached under its own token id, so a refresh that skipped it would leave the
+        // next cached emission valuing a resolved position at zero.
+        coVerify {
+            tokenPriceRepository.refresh(
+                match { it.any { coin -> coin.id == Coins.ThorChain.sRUJI.id } }
+            )
+        }
+    }
+
+    @Test
+    fun `a vault holding no DeFi-only position carries no account for it`() = runTest {
+        val rune = Coins.ThorChain.RUNE.copy(address = THOR_ADDRESS)
+        coEvery { vaultRepository.get(VAULT_ID) } returns
+            Vault(id = VAULT_ID, name = "Test Vault", coins = listOf(rune))
+        coEvery {
+            balanceRepository.getDeFiCachedTokeBalanceAndPrice(THOR_ADDRESS, any(), VAULT_ID)
+        } returns
+            listOf(
+                defiBalance(Coins.ThorChain.RUNE, amount = 0L, fiat = 0L),
+                defiBalance(Coins.ThorChain.sRUJI, amount = 0L, fiat = 0L),
+            )
+
+        val thorchain =
+            repository.loadDeFiAddresses(VAULT_ID, isRefresh = false).toList().last().first {
+                it.chain == Chain.ThorChain
+            }
+
+        // The account is injected before any balance is known, so an empty one must not survive to
+        // the row — it is counted among the chain's assets there.
+        assertEquals(
+            listOf(Coins.ThorChain.RUNE.id),
+            thorchain.accounts.map { it.token.id },
+            "an unheld position must not add an asset to the chain's row",
+        )
+    }
+
+    @Test
+    fun `DeFi-only positions are stamped with the chain's derived key`() = runTest {
+        val rune = Coins.ThorChain.RUNE.copy(address = THOR_ADDRESS, hexPublicKey = THOR_PUBLIC_KEY)
+        coEvery { vaultRepository.get(VAULT_ID) } returns
+            Vault(id = VAULT_ID, name = "Test Vault", coins = listOf(rune))
+        coEvery {
+            balanceRepository.getDeFiCachedTokeBalanceAndPrice(THOR_ADDRESS, any(), VAULT_ID)
+        } returns listOf(defiBalance(Coins.ThorChain.sRUJI, amount = STAKED, fiat = STAKED_FIAT))
+
+        val compounding =
+            repository
+                .loadDeFiAddresses(VAULT_ID, isRefresh = false)
+                .toList()
+                .last()
+                .first { it.chain == Chain.ThorChain }
+                .accounts
+                .first { it.token.id == Coins.ThorChain.sRUJI.id }
+                .token
+
+        // The catalogue entry carries neither, and a signing input built from an empty public key
+        // aborts before the keysign QR appears.
+        assertEquals(THOR_ADDRESS, compounding.address)
+        assertEquals(THOR_PUBLIC_KEY, compounding.hexPublicKey)
+    }
+
+    private fun defiBalance(coin: Coin, amount: Long, fiat: Long) =
+        TokenBalanceAndPrice(
+            tokenBalance =
+                TokenBalance(
+                    tokenValue = TokenValue(BigInteger.valueOf(amount), coin.ticker, coin.decimal),
+                    fiatValue = FiatValue(BigDecimal.valueOf(fiat), USD),
+                ),
+            price = FiatValue(BigDecimal.ONE, USD),
+        )
+
     private fun stubVault(vararg coins: Coin) {
         val vault = Vault(id = VAULT_ID, name = "Test Vault", coins = coins.toList())
         every { vaultRepository.getAsFlow(VAULT_ID) } returns flowOf(vault)
@@ -441,6 +577,10 @@ internal class AccountsRepositoryImplTest {
         const val USD = "USD"
         const val ETH_ADDRESS = "0xeth"
         const val SOL_ADDRESS = "sol-addr"
+        const val THOR_ADDRESS = "thor-addr"
+        const val THOR_PUBLIC_KEY = "thor-pubkey"
+        const val STAKED = 12_000_000_000L
+        const val STAKED_FIAT = 250L
         const val CACHED = 5L
         const val NETWORK = 10L
         const val ETH_NETWORK = 100L

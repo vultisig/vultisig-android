@@ -420,14 +420,21 @@ constructor(
         val vault = getVault(vaultId)
         val defiCoins = vault.coins.filter { it.isValidForDeFi() }.distinctBy { it.id.lowercase() }
 
+        val coins =
+            defiCoins
+                .groupBy { it.chain }
+                .mapValues { (chain, tokens) -> tokens + defiOnlyTokens(chain, tokens) }
+
+        // Price the DeFi-only positions alongside the vault's own coins: a price is cached under
+        // its own coin's token id, and that is the row the cached path reads, so a refresh that
+        // left them out would keep valuing a resolved position at $0.00.
         val loadPrices =
             if (isRefresh) {
-                async { tokenPriceRepository.refresh(defiCoins) }
+                async { tokenPriceRepository.refresh(coins.values.flatten()) }
             } else {
                 null
             }
 
-        val coins = defiCoins.groupBy { it.chain }
         val addresses =
             coins.mapNotNullTo(mutableListOf()) { (chain, tokens) ->
                 chainAndTokensToAddressMapper.map(ChainAndTokens(chain, tokens))
@@ -496,7 +503,10 @@ constructor(
                             }
                         val canBeDeFiProvider = address.chain.isDeFiSupported
 
-                        address.copy(accounts = updatedAccounts, isDefiProvider = canBeDeFiProvider)
+                        address.copy(
+                            accounts = updatedAccounts.dropUnfundedDefiOnly(),
+                            isDefiProvider = canBeDeFiProvider,
+                        )
                     }
 
                 send(cachedAddresses)
@@ -538,7 +548,10 @@ constructor(
                                     .awaitAll()
                             val canBeDeFiProvider = account.chain.isDeFiSupported
 
-                            account.copy(accounts = newAccounts, isDefiProvider = canBeDeFiProvider)
+                            account.copy(
+                                accounts = newAccounts.dropUnfundedDefiOnly(),
+                                isDefiProvider = canBeDeFiProvider,
+                            )
                         } catch (e: Exception) {
                             if (e is kotlinx.coroutines.CancellationException) throw e
                             Timber.e(e)
@@ -649,6 +662,40 @@ constructor(
             Chain.Solana -> true
             else -> false
         }
+    }
+
+    /**
+     * The chain's DeFi-only positions, stamped with the key its tokens share.
+     *
+     * These back a DeFi position but are never wallet tokens — the sRUJI receipt is kept out of
+     * token discovery on purpose — so no vault carries one and the accounts built from
+     * [Vault.coins] alone leave the position with nowhere for its balance to land. It is then
+     * dropped from the chain's row and from the portfolio total above it, which read $0.00 over a
+     * funded position.
+     *
+     * Every token on a chain shares the chain's derived key, so the native token supplies the
+     * address the balance is fetched against. A chain whose native token is absent is skipped: the
+     * mapper builds no address for it either, so the accounts would have nothing to hang from.
+     */
+    private fun defiOnlyTokens(chain: Chain, tokens: List<Coin>): List<Coin> {
+        val nativeToken = tokens.firstOrNull { it.isNativeToken } ?: return emptyList()
+        return Coins.defiOnly
+            .filter { position ->
+                position.chain == chain && tokens.none { it.id.equals(position.id, true) }
+            }
+            .map { it.copy(address = nativeToken.address, hexPublicKey = nativeToken.hexPublicKey) }
+    }
+
+    /**
+     * Drops the DeFi-only accounts that resolved to nothing.
+     *
+     * One is injected for every chain that could carry the position, before any balance is known,
+     * so a vault holding none would otherwise show an account it never opened — counted among the
+     * chain's assets on the row that reports them. The vault's own coins are kept whatever they
+     * resolve to: a zero there is a token the user chose to track.
+     */
+    private fun List<Account>.dropUnfundedDefiOnly(): List<Account> = filterNot { account ->
+        Coins.isDefiOnly(account.token) && (account.tokenValue?.value?.signum() ?: 0) <= 0
     }
 }
 

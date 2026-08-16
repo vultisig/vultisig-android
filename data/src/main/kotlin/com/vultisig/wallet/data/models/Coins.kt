@@ -4481,6 +4481,15 @@ object Coins {
     val allResolvable: List<Coin> = all + defiOnly
 
     /**
+     * Whether [coin] is one of the [defiOnly] positions.
+     *
+     * Matched on the id rather than by identity: these coins are stamped with the holding vault's
+     * address and public key before they reach an account, so the instance is never the catalogue's
+     * own.
+     */
+    fun isDefiOnly(coin: Coin): Boolean = defiOnly.any { it.id.equals(coin.id, ignoreCase = true) }
+
+    /**
      * The curated [Coin] a pool or contract refers to, or null when the catalogue doesn't carry it.
      *
      * Pools name their assets by chain and ticker (`BTC.BTC`, `ETH.USDC-0x…`), which is all a
