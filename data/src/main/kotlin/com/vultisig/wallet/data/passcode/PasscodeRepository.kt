@@ -104,6 +104,16 @@ interface PasscodeRepository {
     suspend fun initialize()
 
     /**
+     * Reads the persisted state again after a launch that could not read it.
+     *
+     * Only [PasscodeState.KeyUnavailable] and [PasscodeState.StoreUnavailable] retry. Both are
+     * decided by what a keystore returned once, and a keystore that stalled can come back, so the
+     * alternative is telling the user to relaunch to repeat a read the app can just do again. Every
+     * other state is settled by something this cannot re-derive.
+     */
+    suspend fun retry()
+
+    /**
      * Configures [passcode] for the first time and leaves the app unlocked.
      *
      * Returns [PasscodeUnlockResult.Success] or [PasscodeUnlockResult.Failed]; the verification
@@ -152,8 +162,8 @@ internal interface PasscodeDataKeySource {
      * when no passcode is configured.
      *
      * Returns without waiting when the credentials are unreachable ([PasscodeState.KeyUnavailable],
-     * [PasscodeState.StoreUnavailable]): neither resolves without a relaunch, so waiting would be a
-     * hang rather than a delay.
+     * [PasscodeState.StoreUnavailable]): neither resolves without [PasscodeRepository.retry] or a
+     * relaunch, so waiting would be a hang rather than a delay.
      */
     suspend fun awaitUnlocked()
 }
@@ -223,24 +233,38 @@ internal class PasscodeRepositoryImpl(
     override suspend fun initialize() {
         mutex.withLock {
             if (_state.value != PasscodeState.Unknown) return
-            _state.value =
-                try {
-                    resolveInitialState()
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    // Reading the credentials is itself a keystore operation, and the database is
-                    // asked whether any ciphertext exists — either can fail. Neither leaving the
-                    // state Unknown nor letting this escape is survivable: the first leaves the
-                    // guard's blank cover over the whole app with nothing to move it, and the
-                    // second kills whichever coroutine happened to ask first. Reporting Disabled
-                    // is the one answer that would lose data, so it reports the truth — nothing
-                    // readable this launch — which at least says so on screen and names the fix.
-                    Timber.e(e, "Could not read the passcode state")
-                    PasscodeState.StoreUnavailable
-                }
+            _state.value = resolveOrReport()
         }
     }
+
+    override suspend fun retry() {
+        mutex.withLock {
+            when (_state.value) {
+                PasscodeState.KeyUnavailable,
+                PasscodeState.StoreUnavailable -> _state.value = resolveOrReport()
+                else -> Unit
+            }
+        }
+    }
+
+    /**
+     * Resolves the state, reporting a read that failed as one rather than letting it escape.
+     *
+     * Neither leaving the state Unknown nor throwing is survivable: the first leaves the guard's
+     * blank cover over the whole app with nothing to move it, and the second kills whichever
+     * coroutine happened to ask first. Disabled is the one answer that would lose data.
+     *
+     * Callers must hold [mutex].
+     */
+    private suspend fun resolveOrReport(): PasscodeState =
+        try {
+            resolveInitialState()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Could not read the passcode state")
+            PasscodeState.StoreUnavailable
+        }
 
     /** Callers must hold [mutex]. */
     private suspend fun resolveInitialState(): PasscodeState {

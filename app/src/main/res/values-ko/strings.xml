@@ -286,6 +286,7 @@
     <string name="passcode_settings_title">패스코드 암호화</string>
     <string name="passcode_settings_encryption_title">패스코드 암호화</string>
     <string name="passcode_settings_encryption_subtitle">이 기기의 볼트 저장소를 암호화하고 앱을 잠급니다.</string>
+    <string name="passcode_settings_encryption_explanation">패스코드 암호화는 이 기기에만 적용됩니다. 언제든 볼트를 복원할 수 있도록 .vult 백업을 보관하세요.</string>
     <string name="passcode_settings_change">패스코드 변경</string>
     <string name="passcode_settings_auto_lock">자동 잠금</string>
     <string name="auto_lock_setting_title">자동 잠금</string>
@@ -308,10 +309,10 @@
     <string name="passcode_entry_mismatch">패스코드가 일치하지 않습니다. 다시 선택하세요.</string>
     <string name="passcode_operation_failed">실패했습니다. 패스코드는 변경되지 않았습니다.</string>
     <string name="passcode_not_digits">숫자만 입력하세요.</string>
-    <string name="passcode_key_unavailable_title">볼트를 사용할 수 없음</string>
-    <string name="passcode_key_unavailable_message">이 기기의 볼트 저장소를 보호하는 키가 사라져 키셰어를 더 이상 읽을 수 없습니다. 앱을 다시 설치하고 백업에서 볼트를 복원하세요.</string>
-    <string name="passcode_store_unavailable_title">볼트를 일시적으로 사용할 수 없음</string>
-    <string name="passcode_store_unavailable_message">이번에는 이 기기의 보안 저장소를 열지 못해 볼트가 잠긴 상태로 유지됩니다. 앱을 다시 시작한 후 다시 시도하세요. 볼트는 이 기기에 그대로 있으므로 다시 설치할 필요는 없습니다.</string>
+    <string name="passcode_key_unavailable_title">이 기기에 볼트를 여는 키가 없습니다</string>
+    <string name="passcode_key_unavailable_message">볼트는 이 기기에 그대로 있습니다. 다시 열려면 .vult 백업에서 복원하세요.</string>
+    <string name="passcode_store_unavailable_title">지금은 볼트가 잠겨 있습니다</string>
+    <string name="passcode_store_unavailable_message">이번에는 이 기기의 보안 저장소가 열리지 않았습니다. 모두 그대로 있으니 다시 설치하지 말고 앱을 다시 시작하세요.</string>
     <string name="passcode_input_field_content_description">%2$d자리 중 %1$d자리 입력됨</string>
     <string name="swap_form_from_title">보내는 토큰</string>
     <string name="swap_form_estimated_fees_title">스왑 수수료</string>
