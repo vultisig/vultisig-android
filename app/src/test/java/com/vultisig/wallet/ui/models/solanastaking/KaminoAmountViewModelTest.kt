@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawEligibili
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.OPERATION_KAMINO_DEPOSIT
+import com.vultisig.wallet.data.models.OPERATION_KAMINO_WITHDRAW
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
@@ -39,6 +40,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -382,6 +384,75 @@ internal class KaminoAmountViewModelTest {
 
         assertEquals(OPERATION_KAMINO_DEPOSIT, captured.captured.operation)
         assertEquals("Steakhouse USDC", captured.captured.validatorName)
+        assertEquals(STEAKHOUSE.address, captured.captured.dstAddress)
+    }
+
+    @Test
+    fun `a withdraw is destined for the signer's own account, not the vault`() = runTest {
+        // The vault is where a withdrawal comes *from*. Naming it as the destination told the
+        // approving user the opposite of what the transaction does — and on an Android co-signer
+        // it lands on the generic Send screen with no withdraw framing at all, so the vault address
+        // reads as an ordinary payee.
+        givenTokenBalance("0")
+        coEvery { kaminoApi.getUserPositions(WALLET) } returns
+            listOf(
+                KaminoUserPositionJson(
+                    vaultAddress = STEAKHOUSE.address,
+                    stakedShares = "0",
+                    unstakedShares = "1000000000",
+                    totalShares = "1000000000",
+                )
+            )
+        coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0544278224860290217")
+        val captured = slot<DepositTransaction>()
+        coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+        coEvery {
+            buildKeysignPayload(
+                vault = any(),
+                action = any(),
+                apiAmount = any(),
+                tokenAmount = any(),
+                coin = any(),
+                blockChainSpecific = any(),
+                vaultPublicKeyECDSA = any(),
+                vaultLocalPartyID = any(),
+                libType = any(),
+            )
+        } returns keysignPayloadWithKaminoBudget()
+
+        val vm = viewModel(isWithdraw = true)
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("1")
+        vm.submit()
+
+        assertEquals(OPERATION_KAMINO_WITHDRAW, captured.captured.operation)
+        assertEquals(WALLET, captured.captured.dstAddress)
+        assertNotEquals(STEAKHOUSE.address, captured.captured.dstAddress)
+    }
+
+    @Test
+    fun `a deposit is still destined for the vault`() = runTest {
+        givenTokenBalance("2500000000")
+        val captured = slot<DepositTransaction>()
+        coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+        coEvery {
+            buildKeysignPayload(
+                vault = any(),
+                action = any(),
+                apiAmount = any(),
+                tokenAmount = any(),
+                coin = any(),
+                blockChainSpecific = any(),
+                vaultPublicKeyECDSA = any(),
+                vaultLocalPartyID = any(),
+                libType = any(),
+            )
+        } returns keysignPayloadWithKaminoBudget()
+
+        val vm = viewModel()
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
+        vm.submit()
+
         assertEquals(STEAKHOUSE.address, captured.captured.dstAddress)
     }
 
