@@ -219,28 +219,38 @@ internal object BlockaidSimulationParser {
         val outAmount = parseRawAmount(outRaw) ?: return null
         val fromCoin = buildSolanaCoin(outSource.asset, outSource.assetType) ?: return null
 
-        val inSource = inSources.firstOrNull()
+        // Native SOL and wrapped SOL are normalised to the same mint in buildSolanaCoin (the WSOL
+        // address doubles as the native-SOL sentinel), so a same-asset in-leg is wrap/unwrap noise,
+        // not a real swap destination — e.g. a Kamino deposit's wSOL rent-exempt residual nets out
+        // as a small "incoming" diff. Prefer an in-leg that is a genuinely different asset (the
+        // same
+        // search order parseEvmSwap uses), so a batched signAllTransactions that also contains a
+        // real swap doesn't get shadowed by an unrelated SOL/WSOL leg landing first in `inSources`.
+        val inSource =
+            inSources.firstOrNull {
+                val coin = buildSolanaCoin(it.asset, it.assetType)
+                coin != null && !coin.address.equals(fromCoin.address, ignoreCase = true)
+            } ?: inSources.firstOrNull()
         val inRaw = inSource?.incoming?.rawValue?.toRawValueString()
         val inAmount = inRaw?.let(::parseRawAmount)
         val toCoin = inSource?.let { buildSolanaCoin(it.asset, it.assetType) }
-
-        // Native SOL and wrapped SOL are normalised to the same mint in buildSolanaCoin (the WSOL
-        // address doubles as the native-SOL sentinel), so a SOL-out/WSOL-in pair is the same asset
-        // on both sides — never a genuine swap. It shows up when a transaction wraps SOL and spends
-        // it in the same instruction (e.g. a Kamino deposit): the wSOL account's rent-exempt
-        // residual nets out as a small "incoming" diff, which would otherwise be read as the swap's
-        // destination amount. Falls back to a Transfer of the real out leg instead.
         val sameAsset = toCoin != null && toCoin.address.equals(fromCoin.address, ignoreCase = true)
 
-        return if (inAmount != null && toCoin != null && !sameAsset) {
-            BlockaidSimulationInfo.Swap(
-                fromCoin = fromCoin,
-                toCoin = toCoin,
-                fromAmount = outAmount,
-                toAmount = inAmount,
-            )
-        } else {
-            BlockaidSimulationInfo.Transfer(fromCoin = fromCoin, fromAmount = outAmount)
+        return when {
+            inAmount != null && toCoin != null && !sameAsset ->
+                BlockaidSimulationInfo.Swap(
+                    fromCoin = fromCoin,
+                    toCoin = toCoin,
+                    fromAmount = outAmount,
+                    toAmount = inAmount,
+                )
+            // Same asset on both legs with a bigger in-leg is a Kamino-style withdraw: the
+            // "outgoing" leg is just the temp wSOL account being debited before it closes, and the
+            // amount the user actually receives is the in-leg, not the out-leg. Pure-incoming diffs
+            // are intentionally not represented in the hero (see parseSolanaTransfer), so fall back
+            // to the generic title instead of showing a misleading outgoing transfer.
+            sameAsset && inAmount != null && inAmount > outAmount -> null
+            else -> BlockaidSimulationInfo.Transfer(fromCoin = fromCoin, fromAmount = outAmount)
         }
     }
 
