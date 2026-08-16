@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawEligibili
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawLiquidity
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawMath
 import com.vultisig.wallet.data.blockchain.solana.kamino.coin
+import com.vultisig.wallet.data.blockchain.solana.kamino.kaminoDestinationAddress
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -498,7 +499,9 @@ constructor(
                     srcAddress = coin.address,
                     srcTokenValue = TokenValue(value = keysignPayload.toAmount, token = coin),
                     memo = "",
-                    dstAddress = vault.address,
+                    // The verify screen reads this stored copy, not the payload above, so the
+                    // withdraw branch has to be applied here too or nothing the user sees changes.
+                    dstAddress = kaminoDestinationAddress(vault, action, coin.address),
                     estimatedFees = gasFee,
                     estimateFeesFiat = "",
                     // The payload's, not `specific`'s. `KeysignShareViewModel` rebuilds the relayed

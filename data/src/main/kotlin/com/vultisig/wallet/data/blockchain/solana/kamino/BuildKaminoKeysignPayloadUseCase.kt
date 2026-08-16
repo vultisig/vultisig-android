@@ -10,6 +10,26 @@ import javax.inject.Inject
 import vultisig.keysign.v1.SignSolana
 
 /**
+ * Where a Kamino [action] moves money to, for the verify screen's destination row.
+ *
+ * A deposit pays the vault. A withdraw pays [signerAddress] — the vault is the source, and naming
+ * it as the destination tells the approving user the opposite of what the transaction does.
+ *
+ * Shared by the payload and by the [com.vultisig.wallet.data.models.DepositTransaction] the verify
+ * screen actually reads, because those are two places that must not drift: the screen shows the
+ * stored copy, so a branch applied to only one of them fixes nothing the user can see.
+ */
+fun kaminoDestinationAddress(
+    vault: KaminoVault,
+    action: KaminoAction,
+    signerAddress: String,
+): String =
+    when (action) {
+        KaminoAction.DEPOSIT -> vault.address
+        KaminoAction.WITHDRAW -> signerAddress
+    }
+
+/**
  * Turns a Kamino deposit or withdraw intent into a [KeysignPayload] with `signSolana` populated.
  *
  * Mirrors
@@ -92,8 +112,10 @@ constructor(private val preparer: KaminoTransactionPreparer) {
         return KeysignPayload(
             coin = coin,
             // Display destination on the verify screen. Routing is driven by the relayed bytes, not
-            // by this field.
-            toAddress = vault.address,
+            // by this field — but it is what the approving user is told the money is going to, and
+            // the two directions do not share an answer: a deposit pays the vault, a withdraw pays
+            // the signer's own account and the vault is the *source*. iOS branches the same way.
+            toAddress = kaminoDestinationAddress(vault, action, coin.address),
             toAmount =
                 tokenAmount
                     .movePointRight(coin.decimal)
