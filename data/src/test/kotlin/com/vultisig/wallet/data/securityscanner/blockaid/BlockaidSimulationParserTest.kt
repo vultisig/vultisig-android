@@ -394,6 +394,62 @@ internal class BlockaidSimulationParserTest {
 
         assertEquals("SOL", swap.fromCoin.ticker)
         assertEquals("USDC", swap.toCoin.ticker)
+        assertEquals(BigInteger("59435000"), swap.fromAmount)
+        assertEquals(BigInteger("10000000"), swap.toAmount)
+    }
+
+    @Test
+    fun `solana batch picks the real outgoing leg over a fee leg that comes first`() {
+        // Same fixture as above with the tiny fee diff moved to the front. `outSources` must be
+        // picked by amount, not by list position, or the fee's 5000 lamports gets shown as the
+        // swap's fromAmount instead of the real 59435000 lamports leg.
+        val response =
+            solanaResponse(
+                """{
+                    "result": {
+                      "simulation": {
+                        "account_summary": {
+                          "account_assets_diff": [
+                            {
+                              "asset": { "type": "SOL", "decimals": 9, "symbol": "SOL", "address": null },
+                              "out": { "raw_value": "5000" }
+                            },
+                            {
+                              "asset": { "type": "SOL", "decimals": 9, "symbol": "SOL", "address": null },
+                              "out": { "raw_value": "59435000" }
+                            },
+                            {
+                              "asset": {
+                                "type": "TOKEN",
+                                "address": "So11111111111111111111111111111111111111112",
+                                "symbol": "WSOL",
+                                "decimals": 9
+                              },
+                              "in": { "raw_value": "2039280" }
+                            },
+                            {
+                              "asset": {
+                                "type": "TOKEN",
+                                "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                                "symbol": "USDC",
+                                "decimals": 6
+                              },
+                              "in": { "raw_value": "10000000" }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                """
+                    .trimIndent()
+            )
+
+        val swap = BlockaidSimulationParser.parseSolana(response) as BlockaidSimulationInfo.Swap
+
+        assertEquals("SOL", swap.fromCoin.ticker)
+        assertEquals("USDC", swap.toCoin.ticker)
+        assertEquals(BigInteger("59435000"), swap.fromAmount)
         assertEquals(BigInteger("10000000"), swap.toAmount)
     }
 

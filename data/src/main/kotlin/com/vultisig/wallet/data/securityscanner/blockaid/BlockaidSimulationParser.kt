@@ -212,9 +212,14 @@ internal object BlockaidSimulationParser {
             return BlockaidSimulationInfo.Transfer(fromCoin = coin, fromAmount = total)
         }
 
-        // Regular swap path: pick by field presence rather than position. Blockaid does not
-        // contractually order diffs.
-        val outSource = outSources.firstOrNull() ?: return null
+        // Regular swap path: pick by amount, not position. Blockaid does not contractually order
+        // diffs, so a batch with a real outgoing leg plus a small network-fee leg (both
+        // outgoing-only native SOL) must not have `firstOrNull` land on whichever happens to come
+        // first — the fee is always far smaller than a genuine outgoing leg.
+        val outSource =
+            outSources.maxByOrNull {
+                it.outgoing?.rawValue?.toRawValueString()?.let(::parseRawAmount) ?: BigInteger.ZERO
+            } ?: return null
         val outRaw = outSource.outgoing?.rawValue?.toRawValueString() ?: return null
         val outAmount = parseRawAmount(outRaw) ?: return null
         val fromCoin = buildSolanaCoin(outSource.asset, outSource.assetType) ?: return null
