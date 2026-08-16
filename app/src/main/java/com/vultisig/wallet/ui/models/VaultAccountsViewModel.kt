@@ -347,6 +347,26 @@ constructor(
         val vaultId = vaultId ?: return
         updateRefreshing(true)
         loadAccounts(vaultId)
+        // A pull on the DeFi tab has to reload the DeFi rows: they come from their own load, so
+        // refreshing only the wallet accounts left the list the user was pulling on untouched.
+        if (uiState.value.cryptoConnectionType == CryptoConnectionType.Defi) {
+            loadDeFiBalances(vaultId, isRefresh = true)
+        }
+    }
+
+    /**
+     * Re-reads the DeFi list when home comes back to the front.
+     *
+     * Positions are changed a screen deeper — a Kamino vault switched on under Manage Positions, a
+     * deposit signed — and nothing on the way back asks this list to look again, so it kept
+     * rendering the figures it had loaded before the change. The wallet tab has its own streaming
+     * load and is left alone.
+     */
+    fun onScreenResumed() {
+        val vaultId = vaultId ?: return
+        if (uiState.value.cryptoConnectionType == CryptoConnectionType.Defi) {
+            loadDeFiBalances(vaultId, isRefresh = true)
+        }
     }
 
     fun send() {
