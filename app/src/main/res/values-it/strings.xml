@@ -479,8 +479,6 @@
     <string name="dapp_hero_unverified_function_subtitle">Controlla i dettagli prima di firmare</string>
     <string name="dapp_unverified_function_done_caution">Funzione non verificata. Controlla i dettagli della transazione.</string>
     <string name="request_from">Richiesta da</string>
-    <string name="send_shares_currency_hint">Inserisci quote</string>
-    <string name="deposit_form_shares_title">Quote (Saldo: %1$s)</string>
     <string name="fast_vault_password_reminder_title">Verifica la tua password per:</string>
     <string name="fast_vault_password_reminder_done_button">Fatto</string>
     <string name="periodically_ask_verify_password">Ti chiediamo periodicamente una verifica affinché tu non dimentichi la tua password.</string>
@@ -1194,7 +1192,6 @@
     <string name="onboarding_desc_page_6_part_1">Queste condivisioni collaborano per</string>
     <string name="enter_email_screen_desc">Questa email viene utilizzata solo per inviare il backup del server</string>
     <string name="keygen_connecting_with_server_take_a_second">L\'operazione dovrebbe richiedere solo un secondo</string>
-    <string name="function_switch_thorchain_address">Indirizzo THORChain</string>
     <string name="tx_transaction_successful_screen_title">Transazione riuscita</string>
     <string name="migration_onboarding_step_3_text_end">durante l\'aggiornamento</string>
     <string name="migration_onboarding_upgrade_your_vault">Aggiorna il tuo caveau</string>

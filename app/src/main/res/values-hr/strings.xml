@@ -480,8 +480,6 @@
     <string name="dapp_hero_unverified_function_subtitle">Pregledajte detalje prije potpisivanja</string>
     <string name="dapp_unverified_function_done_caution">Neprovjerena funkcija. Pregledajte detalje transakcije.</string>
     <string name="request_from">Zahtjev od</string>
-    <string name="send_shares_currency_hint">Unesite udjele</string>
-    <string name="deposit_form_shares_title">Udjeli (Stanje: %1$s)</string>
     <string name="fast_vault_password_reminder_title">Potvrdite svoju lozinku za:</string>
     <string name="fast_vault_password_reminder_done_button">Gotovo</string>
     <string name="periodically_ask_verify_password">Povremeno tražimo potvrdu kako ne biste zaboravili svoju lozinku.</string>
@@ -1199,7 +1197,6 @@
     <string name="onboarding_desc_page_6_part_1">Ovi dijeljeni resursi surađuju s</string>
     <string name="enter_email_screen_desc">Ova e-pošta koristi se samo za slanje sigurnosne kopije poslužitelja</string>
     <string name="keygen_connecting_with_server_take_a_second">Ovo bi trebalo trajati samo sekundu</string>
-    <string name="function_switch_thorchain_address">THORChain adresa</string>
     <string name="tx_transaction_successful_screen_title">Transakcija uspješna</string>
     <string name="migration_onboarding_step_3_text_end">prilikom nadogradnje</string>
     <string name="migration_onboarding_upgrade_your_vault">Nadogradi svoj trezor</string>

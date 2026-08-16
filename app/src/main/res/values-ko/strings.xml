@@ -190,7 +190,6 @@
     <string name="send_to_address_hint">주소를 입력하세요</string>
     <string name="send_amount">금액</string>
     <string name="send_amount_currency_hint">금액 입력</string>
-    <string name="send_shares_currency_hint">수량 입력</string>
     <string name="send_continue_button">계속</string>
     <string name="chain_account_view_swap">스왑</string>
     <string name="vault_settings_error_backup_file">오류가 발생했습니다</string>
@@ -365,7 +364,6 @@
     <string name="custom_token_token_not_found">토큰을 찾을 수 없습니다</string>
     <string name="custom_token_add_token">%1$s 토큰 추가</string>
     <string name="deposit_form_amount_title">금액 (잔액: %1$s)</string>
-    <string name="deposit_form_shares_title">수량 (잔액: %1$s)</string>
     <string name="share_vault_qr_share">공유</string>
     <string name="deposit_form_node_address_title">노드 주소</string>
     <string name="bond_not_whitelisted_error">이 노드의 화이트리스트에 등록되지 않았습니다</string>
@@ -804,7 +802,6 @@
     <string name="backup_password_request_with_password_action">비밀번호 사용</string>
     <string name="backup_password_topbar_title">비밀번호</string>
     <string name="function_transfer_ibc_dst_address_input_title">수신 주소</string>
-    <string name="function_switch_thorchain_address">THORChain 주소</string>
     <string name="migration_onboarding_step_1_text_start">이 볼트를</string>
     <string name="migration_onboarding_step_1_text_emphasized">세계에서 가장 빠른 MPC 프로토콜</string>
     <string name="migration_onboarding_step_1_text_end">로 업그레이드하고 그 어느 때보다 빠르게 서명하세요</string>

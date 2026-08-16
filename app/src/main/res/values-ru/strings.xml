@@ -480,8 +480,6 @@
     <string name="dapp_hero_unverified_function_subtitle">Просмотрите детали ниже перед подписанием</string>
     <string name="dapp_unverified_function_done_caution">Непроверенная функция. Просмотрите детали транзакции.</string>
     <string name="request_from">Запрос от</string>
-    <string name="send_shares_currency_hint">Введите доли</string>
-    <string name="deposit_form_shares_title">Доли (Баланс: %1$s)</string>
     <string name="fast_vault_password_reminder_title">Подтвердите пароль для:</string>
     <string name="fast_vault_password_reminder_done_button">Готово</string>
     <string name="periodically_ask_verify_password">Мы периодически просим подтвердить пароль, чтобы вы его не забыли.</string>
@@ -1199,7 +1197,6 @@
     <string name="onboarding_desc_page_6_part_1">Эти общие ресурсы взаимодействуют с</string>
     <string name="enter_email_screen_desc">Этот адрес электронной почты используется только для отправки резервной копии сервера.</string>
     <string name="keygen_connecting_with_server_take_a_second">Это займёт всего секунду.</string>
-    <string name="function_switch_thorchain_address">Адрес THORChain</string>
     <string name="tx_transaction_successful_screen_title">Транзакция выполнена успешно</string>
     <string name="migration_onboarding_step_3_text_end">при обновлении</string>
     <string name="migration_onboarding_upgrade_your_vault">Обновите своё хранилище</string>

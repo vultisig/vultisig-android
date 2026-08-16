@@ -479,8 +479,6 @@
     <string name="dapp_hero_unverified_function_subtitle">Überprüfen Sie die Details unten, bevor Sie signieren</string>
     <string name="dapp_unverified_function_done_caution">Nicht verifizierte Funktion. Überprüfen Sie die Transaktionsdetails.</string>
     <string name="request_from">Anfrage von</string>
-    <string name="send_shares_currency_hint">Anteile eingeben</string>
-    <string name="deposit_form_shares_title">Anteile (Guthaben: %1$s)</string>
     <string name="fast_vault_password_reminder_title">Überprüfen Sie Ihr Passwort für:</string>
     <string name="fast_vault_password_reminder_done_button">Fertig</string>
     <string name="periodically_ask_verify_password">Wir bitten regelmäßig um eine Bestätigung, damit Sie Ihr Passwort nicht vergessen.</string>
@@ -1196,7 +1194,6 @@
     <string name="onboarding_desc_page_6_part_1">Diese Freigaben arbeiten zusammen, um</string>
     <string name="enter_email_screen_desc">Diese E-Mail-Adresse wird nur zum Senden der Serversicherung verwendet.</string>
     <string name="keygen_connecting_with_server_take_a_second">Dies dauert nur einen Augenblick.</string>
-    <string name="function_switch_thorchain_address">THORChain-Adresse</string>
     <string name="tx_transaction_successful_screen_title">Transaktion erfolgreich</string>
     <string name="migration_onboarding_step_3_text_end">Beim Upgrade</string>
     <string name="migration_onboarding_upgrade_your_vault">Verbessern Sie Ihren Tresor</string>

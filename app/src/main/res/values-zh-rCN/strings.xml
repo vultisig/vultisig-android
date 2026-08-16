@@ -196,7 +196,6 @@
     <string name="send_to_address_hint">在此输入地址</string>
     <string name="send_amount">金额</string>
     <string name="send_amount_currency_hint">输入金额</string>
-    <string name="send_shares_currency_hint">输入份额</string>
     <string name="send_continue_button">继续</string>
 
     <!-- Chain Account -->
@@ -466,7 +465,6 @@
 
     <!-- Deposit Form -->
     <string name="deposit_form_amount_title">金额（余额：%1$s）</string>
-    <string name="deposit_form_shares_title">份额（余额：%1$s）</string>
 
     <!-- Share Vault QR -->
     <string name="share_vault_qr_share">分享</string>
@@ -1525,7 +1523,6 @@
     <string name="onboarding_desc_page_6_part_1">这些共享文件协同工作</string>
     <string name="enter_email_screen_desc">此电子邮件仅用于发送服务器备份</string>
     <string name="keygen_connecting_with_server_take_a_second">这只需几秒钟。</string>
-    <string name="function_switch_thorchain_address">THORChain 地址</string>
     <string name="tx_transaction_successful_screen_title">交易成功</string>
     <string name="migration_onboarding_step_3_text_end">升级时</string>
     <string name="migration_onboarding_upgrade_your_vault">升级您的保险库</string>

@@ -193,7 +193,6 @@
     <string name="send_to_address_hint">Enter address here</string>
     <string name="send_amount">Amount</string>
     <string name="send_amount_currency_hint">Enter Amount</string>
-    <string name="send_shares_currency_hint">Enter Shares</string>
     <string name="send_continue_button">Continue</string>
     <string name="send_percent" translatable="false">%d%%</string>
     <string name="chain_account_view_swap">Swap</string>
@@ -376,7 +375,6 @@
     <string name="custom_token_token_not_found">Token not found</string>
     <string name="custom_token_add_token">Add %1$s Token</string>
     <string name="deposit_form_amount_title">Amount (Balance: %1$s)</string>
-    <string name="deposit_form_shares_title">Shares (Balance: %1$s)</string>
     <string name="share_vault_qr_share">Share</string>
     <string name="deposit_form_node_address_title">Node Address</string>
     <string name="bond_not_whitelisted_error">You are not whitelisted on this node</string>
@@ -815,7 +813,6 @@
     <string name="backup_password_request_with_password_action">Use password</string>
     <string name="backup_password_topbar_title">Password</string>
     <string name="function_transfer_ibc_dst_address_input_title">Destination Address</string>
-    <string name="function_switch_thorchain_address">THORChain Address</string>
     <string name="migration_onboarding_step_1_text_start">Upgrade this vault to the</string>
     <string name="migration_onboarding_step_1_text_emphasized">world’s fastest MPC protocol</string>
     <string name="migration_onboarding_step_1_text_end">and sign faster than ever before</string>

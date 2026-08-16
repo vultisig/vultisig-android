@@ -479,8 +479,6 @@
     <string name="dapp_hero_unverified_function_subtitle">Reveja os detalhes antes de assinar</string>
     <string name="dapp_unverified_function_done_caution">Função não verificada. Reveja os detalhes da transação.</string>
     <string name="request_from">Pedido de</string>
-    <string name="send_shares_currency_hint">Insira cotas</string>
-    <string name="deposit_form_shares_title">Cotas (Saldo: %1$s)</string>
     <string name="fast_vault_password_reminder_title">Verifique a sua palavra-passe para:</string>
     <string name="fast_vault_password_reminder_done_button">Concluído</string>
     <string name="periodically_ask_verify_password">Pedimos periodicamente uma verificação para que não esqueça a sua palavra-passe.</string>
@@ -1193,7 +1191,6 @@
     <string name="enter_email_screen_desc">Este email é apenas utilizado para enviar o backup do servidor</string>
     <string name="onboarding_desc_page_6_part_1">Estas ações colaboram para</string>
     <string name="keygen_connecting_with_server_take_a_second">Isto deve demorar apenas um segundo.</string>
-    <string name="function_switch_thorchain_address">Endereço THORChain</string>
     <string name="tx_transaction_successful_screen_title">Transação concluída com sucesso</string>
     <string name="migration_onboarding_step_3_text_end">Ao atualizar</string>
     <string name="migration_onboarding_upgrade_your_vault">Atualize o seu cofre</string>

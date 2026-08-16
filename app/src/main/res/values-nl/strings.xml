@@ -478,8 +478,6 @@
     <string name="dapp_hero_unverified_function_subtitle">Bekijk de details hieronder voordat je ondertekent</string>
     <string name="dapp_unverified_function_done_caution">Niet-geverifieerde functie. Bekijk de transactiedetails.</string>
     <string name="request_from">Verzoek van</string>
-    <string name="send_shares_currency_hint">Voer aandelen in</string>
-    <string name="deposit_form_shares_title">Aandelen (Saldo: %1$s)</string>
     <string name="fast_vault_password_reminder_title">Verifieer uw wachtwoord voor:</string>
     <string name="fast_vault_password_reminder_done_button">Klaar</string>
     <string name="periodically_ask_verify_password">We vragen regelmatig om verificatie zodat u uw wachtwoord niet vergeet.</string>
@@ -1191,7 +1189,6 @@
     <string name="onboarding_desc_page_6_part_1">Deze shares werken samen om</string>
     <string name="enter_email_screen_desc">Dit emailadres wordt alleen gebruikt om de serverback-up te verzenden</string>
     <string name="keygen_connecting_with_server_take_a_second">Dit zou slechts een seconde moeten duren</string>
-    <string name="function_switch_thorchain_address">THORChain-adres</string>
     <string name="tx_transaction_successful_screen_title">Transactie succesvol</string>
     <string name="migration_onboarding_step_3_text_end">bij het upgraden</string>
     <string name="migration_onboarding_upgrade_your_vault">Upgrade uw kluis</string>
