@@ -219,12 +219,10 @@ constructor(
      * Wallet balance less everything the deposit itself has to pay for, so a Max amount produces a
      * transaction that can actually land.
      *
-     * For the SOL vault that is three things, not one: the base fee, the priority fee this
-     * transaction will be charged (price × the compute limit, far from negligible at these limits),
-     * and the rent-exempt reserve for the **wrapped-SOL account the deposit has to create** — the
-     * vault's underlying is wSOL, not native SOL. Reserving only the base fee, as this first did,
-     * leaves a Max deposit unable to fund that account and it fails on chain. The native staking
-     * flow reserves rent the same way.
+     * For a first SOL-vault deposit that is several things, not one: the base fee, the charged
+     * Kamino priority fee (price × compute limit), and rent for every account the deposit creates:
+     * wSOL ATA, share ATA and farm user-state. Reserving only the transfer-shaped fee leaves a Max
+     * deposit unable to fund those accounts and it fails at preflight.
      *
      * A token deposit pays all of that in SOL, so the token balance is spendable in full.
      */
@@ -232,29 +230,71 @@ constructor(
         val balance = balanceRepository.getTokenValue(coin.address, coin).first().value
         if (!coin.isNativeToken) return BigDecimal(balance).movePointLeft(coin.decimal)
 
-        val priorityFee =
-            KaminoComputeBudget.priorityFeeLamports(
-                vault = vault,
-                action = KaminoAction.DEPOSIT,
-                networkPrice = null,
-            )
-        val wrappedSolRent =
-            if (vault.tokenMint == KaminoVaultRegistry.WRAPPED_SOL_MINT) {
-                // Falling back to zero would quietly hand the whole balance to a Max deposit that
-                // then cannot fund the account it creates. The 165-byte token-account rent is a
-                // network constant in practice, so the known value is a far better answer than
-                // none.
-                runCatching { solanaApi.getMinimumBalanceForRentExemption() }
-                    .getOrNull()
-                    ?.takeIf { it.signum() > 0 } ?: SPL_TOKEN_ACCOUNT_RENT_LAMPORTS
-            } else {
-                BigInteger.ZERO
-            }
+        val priorityFee = kaminoDepositPriorityFee(vault, coin)
+        val rentReserve = kaminoNativeDepositRentReserve(vault, coin)
 
-        val headroom = SolanaHelper.DefaultFeeInLamports + priorityFee + wrappedSolRent
+        val headroom = SolanaHelper.DefaultFeeInLamports + priorityFee + rentReserve
         return BigDecimal((balance - headroom).coerceAtLeast(BigInteger.ZERO))
             .movePointLeft(coin.decimal)
     }
+
+    private suspend fun kaminoDepositPriorityFee(vault: KaminoVault, coin: Coin): BigInteger {
+        val solanaSpecific =
+            runCatching {
+                    blockChainSpecificRepository
+                        .getSpecific(
+                            chain = Chain.Solana,
+                            address = coin.address,
+                            token = coin,
+                            gasFee = TokenValue(SolanaHelper.DefaultFeeInLamports, coin),
+                            isSwap = false,
+                            isMaxAmountEnabled = false,
+                            isDeposit = true,
+                        )
+                        .blockChainSpecific as? BlockChainSpecific.Solana
+                }
+                .getOrNull()
+
+        return KaminoComputeBudget.priorityFeeLamports(
+            vault = vault,
+            action = KaminoAction.DEPOSIT,
+            networkPrice = solanaSpecific?.priorityFee,
+        )
+    }
+
+    private suspend fun kaminoNativeDepositRentReserve(vault: KaminoVault, coin: Coin): BigInteger {
+        if (vault.tokenMint != KaminoVaultRegistry.WRAPPED_SOL_MINT) return BigInteger.ZERO
+
+        val tokenAccountRent = tokenAccountRentReserve()
+        val wrappedSolRent =
+            tokenAccountRent.takeUnless { tokenAccountExists(coin.address, vault.tokenMint) }
+                ?: BigInteger.ZERO
+        val shareAccountRent =
+            tokenAccountRent.takeUnless { tokenAccountExists(coin.address, vault.sharesMint) }
+                ?: BigInteger.ZERO
+        val farmUserStateRent =
+            FARM_USER_STATE_RENT_LAMPORTS.takeUnless { hasKaminoVaultPosition(coin.address, vault) }
+                ?: BigInteger.ZERO
+
+        return wrappedSolRent + shareAccountRent + farmUserStateRent
+    }
+
+    private suspend fun tokenAccountRentReserve(): BigInteger =
+        runCatching { solanaApi.getMinimumBalanceForRentExemption() }
+            .getOrNull()
+            ?.takeIf { it.signum() > 0 } ?: SPL_TOKEN_ACCOUNT_RENT_LAMPORTS
+
+    private suspend fun tokenAccountExists(walletAddress: String, mint: String): Boolean =
+        runCatching {
+                solanaApi.getTokenAssociatedAccountByOwner(walletAddress, mint).first != null
+            }
+            .getOrDefault(false)
+
+    private suspend fun hasKaminoVaultPosition(walletAddress: String, vault: KaminoVault): Boolean =
+        runCatching {
+                kaminoApi.getUserPositions(walletAddress).any { it.vaultAddress == vault.address }
+            }
+            .getOrDefault(false)
 
     /**
      * Resolves what the withdraw form may offer, in shares first and tokens only as a projection.
@@ -568,6 +608,13 @@ constructor(
          * — reserving nothing would be worse than reserving a value that has not moved in practice.
          */
         val SPL_TOKEN_ACCOUNT_RENT_LAMPORTS: BigInteger = BigInteger.valueOf(2_039_280)
+
+        /**
+         * Rent-exempt minimum Kamino charges when a first deposit creates the farms `UserState`.
+         * The account size is Kamino-owned, so keep the observed mainnet lamport value here rather
+         * than pretending the app can derive it from SPL token-account rent.
+         */
+        val FARM_USER_STATE_RENT_LAMPORTS: BigInteger = BigInteger.valueOf(6_299_080)
 
         val ONE_HUNDRED = BigDecimal(100)
         const val DEFAULT_SCALE = 6
