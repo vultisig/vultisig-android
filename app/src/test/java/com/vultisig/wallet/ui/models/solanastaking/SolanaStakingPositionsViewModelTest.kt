@@ -17,6 +17,9 @@ import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.screens.v2.defi.solana.KaminoEarnTotal
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -24,10 +27,9 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.text.NumberFormat
 import java.util.Locale
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -96,22 +98,22 @@ internal class SolanaStakingPositionsViewModelTest {
     fun `the header adds Kamino Earn to native staking`() = runTest {
         val vm = viewModel().apply { setData(VAULT_ID) }
 
-        vm.onKaminoTotalChanged(BigDecimal("54.25"))
+        vm.onKaminoTotalChanged(kaminoTotal("54.25"))
 
         // The Staked tab keeps reporting its own half.
-        assertEquals("$100.00", vm.state.value.totalStakedFiatDisplay)
-        assertEquals("$154.25", vm.state.value.chainTotalFiatDisplay)
+        vm.state.value.totalStakedFiatDisplay shouldBe "$100.00"
+        vm.state.value.chainTotalFiatDisplay shouldBe "$154.25"
     }
 
     @Test
     fun `the header totals whichever half arrives first`() = runTest {
         // Earn is loaded by its own view-model, so it can resolve before the stake accounts do.
         val vm = viewModel()
-        vm.onKaminoTotalChanged(BigDecimal("54.25"))
+        vm.onKaminoTotalChanged(kaminoTotal("54.25"))
 
         vm.setData(VAULT_ID)
 
-        assertEquals("$154.25", vm.state.value.chainTotalFiatDisplay)
+        vm.state.value.chainTotalFiatDisplay shouldBe "$154.25"
     }
 
     @Test
@@ -119,22 +121,74 @@ internal class SolanaStakingPositionsViewModelTest {
         val vm = viewModel().apply { setData(VAULT_ID) }
 
         // A resolved zero, which the Earn view-model reports when nothing is enabled.
-        vm.onKaminoTotalChanged(BigDecimal.ZERO)
+        vm.onKaminoTotalChanged(kaminoTotal("0"))
 
-        assertEquals("$100.00", vm.state.value.chainTotalFiatDisplay)
+        vm.state.value.chainTotalFiatDisplay shouldBe "$100.00"
     }
 
     @Test
     fun `an unresolved Kamino total leaves the header unavailable rather than short`() = runTest {
         val vm = viewModel().apply { setData(VAULT_ID) }
-        vm.onKaminoTotalChanged(BigDecimal("54.25"))
+        vm.onKaminoTotalChanged(kaminoTotal("54.25"))
 
         vm.onKaminoTotalChanged(null)
 
         // Reporting the staking half alone would present a number short by a real position as the
         // chain's whole DeFi balance.
-        assertNull(vm.state.value.chainTotalFiatDisplay)
-        assertEquals("$100.00", vm.state.value.totalStakedFiatDisplay)
+        vm.state.value.chainTotalFiatDisplay.shouldBeNull()
+        vm.state.value.totalStakedFiatDisplay shouldBe "$100.00"
+    }
+
+    @Test
+    fun `the newest Kamino total wins, whatever order the handovers land in`() = runTest {
+        val vm = viewModel().apply { setData(VAULT_ID) }
+
+        vm.onKaminoTotalChanged(kaminoTotal("54.25"))
+        vm.onKaminoTotalChanged(kaminoTotal("70.00"))
+
+        // An earlier handover must never overwrite a later one — the banner would then sit on a
+        // figure the Earn tab has already moved past.
+        vm.state.value.chainTotalFiatDisplay shouldBe "$170.00"
+    }
+
+    @Test
+    fun `a Kamino half priced in another currency is not added to this one`() = runTest {
+        val vm = viewModel().apply { setData(VAULT_ID) }
+
+        // Mid-switch: Earn is still reporting the figure it priced before the change landed.
+        vm.onKaminoTotalChanged(KaminoEarnTotal(BigDecimal("54.25"), AppCurrency.EUR))
+
+        // €54.25 added to $100.00 is not a figure in either currency, so the banner waits.
+        vm.state.value.chainTotalFiatDisplay.shouldBeNull()
+    }
+
+    @Test
+    fun `a currency change re-prices the screen instead of relabelling it`() = runTest {
+        val currency = MutableStateFlow(AppCurrency.USD)
+        every { appCurrencyRepository.currency } returns currency
+        coEvery { appCurrencyRepository.getCurrencyFormat() } answers
+            {
+                NumberFormat.getCurrencyInstance(
+                    if (currency.value == AppCurrency.EUR) Locale.GERMANY else Locale.US
+                )
+            }
+        coEvery { tokenPriceRepository.getCachedPrice(SOL.id, AppCurrency.EUR) } returns
+            BigDecimal("90")
+
+        val vm = viewModel().apply { setData(VAULT_ID) }
+        vm.onKaminoTotalChanged(kaminoTotal("10"))
+        vm.state.value.chainTotalFiatDisplay shouldBe "$110.00"
+
+        currency.value = AppCurrency.EUR
+
+        // Earn has not re-priced yet, and its dollar figure must not be added to a euro one.
+        vm.state.value.chainTotalFiatDisplay.shouldBeNull()
+
+        vm.onKaminoTotalChanged(KaminoEarnTotal(BigDecimal("10"), AppCurrency.EUR))
+
+        // The staked SOL is re-priced in euros rather than the dollar figure being restamped.
+        vm.state.value.chainTotalFiatDisplay shouldBe
+            NumberFormat.getCurrencyInstance(Locale.GERMANY).format(BigDecimal("100"))
     }
 
     @Test
@@ -142,10 +196,12 @@ internal class SolanaStakingPositionsViewModelTest {
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT.copy(coins = emptyList())
 
         val vm = viewModel().apply { setData(VAULT_ID) }
-        vm.onKaminoTotalChanged(BigDecimal("54.25"))
+        vm.onKaminoTotalChanged(kaminoTotal("54.25"))
 
-        assertNull(vm.state.value.chainTotalFiatDisplay)
+        vm.state.value.chainTotalFiatDisplay.shouldBeNull()
     }
+
+    private fun kaminoTotal(value: String) = KaminoEarnTotal(BigDecimal(value), AppCurrency.USD)
 
     private fun viewModel() =
         SolanaStakingPositionsViewModel(

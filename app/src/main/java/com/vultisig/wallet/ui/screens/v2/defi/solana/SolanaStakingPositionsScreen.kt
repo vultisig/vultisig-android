@@ -85,8 +85,8 @@ internal fun SolanaStakingPositionsScreen(
     // The header banner is the chain's total, so it needs both tabs' figures. Earn owns its own
     // load, so its total is handed to the staking view-model as it resolves rather than being
     // summed in the composition, where the user's currency format isn't available.
-    LaunchedEffect(kaminoState.totalFiatValue) {
-        viewModel.onKaminoTotalChanged(kaminoState.totalFiatValue)
+    LaunchedEffect(kaminoState.totalValue) {
+        viewModel.onKaminoTotalChanged(kaminoState.totalValue)
     }
 
     SolanaStakingPositionsContent(
@@ -150,9 +150,16 @@ internal fun SolanaStakingPositionsContent(
         ) {
             SolanaHeaderBanner(
                 totalValue = state.chainTotalFiatDisplay,
-                // Both halves gate the banner: showing the staking total the moment it lands would
-                // print a figure that then jumps as Earn resolves.
-                isLoading = state.isLoading || kaminoState.isLoading,
+                // Both halves gate the banner, but only until it first resolves: Earn reloads on
+                // every pull-to-refresh and vault toggle, and gating on that would swap an
+                // already-correct figure for a skeleton. The handover runs a frame behind Earn's
+                // own load, so a total that has arrived but not yet reached the staking view-model
+                // reads as still loading rather than as unavailable.
+                isLoading =
+                    state.chainTotalFiatDisplay == null &&
+                        (state.isLoading ||
+                            kaminoState.isLoading ||
+                            kaminoState.totalValue != state.kaminoTotal),
                 isBalanceVisible = state.isBalanceVisible,
             )
 

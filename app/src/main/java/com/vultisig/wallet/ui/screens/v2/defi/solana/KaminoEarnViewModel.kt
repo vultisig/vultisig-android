@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
 import com.vultisig.wallet.data.blockchain.solana.kamino.coin
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -35,6 +36,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -72,11 +74,18 @@ constructor(
     private var loadJob: Job? = null
     private var selectionJob: Job? = null
 
+    /**
+     * The enabled set [KaminoEarnUiModel.totalValue] was summed over. A stored total answers one
+     * question — this selection, in this currency — so once either changes it stops being an answer
+     * and is dropped rather than carried forward.
+     */
+    private var totalCoverage: Set<String> = emptySet()
+
     fun setData(vaultId: String) {
         this.vaultId = vaultId
         forgetStoredShareTokens()
         loadBalanceVisibility()
-        observeSelection()
+        observeSelectionAndCurrency()
     }
 
     /**
@@ -179,21 +188,27 @@ constructor(
 
     /**
      * Reloads whenever the opt-in changes, so toggling a vault under Manage positions takes effect
-     * without leaving the screen.
+     * without leaving the screen, and whenever the display currency changes, because every figure
+     * here is priced — leaving them be after a switch would relabel them without re-pricing.
      */
-    private fun observeSelection() {
+    private fun observeSelectionAndCurrency() {
         selectionJob?.cancel()
         selectionJob =
             viewModelScope.safeLaunch {
-                selectionRepository.getSelectedVaults(vaultId).distinctUntilChanged().collect {
-                    selected ->
-                    _state.update { it.copy(hasEnabledVaults = selected.isNotEmpty()) }
-                    load(selected)
-                }
+                combine(
+                        selectionRepository.getSelectedVaults(vaultId),
+                        appCurrencyRepository.currency,
+                        ::Pair,
+                    )
+                    .distinctUntilChanged()
+                    .collect { (selected, currency) ->
+                        _state.update { it.copy(hasEnabledVaults = selected.isNotEmpty()) }
+                        load(selected, currency)
+                    }
             }
     }
 
-    private fun load(selected: Set<String>? = null) {
+    private fun load(selected: Set<String>? = null, selectedCurrency: AppCurrency? = null) {
         loadJob?.cancel()
         loadJob =
             viewModelScope.safeLaunch(
@@ -206,6 +221,15 @@ constructor(
             ) {
                 val enabled = selected ?: selectionRepository.getSelectedVaults(vaultId).first()
                 val vaults = KaminoVaultRegistry.ALLOW_LIST.filter { it.address in enabled }
+                val currency = selectedCurrency ?: appCurrencyRepository.currency.first()
+
+                // Drop a stored total that no longer describes this selection or this currency
+                // before anything else, so neither this load's fallback nor a failure part-way
+                // through can leave it on screen as though it still answered.
+                if (totalCoverage != enabled || _state.value.totalValue?.currency != currency) {
+                    totalCoverage = emptySet()
+                    _state.update { it.copy(totalFiat = null, totalValue = null) }
+                }
 
                 if (vaults.isEmpty()) {
                     _state.update {
@@ -216,7 +240,7 @@ constructor(
                             totalFiat = null,
                             // Zero, not null: no vault enabled is a read that succeeded and found
                             // nothing, so the chain header can still add it up.
-                            totalFiatValue = BigDecimal.ZERO,
+                            totalValue = KaminoEarnTotal(BigDecimal.ZERO, currency),
                         )
                     }
                     return@safeLaunch
@@ -242,6 +266,7 @@ constructor(
                                             walletAddress = walletAddress,
                                             position = positions?.get(vault.address),
                                             positionsAreKnown = positions != null,
+                                            currency = currency,
                                         )
                                     }
                                     .getOrElse { throwable ->
@@ -258,8 +283,19 @@ constructor(
                 }
 
                 val resolved = rows.filterNotNull()
-                val resolvedTotal = resolved.takeIf { it.isNotEmpty() }?.let(::totalFiatValue)
+                // Only a sum covering every enabled vault is this wallet's Kamino total. A vault
+                // whose row failed to build, or whose price never landed, would otherwise be folded
+                // in as a zero and quietly shrink both this card and the chain header.
+                val resolvedTotal =
+                    if (resolved.size == vaults.size) {
+                        totalFiatValue(resolved)?.let { KaminoEarnTotal(it, currency) }
+                    } else {
+                        null
+                    }
                 _state.update { current ->
+                    // The previous total is only kept when this load produced none; it has already
+                    // been dropped above unless it still covers this selection and currency.
+                    val total = resolvedTotal ?: current.totalValue
                     current.copy(
                         isLoading = false,
                         // Keep the previous rows if every vault failed, rather than blanking
@@ -269,11 +305,11 @@ constructor(
                             resolved.ifEmpty {
                                 current.rows.filter { row -> row.vaultAddress in enabled }
                             },
-                        totalFiat =
-                            resolvedTotal?.let { currencyFormat.format(it) } ?: current.totalFiat,
-                        totalFiatValue = resolvedTotal ?: current.totalFiatValue,
+                        totalFiat = total?.let { currencyFormat.format(it.value) },
+                        totalValue = total,
                     )
                 }
+                if (resolvedTotal != null) totalCoverage = enabled
             }
     }
 
@@ -302,6 +338,7 @@ constructor(
         walletAddress: String,
         position: KaminoUserPositionJson?,
         positionsAreKnown: Boolean,
+        currency: AppCurrency,
     ): KaminoEarnRow = supervisorScope {
         val stateDeferred = async {
             runCatching { kaminoApi.getVaultState(vault.address) }.getOrNull()
@@ -348,7 +385,8 @@ constructor(
             depositedDisplay =
                 tokenAmount?.let { it.stripTrailingZeros().formatTokenAmount(coin?.ticker).trim() }
                     ?: FIAT_VALUE_UNAVAILABLE,
-            depositedFiat = tokenAmount?.let { amount -> coin?.let { fiatOrNull(amount, it) } },
+            depositedFiat =
+                tokenAmount?.let { amount -> coin?.let { fiatOrNull(amount, it, currency) } },
             apyDisplay = apy?.formatPercent(),
             pnlDisplay =
                 pnlToken?.let {
@@ -364,9 +402,10 @@ constructor(
                     pnlToken.signum() < 0 -> KaminoEarnRow.PnlDirection.DOWN
                     else -> KaminoEarnRow.PnlDirection.FLAT
                 },
+            // Null, not zero, when the position or its price could not be read: the totals that add
+            // these up treat an unread vault as unknown rather than as holding nothing.
             fiatValue =
-                tokenAmount?.let { amount -> coin?.let { fiatValueOrNull(amount, it) } }
-                    ?: BigDecimal.ZERO,
+                tokenAmount?.let { amount -> coin?.let { fiatValueOrNull(amount, it, currency) } },
             // Two different claims live in a zero here: "read, and holds nothing" and "not read
             // yet". Only the first may remove Withdraw. Hiding it on an unread position strands a
             // user who deposited on another device, or whose refresh failed right after depositing
@@ -382,9 +421,12 @@ constructor(
      * Fiat goes through the app's own price pipeline rather than Kamino's USD figures, because the
      * user may not be reading in dollars.
      */
-    private suspend fun fiatValueOrNull(amount: BigDecimal, coin: Coin): BigDecimal? {
+    private suspend fun fiatValueOrNull(
+        amount: BigDecimal,
+        coin: Coin,
+        currency: AppCurrency,
+    ): BigDecimal? {
         if (amount.signum() == 0) return BigDecimal.ZERO
-        val currency = appCurrencyRepository.currency.first()
         val price =
             runCatching {
                     tokenPriceRepository.getCachedPrice(tokenId = coin.id, appCurrency = currency)
@@ -397,17 +439,23 @@ constructor(
         return amount.multiply(price).setScale(2, RoundingMode.DOWN)
     }
 
-    private suspend fun fiatOrNull(amount: BigDecimal, coin: Coin): String? {
-        val value = fiatValueOrNull(amount, coin) ?: return null
+    private suspend fun fiatOrNull(amount: BigDecimal, coin: Coin, currency: AppCurrency): String? {
+        val value = fiatValueOrNull(amount, coin, currency) ?: return null
         return runCatching { appCurrencyRepository.getCurrencyFormat().format(value) }.getOrNull()
     }
 
     /**
      * Summed per row, because the vaults do not share an underlying token — dollars and SOL cannot
-     * be added before each has been priced.
+     * be added before each has been priced. Null as soon as one row is unpriced: that vault added
+     * in as a zero would report a total the user does not hold.
      */
-    private fun totalFiatValue(rows: List<KaminoEarnRow>): BigDecimal =
-        rows.fold(BigDecimal.ZERO) { running, row -> running.add(row.fiatValue) }
+    private fun totalFiatValue(rows: List<KaminoEarnRow>): BigDecimal? {
+        var total = BigDecimal.ZERO
+        for (row in rows) {
+            total = total.add(row.fiatValue ?: return null)
+        }
+        return total
+    }
 
     private suspend fun resolveSolanaAddress(): String {
         val vault =

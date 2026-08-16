@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.KaminoVaultStateJson
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRiskTier
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.settings.AppCurrency
@@ -33,6 +34,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -135,7 +137,8 @@ internal class KaminoEarnViewModelTest {
 
         val state = viewModel().apply { setData(VAULT_ID) }.state.value
 
-        assertEquals(0, BigDecimal.ZERO.compareTo(state.totalFiatValue))
+        assertEquals(0, BigDecimal.ZERO.compareTo(state.totalValue?.value))
+        assertEquals(AppCurrency.USD, state.totalValue?.currency)
     }
 
     @Test
@@ -147,8 +150,65 @@ internal class KaminoEarnViewModelTest {
         val state = viewModel().apply { setData(VAULT_ID) }.state.value
 
         assertTrue(state.loadFailed)
-        assertNull(state.totalFiatValue)
+        assertNull(state.totalValue)
     }
+
+    @Test
+    fun `an unpriced vault leaves the total unknown rather than counting it as zero`() = runTest {
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flowOf(setOf(STEAKHOUSE.address, ALLEZ.address))
+        coEvery { kaminoApi.getUserPositions(WALLET_ADDRESS) } returns
+            listOf(
+                KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "100"),
+                KaminoUserPositionJson(vaultAddress = ALLEZ.address, totalShares = "100"),
+            )
+        coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Vault")
+        coEvery { kaminoApi.getVaultMetrics(any()) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0")
+        // The SOL vault holds a real deposit that no price landed for this round.
+        coEvery { tokenPriceRepository.getCachedPrice(Coins.Solana.SOL.id, any()) } returns null
+        coEvery {
+            tokenPriceRepository.getPriceByContactAddress(
+                Chain.Solana.id,
+                Coins.Solana.SOL.contractAddress,
+            )
+        } throws RuntimeException("503")
+
+        val state = viewModel().apply { setData(VAULT_ID) }.state.value
+
+        // The USDC half alone is not what the wallet holds on Kamino, and the chain header adds
+        // this figure to native staking — reporting it short would understate the whole chain.
+        assertEquals(2, state.rows.size)
+        assertNull(state.totalValue)
+        assertNull(state.totalFiat)
+    }
+
+    @Test
+    fun `a total from an earlier selection is dropped rather than reused for a new one`() =
+        runTest {
+            val selection = MutableStateFlow(setOf(STEAKHOUSE.address, ALLEZ.address))
+            coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns selection
+            coEvery { kaminoApi.getUserPositions(WALLET_ADDRESS) } returns
+                listOf(
+                    KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "100"),
+                    KaminoUserPositionJson(vaultAddress = ALLEZ.address, totalShares = "100"),
+                )
+            coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Vault")
+            coEvery { kaminoApi.getVaultMetrics(any()) } returns
+                KaminoVaultMetricsJson(tokensPerShare = "1.0")
+
+            val vm = viewModel().apply { setData(VAULT_ID) }
+            assertEquals("$200.00", vm.state.value.totalFiat)
+
+            // One vault is switched off, and the reload that follows never lands.
+            coEvery { chainAccountAddressRepository.getAddress(Chain.Solana, VAULT) } throws
+                RuntimeException("503")
+            selection.value = setOf(STEAKHOUSE.address)
+
+            // $200 covered both vaults; leaving it up for one would report a deselected position.
+            assertNull(vm.state.value.totalValue)
+            assertNull(vm.state.value.totalFiat)
+        }
 
     @Test
     fun `an enabled vault with no deposit still gets a card at zero`() = runTest {
@@ -309,7 +369,7 @@ internal class KaminoEarnViewModelTest {
         // Priced at 1.0 each, 100 + 100 shares against a 1:1 share ratio.
         assertEquals("$200.00", state.totalFiat)
         // The same figure unformatted, which is what the chain header adds to native staking.
-        assertEquals(0, BigDecimal("200").compareTo(state.totalFiatValue))
+        assertEquals(0, BigDecimal("200").compareTo(state.totalValue?.value))
     }
 
     @Test

@@ -2,7 +2,17 @@ package com.vultisig.wallet.ui.screens.v2.defi.solana
 
 import androidx.compose.runtime.Immutable
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRiskTier
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import java.math.BigDecimal
+
+/**
+ * A fiat figure together with the currency it was priced in.
+ *
+ * The chain header adds this to a half priced by a different view-model, and the two read the
+ * selected currency independently. Carrying the currency lets that sum refuse to happen while a
+ * mid-session switch has only landed on one side, instead of adding euros to dollars.
+ */
+@Immutable data class KaminoEarnTotal(val value: BigDecimal, val currency: AppCurrency)
 
 /** State of the Kamino Earn segment of the Solana DeFi tab. */
 @Immutable
@@ -19,9 +29,10 @@ data class KaminoEarnUiModel(
     /**
      * The same sum before formatting, so the chain header can add it to native staking without
      * re-parsing [totalFiat]. Zero when no vault is enabled — that is the user holding nothing
-     * here, a known value — and null only while the total is genuinely unresolved.
+     * here, a known value — and null whenever any enabled vault is unread or unpriced, because a
+     * sum that silently omits one of them is not this wallet's Kamino total.
      */
-    val totalFiatValue: BigDecimal? = null,
+    val totalValue: KaminoEarnTotal? = null,
     val isBalanceVisible: Boolean = true,
     /** Whether the last load stopped on an error, so the tab can say so rather than look empty. */
     val loadFailed: Boolean = false,
@@ -56,13 +67,15 @@ data class KaminoEarnRow(
     val pnlDirection: PnlDirection,
     /**
      * The row's fiat value, kept alongside its formatted form so the screen total can be summed
-     * without re-parsing display strings. Zero when the position or its price is unresolved.
+     * without re-parsing display strings. Null when the position or its price could not be read — a
+     * zero there would drop the vault out of every total that adds these up, which reads as a
+     * deposit having shrunk rather than as a figure that is briefly unknown.
      */
-    val fiatValue: BigDecimal = BigDecimal.ZERO,
+    val fiatValue: BigDecimal? = null,
     /**
      * Whether the wallet actually holds shares here. Kept separate from [fiatValue] because a
-     * failed price lookup leaves that at zero, and a position must not disappear because it could
-     * not be priced.
+     * failed price lookup leaves that unresolved, and a position must not disappear because it
+     * could not be priced.
      */
     val hasPosition: Boolean = false,
 ) {
