@@ -224,7 +224,15 @@ internal object BlockaidSimulationParser {
         val inAmount = inRaw?.let(::parseRawAmount)
         val toCoin = inSource?.let { buildSolanaCoin(it.asset, it.assetType) }
 
-        return if (inAmount != null && toCoin != null) {
+        // Native SOL and wrapped SOL are normalised to the same mint in buildSolanaCoin (the WSOL
+        // address doubles as the native-SOL sentinel), so a SOL-out/WSOL-in pair is the same asset
+        // on both sides — never a genuine swap. It shows up when a transaction wraps SOL and spends
+        // it in the same instruction (e.g. a Kamino deposit): the wSOL account's rent-exempt
+        // residual nets out as a small "incoming" diff, which would otherwise be read as the swap's
+        // destination amount. Falls back to a Transfer of the real out leg instead.
+        val sameAsset = toCoin != null && toCoin.address.equals(fromCoin.address, ignoreCase = true)
+
+        return if (inAmount != null && toCoin != null && !sameAsset) {
             BlockaidSimulationInfo.Swap(
                 fromCoin = fromCoin,
                 toCoin = toCoin,

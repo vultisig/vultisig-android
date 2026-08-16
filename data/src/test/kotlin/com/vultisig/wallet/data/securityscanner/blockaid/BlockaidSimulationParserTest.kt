@@ -257,6 +257,48 @@ internal class BlockaidSimulationParserTest {
     }
 
     @Test
+    fun `solana SOL-out WSOL-in pair is a transfer, not a swap`() {
+        // A Kamino SOL-vault deposit wraps SOL and immediately spends it, leaving only the wSOL
+        // account's rent-exempt residual as an "incoming" diff. WSOL's real mint is the same
+        // address the parser uses as the native-SOL sentinel, so this must collapse to a Transfer
+        // of the real 0.059435 SOL leg rather than a misleading "SOL -> 0.00203928 WSOL" swap.
+        val response =
+            solanaResponse(
+                """{
+                    "result": {
+                      "simulation": {
+                        "account_summary": {
+                          "account_assets_diff": [
+                            {
+                              "asset": { "type": "SOL", "decimals": 9, "symbol": "SOL", "address": null },
+                              "out": { "raw_value": "59435000" }
+                            },
+                            {
+                              "asset": {
+                                "type": "TOKEN",
+                                "address": "So11111111111111111111111111111111111111112",
+                                "symbol": "WSOL",
+                                "decimals": 9
+                              },
+                              "in": { "raw_value": "2039280" }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                """
+                    .trimIndent()
+            )
+
+        val transfer =
+            BlockaidSimulationParser.parseSolana(response) as BlockaidSimulationInfo.Transfer
+
+        assertEquals("SOL", transfer.fromCoin.ticker)
+        assertEquals(BigInteger("59435000"), transfer.fromAmount)
+    }
+
+    @Test
     fun `solana native SOL transfer maps to wrapped sol mint`() {
         val response =
             solanaResponse(
