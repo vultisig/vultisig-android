@@ -49,6 +49,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -271,6 +272,12 @@ fun ActionButton(
     contentColor: Color,
     iconCircleColor: Color,
     enabled: Boolean = true,
+    // The DeFi Button component measures these at 34dp and 16dp, which is what the Kamino cards
+    // pass. The defaults are the sizes every other caller was already drawing, left alone
+    // deliberately rather than corrected in passing: they reach screens this change has no business
+    // touching.
+    iconCircleSize: Dp = 30.dp,
+    iconSize: Dp = 12.dp,
     onClick: () -> Unit,
 ) {
     Button(
@@ -310,7 +317,7 @@ fun ActionButton(
                 Box(
                     modifier =
                         Modifier.align(Alignment.CenterStart)
-                            .size(30.dp)
+                            .size(iconCircleSize)
                             .background(
                                 if (enabled) iconCircleColor
                                 else iconCircleColor.copy(alpha = 0.5f),
@@ -321,7 +328,7 @@ fun ActionButton(
                     Icon(
                         painter = painterResource(id = icon),
                         contentDescription = null,
-                        modifier = Modifier.size(12.dp),
+                        modifier = Modifier.size(iconSize),
                         tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f),
                     )
                 }
