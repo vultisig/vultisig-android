@@ -63,6 +63,32 @@ constructor(private val preparer: KaminoTransactionPreparer) {
                 networkUnitPrice = solanaSpecific.priorityFee,
             )
 
+        // The compute budget the app just injected, recorded where the payload carries it.
+        //
+        // The generic Solana values these arrive as describe a plain transfer — a 100,000-unit
+        // limit and the raw network sample — and neither is what went into these bytes. iOS
+        // compares the two for equality before it will co-sign (`KaminoVerifyPresentation
+        // .priorityFeeAgrees`) and refuses on any difference, with "the network fee inside this
+        // transaction is not the one shown above". The same mismatch also makes the fee on the
+        // verify screen wrong: it would be priced off 100,000 units rather than the 320,000–400,000
+        // these actually reserve.
+        //
+        // `unitPriceFor` is idempotent, so passing the sample to both this and `prepare` above
+        // yields the same price by construction rather than by coincidence.
+        val kaminoSpecific =
+            solanaSpecific.copy(
+                priorityFee = KaminoComputeBudget.unitPriceFor(solanaSpecific.priorityFee),
+                priorityLimit = KaminoComputeBudget.unitLimitFor(vault, action),
+                // Cleared, not carried. iOS does not relay an ATA rent figure — it *infers* one,
+                // adding 2,039,280 lamports whenever the from-address token account is named and
+                // the to-address one is not, which is exactly the shape a token deposit produces
+                // here. Kamino's own transaction creates whatever accounts it needs inside the
+                // bytes, so that surcharge describes a transfer this is not. iOS's own Kamino
+                // factory sets both to nil for the same reason.
+                fromAddressPubKey = null,
+                toAddressPubKey = null,
+            )
+
         return KeysignPayload(
             coin = coin,
             // Display destination on the verify screen. Routing is driven by the relayed bytes, not
@@ -76,7 +102,7 @@ constructor(private val preparer: KaminoTransactionPreparer) {
                     // how the staking flows handle over-precise input.
                     .setScale(0, RoundingMode.DOWN)
                     .toBigInteger(),
-            blockChainSpecific = blockChainSpecific,
+            blockChainSpecific = kaminoSpecific,
             memo = null,
             vaultPublicKeyECDSA = vaultPublicKeyECDSA,
             vaultLocalPartyID = vaultLocalPartyID,

@@ -82,9 +82,12 @@ object KaminoTransactionDecoder {
  * The order of operations is the contract:
  * 1. Kamino builds the transaction, embedding a recent blockhash. It carries no compute budget and
  *    ignores any fee hints in the request, so the app supplies both.
- * 2. Compute budget goes on first. WalletCore appends these when absent, so doing this before the
- *    memo is what leaves the memo last — which the validator then requires.
- * 3. The attribution memo goes on last.
+ * 2. Compute budget goes on first, as the two leading instructions: the unit limit at index 0 and
+ *    the unit price at index 1. That is the layout iOS emits and matches the remaining instructions
+ *    against positionally, so it is a cross-platform contract rather than a preference — get it
+ *    wrong and an iPhone co-signer reads the transaction as unsigned-for and will not join.
+ * 3. The attribution memo goes on last, after the budget, which is what leaves it unambiguously
+ *    final — the position the validator then requires.
  * 4. The result is decoded and validated against the local registry, never against anything Kamino
  *    just said.
  *
@@ -166,8 +169,50 @@ class KaminoTransactionPreparer @Inject constructor(private val kaminoApi: Kamin
                 "WalletCore could not set the Kamino compute-unit limit"
             }
 
-        return checkNotNull(SolanaTransaction.setComputeUnitPrice(withLimit, price.toString())) {
+        // Two assumptions are read back here rather than trusted, because the insert below adds a
+        // price unconditionally where `setComputeUnitPrice` used to overwrite one in place.
+        //
+        // Where the limit landed: WalletCore chooses that — index 0, unless the first instruction
+        // is `AdvanceNonceAccount`, which Kamino never builds. Anything but 0 is not the layout iOS
+        // emits, and is refused here rather than sent to a co-signer that would silently decline
+        // it.
+        //
+        // That it is the only one: Kamino's responses carry no compute budget today. Should one
+        // ever arrive carrying its own *price*, `setComputeUnitLimit` would leave it untouched and
+        // the insert below would make two `SetComputeUnitPrice` instructions — which the chain
+        // rejects, after a full signing ceremony has already been spent on it.
+        val instructions = KaminoTransactionDecoder.decode(withLimit).instructions
+        val budgetIndices =
+            instructions.indices.filter {
+                instructions[it].programId == KaminoComputeBudget.PROGRAM_ID
+            }
+        check(budgetIndices == listOf(UNIT_LIMIT_INDEX)) {
+            "expected the app's compute-unit limit alone at index $UNIT_LIMIT_INDEX, " +
+                "found ComputeBudget instructions at $budgetIndices"
+        }
+
+        // Deliberately not `SolanaTransaction.setComputeUnitPrice`. The two helpers place their
+        // instruction differently: the limit is *inserted at the front*, the price is *appended*.
+        // Kamino's responses carry no compute budget, so that pair leaves the price behind every
+        // instruction Kamino built, and an iOS co-signer — which emits the two at 0 and 1 and reads
+        // the rest positionally — finds the wrong instruction where the price belongs, marks the
+        // transaction unreadable and refuses to join. Swapping the call order does not help; the
+        // limit still lands at index 0.
+        return checkNotNull(
+            SolanaTransaction.insertInstruction(
+                withLimit,
+                UNIT_PRICE_INDEX,
+                KaminoComputeBudget.setUnitPriceInstructionJson(price),
+            )
+        ) {
             "WalletCore could not set the Kamino compute-unit price"
         }
+    }
+
+    private companion object {
+        private const val UNIT_LIMIT_INDEX = 0
+
+        /** Right after the limit, which is where iOS puts it. */
+        private const val UNIT_PRICE_INDEX = UNIT_LIMIT_INDEX + 1
     }
 }

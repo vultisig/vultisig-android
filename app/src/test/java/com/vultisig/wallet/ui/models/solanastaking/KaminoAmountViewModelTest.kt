@@ -18,6 +18,8 @@ import com.vultisig.wallet.data.models.OPERATION_KAMINO_DEPOSIT
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -50,6 +52,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import vultisig.keysign.v1.SignSolana
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class KaminoAmountViewModelTest {
@@ -371,7 +374,7 @@ internal class KaminoAmountViewModelTest {
                 vaultLocalPartyID = any(),
                 libType = any(),
             )
-        } returns mockk(relaxed = true)
+        } returns keysignPayloadWithKaminoBudget()
 
         val vm = viewModel()
         vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
@@ -380,6 +383,75 @@ internal class KaminoAmountViewModelTest {
         assertEquals(OPERATION_KAMINO_DEPOSIT, captured.captured.operation)
         assertEquals("Steakhouse USDC", captured.captured.validatorName)
         assertEquals(STEAKHOUSE.address, captured.captured.dstAddress)
+    }
+
+    @Test
+    fun `the stored transaction carries the payload's compute budget, not the generic one`() =
+        runTest {
+            // `KeysignShareViewModel` rebuilds the relayed KeysignPayload out of this transaction,
+            // so whatever is stored here is what a co-signer receives. Storing the generic Solana
+            // values put a 100,000-unit limit back into a transaction whose bytes reserve 320,000,
+            // and an iPhone refused to join: "the network fee inside this transaction is not the
+            // one shown above".
+            givenTokenBalance("2500000000")
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+            coEvery {
+                buildKeysignPayload(
+                    vault = any(),
+                    action = any(),
+                    apiAmount = any(),
+                    tokenAmount = any(),
+                    coin = any(),
+                    blockChainSpecific = any(),
+                    vaultPublicKeyECDSA = any(),
+                    vaultLocalPartyID = any(),
+                    libType = any(),
+                )
+            } returns keysignPayloadWithKaminoBudget()
+
+            val vm = viewModel()
+            vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
+            vm.submit()
+
+            val stored = captured.captured.blockChainSpecific as BlockChainSpecific.Solana
+            assertEquals(KAMINO_UNIT_LIMIT, stored.priorityLimit)
+            assertEquals(KAMINO_UNIT_PRICE, stored.priorityFee)
+        }
+
+    @Test
+    fun `the network fee is quoted in SOL, not in the vault's underlying token`() = runTest {
+        // A lamport count tagged with USDC's six decimals rendered as "1 USDC" on the verify
+        // screen. The fee is paid in SOL whatever the vault holds.
+        givenTokenBalance("2500000000")
+        val captured = slot<DepositTransaction>()
+        coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+        coEvery {
+            buildKeysignPayload(
+                vault = any(),
+                action = any(),
+                apiAmount = any(),
+                tokenAmount = any(),
+                coin = any(),
+                blockChainSpecific = any(),
+                vaultPublicKeyECDSA = any(),
+                vaultLocalPartyID = any(),
+                libType = any(),
+            )
+        } returns keysignPayloadWithKaminoBudget()
+
+        val vm = viewModel()
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
+        vm.submit()
+
+        val fee = captured.captured.estimatedFees
+        assertEquals("SOL", fee.unit)
+        // The decimals are half the bug: 1,000,000 lamports against USDC's 6 rendered as "1", and
+        // against SOL's 9 renders as 0.001.
+        assertEquals(9, fee.decimals)
+        // The same arithmetic iOS applies to a relayed payload: 1,000,000 base plus price x limit.
+        assertEquals(BigInteger("1320000"), fee.value)
+        assertEquals(0, BigDecimal("0.00132").compareTo(fee.decimal))
     }
 
     @Test
@@ -403,7 +475,35 @@ internal class KaminoAmountViewModelTest {
         )
     }
 
+    /**
+     * What [BuildKaminoKeysignPayloadUseCase] returns in production: a payload whose chain-specific
+     * records the compute budget injected into the bytes, rather than the generic Solana values it
+     * was built from. A relaxed mock cannot stand in — the ViewModel reads this back.
+     */
+    private fun keysignPayloadWithKaminoBudget() =
+        KeysignPayload(
+            coin = COIN,
+            toAddress = STEAKHOUSE.address,
+            toAmount = BigInteger("100000000"),
+            blockChainSpecific =
+                BlockChainSpecific.Solana(
+                    recentBlockHash = "",
+                    priorityFee = KAMINO_UNIT_PRICE,
+                    priorityLimit = KAMINO_UNIT_LIMIT,
+                ),
+            memo = null,
+            vaultPublicKeyECDSA = "",
+            vaultLocalPartyID = "",
+            libType = SigningLibType.DKLS,
+            wasmExecuteContractPayload = null,
+            signSolana = SignSolana(rawTransactions = listOf("tx")),
+        )
+
     private companion object {
+        /** The clamped price and the token-deposit limit a Steakhouse USDC deposit carries. */
+        val KAMINO_UNIT_PRICE: BigInteger = BigInteger("1000000")
+        val KAMINO_UNIT_LIMIT: BigInteger = BigInteger("320000")
+
         const val VAULT_ID = "vault-id"
         const val WALLET = "9ceRgz579BcfWogs3RE11FKNQaWW7Lmtnev3MXspxUjF"
 

@@ -27,10 +27,12 @@ import com.vultisig.wallet.data.blockchain.solana.kamino.coin
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.OPERATION_KAMINO_DEPOSIT
 import com.vultisig.wallet.data.models.OPERATION_KAMINO_WITHDRAW
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -391,13 +393,24 @@ constructor(
             val storedVault =
                 vaultRepository.get(route.vaultId) ?: error("Vault ${route.vaultId} not found")
 
-            val gasFee = TokenValue(value = SolanaHelper.DefaultFeeInLamports, token = coin)
+            // The fee is paid in SOL, never in the vault's underlying token. Denominating it in
+            // `coin` rendered a lamport count against USDC's six decimals, so the verify screen
+            // read "1 USDC" for a fee of 0.001 SOL. Every sibling Solana flow uses the native coin.
+            //
+            // Falls back to the coin definition rather than refusing when the vault has no native
+            // SOL enabled — the fee is paid out of the same wallet either way, this value is only
+            // ever displayed, and a deposit the user can otherwise afford must not be blocked by
+            // which tokens they happen to have switched on.
+            val solCoin =
+                storedVault.coins.firstOrNull { it.chain == Chain.Solana && it.isNativeToken }
+                    ?: Coins.Solana.SOL.copy(address = coin.address)
+
             val specific =
                 blockChainSpecificRepository.getSpecific(
                     chain = Chain.Solana,
                     address = coin.address,
                     token = coin,
-                    gasFee = gasFee,
+                    gasFee = TokenValue(SolanaHelper.DefaultFeeInLamports, solCoin),
                     isSwap = false,
                     isMaxAmountEnabled = false,
                     isDeposit = true,
@@ -417,6 +430,26 @@ constructor(
                     libType = storedVault.libType,
                 )
 
+            // What this transaction will be charged, read back from the compute budget the payload
+            // records rather than from a flat constant, so the number on this screen is the number
+            // inside the bytes.
+            //
+            // Deliberately the same arithmetic iOS applies to the relayed payload — its base term
+            // is `SolanaHelper.defaultFeeInLamports`, the same 1,000,000, plus price × limit — so
+            // the two devices quote one figure for one transaction instead of two.
+            val recordedBudget = keysignPayload.blockChainSpecific as BlockChainSpecific.Solana
+            val gasFee =
+                TokenValue(
+                    value =
+                        SolanaHelper.DefaultFeeInLamports +
+                            KaminoComputeBudget.priorityFeeLamports(
+                                vault = vault,
+                                action = action,
+                                networkPrice = recordedBudget.priorityFee,
+                            ),
+                    token = solCoin,
+                )
+
             val depositTx =
                 DepositTransaction(
                     id = UUID.randomUUID().toString(),
@@ -428,7 +461,11 @@ constructor(
                     dstAddress = vault.address,
                     estimatedFees = gasFee,
                     estimateFeesFiat = "",
-                    blockChainSpecific = specific.blockChainSpecific,
+                    // The payload's, not `specific`'s. `KeysignShareViewModel` rebuilds the relayed
+                    // KeysignPayload out of this transaction, so whatever is stored here is what a
+                    // co-signer receives — storing the generic values would put them straight back
+                    // and an iPhone would still see a fee that is not the one in the bytes.
+                    blockChainSpecific = keysignPayload.blockChainSpecific,
                     operation =
                         if (route.isWithdraw) OPERATION_KAMINO_WITHDRAW
                         else OPERATION_KAMINO_DEPOSIT,

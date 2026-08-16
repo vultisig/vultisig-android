@@ -4,6 +4,7 @@ import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 /**
  * The limits here have a direct on-chain consequence: too low and the transaction aborts on compute
@@ -97,6 +98,34 @@ class KaminoComputeBudgetTest {
     }
 
     @Test
+    fun `the unit price is capped, because iOS refuses anything above the ceiling`() {
+        // Not merely a spend cap. iOS clamps into the same range and its decoder rejects a
+        // transaction priced outside it, so an uncapped price is a transaction an iPhone co-signer
+        // will not join. And the sample this receives comes from `getMedianPriorityFee`, which
+        // already floors at the app-wide 1,000,000 and caps at 100,000,000 — so without this every
+        // congested-network sample would sail past the ceiling.
+        val ceiling = KaminoComputeBudget.MAX_UNIT_PRICE
+        assertEquals(BigInteger.valueOf(1_000_000), ceiling)
+        assertEquals(ceiling, KaminoComputeBudget.unitPriceFor(ceiling))
+        assertEquals(ceiling, KaminoComputeBudget.unitPriceFor(ceiling.add(BigInteger.ONE)))
+        assertEquals(ceiling, KaminoComputeBudget.unitPriceFor(BigInteger.valueOf(100_000_000)))
+
+        // Just below stays exactly where it is: the clamp must not round anything in range.
+        val below = ceiling.subtract(BigInteger.ONE)
+        assertEquals(below, KaminoComputeBudget.unitPriceFor(below))
+
+        // The ceiling bounds the worst fee too: 1,000,000 x 400,000 / 1e6 = 400,000 lamports.
+        assertEquals(
+            BigInteger.valueOf(400_000),
+            KaminoComputeBudget.priorityFeeLamports(
+                usdcVault,
+                KaminoAction.WITHDRAW,
+                BigInteger.valueOf(100_000_000),
+            ),
+        )
+    }
+
+    @Test
     fun `the priority fee is price times limit, in lamports`() {
         // 20,000 micro-lamports per unit x 320,000 units = 6,400,000,000 micro-lamports = 6,400
         // lamports, which is what bounds the cost of these limits.
@@ -128,5 +157,37 @@ class KaminoComputeBudgetTest {
             )
         // 20,001 x 320,000 = 6,400,320,000 micro-lamports = 6,400.32 lamports, rounded up.
         assertEquals(BigInteger.valueOf(6_401), odd)
+    }
+
+    @Test
+    fun `SetComputeUnitPrice is borsh - discriminator 3 then a little-endian u64`() {
+        // Hand-encoded because the app now builds this instruction itself rather than letting
+        // WalletCore append one. Getting the width or the endianness wrong would price the fee at
+        // some other number entirely, and nothing downstream would say so.
+        assertEquals(
+            listOf(3, 0x20, 0x4E, 0, 0, 0, 0, 0, 0),
+            KaminoComputeBudget.setUnitPriceData(BigInteger.valueOf(20_000)).map {
+                it.toInt() and 0xFF
+            },
+        )
+
+        assertEquals(
+            listOf(3, 0, 0, 0, 0, 0, 0, 0, 0),
+            KaminoComputeBudget.setUnitPriceData(BigInteger.ZERO).map { it.toInt() and 0xFF },
+        )
+
+        // The full u64 range is representable; one past it is not a price the instruction can
+        // carry.
+        val maxU64 = BigInteger.TWO.pow(64).subtract(BigInteger.ONE)
+        assertEquals(
+            List(9) { if (it == 0) 3 else 0xFF },
+            KaminoComputeBudget.setUnitPriceData(maxU64).map { it.toInt() and 0xFF },
+        )
+        assertThrows<IllegalArgumentException> {
+            KaminoComputeBudget.setUnitPriceData(maxU64.add(BigInteger.ONE))
+        }
+        assertThrows<IllegalArgumentException> {
+            KaminoComputeBudget.setUnitPriceData(BigInteger.valueOf(-1))
+        }
     }
 }
