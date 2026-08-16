@@ -50,9 +50,10 @@ data class KaminoEarnRow(
     val pnlDirection: PnlDirection,
     /**
      * The row's fiat value, kept alongside its formatted form so the screen total can be summed
-     * without re-parsing display strings. Zero when the position or its price is unresolved.
+     * without re-parsing display strings. Null when the position or its price is unresolved — never
+     * folded to zero, which would silently understate the total by this row's real value.
      */
-    val fiatValue: BigDecimal = BigDecimal.ZERO,
+    val fiatValue: BigDecimal? = null,
     /**
      * Whether the wallet actually holds shares here. Kept separate from [fiatValue] because a
      * failed price lookup leaves that at zero, and a position must not disappear because it could

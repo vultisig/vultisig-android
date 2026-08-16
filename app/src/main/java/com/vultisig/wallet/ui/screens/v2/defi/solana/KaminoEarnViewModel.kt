@@ -256,20 +256,36 @@ constructor(
 
                 val resolved = rows.filterNotNull()
                 _state.update { current ->
+                    // A row whose fiat value did not resolve this refresh keeps its last known
+                    // value rather than going blank or zero — same principle as keeping the whole
+                    // card standing on a failed vault call, one row at a time.
+                    val previousFiatByVault =
+                        current.rows.associate { it.vaultAddress to it.fiatValue }
+                    val merged =
+                        resolved.map { row ->
+                            if (row.fiatValue != null) row
+                            else
+                                previousFiatByVault[row.vaultAddress]?.let { fiatValue ->
+                                    row.copy(fiatValue = fiatValue)
+                                } ?: row
+                        }
                     current.copy(
                         isLoading = false,
                         // Keep the previous rows if every vault failed, rather than blanking
                         // positions the user holds because one refresh did not land — but only for
                         // vaults still enabled, or disabling one would leave its card on screen.
                         rows =
-                            resolved.ifEmpty {
+                            merged.ifEmpty {
                                 current.rows.filter { row -> row.vaultAddress in enabled }
                             },
+                        // Null when any row is still unresolved after the merge above: a total
+                        // short by one row's real value is not a smaller total, so the last
+                        // confirmed total is kept on screen instead.
                         totalFiat =
-                            resolved
+                            merged
                                 .takeIf { it.isNotEmpty() }
-                                ?.let { currencyFormat.format(totalFiatValue(it)) }
-                                ?: current.totalFiat,
+                                ?.let { totalFiatValue(it) }
+                                ?.let { currencyFormat.format(it) } ?: current.totalFiat,
                     )
                 }
             }
@@ -316,12 +332,15 @@ constructor(
         val pnl = pnlDeferred.await()
 
         // A position that could not be read is not a zero one. Null keeps the balance blank rather
-        // than asserting "0", which on a real deposit reads as though it had gone.
+        // than asserting "0", which on a real deposit reads as though it had gone. An absent entry
+        // is a real zero (the wallet holds nothing in this vault); an entry present but whose
+        // `totalShares` will not parse is a failed read of a real row, and must not be folded into
+        // the same zero.
         val shares =
-            if (positionsAreKnown) {
-                KaminoPositionMath.decimalOrNull(position?.totalShares) ?: BigDecimal.ZERO
-            } else {
-                null
+            when {
+                !positionsAreKnown -> null
+                position == null -> BigDecimal.ZERO
+                else -> KaminoPositionMath.decimalOrNull(position.totalShares)
             }
         val tokensPerShare = KaminoPositionMath.decimalOrNull(metrics?.tokensPerShare)
         val tokenAmount =
@@ -362,9 +381,10 @@ constructor(
                     pnlToken.signum() < 0 -> KaminoEarnRow.PnlDirection.DOWN
                     else -> KaminoEarnRow.PnlDirection.FLAT
                 },
-            fiatValue =
-                tokenAmount?.let { amount -> coin?.let { fiatValueOrNull(amount, it) } }
-                    ?: BigDecimal.ZERO,
+            // Null, not zero, when the position or its price could not be resolved this refresh —
+            // folding a failed read into zero would silently drop this row's real value out of the
+            // total below.
+            fiatValue = tokenAmount?.let { amount -> coin?.let { fiatValueOrNull(amount, it) } },
             // Two different claims live in a zero here: "read, and holds nothing" and "not read
             // yet". Only the first may remove Withdraw. Hiding it on an unread position strands a
             // user who deposited on another device, or whose refresh failed right after depositing
@@ -402,10 +422,14 @@ constructor(
 
     /**
      * Summed per row, because the vaults do not share an underlying token — dollars and SOL cannot
-     * be added before each has been priced.
+     * be added before each has been priced. Null when any row's value is still unresolved: a sum
+     * missing one row is not a smaller total, it is not a total.
      */
-    private fun totalFiatValue(rows: List<KaminoEarnRow>): BigDecimal =
-        rows.fold(BigDecimal.ZERO) { running, row -> running.add(row.fiatValue) }
+    private fun totalFiatValue(rows: List<KaminoEarnRow>): BigDecimal? {
+        val values = rows.map { it.fiatValue }
+        if (values.any { it == null }) return null
+        return values.fold(BigDecimal.ZERO) { running, value -> running.add(value) }
+    }
 
     private suspend fun resolveSolanaAddress(): String {
         val vault =
