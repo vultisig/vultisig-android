@@ -58,9 +58,6 @@
     <string name="deposit_option_unstake">Unstake</string>
     <string name="deposit_option_custom">Custom</string>
     <string name="deposit_option_ibc_transfer">IBC Transfer</string>
-    <string name="deposit_option_switch">Switch</string>
-    <string name="deposit_option_merge">Merge</string>
-    <string name="deposit_option_withdraw_ruji">Withdraw RUJI</string>
     <string name="withdraw_amount">Withdraw %s</string>
     <string name="defi_tab_deposited">Deposited</string>
     <string name="defi_tab_staked">Staked</string>
@@ -196,7 +193,6 @@
     <string name="send_to_address_hint">Enter address here</string>
     <string name="send_amount">Amount</string>
     <string name="send_amount_currency_hint">Enter Amount</string>
-    <string name="send_shares_currency_hint">Enter Shares</string>
     <string name="send_continue_button">Continue</string>
     <string name="send_percent" translatable="false">%d%%</string>
     <string name="chain_account_view_swap">Swap</string>
@@ -214,7 +210,6 @@
     <string name="send_error_no_amount">Amount must be a positive number</string>
     <string name="send_error_too_many_decimals">Amount can have at most %1$d decimal places</string>
     <string name="send_error_invalid_operator_fee">Operator fee must be a valid number between 0 and 10000 basis points</string>
-    <string name="send_error_max_shares">Amount should not exceed balance</string>
     <string name="send_error_insufficient_balance">Insufficient funds</string>
     <string name="send_error_msca_not_deployed">MSCA account not deployed yet, please try again</string>
     <string name="send_error_insufficient_native_balance_with_fees">Insufficient %1$s balance</string>
@@ -380,7 +375,6 @@
     <string name="custom_token_token_not_found">Token not found</string>
     <string name="custom_token_add_token">Add %1$s Token</string>
     <string name="deposit_form_amount_title">Amount (Balance: %1$s)</string>
-    <string name="deposit_form_shares_title">Shares (Balance: %1$s)</string>
     <string name="share_vault_qr_share">Share</string>
     <string name="deposit_form_node_address_title">Node Address</string>
     <string name="bond_not_whitelisted_error">You are not whitelisted on this node</string>
@@ -819,7 +813,6 @@
     <string name="backup_password_request_with_password_action">Use password</string>
     <string name="backup_password_topbar_title">Password</string>
     <string name="function_transfer_ibc_dst_address_input_title">Destination Address</string>
-    <string name="function_switch_thorchain_address">THORChain Address</string>
     <string name="migration_onboarding_step_1_text_start">Upgrade this vault to the</string>
     <string name="migration_onboarding_step_1_text_emphasized">world’s fastest MPC protocol</string>
     <string name="migration_onboarding_step_1_text_end">and sign faster than ever before</string>
@@ -833,7 +826,6 @@
     <string name="upgrade_banner_title">Upgrade your vault now</string>
     <string name="deposit_form_custom_memo_optional_title">Custom Memo (optional)</string>
     <string name="transfer_ibc_function_memo_title">Memo</string>
-    <string name="merge_account_doesnt_exist">Selected token is not found for this address</string>
     <string name="keygen_email_error">Incorrect email, please check</string>
     <string name="verify_transaction_function_signature_title">Function Signature</string>
     <string name="verify_transaction_function_inputs_title">Function Arguments</string>

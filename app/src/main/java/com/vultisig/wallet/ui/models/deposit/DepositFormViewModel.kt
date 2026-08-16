@@ -31,7 +31,6 @@ import com.vultisig.wallet.ui.models.deposit.load.DepositFieldInputCoordinator
 import com.vultisig.wallet.ui.models.deposit.load.DepositOptionCoordinator
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.NodeWhitelistChecker
-import com.vultisig.wallet.ui.models.deposit.load.RujiBalancesLoader
 import com.vultisig.wallet.ui.models.deposit.load.SecuredAssetLoader
 import com.vultisig.wallet.ui.models.deposit.submit.DepositStrategyContext
 import com.vultisig.wallet.ui.models.deposit.submit.DepositStrategyFactory
@@ -70,10 +69,7 @@ internal enum class DepositOption {
     Unstake,
     Custom,
     TransferIbc,
-    Switch,
-    Merge,
     RemoveCacaoPool,
-    UnMerge,
     SecuredAsset,
     WithdrawSecuredAsset,
     AddLiquidity,
@@ -102,15 +98,12 @@ internal data class DepositFormUiModel(
     val isWhitelistFailed: Boolean = false,
     val balance: UiText = UiText.Empty,
     val balanceDecimal: BigDecimal? = null,
-    val sharesBalance: UiText = R.string.share_balance_loading.asUiText(),
     val selectedDstChain: Chain = Chain.ThorChain,
     val dstChainList: List<Chain> = emptyList(),
     val dstAddressError: UiText? = null,
     val amountError: UiText? = null,
     val memoError: UiText? = null,
-    val thorAddressError: UiText? = null,
     val selectedCoin: TokenMergeInfo = tokensToMerge.first(),
-    val selectedUnMergeCoin: TokenMergeInfo = tokensToMerge.first(),
     val coinList: List<TokenMergeInfo> = tokensToMerge,
     val unstakableAmount: String? = null,
     val isUnstakeMature: Boolean = false,
@@ -163,7 +156,6 @@ constructor(
     private val liquidityDataLoaderFactory: LiquidityDataLoader.Factory,
     private val securedAssetLoaderFactory: SecuredAssetLoader.Factory,
     private val cacaoMaturityLoaderFactory: CacaoMaturityLoader.Factory,
-    private val rujiBalancesLoaderFactory: RujiBalancesLoader.Factory,
     private val nodeWhitelistCheckerFactory: NodeWhitelistChecker.Factory,
     private val dataLoaderFactory: DepositDataLoader.Factory,
     private val depositOptionCoordinatorFactory: DepositOptionCoordinator.Factory,
@@ -288,18 +280,6 @@ constructor(
             bondAddress = { bondAddress },
         )
 
-    private val rujiBalancesLoader: RujiBalancesLoader =
-        rujiBalancesLoaderFactory.create(
-            scope = viewModelScope,
-            tokenAmountFieldState = tokenAmountFieldState,
-            addressProvider = { address.value?.address },
-            selectedUnMergeCoinProvider = { state.value.selectedUnMergeCoin },
-            onSharesBalance = { sharesBalance ->
-                _state.update { it.copy(sharesBalance = sharesBalance) }
-            },
-            setLoading = { isLoading = it },
-        )
-
     private val nodeWhitelistChecker: NodeWhitelistChecker =
         nodeWhitelistCheckerFactory.create(
             scope = viewModelScope,
@@ -357,7 +337,6 @@ constructor(
                 resolveSecuredAssetInboundAddress =
                     depositOptionCoordinator::requireSecuredAssetInboundAddress,
                 getBitcoinTransactionPlan = depositAmountHelper::getBitcoinTransactionPlan,
-                rujiMergeBalances = { rujiBalancesLoader.balances },
             )
         )
 
@@ -470,15 +449,6 @@ constructor(
         _state.update { it.copy(selectedCoin = mergeInfo) }
     }
 
-    fun selectUnMergeToken(unmergeInfo: TokenMergeInfo) {
-        _state.update { it.copy(selectedUnMergeCoin = unmergeInfo) }
-        if (rujiBalancesLoader.balances == null) {
-            onLoadRujiMergeBalances()
-        } else {
-            rujiBalancesLoader.setUnMergeTokenSharesField(unmergeInfo)
-        }
-    }
-
     /**
      * Validates the destination-address field; see
      * [DepositFieldInputCoordinator.validateDstAddress].
@@ -530,18 +500,6 @@ constructor(
      * [DepositFieldInputCoordinator.setDstAddress].
      */
     fun setDstAddress(address: String) = fieldInputCoordinator.setDstAddress(address)
-
-    /**
-     * Validates the THORChain destination address; see
-     * [DepositFieldInputCoordinator.validateThorAddress].
-     */
-    fun validateThorAddress() = fieldInputCoordinator.validateThorAddress()
-
-    /**
-     * Sets the THORChain destination address and revalidates; see
-     * [DepositFieldInputCoordinator.setThorAddress].
-     */
-    fun setThorAddress(address: String) = fieldInputCoordinator.setThorAddress(address)
 
     fun scan() {
         viewModelScope.launch {
@@ -625,10 +583,6 @@ constructor(
         val address = address.value ?: return null
         val userSelectedToken = state.value.selectedToken
         return address.accounts.firstOrNull { it.token.id == userSelectedToken.id }
-    }
-
-    fun onLoadRujiMergeBalances() {
-        rujiBalancesLoader.loadRujiMergeBalances()
     }
 
     private fun showError(text: UiText) {
