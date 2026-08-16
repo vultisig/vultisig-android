@@ -16,6 +16,12 @@ data class KaminoEarnUiModel(
     val rows: List<KaminoEarnRow> = emptyList(),
     /** Summed across vaults in the user's currency; null while unresolved. */
     val totalFiat: String? = null,
+    /**
+     * The same sum before formatting, so the chain header can add it to native staking without
+     * re-parsing [totalFiat]. Zero when no vault is enabled — that is the user holding nothing
+     * here, a known value — and null only while the total is genuinely unresolved.
+     */
+    val totalFiatValue: BigDecimal? = null,
     val isBalanceVisible: Boolean = true,
     /** Whether the last load stopped on an error, so the tab can say so rather than look empty. */
     val loadFailed: Boolean = false,

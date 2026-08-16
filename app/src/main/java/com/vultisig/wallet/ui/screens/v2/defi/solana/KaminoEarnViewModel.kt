@@ -214,6 +214,9 @@ constructor(
                             hasEnabledVaults = false,
                             rows = emptyList(),
                             totalFiat = null,
+                            // Zero, not null: no vault enabled is a read that succeeded and found
+                            // nothing, so the chain header can still add it up.
+                            totalFiatValue = BigDecimal.ZERO,
                         )
                     }
                     return@safeLaunch
@@ -255,6 +258,7 @@ constructor(
                 }
 
                 val resolved = rows.filterNotNull()
+                val resolvedTotal = resolved.takeIf { it.isNotEmpty() }?.let(::totalFiatValue)
                 _state.update { current ->
                     current.copy(
                         isLoading = false,
@@ -266,10 +270,8 @@ constructor(
                                 current.rows.filter { row -> row.vaultAddress in enabled }
                             },
                         totalFiat =
-                            resolved
-                                .takeIf { it.isNotEmpty() }
-                                ?.let { currencyFormat.format(totalFiatValue(it)) }
-                                ?: current.totalFiat,
+                            resolvedTotal?.let { currencyFormat.format(it) } ?: current.totalFiat,
+                        totalFiatValue = resolvedTotal ?: current.totalFiatValue,
                     )
                 }
             }

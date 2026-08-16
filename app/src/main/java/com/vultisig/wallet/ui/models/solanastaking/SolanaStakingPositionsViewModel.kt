@@ -100,6 +100,18 @@ internal data class SolanaStakingPositionsUiState(
     // string would slip past that and draw a blank line where the price belongs.
     val totalStakedFiatDisplay: String? = null,
     val totalStakedSolDisplay: String = "",
+    /**
+     * The chain's whole DeFi holding — native staking plus Kamino Earn — for the header banner,
+     * which is labelled with the chain rather than with the selected tab. Null renders as the
+     * unavailable marker, same as [totalStakedFiatDisplay].
+     */
+    val chainTotalFiatDisplay: String? = null,
+    /**
+     * The two halves [chainTotalFiatDisplay] is made of, kept raw because they are loaded by
+     * separate view-models and either may arrive first.
+     */
+    val stakedFiatValue: BigDecimal? = null,
+    val kaminoFiatValue: BigDecimal? = null,
     val positions: List<SolanaStakePositionRow> = emptyList(),
     val error: UiText? = null,
 )
@@ -145,6 +157,27 @@ constructor(
         if (vaultId.isEmpty()) return
         _state.update { it.copy(isReloading = true) }
         loadData()
+    }
+
+    /**
+     * The Kamino Earn total for this vault, handed over by the screen. Earn is loaded by its own
+     * view-model, so the header banner — which is labelled with the chain, not with the selected
+     * tab — can only be their sum once both sides have reported.
+     *
+     * Null is "not resolved", which is not zero: reporting the staking half alone would present a
+     * number that is short by a real position as the chain's whole DeFi balance.
+     */
+    fun onKaminoTotalChanged(total: BigDecimal?) {
+        viewModelScope.safeLaunch(onError = { Timber.w(it, "Failed to total the Solana header") }) {
+            val currencyFormat = appCurrencyRepository.getCurrencyFormat()
+            _state.update {
+                it.withChainTotal(
+                    staked = it.stakedFiatValue,
+                    kamino = total,
+                    format = currencyFormat,
+                )
+            }
+        }
     }
 
     fun onStake() {
@@ -335,19 +368,27 @@ constructor(
                             acc + account.delegatedStake.toBigDecimal()
                         }
                         .movePointLeft(solCoin.decimal)
-                val totalFiat = currencyFormat.format(totalStakedSolAmount.multiply(price))
+                val stakedFiatValue = totalStakedSolAmount.multiply(price)
+                val totalFiat = currencyFormat.format(stakedFiatValue)
 
                 _state.update {
                     it.copy(
-                        isLoading = false,
-                        isReloading = false,
-                        isBalanceVisible = isBalanceVisible,
-                        totalStakedFiatDisplay = totalFiat,
-                        totalStakedSolDisplay =
-                            totalStakedSolAmount.stripTrailingZeros().formatTokenAmount(SOL_TICKER),
-                        positions = rows,
-                        error = null,
-                    )
+                            isLoading = false,
+                            isReloading = false,
+                            isBalanceVisible = isBalanceVisible,
+                            totalStakedFiatDisplay = totalFiat,
+                            totalStakedSolDisplay =
+                                totalStakedSolAmount
+                                    .stripTrailingZeros()
+                                    .formatTokenAmount(SOL_TICKER),
+                            positions = rows,
+                            error = null,
+                        )
+                        .withChainTotal(
+                            staked = stakedFiatValue,
+                            kamino = it.kaminoFiatValue,
+                            format = currencyFormat,
+                        )
                 }
             }
     }
@@ -411,6 +452,26 @@ constructor(
 
     private fun shortAddress(address: String): String =
         if (address.length > 12) "${address.take(6)}…${address.takeLast(4)}" else address
+
+    /**
+     * Folds the two halves of the chain's DeFi holding into the banner value.
+     *
+     * Unknown wins over known: while either half is unresolved the banner says so rather than
+     * printing the other half, which would read as the chain total while being short by whatever
+     * the unread side holds. A user with no Kamino vault enabled has a resolved zero there, so the
+     * common staking-only case still shows a figure.
+     */
+    private fun SolanaStakingPositionsUiState.withChainTotal(
+        staked: BigDecimal?,
+        kamino: BigDecimal?,
+        format: NumberFormat,
+    ): SolanaStakingPositionsUiState =
+        copy(
+            stakedFiatValue = staked,
+            kaminoFiatValue = kamino,
+            chainTotalFiatDisplay =
+                if (staked == null || kamino == null) null else format.format(staked.add(kamino)),
+        )
 
     private suspend fun cachedPrice(tokenId: String, currency: AppCurrency): BigDecimal =
         tokenPriceRepository.getCachedPrice(tokenId = tokenId, appCurrency = currency)

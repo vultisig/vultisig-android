@@ -20,6 +20,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -79,6 +80,13 @@ internal fun SolanaStakingPositionsScreen(
         viewModel.setData(vaultId)
         kaminoViewModel.setData(vaultId)
         onPauseOrDispose {}
+    }
+
+    // The header banner is the chain's total, so it needs both tabs' figures. Earn owns its own
+    // load, so its total is handed to the staking view-model as it resolves rather than being
+    // summed in the composition, where the user's currency format isn't available.
+    LaunchedEffect(kaminoState.totalFiatValue) {
+        viewModel.onKaminoTotalChanged(kaminoState.totalFiatValue)
     }
 
     SolanaStakingPositionsContent(
@@ -141,8 +149,10 @@ internal fun SolanaStakingPositionsContent(
             horizontalAlignment = CenterHorizontally,
         ) {
             SolanaHeaderBanner(
-                totalValue = state.totalStakedFiatDisplay,
-                isLoading = state.isLoading,
+                totalValue = state.chainTotalFiatDisplay,
+                // Both halves gate the banner: showing the staking total the moment it lands would
+                // print a figure that then jumps as Earn resolves.
+                isLoading = state.isLoading || kaminoState.isLoading,
                 isBalanceVisible = state.isBalanceVisible,
             )
 

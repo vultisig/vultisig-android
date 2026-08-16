@@ -128,6 +128,29 @@ internal class KaminoEarnViewModelTest {
     }
 
     @Test
+    fun `nothing enabled hands the chain header a resolved zero, not an unknown`() = runTest {
+        // The header adds this to native staking. Null there would read as "not loaded" and blank
+        // the whole banner for everyone who never turned Earn on.
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns flowOf(emptySet())
+
+        val state = viewModel().apply { setData(VAULT_ID) }.state.value
+
+        assertEquals(0, BigDecimal.ZERO.compareTo(state.totalFiatValue))
+    }
+
+    @Test
+    fun `a failed load leaves the total unknown rather than reporting zero`() = runTest {
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flowOf(setOf(STEAKHOUSE.address))
+        coEvery { vaultRepository.get(VAULT_ID) } returns null
+
+        val state = viewModel().apply { setData(VAULT_ID) }.state.value
+
+        assertTrue(state.loadFailed)
+        assertNull(state.totalFiatValue)
+    }
+
+    @Test
     fun `an enabled vault with no deposit still gets a card at zero`() = runTest {
         coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
             flowOf(setOf(STEAKHOUSE.address))
@@ -285,6 +308,8 @@ internal class KaminoEarnViewModelTest {
         assertEquals(2, state.rows.size)
         // Priced at 1.0 each, 100 + 100 shares against a 1:1 share ratio.
         assertEquals("$200.00", state.totalFiat)
+        // The same figure unformatted, which is what the chain header adds to native staking.
+        assertEquals(0, BigDecimal("200").compareTo(state.totalFiatValue))
     }
 
     @Test
