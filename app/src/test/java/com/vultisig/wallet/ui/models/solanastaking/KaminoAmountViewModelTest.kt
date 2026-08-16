@@ -90,6 +90,7 @@ internal class KaminoAmountViewModelTest {
         // 165-byte SPL token account rent-exempt reserve, the real mainnet figure.
         coEvery { solanaApi.getMinimumBalanceForRentExemption() } returns BigInteger("2039280")
         coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns (null to false)
+        coEvery { solanaApi.getMedianPriorityFee(any()) } returns KAMINO_UNIT_PRICE
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { chainAccountAddressRepository.getAddress(Chain.Solana, VAULT) } returns
             (WALLET to "pubkey")
@@ -304,6 +305,51 @@ internal class KaminoAmountViewModelTest {
         // 350,000), two token-account rents (2,039,280 each) and farm UserState rent (6,299,080).
         assertEquals(0, BigDecimal("0.98827236").compareTo(available))
     }
+
+    @Test
+    fun `a first native SOL deposit charges the same rent it reserved, not just the network fee`() =
+        runTest {
+            // Otherwise the verify screen shows an amount plus a fee that together fall short of
+            // the wallet's starting balance by exactly the account rent this deposit actually
+            // spends.
+            coEvery { balanceRepository.getTokenValue(any(), any()) } returns
+                flowOf(TokenValue(value = BigInteger("1000000000"), token = COIN))
+            coEvery { kaminoApi.getVaultState(any()) } returns
+                KaminoVaultStateJson(
+                    address = ALLEZ.address,
+                    state =
+                        KaminoVaultStateJson.State(
+                            name = "Allez SOL",
+                            tokenMint = ALLEZ.tokenMint,
+                            tokenDecimals = 9,
+                            sharesMint = ALLEZ.sharesMint,
+                            sharesDecimals = 6,
+                        ),
+                )
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+            coEvery {
+                buildKeysignPayload(
+                    vault = any(),
+                    action = any(),
+                    apiAmount = any(),
+                    tokenAmount = any(),
+                    coin = any(),
+                    blockChainSpecific = any(),
+                    vaultPublicKeyECDSA = any(),
+                    vaultLocalPartyID = any(),
+                    libType = any(),
+                )
+            } returns keysignPayloadWithKaminoBudget()
+
+            val vm = viewModel(vaultAddress = ALLEZ.address)
+            vm.amountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+            vm.submit()
+
+            // Base fee (1,000,000) + priority fee (350,000) + wSOL and share ATA rent (2,039,280
+            // each) + farm UserState rent (6,299,080) = 11,727,640.
+            assertEquals(BigInteger("11727640"), captured.captured.estimatedFees.value)
+        }
 
     @Test
     fun `a USDC deposit does not reserve SOL costs against the token balance`() = runTest {

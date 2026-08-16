@@ -39,6 +39,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.utils.runCatchingCancellable
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -195,7 +196,8 @@ constructor(
             }
 
             val available = spendableBalance(vault, coin)
-            val vaultState = runCatching { kaminoApi.getVaultState(vault.address) }.getOrNull()
+            val vaultState =
+                runCatchingCancellable { kaminoApi.getVaultState(vault.address) }.getOrNull()
 
             _state.update {
                 it.copy(
@@ -239,27 +241,22 @@ constructor(
             .movePointLeft(coin.decimal)
     }
 
+    /**
+     * Reads the network's median priority price directly rather than through
+     * [BlockChainSpecificRepository.getSpecific], which also fetches a recent blockhash and ATA
+     * lookups unrelated to pricing. Any one of those failing would fail the whole call, nulling out
+     * the price too and dropping the floor from the app-wide 1,000,000 to
+     * [KaminoComputeBudget.FALLBACK_UNIT_PRICE]'s 20,000 — under-reserving the exact way #5599
+     * failed, just at a smaller scale. [SolanaApi.getMedianPriorityFee] already falls back to
+     * 1,000,000 internally and never throws but for cancellation, so nothing here needs its own
+     * fallback.
+     */
     private suspend fun kaminoDepositPriorityFee(vault: KaminoVault, coin: Coin): BigInteger {
-        val solanaSpecific =
-            runCatching {
-                    blockChainSpecificRepository
-                        .getSpecific(
-                            chain = Chain.Solana,
-                            address = coin.address,
-                            token = coin,
-                            gasFee = TokenValue(SolanaHelper.DefaultFeeInLamports, coin),
-                            isSwap = false,
-                            isMaxAmountEnabled = false,
-                            isDeposit = true,
-                        )
-                        .blockChainSpecific as? BlockChainSpecific.Solana
-                }
-                .getOrNull()
-
+        val networkPrice = solanaApi.getMedianPriorityFee(listOf(coin.address))
         return KaminoComputeBudget.priorityFeeLamports(
             vault = vault,
             action = KaminoAction.DEPOSIT,
-            networkPrice = solanaSpecific?.priorityFee,
+            networkPrice = networkPrice,
         )
     }
 
@@ -281,19 +278,33 @@ constructor(
     }
 
     private suspend fun tokenAccountRentReserve(): BigInteger =
-        runCatching { solanaApi.getMinimumBalanceForRentExemption() }
+        runCatchingCancellable { solanaApi.getMinimumBalanceForRentExemption() }
             .getOrNull()
             ?.takeIf { it.signum() > 0 } ?: SPL_TOKEN_ACCOUNT_RENT_LAMPORTS
 
     private suspend fun tokenAccountExists(walletAddress: String, mint: String): Boolean =
-        runCatching {
+        runCatchingCancellable {
                 solanaApi.getTokenAssociatedAccountByOwner(walletAddress, mint).first != null
             }
             .getOrDefault(false)
 
+    /**
+     * Whether the wallet already has a farm UserState account for this vault, so a redeposit does
+     * not need to pay its rent again.
+     *
+     * Goes through [KaminoWithdrawEligibility.resolve] rather than checking for a bare entry in the
+     * response: the same endpoint keeps a zero-share row for a wallet that has fully exited, and
+     * the withdraw flow already treats that row as no position. Checking entry presence alone would
+     * disagree with that and waive the rent on an account that may no longer exist.
+     */
     private suspend fun hasKaminoVaultPosition(walletAddress: String, vault: KaminoVault): Boolean =
-        runCatching {
-                kaminoApi.getUserPositions(walletAddress).any { it.vaultAddress == vault.address }
+        runCatchingCancellable {
+                val entry =
+                    kaminoApi.getUserPositions(walletAddress).firstOrNull {
+                        it.vaultAddress == vault.address
+                    }
+                KaminoWithdrawEligibility.resolve(entry, vault.sharesDecimals) is
+                    KaminoWithdrawEligibility.Withdrawable
             }
             .getOrDefault(false)
 
@@ -305,7 +316,8 @@ constructor(
      * is denominated in is derived from those, never the other way round.
      */
     private suspend fun loadWithdrawState(vault: KaminoVault, coin: Coin) {
-        val positions = runCatching { kaminoApi.getUserPositions(coin.address) }.getOrNull()
+        val positions =
+            runCatchingCancellable { kaminoApi.getUserPositions(coin.address) }.getOrNull()
         val eligibility =
             if (positions == null) {
                 // A failed read is neither "nothing to withdraw" nor "everything": refuse it.
@@ -317,7 +329,8 @@ constructor(
                 )
             }
 
-        val metrics = runCatching { kaminoApi.getVaultMetrics(vault.address) }.getOrNull()
+        val metrics =
+            runCatchingCancellable { kaminoApi.getVaultMetrics(vault.address) }.getOrNull()
         val rate = KaminoRate.parse(metrics?.tokensPerShare)
         val held = eligibility.withdrawableShares?.maximum
 
@@ -328,7 +341,8 @@ constructor(
                 null
             }
 
-        val vaultState = runCatching { kaminoApi.getVaultState(vault.address) }.getOrNull()
+        val vaultState =
+            runCatchingCancellable { kaminoApi.getVaultState(vault.address) }.getOrNull()
         // Share base units, not token — comparing it against a token amount would be wrong by the
         // whole share rate (about 930x on the SOL vault).
         val minimumShares =
@@ -479,6 +493,16 @@ constructor(
             // is `SolanaHelper.defaultFeeInLamports`, the same 1,000,000, plus price × limit — so
             // the two devices quote one figure for one transaction instead of two.
             val recordedBudget = keysignPayload.blockChainSpecific as BlockChainSpecific.Solana
+            // A first native-SOL deposit also spends the rent [spendableBalance] reserved against
+            // the same balance, on the wSOL ATA, share ATA and farm UserState it creates. Folded in
+            // here too, or the amount plus this fee would undercount the wallet's starting balance
+            // by exactly that rent on the verify screen.
+            val rentReserve =
+                if (!route.isWithdraw && coin.isNativeToken) {
+                    kaminoNativeDepositRentReserve(vault, coin)
+                } else {
+                    BigInteger.ZERO
+                }
             val gasFee =
                 TokenValue(
                     value =
@@ -487,7 +511,8 @@ constructor(
                                 vault = vault,
                                 action = action,
                                 networkPrice = recordedBudget.priorityFee,
-                            ),
+                            ) +
+                            rentReserve,
                     token = solCoin,
                 )
 
