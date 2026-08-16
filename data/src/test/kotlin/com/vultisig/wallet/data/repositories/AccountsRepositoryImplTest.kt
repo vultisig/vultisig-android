@@ -25,6 +25,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
@@ -501,6 +502,65 @@ internal class AccountsRepositoryImplTest {
         assertEquals(THOR_PUBLIC_KEY, compounding.hexPublicKey)
     }
 
+    @Test
+    fun `a cached DeFi balance stays on the chain that reported it`() = runTest {
+        val eth = Coins.Ethereum.ETH.copy(address = ETH_ADDRESS)
+        val ethUsdc = Coins.Ethereum.USDC.copy(address = ETH_ADDRESS)
+        val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
+        val solUsdc = Coins.Solana.USDC.copy(address = SOL_ADDRESS)
+        coEvery { vaultRepository.get(VAULT_ID) } returns
+            Vault(id = VAULT_ID, name = "Test Vault", coins = listOf(eth, ethUsdc, sol, solUsdc))
+
+        // Only Ethereum has a funded position — the Circle deposit, reported as Ethereum USDC.
+        coEvery {
+            balanceRepository.getDeFiCachedTokeBalanceAndPrice(ETH_ADDRESS, any(), VAULT_ID)
+        } returns listOf(defiBalance(Coins.Ethereum.USDC, amount = DEPOSIT, fiat = DEPOSIT_FIAT))
+        coEvery {
+            balanceRepository.getDeFiCachedTokeBalanceAndPrice(SOL_ADDRESS, any(), VAULT_ID)
+        } returns emptyList()
+
+        val addresses = repository.loadDeFiAddresses(VAULT_ID, isRefresh = false).toList().last()
+
+        // Balances arrive carrying a ticker and nothing else, so a lookup pooled across chains
+        // handed this one deposit to the Solana USDC account as well.
+        val solanaUsdc =
+            addresses
+                .first { it.chain == Chain.Solana }
+                .accounts
+                .first { it.token.id == solUsdc.id }
+        assertEquals(0L, solanaUsdc.tokenValue?.value?.toLong())
+        assertEquals(
+            DEPOSIT_FIAT,
+            addresses.sumOf { address ->
+                address.accounts.sumOf { it.fiatValue?.value?.toLong() ?: 0L }
+            },
+            "the DeFi total must count the deposit once, not once per chain sharing its ticker",
+        )
+    }
+
+    @Test
+    fun `the wallet price refresh keeps the DeFi-only receipts priced`() = runTest {
+        val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
+        stubVault(sol)
+        coJustRun { tokenPriceRepository.refresh(any()) }
+        coEvery { balanceRepository.getCachedTokenBalances(any(), any()) } returns
+            listOf(wrapped(amount = CACHED, coin = sol))
+        every { balanceRepository.getTokenBalanceAndPrice(SOL_ADDRESS, sol) } returns
+            flowOf(balance(amount = NETWORK, coin = sol))
+
+        val job = launch { repository.loadAddressBalances(VAULT_ID).collect() }
+        advanceUntilIdle()
+
+        // No vault carries a receipt, so this refresh is the only ungated writer of its price row —
+        // and the cached DeFi emission reads that row on every cold start.
+        coVerify {
+            tokenPriceRepository.refresh(
+                match { it.any { coin -> coin.id == Coins.ThorChain.sRUJI.id } }
+            )
+        }
+        job.cancel()
+    }
+
     private fun defiBalance(coin: Coin, amount: Long, fiat: Long) =
         TokenBalanceAndPrice(
             tokenBalance =
@@ -581,6 +641,8 @@ internal class AccountsRepositoryImplTest {
         const val THOR_PUBLIC_KEY = "thor-pubkey"
         const val STAKED = 12_000_000_000L
         const val STAKED_FIAT = 250L
+        const val DEPOSIT = 500_000_000L
+        const val DEPOSIT_FIAT = 500L
         const val CACHED = 5L
         const val NETWORK = 10L
         const val ETH_NETWORK = 100L

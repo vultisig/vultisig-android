@@ -96,7 +96,15 @@ constructor(
         buildCacheAddresses(vaultId).flatMapLatest { (vaultCoins, addresses) ->
             channelFlow {
                 supervisorScope {
-                    val loadPrices = async { tokenPriceRepository.refresh(vaultCoins) }
+                    // The DeFi-only receipts ride along: no vault carries one, so this refresh —
+                    // the only ungated one — is all that keeps their price rows warm.
+                    // loadDeFiAddresses refreshes them too, but only on an explicit reload, and
+                    // its cached emission reads those rows, so a cold start would otherwise value
+                    // a funded position at $0.00. They price off the token they mirror and share
+                    // its provider id, so the lookup below gains no round trip.
+                    val loadPrices = async {
+                        tokenPriceRepository.refresh(vaultCoins + Coins.defiOnly)
+                    }
 
                     // Always emit the last-known DB snapshot first so the UI shows cached
                     // balances immediately instead of empty rows — including on refresh
@@ -456,25 +464,32 @@ constructor(
                 )
 
             val addressesByChain = addresses.associateBy { it.chain }
-            val cacheBalances =
-                defiChainNativeCoins.flatMap { (chain, nativeCoin) ->
-                    addressesByChain[chain]?.let { address ->
-                        balanceRepository.getDeFiCachedTokeBalanceAndPrice(
-                            address = address.address,
-                            coin = nativeCoin,
-                            vaultId = vaultId,
-                        )
-                    } ?: emptyList()
+            // Kept per chain: a cached balance carries only its ticker, and the same ticker is a
+            // different asset on each of them. Pooled into one map, the funded Circle deposit
+            // reported as Ethereum USDC also matched the Solana and Tron USDC accounts below, so
+            // the one deposit was counted once per chain in the DeFi total.
+            val cacheBalancesByChain =
+                defiChainNativeCoins.associate { (chain, nativeCoin) ->
+                    chain to
+                        (addressesByChain[chain]?.let { address ->
+                            balanceRepository.getDeFiCachedTokeBalanceAndPrice(
+                                address = address.address,
+                                coin = nativeCoin,
+                                vaultId = vaultId,
+                            )
+                        } ?: emptyList())
                 }
 
-            if (cacheBalances.isNotEmpty()) {
-                val balancesByTicker =
-                    cacheBalances.associateBy { balance ->
-                        balance.tokenBalance.tokenValue?.unit?.lowercase()
-                    }
-
+            if (cacheBalancesByChain.values.any { it.isNotEmpty() }) {
                 val cachedAddresses =
                     addresses.map { address ->
+                        val balancesByTicker =
+                            cacheBalancesByChain[address.chain]
+                                ?.associateBy { balance ->
+                                    balance.tokenBalance.tokenValue?.unit?.lowercase()
+                                }
+                                .orEmpty()
+
                         val updatedAccounts =
                             address.accounts.map { account ->
                                 val cachedBalance =
