@@ -122,7 +122,7 @@ constructor(
      * seeds the initial [state], derives the merge coin list, resolves the vault [address], and
      * starts the three sequence-sensitive flow collectors (native-token reselection + ADD_LP gas
      * display, the `selectedCoin × address × depositOption × selectedToken`
-     * token-amount/secured-asset collector, and the `selectedCoin × depositOption` IBC/Switch
+     * token-amount/secured-asset collector, and the `selectedCoin × depositOption` IBC transfer
      * destination-chain collector).
      *
      * Collector order and structure are preserved exactly; the SecuredAsset address population
@@ -136,7 +136,7 @@ constructor(
      * @param state the ViewModel's mutable UI state, read for derivations and updated in place.
      * @param updateTokenAmount callback that refreshes the displayed balance for the resolved
      *   account.
-     * @param selectDstChain callback that selects the first IBC/Switch destination chain.
+     * @param selectDstChain callback that selects the first IBC transfer destination chain.
      * @param collectSecuredAssetAddresses trigger that populates the user's own THORChain address
      *   on the SecuredAsset form.
      * @param loadGasFeeForDisplay callback that loads and displays gas fees for the ADD_LP
@@ -160,8 +160,6 @@ constructor(
                         DepositOption.Unbond,
                         DepositOption.Leave,
                         DepositOption.Custom,
-                        DepositOption.Merge,
-                        DepositOption.UnMerge,
                         DepositOption.WithdrawSecuredAsset,
                     )
 
@@ -170,7 +168,7 @@ constructor(
                 Chain.Kujira,
                 Chain.Osmosis -> listOf(DepositOption.TransferIbc)
 
-                Chain.GaiaChain -> listOf(DepositOption.TransferIbc, DepositOption.Switch)
+                Chain.GaiaChain -> listOf(DepositOption.TransferIbc)
                 // TON staking moved to the dedicated DeFi-tab Stake/Unstake screens; it no longer
                 // surfaces Stake/Unstake in the generic deposit form (iOS Functions-flow parity).
                 else ->
@@ -201,13 +199,7 @@ constructor(
                 if (chain == Chain.Osmosis) it.filter { it.ticker.equals("LVN", ignoreCase = true) }
                 else it
             }
-        state.update {
-            it.copy(
-                selectedCoin = coinList.first(),
-                coinList = coinList,
-                selectedUnMergeCoin = coinList.first(),
-            )
-        }
+        state.update { it.copy(selectedCoin = coinList.first(), coinList = coinList) }
 
         loadAddress(vaultId, chain)
 
@@ -233,9 +225,7 @@ constructor(
 
                     val account =
                         when (depositOption) {
-                            DepositOption.Switch,
-                            DepositOption.TransferIbc,
-                            DepositOption.Merge -> {
+                            DepositOption.TransferIbc -> {
                                 targetTicker = selectedMergeToken.ticker
                                 address.accounts.find {
                                     it.token.ticker.equals(
@@ -281,8 +271,7 @@ constructor(
                     state.map { it.depositOption }.distinctUntilChanged(),
                 ) { selectedMergeToken, depositOption ->
                     when (depositOption) {
-                        DepositOption.TransferIbc,
-                        DepositOption.Switch -> {
+                        DepositOption.TransferIbc -> {
                             // special case, because of all supported merge tokens only lvn is
                             // osmosis native
                             val dstChainList =

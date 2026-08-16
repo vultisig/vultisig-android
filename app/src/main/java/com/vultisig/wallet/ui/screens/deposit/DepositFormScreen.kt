@@ -42,10 +42,7 @@ import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
 import com.vultisig.wallet.ui.models.deposit.TokenWithdrawSecureAsset
-import com.vultisig.wallet.ui.screens.function.MergeFunctionScreen
-import com.vultisig.wallet.ui.screens.function.SwitchFunctionScreen
 import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
-import com.vultisig.wallet.ui.screens.function.UnMergeFunctionScreen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -98,12 +95,8 @@ internal fun DepositFormScreen(
         memoFieldState = model.customMemoFieldState,
         onMemoLostFocus = {},
         onSelectCoin = model::selectMergeToken,
-        onSelectUnMergeCoin = model::selectUnMergeToken,
         thorAddress = model.thorAddressFieldState,
-        onThorAddressLostFocus = model::validateThorAddress,
-        onSetThorAddress = model::setThorAddress,
         onOpenSelectToken = model::selectToken,
-        onLoadRujiBalances = model::onLoadRujiMergeBalances,
         onSelectSecureAsset = model::onSelectSecureAsset,
         onSelectBondAsset = model::selectBondAsset,
     )
@@ -146,12 +139,8 @@ internal fun DepositFormScreen(
     memoFieldState: TextFieldState,
     onMemoLostFocus: () -> Unit = {},
     thorAddress: TextFieldState,
-    onThorAddressLostFocus: () -> Unit = {},
-    onSetThorAddress: (String) -> Unit = {},
     onSelectCoin: (TokenMergeInfo) -> Unit = {},
-    onSelectUnMergeCoin: (TokenMergeInfo) -> Unit = {},
     onOpenSelectToken: () -> Unit = {},
-    onLoadRujiBalances: () -> Unit = {},
     onSelectSecureAsset: (TokenWithdrawSecureAsset) -> Unit = {},
     onSelectBondAsset: (String) -> Unit = {},
 ) {
@@ -198,11 +187,6 @@ internal fun DepositFormScreen(
                         DepositOption.Custom -> stringResource(R.string.deposit_option_custom)
                         DepositOption.TransferIbc ->
                             stringResource(R.string.deposit_option_ibc_transfer)
-                        DepositOption.Switch -> stringResource(R.string.deposit_option_switch)
-                        DepositOption.Merge -> stringResource(R.string.deposit_option_merge)
-                        DepositOption.UnMerge ->
-                            stringResource(R.string.deposit_option_withdraw_ruji)
-
                         DepositOption.AddCacaoPool ->
                             stringResource(R.string.deposit_option_add_cacao_pool)
                         DepositOption.RemoveCacaoPool ->
@@ -239,51 +223,6 @@ internal fun DepositFormScreen(
                         memoFieldState = memoFieldState,
                         onMemoLostFocus = onMemoLostFocus,
                         memoError = state.memoError,
-                    )
-                }
-
-                DepositOption.Switch -> {
-                    SwitchFunctionScreen(
-                        selectedToken = state.selectedCoin,
-                        coinList = state.coinList,
-                        onSelectCoin = onSelectCoin,
-                        dstAddress = dstAddress,
-                        onDstAddressLostFocus = onDstAddressLostFocus,
-                        dstAddressError = state.dstAddressError,
-                        onSetDstAddress = onSetDstAddress,
-                        thorAddress = thorAddress,
-                        onThorAddressLostFocus = onThorAddressLostFocus,
-                        thorAddressError = state.thorAddressError,
-                        onSetThorAddress = onSetThorAddress,
-                        balance = state.balance,
-                        amountFieldState = amountFieldState,
-                        onAmountLostFocus = onAmountLostFocus,
-                        amountError = state.amountError,
-                    )
-                }
-
-                DepositOption.Merge -> {
-                    MergeFunctionScreen(
-                        selectedToken = state.selectedCoin,
-                        coinList = state.coinList,
-                        onSelectCoin = onSelectCoin,
-                        balance = state.balance,
-                        amountFieldState = amountFieldState,
-                        onAmountLostFocus = onAmountLostFocus,
-                        amountError = state.amountError,
-                    )
-                }
-
-                DepositOption.UnMerge -> {
-                    UnMergeFunctionScreen(
-                        selectedToken = state.selectedUnMergeCoin,
-                        coinList = state.coinList,
-                        onSelectCoin = onSelectUnMergeCoin,
-                        shares = state.sharesBalance,
-                        amountFieldState = amountFieldState,
-                        onAmountLostFocus = onAmountLostFocus,
-                        amountError = state.amountError,
-                        onLoadRujiBalances = onLoadRujiBalances,
                     )
                 }
 
@@ -581,7 +520,6 @@ internal fun DepositFormScreen(
                         state.isWhitelistFailed ||
                         state.nodeAddressError != null ||
                         state.dstAddressError != null ||
-                        state.thorAddressError != null ||
                         (state.depositOption == DepositOption.WithdrawSecuredAsset &&
                             state.availableSecuredAssets.isEmpty())
                 )

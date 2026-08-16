@@ -471,9 +471,6 @@
     <string name="deposit_option_unstake">Unstake</string>
     <string name="deposit_option_custom">Personalizzato</string>
     <string name="deposit_option_ibc_transfer">Trasferimento IBC</string>
-    <string name="deposit_option_switch">Cambia</string>
-    <string name="deposit_option_merge">Unisci</string>
-    <string name="deposit_option_withdraw_ruji">Ritira RUJI</string>
     <string name="withdraw_amount">Ritira %s</string>
     <string name="deposit_form_unstake_percentage_hint">Inserisci la percentuale da sbloccare</string>
     <string name="verify_transaction_function_signature_title">Firma della funzione</string>
@@ -483,7 +480,6 @@
     <string name="dapp_unverified_function_done_caution">Funzione non verificata. Controlla i dettagli della transazione.</string>
     <string name="request_from">Richiesta da</string>
     <string name="send_shares_currency_hint">Inserisci quote</string>
-    <string name="send_error_max_shares">L\'importo non deve superare il saldo</string>
     <string name="deposit_form_shares_title">Quote (Saldo: %1$s)</string>
     <string name="fast_vault_password_reminder_title">Verifica la tua password per:</string>
     <string name="fast_vault_password_reminder_done_button">Fatto</string>
@@ -509,7 +505,6 @@
     <string name="keygen_step_generating_mldsa">Generazione della chiave MLDSA</string>
     <string name="keygen_step_generating_chain_keys">Generazione delle chiavi della catena</string>
     <string name="reshare_step_generating_ecdsa">Generazione della chiave ECDSA</string>
-    <string name="merge_account_doesnt_exist">Il token selezionato non è stato trovato per questo indirizzo</string>
     <string name="keygen_email_error">E-mail errata, controllala</string>
     <string name="tx_overview_screen_tx_send">Invia</string>
     <string name="tx_overview_screen_tx_deposit">Deposito</string>

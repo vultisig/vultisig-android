@@ -471,9 +471,6 @@
     <string name="deposit_option_unstake">Unstake</string>
     <string name="deposit_option_custom">Benutzerdefiniert</string>
     <string name="deposit_option_ibc_transfer">IBC-Überweisung</string>
-    <string name="deposit_option_switch">Wechseln</string>
-    <string name="deposit_option_merge">Zusammenführen</string>
-    <string name="deposit_option_withdraw_ruji">RUJI abheben</string>
     <string name="withdraw_amount">%s abheben</string>
     <string name="deposit_form_unstake_percentage_hint">Prozentsatz zum Unstaking eingeben</string>
     <string name="verify_transaction_function_signature_title">Funktionssignatur</string>
@@ -483,7 +480,6 @@
     <string name="dapp_unverified_function_done_caution">Nicht verifizierte Funktion. Überprüfen Sie die Transaktionsdetails.</string>
     <string name="request_from">Anfrage von</string>
     <string name="send_shares_currency_hint">Anteile eingeben</string>
-    <string name="send_error_max_shares">Betrag darf den Kontostand nicht überschreiten</string>
     <string name="deposit_form_shares_title">Anteile (Guthaben: %1$s)</string>
     <string name="fast_vault_password_reminder_title">Überprüfen Sie Ihr Passwort für:</string>
     <string name="fast_vault_password_reminder_done_button">Fertig</string>
@@ -509,7 +505,6 @@
     <string name="keygen_step_generating_mldsa">Generieren eines MLDSA-Schlüssels</string>
     <string name="keygen_step_generating_chain_keys">Blockchain-Schlüssel generieren</string>
     <string name="reshare_step_generating_ecdsa">Generieren des ECDSA-Schlüssels</string>
-    <string name="merge_account_doesnt_exist">Das ausgewählte Token wurde für diese Adresse nicht gefunden.</string>
     <string name="keygen_email_error">Falsche E-Mail, bitte überprüfen</string>
     <string name="tx_overview_screen_tx_send">Senden</string>
     <string name="tx_overview_screen_tx_deposit">Einzahlung</string>

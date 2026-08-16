@@ -472,9 +472,6 @@
     <string name="deposit_option_unstake">Unstake</string>
     <string name="deposit_option_custom">Prilagođeno</string>
     <string name="deposit_option_ibc_transfer">IBC prijenos</string>
-    <string name="deposit_option_switch">Prebaci</string>
-    <string name="deposit_option_merge">Spoji</string>
-    <string name="deposit_option_withdraw_ruji">Povuci RUJI</string>
     <string name="withdraw_amount">Povuci %s</string>
     <string name="deposit_form_unstake_percentage_hint">Unesite postotak za deblokiranje</string>
     <string name="verify_transaction_function_signature_title">Potpis funkcije</string>
@@ -484,7 +481,6 @@
     <string name="dapp_unverified_function_done_caution">Neprovjerena funkcija. Pregledajte detalje transakcije.</string>
     <string name="request_from">Zahtjev od</string>
     <string name="send_shares_currency_hint">Unesite udjele</string>
-    <string name="send_error_max_shares">Iznos ne smije premašiti stanje</string>
     <string name="deposit_form_shares_title">Udjeli (Stanje: %1$s)</string>
     <string name="fast_vault_password_reminder_title">Potvrdite svoju lozinku za:</string>
     <string name="fast_vault_password_reminder_done_button">Gotovo</string>
@@ -510,7 +506,6 @@
     <string name="keygen_step_generating_mldsa">Generiranje MLDSA ključa</string>
     <string name="keygen_step_generating_chain_keys">Generiranje ključeva lanca</string>
     <string name="reshare_step_generating_ecdsa">Generiranje ECDSA ključa</string>
-    <string name="merge_account_doesnt_exist">Odabrani token nije pronađen za ovu adresu</string>
     <string name="keygen_email_error">Netočna e-pošta, molimo provjerite</string>
     <string name="tx_overview_screen_tx_send">POŠALJI</string>
     <string name="tx_overview_screen_tx_deposit">Polog</string>
