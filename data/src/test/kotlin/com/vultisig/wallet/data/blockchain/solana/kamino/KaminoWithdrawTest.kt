@@ -80,8 +80,8 @@ class KaminoWithdrawTest {
 
     @Test
     fun `the vault minimum rounds up so it converts back to at least the minimum`() {
-        // minWithdrawAmount is 1000 SHARE base units. Rounded down it would be 1054 token units,
-        // which converts back to fewer shares than the vault accepts.
+        // A share minimum of 1000 base units. Rounded down it would be 1054 token units, which
+        // converts back to fewer shares than the vault accepts.
         val minimum = KaminoWithdrawMath.minimumTokens(shares("1000"), usdcRate, tokenDecimals = 6)
         assertEquals(BigInteger("1055"), minimum!!.baseUnits)
 
@@ -90,6 +90,32 @@ class KaminoWithdrawTest {
             backToShares.baseUnits >= BigInteger("1000"),
             "rounding up must survive the round trip, was ${backToShares.baseUnits}",
         )
+    }
+
+    @Test
+    fun `the effective withdraw minimum is read as tokens, margined 3x, and converted to shares`() {
+        // minWithdrawAmount is 1000 TOKEN base units (0.001 USDC), not shares — the program
+        // compares
+        // it against the token value being withdrawn. The real floor sits above the published
+        // figure, so this margins it 3x (0.003 USDC) before converting to the shares a withdraw has
+        // to name, rounded up so the share figure is never worth fractionally less than that.
+        val published = tokens("1000", 6)
+        val minimumShares =
+            KaminoWithdrawMath.effectiveMinimumShares(published, usdcRate, shareDecimals = 6)
+        assertEquals(BigInteger("2846"), minimumShares!!.baseUnits)
+
+        val backToTokens = minimumShares.tokenValueRoundedUp(usdcRate, tokenDecimals = 6)!!
+        assertTrue(
+            backToTokens.baseUnits >= BigInteger("3000"),
+            "the margined minimum must survive the round trip, was ${backToTokens.baseUnits}",
+        )
+
+        // Allez SOL: 9-decimal token against 6-decimal shares, rate far below 1 — the shape that
+        // makes a shares-vs-tokens mixup differ by orders of magnitude rather than rounding away.
+        val publishedSol = tokens("1000", 9)
+        val minimumSharesSol =
+            KaminoWithdrawMath.effectiveMinimumShares(publishedSol, solRate, shareDecimals = 6)
+        assertEquals(BigInteger("2789"), minimumSharesSol!!.baseUnits)
     }
 
     @Test

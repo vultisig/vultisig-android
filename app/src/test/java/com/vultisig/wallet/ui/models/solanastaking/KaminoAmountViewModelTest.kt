@@ -205,9 +205,10 @@ internal class KaminoAmountViewModelTest {
         // 999999999 share base units (one below the balance, stepping back from the API's sentinel)
         // × 1.0544278224860290217, truncated to the token's 6 decimals.
         assertEquals(0, BigDecimal("1054.427821").compareTo(state.available))
-        // minWithdrawAmount is 1000 SHARE base units, so in tokens it is 0.001055 rounded up — not
-        // the 0.001 a token-denominated reading would give.
-        assertEquals(0, BigDecimal("0.001055").compareTo(state.minimum!!))
+        // minWithdrawAmount is 1000 TOKEN base units (0.001 USDC). The program's real floor sits
+        // above that, so the margined figure is 3x it converted to shares and back: 0.003001, not
+        // the 0.001 the raw published amount would suggest.
+        assertEquals(0, BigDecimal("0.003001").compareTo(state.minimum!!))
     }
 
     @Test
@@ -394,9 +395,10 @@ internal class KaminoAmountViewModelTest {
     }
 
     @Test
-    fun `the withdraw minimum is read as shares, not as the token amount`() = runTest {
-        // minWithdrawAmount is 1000 SHARE base units. Treated as token base units it would be
-        // 0.001 USDC; converted properly at the Steakhouse rate it is 0.001055.
+    fun `the withdraw minimum is read as tokens, padded past the program's real floor`() = runTest {
+        // minWithdrawAmount is 1000 TOKEN base units — 0.001 USDC. Read as shares it would convert
+        // to 0.001055; the program's real floor sits above the published figure, so this pads it 3x
+        // (matching iOS) before converting to shares and back: 0.003001.
         givenTokenBalance("0")
         coEvery { kaminoApi.getUserPositions(WALLET) } returns
             listOf(
@@ -411,7 +413,7 @@ internal class KaminoAmountViewModelTest {
             KaminoVaultMetricsJson(tokensPerShare = "1.0544278224860290217")
 
         val minimum = viewModel(isWithdraw = true).state.value.minimum
-        assertEquals(0, BigDecimal("0.001055").compareTo(minimum!!))
+        assertEquals(0, BigDecimal("0.003001").compareTo(minimum!!))
     }
 
     @Test
