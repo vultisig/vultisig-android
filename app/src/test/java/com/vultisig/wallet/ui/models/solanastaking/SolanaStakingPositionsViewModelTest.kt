@@ -81,7 +81,7 @@ internal class SolanaStakingPositionsViewModelTest {
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { balanceVisibilityRepository.getVisibility(VAULT_ID) } returns true
         every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
-        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+        coEvery { appCurrencyRepository.getCurrencyFormat(any()) } returns
             NumberFormat.getCurrencyInstance(Locale.US)
         coEvery { tokenPriceRepository.getCachedPrice(SOL.id, AppCurrency.USD) } returns
             BigDecimal("100")
@@ -167,10 +167,10 @@ internal class SolanaStakingPositionsViewModelTest {
     fun `a currency change re-prices the screen instead of relabelling it`() = runTest {
         val currency = MutableStateFlow(AppCurrency.USD)
         every { appCurrencyRepository.currency } returns currency
-        coEvery { appCurrencyRepository.getCurrencyFormat() } answers
+        coEvery { appCurrencyRepository.getCurrencyFormat(any()) } answers
             {
                 NumberFormat.getCurrencyInstance(
-                    if (currency.value == AppCurrency.EUR) Locale.GERMANY else Locale.US
+                    if (firstArg<AppCurrency>() == AppCurrency.EUR) Locale.GERMANY else Locale.US
                 )
             }
         coEvery { tokenPriceRepository.getCachedPrice(SOL.id, AppCurrency.EUR) } returns
@@ -197,10 +197,11 @@ internal class SolanaStakingPositionsViewModelTest {
         runTest {
             val currency = MutableStateFlow(AppCurrency.USD)
             every { appCurrencyRepository.currency } returns currency
-            coEvery { appCurrencyRepository.getCurrencyFormat() } answers
+            coEvery { appCurrencyRepository.getCurrencyFormat(any()) } answers
                 {
                     NumberFormat.getCurrencyInstance(
-                        if (currency.value == AppCurrency.EUR) Locale.GERMANY else Locale.US
+                        if (firstArg<AppCurrency>() == AppCurrency.EUR) Locale.GERMANY
+                        else Locale.US
                     )
                 }
             coEvery { tokenPriceRepository.getCachedPrice(SOL.id, AppCurrency.EUR) } returns

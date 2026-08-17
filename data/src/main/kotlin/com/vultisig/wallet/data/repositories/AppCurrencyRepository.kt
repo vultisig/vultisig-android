@@ -23,7 +23,16 @@ interface AppCurrencyRepository {
 
     fun getAllCurrencies(): List<AppCurrency>
 
+    /** The format for whichever currency is selected right now. */
     suspend fun getCurrencyFormat(): NumberFormat
+
+    /**
+     * The format for [currency] specifically, for callers that priced their figures in a currency
+     * they captured earlier. The selection can change while a load is in flight, and this stamps
+     * those values with the symbol they were priced in rather than whichever one happens to be
+     * selected by the time they are rendered.
+     */
+    suspend fun getCurrencyFormat(appCurrency: AppCurrency): NumberFormat
 }
 
 internal class AppCurrencyRepositoryImpl @Inject constructor(private val dataStore: AppDataStore) :
@@ -52,8 +61,9 @@ internal class AppCurrencyRepositoryImpl @Inject constructor(private val dataSto
         return CURRENCY_LIST
     }
 
-    override suspend fun getCurrencyFormat(): NumberFormat {
-        val appCurrency = currency.first()
+    override suspend fun getCurrencyFormat(): NumberFormat = getCurrencyFormat(currency.first())
+
+    override suspend fun getCurrencyFormat(appCurrency: AppCurrency): NumberFormat {
         return mutex.withLock {
             val currentLocale = resolveFormatLocale(Locale.getDefault())
             // Rebuild when either the format locale or the selected app currency changes. The

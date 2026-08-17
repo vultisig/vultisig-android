@@ -24,6 +24,7 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -79,7 +80,7 @@ internal class KaminoEarnViewModelTest {
         coEvery { chainAccountAddressRepository.getAddress(Chain.Solana, VAULT) } returns
             (WALLET_ADDRESS to "pubkey")
         every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
-        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+        coEvery { appCurrencyRepository.getCurrencyFormat(any()) } returns
             NumberFormat.getCurrencyInstance(Locale.US)
         coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns BigDecimal.ONE
     }
@@ -557,6 +558,30 @@ internal class KaminoEarnViewModelTest {
             // What the vault holds is priced in neither currency, so the card keeps saying it.
             row.depositedDisplay shouldBe priced.depositedDisplay
         }
+
+    @Test
+    fun `fiat is stamped with the currency it was priced in, not a live read`() = runTest {
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.EUR)
+        coEvery { appCurrencyRepository.getCurrencyFormat(AppCurrency.EUR) } returns
+            NumberFormat.getCurrencyInstance(Locale.GERMANY)
+        // Nothing may reach for the selection as it stands now: it can have moved on since this
+        // load priced its figures, and the symbol would then belong to a currency they were not
+        // priced in. Any such read shows up here as yen.
+        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+            NumberFormat.getCurrencyInstance(Locale.JAPAN)
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flowOf(setOf(STEAKHOUSE.address))
+        coEvery { kaminoApi.getUserPositions(WALLET_ADDRESS) } returns
+            listOf(KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "100"))
+        coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Steakhouse USDC")
+        coEvery { kaminoApi.getVaultMetrics(any()) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0")
+
+        val state = viewModel().apply { setData(VAULT_ID) }.state.value
+
+        state.rows.single().depositedFiat.shouldNotBeNull() shouldContain "€"
+        state.totalFiat.shouldNotBeNull() shouldContain "€"
+    }
 
     private companion object {
         const val VAULT_ID = "vault-id"

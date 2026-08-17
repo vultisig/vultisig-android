@@ -276,8 +276,11 @@ constructor(
 
                 val walletAddress = resolveSolanaAddress()
                 val positions = fetchPositions(walletAddress)
+                // Pinned to the currency this load priced in, not read live: a switch part-way
+                // through would otherwise stamp the new currency's symbol on figures priced in the
+                // old one.
                 val currencyFormat =
-                    withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
+                    withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat(currency) }
 
                 // Each vault is independent: one failing call must not empty the other cards.
                 val rows = supervisorScope {
@@ -476,9 +479,16 @@ constructor(
         return amount.multiply(price).setScale(2, RoundingMode.DOWN)
     }
 
+    /**
+     * Formatted for the currency the value was priced in, not for whichever one is selected by the
+     * time the row is built: a switch mid-load would otherwise stamp the new symbol on a figure
+     * priced in the old one. Its own format instance, since rows are built concurrently and a
+     * NumberFormat is not safe to share.
+     */
     private suspend fun fiatOrNull(amount: BigDecimal, coin: Coin, currency: AppCurrency): String? {
         val value = fiatValueOrNull(amount, coin, currency) ?: return null
-        return runCatching { appCurrencyRepository.getCurrencyFormat().format(value) }.getOrNull()
+        return runCatching { appCurrencyRepository.getCurrencyFormat(currency).format(value) }
+            .getOrNull()
     }
 
     /**

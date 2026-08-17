@@ -393,7 +393,10 @@ constructor(
 
                 val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
                 val currency = selectedCurrency ?: appCurrencyRepository.currency.first()
-                val currencyFormat = appCurrencyRepository.getCurrencyFormat()
+                // Built for the currency this load prices in rather than read live, so [pricing]
+                // pairs a format and a currency that cannot disagree if the selection changes
+                // part-way through.
+                val currencyFormat = appCurrencyRepository.getCurrencyFormat(currency)
                 val price = cachedPrice(solCoin.id, currency)
 
                 this@SolanaStakingPositionsViewModel.solCoin = solCoin
