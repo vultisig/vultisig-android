@@ -25,7 +25,12 @@ import timber.log.Timber
  * deliberately keeps out of wallet-token discovery.
  *
  * Gated on the per-vault opt-in, matching the Earn tab: a vault the user has switched off shows no
- * card there and must not show a balance here either, or the two surfaces disagree.
+ * card there and must not count here either.
+ *
+ * On a failed read the two surfaces do part company, deliberately. A card can say it does not know
+ * the position and the user reads that; a portfolio total has no such affordance, so leaving the
+ * position out would quietly understate every figure above it. This side therefore keeps the last
+ * known size while the card shows the position as unavailable.
  *
  * Mirrors iOS `DefiBalanceService.kaminoEarnTotalBalanceFiatDecimal`.
  */
@@ -36,22 +41,25 @@ class KaminoDeFiBalanceService(
 ) : DeFiService {
 
     override suspend fun getRemoteDeFiBalance(address: String, vaultId: String): List<DeFiBalance> {
-        val enabled = enabledVaults(vaultId)
-        if (enabled.isEmpty()) return emptyList()
+        val amounts =
+            try {
+                // The opt-in read is inside the guard like every other read here: this service is
+                // one of two the Solana provider awaits side by side, so an escaping throw would
+                // take the healthy staking figure down with it.
+                val enabled = enabledVaults(vaultId)
+                if (enabled.isEmpty()) return emptyList()
 
-        return try {
-            // One call for the whole wallet. An empty list is a real answer — the wallet holds no
-            // position — while a throw is not knowing, which is why it is caught below rather than
-            // collapsed into zero.
-            val positions = kaminoApi.getUserPositions(address).associateBy { it.vaultAddress }
-            val cached = positionCache.getPositions(vaultId)
-            Timber.d(
-                "KaminoDeFiBalanceService: %d enabled vaults, %d positions held",
-                enabled.size,
-                positions.size,
-            )
+                // One call for the whole wallet. An empty list is a real answer — the wallet holds
+                // no position — while a throw is not knowing, which is why it is caught below
+                // rather than collapsed into zero.
+                val positions = kaminoApi.getUserPositions(address).associateBy { it.vaultAddress }
+                val cached = positionCache.getPositions(vaultId)
+                Timber.d(
+                    "KaminoDeFiBalanceService: %d enabled vaults, %d positions held",
+                    enabled.size,
+                    positions.size,
+                )
 
-            val amounts =
                 supervisorScope {
                         enabled
                             .map { vault ->
@@ -68,15 +76,18 @@ class KaminoDeFiBalanceService(
                     }
                     .filterNotNull()
                     .toMap()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(e, "KaminoDeFiBalanceService: failed to read positions")
+                return getCacheDeFiBalance(address, vaultId)
+            }
 
-            positionCache.savePositions(vaultId, amounts.mapKeys { it.key.address })
-            balancesOf(amounts)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Timber.w(e, "KaminoDeFiBalanceService: failed to read positions")
-            getCacheDeFiBalance(address, vaultId)
-        }
+        // Persisted outside the read's fallback: a snapshot the store refused to keep costs the
+        // next cold start a stale figure, whereas discarding what was just read costs this one its
+        // whole position.
+        persistSnapshot(vaultId, amounts)
+        return balancesOf(amounts)
     }
 
     override suspend fun getCacheDeFiBalance(address: String, vaultId: String): List<DeFiBalance> {
@@ -92,6 +103,16 @@ class KaminoDeFiBalanceService(
         } catch (e: Exception) {
             Timber.w(e, "KaminoDeFiBalanceService: failed to read the cached positions")
             emptyList()
+        }
+    }
+
+    private suspend fun persistSnapshot(vaultId: String, amounts: Map<KaminoVault, BigInteger>) {
+        try {
+            positionCache.savePositions(vaultId, amounts.mapKeys { it.key.address })
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "KaminoDeFiBalanceService: failed to persist the position snapshot")
         }
     }
 
@@ -113,10 +134,23 @@ class KaminoDeFiBalanceService(
         val shares = KaminoPositionMath.decimalOrNull(position?.totalShares) ?: BigDecimal.ZERO
         if (shares.signum() == 0) return BigInteger.ZERO
 
+        val metrics =
+            try {
+                kaminoApi.getVaultMetrics(vault.address)
+            } catch (e: CancellationException) {
+                // runCatching would hand a cancelled read back as "no metrics", so the vault would
+                // quietly resolve from cache instead of the load stopping.
+                throw e
+            } catch (e: Exception) {
+                Timber.w(e, "KaminoDeFiBalanceService: failed to read the metrics of a vault")
+                null
+            }
+
+        // A share price of zero is not a price — it values a real deposit at nothing — so it counts
+        // as not knowing. Answering zero would also persist over the position's last known size.
         val tokensPerShare =
-            runCatching { kaminoApi.getVaultMetrics(vault.address) }
-                .getOrNull()
-                ?.let { KaminoPositionMath.decimalOrNull(it.tokensPerShare) } ?: return null
+            KaminoPositionMath.decimalOrNull(metrics?.tokensPerShare)?.takeIf { it.signum() > 0 }
+                ?: return null
 
         return KaminoPositionMath.tokenAmount(shares, tokensPerShare, vault.tokenDecimals)
             .movePointRight(vault.tokenDecimals)

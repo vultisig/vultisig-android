@@ -11,9 +11,13 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import java.math.BigInteger
+import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -122,6 +126,60 @@ internal class KaminoDeFiBalanceServiceTest {
 
             assertEquals(BigInteger("500000000"), balance.amount)
         }
+
+    @Test
+    fun `a share price of zero counts as unknown rather than as an empty position`() = runTest {
+        coEvery { kaminoApi.getUserPositions(ADDRESS) } returns
+            listOf(KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "1000"))
+        coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "0")
+        coEvery { positionCache.getPositions(VAULT_ID) } returns
+            mapOf(STEAKHOUSE.address to BigInteger("500000000"))
+
+        val balance = service().getRemoteDeFiBalance(ADDRESS, VAULT_ID).single().balances.single()
+
+        assertEquals(BigInteger("500000000"), balance.amount)
+        // The zero must not reach the snapshot either, or it would erase the real position until a
+        // later good read.
+        coVerify(exactly = 0) {
+            positionCache.savePositions(VAULT_ID, mapOf(STEAKHOUSE.address to BigInteger.ZERO))
+        }
+    }
+
+    @Test
+    fun `a cancelled share-price read stops the load rather than falling back`() = runTest {
+        coEvery { kaminoApi.getUserPositions(ADDRESS) } returns
+            listOf(KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "1000"))
+        coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } throws
+            CancellationException("cancelled")
+
+        assertThrows(CancellationException::class.java) {
+            runBlocking { service().getRemoteDeFiBalance(ADDRESS, VAULT_ID) }
+        }
+    }
+
+    @Test
+    fun `an opt-in read that fails leaves the rest of the chain's load standing`() = runTest {
+        // The Solana provider awaits this service and staking side by side in one scope, so a throw
+        // escaping here would cancel the healthy staking figure too.
+        every { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flow { throw RuntimeException("datastore") }
+
+        assertTrue(service().getRemoteDeFiBalance(ADDRESS, VAULT_ID).isEmpty())
+    }
+
+    @Test
+    fun `a snapshot the store refuses to keep does not discard the balance just read`() = runTest {
+        coEvery { kaminoApi.getUserPositions(ADDRESS) } returns
+            listOf(KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "1000"))
+        coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.05")
+        coEvery { positionCache.savePositions(any(), any()) } throws RuntimeException("disk full")
+
+        val balance = service().getRemoteDeFiBalance(ADDRESS, VAULT_ID).single().balances.single()
+
+        assertEquals(BigInteger("1050000000"), balance.amount)
+    }
 
     @Test
     fun `the cached read answers from the snapshot without touching the network`() = runTest {
