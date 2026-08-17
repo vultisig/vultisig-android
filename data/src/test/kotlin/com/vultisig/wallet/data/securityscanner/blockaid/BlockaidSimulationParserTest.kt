@@ -454,6 +454,59 @@ internal class BlockaidSimulationParserTest {
     }
 
     @Test
+    fun `solana batch ranks out legs by decimal-normalised amount, not raw integer`() {
+        // A wSOL rent-residual out-leg (2,039,280 raw @ 9 decimals = 0.00203928 SOL) has a bigger
+        // raw integer than a 2 USDC out-leg (2,000,000 raw @ 6 decimals), even though 2 USDC is the
+        // real swap leg and the wSOL row is exactly the noise this PR exists to suppress. Comparing
+        // raw integers across mismatched decimals would rank the residual first; the parser must
+        // normalise by decimals before picking the max.
+        val response =
+            solanaResponse(
+                """{
+                    "result": {
+                      "simulation": {
+                        "account_summary": {
+                          "account_assets_diff": [
+                            {
+                              "asset": {
+                                "type": "TOKEN",
+                                "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                                "symbol": "USDC",
+                                "decimals": 6
+                              },
+                              "out": { "raw_value": "2000000" }
+                            },
+                            {
+                              "asset": {
+                                "type": "TOKEN",
+                                "address": "So11111111111111111111111111111111111111112",
+                                "symbol": "WSOL",
+                                "decimals": 9
+                              },
+                              "out": { "raw_value": "2039280" }
+                            },
+                            {
+                              "asset": { "type": "TOKEN", "address": "MintB", "symbol": "BONK", "decimals": 5 },
+                              "in": { "raw_value": "9999" }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                """
+                    .trimIndent()
+            )
+
+        val swap = BlockaidSimulationParser.parseSolana(response) as BlockaidSimulationInfo.Swap
+
+        assertEquals("USDC", swap.fromCoin.ticker)
+        assertEquals("BONK", swap.toCoin.ticker)
+        assertEquals(BigInteger("2000000"), swap.fromAmount)
+        assertEquals(BigInteger("9999"), swap.toAmount)
+    }
+
+    @Test
     fun `solana native SOL transfer maps to wrapped sol mint`() {
         val response =
             solanaResponse(

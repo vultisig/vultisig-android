@@ -215,10 +215,19 @@ internal object BlockaidSimulationParser {
         // Regular swap path: pick by amount, not position. Blockaid does not contractually order
         // diffs, so a batch with a real outgoing leg plus a small network-fee leg (both
         // outgoing-only native SOL) must not have `firstOrNull` land on whichever happens to come
-        // first — the fee is always far smaller than a genuine outgoing leg.
+        // first — the fee is always far smaller than a genuine outgoing leg. Amounts are compared
+        // decimal-normalised (not raw): Blockaid nets one row per asset, so out rows always carry
+        // different decimals (e.g. a 2,039,280-lamport wSOL rent residual at 9 decimals is only
+        // 0.00203928 SOL, smaller than a 2,000,000-raw USDC leg at 6 decimals, i.e. $2 — but the
+        // raw
+        // integers alone rank the residual first).
         val outSource =
-            outSources.maxByOrNull {
-                it.outgoing?.rawValue?.toRawValueString()?.let(::parseRawAmount) ?: BigInteger.ZERO
+            outSources.maxByOrNull { diff ->
+                val raw =
+                    diff.outgoing?.rawValue?.toRawValueString()?.let(::parseRawAmount)
+                        ?: BigInteger.ZERO
+                val decimals = diff.asset.decimals?.clampDecimals() ?: 0
+                raw.toBigDecimal().movePointLeft(decimals)
             } ?: return null
         val outRaw = outSource.outgoing?.rawValue?.toRawValueString() ?: return null
         val outAmount = parseRawAmount(outRaw) ?: return null
