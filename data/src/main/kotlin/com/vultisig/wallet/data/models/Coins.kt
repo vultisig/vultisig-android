@@ -4481,6 +4481,41 @@ object Coins {
     val allResolvable: List<Coin> = all + defiOnly
 
     /**
+     * Whether [coin] is one of the [defiOnly] positions.
+     *
+     * Matched on the id rather than by identity: these coins are stamped with the holding vault's
+     * address and public key before they reach an account, so the instance is never the catalogue's
+     * own.
+     */
+    fun isDefiOnly(coin: Coin): Boolean = defiOnly.any { it.id.equals(coin.id, ignoreCase = true) }
+
+    /**
+     * The coins that read another coin's price row instead of holding one of their own, keyed by
+     * the id they are asked for.
+     */
+    private val priceRowAliases: Map<String, Coin> =
+        mapOf(ThorChain.sRUJI.id.lowercase() to ThorChain.RUJI)
+
+    /**
+     * The coin whose price row values [coin].
+     *
+     * A position reported in an asset other than the one receipting it has to read that asset's
+     * row: the auto-compounding RUJI position is reported in RUJI — the pool's `liquidSize`, not a
+     * share count — so RUJI's row is the only one that can value it. Letting the receipt keep a row
+     * of its own put two prices on the same RUJI: it borrows RUJI's `rujira` provider id, so the
+     * CoinGecko batch filled that row with a quote, while RUJI's own row is overwritten moments
+     * later by the THOR.RUJI pool price every other RUJI reading in the app is taken from.
+     *
+     * It lives on the catalogue for the same reason as [isNavPricedDenom]: the pricing repository
+     * and everything that values a position have to agree on which rows exist, and two copies of
+     * the list would drift.
+     */
+    fun pricedAs(coin: Coin): Coin = priceRowAliases[coin.id.lowercase()] ?: coin
+
+    /** [pricedAs] for callers holding an id rather than the coin it belongs to. */
+    fun pricedAs(tokenId: TokenId): TokenId = priceRowAliases[tokenId.lowercase()]?.id ?: tokenId
+
+    /**
      * The curated [Coin] a pool or contract refers to, or null when the catalogue doesn't carry it.
      *
      * Pools name their assets by chain and ticker (`BTC.BTC`, `ETH.USDC-0x…`), which is all a

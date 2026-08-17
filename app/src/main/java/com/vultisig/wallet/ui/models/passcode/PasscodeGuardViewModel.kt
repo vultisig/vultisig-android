@@ -75,6 +75,10 @@ constructor(private val passcodeRepository: PasscodeRepository) : ViewModel() {
         }
     }
 
+    fun onRetry() {
+        viewModelScope.safeLaunch { passcodeRepository.retry() }
+    }
+
     private fun MutableStateFlow<PasscodeGuardUiModel>.update(passcodeState: PasscodeState) {
         value =
             value.copy(

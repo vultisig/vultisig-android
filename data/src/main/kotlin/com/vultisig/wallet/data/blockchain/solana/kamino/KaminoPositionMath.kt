@@ -57,5 +57,24 @@ object KaminoPositionMath {
     fun baseUnitsToDecimal(baseUnits: String?, tokenDecimals: Int): BigDecimal? =
         decimalOrNull(baseUnits)?.movePointLeft(tokenDecimals)
 
+    /**
+     * A vault's published `minDepositAmount`, padded so the figure the form displays and enforces
+     * also clears the kVault program's check.
+     *
+     * The program subtracts crank funds (reserve count × fee) from the deposit before comparing it
+     * to `min_deposit_amount`, so depositing exactly the published minimum always falls short by a
+     * few base units. That shortfall tracks the vault's reserve count, which curators change, so a
+     * fixed constant would drift — a proportional margin does not. Matches iOS: one part in 1,000,
+     * rounded up, floored at 16 base units.
+     */
+    fun depositMinimumWithMargin(baseUnits: String?, tokenDecimals: Int): BigDecimal? =
+        decimalOrNull(baseUnits)
+            ?.takeIf { it.signum() >= 0 && it.remainder(BigDecimal.ONE).signum() == 0 }
+            ?.let { minimum ->
+                val margin =
+                    minimum.divide(BigDecimal(1000), 0, RoundingMode.UP).max(BigDecimal(16))
+                minimum.add(margin).movePointLeft(tokenDecimals)
+            }
+
     private val ONE_HUNDRED = BigDecimal(100)
 }

@@ -3214,6 +3214,7 @@ private fun SolanaStakingPositionsLoadedPreview() {
             com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState(
                 isLoading = false,
                 totalStakedFiatDisplay = "$78.04",
+                chainTotalFiatDisplay = "$78.04",
                 totalStakedSolDisplay = "1 SOL",
                 positions =
                     listOf(
@@ -3303,6 +3304,7 @@ private fun SolanaStakingPositionsEmptyPreview() {
             com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState(
                 isLoading = false,
                 totalStakedFiatDisplay = "$0.00",
+                chainTotalFiatDisplay = "$0.00",
                 totalStakedSolDisplay = "0 SOL",
                 positions = emptyList(),
                 isBalanceVisible = true,
@@ -4045,6 +4047,8 @@ private fun SolanaDeFiPreview(tab: DeFiTab, hasEnabledVaults: Boolean = true) {
                 isLoading = false,
                 isBalanceVisible = true,
                 totalStakedFiatDisplay = "$1,240.50",
+                // Staking plus the Earn tab, the way the banner reports it on device.
+                chainTotalFiatDisplay = if (hasEnabledVaults) "$2,294.72" else "$1,240.50",
                 totalStakedSolDisplay = "12.5 SOL",
                 positions =
                     listOf(

@@ -96,7 +96,14 @@ constructor(
         buildCacheAddresses(vaultId).flatMapLatest { (vaultCoins, addresses) ->
             channelFlow {
                 supervisorScope {
-                    val loadPrices = async { tokenPriceRepository.refresh(vaultCoins) }
+                    // The DeFi-only receipts ride along: no vault carries one, so this refresh —
+                    // the only ungated one — is all that keeps the row they are valued from warm.
+                    // loadDeFiAddresses refreshes them too, but only on an explicit reload, and
+                    // its cached emission reads that row, so a cold start would otherwise value a
+                    // funded position at $0.00.
+                    val loadPrices = async {
+                        tokenPriceRepository.refresh(vaultCoins + defiOnlyReceiptsFor(vaultCoins))
+                    }
 
                     // Always emit the last-known DB snapshot first so the UI shows cached
                     // balances immediately instead of empty rows — including on refresh
@@ -420,14 +427,21 @@ constructor(
         val vault = getVault(vaultId)
         val defiCoins = vault.coins.filter { it.isValidForDeFi() }.distinctBy { it.id.lowercase() }
 
+        val coins =
+            defiCoins
+                .groupBy { it.chain }
+                .mapValues { (chain, tokens) -> tokens + defiOnlyTokens(chain, tokens) }
+
+        // Price the DeFi-only positions alongside the vault's own coins: a price is cached under
+        // its own coin's token id, and that is the row the cached path reads, so a refresh that
+        // left them out would keep valuing a resolved position at $0.00.
         val loadPrices =
             if (isRefresh) {
-                async { tokenPriceRepository.refresh(defiCoins) }
+                async { tokenPriceRepository.refresh(coins.values.flatten()) }
             } else {
                 null
             }
 
-        val coins = defiCoins.groupBy { it.chain }
         val addresses =
             coins.mapNotNullTo(mutableListOf()) { (chain, tokens) ->
                 chainAndTokensToAddressMapper.map(ChainAndTokens(chain, tokens))
@@ -449,25 +463,43 @@ constructor(
                 )
 
             val addressesByChain = addresses.associateBy { it.chain }
-            val cacheBalances =
-                defiChainNativeCoins.flatMap { (chain, nativeCoin) ->
-                    addressesByChain[chain]?.let { address ->
-                        balanceRepository.getDeFiCachedTokeBalanceAndPrice(
-                            address = address.address,
-                            coin = nativeCoin,
-                            vaultId = vaultId,
-                        )
-                    } ?: emptyList()
+            // Kept per chain: a cached balance carries only its ticker, and the same ticker is a
+            // different asset on each of them. Pooled into one map, the funded Circle deposit
+            // reported as Ethereum USDC also matched the Solana and Tron USDC accounts below, so
+            // the one deposit was counted once per chain in the DeFi total.
+            val cacheBalancesByChain =
+                defiChainNativeCoins.associate { (chain, nativeCoin) ->
+                    chain to
+                        (addressesByChain[chain]?.let { address ->
+                            balanceRepository.getDeFiCachedTokeBalanceAndPrice(
+                                address = address.address,
+                                coin = nativeCoin,
+                                vaultId = vaultId,
+                            )
+                        } ?: emptyList())
                 }
 
-            if (cacheBalances.isNotEmpty()) {
-                val balancesByTicker =
-                    cacheBalances.associateBy { balance ->
-                        balance.tokenBalance.tokenValue?.unit?.lowercase()
-                    }
+            if (cacheBalancesByChain.values.any { it.isNotEmpty() }) {
+                // Zero-fill in the currency the resolved balances came back in, not a hardcoded
+                // USD. calculateAccountsPartialFiatValue labels a total with the currency of the
+                // last value it summed, so one unmatched account — and the per-chain lookup above
+                // leaves plenty — was enough to render a EUR portfolio with a dollar sign. The
+                // network emission below never had the problem: every value there is stamped with
+                // the app currency.
+                val cachedCurrency =
+                    cacheBalancesByChain.values.asSequence().flatten().firstNotNullOfOrNull {
+                        it.tokenBalance.fiatValue?.currency
+                    } ?: AppCurrency.USD.ticker
 
                 val cachedAddresses =
                     addresses.map { address ->
+                        val balancesByTicker =
+                            cacheBalancesByChain[address.chain]
+                                ?.associateBy { balance ->
+                                    balance.tokenBalance.tokenValue?.unit?.lowercase()
+                                }
+                                .orEmpty()
+
                         val updatedAccounts =
                             address.accounts.map { account ->
                                 val cachedBalance =
@@ -488,7 +520,7 @@ constructor(
                                         fiatValue =
                                             FiatValue(
                                                 value = BigDecimal.ZERO,
-                                                currency = AppCurrency.USD.ticker,
+                                                currency = cachedCurrency,
                                             ),
                                         price = null,
                                     )
@@ -496,7 +528,10 @@ constructor(
                             }
                         val canBeDeFiProvider = address.chain.isDeFiSupported
 
-                        address.copy(accounts = updatedAccounts, isDefiProvider = canBeDeFiProvider)
+                        address.copy(
+                            accounts = updatedAccounts.dropUnfundedDefiOnly(),
+                            isDefiProvider = canBeDeFiProvider,
+                        )
                     }
 
                 send(cachedAddresses)
@@ -538,7 +573,10 @@ constructor(
                                     .awaitAll()
                             val canBeDeFiProvider = account.chain.isDeFiSupported
 
-                            account.copy(accounts = newAccounts, isDefiProvider = canBeDeFiProvider)
+                            account.copy(
+                                accounts = newAccounts.dropUnfundedDefiOnly(),
+                                isDefiProvider = canBeDeFiProvider,
+                            )
                         } catch (e: Exception) {
                             if (e is kotlinx.coroutines.CancellationException) throw e
                             Timber.e(e)
@@ -649,6 +687,52 @@ constructor(
             Chain.Solana -> true
             else -> false
         }
+    }
+
+    /**
+     * The chain's DeFi-only positions, stamped with the key its tokens share.
+     *
+     * These back a DeFi position but are never wallet tokens — the sRUJI receipt is kept out of
+     * token discovery on purpose — so no vault carries one and the accounts built from
+     * [Vault.coins] alone leave the position with nowhere for its balance to land. It is then
+     * dropped from the chain's row and from the portfolio total above it, which read $0.00 over a
+     * funded position.
+     *
+     * Every token on a chain shares the chain's derived key, so the native token supplies the
+     * address the balance is fetched against. A chain whose native token is absent is skipped: the
+     * mapper builds no address for it either, so the accounts would have nothing to hang from.
+     */
+    private fun defiOnlyTokens(chain: Chain, tokens: List<Coin>): List<Coin> {
+        val nativeToken = tokens.firstOrNull { it.isNativeToken } ?: return emptyList()
+        return Coins.defiOnly
+            .filter { position ->
+                position.chain == chain && tokens.none { it.id.equals(position.id, true) }
+            }
+            .map { it.copy(address = nativeToken.address, hexPublicKey = nativeToken.hexPublicKey) }
+    }
+
+    /**
+     * The DeFi-only receipts worth pricing for a vault holding [vaultCoins].
+     *
+     * Only the chains the vault actually holds: [defiOnlyTokens] hangs a receipt off the chain's
+     * native token, so a vault without the chain can never carry the position and its row is one
+     * nothing will read. Pricing it regardless is not free — the receipts read a THORChain row, and
+     * a single THORChain token in the batch commits the refresh to a `/thorchain/pools` fetch the
+     * vault's own coins would have skipped, with the terminal emission waiting behind it.
+     */
+    private fun defiOnlyReceiptsFor(vaultCoins: List<Coin>): List<Coin> =
+        Coins.defiOnly.filter { receipt -> vaultCoins.any { it.chain == receipt.chain } }
+
+    /**
+     * Drops the DeFi-only accounts that resolved to nothing.
+     *
+     * One is injected for every chain that could carry the position, before any balance is known,
+     * so a vault holding none would otherwise show an account it never opened — counted among the
+     * chain's assets on the row that reports them. The vault's own coins are kept whatever they
+     * resolve to: a zero there is a token the user chose to track.
+     */
+    private fun List<Account>.dropUnfundedDefiOnly(): List<Account> = filterNot { account ->
+        Coins.isDefiOnly(account.token) && (account.tokenValue?.value?.signum() ?: 0) <= 0
     }
 }
 
