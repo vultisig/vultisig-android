@@ -97,13 +97,12 @@ constructor(
             channelFlow {
                 supervisorScope {
                     // The DeFi-only receipts ride along: no vault carries one, so this refresh —
-                    // the only ungated one — is all that keeps their price rows warm.
+                    // the only ungated one — is all that keeps the row they are valued from warm.
                     // loadDeFiAddresses refreshes them too, but only on an explicit reload, and
-                    // its cached emission reads those rows, so a cold start would otherwise value
-                    // a funded position at $0.00. They price off the token they mirror and share
-                    // its provider id, so the lookup below gains no round trip.
+                    // its cached emission reads that row, so a cold start would otherwise value a
+                    // funded position at $0.00.
                     val loadPrices = async {
-                        tokenPriceRepository.refresh(vaultCoins + Coins.defiOnly)
+                        tokenPriceRepository.refresh(vaultCoins + defiOnlyReceiptsFor(vaultCoins))
                     }
 
                     // Always emit the last-known DB snapshot first so the UI shows cached
@@ -481,6 +480,17 @@ constructor(
                 }
 
             if (cacheBalancesByChain.values.any { it.isNotEmpty() }) {
+                // Zero-fill in the currency the resolved balances came back in, not a hardcoded
+                // USD. calculateAccountsPartialFiatValue labels a total with the currency of the
+                // last value it summed, so one unmatched account — and the per-chain lookup above
+                // leaves plenty — was enough to render a EUR portfolio with a dollar sign. The
+                // network emission below never had the problem: every value there is stamped with
+                // the app currency.
+                val cachedCurrency =
+                    cacheBalancesByChain.values.asSequence().flatten().firstNotNullOfOrNull {
+                        it.tokenBalance.fiatValue?.currency
+                    } ?: AppCurrency.USD.ticker
+
                 val cachedAddresses =
                     addresses.map { address ->
                         val balancesByTicker =
@@ -510,7 +520,7 @@ constructor(
                                         fiatValue =
                                             FiatValue(
                                                 value = BigDecimal.ZERO,
-                                                currency = AppCurrency.USD.ticker,
+                                                currency = cachedCurrency,
                                             ),
                                         price = null,
                                     )
@@ -700,6 +710,18 @@ constructor(
             }
             .map { it.copy(address = nativeToken.address, hexPublicKey = nativeToken.hexPublicKey) }
     }
+
+    /**
+     * The DeFi-only receipts worth pricing for a vault holding [vaultCoins].
+     *
+     * Only the chains the vault actually holds: [defiOnlyTokens] hangs a receipt off the chain's
+     * native token, so a vault without the chain can never carry the position and its row is one
+     * nothing will read. Pricing it regardless is not free — the receipts read a THORChain row, and
+     * a single THORChain token in the batch commits the refresh to a `/thorchain/pools` fetch the
+     * vault's own coins would have skipped, with the terminal emission waiting behind it.
+     */
+    private fun defiOnlyReceiptsFor(vaultCoins: List<Coin>): List<Coin> =
+        Coins.defiOnly.filter { receipt -> vaultCoins.any { it.chain == receipt.chain } }
 
     /**
      * Drops the DeFi-only accounts that resolved to nothing.

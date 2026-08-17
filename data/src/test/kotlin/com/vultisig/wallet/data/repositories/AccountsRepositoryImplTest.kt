@@ -540,6 +540,30 @@ internal class AccountsRepositoryImplTest {
 
     @Test
     fun `the wallet price refresh keeps the DeFi-only receipts priced`() = runTest {
+        val rune = Coins.ThorChain.RUNE.copy(address = THOR_ADDRESS)
+        stubVault(rune)
+        coJustRun { tokenPriceRepository.refresh(any()) }
+        coEvery { balanceRepository.getCachedTokenBalances(any(), any()) } returns
+            listOf(wrapped(amount = CACHED, coin = rune))
+        every { balanceRepository.getTokenBalanceAndPrice(THOR_ADDRESS, rune) } returns
+            flowOf(balance(amount = NETWORK, coin = rune))
+
+        val job = launch { repository.loadAddressBalances(VAULT_ID).collect() }
+        advanceUntilIdle()
+
+        // No vault carries a receipt, so this refresh is the only ungated writer of the row its
+        // position is valued from — and the cached DeFi emission reads that row on every cold
+        // start.
+        coVerify {
+            tokenPriceRepository.refresh(
+                match { it.any { coin -> coin.id == Coins.ThorChain.sRUJI.id } }
+            )
+        }
+        job.cancel()
+    }
+
+    @Test
+    fun `a vault without the receipt's chain does not pay to price it`() = runTest {
         val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
         stubVault(sol)
         coJustRun { tokenPriceRepository.refresh(any()) }
@@ -551,24 +575,61 @@ internal class AccountsRepositoryImplTest {
         val job = launch { repository.loadAddressBalances(VAULT_ID).collect() }
         advanceUntilIdle()
 
-        // No vault carries a receipt, so this refresh is the only ungated writer of its price row —
-        // and the cached DeFi emission reads that row on every cold start.
-        coVerify {
-            tokenPriceRepository.refresh(
-                match { it.any { coin -> coin.id == Coins.ThorChain.sRUJI.id } }
-            )
+        // The receipt hangs off the chain's native token, so this vault can never carry the
+        // position. Sending it anyway put a THORChain token in the batch, which commits the
+        // refresh to a pools fetch this vault's own coins skip — with completion waiting on it.
+        coVerify { tokenPriceRepository.refresh(match { it.any { coin -> coin.id == sol.id } }) }
+        coVerify(exactly = 0) {
+            tokenPriceRepository.refresh(match { tokens -> tokens.any(Coins::isDefiOnly) })
         }
         job.cancel()
     }
 
-    private fun defiBalance(coin: Coin, amount: Long, fiat: Long) =
+    @Test
+    fun `an unmatched cached DeFi account keeps the currency the balances resolved in`() = runTest {
+        val eth = Coins.Ethereum.ETH.copy(address = ETH_ADDRESS)
+        val ethUsdc = Coins.Ethereum.USDC.copy(address = ETH_ADDRESS)
+        coEvery { vaultRepository.get(VAULT_ID) } returns
+            Vault(id = VAULT_ID, name = "Test Vault", coins = listOf(eth, ethUsdc))
+
+        // Only the Circle deposit is funded; ETH has no DeFi position and is zero-filled below.
+        coEvery {
+            balanceRepository.getDeFiCachedTokeBalanceAndPrice(ETH_ADDRESS, any(), VAULT_ID)
+        } returns
+            listOf(
+                defiBalance(
+                    Coins.Ethereum.USDC,
+                    amount = DEPOSIT,
+                    fiat = DEPOSIT_FIAT,
+                    currency = EUR,
+                )
+            )
+
+        val accounts =
+            repository
+                .loadDeFiAddresses(VAULT_ID, isRefresh = false)
+                .toList()
+                .last()
+                .first { it.chain == Chain.Ethereum }
+                .accounts
+
+        // calculateAccountsPartialFiatValue labels a total with the currency of the last value it
+        // summed, so a single account stamped USD rendered a EUR portfolio with a dollar sign.
+        assertEquals(
+            listOf(EUR, EUR),
+            accounts.map { it.fiatValue?.currency },
+            "a zero-filled account must not relabel the row's total",
+        )
+    }
+
+    private fun defiBalance(coin: Coin, amount: Long, fiat: Long, currency: String = USD) =
         TokenBalanceAndPrice(
             tokenBalance =
                 TokenBalance(
                     tokenValue = TokenValue(BigInteger.valueOf(amount), coin.ticker, coin.decimal),
-                    fiatValue = FiatValue(BigDecimal.valueOf(fiat), USD),
+                    fiatValue = FiatValue(BigDecimal.valueOf(fiat), currency),
                 ),
-            price = FiatValue(BigDecimal.ONE, USD),
+            price = FiatValue(BigDecimal.ONE, currency),
         )
 
     private fun stubVault(vararg coins: Coin) {
@@ -635,6 +696,7 @@ internal class AccountsRepositoryImplTest {
     private companion object {
         const val VAULT_ID = "vault-1"
         const val USD = "USD"
+        const val EUR = "EUR"
         const val ETH_ADDRESS = "0xeth"
         const val SOL_ADDRESS = "sol-addr"
         const val THOR_ADDRESS = "thor-addr"
