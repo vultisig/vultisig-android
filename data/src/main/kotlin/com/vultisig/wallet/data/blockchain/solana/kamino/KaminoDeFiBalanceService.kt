@@ -7,7 +7,6 @@ import com.vultisig.wallet.data.blockchain.model.DeFiBalance
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.KaminoPositionCacheRepository
 import com.vultisig.wallet.data.repositories.KaminoVaultSelectionRepository
-import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.async
@@ -124,14 +123,20 @@ class KaminoDeFiBalanceService(
     /**
      * What the wallet's shares in [vault] redeem for, or null when that cannot be established.
      *
-     * Zero shares need no share price, so a wallet holding nothing in a vault resolves without a
-     * metrics call — and cannot be left unknown by one failing.
+     * No entry for the vault is a real answer — the wallet holds nothing in it — and zero shares
+     * need no share price, so either resolves without a metrics call and cannot be left unknown by
+     * one failing. A share count that will not parse, or one below zero, is not an answer: it is
+     * read as not knowing, so the last known size stands rather than being overwritten by a zero.
      */
     private suspend fun amountOf(
         vault: KaminoVault,
         position: KaminoUserPositionJson?,
     ): BigInteger? {
-        val shares = KaminoPositionMath.decimalOrNull(position?.totalShares) ?: BigDecimal.ZERO
+        if (position == null) return BigInteger.ZERO
+
+        val shares =
+            KaminoPositionMath.decimalOrNull(position.totalShares)?.takeIf { it.signum() >= 0 }
+                ?: return null
         if (shares.signum() == 0) return BigInteger.ZERO
 
         val metrics =

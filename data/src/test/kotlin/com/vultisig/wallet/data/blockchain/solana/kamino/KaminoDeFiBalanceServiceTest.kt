@@ -147,6 +147,77 @@ internal class KaminoDeFiBalanceServiceTest {
     }
 
     @Test
+    fun `a share count that will not parse keeps the position at its last known size`() = runTest {
+        coEvery { kaminoApi.getUserPositions(ADDRESS) } returns
+            listOf(KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "n/a"))
+        coEvery { positionCache.getPositions(VAULT_ID) } returns
+            mapOf(STEAKHOUSE.address to BigInteger("500000000"))
+
+        val balance = service().getRemoteDeFiBalance(ADDRESS, VAULT_ID).single().balances.single()
+
+        assertEquals(BigInteger("500000000"), balance.amount)
+        // The last known size is what goes back into the snapshot, so a run of unreadable answers
+        // cannot walk the position down to zero.
+        coVerify {
+            positionCache.savePositions(
+                VAULT_ID,
+                mapOf(STEAKHOUSE.address to BigInteger("500000000")),
+            )
+        }
+        // Unknown shares are not worth a share price either.
+        coVerify(exactly = 0) { kaminoApi.getVaultMetrics(any()) }
+    }
+
+    @Test
+    fun `a share count below zero counts as unknown rather than as an empty position`() = runTest {
+        coEvery { kaminoApi.getUserPositions(ADDRESS) } returns
+            listOf(KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "-1000"))
+        coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.05")
+        coEvery { positionCache.getPositions(VAULT_ID) } returns
+            mapOf(STEAKHOUSE.address to BigInteger("500000000"))
+
+        val balance = service().getRemoteDeFiBalance(ADDRESS, VAULT_ID).single().balances.single()
+
+        assertEquals(BigInteger("500000000"), balance.amount)
+        coVerify {
+            positionCache.savePositions(
+                VAULT_ID,
+                mapOf(STEAKHOUSE.address to BigInteger("500000000")),
+            )
+        }
+    }
+
+    @Test
+    fun `a position with no shares field is not read as an emptied vault`() = runTest {
+        // The field is optional on the wire, so an entry arriving without it says nothing about the
+        // size — and an entry only exists at all for a vault the wallet is in.
+        coEvery { kaminoApi.getUserPositions(ADDRESS) } returns
+            listOf(KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = null))
+        coEvery { positionCache.getPositions(VAULT_ID) } returns
+            mapOf(STEAKHOUSE.address to BigInteger("500000000"))
+
+        val balance = service().getRemoteDeFiBalance(ADDRESS, VAULT_ID).single().balances.single()
+
+        assertEquals(BigInteger("500000000"), balance.amount)
+    }
+
+    @Test
+    fun `a share count of exactly zero is a real emptied vault`() = runTest {
+        // The other half of the rule: an answered zero must still erase the old figure, or a
+        // withdrawn position would linger on the portfolio for good.
+        coEvery { kaminoApi.getUserPositions(ADDRESS) } returns
+            listOf(KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "0"))
+        coEvery { positionCache.getPositions(VAULT_ID) } returns
+            mapOf(STEAKHOUSE.address to BigInteger("500000000"))
+
+        assertTrue(service().getRemoteDeFiBalance(ADDRESS, VAULT_ID).isEmpty())
+        coVerify {
+            positionCache.savePositions(VAULT_ID, mapOf(STEAKHOUSE.address to BigInteger.ZERO))
+        }
+    }
+
+    @Test
     fun `a cancelled share-price read stops the load rather than falling back`() = runTest {
         coEvery { kaminoApi.getUserPositions(ADDRESS) } returns
             listOf(KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "1000"))
