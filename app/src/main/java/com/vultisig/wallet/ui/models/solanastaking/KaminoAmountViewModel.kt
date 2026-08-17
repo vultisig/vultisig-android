@@ -207,9 +207,10 @@ constructor(
                             ?: vault.fallbackName,
                     ticker = coin.ticker,
                     available = available,
-                    // Token base units for a deposit — the endpoint's own denomination.
+                    // Token base units for a deposit — the endpoint's own denomination. Padded past
+                    // the kVault program's crank-fund deduction, see KaminoPositionMath.
                     minimum =
-                        KaminoPositionMath.baseUnitsToDecimal(
+                        KaminoPositionMath.depositMinimumWithMargin(
                             vaultState?.state?.minDepositAmount,
                             vault.tokenDecimals,
                         ),

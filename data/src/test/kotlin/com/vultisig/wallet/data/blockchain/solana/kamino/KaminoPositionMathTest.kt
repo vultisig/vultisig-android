@@ -104,6 +104,15 @@ class KaminoPositionMathTest {
     }
 
     @Test
+    fun `deposit minimum gets a proportional margin so the advertised figure actually clears`() {
+        // 100000 base units: 1/1000 margin is 100, rounded up — above the 16 floor.
+        assertSameValue("0.1001", KaminoPositionMath.depositMinimumWithMargin("100000", 6))
+        // 1000 base units: 1/1000 margin is 1, rounded up — the 16 floor applies instead.
+        assertSameValue("0.001016", KaminoPositionMath.depositMinimumWithMargin("1000", 6))
+        assertNull(KaminoPositionMath.depositMinimumWithMargin(null, 6))
+    }
+
+    @Test
     fun `absent and malformed numbers read as missing, never as zero`() {
         // A row showing nothing is recoverable; a balance rendered as 0 reads as a lost deposit.
         assertNull(KaminoPositionMath.decimalOrNull(null))

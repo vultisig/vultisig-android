@@ -177,12 +177,15 @@ internal class KaminoAmountViewModelTest {
     }
 
     @Test
-    fun `the deposit minimum comes from vault state, converted out of base units`() = runTest {
-        givenTokenBalance("2500000000")
+    fun `the deposit minimum comes from vault state, padded past the program's minimum`() =
+        runTest {
+            givenTokenBalance("2500000000")
 
-        // 100000 base units at 6 decimals is 0.1 USDC — not 100,000.
-        assertEquals(0, BigDecimal("0.1").compareTo(viewModel().state.value.minimum!!))
-    }
+            // 100000 base units gets a 1/1000 margin (100 base units) added before the 6-decimal
+            // conversion, so the displayed and enforced minimum is 0.1001 USDC, not 0.1 — the
+            // published figure the kVault program actually refuses.
+            assertEquals(0, BigDecimal("0.1001").compareTo(viewModel().state.value.minimum!!))
+        }
 
     @Test
     fun `a withdraw caps against the position, not the wallet`() = runTest {
