@@ -144,6 +144,63 @@ class KaminoWithdrawTest {
     }
 
     @Test
+    fun `a position sitting exactly on the effective minimum still has a submittable amount`() {
+        // Steakhouse USDC, minWithdrawAmount 1000 -> effective minimum 2846 shares (see the 3x-
+        // margin test above). A position holding exactly that many shares clears the vault's real
+        // floor, but minimumTokens rounds up and maximumTokens rounds down the same non-terminating
+        // product, so the raw minimum (3001) lands one base unit above the raw maximum (3000) with
+        // nothing in between for the form to offer.
+        val minimumShares = shares("2846")
+        val held = minimumShares
+        val maximum = KaminoWithdrawMath.maximumTokens(held, usdcRate, tokenDecimals = 6)!!
+        assertEquals(BigInteger("3000"), maximum.baseUnits)
+        assertEquals(
+            BigInteger("3001"),
+            KaminoWithdrawMath.minimumTokens(minimumShares, usdcRate, tokenDecimals = 6)!!
+                .baseUnits,
+            "the raw minimum must be the one base unit over, or this test isn't exercising the bug",
+        )
+
+        val effectiveMinimum =
+            KaminoWithdrawMath.effectiveMinimumTokens(
+                held = held,
+                minimumShares = minimumShares,
+                maximumTokens = maximum,
+                rate = usdcRate,
+                tokenDecimals = 6,
+            )
+
+        assertEquals(
+            maximum.baseUnits,
+            effectiveMinimum!!.baseUnits,
+            "clamped to the maximum so Max — amount == available — clears the minimum too",
+        )
+    }
+
+    @Test
+    fun `a position short of the effective minimum still shows the real figure`() {
+        // Held less than the 2846-share minimum: the vault genuinely would refuse this withdraw, so
+        // the unclamped minimum must stand to tell the user what they are short of, not silently
+        // shrink to match their smaller balance.
+        val minimumShares = shares("2846")
+        val held = shares("2000")
+        val maximum = KaminoWithdrawMath.maximumTokens(held, usdcRate, tokenDecimals = 6)!!
+        val rawMinimum =
+            KaminoWithdrawMath.minimumTokens(minimumShares, usdcRate, tokenDecimals = 6)!!
+
+        val effectiveMinimum =
+            KaminoWithdrawMath.effectiveMinimumTokens(
+                held = held,
+                minimumShares = minimumShares,
+                maximumTokens = maximum,
+                rate = usdcRate,
+                tokenDecimals = 6,
+            )
+
+        assertEquals(rawMinimum.baseUnits, effectiveMinimum!!.baseUnits)
+    }
+
+    @Test
     fun `a withdraw above the maximum is refused rather than clamped`() {
         val held = shares("1000000000")
         val maximum = KaminoWithdrawMath.maximumTokens(held, usdcRate, 6)!!

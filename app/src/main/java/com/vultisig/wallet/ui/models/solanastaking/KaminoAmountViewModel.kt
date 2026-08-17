@@ -362,8 +362,14 @@ constructor(
                 null
             }
         val minimum =
-            if (minimumShares != null && rate != null) {
-                KaminoWithdrawMath.minimumTokens(minimumShares, rate, vault.tokenDecimals)
+            if (held != null && minimumShares != null && maximum != null && rate != null) {
+                KaminoWithdrawMath.effectiveMinimumTokens(
+                    held,
+                    minimumShares,
+                    maximum,
+                    rate,
+                    vault.tokenDecimals,
+                )
             } else {
                 null
             }

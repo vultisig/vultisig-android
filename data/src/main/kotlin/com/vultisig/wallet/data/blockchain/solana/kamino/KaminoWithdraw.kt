@@ -450,6 +450,34 @@ object KaminoWithdrawMath {
     ): KaminoTokenAmount? = minimumShares.tokenValueRoundedUp(rate, tokenDecimals)
 
     /**
+     * The minimum the form should display and gate on, clamped to [maximumTokens] for a position
+     * that already clears the minimum in share terms.
+     *
+     * [minimumTokens] rounds up and [maximumTokens] rounds down the same rate, so a position held
+     * at (or just above) [minimumShares] can see its ceil-rounded token minimum land one base unit
+     * above its own floor-rounded token maximum — a position the vault would accept (`held >=
+     * minimumShares`) for which the form could then offer no amount at all: every value is either
+     * over the maximum or under the minimum. Where the position genuinely holds fewer shares than
+     * the minimum, the unclamped figure stands so the user can see what they are short of.
+     */
+    fun effectiveMinimumTokens(
+        held: KaminoShareAmount,
+        minimumShares: KaminoShareAmount,
+        maximumTokens: KaminoTokenAmount,
+        rate: KaminoRate,
+        tokenDecimals: Int,
+    ): KaminoTokenAmount? {
+        val minimum = minimumTokens(minimumShares, rate, tokenDecimals) ?: return null
+        return if (
+            held.baseUnits >= minimumShares.baseUnits && minimum.baseUnits > maximumTokens.baseUnits
+        ) {
+            maximumTokens
+        } else {
+            minimum
+        }
+    }
+
+    /**
      * The shares a withdraw of [tokens] burns, or null when no withdraw of that size can be sized
      * safely.
      *
