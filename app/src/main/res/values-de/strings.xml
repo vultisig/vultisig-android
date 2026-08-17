@@ -198,6 +198,8 @@
     <string name="passcode_not_digits">Nur Ziffern eingeben.</string>
     <string name="passcode_key_unavailable_title">Diesem Gerät fehlt Ihr Vault-Schlüssel</string>
     <string name="passcode_key_unavailable_message">Ihre Vaults sind noch auf diesem Gerät. Stellen Sie sie aus Ihrem .vult-Backup wieder her, um sie zu öffnen.</string>
+    <string name="passcode_key_unavailable_restore">Aus Backup wiederherstellen</string>
+    <string name="passcode_key_unavailable_restored">Vault wiederhergestellt. Ein weiterer Vault auf diesem Gerät braucht noch sein Backup.</string>
     <string name="passcode_store_unavailable_title">Ihre Vaults sind vorerst gesperrt</string>
     <string name="passcode_store_unavailable_message">Der sichere Speicher dieses Geräts ließ sich diesmal nicht öffnen. Alles ist noch da, starten Sie also die App neu, statt sie neu zu installieren.</string>
     <string name="passcode_input_field_content_description">%1$d von %2$d Ziffern eingegeben</string>

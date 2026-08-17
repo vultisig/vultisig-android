@@ -370,6 +370,8 @@
     <string name="passcode_not_digits">请仅输入数字。</string>
     <string name="passcode_key_unavailable_title">本设备缺少您的保险库密钥</string>
     <string name="passcode_key_unavailable_message">您的保险库仍在本设备上。从您的 .vult 备份恢复，即可重新打开它们。</string>
+    <string name="passcode_key_unavailable_restore">从备份恢复</string>
+    <string name="passcode_key_unavailable_restored">保险库已恢复。本设备上还有一个保险库需要它的备份。</string>
     <string name="passcode_store_unavailable_title">您的保险库暂时处于锁定状态</string>
     <string name="passcode_store_unavailable_message">本设备的安全存储这次没能打开。所有内容都还在，重新启动应用即可，不必重新安装。</string>
     <string name="passcode_input_field_content_description">已输入 %2$d 位数字中的 %1$d 位</string>

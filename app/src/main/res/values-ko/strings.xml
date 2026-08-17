@@ -311,6 +311,8 @@
     <string name="passcode_not_digits">숫자만 입력하세요.</string>
     <string name="passcode_key_unavailable_title">이 기기에 볼트를 여는 키가 없습니다</string>
     <string name="passcode_key_unavailable_message">볼트는 이 기기에 그대로 있습니다. 다시 열려면 .vult 백업에서 복원하세요.</string>
+    <string name="passcode_key_unavailable_restore">백업에서 복원</string>
+    <string name="passcode_key_unavailable_restored">볼트를 복원했습니다. 이 기기의 다른 볼트에도 백업이 필요합니다.</string>
     <string name="passcode_store_unavailable_title">지금은 볼트가 잠겨 있습니다</string>
     <string name="passcode_store_unavailable_message">이번에는 이 기기의 보안 저장소가 열리지 않았습니다. 모두 그대로 있으니 다시 설치하지 말고 앱을 다시 시작하세요.</string>
     <string name="passcode_input_field_content_description">%2$d자리 중 %1$d자리 입력됨</string>

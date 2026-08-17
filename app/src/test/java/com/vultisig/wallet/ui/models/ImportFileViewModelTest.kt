@@ -7,17 +7,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.AppZipEntry
-import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
-import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.MalformedVaultException
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
-import com.vultisig.wallet.data.usecases.SaveVaultUseCase
+import com.vultisig.wallet.data.usecases.StoreImportedVaultUseCase
 import com.vultisig.wallet.data.usecases.WrongPasswordException
 import com.vultisig.wallet.data.usecases.file.UriFileReaderUseCase
 import com.vultisig.wallet.ui.navigation.Destination
@@ -30,7 +25,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.slot
 import io.mockk.unmockkStatic
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.assertEquals
@@ -54,11 +48,8 @@ internal class ImportFileViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private lateinit var navigator: Navigator<Destination>
-    private lateinit var vaultDataStoreRepository: VaultDataStoreRepository
-    private lateinit var saveVault: SaveVaultUseCase
+    private lateinit var storeImportedVault: StoreImportedVaultUseCase
     private lateinit var parseVaultFromString: ParseVaultFromStringUseCase
-    private lateinit var vaultRepository: VaultRepository
-    private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
     private lateinit var snackbarFlow: SnackbarFlow
     private lateinit var uriFileReader: UriFileReaderUseCase
 
@@ -68,11 +59,11 @@ internal class ImportFileViewModelTest {
         mockkStatic("androidx.navigation.SavedStateHandleKt")
         every { any<SavedStateHandle>().toRoute<Route.ImportVault>() } returns Route.ImportVault()
         navigator = mockk(relaxed = true)
-        vaultDataStoreRepository = mockk(relaxed = true)
-        saveVault = mockk(relaxed = true)
+        storeImportedVault = mockk()
+        // Stores whatever it is handed, as the real one does once any libType correction is
+        // applied.
+        coEvery { storeImportedVault(any(), any()) } answers { firstArg() }
         parseVaultFromString = mockk(relaxed = true)
-        vaultRepository = mockk(relaxed = true)
-        chainAccountAddressRepository = mockk(relaxed = true)
         snackbarFlow = mockk(relaxed = true)
         uriFileReader = mockk(relaxed = true)
     }
@@ -95,11 +86,8 @@ internal class ImportFileViewModelTest {
             ImportFileViewModel(
                 savedStateHandle = savedStateHandle,
                 navigator = navigator,
-                vaultDataStoreRepository = vaultDataStoreRepository,
-                saveVault = saveVault,
+                storeImportedVault = storeImportedVault,
                 parseVaultFromString = parseVaultFromString,
-                vaultRepository = vaultRepository,
-                chainAccountAddressRepository = chainAccountAddressRepository,
                 snackBarFlow = snackbarFlow,
                 uriFileReader = uriFileReader,
                 defaultDispatcher = testDispatcher,
@@ -117,91 +105,6 @@ internal class ImportFileViewModelTest {
 
     private fun testVault(libType: SigningLibType = SigningLibType.DKLS) =
         Vault(id = "test-vault-id", name = "Test Vault", libType = libType)
-
-    // --- libType heuristics (preserved from original test file) --------------
-
-    @Test
-    fun `KeyImport vault with share filename keeps KeyImport libType`() = runTest {
-        val vault = testVault(libType = SigningLibType.KeyImport)
-        coEvery { parseVaultFromString(any(), any()) } returns vault
-        val vm = createViewModel(fileName = "share1of2-test.bak")
-
-        vm.decryptVaultData()
-
-        val savedVaultSlot = slot<Vault>()
-        coVerify { saveVault(capture(savedVaultSlot), false) }
-        assertEquals(SigningLibType.KeyImport, savedVaultSlot.captured.libType)
-    }
-
-    @Test
-    fun `GG20 vault with share filename gets overridden to DKLS`() = runTest {
-        val vault = testVault(libType = SigningLibType.GG20)
-        coEvery { parseVaultFromString(any(), any()) } returns vault
-        val vm = createViewModel(fileName = "share1of2-test.bak")
-
-        vm.decryptVaultData()
-
-        val savedVaultSlot = slot<Vault>()
-        coVerify { saveVault(capture(savedVaultSlot), false) }
-        assertEquals(SigningLibType.DKLS, savedVaultSlot.captured.libType)
-    }
-
-    @Test
-    fun `DKLS vault without share filename keeps DKLS`() = runTest {
-        val vault = testVault(libType = SigningLibType.DKLS)
-        coEvery { parseVaultFromString(any(), any()) } returns vault
-        val vm = createViewModel(fileName = "test.bak")
-
-        vm.decryptVaultData()
-
-        val savedVaultSlot = slot<Vault>()
-        coVerify { saveVault(capture(savedVaultSlot), false) }
-        assertEquals(SigningLibType.DKLS, savedVaultSlot.captured.libType)
-    }
-
-    @Test
-    fun `restoring an MLDSA-capable vault re-adds the QBTC token`() = runTest {
-        val vault =
-            Vault(
-                id = "test-vault-id",
-                name = "Test Vault",
-                libType = SigningLibType.KeyImport,
-                pubKeyMLDSA = "mldsa-pubkey",
-            )
-        coEvery { parseVaultFromString(any(), any()) } returns vault
-        coEvery { saveVault(any(), false) } returns Unit
-        coEvery { vaultDataStoreRepository.setBackupStatus(any(), any()) } returns Unit
-        coEvery { chainAccountAddressRepository.getAddress(any<Coin>(), any<Vault>()) } returns
-            Pair("qbtc1address", "qbtc-derived-pubkey")
-        coEvery { vaultRepository.addTokenToVault(any(), any()) } returns Unit
-
-        val vm = createViewModel(fileName = "share1of2-test.bak")
-        vm.uiModel.value = vm.uiModel.value.copy(showPasswordPrompt = true)
-        vm.decryptVaultData()
-        vm.uiModel.first { !it.showPasswordPrompt }
-
-        val tokenSlot = slot<Coin>()
-        coVerify { vaultRepository.addTokenToVault("test-vault-id", capture(tokenSlot)) }
-        assertEquals(Coins.Qbtc.QBTC.ticker, tokenSlot.captured.ticker)
-        assertEquals("qbtc1address", tokenSlot.captured.address)
-        assertEquals("qbtc-derived-pubkey", tokenSlot.captured.hexPublicKey)
-    }
-
-    @Test
-    fun `restoring a vault without MLDSA leaves QBTC alone`() = runTest {
-        val vault =
-            Vault(
-                id = "test-vault-id",
-                name = "Test Vault",
-                libType = SigningLibType.DKLS,
-                pubKeyMLDSA = "",
-            )
-        coEvery { parseVaultFromString(any(), any()) } returns vault
-
-        createViewModel(fileName = "share1of2-test.bak").decryptVaultData()
-
-        coVerify(exactly = 0) { vaultRepository.addTokenToVault(any(), any()) }
-    }
 
     // --- decryptVaultData: SaveResult routing --------------------------------
 
@@ -249,7 +152,7 @@ internal class ImportFileViewModelTest {
     @Test
     fun `decryptVaultData on SQLiteConstraintException also treated as Duplicate`() = runTest {
         coEvery { parseVaultFromString(any(), any()) } returns testVault()
-        coEvery { saveVault(any(), false) } throws SQLiteConstraintException()
+        coEvery { storeImportedVault(any(), any()) } throws SQLiteConstraintException()
         val vm = createViewModel(fileName = "vault.bak", showPasswordPrompt = true)
 
         vm.decryptVaultData()
@@ -301,7 +204,7 @@ internal class ImportFileViewModelTest {
     @Test
     fun `decryptVaultData on generic failure closes dialog and keeps file for retry`() = runTest {
         coEvery { parseVaultFromString(any(), any()) } returns testVault()
-        coEvery { saveVault(any(), false) } throws RuntimeException("db locked")
+        coEvery { storeImportedVault(any(), any()) } throws RuntimeException("db locked")
         val vm = createViewModel(fileName = "vault.bak", showPasswordPrompt = true)
 
         vm.decryptVaultData()
@@ -321,7 +224,7 @@ internal class ImportFileViewModelTest {
             // to SaveResult.Failed. If the generic `catch (e: Exception)` swallowed
             // CancellationException, saveToDb would return SaveResult.Failed, which would
             // trigger showGenericError and set `state.error`. Asserting state unchanged
-            // AND that saveVault was never reached proves the rethrow path fired.
+            // AND that the store was never reached proves the rethrow path fired.
             coEvery { parseVaultFromString(any(), any()) } throws CancellationException("cancelled")
             val vm = createViewModel(fileName = "vault.bak", showPasswordPrompt = true)
 
@@ -334,7 +237,7 @@ internal class ImportFileViewModelTest {
                 state.showPasswordPrompt,
                 "cancellation must not flip UI state as if the save completed",
             )
-            coVerify(exactly = 0) { saveVault(any(), any()) }
+            coVerify(exactly = 0) { storeImportedVault(any(), any()) }
         }
 
     // --- parseFileContent: SaveResult routing (no-password first pass) -------
@@ -393,7 +296,9 @@ internal class ImportFileViewModelTest {
         val state = vm.uiModel.value
         assertFalse(state.showPasswordPrompt, "success must not pop the password prompt")
         assertNull(state.error)
-        coVerify { saveVault(any(), false) }
+        // The name goes with it: it is the only thing that tells a mislabelled older DKLS backup
+        // from a GG20 one.
+        coVerify { storeImportedVault(any(), "vault.bak") }
     }
 
     @Test
@@ -402,7 +307,7 @@ internal class ImportFileViewModelTest {
 
         coEvery { uriFileReader.readContent(uri) } returns "unencrypted-duplicate"
         coEvery { parseVaultFromString(any(), null) } returns testVault()
-        coEvery { saveVault(any(), false) } throws DuplicateVaultException()
+        coEvery { storeImportedVault(any(), any()) } throws DuplicateVaultException()
 
         val vm = createViewModel(fileContent = null, isZip = false, fileName = "dup.bak")
         vm.uiModel.value = vm.uiModel.value.copy(fileUri = uri, fileName = "dup.bak")
@@ -429,7 +334,7 @@ internal class ImportFileViewModelTest {
 
         coEvery { uriFileReader.readContent(uri) } returns "valid-unencrypted"
         coEvery { parseVaultFromString(any(), null) } returns testVault()
-        coEvery { saveVault(any(), false) } throws RuntimeException("db locked")
+        coEvery { storeImportedVault(any(), any()) } throws RuntimeException("db locked")
 
         val vm = createViewModel(fileContent = null, isZip = false, fileName = "vault.bak")
         vm.uiModel.value = vm.uiModel.value.copy(fileUri = uri, fileName = "vault.bak")
@@ -504,7 +409,7 @@ internal class ImportFileViewModelTest {
     @Test
     fun `decryptVaultData zip generic Failed shows snackbar and keeps file intact`() = runTest {
         coEvery { parseVaultFromString(any(), any()) } returns testVault()
-        coEvery { saveVault(any(), false) } throws RuntimeException("db locked")
+        coEvery { storeImportedVault(any(), any()) } throws RuntimeException("db locked")
         val entry = AppZipEntry(name = "vault.bak", content = "keep-me")
         val vm =
             createViewModel(
@@ -530,7 +435,7 @@ internal class ImportFileViewModelTest {
 
         coEvery { uriFileReader.readContent(uri) } returns "test-content"
         coEvery { parseVaultFromString(any(), any()) } returns testVault()
-        coEvery { saveVault(any(), false) } throws SQLiteConstraintException()
+        coEvery { storeImportedVault(any(), any()) } throws SQLiteConstraintException()
 
         val vm = createViewModel(fileContent = null)
         vm.uiModel.value = vm.uiModel.value.copy(fileUri = uri)
@@ -544,43 +449,6 @@ internal class ImportFileViewModelTest {
         )
         assertNull(state.fileName)
         assertNull(state.fileContent)
-    }
-
-    // --- Post-save hardening: non-fatal downstream failures ------------------
-
-    @Test
-    fun `import succeeds when setBackupStatus fails`() = runTest {
-        coEvery { parseVaultFromString(any(), any()) } returns testVault()
-        coEvery { vaultDataStoreRepository.setBackupStatus(any(), any()) } throws
-            RuntimeException("datastore")
-        val vm = createViewModel(fileName = "vault.bak")
-
-        vm.decryptVaultData()
-
-        val state = vm.uiModel.value
-        assertNull(state.error)
-        coVerify { saveVault(any(), false) }
-    }
-
-    @Test
-    fun `import succeeds when QBTC address derivation fails on MLDSA vault`() = runTest {
-        val mldsaVault =
-            Vault(
-                id = "v",
-                name = "V",
-                libType = SigningLibType.DKLS,
-                pubKeyMLDSA = "mldsa-pub-key",
-            )
-        coEvery { parseVaultFromString(any(), any()) } returns mldsaVault
-        coEvery { chainAccountAddressRepository.getAddress(any<Coin>(), any<Vault>()) } throws
-            RuntimeException("derivation failed")
-        val vm = createViewModel(fileName = "vault.bak")
-
-        vm.decryptVaultData()
-
-        val state = vm.uiModel.value
-        assertNull(state.error, "QBTC derivation failure must not block import")
-        coVerify { saveVault(any(), false) }
     }
 
     @Test

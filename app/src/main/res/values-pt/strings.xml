@@ -198,6 +198,8 @@
     <string name="passcode_not_digits">Introduza apenas dígitos.</string>
     <string name="passcode_key_unavailable_title">Este dispositivo não tem a chave do seu cofre</string>
     <string name="passcode_key_unavailable_message">Os seus cofres continuam neste dispositivo. Restaure a partir do backup .vult para os voltar a abrir.</string>
+    <string name="passcode_key_unavailable_restore">Restaurar a partir do backup</string>
+    <string name="passcode_key_unavailable_restored">Cofre restaurado. Outro cofre neste dispositivo ainda precisa do seu backup.</string>
     <string name="passcode_store_unavailable_title">Os cofres estão bloqueados por agora</string>
     <string name="passcode_store_unavailable_message">O armazenamento seguro deste dispositivo não abriu desta vez. Continua tudo aqui, por isso reinicie a aplicação em vez de a reinstalar.</string>
     <string name="passcode_input_field_content_description">%1$d de %2$d dígitos introduzidos</string>

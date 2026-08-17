@@ -292,6 +292,12 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindSupersedeUnopenableVaultUseCase(
+        impl: SupersedeUnopenableVaultUseCaseImpl
+    ): SupersedeUnopenableVaultUseCase
+
+    @Binds
+    @Singleton
     fun bindBuildCosmosStakingKeysignPayloadUseCase(
         impl:
             com.vultisig.wallet.data.blockchain.cosmos.staking.BuildCosmosStakingKeysignPayloadUseCaseImpl

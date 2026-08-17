@@ -199,6 +199,8 @@
     <string name="passcode_not_digits">Introduzca solo dígitos.</string>
     <string name="passcode_key_unavailable_title">A este dispositivo le falta su clave de bóveda</string>
     <string name="passcode_key_unavailable_message">Sus bóvedas siguen en este dispositivo. Restáurelas desde su copia de seguridad .vult para volver a abrirlas.</string>
+    <string name="passcode_key_unavailable_restore">Restaurar desde copia de seguridad</string>
+    <string name="passcode_key_unavailable_restored">Bóveda restaurada. Otra bóveda de este dispositivo todavía necesita su copia de seguridad.</string>
     <string name="passcode_store_unavailable_title">Sus bóvedas están bloqueadas por ahora</string>
     <string name="passcode_store_unavailable_message">El almacenamiento seguro de este dispositivo no se abrió esta vez. Todo sigue aquí, así que reinicie la aplicación en lugar de reinstalarla.</string>
     <string name="passcode_input_field_content_description">%1$d de %2$d dígitos introducidos</string>

@@ -209,6 +209,8 @@
     <string name="passcode_not_digits">Voer alleen cijfers in.</string>
     <string name="passcode_key_unavailable_title">Dit apparaat mist je kluissleutel</string>
     <string name="passcode_key_unavailable_message">Je kluizen staan nog op dit apparaat. Herstel vanaf je .vult-back-up om ze weer te openen.</string>
+    <string name="passcode_key_unavailable_restore">Herstellen vanaf back-up</string>
+    <string name="passcode_key_unavailable_restored">Kluis hersteld. Een andere kluis op dit apparaat heeft nog zijn back-up nodig.</string>
     <string name="passcode_store_unavailable_title">Je kluizen zijn even vergrendeld</string>
     <string name="passcode_store_unavailable_message">De beveiligde opslag van dit apparaat ging deze keer niet open. Alles staat er nog, dus herstart de app in plaats van hem opnieuw te installeren.</string>
     <string name="passcode_input_field_content_description">%1$d van %2$d cijfers ingevoerd</string>

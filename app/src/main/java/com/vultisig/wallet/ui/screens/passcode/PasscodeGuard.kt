@@ -69,12 +69,7 @@ internal fun PasscodeGuard(model: PasscodeGuardViewModel = hiltViewModel()) {
 private fun GateContent(passcodeState: PasscodeState, onRetry: () -> Unit) {
     when (passcodeState) {
         PasscodeState.Locked -> PasscodeLockScreen()
-        PasscodeState.KeyUnavailable ->
-            DeadEndScreen(
-                title = stringResource(R.string.passcode_key_unavailable_title),
-                message = stringResource(R.string.passcode_key_unavailable_message),
-                onRetry = onRetry,
-            )
+        PasscodeState.KeyUnavailable -> KeyshareRecoveryScreen()
         PasscodeState.StoreUnavailable ->
             DeadEndScreen(
                 title = stringResource(R.string.passcode_store_unavailable_title),
@@ -126,14 +121,13 @@ private fun LockWindow(content: @Composable () -> Unit) {
 }
 
 /**
- * Shown when encrypted keyshares cannot be opened at all — the credentials are gone
- * ([PasscodeState.KeyUnavailable]) or unreachable this launch ([PasscodeState.StoreUnavailable]).
- * Neither has a passcode that would work, so the screen says what happened rather than asking for
- * one. The two differ only in what the user should do next, which is exactly what [message]
- * carries.
+ * Shown when the credential store could not be opened this launch
+ * ([PasscodeState.StoreUnavailable]) — there is no passcode that would work, so the screen says
+ * what happened rather than asking for one.
  *
- * [onRetry] is the only way off this window, since back and outside taps belong to the gate. Both
- * states rest on a keystore read that can come back, so it is worth offering.
+ * [onRetry] is the only way off this window, since back and outside taps belong to the gate. The
+ * state rests on a keystore read that can come back, so it is worth offering. The credentials-gone
+ * state has more to offer than a retry and gets its own screen — see [KeyshareRecoveryScreen].
  */
 @Composable
 private fun DeadEndScreen(title: String, message: String, onRetry: () -> Unit) {

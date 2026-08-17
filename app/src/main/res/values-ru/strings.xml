@@ -209,6 +209,8 @@
     <string name="passcode_not_digits">Вводите только цифры.</string>
     <string name="passcode_key_unavailable_title">На этом устройстве нет ключа от ваших хранилищ</string>
     <string name="passcode_key_unavailable_message">Ваши хранилища всё ещё на этом устройстве. Восстановите их из резервной копии .vult, чтобы снова открыть.</string>
+    <string name="passcode_key_unavailable_restore">Восстановить из резервной копии</string>
+    <string name="passcode_key_unavailable_restored">Хранилище восстановлено. Ещё одному хранилищу на этом устройстве нужна его резервная копия.</string>
     <string name="passcode_store_unavailable_title">Ваши хранилища пока заблокированы</string>
     <string name="passcode_store_unavailable_message">На этот раз не удалось открыть защищённое хранилище ключей устройства. Всё на месте, поэтому перезапустите приложение, а не переустанавливайте его.</string>
     <string name="passcode_input_field_content_description">Введено %1$d из %2$d цифр</string>

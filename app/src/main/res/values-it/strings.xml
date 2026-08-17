@@ -198,6 +198,8 @@
     <string name="passcode_not_digits">Inserisci solo cifre.</string>
     <string name="passcode_key_unavailable_title">A questo dispositivo manca la chiave dei vault</string>
     <string name="passcode_key_unavailable_message">I tuoi vault sono ancora su questo dispositivo. Ripristina dal backup .vult per riaprirli.</string>
+    <string name="passcode_key_unavailable_restore">Ripristina dal backup</string>
+    <string name="passcode_key_unavailable_restored">Vault ripristinato. Un altro vault su questo dispositivo ha ancora bisogno del suo backup.</string>
     <string name="passcode_store_unavailable_title">I tuoi vault sono bloccati per ora</string>
     <string name="passcode_store_unavailable_message">L\'archiviazione sicura di questo dispositivo non si è aperta stavolta. C\'è ancora tutto, quindi riavvia l\'app invece di reinstallarla.</string>
     <string name="passcode_input_field_content_description">%1$d di %2$d cifre inserite</string>

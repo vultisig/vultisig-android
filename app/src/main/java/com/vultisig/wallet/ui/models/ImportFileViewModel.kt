@@ -12,16 +12,11 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.DefaultDispatcher
 import com.vultisig.wallet.data.common.AppZipEntry
-import com.vultisig.wallet.data.models.Coins
-import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
-import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.MalformedVaultException
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
-import com.vultisig.wallet.data.usecases.SaveVaultUseCase
+import com.vultisig.wallet.data.usecases.StoreImportedVaultUseCase
 import com.vultisig.wallet.data.usecases.WrongPasswordException
 import com.vultisig.wallet.data.usecases.backup.FILE_ALLOWED_EXTENSIONS
 import com.vultisig.wallet.data.usecases.file.UriFileReaderUseCase
@@ -66,11 +61,8 @@ internal class ImportFileViewModel
 constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    private val vaultDataStoreRepository: VaultDataStoreRepository,
-    private val saveVault: SaveVaultUseCase,
+    private val storeImportedVault: StoreImportedVaultUseCase,
     private val parseVaultFromString: ParseVaultFromStringUseCase,
-    private val vaultRepository: VaultRepository,
-    private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val snackBarFlow: SnackbarFlow,
     private val uriFileReader: UriFileReaderUseCase,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
@@ -124,7 +116,7 @@ constructor(
         try {
             val vault =
                 withContext(defaultDispatcher) { parseVaultFromString(fileContent, password) }
-            insertVaultToDb(vault)
+            finishImport(storeImportedVault(vault, uiModel.value.fileName))
             SaveResult.Success
         } catch (e: CancellationException) {
             throw e
@@ -207,31 +199,6 @@ constructor(
         Failed,
     }
 
-    // saveVault is the point of no return — failure there surfaces as SaveResult.Failed. Every
-    // step after runs best-effort so a datastore / network / derivation glitch can't orphan a
-    // saved vault or surface as a misleading top-level error.
-    private suspend fun insertVaultToDb(vault: Vault) {
-        val adjusted = vault.withInferredLibType(uiModel.value.fileName)
-
-        saveVault(adjusted, false)
-        runBestEffort("Failed to set backup status") {
-            vaultDataStoreRepository.setBackupStatus(adjusted.id, true)
-        }
-        if (adjusted.pubKeyMLDSA.isNotBlank()) attachQbtcToken(adjusted)
-
-        finishImport(adjusted)
-    }
-
-    private suspend fun attachQbtcToken(vault: Vault) =
-        runBestEffort("Failed to add QBTC token") {
-            val qbtc = Coins.Qbtc.QBTC
-            val (address, pubKey) = chainAccountAddressRepository.getAddress(qbtc, vault)
-            vaultRepository.addTokenToVault(
-                vault.id,
-                qbtc.copy(address = address, hexPublicKey = pubKey),
-            )
-        }
-
     private suspend fun finishImport(vault: Vault) {
         if (uiModel.value.isZip != true) {
             navigateToHome(vault)
@@ -266,16 +233,6 @@ constructor(
             Timber.w(e, message)
         }
     }
-
-    // Older DKLS backups were sometimes persisted with libType=GG20. Recover the real type
-    // from the share-NofM filename convention, but leave KeyImport vaults alone — they also
-    // use that naming and must keep their declared libType.
-    private fun Vault.withInferredLibType(fileName: String?): Vault =
-        if (libType == SigningLibType.GG20 && fileName?.contains(SHARE_FILENAME_REGEX) == true) {
-            copy(libType = SigningLibType.DKLS)
-        } else {
-            this
-        }
 
     fun saveFileToAppDir() {
         val uri = uiModel.value.fileUri ?: return
@@ -383,9 +340,5 @@ constructor(
             val target = state.activeVault?.takeIf { state.canNavigateToHome }
             if (target != null) navigateToHome(target) else navigator.back()
         }
-    }
-
-    private companion object {
-        private val SHARE_FILENAME_REGEX = "share\\d+of\\d+".toRegex()
     }
 }

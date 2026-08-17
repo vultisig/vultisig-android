@@ -198,6 +198,8 @@
     <string name="passcode_not_digits">Unesite samo znamenke.</string>
     <string name="passcode_key_unavailable_title">Ovom uređaju nedostaje ključ vašeg trezora</string>
     <string name="passcode_key_unavailable_message">Vaši su trezori i dalje na ovom uređaju. Vratite ih iz .vult sigurnosne kopije da ih ponovno otvorite.</string>
+    <string name="passcode_key_unavailable_restore">Vrati iz sigurnosne kopije</string>
+    <string name="passcode_key_unavailable_restored">Trezor je vraćen. Još jedan trezor na ovom uređaju treba svoju sigurnosnu kopiju.</string>
     <string name="passcode_store_unavailable_title">Vaši su trezori zasad zaključani</string>
     <string name="passcode_store_unavailable_message">Ovaj se put sigurna pohrana ovog uređaja nije otvorila. Sve je i dalje tu, pa ponovno pokrenite aplikaciju umjesto ponovne instalacije.</string>
     <string name="passcode_input_field_content_description">Uneseno %1$d od %2$d znamenki</string>
