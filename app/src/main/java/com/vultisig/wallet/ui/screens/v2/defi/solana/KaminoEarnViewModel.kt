@@ -344,10 +344,15 @@ constructor(
             }
         val tokensPerShare = KaminoPositionMath.decimalOrNull(metrics?.tokensPerShare)
         val tokenAmount =
-            if (tokensPerShare == null || shares == null) {
-                null
-            } else {
-                KaminoPositionMath.tokenAmount(shares, tokensPerShare, vault.tokenDecimals)
+            when {
+                shares == null -> null
+                // A confirmed-zero position is worth zero regardless of the rate — no need to
+                // wait on a `/metrics` read that may have failed this refresh. Folding this case
+                // into the `tokensPerShare == null` branch below would show "Unavailable" on a
+                // real full withdrawal instead of the true zero.
+                shares.signum() == 0 -> BigDecimal.ZERO.setScale(vault.tokenDecimals)
+                tokensPerShare == null -> null
+                else -> KaminoPositionMath.tokenAmount(shares, tokensPerShare, vault.tokenDecimals)
             }
 
         val coin = vault.coin
