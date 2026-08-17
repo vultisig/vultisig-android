@@ -529,6 +529,43 @@ internal class KaminoEarnViewModelTest {
         }
 
     @Test
+    fun `a total never blends a fresh row with another row's stale splice`() = runTest {
+        // First refresh: both vaults price cleanly. Second refresh: Allez genuinely grows (a real,
+        // freshly priced increase) while Steakhouse's metrics call merely fails — not a confirmed
+        // zero, just unresolved this round. The row-level splice keeps Steakhouse's card showing
+        // its
+        // last known figure, but the total must not add that spliced value to Allez's new one: that
+        // combination was never true of any single confirmed state, fresh and stale alike.
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flowOf(setOf(STEAKHOUSE.address, ALLEZ.address))
+        coEvery { kaminoApi.getUserPositions(WALLET_ADDRESS) } returnsMany
+            listOf(
+                listOf(
+                    KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "100"),
+                    KaminoUserPositionJson(vaultAddress = ALLEZ.address, totalShares = "100"),
+                ),
+                listOf(
+                    KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "100"),
+                    KaminoUserPositionJson(vaultAddress = ALLEZ.address, totalShares = "300"),
+                ),
+            )
+        coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Vault")
+        coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0") andThenThrows
+            RuntimeException("503")
+        coEvery { kaminoApi.getVaultMetrics(ALLEZ.address) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0")
+
+        val vm = viewModel().apply { setData(VAULT_ID) }
+        val firstTotal = vm.state.value.totalFiat
+        firstTotal.shouldNotBeNull()
+
+        vm.refresh()
+
+        vm.state.value.totalFiat shouldBe firstTotal
+    }
+
+    @Test
     fun `a confirmed full withdrawal with a failed metrics call still shows a real zero`() =
         runTest {
             // The entry is present with totalShares "0" — a confirmed real zero, not the "wallet
