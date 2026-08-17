@@ -35,7 +35,6 @@ interface VaultDao {
     @Query("SELECT * FROM vault")
     suspend fun loadAll(): List<VaultWithKeySharesAndTokens>
 
-    /** The vault rows alone, for callers that only compare public keys. */
     @Query("SELECT * FROM vault") suspend fun loadAllVaults(): List<VaultEntity>
 
     @Query("SELECT * FROM keyShare WHERE vaultId = :vaultId")
@@ -100,11 +99,8 @@ interface VaultDao {
     }
 
     /**
-     * Stores [vault] in place of [supersededVaultId], in one transaction.
-     *
-     * The delete cascades every row belonging to the vault it removes, keyshares included. Both
-     * statements land together or neither does, so process death part-way cannot leave the device
-     * holding neither the vault it took away nor the one that replaces it.
+     * The delete cascades the vault's keyshares, and both statements land together or neither does
+     * — so process death part-way cannot leave the device holding neither vault.
      */
     @Transaction
     suspend fun replace(supersededVaultId: String, vault: VaultWithKeySharesAndTokens) {

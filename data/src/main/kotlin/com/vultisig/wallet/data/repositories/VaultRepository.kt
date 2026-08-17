@@ -69,11 +69,9 @@ interface VaultRepository {
     suspend fun upsert(vault: Vault)
 
     /**
-     * Stores [vault] and removes [supersededVaultId] as one atomic step.
-     *
-     * For a vault whose keyshares this device can no longer open, where the row has to go but only
-     * once what replaces it is provably stored — see `SupersedeUnopenableVaultUseCase`, which is
-     * the one caller and holds every guard on when that is allowed.
+     * Stores [vault] and removes [supersededVaultId] as one atomic step. Only for a vault whose
+     * keyshares this device can no longer open; `SupersedeUnopenableVaultUseCase` holds every guard
+     * on when that is allowed.
      */
     suspend fun replace(supersededVaultId: VaultId, vault: Vault)
 
@@ -148,8 +146,9 @@ constructor(
     }
 
     override suspend fun replace(supersededVaultId: VaultId, vault: Vault) {
-        // Mapped before the call: a suspend @Transaction body may only reach the DAO, and this
-        // reads the data key.
+        // Mapped out here because a suspend @Transaction body may only reach the DAO, and this
+        // reads
+        // the data key.
         vaultDao.replace(supersededVaultId, vault.toVaultDb())
     }
 
@@ -235,10 +234,9 @@ constructor(
      * the data key; the states that can never unlock leave it in the clear.
      */
     private fun protect(keyShare: String, identity: KeyShareIdentity, dataKey: ByteArray?): String {
-        // Only [KeyShareCipher.encrypt] may write the marker, and a share reaching here has already
-        // come back through decrypt. So one carrying it was supplied by a backup file, and storing
-        // it verbatim would leave the table holding ciphertext no key opens — the app-wide
-        // unreadable state, on a device that may never have had a passcode.
+        // Only the cipher writes this marker, so a share arriving with one came from a backup file.
+        // Stored verbatim it would leave ciphertext no key opens, which every later launch reads as
+        // credentials gone — on a device that may never have had a passcode.
         check(!keyShareCipher.isEncrypted(keyShare)) {
             "Refusing to store a keyshare that claims to be encrypted"
         }

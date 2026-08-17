@@ -29,9 +29,8 @@ constructor(
         if (shouldOverrideVault) {
             vaultRepository.upsert(vault)
         } else if (!supersedeUnopenableVault(vault)) {
-            // Reached unless the vault replaced one whose keyshares this device can no longer open
-            // — the single collision a restore may resolve rather than refuse. The use case holds
-            // every guard on when that applies.
+            // Reached unless the vault replaced one this device can no longer open — the single
+            // collision a restore may resolve rather than refuse.
             vaultRepository.getByEcdsa(vault.pubKeyECDSA)?.let {
                 Timber.d("saveVault: vault already exists, updating")
                 throw DuplicateVaultException()

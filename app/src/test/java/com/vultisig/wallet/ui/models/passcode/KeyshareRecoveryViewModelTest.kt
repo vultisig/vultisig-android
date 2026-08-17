@@ -72,10 +72,10 @@ internal class KeyshareRecoveryViewModelTest {
     }
 
     /** Makes the picked file an archive carrying [entries]. */
-    private fun archiveOf(vararg entries: AppZipEntry) {
+    private fun archiveOf(vararg entries: AppZipEntry, isComplete: Boolean = true) {
         coEvery { uriFileReader.isValidZip(uri) } returns true
         coEvery { uriFileReader.extractZipEntries(uri) } returns
-            AppZipContents(entries = entries.toList(), isComplete = true)
+            AppZipContents(entries = entries.toList(), isComplete = isComplete)
     }
 
     // ---- the recovery -------------------------------------------------------
@@ -170,7 +170,6 @@ internal class KeyshareRecoveryViewModelTest {
         model.onBackupPicked(uri)
 
         model.state.value.message shouldBe R.string.import_file_screen_duplicate_vault
-        coVerify(exactly = 0) { passcodeRepository.retry() }
     }
 
     @Test
@@ -180,6 +179,64 @@ internal class KeyshareRecoveryViewModelTest {
         model.onBackupPicked(uri)
 
         model.state.value.message shouldBe R.string.import_file_not_supported
+    }
+
+    /** An archive that stopped part-way is not the file being unsupported. */
+    @Test
+    fun `an archive that could not be read through says so`() = runTest {
+        archiveOf(isComplete = false)
+
+        model.onBackupPicked(uri)
+
+        model.state.value.message shouldBe R.string.import_file_zip_incomplete
+    }
+
+    /**
+     * Otherwise the user is sent hunting for a backup they are already holding, when the cause is
+     * that the app stopped reading their archive.
+     */
+    @Test
+    fun `a partly read archive says so even when a share landed`() = runTest {
+        archiveOf(
+            AppZipEntry(name = "Main-share2of2.vult", content = "share-a"),
+            isComplete = false,
+        )
+
+        model.onBackupPicked(uri)
+
+        model.state.value.message shouldBe R.string.import_file_zip_incomplete
+    }
+
+    /**
+     * A store can throw after `SupersedeUnopenableVaultUseCase` has already replaced the row, so
+     * the gate is re-read whatever the outcome — otherwise it stays closed over a restored vault.
+     */
+    @Test
+    fun `the gate is re-read even when the store reports a failure`() = runTest {
+        coEvery { storeImportedVault(any(), any()) } throws RuntimeException("derivation failed")
+
+        model.onBackupPicked(uri)
+
+        coVerify { passcodeRepository.retry() }
+    }
+
+    /**
+     * The password is asked for before anything is stored, so a share needing one cannot leave the
+     * shares ahead of it stored with the screen saying nothing about them.
+     */
+    @Test
+    fun `a share needing a password stores nothing until it is given`() = runTest {
+        archiveOf(
+            AppZipEntry(name = "Main-share2of2.vult", content = "share-a"),
+            AppZipEntry(name = "Savings-share2of2.vult", content = "share-b"),
+        )
+        coEvery { parseVaultFromString("share-b", null) } throws WrongPasswordException()
+
+        model.onBackupPicked(uri)
+
+        model.state.value.isPasswordPromptVisible shouldBe true
+        coVerify(exactly = 0) { storeImportedVault(any(), any()) }
+        coVerify(exactly = 0) { passcodeRepository.retry() }
     }
 
     // ---- password-protected backups -----------------------------------------
@@ -266,7 +323,6 @@ internal class KeyshareRecoveryViewModelTest {
         model.onBackupPicked(uri)
 
         model.state.value.message shouldBe R.string.import_file_not_supported
-        coVerify(exactly = 0) { passcodeRepository.retry() }
     }
 
     /** A vault the device can still open, or one already restored this session. */
@@ -278,7 +334,6 @@ internal class KeyshareRecoveryViewModelTest {
             model.onBackupPicked(uri)
 
             model.state.value.message shouldBe R.string.import_file_screen_duplicate_vault
-            coVerify(exactly = 0) { passcodeRepository.retry() }
         }
 
     @Test
@@ -288,7 +343,6 @@ internal class KeyshareRecoveryViewModelTest {
         model.onBackupPicked(uri)
 
         model.state.value.message shouldBe R.string.dialog_default_error_body
-        coVerify(exactly = 0) { passcodeRepository.retry() }
     }
 
     /** A failed attempt must not leave its message standing where the instruction belongs. */

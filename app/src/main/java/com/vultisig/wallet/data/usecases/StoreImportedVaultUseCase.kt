@@ -11,11 +11,10 @@ import kotlin.coroutines.cancellation.CancellationException
 import timber.log.Timber
 
 /**
- * Stores a vault parsed out of a backup file, and does the two things that only an import owes it.
+ * Stores a vault parsed out of a backup file, and does the two things only an import owes it.
  *
- * Shared by the import screen and by the recovery the passcode gate offers when a device can no
- * longer open its own keyshares — the second cannot route to the first, because the import screen
- * draws in the window the gate covers.
+ * Shared with the recovery the passcode gate offers, which cannot route to the import screen
+ * because that screen draws in the window the gate covers.
  */
 internal interface StoreImportedVaultUseCase {
     /**

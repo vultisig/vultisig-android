@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.DefaultDispatcher
+import com.vultisig.wallet.data.common.AppZipContents
 import com.vultisig.wallet.data.common.AppZipEntry
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.passcode.PasscodeRepository
@@ -33,10 +34,7 @@ import timber.log.Timber
 
 @Immutable
 internal data class KeyshareRecoveryUiModel(
-    /**
-     * What the screen says below its title: the standing instruction until a backup has been tried,
-     * and what came of that attempt afterwards.
-     */
+    /** The standing instruction until a backup has been tried, then what came of that attempt. */
     @StringRes val message: Int = R.string.passcode_key_unavailable_message,
     val isRestoring: Boolean = false,
     val isPasswordPromptVisible: Boolean = false,
@@ -47,9 +45,9 @@ internal data class KeyshareRecoveryUiModel(
 /**
  * Restores vaults from their backup file while the gate is closed over an unreadable keystore.
  *
- * The import cannot be routed to from here — the import screen draws in the window this one covers
- * — so the file is read and stored on the spot, and the gate is asked to resolve again afterwards.
- * It opens once no sealed keyshare is left on the device, which takes a backup per vault.
+ * The import screen cannot be routed to — it draws in the window this one covers — so the file is
+ * read and stored here, then the gate is asked to resolve again. It opens once no sealed keyshare
+ * is left on the device, which takes a backup per vault.
  */
 @HiltViewModel
 internal class KeyshareRecoveryViewModel
@@ -67,27 +65,20 @@ constructor(
 
     val passwordTextFieldState = TextFieldState()
 
-    /** The shares the picked file holds, kept while a password for them is being asked for. */
-    private var picked: List<AppZipEntry> = emptyList()
+    private var picked = AppZipContents(entries = emptyList(), isComplete = true)
 
     fun onBackupPicked(uri: Uri?) {
         uri ?: return
         viewModelScope.safeLaunch {
-            val shares = read(uri)
-            if (shares.isEmpty()) {
-                report(R.string.import_file_not_supported)
-                return@safeLaunch
-            }
-            picked = shares
-            // Every share in an archive was exported together, under one password, and the prompt
-            // below opens on whatever the field holds.
+            picked = read(uri)
+            // Each file has its own password, and the prompt opens on whatever the field holds.
             passwordTextFieldState.clearText()
             restore(password = null)
         }
     }
 
     fun onPasswordEntered() {
-        if (picked.isEmpty()) return
+        if (picked.entries.isEmpty()) return
         viewModelScope.safeLaunch { restore(passwordTextFieldState.text.toString()) }
     }
 
@@ -106,41 +97,42 @@ constructor(
     /**
      * The vault shares [uri] holds: the entries of a multi-vault archive, or the one file itself.
      *
-     * An archive is what "back up all vaults" writes, and the gate needs a share per vault before
-     * it opens — so refusing one here would name the only file the user has as the wrong file. Each
-     * share keeps its own name, which is what tells a mislabelled older backup from a GG20 one; see
-     * [StoreImportedVaultUseCase].
+     * "Back up all vaults" writes an archive and the gate needs a share per vault, so refusing one
+     * would name the only file the user has as the wrong file. Each share keeps its own name, which
+     * is what [StoreImportedVaultUseCase] reads to correct a mislabelled older backup.
      */
-    private suspend fun read(uri: Uri): List<AppZipEntry> {
-        val shares =
-            if (uriFileReader.isValidZip(uri)) {
-                uriFileReader.extractZipEntries(uri).entries
-            } else {
-                val content = uriFileReader.readContent(uri) ?: return emptyList()
-                listOf(AppZipEntry(name = uriFileReader.readName(uri).orEmpty(), content = content))
-            }
-        return shares.filter { it.content.isNotBlank() }
+    private suspend fun read(uri: Uri): AppZipContents {
+        if (uriFileReader.isValidZip(uri)) {
+            val contents = uriFileReader.extractZipEntries(uri)
+            return contents.copy(entries = contents.entries.filter { it.content.isNotBlank() })
+        }
+        val content = uriFileReader.readContent(uri)?.takeUnless { it.isBlank() }
+        val name = uriFileReader.readName(uri).orEmpty()
+        return AppZipContents(
+            entries = listOfNotNull(content?.let { AppZipEntry(name = name, content = it) }),
+            isComplete = true,
+        )
     }
 
     /**
      * Stores every share the picked file holds, and asks the gate to resolve again if any landed.
      *
-     * One outcome for the whole file rather than one per share: an archive holds a share per vault,
-     * and the ones it carries for vaults this device never lost are duplicates by design.
+     * Parsed through before anything is stored, so a share needing a password cannot leave the ones
+     * ahead of it stored with nothing said about them. One outcome for the whole file, too: the
+     * shares an archive carries for vaults this device never lost are duplicates by design.
      */
     private suspend fun restore(password: String?) {
-        // Deriving an address per default chain takes seconds. Without this, the second tap of a
-        // double tap starts a second restore of the same file, which finds the row the first one
-        // just wrote and reports a duplicate over its success. Read and set before this suspends,
-        // on a scope that dispatches to one thread, so the two cannot both pass.
+        // Read and set before this suspends, on a scope that dispatches to one thread, so a double
+        // tap cannot start a second restore that finds the row the first just wrote and reports a
+        // duplicate over its success.
         if (state.value.isRestoring) return
         _state.update {
             it.copy(message = R.string.passcode_key_unavailable_message, isRestoring = true)
         }
         try {
-            var restored: Vault? = null
+            val parsed = mutableListOf<Pair<AppZipEntry, Vault>>()
             var refusal: Int? = null
-            for (share in picked) {
+            for (share in picked.entries) {
                 val vault =
                     try {
                         withContext(defaultDispatcher) {
@@ -156,6 +148,11 @@ constructor(
                         refusal = refusal ?: R.string.import_file_not_supported
                         continue
                     }
+                parsed += share to vault
+            }
+
+            var restored: Vault? = null
+            for ((share, vault) in parsed) {
                 when (val outcome = store(vault, share.name)) {
                     null -> restored = vault
                     else -> refusal = refusal ?: outcome
@@ -183,18 +180,21 @@ constructor(
         }
 
     private suspend fun settle(restored: Vault?, @StringRes refusal: Int?) {
-        if (restored == null) {
-            report(refusal ?: R.string.import_file_not_supported)
-            return
-        }
-        picked = emptyList()
+        val wasComplete = picked.isComplete
+        if (restored != null) picked = AppZipContents(entries = emptyList(), isComplete = true)
+        // Asked whatever the outcome: a store can throw after the replacement has committed, and
+        // the gate would then stay closed over a vault that is in fact restored.
         passcodeRepository.retry()
-        // Only the last vault's restore takes the gate down. Said after the state has settled, so
-        // it
-        // is never claimed over a gate that is already lifting.
-        if (passcodeRepository.state.value == PasscodeState.KeyUnavailable) {
-            report(R.string.passcode_key_unavailable_restored)
-        }
+        if (passcodeRepository.state.value != PasscodeState.KeyUnavailable) return
+        report(
+            when {
+                // A truncated archive holds shares that were never read, so this — not a missing
+                // backup — is what the user has to act on.
+                !wasComplete -> R.string.import_file_zip_incomplete
+                restored != null -> R.string.passcode_key_unavailable_restored
+                else -> refusal ?: R.string.import_file_not_supported
+            }
+        )
     }
 
     private fun promptForPassword(isRetry: Boolean) {

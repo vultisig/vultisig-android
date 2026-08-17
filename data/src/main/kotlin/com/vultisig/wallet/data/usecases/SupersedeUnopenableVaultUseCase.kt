@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
@@ -20,14 +21,12 @@ import timber.log.Timber
  * Stores a backup in place of the stored vault it restores, when that vault is one this device can
  * no longer open.
  *
- * Without this the backup is refused as a duplicate and the vault is unrecoverable in the app: the
- * orphaned row still resolves to a `Vault`, so the import's collision check finds it, and its
- * sealed keyshares keep every launch from then on in [PasscodeState.KeyUnavailable].
+ * Without it the backup is refused as a duplicate: the orphaned row still resolves to a `Vault`, so
+ * the import's collision check finds it, while its sealed keyshares hold every later launch in
+ * [PasscodeState.KeyUnavailable].
  */
 interface SupersedeUnopenableVaultUseCase {
-    /**
-     * Returns true when [backup] was stored in place of a vault, and false when nothing changed.
-     */
+    /** True when [backup] was stored in place of a vault, false when nothing changed. */
     suspend operator fun invoke(backup: Vault): Boolean
 }
 
@@ -48,14 +47,14 @@ constructor(
             val superseded = supersededBy(backup) ?: return@withContext false
 
             vaultRepository.replace(superseded.id, backup)
-            // Two pointers to the row that just went, neither of them a foreign key. The ordering
-            // row would outlive it — the delete flow removes it by hand for the same reason, and
-            // the replacement is given its place in the list the way any new vault is. The
-            // last-opened id is what the home screen resolves the vault it shows from, and it is
-            // read once: left dangling, the screen behind the gate stays bound to a vault that no
-            // longer exists, and sends and swaps route with its id.
-            vaultOrderRepository.delete(parentId = null, name = superseded.id)
-            lastOpenedVaultRepository.setLastOpenedVaultId(backup.id)
+            // Two pointers at the row that just went, neither of them a foreign key. Home reads the
+            // last-opened id once, so leaving it dangling keeps that screen — and the sends it
+            // routes — on a vault that is gone. The row is deleted by the time these run, so they
+            // are not the caller's to cancel.
+            withContext(NonCancellable) {
+                vaultOrderRepository.delete(parentId = null, name = superseded.id)
+                lastOpenedVaultRepository.setLastOpenedVaultId(backup.id)
+            }
             Timber.i("Restored a vault whose keyshares this device could no longer open")
             true
         }
@@ -63,36 +62,26 @@ constructor(
     /**
      * The one stored vault [backup] is allowed to replace, or null when there is none.
      *
-     * This re-enables, in one bounded path, the replacement the import gate exists to refuse, so
-     * every clause below is the difference between a recovery and a loss:
-     * - **The credentials are confirmed gone, as of now.** The state is read back through
-     *   [PasscodeRepository.retry] first, so a keystore that has come back since launch resolves to
-     *   [PasscodeState.Locked] and refuses here rather than after the delete.
-     *   [PasscodeState.StoreUnavailable] never qualifies: there the wrap is most likely still on
-     *   disk and the shares open again once the keystore returns, so a replacement would destroy a
-     *   vault that was only ever unreadable for a launch. Together these stand in for the "was the
-     *   wrapped key absent" question iOS asks its keychain directly, which Android's store cannot
-     *   answer — a value it fails to decrypt reads exactly like one that was never written.
-     * - **Exactly one stored vault collides.** A backup matching two of them is a question this
-     *   cannot answer, and answering it by picking one destroys the other's key material.
-     * - **Every share of that vault is sealed, and it has at least one.** A vault with no shares
-     *   has nothing to be orphaned about, and a row still holding one in the clear is one this
-     *   device wrote after the credentials went — a vault it is keeping, not losing.
-     * - **The backup *is* that vault, not merely overlapping with it.** Matching one public key is
-     *   what makes something a duplicate; it takes every signing identity the stored row holds to
-     *   make it a replacement. An identity the backup adds is fine, one it leaves out is not.
-     * - **The backup carries a share for every key — its own and the stored row's.** An empty or
-     *   blank-filled `keyshares` list round-trips perfectly well and would buy the deletion with
-     *   nothing.
+     * This re-enables the replacement the import gate exists to refuse, so every clause is the
+     * difference between a recovery and a loss:
+     * - Two colliding vaults is a question this cannot answer, and picking one destroys the other's
+     *   key material.
+     * - A row holding a share in the clear is one this device can still read.
+     * - Matching one public key makes a duplicate; it takes every identity the row holds to make a
+     *   replacement. An identity the backup adds is fine, one it leaves out is key material lost.
+     * - An empty or blank-filled `keyshares` list round-trips perfectly well and would buy the
+     *   deletion with nothing.
      *
-     * Deliberately not done: nothing here parses a share to confirm its bytes really derive the
-     * public key they are filed under. That is work behind the TSS boundary, and the ordinary
-     * import path extends a backup the same trust — these clauses keep this path from extending it
-     * any further.
+     * Nothing here parses a share to confirm its bytes derive the key it is filed under: that is
+     * work behind the TSS boundary, and the ordinary import path extends a backup the same trust.
      */
     private suspend fun supersededBy(backup: Vault): VaultEntity? {
-        // Re-reads the keystore before anything is deleted rather than trusting the answer a launch
-        // hours ago got. A no-op unless the state is already one of the unreadable two.
+        // Re-read before anything is deleted rather than trusting what a launch hours ago found; a
+        // keystore that has come back resolves to Locked here instead of after the row is gone.
+        // [PasscodeState.StoreUnavailable] must never qualify — there the wrap is probably still on
+        // disk. Together these stand in for the "was the wrapped key absent" question iOS asks its
+        // keychain, which this store cannot answer: a value it fails to decrypt reads like one that
+        // was never written.
         passcodeRepository.retry()
         if (passcodeRepository.state.value != PasscodeState.KeyUnavailable) return null
 
@@ -122,11 +111,7 @@ private fun VaultEntity.collidesWith(backup: Vault): Boolean =
         pubKeyEddsa.sameAs(backup.pubKeyEDDSA) ||
         pubKeyMldsa.sameAs(backup.pubKeyMLDSA)
 
-/**
- * Whether a signing identity the stored vault holds survives the replacement unchanged. One it does
- * not have is nothing to preserve; one it has and the backup omits or spells differently is key
- * material the replacement would take away with the row.
- */
+/** An identity the stored vault does not hold is nothing to preserve. */
 private fun preserves(stored: String, backup: String): Boolean =
     stored.isBlank() || stored == backup
 
