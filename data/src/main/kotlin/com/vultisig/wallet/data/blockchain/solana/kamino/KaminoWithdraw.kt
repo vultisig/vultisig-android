@@ -144,7 +144,25 @@ data class KaminoTokenAmount(val baseUnits: BigInteger, val decimals: Int) {
      * Rounding down is a safety property, not a preference: an over-request by a single base unit
      * is rewritten by the API to a full exit.
      */
-    fun shareAmount(rate: KaminoRate, shareDecimals: Int): KaminoShareAmount? {
+    fun shareAmount(rate: KaminoRate, shareDecimals: Int): KaminoShareAmount? =
+        shareAmount(rate, shareDecimals, roundUp = false)
+
+    /**
+     * The same conversion rounded up. Used for one thing only: turning a token-denominated minimum
+     * into the share count a withdraw has to name to clear it — rounding down there would produce a
+     * share figure worth fractionally less than the minimum.
+     *
+     * Never use this to size an actual withdraw. Rounding up is exactly the direction that turns a
+     * partial withdraw into an over-request, which the API rewrites to a full exit.
+     */
+    fun shareAmountRoundedUp(rate: KaminoRate, shareDecimals: Int): KaminoShareAmount? =
+        shareAmount(rate, shareDecimals, roundUp = true)
+
+    private fun shareAmount(
+        rate: KaminoRate,
+        shareDecimals: Int,
+        roundUp: Boolean,
+    ): KaminoShareAmount? {
         if (!rate.isPositive || baseUnits.signum() < 0) return null
         if (!scalesAreSane(shareDecimals, decimals) || rate.scale !in 0..(MAX_DECIMALS * 4)) {
             return null
@@ -152,7 +170,13 @@ data class KaminoTokenAmount(val baseUnits: BigInteger, val decimals: Int) {
         // sharesBase = tokensBase × 10^(rateScale + shareDecimals) ÷ (10^tokenDecimals × numerator)
         val numerator = baseUnits.multiply(tenPow(rate.scale + shareDecimals))
         val denominator = tenPow(decimals).multiply(rate.numerator)
-        return KaminoShareAmount(numerator.divide(denominator), shareDecimals)
+        val quotient =
+            if (roundUp) {
+                numerator.add(denominator).subtract(BigInteger.ONE).divide(denominator)
+            } else {
+                numerator.divide(denominator)
+            }
+        return KaminoShareAmount(quotient, shareDecimals)
     }
 
     companion object {
@@ -388,6 +412,34 @@ object KaminoWithdrawMath {
     ): KaminoTokenAmount? = shares.tokenValue(rate, tokenDecimals)
 
     /**
+     * The vault's minimum withdraw, in SHARES, padded for the kVault program's real floor.
+     *
+     * `minWithdrawAmount` is TOKEN base units — the program compares it against the token value
+     * being withdrawn, `available_to_send_to_user + invested_liquidity_to_send_to_user`, not
+     * against a share count. Measured on chain the real floor sits above the published figure,
+     * roughly double it, and that gap is a live value rather than a fixed boundary, so this matches
+     * iOS's tested margin (3x the published figure) instead of hard-coding the measured one.
+     *
+     * Rounded up on the way back to shares so a share count worth fractionally less than the
+     * required token amount is never offered as if it cleared the minimum.
+     */
+    fun effectiveMinimumShares(
+        published: KaminoTokenAmount,
+        rate: KaminoRate,
+        shareDecimals: Int,
+    ): KaminoShareAmount? {
+        val required =
+            KaminoTokenAmount(
+                published.baseUnits.multiply(MINIMUM_WITHDRAW_MULTIPLE),
+                published.decimals,
+            )
+        return required.shareAmountRoundedUp(rate, shareDecimals)
+    }
+
+    /** A margin of this many times the published minimum, matching iOS's tested multiple. */
+    private val MINIMUM_WITHDRAW_MULTIPLE = BigInteger.valueOf(3)
+
+    /**
      * The vault's share-denominated minimum expressed in the token, rounded up so anything at or
      * above it converts back to at least the minimum.
      */
@@ -396,6 +448,34 @@ object KaminoWithdrawMath {
         rate: KaminoRate,
         tokenDecimals: Int,
     ): KaminoTokenAmount? = minimumShares.tokenValueRoundedUp(rate, tokenDecimals)
+
+    /**
+     * The minimum the form should display and gate on, clamped to [maximumTokens] for a position
+     * that already clears the minimum in share terms.
+     *
+     * [minimumTokens] rounds up and [maximumTokens] rounds down the same rate, so a position held
+     * at (or just above) [minimumShares] can see its ceil-rounded token minimum land one base unit
+     * above its own floor-rounded token maximum — a position the vault would accept (`held >=
+     * minimumShares`) for which the form could then offer no amount at all: every value is either
+     * over the maximum or under the minimum. Where the position genuinely holds fewer shares than
+     * the minimum, the unclamped figure stands so the user can see what they are short of.
+     */
+    fun effectiveMinimumTokens(
+        held: KaminoShareAmount,
+        minimumShares: KaminoShareAmount,
+        maximumTokens: KaminoTokenAmount,
+        rate: KaminoRate,
+        tokenDecimals: Int,
+    ): KaminoTokenAmount? {
+        val minimum = minimumTokens(minimumShares, rate, tokenDecimals) ?: return null
+        return if (
+            held.baseUnits >= minimumShares.baseUnits && minimum.baseUnits > maximumTokens.baseUnits
+        ) {
+            maximumTokens
+        } else {
+            minimum
+        }
+    }
 
     /**
      * The shares a withdraw of [tokens] burns, or null when no withdraw of that size can be sized

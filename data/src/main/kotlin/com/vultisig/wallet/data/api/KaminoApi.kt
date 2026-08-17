@@ -183,8 +183,9 @@ data class KaminoVaultStateJson(
         /** In the **token's** base units, not decimal — 100000 is 0.1 USDC at 6 decimals. */
         @SerialName("minDepositAmount") val minDepositAmount: String? = null,
         /**
-         * In the **share** base units, matching the withdraw endpoint's own denomination — not the
-         * token's. Comparing it against a token amount is wrong by the share rate.
+         * In the **token's** base units too, like [minDepositAmount] — not the share base units the
+         * withdraw endpoint itself takes. The kVault program compares this against the token value
+         * being withdrawn, not a share count; reading it as shares is wrong by the share rate.
          */
         @SerialName("minWithdrawAmount") val minWithdrawAmount: String? = null,
         @SerialName("performanceFeeBps") val performanceFeeBps: Int? = null,

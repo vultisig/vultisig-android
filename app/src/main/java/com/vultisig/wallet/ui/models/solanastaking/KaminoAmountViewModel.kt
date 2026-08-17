@@ -312,9 +312,10 @@ constructor(
     /**
      * Resolves what the withdraw form may offer, in shares first and tokens only as a projection.
      *
-     * Shares are the primary unit throughout: the endpoint takes shares, the vault's minimum is in
-     * shares, and a full withdraw must send the exact held share count. The token figure the form
-     * is denominated in is derived from those, never the other way round.
+     * Shares are the primary unit for the balance and the endpoint: the endpoint takes shares, and
+     * a full withdraw must send the exact held share count, so the token figure the form is
+     * denominated in is derived from that, never the other way round. The vault's *minimum*,
+     * though, is published in tokens — see [KaminoWithdrawMath.effectiveMinimumShares].
      */
     private suspend fun loadWithdrawState(vault: KaminoVault, coin: Coin) {
         val positions =
@@ -344,15 +345,32 @@ constructor(
 
         val vaultState =
             runCatchingCancellable { kaminoApi.getVaultState(vault.address) }.getOrNull()
-        // Share base units, not token — comparing it against a token amount would be wrong by the
-        // whole share rate (about 930x on the SOL vault).
-        val minimumShares =
+        // Token base units, not shares — the program compares this against the token value being
+        // withdrawn. Reading it as shares would be wrong by the whole share rate (about 930x on the
+        // SOL vault).
+        val publishedMinimum =
             vaultState?.state?.minWithdrawAmount?.let { raw ->
-                runCatching { KaminoShareAmount(BigInteger(raw), vault.sharesDecimals) }.getOrNull()
+                runCatching { KaminoTokenAmount(BigInteger(raw), vault.tokenDecimals) }.getOrNull()
+            }
+        val minimumShares =
+            if (publishedMinimum != null && rate != null) {
+                KaminoWithdrawMath.effectiveMinimumShares(
+                    publishedMinimum,
+                    rate,
+                    vault.sharesDecimals,
+                )
+            } else {
+                null
             }
         val minimum =
-            if (minimumShares != null && rate != null) {
-                KaminoWithdrawMath.minimumTokens(minimumShares, rate, vault.tokenDecimals)
+            if (held != null && minimumShares != null && maximum != null && rate != null) {
+                KaminoWithdrawMath.effectiveMinimumTokens(
+                    held,
+                    minimumShares,
+                    maximum,
+                    rate,
+                    vault.tokenDecimals,
+                )
             } else {
                 null
             }
