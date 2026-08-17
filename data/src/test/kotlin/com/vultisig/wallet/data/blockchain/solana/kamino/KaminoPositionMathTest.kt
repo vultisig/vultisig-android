@@ -113,6 +113,14 @@ class KaminoPositionMathTest {
     }
 
     @Test
+    fun `deposit minimum rejects negative or fractional base units`() {
+        // A negative or fractional minimum is not a valid base-unit amount — treat it as missing
+        // rather than let it silently pass every deposit's minimum check.
+        assertNull(KaminoPositionMath.depositMinimumWithMargin("-100000", 6))
+        assertNull(KaminoPositionMath.depositMinimumWithMargin("1000.5", 6))
+    }
+
+    @Test
     fun `absent and malformed numbers read as missing, never as zero`() {
         // A row showing nothing is recoverable; a balance rendered as 0 reads as a lost deposit.
         assertNull(KaminoPositionMath.decimalOrNull(null))

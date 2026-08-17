@@ -184,7 +184,8 @@ internal class KaminoAmountViewModelTest {
             // 100000 base units gets a 1/1000 margin (100 base units) added before the 6-decimal
             // conversion, so the displayed and enforced minimum is 0.1001 USDC, not 0.1 — the
             // published figure the kVault program actually refuses.
-            assertEquals(0, BigDecimal("0.1001").compareTo(viewModel().state.value.minimum!!))
+            val minimum = requireNotNull(viewModel().state.value.minimum)
+            assertEquals(0, BigDecimal("0.1001").compareTo(minimum))
         }
 
     @Test

@@ -68,10 +68,13 @@ object KaminoPositionMath {
      * rounded up, floored at 16 base units.
      */
     fun depositMinimumWithMargin(baseUnits: String?, tokenDecimals: Int): BigDecimal? =
-        decimalOrNull(baseUnits)?.let { minimum ->
-            val margin = minimum.divide(BigDecimal(1000), 0, RoundingMode.UP).max(BigDecimal(16))
-            minimum.add(margin).movePointLeft(tokenDecimals)
-        }
+        decimalOrNull(baseUnits)
+            ?.takeIf { it.signum() >= 0 && it.remainder(BigDecimal.ONE).signum() == 0 }
+            ?.let { minimum ->
+                val margin =
+                    minimum.divide(BigDecimal(1000), 0, RoundingMode.UP).max(BigDecimal(16))
+                minimum.add(margin).movePointLeft(tokenDecimals)
+            }
 
     private val ONE_HUNDRED = BigDecimal(100)
 }
