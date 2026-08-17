@@ -315,6 +315,8 @@
     <string name="passcode_not_digits">Enter digits only.</string>
     <string name="passcode_key_unavailable_title">This device is missing your vault key</string>
     <string name="passcode_key_unavailable_message">Your vaults are still on this device. Restore from your .vult backup to open them again.</string>
+    <string name="passcode_key_unavailable_restore">Restore from backup</string>
+    <string name="passcode_key_unavailable_restored">Vault restored. Another vault on this device still needs its backup.</string>
     <string name="passcode_store_unavailable_title">Your vaults are locked for now</string>
     <string name="passcode_store_unavailable_message">This device\'s secure storage didn\'t open this time. Everything is still here, so restart the app instead of reinstalling.</string>
     <string name="passcode_input_field_content_description">%1$d of %2$d digits entered</string>

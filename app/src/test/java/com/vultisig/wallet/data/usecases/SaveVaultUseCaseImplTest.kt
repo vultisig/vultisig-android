@@ -32,6 +32,7 @@ internal class SaveVaultUseCaseImplTest {
     private lateinit var defaultChainsRepository: DefaultChainsRepository
     private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
     private lateinit var discoverTokenUseCase: DiscoverTokenUseCase
+    private lateinit var supersedeUnopenableVault: SupersedeUnopenableVaultUseCase
 
     private lateinit var useCase: SaveVaultUseCaseImpl
 
@@ -58,6 +59,8 @@ internal class SaveVaultUseCaseImplTest {
         chainAccountAddressRepository = mockk()
         discoverTokenUseCase = mockk()
         every { discoverTokenUseCase(any(), any()) } just Runs
+        supersedeUnopenableVault = mockk()
+        coEvery { supersedeUnopenableVault(any()) } returns false
 
         // Default: nativeTokens returns coins for all chains we test with
         val nativeTokens =
@@ -77,6 +80,7 @@ internal class SaveVaultUseCaseImplTest {
                 defaultChainsRepository = defaultChainsRepository,
                 chainAccountAddressRepository = chainAccountAddressRepository,
                 discoverTokenUseCase = discoverTokenUseCase,
+                supersedeUnopenableVault = supersedeUnopenableVault,
             )
     }
 
@@ -225,5 +229,52 @@ internal class SaveVaultUseCaseImplTest {
         useCase(vault, true)
 
         coVerify { vaultRepository.upsert(vault) }
+    }
+
+    @Test
+    fun `a vault replacing an unopenable one is neither refused nor added again`() = runTest {
+        val vault = dklsVault().copy(coins = listOf(nativeCoin(Chain.Ethereum)))
+        coEvery { supersedeUnopenableVault(vault) } returns true
+
+        useCase(vault, false)
+
+        coVerify(exactly = 0) { vaultRepository.add(any()) }
+        coVerify(exactly = 0) { vaultRepository.getByEcdsa(any()) }
+    }
+
+    /** A restored vault carries no coins, so it needs the same default set a fresh import gets. */
+    @Test
+    fun `a vault replacing an unopenable one still gets its default chains and discovery`() =
+        runTest {
+            val vault = dklsVault()
+            coEvery { supersedeUnopenableVault(vault) } returns true
+            coEvery { vaultRepository.get(vaultId) } returns vault
+            every { defaultChainsRepository.selectedDefaultChains } returns
+                flowOf(listOf(Chain.Bitcoin, Chain.Ethereum))
+
+            useCase(vault, false)
+
+            coVerify(exactly = 2) { vaultRepository.addTokenToVault(vaultId, any()) }
+            verify(exactly = 1) { discoverTokenUseCase(vaultId, null) }
+        }
+
+    /** The override path is keygen's, and reshare must never displace a row by public key. */
+    @Test
+    fun `the override path never supersedes`() = runTest {
+        val vault = dklsVault().copy(coins = listOf(nativeCoin(Chain.Ethereum)))
+
+        useCase(vault, true)
+
+        coVerify(exactly = 0) { supersedeUnopenableVault(any()) }
+        coVerify { vaultRepository.upsert(vault) }
+    }
+
+    @Test
+    fun `a duplicate is still refused when nothing was superseded`() = runTest {
+        val vault = keyImportVault()
+        coEvery { supersedeUnopenableVault(vault) } returns false
+        coEvery { vaultRepository.getByEcdsa(any()) } returns vault
+
+        assertFailsWith<DuplicateVaultException> { useCase(vault, false) }
     }
 }
