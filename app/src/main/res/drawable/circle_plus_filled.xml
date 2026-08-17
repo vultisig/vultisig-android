@@ -1,0 +1,14 @@
+<!--
+  DeFi Button's leading glyph, filled rather than outlined. Figma names it `circle-plus-filled`.
+  Its path already spans 1.6..14.4 of a 16-unit box, which is the 10% inset the design applies, so
+  unlike the minus it needs no translation.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="16dp"
+    android:height="16dp"
+    android:viewportWidth="16"
+    android:viewportHeight="16">
+  <path
+      android:pathData="M8.0006,1.6006C4.4718,1.6006 1.6006,4.4718 1.6006,8.0006C1.6006,11.5294 4.4718,14.4006 8.0006,14.4006C11.5294,14.4006 14.4006,11.5294 14.4006,8.0006C14.4006,4.4718 11.5294,1.6006 8.0006,1.6006ZM10.8006,8.8006H8.8006V10.8006C8.8006,11.2422 8.4422,11.6006 8.0006,11.6006C7.559,11.6006 7.2006,11.2422 7.2006,10.8006V8.8006H5.2006C4.759,8.8006 4.4006,8.4422 4.4006,8.0006C4.4006,7.559 4.759,7.2006 5.2006,7.2006H7.2006V5.2006C7.2006,4.759 7.559,4.4006 8.0006,4.4006C8.4422,4.4006 8.8006,4.759 8.8006,5.2006V7.2006H10.8006C11.2422,7.2006 11.6006,7.559 11.6006,8.0006C11.6006,8.4422 11.2422,8.8006 10.8006,8.8006Z"
+      android:fillColor="#F0F4FC"/>
+</vector>

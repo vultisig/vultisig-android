@@ -159,43 +159,6 @@ constructor(
                         calculateGasFee = context.calculateGasFee,
                         getFeesFiatValue = context.getFeesFiatValue,
                     ),
-                DepositOption.Switch to
-                    SwitchStrategy(
-                        vaultIdProvider = context.vaultId,
-                        chainProvider = context.chain,
-                        stateProvider = context.state,
-                        addressProvider = context.address,
-                        nodeAddressFieldState = fields.nodeAddressFieldState,
-                        thorAddressFieldState = fields.thorAddressFieldState,
-                        dstAddressErrorOrNull = fieldValidator::dstAddressErrorOrNull,
-                        requireTokenAmount = context.requireTokenAmount,
-                        blockChainSpecificRepository = context.blockChainSpecificRepository,
-                        calculateGasFee = context.calculateGasFee,
-                        getFeesFiatValue = context.getFeesFiatValue,
-                    ),
-                DepositOption.Merge to
-                    MergeStrategy(
-                        vaultIdProvider = context.vaultId,
-                        chainProvider = context.chain,
-                        stateProvider = context.state,
-                        addressProvider = context.address,
-                        requireTokenAmount = context.requireTokenAmount,
-                        blockChainSpecificRepository = context.blockChainSpecificRepository,
-                        calculateGasFee = context.calculateGasFee,
-                        getFeesFiatValue = context.getFeesFiatValue,
-                    ),
-                DepositOption.UnMerge to
-                    UnMergeStrategy(
-                        vaultIdProvider = context.vaultId,
-                        chainProvider = context.chain,
-                        stateProvider = context.state,
-                        addressProvider = context.address,
-                        rujiMergeBalancesProvider = context.rujiMergeBalances,
-                        tokenAmountFieldState = fields.tokenAmountFieldState,
-                        blockChainSpecificRepository = context.blockChainSpecificRepository,
-                        calculateGasFee = context.calculateGasFee,
-                        getFeesFiatValue = context.getFeesFiatValue,
-                    ),
                 DepositOption.RemoveCacaoPool to
                     RemoveCacaoPoolStrategy(
                         vaultIdProvider = context.vaultId,

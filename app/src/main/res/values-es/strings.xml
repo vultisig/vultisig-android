@@ -174,6 +174,7 @@
     <string name="passcode_settings_title">Cifrado con código de acceso</string>
     <string name="passcode_settings_encryption_title">Cifrado con código de acceso</string>
     <string name="passcode_settings_encryption_subtitle">Cifra el almacenamiento de bóvedas de este dispositivo y bloquea la aplicación.</string>
+    <string name="passcode_settings_encryption_explanation">El cifrado con código de acceso está ligado a este dispositivo. Guarde una copia de seguridad .vult para restaurar sus bóvedas.</string>
     <string name="passcode_settings_change">Cambiar código de acceso</string>
     <string name="passcode_settings_auto_lock">Bloqueo automático</string>
     <string name="auto_lock_setting_title">Bloqueo automático</string>
@@ -196,10 +197,10 @@
     <string name="passcode_entry_mismatch">Los códigos de acceso no coinciden. Elija de nuevo.</string>
     <string name="passcode_operation_failed">No funcionó. Su código de acceso no ha cambiado.</string>
     <string name="passcode_not_digits">Introduzca solo dígitos.</string>
-    <string name="passcode_key_unavailable_title">Bóvedas no disponibles</string>
-    <string name="passcode_key_unavailable_message">Las claves que protegen el almacenamiento de bóvedas de este dispositivo se han perdido, por lo que ya no se pueden leer sus recursos compartidos de la bóveda. Reinstale la aplicación y restaure sus bóvedas desde una copia de seguridad.</string>
-    <string name="passcode_store_unavailable_title">Bóvedas temporalmente no disponibles</string>
-    <string name="passcode_store_unavailable_message">Esta vez no se ha podido abrir el almacenamiento seguro de este dispositivo, por lo que sus bóvedas permanecen bloqueadas. Reinicie la aplicación para volver a intentarlo. Sus bóvedas siguen en este dispositivo, así que no es necesario reinstalar.</string>
+    <string name="passcode_key_unavailable_title">A este dispositivo le falta su clave de bóveda</string>
+    <string name="passcode_key_unavailable_message">Sus bóvedas siguen en este dispositivo. Restáurelas desde su copia de seguridad .vult para volver a abrirlas.</string>
+    <string name="passcode_store_unavailable_title">Sus bóvedas están bloqueadas por ahora</string>
+    <string name="passcode_store_unavailable_message">El almacenamiento seguro de este dispositivo no se abrió esta vez. Todo sigue aquí, así que reinicie la aplicación en lugar de reinstalarla.</string>
     <string name="passcode_input_field_content_description">%1$d de %2$d dígitos introducidos</string>
     <string name="swap_form_from_title">De</string>
     <string name="swap_form_estimated_fees_title">Tarifa de intercambio</string>
@@ -471,9 +472,6 @@
     <string name="deposit_option_unstake">Unstake</string>
     <string name="deposit_option_custom">Personalizado</string>
     <string name="deposit_option_ibc_transfer">Transferencia IBC</string>
-    <string name="deposit_option_switch">Cambiar</string>
-    <string name="deposit_option_merge">Fusionar</string>
-    <string name="deposit_option_withdraw_ruji">Retirar RUJI</string>
     <string name="withdraw_amount">Retirar %s</string>
     <string name="deposit_form_unstake_percentage_hint">Ingrese el porcentaje a desbloquear</string>
     <string name="verify_transaction_function_signature_title">Firma de función</string>
@@ -482,9 +480,6 @@
     <string name="dapp_hero_unverified_function_subtitle">Revisa los detalles antes de firmar</string>
     <string name="dapp_unverified_function_done_caution">Función no verificada. Revisa los detalles de la transacción.</string>
     <string name="request_from">Solicitud de</string>
-    <string name="send_shares_currency_hint">Introduce acciones</string>
-    <string name="send_error_max_shares">La cantidad no debe exceder el saldo</string>
-    <string name="deposit_form_shares_title">Acciones (Saldo: %1$s)</string>
     <string name="fast_vault_password_reminder_title">Verifica tu contraseña para:</string>
     <string name="fast_vault_password_reminder_done_button">Hecho</string>
     <string name="periodically_ask_verify_password">Periódicamente te pedimos una verificación para que no olvides tu contraseña.</string>
@@ -509,7 +504,6 @@
     <string name="keygen_connecting_with_server">Conectando con el servidor…</string>
     <string name="reshare_step_generating_ecdsa">Generación de clave ECDSA</string>
     <string name="reshare_step_generating_eddsa">Generación de clave EDDSA</string>
-    <string name="merge_account_doesnt_exist">No se encontró el token seleccionado para esta dirección</string>
     <string name="keygen_email_error">Correo electrónico incorrecto, por favor verifique</string>
     <string name="tx_overview_screen_tx_send">Enviar</string>
     <string name="tx_overview_screen_tx_deposit">Depósito</string>
@@ -1199,7 +1193,6 @@
     <string name="onboarding_desc_page_6_part_1">Estas comparticiones colaboran para</string>
     <string name="enter_email_screen_desc">Este correo electrónico solo se utiliza para enviar la copia de seguridad del servidor</string>
     <string name="keygen_connecting_with_server_take_a_second">Esto solo debería tardar un segundo.</string>
-    <string name="function_switch_thorchain_address">Dirección de THORChain</string>
     <string name="tx_transaction_successful_screen_title">Transacción exitosa</string>
     <string name="migration_onboarding_step_3_text_end">Al actualizar</string>
     <string name="migration_onboarding_upgrade_your_vault">Mejora tu bóveda</string>
