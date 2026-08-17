@@ -1,27 +1,35 @@
 package com.vultisig.wallet.ui.models
 
 import androidx.lifecycle.SavedStateHandle
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.AddressBalancesUpdate
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
 import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.HasCircleAccountUseCase
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
@@ -112,6 +120,75 @@ internal class VaultAccountsViewModelTest {
         coVerify(atLeast = 1) { accountsRepository.loadDeFiAddresses(VAULT_ID, true) }
     }
 
+    @Test
+    fun `resuming right after a read reuses it instead of fetching again`() = runTest {
+        connectionType.value = CryptoConnectionType.Defi
+        val viewModel = viewModel()
+        runCurrent()
+
+        // Stands in for anything that reloads the list on its own on the way back — the chain
+        // picker does exactly this once its result lands, a step before home resumes behind it.
+        viewModel.refreshData()
+        runCurrent()
+        viewModel.onScreenResumed()
+        runCurrent()
+
+        coVerify(exactly = 1) { accountsRepository.loadDeFiAddresses(VAULT_ID, true) }
+    }
+
+    @Test
+    fun `resuming once the read has gone stale fetches again`() = runTest {
+        connectionType.value = CryptoConnectionType.Defi
+        val viewModel = viewModel()
+        runCurrent()
+
+        viewModel.refreshData()
+        runCurrent()
+        advanceTimeBy(THROTTLE_WINDOW + 1.seconds)
+        viewModel.onScreenResumed()
+        runCurrent()
+
+        coVerify(exactly = 2) { accountsRepository.loadDeFiAddresses(VAULT_ID, true) }
+    }
+
+    @Test
+    fun `pulling on the DeFi tab keeps the spinner up until the DeFi list lands`() = runTest {
+        connectionType.value = CryptoConnectionType.Defi
+        val deFiAddresses = Channel<List<Address>>(Channel.UNLIMITED)
+        coEvery { accountsRepository.loadDeFiAddresses(VAULT_ID, true) } returns
+            deFiAddresses.consumeAsFlow()
+        // The wallet stream is done as soon as the pull starts; it says nothing about the DeFi
+        // rows the user is actually pulling on.
+        every { accountsRepository.loadAddressBalances(VAULT_ID) } returns
+            flowOf(AddressBalancesUpdate(addresses = emptyList(), isComplete = true))
+        val viewModel = viewModel()
+        runCurrent()
+
+        viewModel.refreshData()
+        runCurrent()
+
+        viewModel.uiState.value.isRefreshing shouldBe true
+
+        deFiAddresses.close()
+        runCurrent()
+
+        viewModel.uiState.value.isRefreshing shouldBe false
+    }
+
+    @Test
+    fun `pulling on the wallet tab still ends with the wallet stream`() = runTest {
+        connectionType.value = CryptoConnectionType.Wallet
+        every { accountsRepository.loadAddressBalances(VAULT_ID) } returns
+            flowOf(AddressBalancesUpdate(addresses = emptyList(), isComplete = true))
+        val viewModel = viewModel()
+        runCurrent()
+
+        viewModel.refreshData()
+        runCurrent()
+
+        viewModel.uiState.value.isRefreshing shouldBe false
+    }
+
     private fun viewModel() =
         VaultAccountsViewModel(
             savedStateHandle = SavedStateHandle(),
@@ -141,6 +218,9 @@ internal class VaultAccountsViewModelTest {
 
     private companion object {
         const val VAULT_ID = "vault-id"
+
+        // Mirrors DEFI_REFRESH_THROTTLE, which is private to the ViewModel.
+        val THROTTLE_WINDOW = 15.seconds
 
         val VAULT =
             Vault(
