@@ -456,6 +456,41 @@ internal class TokenPriceRepositoryImplTest {
     }
 
     @Test
+    fun `the auto-compounding receipt is priced off RUJI's row, not one of its own`() = runTest {
+        // Both RUJI legs are reported in RUJI, and the pool price is the one every other RUJI
+        // reading in the app comes from. The receipt borrows RUJI's `rujira` provider id, so a row
+        // of its own kept CoinGecko's quote while RUJI's row was overwritten by the pool moments
+        // later — the same RUJI at two prices, one on the DeFi tab and one on the position card.
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns
+            mapOf("rujira" to mapOf("usd" to BigDecimal("0.171154")))
+        coEvery { thorApi.getPools() } returns listOf(pool("THOR.RUJI", "17177730"))
+
+        repository.refresh(listOf(Coins.ThorChain.sRUJI))
+
+        assertPriceEquals(
+            "0.17177730",
+            repository.getPrice(Coins.ThorChain.sRUJI, AppCurrency.USD).first(),
+        )
+        coVerify(exactly = 0) {
+            tokenPriceDao.insertTokenPrice(match { it.tokenId == Coins.ThorChain.sRUJI.id })
+        }
+    }
+
+    @Test
+    fun `a cached price read for the receipt is served from RUJI's row`() = runTest {
+        // A row written before this change is still in Room, and the cached DeFi emission reads
+        // one on every cold start — it must not be preferred over the row the position is valued
+        // from.
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.sRUJI.id, "usd") } returns "0.171154"
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.RUJI.id, "usd") } returns "0.17177730"
+
+        val price = repository.getCachedPrice(Coins.ThorChain.sRUJI.id, AppCurrency.USD)
+
+        assertPriceEquals("0.17177730", price!!)
+    }
+
+    @Test
     fun `sTCY does not inherit TCY's price through their shared provider id`() = runTest {
         // sTCY carries TCY's `tcy` priceProviderID, so the provider batch would cache raw TCY under
         // sTCY's row. fetchThorContractPrices corrects it to NAV x TCY afterwards — but when that
