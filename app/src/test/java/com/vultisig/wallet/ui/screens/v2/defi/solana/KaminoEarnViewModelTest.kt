@@ -20,6 +20,10 @@ import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import io.kotest.assertions.withClue
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -27,11 +31,6 @@ import io.mockk.mockk
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.util.Locale
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -123,10 +122,10 @@ internal class KaminoEarnViewModelTest {
 
         val state = viewModel().apply { setData(VAULT_ID) }.state.value
 
-        assertFalse(state.hasEnabledVaults)
-        assertTrue(state.rows.isEmpty())
-        assertNull(state.totalFiat)
-        assertFalse(state.isLoading)
+        state.hasEnabledVaults shouldBe false
+        state.rows.isEmpty() shouldBe true
+        state.totalFiat.shouldBeNull()
+        state.isLoading shouldBe false
     }
 
     @Test
@@ -137,8 +136,8 @@ internal class KaminoEarnViewModelTest {
 
         val state = viewModel().apply { setData(VAULT_ID) }.state.value
 
-        assertEquals(0, BigDecimal.ZERO.compareTo(state.totalValue?.value))
-        assertEquals(AppCurrency.USD, state.totalValue?.currency)
+        BigDecimal.ZERO.compareTo(state.totalValue?.value) shouldBe 0
+        state.totalValue?.currency shouldBe AppCurrency.USD
     }
 
     @Test
@@ -149,8 +148,8 @@ internal class KaminoEarnViewModelTest {
 
         val state = viewModel().apply { setData(VAULT_ID) }.state.value
 
-        assertTrue(state.loadFailed)
-        assertNull(state.totalValue)
+        state.loadFailed shouldBe true
+        state.totalValue.shouldBeNull()
     }
 
     @Test
@@ -169,8 +168,9 @@ internal class KaminoEarnViewModelTest {
         coEvery { tokenPriceRepository.getCachedPrice(Coins.Solana.SOL.id, any()) } returns null
         coEvery {
             tokenPriceRepository.getPriceByContactAddress(
-                Chain.Solana.id,
-                Coins.Solana.SOL.contractAddress,
+                chainId = Chain.Solana.id,
+                contractAddress = Coins.Solana.SOL.contractAddress,
+                appCurrency = AppCurrency.USD,
             )
         } throws RuntimeException("503")
 
@@ -178,9 +178,9 @@ internal class KaminoEarnViewModelTest {
 
         // The USDC half alone is not what the wallet holds on Kamino, and the chain header adds
         // this figure to native staking — reporting it short would understate the whole chain.
-        assertEquals(2, state.rows.size)
-        assertNull(state.totalValue)
-        assertNull(state.totalFiat)
+        state.rows.size shouldBe 2
+        state.totalValue.shouldBeNull()
+        state.totalFiat.shouldBeNull()
     }
 
     @Test
@@ -198,7 +198,7 @@ internal class KaminoEarnViewModelTest {
                 KaminoVaultMetricsJson(tokensPerShare = "1.0")
 
             val vm = viewModel().apply { setData(VAULT_ID) }
-            assertEquals("$200.00", vm.state.value.totalFiat)
+            vm.state.value.totalFiat shouldBe "$200.00"
 
             // One vault is switched off, and the reload that follows never lands.
             coEvery { chainAccountAddressRepository.getAddress(Chain.Solana, VAULT) } throws
@@ -206,8 +206,8 @@ internal class KaminoEarnViewModelTest {
             selection.value = setOf(STEAKHOUSE.address)
 
             // $200 covered both vaults; leaving it up for one would report a deselected position.
-            assertNull(vm.state.value.totalValue)
-            assertNull(vm.state.value.totalFiat)
+            vm.state.value.totalValue.shouldBeNull()
+            vm.state.value.totalFiat.shouldBeNull()
         }
 
     @Test
@@ -221,16 +221,16 @@ internal class KaminoEarnViewModelTest {
 
         val state = viewModel().apply { setData(VAULT_ID) }.state.value
 
-        assertTrue(state.hasEnabledVaults)
-        assertEquals(1, state.rows.size)
+        state.hasEnabledVaults shouldBe true
+        state.rows.size shouldBe 1
         val row = state.rows.single()
-        assertEquals("Steakhouse USDC", row.name)
-        assertEquals("Steakhouse Financial", row.curator)
-        assertEquals(KaminoRiskTier.CONSERVATIVE, row.riskTier)
-        assertEquals("0 USDC", row.depositedDisplay)
-        assertEquals("4.00%", row.apyDisplay)
+        row.name shouldBe "Steakhouse USDC"
+        row.curator shouldBe "Steakhouse Financial"
+        row.riskTier shouldBe KaminoRiskTier.CONSERVATIVE
+        row.depositedDisplay shouldBe "0 USDC"
+        row.apyDisplay shouldBe "4.00%"
         // Zero is not a gain: an untouched vault must not render green.
-        assertEquals(KaminoEarnRow.PnlDirection.FLAT, row.pnlDirection)
+        row.pnlDirection shouldBe KaminoEarnRow.PnlDirection.FLAT
     }
 
     @Test
@@ -259,10 +259,10 @@ internal class KaminoEarnViewModelTest {
 
         val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
 
-        assertEquals("1,054.427822 USDC", row.depositedDisplay)
-        assertEquals("54.427822 USDC", row.pnlDisplay)
-        assertEquals(KaminoEarnRow.PnlDirection.UP, row.pnlDirection)
-        assertNotNull(row.depositedFiat)
+        row.depositedDisplay shouldBe "1,054.427822 USDC"
+        row.pnlDisplay shouldBe "54.427822 USDC"
+        row.pnlDirection shouldBe KaminoEarnRow.PnlDirection.UP
+        row.depositedFiat.shouldNotBeNull()
     }
 
     @Test
@@ -290,9 +290,9 @@ internal class KaminoEarnViewModelTest {
 
         val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
 
-        assertEquals("1\u00A0054,427822 USDC", row.depositedDisplay)
-        assertEquals("54,427822 USDC", row.pnlDisplay)
-        assertEquals("4,00%", row.apyDisplay)
+        row.depositedDisplay shouldBe "1\u00A0054,427822 USDC"
+        row.pnlDisplay shouldBe "54,427822 USDC"
+        row.apyDisplay shouldBe "4,00%"
     }
 
     @Test
@@ -308,7 +308,7 @@ internal class KaminoEarnViewModelTest {
 
         val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
 
-        assertEquals(KaminoEarnRow.PnlDirection.DOWN, row.pnlDirection)
+        row.pnlDirection shouldBe KaminoEarnRow.PnlDirection.DOWN
     }
 
     @Test
@@ -322,8 +322,8 @@ internal class KaminoEarnViewModelTest {
         val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
 
         // The vault is still one the user enabled; dropping the card would read as losing it.
-        assertEquals("Steakhouse USDC", row.name)
-        assertNull(row.apyDisplay)
+        row.name shouldBe "Steakhouse USDC"
+        row.apyDisplay.shouldBeNull()
     }
 
     @Test
@@ -337,7 +337,7 @@ internal class KaminoEarnViewModelTest {
 
         val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
 
-        assertEquals(STEAKHOUSE.fallbackName, row.name)
+        row.name shouldBe STEAKHOUSE.fallbackName
     }
 
     @Test
@@ -347,7 +347,7 @@ internal class KaminoEarnViewModelTest {
 
         val state = viewModel().apply { setData(VAULT_ID) }.state.value
 
-        assertTrue(state.rows.isEmpty())
+        state.rows.isEmpty() shouldBe true
     }
 
     @Test
@@ -365,11 +365,11 @@ internal class KaminoEarnViewModelTest {
 
         val state = viewModel().apply { setData(VAULT_ID) }.state.value
 
-        assertEquals(2, state.rows.size)
+        state.rows.size shouldBe 2
         // Priced at 1.0 each, 100 + 100 shares against a 1:1 share ratio.
-        assertEquals("$200.00", state.totalFiat)
+        state.totalFiat shouldBe "$200.00"
         // The same figure unformatted, which is what the chain header adds to native staking.
-        assertEquals(0, BigDecimal("200").compareTo(state.totalValue?.value))
+        BigDecimal("200").compareTo(state.totalValue?.value) shouldBe 0
     }
 
     @Test
@@ -377,7 +377,7 @@ internal class KaminoEarnViewModelTest {
         coEvery { balanceVisibilityRepository.getVisibility(VAULT_ID) } returns false
         coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns flowOf(emptySet())
 
-        assertFalse(viewModel().apply { setData(VAULT_ID) }.state.value.isBalanceVisible)
+        viewModel().apply { setData(VAULT_ID) }.state.value.isBalanceVisible shouldBe false
     }
 
     @Test
@@ -392,13 +392,13 @@ internal class KaminoEarnViewModelTest {
         val vm = viewModel().apply { setData(VAULT_ID) }
         vm.openPicker()
 
-        assertTrue(vm.state.value.isShowingPicker)
-        assertEquals(setOf(STEAKHOUSE.address), vm.state.value.pendingSelection)
+        vm.state.value.isShowingPicker shouldBe true
+        vm.state.value.pendingSelection shouldBe setOf(STEAKHOUSE.address)
 
         vm.onVaultToggled(ALLEZ.address, true)
         vm.savePicker()
 
-        assertFalse(vm.state.value.isShowingPicker)
+        vm.state.value.isShowingPicker shouldBe false
         coVerify {
             selectionRepository.saveSelectedVaults(
                 VAULT_ID,
@@ -421,7 +421,7 @@ internal class KaminoEarnViewModelTest {
         vm.onVaultToggled(STEAKHOUSE.address, false)
         vm.closePicker()
 
-        assertFalse(vm.state.value.isShowingPicker)
+        vm.state.value.isShowingPicker shouldBe false
         coVerify(exactly = 0) { selectionRepository.saveSelectedVaults(any(), any()) }
     }
 
@@ -451,7 +451,7 @@ internal class KaminoEarnViewModelTest {
         vm.openPicker()
         vm.onVaultToggled("2Z6C84pCc2ri8t39jvRCXnTGFQqUJf1mMpUMtpeFfhyB", true)
 
-        assertTrue(vm.state.value.pendingSelection.isEmpty())
+        vm.state.value.pendingSelection.isEmpty() shouldBe true
     }
 
     @Test
@@ -468,9 +468,9 @@ internal class KaminoEarnViewModelTest {
 
         val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
 
-        assertTrue(row.hasPosition, "an unread position must not hide Withdraw")
+        withClue("an unread position must not hide Withdraw") { row.hasPosition shouldBe true }
         // The figures stay off the card either way — the form reads the position itself.
-        assertNull(row.depositedFiat)
+        row.depositedFiat.shouldBeNull()
     }
 
     @Test
@@ -484,7 +484,7 @@ internal class KaminoEarnViewModelTest {
 
         val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
 
-        assertFalse(row.hasPosition)
+        row.hasPosition shouldBe false
     }
 
     @Test
@@ -500,9 +500,63 @@ internal class KaminoEarnViewModelTest {
 
         val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
 
-        assertEquals(KaminoEarnRow.PnlDirection.DOWN, row.pnlDirection)
-        assertEquals("3 USDC", row.pnlDisplay)
+        row.pnlDirection shouldBe KaminoEarnRow.PnlDirection.DOWN
+        row.pnlDisplay shouldBe "3 USDC"
     }
+
+    @Test
+    fun `a position whose share balance cannot be read is unknown rather than zero`() = runTest {
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flowOf(setOf(STEAKHOUSE.address))
+        // The position is there — only the figure saying how large it is failed to parse.
+        coEvery { kaminoApi.getUserPositions(WALLET_ADDRESS) } returns
+            listOf(KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "n/a"))
+        coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Steakhouse USDC")
+        coEvery { kaminoApi.getVaultMetrics(any()) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0")
+
+        val state = viewModel().apply { setData(VAULT_ID) }.state.value
+        val row = state.rows.single()
+
+        withClue("a deposit whose size failed to read must not hide Withdraw") {
+            row.hasPosition shouldBe true
+        }
+        row.depositedFiat.shouldBeNull()
+        row.fiatValue.shouldBeNull()
+        // Counting it as a zero would report the whole wallet as short by a real deposit.
+        state.totalValue.shouldBeNull()
+    }
+
+    @Test
+    fun `a currency change clears the fiat on each card, and a failed reload leaves it clear`() =
+        runTest {
+            val currency = MutableStateFlow(AppCurrency.USD)
+            every { appCurrencyRepository.currency } returns currency
+            coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+                flowOf(setOf(STEAKHOUSE.address))
+            coEvery { kaminoApi.getUserPositions(WALLET_ADDRESS) } returns
+                listOf(
+                    KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "100")
+                )
+            coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Steakhouse USDC")
+            coEvery { kaminoApi.getVaultMetrics(any()) } returns
+                KaminoVaultMetricsJson(tokensPerShare = "1.0")
+
+            val vm = viewModel().apply { setData(VAULT_ID) }
+            val priced = vm.state.value.rows.single()
+            priced.depositedFiat.shouldNotBeNull()
+
+            // The reload the switch triggers never lands, so nothing rebuilds these cards.
+            coEvery { chainAccountAddressRepository.getAddress(Chain.Solana, VAULT) } throws
+                RuntimeException("503")
+            currency.value = AppCurrency.EUR
+
+            val row = vm.state.value.rows.single()
+            row.depositedFiat.shouldBeNull()
+            row.fiatValue.shouldBeNull()
+            // What the vault holds is priced in neither currency, so the card keeps saying it.
+            row.depositedDisplay shouldBe priced.depositedDisplay
+        }
 
     private companion object {
         const val VAULT_ID = "vault-id"

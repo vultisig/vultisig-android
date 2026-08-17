@@ -22,6 +22,7 @@ import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.v2.defi.DefiFiatTotal
 import com.vultisig.wallet.ui.screens.v2.defi.FIAT_VALUE_UNAVAILABLE
 import com.vultisig.wallet.ui.utils.formatPercent
 import com.vultisig.wallet.ui.utils.formatTokenAmount
@@ -80,6 +81,13 @@ constructor(
      * and is dropped rather than carried forward.
      */
     private var totalCoverage: Set<String> = emptySet()
+
+    /**
+     * The currency the cards on screen were priced in, null until a load has priced any. A switch
+     * invalidates every fiat figure they carry, so it is tracked separately from [totalCoverage]:
+     * the rows outlive a load that resolves no total.
+     */
+    private var pricedCurrency: AppCurrency? = null
 
     fun setData(vaultId: String) {
         this.vaultId = vaultId
@@ -231,6 +239,22 @@ constructor(
                     _state.update { it.copy(totalFiat = null, totalValue = null) }
                 }
 
+                // The cards carry their own fiat, priced in whatever currency was selected when
+                // they were built. A switch does not merely relabel those figures, it makes them
+                // wrong — and the rows survive both a failed reload and one that resolves no
+                // total, so they would sit there in the old currency indefinitely.
+                if (pricedCurrency != null && pricedCurrency != currency) {
+                    pricedCurrency = null
+                    _state.update { current ->
+                        current.copy(
+                            rows =
+                                current.rows.map { row ->
+                                    row.copy(depositedFiat = null, fiatValue = null)
+                                }
+                        )
+                    }
+                }
+
                 if (vaults.isEmpty()) {
                     _state.update {
                         it.copy(
@@ -240,7 +264,7 @@ constructor(
                             totalFiat = null,
                             // Zero, not null: no vault enabled is a read that succeeded and found
                             // nothing, so the chain header can still add it up.
-                            totalValue = KaminoEarnTotal(BigDecimal.ZERO, currency),
+                            totalValue = DefiFiatTotal(BigDecimal.ZERO, currency),
                         )
                     }
                     return@safeLaunch
@@ -288,7 +312,7 @@ constructor(
                 // in as a zero and quietly shrink both this card and the chain header.
                 val resolvedTotal =
                     if (resolved.size == vaults.size) {
-                        totalFiatValue(resolved)?.let { KaminoEarnTotal(it, currency) }
+                        totalFiatValue(resolved)?.let { DefiFiatTotal(it, currency) }
                     } else {
                         null
                     }
@@ -309,6 +333,7 @@ constructor(
                         totalValue = total,
                     )
                 }
+                pricedCurrency = currency
                 if (resolvedTotal != null) totalCoverage = enabled
             }
     }
@@ -355,12 +380,15 @@ constructor(
         val pnl = pnlDeferred.await()
 
         // A position that could not be read is not a zero one. Null keeps the balance blank rather
-        // than asserting "0", which on a real deposit reads as though it had gone.
+        // than asserting "0", which on a real deposit reads as though it had gone. Only the wallet
+        // having no position in this vault at all is a genuine zero: a position that is there but
+        // whose share balance will not parse is a deposit of unknown size, which is how
+        // `KaminoWithdraw` treats the same field failing to parse.
         val shares =
-            if (positionsAreKnown) {
-                KaminoPositionMath.decimalOrNull(position?.totalShares) ?: BigDecimal.ZERO
-            } else {
-                null
+            when {
+                !positionsAreKnown -> null
+                position == null -> BigDecimal.ZERO
+                else -> KaminoPositionMath.decimalOrNull(position.totalShares)
             }
         val tokensPerShare = KaminoPositionMath.decimalOrNull(metrics?.tokensPerShare)
         val tokenAmount =
@@ -431,11 +459,20 @@ constructor(
             runCatching {
                     tokenPriceRepository.getCachedPrice(tokenId = coin.id, appCurrency = currency)
                         ?: tokenPriceRepository.getPriceByContactAddress(
-                            coin.chain.id,
-                            coin.contractAddress,
+                            chainId = coin.chain.id,
+                            contractAddress = coin.contractAddress,
+                            // The currency this row is being priced in, not whichever one is
+                            // selected by the time the lookup returns: the app currency can change
+                            // mid-flight, and the quote would then be filed and added up under the
+                            // other one.
+                            appCurrency = currency,
                         )
                 }
-                .getOrNull() ?: return null
+                // A miss arrives from that lookup as a zero rather than as a throw — for a native
+                // token it does not even reach the network, since there is no contract to ask
+                // about. Counting that as "worth nothing" is the same lie as a zero balance.
+                .getOrNull()
+                ?.takeIf { it.signum() > 0 } ?: return null
         return amount.multiply(price).setScale(2, RoundingMode.DOWN)
     }
 

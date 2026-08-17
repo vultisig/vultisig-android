@@ -29,7 +29,7 @@ import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.v2.defi.solana.KaminoEarnTotal
+import com.vultisig.wallet.ui.screens.v2.defi.DefiFiatTotal
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.formatPercent
@@ -58,7 +58,9 @@ import timber.log.Timber
  * @property validatorName display name (metadata) or truncated vote pubkey when unenriched
  * @property validatorLogoUrl absolute logo URL, or null to fall back to a monogram avatar
  * @property stakedDisplay delegated stake formatted as SOL, e.g. `"12.5 SOL"`
- * @property stakedFiatDisplay pre-formatted fiat value of the delegated stake
+ * @property stakedFiatDisplay pre-formatted fiat value of the delegated stake, null while it is not
+ *   known in the selected currency — a display-currency change drops it until the reload re-prices
+ *   it, rather than leaving a figure that is now a number in one currency wearing another's symbol
  * @property stateLabel localized lifecycle label (Active / Activating / Deactivating / Inactive)
  * @property apyDisplay pre-formatted APY (e.g. `"5.72%"`), or null when unknown
  * @property canManage the account is Active/Activating/Deactivating, so the Move/Stake actions row
@@ -76,7 +78,7 @@ internal data class SolanaStakePositionRow(
     val validatorLogoUrl: String?,
     val votePubkey: String?,
     val stakedDisplay: String,
-    val stakedFiatDisplay: String,
+    val stakedFiatDisplay: String?,
     val rentReserveDisplay: String,
     val state: SolanaStakeState,
     val stateLabel: UiText,
@@ -110,12 +112,12 @@ internal data class SolanaStakingPositionsUiState(
     val chainTotalFiatDisplay: String? = null,
     /**
      * The two halves [chainTotalFiatDisplay] is made of, kept raw because they are loaded by
-     * separate view-models and either may arrive first. The Kamino half is stored exactly as it was
-     * handed over, currency tag included, so the screen can tell "Earn's figure has not reached
-     * this view-model yet" from "Earn has no figure".
+     * separate view-models and either may arrive first. Each keeps the currency it was priced in —
+     * the Kamino half exactly as it was handed over, so the screen can also tell "Earn's figure has
+     * not reached this view-model yet" from "Earn has no figure".
      */
-    val stakedFiatValue: BigDecimal? = null,
-    val kaminoTotal: KaminoEarnTotal? = null,
+    val stakedFiat: DefiFiatTotal? = null,
+    val kaminoTotal: DefiFiatTotal? = null,
     val positions: List<SolanaStakePositionRow> = emptyList(),
     val error: UiText? = null,
 )
@@ -181,13 +183,17 @@ constructor(
                 appCurrencyRepository.currency.distinctUntilChanged().collect { currency ->
                     if (pricing?.currency?.equals(currency) == false) {
                         // Drop the old-currency figures instead of leaving them under a new
-                        // symbol while the reload runs.
+                        // symbol while the reload runs. The per-account fiat goes with them: those
+                        // strings are priced too, and a reload that then fails never rebuilds
+                        // them, so leaving them would strand each card on the old currency.
                         pricing = null
                         _state.update {
                             it.copy(
                                 isLoading = true,
                                 totalStakedFiatDisplay = null,
                                 chainTotalFiatDisplay = null,
+                                positions =
+                                    it.positions.map { row -> row.copy(stakedFiatDisplay = null) },
                             )
                         }
                     }
@@ -213,8 +219,8 @@ constructor(
      * Applied synchronously on purpose. Formatting asynchronously here let two handovers finish out
      * of order, so an earlier total could land last and sit on the banner as the current one.
      */
-    fun onKaminoTotalChanged(total: KaminoEarnTotal?) {
-        _state.update { it.withChainTotal(staked = it.stakedFiatValue, kamino = total) }
+    fun onKaminoTotalChanged(total: DefiFiatTotal?) {
+        _state.update { it.withChainTotal(staked = it.stakedFiat, kamino = total) }
     }
 
     fun onStake() {
@@ -388,7 +394,6 @@ constructor(
                 val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
                 val currency = selectedCurrency ?: appCurrencyRepository.currency.first()
                 val currencyFormat = appCurrencyRepository.getCurrencyFormat()
-                pricing = Pricing(currency = currency, format = currencyFormat)
                 val price = cachedPrice(solCoin.id, currency)
 
                 this@SolanaStakingPositionsViewModel.solCoin = solCoin
@@ -409,6 +414,10 @@ constructor(
                 val stakedFiatValue = totalStakedSolAmount.multiply(price)
                 val totalFiat = currencyFormat.format(stakedFiatValue)
 
+                // Published with the figures it priced, not ahead of them: everything the banner
+                // adds up is checked against this currency, so a load still in flight must not
+                // already claim its own.
+                pricing = Pricing(currency = currency, format = currencyFormat)
                 _state.update {
                     it.copy(
                             isLoading = false,
@@ -422,7 +431,10 @@ constructor(
                             positions = rows,
                             error = null,
                         )
-                        .withChainTotal(staked = stakedFiatValue, kamino = it.kaminoTotal)
+                        .withChainTotal(
+                            staked = DefiFiatTotal(stakedFiatValue, currency),
+                            kamino = it.kaminoTotal,
+                        )
                 }
             }
     }
@@ -495,22 +507,26 @@ constructor(
      * the unread side holds. A user with no Kamino vault enabled has a resolved zero there, so the
      * common staking-only case still shows a figure.
      *
-     * A Kamino half priced in some other currency counts as unresolved too. The two view-models
-     * read the selected currency independently, so a mid-session switch reaches one before the
-     * other; the banner waits that window out rather than adding euros to dollars.
+     * A half priced in some other currency counts as unresolved too, and both are held to that —
+     * the staking one is no safer than Kamino's. The two view-models read the selected currency
+     * independently, so a mid-session switch reaches one before the other, and Kamino's zero-vault
+     * answer needs no network call at all: it can arrive re-priced while this side is still holding
+     * the figure it read before the switch. The banner waits that window out rather than summing
+     * across currencies or restamping an old total with a new symbol.
      */
     private fun SolanaStakingPositionsUiState.withChainTotal(
-        staked: BigDecimal?,
-        kamino: KaminoEarnTotal?,
+        staked: DefiFiatTotal?,
+        kamino: DefiFiatTotal?,
     ): SolanaStakingPositionsUiState {
         val pricing = pricing
+        val stakedValue = staked?.takeIf { it.currency == pricing?.currency }?.value
         val kaminoValue = kamino?.takeIf { it.currency == pricing?.currency }?.value
         return copy(
-            stakedFiatValue = staked,
+            stakedFiat = staked,
             kaminoTotal = kamino,
             chainTotalFiatDisplay =
-                if (staked == null || kaminoValue == null || pricing == null) null
-                else pricing.format.format(staked.add(kaminoValue)),
+                if (stakedValue == null || kaminoValue == null || pricing == null) null
+                else pricing.format.format(stakedValue.add(kaminoValue)),
         )
     }
 

@@ -17,7 +17,7 @@ import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.screens.v2.defi.solana.KaminoEarnTotal
+import com.vultisig.wallet.ui.screens.v2.defi.DefiFiatTotal
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -27,6 +27,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.text.NumberFormat
 import java.util.Locale
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -156,7 +157,7 @@ internal class SolanaStakingPositionsViewModelTest {
         val vm = viewModel().apply { setData(VAULT_ID) }
 
         // Mid-switch: Earn is still reporting the figure it priced before the change landed.
-        vm.onKaminoTotalChanged(KaminoEarnTotal(BigDecimal("54.25"), AppCurrency.EUR))
+        vm.onKaminoTotalChanged(DefiFiatTotal(BigDecimal("54.25"), AppCurrency.EUR))
 
         // €54.25 added to $100.00 is not a figure in either currency, so the banner waits.
         vm.state.value.chainTotalFiatDisplay.shouldBeNull()
@@ -184,12 +185,73 @@ internal class SolanaStakingPositionsViewModelTest {
         // Earn has not re-priced yet, and its dollar figure must not be added to a euro one.
         vm.state.value.chainTotalFiatDisplay.shouldBeNull()
 
-        vm.onKaminoTotalChanged(KaminoEarnTotal(BigDecimal("10"), AppCurrency.EUR))
+        vm.onKaminoTotalChanged(DefiFiatTotal(BigDecimal("10"), AppCurrency.EUR))
 
         // The staked SOL is re-priced in euros rather than the dollar figure being restamped.
         vm.state.value.chainTotalFiatDisplay shouldBe
             NumberFormat.getCurrencyInstance(Locale.GERMANY).format(BigDecimal("100"))
     }
+
+    @Test
+    fun `a Kamino half that re-priced first is not added to a staked half that has not`() =
+        runTest {
+            val currency = MutableStateFlow(AppCurrency.USD)
+            every { appCurrencyRepository.currency } returns currency
+            coEvery { appCurrencyRepository.getCurrencyFormat() } answers
+                {
+                    NumberFormat.getCurrencyInstance(
+                        if (currency.value == AppCurrency.EUR) Locale.GERMANY else Locale.US
+                    )
+                }
+            coEvery { tokenPriceRepository.getCachedPrice(SOL.id, AppCurrency.EUR) } returns
+                BigDecimal("90")
+
+            val vm = viewModel().apply { setData(VAULT_ID) }
+            vm.onKaminoTotalChanged(kaminoTotal("10"))
+            vm.state.value.chainTotalFiatDisplay shouldBe "$110.00"
+
+            // The reload the switch triggers is still reading stake accounts...
+            val reload = CompletableDeferred<List<SolanaStakeAccount>>()
+            coEvery { solanaStakingService.fetchStakeAccounts(ADDRESS) } coAnswers
+                {
+                    reload.await()
+                }
+            currency.value = AppCurrency.EUR
+
+            // ...while Earn, whose no-vault-enabled answer needs no network call at all, has
+            // already re-priced and handed its half over.
+            vm.onKaminoTotalChanged(DefiFiatTotal(BigDecimal("10"), AppCurrency.EUR))
+
+            // $100 of staked SOL is not €100, so the banner waits rather than restamping it.
+            vm.state.value.chainTotalFiatDisplay.shouldBeNull()
+
+            reload.complete(listOf(stakeAccount()))
+
+            vm.state.value.chainTotalFiatDisplay shouldBe
+                NumberFormat.getCurrencyInstance(Locale.GERMANY).format(BigDecimal("100"))
+        }
+
+    @Test
+    fun `a currency change clears the fiat on each card, and a failed reload leaves it clear`() =
+        runTest {
+            val currency = MutableStateFlow(AppCurrency.USD)
+            every { appCurrencyRepository.currency } returns currency
+
+            val vm = viewModel().apply { setData(VAULT_ID) }
+            val staked = vm.state.value.positions.single()
+            staked.stakedFiatDisplay shouldBe "$100.00"
+
+            coEvery { solanaStakingService.fetchStakeAccounts(ADDRESS) } throws
+                RuntimeException("503")
+            currency.value = AppCurrency.EUR
+
+            val row = vm.state.value.positions.single()
+            // The euro value is not known yet and the dollar one is no longer true, so the card
+            // says nothing rather than wearing the wrong symbol — and this reload never rebuilds
+            // it. The staked SOL is priced in neither currency, so it stays.
+            row.stakedFiatDisplay.shouldBeNull()
+            row.stakedDisplay shouldBe staked.stakedDisplay
+        }
 
     @Test
     fun `a vault without SOL reports no total at all`() = runTest {
@@ -201,7 +263,7 @@ internal class SolanaStakingPositionsViewModelTest {
         vm.state.value.chainTotalFiatDisplay.shouldBeNull()
     }
 
-    private fun kaminoTotal(value: String) = KaminoEarnTotal(BigDecimal(value), AppCurrency.USD)
+    private fun kaminoTotal(value: String) = DefiFiatTotal(BigDecimal(value), AppCurrency.USD)
 
     private fun viewModel() =
         SolanaStakingPositionsViewModel(

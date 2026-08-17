@@ -383,7 +383,9 @@ private fun StakeAccountContent(
                 )
                 UiSpacer(2.dp)
                 Text(
-                    text = if (isBalanceVisible) row.stakedFiatDisplay else HIDE_BALANCE_CHARS,
+                    text =
+                        if (isBalanceVisible) row.stakedFiatDisplay ?: FIAT_VALUE_UNAVAILABLE
+                        else HIDE_BALANCE_CHARS,
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.text.tertiary,
                 )

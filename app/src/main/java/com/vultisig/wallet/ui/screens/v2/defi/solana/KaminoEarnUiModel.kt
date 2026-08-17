@@ -2,17 +2,8 @@ package com.vultisig.wallet.ui.screens.v2.defi.solana
 
 import androidx.compose.runtime.Immutable
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRiskTier
-import com.vultisig.wallet.data.models.settings.AppCurrency
+import com.vultisig.wallet.ui.screens.v2.defi.DefiFiatTotal
 import java.math.BigDecimal
-
-/**
- * A fiat figure together with the currency it was priced in.
- *
- * The chain header adds this to a half priced by a different view-model, and the two read the
- * selected currency independently. Carrying the currency lets that sum refuse to happen while a
- * mid-session switch has only landed on one side, instead of adding euros to dollars.
- */
-@Immutable data class KaminoEarnTotal(val value: BigDecimal, val currency: AppCurrency)
 
 /** State of the Kamino Earn segment of the Solana DeFi tab. */
 @Immutable
@@ -32,7 +23,7 @@ data class KaminoEarnUiModel(
      * here, a known value — and null whenever any enabled vault is unread or unpriced, because a
      * sum that silently omits one of them is not this wallet's Kamino total.
      */
-    val totalValue: KaminoEarnTotal? = null,
+    val totalValue: DefiFiatTotal? = null,
     val isBalanceVisible: Boolean = true,
     /** Whether the last load stopped on an error, so the tab can say so rather than look empty. */
     val loadFailed: Boolean = false,
