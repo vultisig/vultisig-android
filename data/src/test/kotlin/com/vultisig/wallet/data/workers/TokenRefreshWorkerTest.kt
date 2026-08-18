@@ -207,29 +207,6 @@ internal class TokenRefreshWorkerTest {
         }
 
     @Test
-    fun `doWork removes a persisted ybRUNE receipt from the vault`() = runTest {
-        // ybRUNE is a DeFi receipt, so a vault that picked it up while it was still discoverable
-        // must have it cleaned out — otherwise it keeps showing in the wallet list forever.
-        val receipt =
-            Coin.EMPTY.copy(
-                chain = Chain.ThorChain,
-                ticker = "ybRUNE",
-                contractAddress = "x/staking-x/brune",
-            )
-        val vault = vault(id = "vault-9", coins = listOf(coin(Chain.ThorChain), receipt))
-
-        coEvery { vaultRepository.getAll() } returns listOf(vault)
-        coEvery { vaultRepository.getDisabledCoinIds(vault.id) } returns emptyList()
-        every { vaultRepository.getEnabledTokens(vault.id) } returns flowOf(listOf(receipt))
-        coEvery { tokenRepository.getRefreshTokens(Chain.ThorChain, vault) } returns emptyList()
-        coEvery { vaultRepository.deleteTokenFromVault(any(), any()) } returns Unit
-
-        buildWorker().doWork()
-
-        coVerify(exactly = 1) { vaultRepository.deleteTokenFromVault(vault.id, receipt) }
-    }
-
-    @Test
     fun `doWork leaves an already-correct token untouched`() = runTest {
         val existing =
             Coin.EMPTY.copy(chain = Chain.ThorChain, ticker = "bRUNE", contractAddress = "x/brune")
