@@ -599,7 +599,7 @@ constructor(
                             .loadDeFiAddresses(vaultId, readsNetwork)
                             .map { addresses -> addresses.sortByAccountsTotalFiatValue() }
                             .catch { error ->
-                                Timber.e(error, "Error loading DeFi balances for vault: $vaultId")
+                                Timber.e(error, "Error loading DeFi balances for vault: %s", vaultId)
                             }
                             // This load, not the wallet stream, is what a pull on the DeFi tab is
                             // waiting on. A cancelled one is superseded by the load that replaced
