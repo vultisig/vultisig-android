@@ -80,8 +80,8 @@ class KaminoWithdrawTest {
 
     @Test
     fun `the vault minimum rounds up so it converts back to at least the minimum`() {
-        // minWithdrawAmount is 1000 SHARE base units. Rounded down it would be 1054 token units,
-        // which converts back to fewer shares than the vault accepts.
+        // A share minimum of 1000 base units. Rounded down it would be 1054 token units, which
+        // converts back to fewer shares than the vault accepts.
         val minimum = KaminoWithdrawMath.minimumTokens(shares("1000"), usdcRate, tokenDecimals = 6)
         assertEquals(BigInteger("1055"), minimum!!.baseUnits)
 
@@ -90,6 +90,32 @@ class KaminoWithdrawTest {
             backToShares.baseUnits >= BigInteger("1000"),
             "rounding up must survive the round trip, was ${backToShares.baseUnits}",
         )
+    }
+
+    @Test
+    fun `the effective withdraw minimum is read as tokens, margined 3x, and converted to shares`() {
+        // minWithdrawAmount is 1000 TOKEN base units (0.001 USDC), not shares — the program
+        // compares
+        // it against the token value being withdrawn. The real floor sits above the published
+        // figure, so this margins it 3x (0.003 USDC) before converting to the shares a withdraw has
+        // to name, rounded up so the share figure is never worth fractionally less than that.
+        val published = tokens("1000", 6)
+        val minimumShares =
+            KaminoWithdrawMath.effectiveMinimumShares(published, usdcRate, shareDecimals = 6)
+        assertEquals(BigInteger("2846"), minimumShares!!.baseUnits)
+
+        val backToTokens = minimumShares.tokenValueRoundedUp(usdcRate, tokenDecimals = 6)!!
+        assertTrue(
+            backToTokens.baseUnits >= BigInteger("3000"),
+            "the margined minimum must survive the round trip, was ${backToTokens.baseUnits}",
+        )
+
+        // Allez SOL: 9-decimal token against 6-decimal shares, rate far below 1 — the shape that
+        // makes a shares-vs-tokens mixup differ by orders of magnitude rather than rounding away.
+        val publishedSol = tokens("1000", 9)
+        val minimumSharesSol =
+            KaminoWithdrawMath.effectiveMinimumShares(publishedSol, solRate, shareDecimals = 6)
+        assertEquals(BigInteger("2789"), minimumSharesSol!!.baseUnits)
     }
 
     @Test
@@ -115,6 +141,63 @@ class KaminoWithdrawTest {
             maximum.shareAmount(usdcRate, 6)!!.baseUnits,
             "the round trip really does lose a unit, which is why it is not used",
         )
+    }
+
+    @Test
+    fun `a position sitting exactly on the effective minimum still has a submittable amount`() {
+        // Steakhouse USDC, minWithdrawAmount 1000 -> effective minimum 2846 shares (see the 3x-
+        // margin test above). A position holding exactly that many shares clears the vault's real
+        // floor, but minimumTokens rounds up and maximumTokens rounds down the same non-terminating
+        // product, so the raw minimum (3001) lands one base unit above the raw maximum (3000) with
+        // nothing in between for the form to offer.
+        val minimumShares = shares("2846")
+        val held = minimumShares
+        val maximum = KaminoWithdrawMath.maximumTokens(held, usdcRate, tokenDecimals = 6)!!
+        assertEquals(BigInteger("3000"), maximum.baseUnits)
+        assertEquals(
+            BigInteger("3001"),
+            KaminoWithdrawMath.minimumTokens(minimumShares, usdcRate, tokenDecimals = 6)!!
+                .baseUnits,
+            "the raw minimum must be the one base unit over, or this test isn't exercising the bug",
+        )
+
+        val effectiveMinimum =
+            KaminoWithdrawMath.effectiveMinimumTokens(
+                held = held,
+                minimumShares = minimumShares,
+                maximumTokens = maximum,
+                rate = usdcRate,
+                tokenDecimals = 6,
+            )
+
+        assertEquals(
+            maximum.baseUnits,
+            effectiveMinimum!!.baseUnits,
+            "clamped to the maximum so Max — amount == available — clears the minimum too",
+        )
+    }
+
+    @Test
+    fun `a position short of the effective minimum still shows the real figure`() {
+        // Held less than the 2846-share minimum: the vault genuinely would refuse this withdraw, so
+        // the unclamped minimum must stand to tell the user what they are short of, not silently
+        // shrink to match their smaller balance.
+        val minimumShares = shares("2846")
+        val held = shares("2000")
+        val maximum = KaminoWithdrawMath.maximumTokens(held, usdcRate, tokenDecimals = 6)!!
+        val rawMinimum =
+            KaminoWithdrawMath.minimumTokens(minimumShares, usdcRate, tokenDecimals = 6)!!
+
+        val effectiveMinimum =
+            KaminoWithdrawMath.effectiveMinimumTokens(
+                held = held,
+                minimumShares = minimumShares,
+                maximumTokens = maximum,
+                rate = usdcRate,
+                tokenDecimals = 6,
+            )
+
+        assertEquals(rawMinimum.baseUnits, effectiveMinimum!!.baseUnits)
     }
 
     @Test

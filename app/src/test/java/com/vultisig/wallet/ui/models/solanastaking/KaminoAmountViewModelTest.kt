@@ -89,9 +89,29 @@ internal class KaminoAmountViewModelTest {
 
         // 165-byte SPL token account rent-exempt reserve, the real mainnet figure.
         coEvery { solanaApi.getMinimumBalanceForRentExemption() } returns BigInteger("2039280")
+        coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns (null to false)
+        coEvery { solanaApi.getMedianPriorityFee(any()) } returns KAMINO_UNIT_PRICE
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { chainAccountAddressRepository.getAddress(Chain.Solana, VAULT) } returns
             (WALLET to "pubkey")
+        coEvery {
+            blockChainSpecificRepository.getSpecific(
+                chain = Chain.Solana,
+                address = any(),
+                token = any(),
+                gasFee = any(),
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+            )
+        } returns
+            com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo(
+                BlockChainSpecific.Solana(
+                    recentBlockHash = "blockhash",
+                    priorityFee = KAMINO_UNIT_PRICE,
+                    priorityLimit = BigInteger("100000"),
+                )
+            )
         coEvery { kaminoApi.getVaultState(any()) } returns
             KaminoVaultStateJson(
                 address = STEAKHOUSE.address,
@@ -157,12 +177,16 @@ internal class KaminoAmountViewModelTest {
     }
 
     @Test
-    fun `the deposit minimum comes from vault state, converted out of base units`() = runTest {
-        givenTokenBalance("2500000000")
+    fun `the deposit minimum comes from vault state, padded past the program's minimum`() =
+        runTest {
+            givenTokenBalance("2500000000")
 
-        // 100000 base units at 6 decimals is 0.1 USDC — not 100,000.
-        assertEquals(0, BigDecimal("0.1").compareTo(viewModel().state.value.minimum!!))
-    }
+            // 100000 base units gets a 1/1000 margin (100 base units) added before the 6-decimal
+            // conversion, so the displayed and enforced minimum is 0.1001 USDC, not 0.1 — the
+            // published figure the kVault program actually refuses.
+            val minimum = requireNotNull(viewModel().state.value.minimum)
+            assertEquals(0, BigDecimal("0.1001").compareTo(minimum))
+        }
 
     @Test
     fun `a withdraw caps against the position, not the wallet`() = runTest {
@@ -185,9 +209,10 @@ internal class KaminoAmountViewModelTest {
         // 999999999 share base units (one below the balance, stepping back from the API's sentinel)
         // × 1.0544278224860290217, truncated to the token's 6 decimals.
         assertEquals(0, BigDecimal("1054.427821").compareTo(state.available))
-        // minWithdrawAmount is 1000 SHARE base units, so in tokens it is 0.001055 rounded up — not
-        // the 0.001 a token-denominated reading would give.
-        assertEquals(0, BigDecimal("0.001055").compareTo(state.minimum!!))
+        // minWithdrawAmount is 1000 TOKEN base units (0.001 USDC). The program's real floor sits
+        // above that, so the margined figure is 3x it converted to shares and back: 0.003001, not
+        // the 0.001 the raw published amount would suggest.
+        assertEquals(0, BigDecimal("0.003001").compareTo(state.minimum!!))
     }
 
     @Test
@@ -245,10 +270,7 @@ internal class KaminoAmountViewModelTest {
         val available = viewModel(vaultAddress = ALLEZ.address).state.value.available
 
         assertTrue(available < BigDecimal.ONE, "expected less than a whole SOL, was $available")
-        assertTrue(
-            available > BigDecimal("0.99"),
-            "expected most of the balance to remain, was $available",
-        )
+        assertTrue(available > BigDecimal("0.98"), "reserved too much, was $available")
     }
 
     @Test
@@ -263,9 +285,10 @@ internal class KaminoAmountViewModelTest {
     }
 
     @Test
-    fun `a max SOL deposit reserves the wrapped-SOL rent and the priority fee`() = runTest {
-        // The vault's underlying is wSOL, so the deposit creates a token account. Without reserving
-        // its rent a Max deposit cannot fund that account and fails on chain.
+    fun `a max SOL deposit reserves first deposit rent and the charged priority fee`() = runTest {
+        // First deposits into the SOL vault create the wSOL ATA, share ATA and farm UserState. The
+        // priority fee must use the same unit price the transaction builder records, not the
+        // KaminoComputeBudget fallback.
         coEvery { balanceRepository.getTokenValue(any(), any()) } returns
             flowOf(TokenValue(value = BigInteger("1000000000"), token = COIN))
         coEvery { kaminoApi.getVaultState(any()) } returns
@@ -283,15 +306,55 @@ internal class KaminoAmountViewModelTest {
 
         val available = viewModel(vaultAddress = ALLEZ.address).state.value.available
 
-        // 1 SOL less rent (0.00203928) less the priority fee (20,000 µlamports x 350,000 CU =
-        // 7,000 lamports) less the base fee — so strictly below 0.998, and far below a naive
-        // fee-only headroom.
-        assertTrue(
-            available < BigDecimal("0.998"),
-            "expected rent + priority fee reserved, was $available",
-        )
-        assertTrue(available > BigDecimal("0.99"), "reserved too much, was $available")
+        // 1 SOL less base fee (1,000,000), priority fee (1,000,000 µlamports x 350,000 CU =
+        // 350,000), two token-account rents (2,039,280 each) and farm UserState rent (6,299,080).
+        assertEquals(0, BigDecimal("0.98827236").compareTo(available))
     }
+
+    @Test
+    fun `a first native SOL deposit charges the same rent it reserved, not just the network fee`() =
+        runTest {
+            // Otherwise the verify screen shows an amount plus a fee that together fall short of
+            // the wallet's starting balance by exactly the account rent this deposit actually
+            // spends.
+            coEvery { balanceRepository.getTokenValue(any(), any()) } returns
+                flowOf(TokenValue(value = BigInteger("1000000000"), token = COIN))
+            coEvery { kaminoApi.getVaultState(any()) } returns
+                KaminoVaultStateJson(
+                    address = ALLEZ.address,
+                    state =
+                        KaminoVaultStateJson.State(
+                            name = "Allez SOL",
+                            tokenMint = ALLEZ.tokenMint,
+                            tokenDecimals = 9,
+                            sharesMint = ALLEZ.sharesMint,
+                            sharesDecimals = 6,
+                        ),
+                )
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+            coEvery {
+                buildKeysignPayload(
+                    vault = any(),
+                    action = any(),
+                    apiAmount = any(),
+                    tokenAmount = any(),
+                    coin = any(),
+                    blockChainSpecific = any(),
+                    vaultPublicKeyECDSA = any(),
+                    vaultLocalPartyID = any(),
+                    libType = any(),
+                )
+            } returns keysignPayloadWithKaminoBudget()
+
+            val vm = viewModel(vaultAddress = ALLEZ.address)
+            vm.amountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+            vm.submit()
+
+            // Base fee (1,000,000) + priority fee (350,000) + wSOL and share ATA rent (2,039,280
+            // each) + farm UserState rent (6,299,080) = 11,727,640.
+            assertEquals(BigInteger("11727640"), captured.captured.estimatedFees.value)
+        }
 
     @Test
     fun `a USDC deposit does not reserve SOL costs against the token balance`() = runTest {
@@ -336,9 +399,10 @@ internal class KaminoAmountViewModelTest {
     }
 
     @Test
-    fun `the withdraw minimum is read as shares, not as the token amount`() = runTest {
-        // minWithdrawAmount is 1000 SHARE base units. Treated as token base units it would be
-        // 0.001 USDC; converted properly at the Steakhouse rate it is 0.001055.
+    fun `the withdraw minimum is read as tokens, padded past the program's real floor`() = runTest {
+        // minWithdrawAmount is 1000 TOKEN base units — 0.001 USDC. Read as shares it would convert
+        // to 0.001055; the program's real floor sits above the published figure, so this pads it 3x
+        // (matching iOS) before converting to shares and back: 0.003001.
         givenTokenBalance("0")
         coEvery { kaminoApi.getUserPositions(WALLET) } returns
             listOf(
@@ -353,7 +417,7 @@ internal class KaminoAmountViewModelTest {
             KaminoVaultMetricsJson(tokensPerShare = "1.0544278224860290217")
 
         val minimum = viewModel(isWithdraw = true).state.value.minimum
-        assertEquals(0, BigDecimal("0.001055").compareTo(minimum!!))
+        assertEquals(0, BigDecimal("0.003001").compareTo(minimum!!))
     }
 
     @Test

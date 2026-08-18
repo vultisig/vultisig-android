@@ -35,6 +35,11 @@ interface VaultDao {
     @Query("SELECT * FROM vault")
     suspend fun loadAll(): List<VaultWithKeySharesAndTokens>
 
+    @Query("SELECT * FROM vault") suspend fun loadAllVaults(): List<VaultEntity>
+
+    @Query("SELECT * FROM keyShare WHERE vaultId = :vaultId")
+    suspend fun loadKeyShares(vaultId: String): List<KeyShareEntity>
+
     @Transaction
     @Query("SELECT * FROM vault")
     fun loadAllAsFlow(): Flow<List<VaultWithKeySharesAndTokens>>
@@ -91,6 +96,16 @@ interface VaultDao {
         insertKeyshares(vault.keyShares)
         insertSigners(vault.signers)
         insertChainPublicKeys(vault.chainPublicKeys)
+    }
+
+    /**
+     * The delete cascades the vault's keyshares, and both statements land together or neither does
+     * — so process death part-way cannot leave the device holding neither vault.
+     */
+    @Transaction
+    suspend fun replace(supersededVaultId: String, vault: VaultWithKeySharesAndTokens) {
+        delete(supersededVaultId)
+        insert(vault)
     }
 
     @Transaction

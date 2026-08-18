@@ -2,23 +2,15 @@ package com.vultisig.wallet.ui.screens.passcode
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -26,6 +18,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.passcode.PasscodeState
 import com.vultisig.wallet.ui.components.BiometryAuthScreen
+import com.vultisig.wallet.ui.components.errors.ErrorState
+import com.vultisig.wallet.ui.components.errors.ErrorView
+import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.models.passcode.PasscodeGuardViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -59,7 +54,7 @@ internal fun PasscodeGuard(model: PasscodeGuardViewModel = hiltViewModel()) {
         // One call site for the whole closed gate rather than one per state: a second would be a
         // second composition slot, and moving between them would take the window down and put a new
         // one up at exactly the moment the lock appears.
-        LockWindow { GateContent(state.passcodeState) }
+        LockWindow { GateContent(state.passcodeState, model::onRetry) }
     }
 
     // The passcode was just turned off, so the user has already identified themselves this session;
@@ -71,18 +66,15 @@ internal fun PasscodeGuard(model: PasscodeGuardViewModel = hiltViewModel()) {
 
 /** What the gate shows, once there is something to show. */
 @Composable
-private fun GateContent(passcodeState: PasscodeState) {
+private fun GateContent(passcodeState: PasscodeState, onRetry: () -> Unit) {
     when (passcodeState) {
         PasscodeState.Locked -> PasscodeLockScreen()
-        PasscodeState.KeyUnavailable ->
-            DeadEndScreen(
-                title = stringResource(R.string.passcode_key_unavailable_title),
-                message = stringResource(R.string.passcode_key_unavailable_message),
-            )
+        PasscodeState.KeyUnavailable -> KeyshareRecoveryScreen()
         PasscodeState.StoreUnavailable ->
             DeadEndScreen(
                 title = stringResource(R.string.passcode_store_unavailable_title),
                 message = stringResource(R.string.passcode_store_unavailable_message),
+                onRetry = onRetry,
             )
         // Persisted state is still loading. The window is up regardless, because a dialog
         // destination restored with the back stack opens its own window while this read is still
@@ -129,39 +121,23 @@ private fun LockWindow(content: @Composable () -> Unit) {
 }
 
 /**
- * Shown when encrypted keyshares cannot be opened at all — the credentials are gone
- * ([PasscodeState.KeyUnavailable]) or unreachable this launch ([PasscodeState.StoreUnavailable]).
- * Neither has a passcode that would work, so the screen says what happened rather than presenting a
- * prompt that could never succeed. The two differ only in what the user should do next, which is
- * exactly what [message] carries.
+ * Shown when the credential store could not be opened this launch
+ * ([PasscodeState.StoreUnavailable]) — there is no passcode that would work, so the screen says
+ * what happened rather than asking for one.
+ *
+ * [onRetry] is the only way off this window, since back and outside taps belong to the gate. The
+ * state rests on a keystore read that can come back, so it is worth offering. The credentials-gone
+ * state has more to offer than a retry and gets its own screen — see [KeyshareRecoveryScreen].
  */
 @Composable
-private fun DeadEndScreen(title: String, message: String) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(horizontal = 32.dp),
-        ) {
-            Text(
-                text = title,
-                color = Theme.v2.colors.text.primary,
-                style = Theme.brockmann.headings.title2,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Text(
-                text = message,
-                color = Theme.v2.colors.text.tertiary,
-                style = Theme.brockmann.supplementary.footnote,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-    }
+private fun DeadEndScreen(title: String, message: String, onRetry: () -> Unit) {
+    ErrorView(
+        title = title,
+        description = message,
+        errorState = ErrorState.WARNING,
+        buttonUiModel =
+            ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = onRetry),
+    )
 }
 
 /** Consumes every pointer event that reaches this node so none of it falls through. */
