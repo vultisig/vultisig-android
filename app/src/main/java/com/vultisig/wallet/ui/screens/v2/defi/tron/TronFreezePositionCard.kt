@@ -22,17 +22,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -46,43 +37,6 @@ import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.theme.Theme
 
 private val TronFreezeCardIconCircleColor = Color.White.copy(alpha = 0.12f)
-private val TronFreezeButtonBevelTopColor = Color.White.copy(alpha = 0.10f)
-private val TronFreezeButtonBevelBottomColor = Color(0xFF0F1C3E)
-
-/**
- * Strokes the pill perimeter with a vertical gradient (highlight → transparent → shadow) so the
- * bevel reads as a soft top shine fading to a dark bottom edge, matching Figma `inset` shadows `0
- * 1px 1px 0 rgba(255,255,255,0.10)` and `0 -1px 0.5px 0 #0F1C3E` without hard clip seams on the
- * side curves.
- */
-private fun Modifier.tronFreezeButtonBevel(enabled: Boolean): Modifier = drawWithContent {
-    drawContent()
-    val alphaMultiplier = if (enabled) 1f else 0.5f
-    val strokePx = 1.dp.toPx()
-    val cornerRadius = CornerRadius(size.height / 2f)
-    val shapePath = Path().apply { addRoundRect(RoundRect(Rect(Offset.Zero, size), cornerRadius)) }
-    val bevelBrush =
-        Brush.verticalGradient(
-            colorStops =
-                arrayOf(
-                    0f to
-                        TronFreezeButtonBevelTopColor.copy(
-                            alpha = TronFreezeButtonBevelTopColor.alpha * alphaMultiplier
-                        ),
-                    0.5f to Color.Transparent,
-                    1f to TronFreezeButtonBevelBottomColor.copy(alpha = alphaMultiplier),
-                )
-        )
-    clipPath(shapePath) {
-        drawRoundRect(
-            brush = bevelBrush,
-            topLeft = Offset.Zero,
-            size = size,
-            cornerRadius = cornerRadius,
-            style = Stroke(width = strokePx * 2f),
-        )
-    }
-}
 
 /**
  * Card showing frozen TRX balance with Freeze/Unfreeze actions; shows placeholders and disables
@@ -238,7 +192,7 @@ private fun TronFreezeActionButton(
         border = resolvedBorder,
         shape = Theme.v2.radius.pill,
         contentPadding = PaddingValues(start = 4.dp, top = 6.dp, end = 16.dp, bottom = 6.dp),
-        modifier = modifier.height(46.dp).tronFreezeButtonBevel(enabled = enabled),
+        modifier = modifier.height(46.dp),
     ) {
         Box(
             modifier =
