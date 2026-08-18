@@ -75,16 +75,28 @@ internal object BlockaidSimulationParser {
         // silently lose the user's actual swap result. Both `asset.type == "SOL"` and
         // `assetType == "SOL"` are checked because Blockaid is inconsistent about which field
         // carries the marker.
+        //
+        // Among outgoing-only native-SOL candidates, the fee is the SMALLEST one, not the first:
+        // a Kamino SOL deposit can emit [big SOL out (real leg), WSOL in (rent residual), tiny SOL
+        // out (fee)] — both the real leg and the fee are outgoing-only native SOL, and
+        // `indexOfFirst`
+        // would drop the real leg instead of the 5000-lamport fee just because it comes first.
         val relevant: List<BlockaidSolanaSimulationJson.AccountAssetDiff> =
             if (all.size == 3) {
                 val solFeeIndex =
-                    all.indexOfFirst {
-                        val isNative = it.isNativeSol()
-                        val outgoingOnly =
-                            it.outgoing?.rawValue?.toRawValueString() != null &&
-                                it.incoming?.rawValue?.toRawValueString() == null
-                        isNative && outgoingOnly
-                    }
+                    all.withIndex()
+                        .filter { (_, diff) ->
+                            val isNative = diff.isNativeSol()
+                            val outgoingOnly =
+                                diff.outgoing?.rawValue?.toRawValueString() != null &&
+                                    diff.incoming?.rawValue?.toRawValueString() == null
+                            isNative && outgoingOnly
+                        }
+                        .minByOrNull { (_, diff) ->
+                            diff.outgoing?.rawValue?.toRawValueString()?.let(::parseRawAmount)
+                                ?: BigInteger.ZERO
+                        }
+                        ?.index ?: -1
                 if (solFeeIndex >= 0) all.filterIndexed { idx, _ -> idx != solFeeIndex } else all
             } else {
                 all

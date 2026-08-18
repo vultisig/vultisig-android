@@ -299,6 +299,56 @@ internal class BlockaidSimulationParserTest {
     }
 
     @Test
+    fun `solana three-diff SOL deposit with a separate fee leg keeps the real out amount`() {
+        // Same Kamino SOL-deposit shape as above, but Blockaid emits the network fee as its own
+        // outgoing-only native-SOL row, landing the response at exactly 3 diffs: [big SOL out (real
+        // leg), WSOL in (rent residual), tiny SOL out (fee)]. `parseSolana`'s 3-diff pre-filter
+        // must
+        // drop the 5000-lamport fee — the smallest outgoing-only native-SOL diff — not the first
+        // one,
+        // or it discards the real 59435000-lamport leg and the deposit renders as unverifiable
+        // instead of a 0.059435 SOL transfer.
+        val response =
+            solanaResponse(
+                """{
+                    "result": {
+                      "simulation": {
+                        "account_summary": {
+                          "account_assets_diff": [
+                            {
+                              "asset": { "type": "SOL", "decimals": 9, "symbol": "SOL", "address": null },
+                              "out": { "raw_value": "59435000" }
+                            },
+                            {
+                              "asset": {
+                                "type": "TOKEN",
+                                "address": "So11111111111111111111111111111111111111112",
+                                "symbol": "WSOL",
+                                "decimals": 9
+                              },
+                              "in": { "raw_value": "2039280" }
+                            },
+                            {
+                              "asset": { "type": "SOL", "decimals": 9, "symbol": "SOL", "address": null },
+                              "out": { "raw_value": "5000" }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                """
+                    .trimIndent()
+            )
+
+        val transfer =
+            BlockaidSimulationParser.parseSolana(response) as BlockaidSimulationInfo.Transfer
+
+        assertEquals("SOL", transfer.fromCoin.ticker)
+        assertEquals(BigInteger("59435000"), transfer.fromAmount)
+    }
+
+    @Test
     fun `solana WSOL-out SOL-in pair with a bigger in-leg is dropped, not a bogus transfer`() {
         // A Kamino SOL-vault withdraw closes the payout wSOL account before returning native SOL to
         // the signer (KaminoComputeBudget.kt:59), so the "outgoing" leg is just that temp account
