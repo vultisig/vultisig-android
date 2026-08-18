@@ -183,33 +183,62 @@ internal class TokenRepositoryImplTest {
     }
 
     @Test
-    fun `getTokensWithBalance canonicalizes ybRUNE decimal to the curated value`() = runTest {
-        // ybRUNE shares the curated-override branch with bRUNE; guard it independently so a
-        // regression isolated to the ybRUNE case can't slip through.
+    fun `getTokensWithBalance drops the ybRUNE receipt as a DeFi-only denom`() = runTest {
+        // ybRUNE is the auto-compounding receipt for bonded bRUNE — a DeFi position, not a
+        // spendable wallet token. Liquid bRUNE held alongside it stays a wallet token.
         val thorApi: ThorChainApi = mockk(relaxed = true)
         coEvery { thorApi.getBalance(ADDRESS) } returns
-            listOf(CosmosBalance(denom = Coins.ThorChain.ybRUNE.contractAddress, amount = "100"))
-        coEvery { thorApi.getDenomMetaFromLCD(Coins.ThorChain.ybRUNE.contractAddress) } returns
-            DenomMetadata(
-                base = Coins.ThorChain.ybRUNE.contractAddress,
-                symbol = "x/ybrune",
-                display = null,
-                denomUnits =
-                    listOf(
-                        com.vultisig.wallet.data.api.models.DenomUnit(
-                            denom = "x/ybrune",
-                            exponent = 6,
-                        )
-                    ),
+            listOf(
+                CosmosBalance(denom = Coins.ThorChain.ybRUNE.contractAddress, amount = "100"),
+                CosmosBalance(denom = Coins.ThorChain.bRUNE.contractAddress, amount = "200"),
             )
+        coEvery { thorApi.getDenomMetaFromLCD(any()) } returns null
 
         val coins =
             newRepository(thorApi)
                 .getTokensWithBalance(Chain.ThorChain, ADDRESS, enabledDenoms = setOf("rune"))
 
-        val ybRune = coins.single { it.contractAddress == Coins.ThorChain.ybRUNE.contractAddress }
-        assertEquals(Coins.ThorChain.ybRUNE.ticker, ybRune.ticker)
-        assertEquals(Coins.ThorChain.ybRUNE.decimal, ybRune.decimal)
+        assertEquals(
+            listOf(Coins.ThorChain.bRUNE.contractAddress),
+            coins.map { it.contractAddress },
+        )
+    }
+
+    @Test
+    fun `getTokensWithBalance drops the ybRUNE receipt whatever casing the node reports`() =
+        runTest {
+            // The DeFi-only gate runs before the canonicalization override, so it has to tolerate
+            // the same casing drift that override exists to correct.
+            val thorApi: ThorChainApi = mockk(relaxed = true)
+            coEvery { thorApi.getBalance(ADDRESS) } returns
+                listOf(CosmosBalance(denom = "x/staking-X/bRUNE", amount = "100"))
+            coEvery { thorApi.getDenomMetaFromLCD(any()) } returns null
+
+            val coins =
+                newRepository(thorApi)
+                    .getTokensWithBalance(Chain.ThorChain, ADDRESS, enabledDenoms = setOf("rune"))
+
+            assertTrue(coins.isEmpty())
+        }
+
+    @Test
+    fun `getTokensWithBalance keeps the ybRUNE receipt out even when it is enabled`() = runTest {
+        // A vault that enabled ybRUNE before it was classified as a receipt must not keep it: the
+        // enabledDenoms gate sits below the DeFi-only filter, so it can never reinstate one.
+        val thorApi: ThorChainApi = mockk(relaxed = true)
+        coEvery { thorApi.getBalance(ADDRESS) } returns
+            listOf(CosmosBalance(denom = Coins.ThorChain.ybRUNE.contractAddress, amount = "100"))
+        coEvery { thorApi.getDenomMetaFromLCD(any()) } returns null
+
+        val coins =
+            newRepository(thorApi)
+                .getTokensWithBalance(
+                    Chain.ThorChain,
+                    ADDRESS,
+                    enabledDenoms = setOf(Coins.ThorChain.ybRUNE.contractAddress),
+                )
+
+        assertTrue(coins.isEmpty())
     }
 
     @Test
