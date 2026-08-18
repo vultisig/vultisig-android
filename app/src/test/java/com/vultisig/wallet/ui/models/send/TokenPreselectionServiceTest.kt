@@ -208,6 +208,34 @@ internal class TokenPreselectionServiceTest {
             assertEquals(emptyList<Any>(), selectedTokens)
         }
 
+    @Test
+    fun `preSelect STAKE_YBRUNE - default coin is bRUNE, not the receipt`() =
+        runTest(mainDispatcher) {
+            // Bonding spends bRUNE. Starting the form on ybRUNE would offer the receipt as the
+            // funding token and build an execute the contract reads as an unbond.
+            defiType = DeFiNavActions.STAKE_YBRUNE
+            loaded(thorAccount(Coins.ThorChain.RUNE))
+            val service = build(backgroundScope)
+
+            service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
+            advanceUntilIdle()
+
+            assertEquals(listOf(Coins.ThorChain.bRUNE), selectedTokens)
+        }
+
+    @Test
+    fun `preSelect UNSTAKE_YBRUNE - default coin is the ybRUNE receipt`() =
+        runTest(mainDispatcher) {
+            defiType = DeFiNavActions.UNSTAKE_YBRUNE
+            loaded(thorAccount(Coins.ThorChain.RUNE))
+            val service = build(backgroundScope)
+
+            service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
+            advanceUntilIdle()
+
+            assertEquals(listOf(Coins.ThorChain.ybRUNE), selectedTokens)
+        }
+
     // ──────── forcePreselection ────────
 
     @Test

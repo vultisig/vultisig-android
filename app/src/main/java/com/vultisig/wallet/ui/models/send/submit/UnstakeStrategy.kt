@@ -20,6 +20,7 @@ import com.vultisig.wallet.ui.models.send.toPlainBigDecimalOrNull
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.v2.defi.STAKING_BRUNE_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.STAKING_RUJI_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.STAKING_TCY_COMPOUND_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
@@ -145,6 +146,17 @@ internal class UnstakeStrategy(
 
                             DeFiNavActions.UNSTAKE_SRUJI ->
                                 createRujiCompoundUnstakeDepositTransaction(
+                                    vaultId = vaultId,
+                                    selectedToken = selectedToken,
+                                    srcAddress = srcAddress,
+                                    dstAddress = dstAddress,
+                                    tokenAmountInt = tokenAmountInt,
+                                    gasFee = gasFee,
+                                    chain = chain,
+                                )
+
+                            DeFiNavActions.UNSTAKE_YBRUNE ->
+                                createBRuneUnstakeDepositTransaction(
                                     vaultId = vaultId,
                                     selectedToken = selectedToken,
                                     srcAddress = srcAddress,
@@ -359,6 +371,66 @@ internal class UnstakeStrategy(
                 ThorchainFunctions.unstakeRujiCompound(
                     shares = shares,
                     stakingContract = STAKING_RUJI_CONTRACT,
+                    fromAddress = srcAddress,
+                ),
+        )
+    }
+
+    /**
+     * Unbonds from the Rujira liquid bond (`liquid.unbond`), returning bRUNE.
+     *
+     * The position is reported in ybRUNE receipt units — AccountsLoader synthesizes the account
+     * from that same bank balance — so the entered amount funds the execute directly. That is the
+     * whole difference from the sRUJI redemption above, which has to convert a RUJI-denominated
+     * amount into shares first.
+     */
+    private suspend fun createBRuneUnstakeDepositTransaction(
+        vaultId: String,
+        selectedToken: Coin,
+        srcAddress: String,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+        gasFee: TokenValue,
+        chain: Chain,
+    ): DepositTransaction {
+        // An amount that rounds below one base unit would build an execute the contract rejects;
+        // say so on the form instead of sending the user through a ceremony that cannot land.
+        if (tokenAmountInt < BigInteger.ONE) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+
+        val specific =
+            withContext(Dispatchers.IO) {
+                blockChainSpecificRepository.getSpecific(
+                    chain,
+                    srcAddress,
+                    selectedToken,
+                    gasFee,
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                    transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+                )
+            }
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = dstAddress,
+            memo = "",
+            srcTokenValue = TokenValue(value = tokenAmountInt, token = selectedToken),
+            estimatedFees = gasFee,
+            estimateFeesFiat =
+                gasFeeToEstimatedFee.fiatFeesFor(gasFee, selectedToken).formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+            wasmExecuteContractPayload =
+                ThorchainFunctions.unstakeBRune(
+                    units = tokenAmountInt,
+                    stakingContract = STAKING_BRUNE_CONTRACT,
                     fromAddress = srcAddress,
                 ),
         )

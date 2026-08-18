@@ -66,6 +66,11 @@ internal class AccountsLoader(
                         loadAutoCompoundRujiAccount(vaultId, generation)
                     }
 
+                DeFiNavActions.UNSTAKE_YBRUNE ->
+                    scope.safeLaunch(onError = ::onLoadError) {
+                        loadBondedRuneReceiptAccount(vaultId, generation)
+                    }
+
                 null,
                 DeFiNavActions.BOND,
                 DeFiNavActions.STAKE_RUJI,
@@ -73,6 +78,8 @@ internal class AccountsLoader(
                 DeFiNavActions.STAKE_TCY,
                 DeFiNavActions.STAKE_STCY,
                 DeFiNavActions.UNSTAKE_STCY,
+                // The bond is funded with bRUNE, an ordinary wallet token.
+                DeFiNavActions.STAKE_YBRUNE,
                 DeFiNavActions.MINT_YRUNE,
                 DeFiNavActions.MINT_YTCY,
                 DeFiNavActions.REDEEM_YRUNE,
@@ -243,6 +250,56 @@ internal class AccountsLoader(
                 generation,
             )
         }
+    }
+
+    /**
+     * The ybRUNE receipt is not a wallet token either, so the unbond form has no account to draw on
+     * until one is synthesized from the position the DeFi tab cached.
+     *
+     * Denominated in receipt units — the vault's `x/staking-x/brune` bank balance, which is what
+     * the position reports — so the amount the form carries is already what funds the unbond. No
+     * conversion happens at submit, unlike the RUJI receipt above, whose position is reported in
+     * RUJI.
+     */
+    private suspend fun loadBondedRuneReceiptAccount(vaultId: VaultId, generation: Long) {
+        val cachedDetails =
+            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.ybRUNE.id)
+        accountsRepository
+            .loadAddresses(vaultId)
+            .map { addrs -> addrs.flatMap { it.accounts } }
+            .collect { accountsLoaded ->
+                publishBondedRuneReceipt(accountsLoaded, cachedDetails?.stakeAmount, generation)
+            }
+    }
+
+    private fun publishBondedRuneReceipt(
+        accountsLoaded: List<Account>,
+        receiptAmount: BigInteger?,
+        generation: Long,
+    ) {
+        if (generation != currentGeneration) return
+        // As with sRUJI: the RUNE account carries the address the unbond is sent from, funds the
+        // gas fee, and supplies the derived key the receipt's catalogue entry has no copy of.
+        val thorchainAccount =
+            accountsLoaded.findSourceOrPublishEmpty(
+                tokenId = Coins.ThorChain.RUNE.id,
+                generation = generation,
+                missingReason = "THORChain account not available for ybRUNE unstake",
+            ) ?: return
+
+        val ybRune =
+            Coins.ThorChain.ybRUNE.copy(
+                address = thorchainAccount.token.address,
+                hexPublicKey = thorchainAccount.token.hexPublicKey,
+            )
+        val ybRuneAccount =
+            Account(
+                token = ybRune,
+                tokenValue = TokenValue(value = receiptAmount ?: BigInteger.ZERO, token = ybRune),
+                fiatValue = null,
+                price = null,
+            )
+        publishLoaded(listOf(ybRuneAccount, thorchainAccount), generation)
     }
 
     // Collect both cached and hydrated emissions so the form renders cached RUNE/RUJI

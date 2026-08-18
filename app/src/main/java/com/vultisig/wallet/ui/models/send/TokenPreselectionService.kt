@@ -167,6 +167,11 @@ internal class TokenPreselectionService(
             DeFiNavActions.WITHDRAW_USDC_CIRCLE -> Coins.Ethereum.USDC
             DeFiNavActions.STAKE_STCY -> Coins.ThorChain.TCY
             DeFiNavActions.UNSTAKE_STCY -> Coins.ThorChain.sTCY
+
+            // The liquid bond is funded with bRUNE and redeemed out of the ybRUNE receipt, so the
+            // two directions start from different tokens — as with the RUJI pair above.
+            DeFiNavActions.STAKE_YBRUNE -> Coins.ThorChain.bRUNE
+            DeFiNavActions.UNSTAKE_YBRUNE -> Coins.ThorChain.ybRUNE
             DeFiNavActions.STAKE_CACAO,
             DeFiNavActions.UNSTAKE_CACAO,
             DeFiNavActions.ADD_LP,

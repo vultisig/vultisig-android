@@ -92,6 +92,8 @@ internal class SendStrategiesSubmitForTest {
                 DeFiNavActions.REDEEM_YTCY to Target.REDEEM,
                 DeFiNavActions.STAKE_STCY to Target.STAKE,
                 DeFiNavActions.UNSTAKE_STCY to Target.UNSTAKE,
+                DeFiNavActions.STAKE_YBRUNE to Target.STAKE,
+                DeFiNavActions.UNSTAKE_YBRUNE to Target.UNSTAKE,
                 DeFiNavActions.WITHDRAW_USDC_CIRCLE to Target.WITHDRAW_USDC_CIRCLE,
                 DeFiNavActions.STAKE_CACAO to Target.DEFAULT,
                 DeFiNavActions.UNSTAKE_CACAO to Target.DEFAULT,

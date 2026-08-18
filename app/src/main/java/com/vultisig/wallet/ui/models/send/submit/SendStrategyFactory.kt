@@ -56,12 +56,14 @@ internal data class SendStrategies(
             DeFiNavActions.STAKE_RUJI,
             DeFiNavActions.STAKE_SRUJI,
             DeFiNavActions.STAKE_TCY,
-            DeFiNavActions.STAKE_STCY -> stake.submit()
+            DeFiNavActions.STAKE_STCY,
+            DeFiNavActions.STAKE_YBRUNE -> stake.submit()
 
             DeFiNavActions.UNSTAKE_RUJI,
             DeFiNavActions.UNSTAKE_SRUJI,
             DeFiNavActions.UNSTAKE_TCY,
             DeFiNavActions.UNSTAKE_STCY,
+            DeFiNavActions.UNSTAKE_YBRUNE,
             DeFiNavActions.WITHDRAW_RUJI -> unstake.submit()
 
             DeFiNavActions.MINT_YRUNE,

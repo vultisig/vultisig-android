@@ -83,6 +83,8 @@ internal class DeFiNavActionsTest {
         assertEquals(DeFiNavActions.MINT_YRUNE, Coins.ThorChain.yRUNE.getStakeDeFiNavAction())
         assertEquals(DeFiNavActions.MINT_YTCY, Coins.ThorChain.yTCY.getStakeDeFiNavAction())
         assertEquals(DeFiNavActions.STAKE_STCY, Coins.ThorChain.sTCY.getStakeDeFiNavAction())
+        // The receipt is the coin the card carries, in both directions.
+        assertEquals(DeFiNavActions.STAKE_YBRUNE, Coins.ThorChain.ybRUNE.getStakeDeFiNavAction())
         assertEquals(DeFiNavActions.STAKE_CACAO, Coins.MayaChain.CACAO.getStakeDeFiNavAction())
     }
 
@@ -94,6 +96,10 @@ internal class DeFiNavActionsTest {
         assertEquals(DeFiNavActions.REDEEM_YRUNE, Coins.ThorChain.yRUNE.getUnstakeDeFiNavAction())
         assertEquals(DeFiNavActions.REDEEM_YTCY, Coins.ThorChain.yTCY.getUnstakeDeFiNavAction())
         assertEquals(DeFiNavActions.UNSTAKE_STCY, Coins.ThorChain.sTCY.getUnstakeDeFiNavAction())
+        assertEquals(
+            DeFiNavActions.UNSTAKE_YBRUNE,
+            Coins.ThorChain.ybRUNE.getUnstakeDeFiNavAction(),
+        )
         assertEquals(DeFiNavActions.UNSTAKE_CACAO, Coins.MayaChain.CACAO.getUnstakeDeFiNavAction())
     }
 

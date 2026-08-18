@@ -253,6 +253,107 @@ internal class AccountsLoaderTest {
             assertEquals(BigInteger.ZERO, sRuji.tokenValue?.value)
         }
 
+    // ──────── UNSTAKE_YBRUNE ────────
+
+    @Test
+    fun `UNSTAKE_YBRUNE synthesizes a ybRUNE account carrying the bonded position`() =
+        runTest(mainDispatcher) {
+            // Same hole as the sRUJI receipt: ybRUNE is not a wallet token, so nothing in the
+            // addresses flow can fund the unbond form. Its ceiling is the receipt balance itself,
+            // which is what the execute is funded with.
+            defiType = DeFiNavActions.UNSTAKE_YBRUNE
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.ybRUNE.id,
+                )
+            } returns stakingDetails(stakeAmount = BigInteger("523400000000"))
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts =
+                                listOf(
+                                    thorAccount(
+                                        Coins.ThorChain.RUNE.copy(
+                                            address = "thor1",
+                                            hexPublicKey = THOR_PUBLIC_KEY,
+                                        )
+                                    )
+                                ),
+                        )
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            val ybRune =
+                loadedAccounts.single { it.token.id.equals(Coins.ThorChain.ybRUNE.id, true) }
+            assertEquals(BigInteger("523400000000"), ybRune.tokenValue?.value)
+            assertTrue(loadedAccounts.any { it.token.id.equals(Coins.ThorChain.RUNE.id, true) })
+            assertEquals("thor1", ybRune.token.address)
+            assertEquals(THOR_PUBLIC_KEY, ybRune.token.hexPublicKey)
+        }
+
+    @Test
+    fun `UNSTAKE_YBRUNE publishes a zero ceiling when no position is cached`() =
+        runTest(mainDispatcher) {
+            defiType = DeFiNavActions.UNSTAKE_YBRUNE
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.ybRUNE.id,
+                )
+            } returns null
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts = listOf(thorAccount(Coins.ThorChain.RUNE)),
+                        )
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            val ybRune =
+                loadedAccounts.single { it.token.id.equals(Coins.ThorChain.ybRUNE.id, true) }
+            assertEquals(BigInteger.ZERO, ybRune.tokenValue?.value)
+        }
+
+    @Test
+    fun `STAKE_YBRUNE reads the wallet accounts the bond is funded from`() =
+        runTest(mainDispatcher) {
+            // The bond spends bRUNE, an ordinary wallet token, so this direction must stay on the
+            // plain addresses flow rather than the synthesized receipt.
+            defiType = DeFiNavActions.STAKE_YBRUNE
+            val bRuneAccount = thorAccount(Coins.ThorChain.bRUNE)
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts = listOf(thorAccount(Coins.ThorChain.RUNE), bRuneAccount),
+                        )
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            assertTrue(loadedAccounts.any { it.token.id.equals(Coins.ThorChain.bRUNE.id, true) })
+        }
+
     // ──────── UNBOND ────────
 
     @Test

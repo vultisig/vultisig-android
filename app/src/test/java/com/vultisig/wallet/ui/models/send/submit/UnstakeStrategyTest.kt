@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.screens.v2.defi.STAKING_BRUNE_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.STAKING_RUJI_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.utils.UiText
@@ -384,6 +385,49 @@ internal class UnstakeStrategyTest {
         }
 
     @Test
+    fun `submit UNSTAKE_YBRUNE funds the unbond with the receipt units entered`() = runTest {
+        withMockedIoDispatcher {
+            givenSuccessfulFlow(selectedToken = ybRuneCoin())
+            // The position is reported in receipt units, so what the form carries is what funds
+            // the execute — no share conversion, unlike the sRUJI redemption above.
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.4")
+
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this, DeFiNavActions.UNSTAKE_YBRUNE).submit()
+            advanceUntilIdle()
+
+            val payload = captured.captured.wasmExecuteContractPayload
+            assertNotNull(payload)
+            assertEquals("""{ "liquid": { "unbond": {} } }""", payload!!.executeMsg)
+            assertEquals(STAKING_BRUNE_CONTRACT, payload.contractAddress)
+            assertEquals(Coins.ThorChain.ybRUNE.contractAddress, payload.coins[0]!!.denom)
+            assertEquals("40000000", payload.coins[0]!!.amount)
+            assertEquals("", captured.captured.memo)
+        }
+    }
+
+    @Test
+    fun `submit UNSTAKE_YBRUNE refuses an amount below one receipt unit`() = runTest {
+        withMockedIoDispatcher {
+            givenSuccessfulFlow(selectedToken = ybRuneCoin())
+            // Rounds to zero base units at 8 decimals: the execute would carry no funds, so the
+            // ceremony could only ever fail on-chain after the user paid for it.
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.000000001")
+
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this, DeFiNavActions.UNSTAKE_YBRUNE).submit()
+            advanceUntilIdle()
+
+            assertEquals(R.string.send_error_no_amount, lastError.stringId())
+            assertFalse(captured.isCaptured)
+        }
+    }
+
+    @Test
     fun `submit surfaces no_address when chain validates dst as invalid`() = runTest {
         givenValidatedAccount()
         coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns false
@@ -404,11 +448,14 @@ internal class UnstakeStrategyTest {
         }
     }
 
-    private fun givenSuccessfulFlow(includeRuji: Boolean = false) {
-        givenValidatedAccount()
+    private fun givenSuccessfulFlow(
+        includeRuji: Boolean = false,
+        selectedToken: Coin = rujiCoin(),
+    ) {
+        givenValidatedAccount(selectedToken = selectedToken)
         coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
         coEvery { getAvailableTokenBalance(any(), any()) } returns
-            TokenValue(BigInteger.valueOf(100_000_000), rujiCoin())
+            TokenValue(BigInteger.valueOf(100_000_000), selectedToken)
         val accounts =
             mutableListOf(
                 Account(
@@ -477,14 +524,17 @@ internal class UnstakeStrategyTest {
             )
     }
 
-    private fun givenValidatedAccount(gasFeeValue: BigInteger = BigInteger.valueOf(2_000_000)) {
+    private fun givenValidatedAccount(
+        gasFeeValue: BigInteger = BigInteger.valueOf(2_000_000),
+        selectedToken: Coin = rujiCoin(),
+    ) {
         coEvery { accountValidator.validate() } returns
             ValidatedAccount(
                 vaultId = VAULT_ID,
                 selectedAccount =
                     Account(
-                        token = rujiCoin(),
-                        tokenValue = TokenValue(BigInteger.valueOf(2_000_000_000), rujiCoin()),
+                        token = selectedToken,
+                        tokenValue = TokenValue(BigInteger.valueOf(2_000_000_000), selectedToken),
                         fiatValue = null,
                         price = null,
                     ),
@@ -528,6 +578,8 @@ internal class UnstakeStrategyTest {
             hideLoading = {},
             showError = { lastError = it },
         )
+
+    private fun ybRuneCoin(): Coin = Coins.ThorChain.ybRUNE.copy(address = "thor1self")
 
     private fun rujiCoin(): Coin =
         Coin(
