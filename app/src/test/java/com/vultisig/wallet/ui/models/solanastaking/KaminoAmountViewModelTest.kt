@@ -399,6 +399,54 @@ internal class KaminoAmountViewModelTest {
     }
 
     @Test
+    fun `a real position with a failed metrics read is unreadable, not a zero balance`() = runTest {
+        // The position itself read fine and holds real shares — only the rate needed to value them
+        // failed. Publishing `Withdrawable` here would show a live deposit as a $0 available
+        // balance instead of naming the read as unresolved.
+        givenTokenBalance("0")
+        coEvery { kaminoApi.getUserPositions(WALLET) } returns
+            listOf(
+                KaminoUserPositionJson(
+                    vaultAddress = STEAKHOUSE.address,
+                    stakedShares = "0",
+                    unstakedShares = "1000",
+                    totalShares = "1000",
+                )
+            )
+        coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } throws RuntimeException("503")
+
+        val state = viewModel(isWithdraw = true).state.value
+
+        assertEquals(KaminoWithdrawEligibility.Unreadable, state.eligibility)
+        assertEquals(0, BigDecimal.ZERO.compareTo(state.available))
+    }
+
+    @Test
+    fun `a real position with a zero metrics rate is unreadable, not a zero balance`() = runTest {
+        // `KaminoRate.parse` accepts "0" as a valid (non-positive) rate rather than rejecting it,
+        // so a `rate == null` check alone would miss this: eligibility would stay `Withdrawable`
+        // while `maximumTokens` separately rejects the non-positive rate, publishing the same
+        // zero-available-with-no-warning fold a failed metrics read is guarded against above.
+        givenTokenBalance("0")
+        coEvery { kaminoApi.getUserPositions(WALLET) } returns
+            listOf(
+                KaminoUserPositionJson(
+                    vaultAddress = STEAKHOUSE.address,
+                    stakedShares = "0",
+                    unstakedShares = "1000",
+                    totalShares = "1000",
+                )
+            )
+        coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "0")
+
+        val state = viewModel(isWithdraw = true).state.value
+
+        assertEquals(KaminoWithdrawEligibility.Unreadable, state.eligibility)
+        assertEquals(0, BigDecimal.ZERO.compareTo(state.available))
+    }
+
+    @Test
     fun `the withdraw minimum is read as tokens, padded past the program's real floor`() = runTest {
         // minWithdrawAmount is 1000 TOKEN base units — 0.001 USDC. Read as shares it would convert
         // to 0.001055; the program's real floor sits above the published figure, so this pads it 3x

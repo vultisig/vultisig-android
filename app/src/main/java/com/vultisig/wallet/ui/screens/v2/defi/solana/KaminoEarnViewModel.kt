@@ -320,6 +320,19 @@ constructor(
                         null
                     }
                 _state.update { current ->
+                    // A row whose fiat value did not resolve this refresh keeps its last known
+                    // value rather than going blank or zero — same principle as keeping the whole
+                    // card standing on a failed vault call, one row at a time.
+                    val previousFiatByVault =
+                        current.rows.associate { it.vaultAddress to it.fiatValue }
+                    val merged =
+                        resolved.map { row ->
+                            if (row.fiatValue != null) row
+                            else
+                                previousFiatByVault[row.vaultAddress]?.let { fiatValue ->
+                                    row.copy(fiatValue = fiatValue)
+                                } ?: row
+                        }
                     // The previous total is only kept when this load produced none; it has already
                     // been dropped above unless it still covers this selection and currency.
                     val total = resolvedTotal ?: current.totalValue
@@ -329,7 +342,7 @@ constructor(
                         // positions the user holds because one refresh did not land — but only for
                         // vaults still enabled, or disabling one would leave its card on screen.
                         rows =
-                            resolved.ifEmpty {
+                            merged.ifEmpty {
                                 current.rows.filter { row -> row.vaultAddress in enabled }
                             },
                         totalFiat = total?.let { currencyFormat.format(it.value) },
@@ -395,10 +408,15 @@ constructor(
             }
         val tokensPerShare = KaminoPositionMath.decimalOrNull(metrics?.tokensPerShare)
         val tokenAmount =
-            if (tokensPerShare == null || shares == null) {
-                null
-            } else {
-                KaminoPositionMath.tokenAmount(shares, tokensPerShare, vault.tokenDecimals)
+            when {
+                shares == null -> null
+                // A confirmed-zero position is worth zero regardless of the rate — no need to
+                // wait on a `/metrics` read that may have failed this refresh. Folding this case
+                // into the `tokensPerShare == null` branch below would show "Unavailable" on a
+                // real full withdrawal instead of the true zero.
+                shares.signum() == 0 -> BigDecimal.ZERO.setScale(vault.tokenDecimals)
+                tokensPerShare == null -> null
+                else -> KaminoPositionMath.tokenAmount(shares, tokensPerShare, vault.tokenDecimals)
             }
 
         val coin = vault.coin

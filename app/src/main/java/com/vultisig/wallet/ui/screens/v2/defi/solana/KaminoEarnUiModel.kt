@@ -58,9 +58,8 @@ data class KaminoEarnRow(
     val pnlDirection: PnlDirection,
     /**
      * The row's fiat value, kept alongside its formatted form so the screen total can be summed
-     * without re-parsing display strings. Null when the position or its price could not be read — a
-     * zero there would drop the vault out of every total that adds these up, which reads as a
-     * deposit having shrunk rather than as a figure that is briefly unknown.
+     * without re-parsing display strings. Null when the position or its price is unresolved — never
+     * folded to zero, which would silently understate the total by this row's real value.
      */
     val fiatValue: BigDecimal? = null,
     /**

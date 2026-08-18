@@ -475,6 +475,149 @@ internal class KaminoEarnViewModelTest {
     }
 
     @Test
+    fun `a position present but with an unparseable share count keeps Withdraw available`() =
+        runTest {
+            // The vault entry exists — this is not "the wallet holds nothing" — but its
+            // `totalShares` field will not parse. That is a failed read of a real row, and must not
+            // be folded into the same zero as a confirmed empty position.
+            coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+                flowOf(setOf(STEAKHOUSE.address))
+            coEvery { kaminoApi.getUserPositions(any()) } returns
+                listOf(
+                    KaminoUserPositionJson(
+                        vaultAddress = STEAKHOUSE.address,
+                        totalShares = "garbage",
+                    )
+                )
+            coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Steakhouse USDC")
+            coEvery { kaminoApi.getVaultMetrics(any()) } returns
+                KaminoVaultMetricsJson(tokensPerShare = "1.0")
+
+            val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
+
+            withClue("an unreadable position must not hide Withdraw") {
+                row.hasPosition shouldBe true
+            }
+            row.depositedFiat.shouldBeNull()
+        }
+
+    @Test
+    fun `a total kept partial by one unresolved row does not silently drop to that row's share`() =
+        runTest {
+            coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+                flowOf(setOf(STEAKHOUSE.address, ALLEZ.address))
+            coEvery { kaminoApi.getUserPositions(WALLET_ADDRESS) } returns
+                listOf(
+                    KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "100"),
+                    KaminoUserPositionJson(vaultAddress = ALLEZ.address, totalShares = "100"),
+                )
+            coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Vault")
+            // Steakhouse's rate fails this refresh; Allez's resolves.
+            coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } throws RuntimeException("503")
+            coEvery { kaminoApi.getVaultMetrics(ALLEZ.address) } returns
+                KaminoVaultMetricsJson(tokensPerShare = "1.0")
+
+            val state = viewModel().apply { setData(VAULT_ID) }.state.value
+
+            val steakhouseRow = state.rows.single { it.vaultAddress == STEAKHOUSE.address }
+            val allezRow = state.rows.single { it.vaultAddress == ALLEZ.address }
+            steakhouseRow.fiatValue.shouldBeNull()
+            allezRow.fiatValue.shouldNotBeNull()
+            // No prior total exists yet, so a total short by the unresolved row must not be shown
+            // as if it were confirmed — $100 would read as the whole position, not half of it.
+            state.totalFiat.shouldBeNull()
+        }
+
+    @Test
+    fun `a total never blends a fresh row with another row's stale splice`() = runTest {
+        // First refresh: both vaults price cleanly. Second refresh: Allez genuinely grows (a real,
+        // freshly priced increase) while Steakhouse's metrics call merely fails — not a confirmed
+        // zero, just unresolved this round. The row-level splice keeps Steakhouse's card showing
+        // its
+        // last known figure, but the total must not add that spliced value to Allez's new one: that
+        // combination was never true of any single confirmed state, fresh and stale alike.
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flowOf(setOf(STEAKHOUSE.address, ALLEZ.address))
+        coEvery { kaminoApi.getUserPositions(WALLET_ADDRESS) } returnsMany
+            listOf(
+                listOf(
+                    KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "100"),
+                    KaminoUserPositionJson(vaultAddress = ALLEZ.address, totalShares = "100"),
+                ),
+                listOf(
+                    KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "100"),
+                    KaminoUserPositionJson(vaultAddress = ALLEZ.address, totalShares = "300"),
+                ),
+            )
+        coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Vault")
+        coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0") andThenThrows
+            RuntimeException("503")
+        coEvery { kaminoApi.getVaultMetrics(ALLEZ.address) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0")
+
+        val vm = viewModel().apply { setData(VAULT_ID) }
+        val firstTotal = vm.state.value.totalFiat
+        firstTotal.shouldNotBeNull()
+
+        vm.refresh()
+
+        vm.state.value.totalFiat shouldBe firstTotal
+    }
+
+    @Test
+    fun `a confirmed full withdrawal with a failed metrics call still shows a real zero`() =
+        runTest {
+            // The entry is present with totalShares "0" — a confirmed real zero, not the "wallet
+            // holds nothing at all" absent-entry case. `tokenAmount` must not wait on a rate read
+            // to know that zero shares are worth zero: requiring `tokensPerShare` here would show
+            // "Unavailable" on a real full withdrawal instead of the true balance.
+            coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+                flowOf(setOf(STEAKHOUSE.address))
+            coEvery { kaminoApi.getUserPositions(any()) } returns
+                listOf(KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "0"))
+            coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Steakhouse USDC")
+            coEvery { kaminoApi.getVaultMetrics(any()) } throws RuntimeException("503")
+
+            val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
+
+            row.depositedDisplay shouldBe "0 USDC"
+            BigDecimal.ZERO.compareTo(row.fiatValue.shouldNotBeNull()) shouldBe 0
+            row.hasPosition shouldBe false
+        }
+
+    @Test
+    fun `a full withdrawal does not leave the pre-withdrawal fiat value in the total`() = runTest {
+        // First refresh: a real, priced deposit. Second refresh (after a full withdrawal):
+        // totalShares confirms zero, but this same refresh's metrics call fails. The merge must
+        // not splice the first refresh's nonzero fiatValue back in — the row is a confirmed zero,
+        // not an unresolved read, so the total must reflect zero rather than money the user no
+        // longer holds.
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flowOf(setOf(STEAKHOUSE.address))
+        coEvery { kaminoApi.getUserPositions(any()) } returnsMany
+            listOf(
+                listOf(
+                    KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "100")
+                ),
+                listOf(KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "0")),
+            )
+        coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Steakhouse USDC")
+        coEvery { kaminoApi.getVaultMetrics(any()) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0") andThenThrows
+            RuntimeException("503")
+
+        val vm = viewModel().apply { setData(VAULT_ID) }
+        val firstTotal = vm.state.value.totalFiat
+        firstTotal shouldBe "$100.00"
+
+        vm.refresh()
+        val secondTotal = vm.state.value.totalFiat
+
+        secondTotal shouldBe "$0.00"
+    }
+
+    @Test
     fun `a read position holding nothing does hide Withdraw`() = runTest {
         coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
             flowOf(setOf(STEAKHOUSE.address))
