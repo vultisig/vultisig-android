@@ -590,9 +590,15 @@ constructor(
                             }
                             // This load, not the wallet stream, is what a pull on the DeFi tab is
                             // waiting on. A cancelled one is superseded by the load that replaced
-                            // it, which clears the spinner in its turn.
+                            // it, which clears the spinner in its turn. Gated on isRefresh so a
+                            // cache-only reload (e.g. one an unrelated AppDataStore write races in
+                            // while a refresh's network fetch is still in flight) can't complete
+                            // first and clear the spinner off the cache instead of the network
+                            // read.
                             .onCompletion { cause ->
-                                if (cause == null) finishRefreshing(CryptoConnectionType.Defi)
+                                if (cause == null && isRefresh) {
+                                    finishRefreshing(CryptoConnectionType.Defi)
+                                }
                             },
                         uiState.value.searchTextFieldState.textAsFlow(),
                         defaultDeFiChainsRepository.getDefaultChains(vaultId),
