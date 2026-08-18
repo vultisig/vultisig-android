@@ -508,29 +508,24 @@ constructor(
     private fun loadPendingLpDeposits() {
         loadPendingLpJob?.cancel()
         loadPendingLpJob =
-            viewModelScope.launch {
-                try {
-                    val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
-                    val runeCoin =
-                        vault?.coins?.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
-                            ?: return@launch
+            viewModelScope.safeLaunch(
+                onError = { Timber.e(it, "Failed to load pending THORChain LP deposits") }
+            ) {
+                val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
+                val runeCoin =
+                    vault?.coins?.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
+                        ?: return@safeLaunch
 
-                    val pending =
-                        withContext(ioDispatcher) {
-                            getThorChainPendingLpDepositsUseCase(
-                                runeAddress = runeCoin.address,
-                                resolveAssetAddress = { poolId ->
-                                    vault.assetAddressForPool(poolId)
-                                },
-                            )
-                        }
+                val pending =
+                    withContext(ioDispatcher) {
+                        getThorChainPendingLpDepositsUseCase(
+                            runeAddress = runeCoin.address,
+                            resolveAssetAddress = { poolId -> vault.assetAddressForPool(poolId) },
+                        )
+                    }
 
-                    val models = pending.map { it.toUiModel(vault.assetAddressForPool(it.pool)) }
-                    state.update { it.copy(lp = it.lp.copy(pendingDeposits = models)) }
-                } catch (e: Throwable) {
-                    if (e is CancellationException) throw e
-                    Timber.e(e, "Failed to load pending THORChain LP deposits")
-                }
+                val models = pending.map { it.toUiModel(vault.assetAddressForPool(it.pool)) }
+                state.update { it.copy(lp = it.lp.copy(pendingDeposits = models)) }
             }
     }
 
@@ -1081,7 +1076,7 @@ constructor(
 
         if (selectedPools.isEmpty()) {
             loadLpJob?.cancel()
-            state.update { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
+            state.update { it.copy(lp = it.lp.copy(isLoading = false, positions = emptyList())) }
             loadLpJob = viewModelScope.launch { reportLpFiat(BigDecimal.ZERO) }
             return
         }
@@ -1099,7 +1094,7 @@ constructor(
                 // has no liquidity yet should be visible so the Add button is reachable.
                 val placeholders = selectedPools.map { it.toPlaceholderUiModel(zero) }
                 state.update {
-                    it.copy(lp = LpTabUiModel(isLoading = true, positions = placeholders))
+                    it.copy(lp = it.lp.copy(isLoading = true, positions = placeholders))
                 }
 
                 try {
@@ -1114,7 +1109,7 @@ constructor(
                         Timber.e("Vault does not have RUNE coin for LP positions")
                         reportLpFiat(BigDecimal.ZERO)
                         state.update {
-                            it.copy(lp = LpTabUiModel(isLoading = false, positions = placeholders))
+                            it.copy(lp = it.lp.copy(isLoading = false, positions = placeholders))
                         }
                         return@launch
                     }
@@ -1186,15 +1181,13 @@ constructor(
                             // understate the header total rather than admit a value is missing.
                             LpLegTotal.Unavailable
                         }
-                    state.update {
-                        it.copy(lp = LpTabUiModel(isLoading = false, positions = merged))
-                    }
+                    state.update { it.copy(lp = it.lp.copy(isLoading = false, positions = merged)) }
                 } catch (e: Throwable) {
                     if (e is CancellationException) throw e
                     Timber.e(e, "Failed to load THORChain LP positions")
                     reportLpFiat(BigDecimal.ZERO)
                     state.update {
-                        it.copy(lp = LpTabUiModel(isLoading = false, positions = placeholders))
+                        it.copy(lp = it.lp.copy(isLoading = false, positions = placeholders))
                     }
                 }
             }
