@@ -663,8 +663,9 @@ constructor(
                 // screens so the lists can't drift apart — a denom this route claims must be kept
                 // out of the generic provider batch, or a borrowed priceProviderID writes the
                 // wrong price into its row first.
-                val thorTokens =
-                    Coins.coins[Chain.ThorChain]?.filter(Coins::isNavPricedDenom) ?: emptyList()
+                // allResolvable, not `coins[ThorChain]`: ybRUNE is a DeFi-only receipt and so
+                // lives outside the wallet catalogue, yet this is the only route that can price it.
+                val thorTokens = Coins.allResolvable.filter(Coins::isNavPricedDenom)
 
                 val matchingTokens =
                     tokenList.filter { token -> thorTokens.any { it.id.equals(token.id, true) } }

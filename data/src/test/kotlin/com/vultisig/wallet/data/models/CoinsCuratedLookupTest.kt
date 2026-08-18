@@ -101,6 +101,24 @@ internal class CoinsCuratedLookupTest {
         )
     }
 
+    /**
+     * The token-selection sheet and token discovery both read the wallet catalogue, so a receipt
+     * left in it is offered as a spendable token however well the discovery filters are tuned.
+     */
+    @Test
+    fun `the DeFi-only receipts are not in the wallet catalogue`() {
+        listOf(Coins.ThorChain.sRUJI, Coins.ThorChain.ybRUNE).forEach { receipt ->
+            assertTrue(
+                Coins.all.none { it.id.equals(receipt.id, ignoreCase = true) },
+                "${receipt.id} is offered as a wallet token",
+            )
+            assertTrue(
+                Coins.allResolvable.any { it.id.equals(receipt.id, ignoreCase = true) },
+                "${receipt.id} is no longer resolvable by id",
+            )
+        }
+    }
+
     /** A market-quoted THORChain denom keeps its own id and must not be diverted. */
     @Test
     fun `a market-priced THORChain denom is not NAV-priced`() {
