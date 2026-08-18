@@ -97,7 +97,9 @@ constructor(
     private suspend fun cleanupDeFiOnlyTokens(vault: Vault, chain: Chain) {
         if (chain != Chain.ThorChain) return
         vault.coins
-            .filter { it.chain == chain && it.contractAddress in DEFI_ONLY_THORCHAIN_DENOMS }
+            .filter {
+                it.chain == chain && it.contractAddress.lowercase() in DEFI_ONLY_THORCHAIN_DENOMS
+            }
             .forEach { vaultRepository.deleteTokenFromVault(vault.id, it) }
     }
 

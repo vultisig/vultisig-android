@@ -741,8 +741,8 @@ constructor(
     /**
      * The chain's DeFi-only positions, stamped with the key its tokens share.
      *
-     * These back a DeFi position but are never wallet tokens — the sRUJI receipt is kept out of
-     * token discovery on purpose — so no vault carries one and the accounts built from
+     * These back a DeFi position but are never wallet tokens — the sRUJI and ybRUNE receipts are
+     * kept out of token discovery on purpose — so no vault carries one and the accounts built from
      * [Vault.coins] alone leave the position with nowhere for its balance to land. It is then
      * dropped from the chain's row and from the portfolio total above it, which read $0.00 over a
      * funded position.
