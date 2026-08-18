@@ -66,7 +66,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
@@ -247,6 +246,11 @@ constructor(
         viewModelScope.safeLaunch {
             updateLastOpenedVault()
             lastOpenedVaultRepository.lastOpenedVaultId
+                // AppDataStore reads the whole preferences file, so every unrelated write
+                // re-emits the same id. Without this, each one re-ran loadData: cancelling the
+                // balance loads in flight and starting them over, a cached DeFi read landing on
+                // top of a pull's network read among them.
+                .distinctUntilChanged()
                 .map { lastOpenedVaultId ->
                     lastOpenedVaultId?.let { vaultRepository.get(it) }
                         ?: vaultRepository.getAll().firstOrNull()
@@ -529,8 +533,12 @@ constructor(
                         isChainSelectionEnabled = vault.libType != SigningLibType.KeyImport,
                     )
                 }
-                val isVaultBackedUp = vaultDataStoreRepository.readBackupStatus(vaultId).first()
-                uiState.update { it.copy(showBackupWarning = !isVaultBackedUp) }
+                // Collected, not read once: backing the vault up is what takes this warning
+                // down, and it happens on another screen while this one is still alive.
+                vaultDataStoreRepository.readBackupStatus(vaultId).distinctUntilChanged().collect {
+                    isBackedUp ->
+                    uiState.update { it.copy(showBackupWarning = !isBackedUp) }
+                }
             }
     }
 
@@ -575,28 +583,31 @@ constructor(
     }
 
     private fun loadDeFiBalances(vaultId: String, isRefresh: Boolean = false) {
+        // A load that replaces the one an outstanding DeFi pull is waiting on has to carry that
+        // pull's network read forward: the job it cancels never clears the spinner, and answering
+        // the pull off the cache would take the spinner down over the very rows it was pulled to
+        // replace.
+        val readsNetwork = isRefresh || refreshOwner == CryptoConnectionType.Defi
         loadDeFiBalancesJob?.cancel()
         // Only a network read covers a later resume; the cached-only load fetches nothing, so it
         // must not stand in for one.
-        if (isRefresh) throttleDeFiRefresh()
+        if (readsNetwork) throttleDeFiRefresh()
         loadDeFiBalancesJob =
             viewModelScope.safeLaunch {
                 combine(
                         accountsRepository
-                            .loadDeFiAddresses(vaultId, isRefresh)
+                            .loadDeFiAddresses(vaultId, readsNetwork)
                             .map { addresses -> addresses.sortByAccountsTotalFiatValue() }
                             .catch { error ->
                                 Timber.e(error, "Error loading DeFi balances for vault: $vaultId")
                             }
                             // This load, not the wallet stream, is what a pull on the DeFi tab is
                             // waiting on. A cancelled one is superseded by the load that replaced
-                            // it, which clears the spinner in its turn. Gated on isRefresh so a
-                            // cache-only reload (e.g. one an unrelated AppDataStore write races in
-                            // while a refresh's network fetch is still in flight) can't complete
-                            // first and clear the spinner off the cache instead of the network
-                            // read.
+                            // it, which clears the spinner in its turn. Gated on the network
+                            // read so a cache-only load can't clear the spinner off the cache
+                            // instead of the fetch the pull is waiting on.
                             .onCompletion { cause ->
-                                if (cause == null && isRefresh) {
+                                if (cause == null && readsNetwork) {
                                     finishRefreshing(CryptoConnectionType.Defi)
                                 }
                             },

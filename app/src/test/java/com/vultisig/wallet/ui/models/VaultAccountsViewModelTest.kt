@@ -11,6 +11,8 @@ import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
 import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.HasCircleAccountUseCase
 import io.kotest.matchers.shouldBe
@@ -18,13 +20,16 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -51,6 +56,8 @@ internal class VaultAccountsViewModelTest {
     private lateinit var cryptoConnectionTypeRepository: CryptoConnectionTypeRepository
     private lateinit var defaultDeFiChainsRepository: DefaultDeFiChainsRepository
     private lateinit var balanceVisibilityRepository: BalanceVisibilityRepository
+    private lateinit var vaultDataStoreRepository: VaultDataStoreRepository
+    private lateinit var requestResultRepository: RequestResultRepository
     private lateinit var hasCircleAccount: HasCircleAccountUseCase
 
     private val connectionType = MutableStateFlow(CryptoConnectionType.Wallet)
@@ -64,6 +71,8 @@ internal class VaultAccountsViewModelTest {
         cryptoConnectionTypeRepository = mockk(relaxed = true)
         defaultDeFiChainsRepository = mockk(relaxed = true)
         balanceVisibilityRepository = mockk(relaxed = true)
+        vaultDataStoreRepository = mockk(relaxed = true)
+        requestResultRepository = mockk(relaxed = true)
         hasCircleAccount = mockk(relaxed = true)
 
         every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf(VAULT_ID)
@@ -75,6 +84,8 @@ internal class VaultAccountsViewModelTest {
         every { defaultDeFiChainsRepository.getDefaultChains(VAULT_ID) } returns flowOf(emptySet())
         coEvery { balanceVisibilityRepository.getVisibility(VAULT_ID) } returns true
         coEvery { hasCircleAccount(any()) } returns false
+        coEvery { vaultDataStoreRepository.readBackupStatus(VAULT_ID) } returns flowOf(true)
+        coEvery { requestResultRepository.request<Unit>(any()) } returns Unit
     }
 
     @AfterEach
@@ -189,15 +200,81 @@ internal class VaultAccountsViewModelTest {
         viewModel.uiState.value.isRefreshing shouldBe false
     }
 
+    @Test
+    fun `an unrelated preference write does not reload the vault`() = runTest {
+        connectionType.value = CryptoConnectionType.Defi
+        val vaultIds = MutableSharedFlow<String?>(replay = 1)
+        vaultIds.emit(VAULT_ID)
+        every { lastOpenedVaultRepository.lastOpenedVaultId } returns vaultIds
+
+        viewModel()
+        advanceUntilIdle()
+
+        // AppDataStore reads the whole preferences file, so a write to any other key re-emits the
+        // id already on screen. Emitted from a SharedFlow, like the DataStore one it stands in
+        // for: a StateFlow would conflate the repeat away before the screen ever saw it.
+        vaultIds.emit(VAULT_ID)
+        advanceUntilIdle()
+
+        verify(exactly = 1) { accountsRepository.loadAddressBalances(VAULT_ID) }
+        coVerify(exactly = 1) { accountsRepository.loadDeFiAddresses(VAULT_ID, any()) }
+    }
+
+    @Test
+    fun `a reload landing mid-pull still takes the spinner down`() = runTest {
+        connectionType.value = CryptoConnectionType.Defi
+        val deFiAddresses = Channel<List<Address>>(Channel.UNLIMITED)
+        coEvery { accountsRepository.loadDeFiAddresses(VAULT_ID, true) } returns
+            deFiAddresses.receiveAsFlow()
+        val viewModel = viewModel()
+        runCurrent()
+
+        viewModel.refreshData()
+        runCurrent()
+
+        viewModel.uiState.value.isRefreshing shouldBe true
+
+        // Reachable from the wallet tab: its chain picker reloads everything on the way back, the
+        // DeFi list included, cancelling the fetch the pull started on the other tab is waiting on.
+        viewModel.setCryptoConnectionType(CryptoConnectionType.Wallet)
+        viewModel.openAddChainAccount()
+        runCurrent()
+
+        // The replacement carries the pull's read forward instead of answering it from the cache,
+        // so the pull still ends on a fetch rather than leaving the spinner up for good.
+        coVerify(exactly = 2) { accountsRepository.loadDeFiAddresses(VAULT_ID, true) }
+
+        deFiAddresses.close()
+        runCurrent()
+
+        viewModel.uiState.value.isRefreshing shouldBe false
+    }
+
+    @Test
+    fun `backing the vault up takes the warning down`() = runTest {
+        val isBackedUp = MutableStateFlow(false)
+        coEvery { vaultDataStoreRepository.readBackupStatus(VAULT_ID) } returns isBackedUp
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.uiState.value.showBackupWarning shouldBe true
+
+        // Backing up happens a screen away while this one is still alive.
+        isBackedUp.value = true
+        advanceUntilIdle()
+
+        viewModel.uiState.value.showBackupWarning shouldBe false
+    }
+
     private fun viewModel() =
         VaultAccountsViewModel(
             savedStateHandle = SavedStateHandle(),
             navigator = mockk(relaxed = true),
-            requestResultRepository = mockk(relaxed = true),
+            requestResultRepository = requestResultRepository,
             addressToUiModelMapper = mockk(relaxed = true),
             fiatValueToStringMapper = mockk(relaxed = true),
             vaultRepository = vaultRepository,
-            vaultDataStoreRepository = mockk(relaxed = true),
+            vaultDataStoreRepository = vaultDataStoreRepository,
             accountsRepository = accountsRepository,
             balanceVisibilityRepository = balanceVisibilityRepository,
             vaultMetadataRepo = mockk(relaxed = true),
