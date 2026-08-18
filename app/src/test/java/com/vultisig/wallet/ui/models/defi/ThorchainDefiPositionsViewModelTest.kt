@@ -390,6 +390,42 @@ internal class ThorchainDefiPositionsViewModelTest {
         assertFalse(sTcy.supportsMint)
     }
 
+    @Test
+    fun `the ybRUNE receipt renders as a compounded bRUNE card`() = runTest {
+        selectPositions("ybRUNE")
+        coEvery { defaultStakingPositionService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(listOf(stakingDetails(Coins.ThorChain.ybRUNE, BigInteger("523400000000"))))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val ybRune =
+            vm.state.value.staking.positions.single { it.coin.id == Coins.ThorChain.ybRUNE.id }
+        // Titled after what was bonded, as the sRUJI card is titled after RUJI.
+        val header = ybRune.stakeAssetHeader as UiText.FormattedText
+        assertEquals(R.string.defi_header_compounded, header.resId)
+        assertEquals(listOf(Coins.ThorChain.bRUNE.ticker), header.formatArgs)
+        // Auto-compounding: nothing is separately claimable, and it is not a transferable balance.
+        assertFalse(ybRune.supportsMint)
+        assertFalse(ybRune.canTransfer)
+        assertFalse(ybRune.canWithdraw)
+        assertTrue(ybRune.canStake)
+        assertTrue(ybRune.canUnstake)
+    }
+
+    @Test
+    fun `a ybRUNE position nobody holds cannot be unbonded`() = runTest {
+        selectPositions("ybRUNE")
+        coEvery { defaultStakingPositionService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(listOf(stakingDetails(Coins.ThorChain.ybRUNE, BigInteger.ZERO)))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val ybRune =
+            vm.state.value.staking.positions.single { it.coin.id == Coins.ThorChain.ybRUNE.id }
+        assertFalse(ybRune.canUnstake)
+        assertTrue(ybRune.canStake)
+    }
+
     /**
      * These position tokens usually aren't vault coins, and the periodic price refresh only ever
      * covers vault coins — so unless the screen refreshes them itself they have no cache row, and

@@ -835,7 +835,8 @@ constructor(
                     settleStakingPositions {
                         it.coin.id == Coins.ThorChain.yRUNE.id ||
                             it.coin.id == Coins.ThorChain.yTCY.id ||
-                            it.coin.id == Coins.ThorChain.sTCY.id
+                            it.coin.id == Coins.ThorChain.sTCY.id ||
+                            it.coin.id == Coins.ThorChain.ybRUNE.id
                     }
                 }
                 .onCompletion { cause ->
@@ -888,21 +889,31 @@ constructor(
 
                             val canTransfer = coin.ticker.contains("stcy", ignoreCase = true)
 
+                            val isBondedRuneReceipt =
+                                coin.id.equals(Coins.ThorChain.ybRUNE.id, true)
+
                             val headerResId =
                                 if (supportsMint) {
                                     R.string.defi_header_minted
                                 } else if (
-                                    defaultPosition.coin.id.equals(Coins.ThorChain.sTCY.id, true)
+                                    defaultPosition.coin.id.equals(Coins.ThorChain.sTCY.id, true) ||
+                                        isBondedRuneReceipt
                                 ) {
                                     R.string.defi_header_compounded
                                 } else {
                                     R.string.defi_header_staked
                                 }
+                            // The bonded position is named after what was bonded, not after the
+                            // receipt that tracks it: "Compounded bRUNE", the way the sRUJI card
+                            // is titled off RUJI.
+                            val headerTicker =
+                                if (isBondedRuneReceipt) Coins.ThorChain.bRUNE.ticker
+                                else coin.ticker
                             val position =
                                 StakePositionUiModel(
                                     coin = defaultPosition.coin,
                                     stakeAssetHeader =
-                                        UiText.FormattedText(headerResId, listOf(coin.ticker)),
+                                        UiText.FormattedText(headerResId, listOf(headerTicker)),
                                     stakedAmountDisplay =
                                         stakeAmount.formatTokenAmount(coin.ticker),
                                     // No .orEmpty(): a missed lookup means "we have no price",
@@ -1406,6 +1417,9 @@ constructor(
                     DeFiNavActions.UNSTAKE_TCY -> Coins.ThorChain.TCY.id
                     DeFiNavActions.STAKE_STCY -> Coins.ThorChain.TCY.id
                     DeFiNavActions.UNSTAKE_STCY -> Coins.ThorChain.sTCY.id
+                    // Bonding spends bRUNE; only the unbond starts from the receipt.
+                    DeFiNavActions.STAKE_YBRUNE -> Coins.ThorChain.bRUNE.id
+                    DeFiNavActions.UNSTAKE_YBRUNE -> Coins.ThorChain.ybRUNE.id
                     DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY.id
                     DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY.id
                     DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE.id
@@ -1470,6 +1484,8 @@ constructor(
             val stcy = Coins.ThorChain.sTCY
             val ytcy = Coins.ThorChain.yTCY
             val yrune = Coins.ThorChain.yRUNE
+            val brune = Coins.ThorChain.bRUNE
+            val ybrune = Coins.ThorChain.ybRUNE
 
             return listOf(
                 StakePositionUiModel(
@@ -1540,6 +1556,19 @@ constructor(
                     coin = yrune,
                     stakeAssetHeader = UiText.StringResource(R.string.staked_yrune_header),
                     stakedAmountDisplay = "0 ${yrune.ticker}",
+                    apy = null,
+                    canWithdraw = false,
+                    canStake = true,
+                    canUnstake = false,
+                    rewards = null,
+                    nextReward = null,
+                    nextPayout = null,
+                ),
+                StakePositionUiModel(
+                    coin = ybrune,
+                    stakeAssetHeader =
+                        UiText.FormattedText(R.string.defi_header_compounded, listOf(brune.ticker)),
+                    stakedAmountDisplay = "0 ${ybrune.ticker}",
                     apy = null,
                     canWithdraw = false,
                     canStake = true,

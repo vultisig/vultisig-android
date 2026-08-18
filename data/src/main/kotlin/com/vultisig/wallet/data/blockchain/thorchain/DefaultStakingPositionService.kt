@@ -20,8 +20,16 @@ constructor(
     private val stakingDetailsRepository: StakingDetailsRepository,
 ) {
 
+    // Every one of these is read the same way: a bank denom whose balance is the position. ybRUNE
+    // is the auto-compounding receipt for bonded bRUNE, and since it is no longer a wallet token
+    // this read is the only thing that surfaces it.
     val supportedStakingCoins =
-        listOf(Coins.ThorChain.sTCY, Coins.ThorChain.yRUNE, Coins.ThorChain.yTCY)
+        listOf(
+            Coins.ThorChain.sTCY,
+            Coins.ThorChain.yRUNE,
+            Coins.ThorChain.yTCY,
+            Coins.ThorChain.ybRUNE,
+        )
 
     fun getStakingDetails(address: String, vaultId: String): Flow<List<StakingDetails>> =
         flow {

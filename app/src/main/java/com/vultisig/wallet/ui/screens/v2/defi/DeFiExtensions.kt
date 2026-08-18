@@ -37,6 +37,7 @@ internal val thorchainSupportStakingDeFi: List<Coin>
             Coins.ThorChain.sTCY,
             Coins.ThorChain.yRUNE,
             Coins.ThorChain.yTCY,
+            Coins.ThorChain.ybRUNE,
         )
 
 internal val thorchainSupportsBonDeFi: List<Coin>
