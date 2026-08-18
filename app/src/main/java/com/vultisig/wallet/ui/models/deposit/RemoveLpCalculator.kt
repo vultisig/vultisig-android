@@ -40,19 +40,28 @@ internal object RemoveLpCalculator {
      * [BigInteger] overload of [computeAmountDisplay] for LP positions whose unit counts exceed
      * `Long.MAX_VALUE` (whale positions). Keeps the redeem-amount math in full-precision
      * fixed-point so no precision is lost converting through `Long`.
+     *
+     * [scale] is how many decimals the result keeps. It defaults to [DISPLAY_SCALE], which suits
+     * RUNE and CACAO; a high-unit-price pool asset needs more, or its whole redeem amount rounds
+     * away to `0.000`.
      */
     fun computeAmountDisplay(
         selectedUnits: BigInteger,
         poolDepth: BigInteger,
         totalPoolUnits: BigInteger,
         decimals: Int,
+        scale: Int = DISPLAY_SCALE,
     ): String? {
         if (totalPoolUnits.signum() <= 0) return null
         return selectedUnits
             .toBigDecimal()
             .multiply(poolDepth.toBigDecimal())
             .divide(totalPoolUnits.toBigDecimal(), LP_UNITS_INTERMEDIATE_SCALE, RoundingMode.DOWN)
-            .divide(BigDecimal.TEN.pow(decimals), DISPLAY_SCALE, RoundingMode.DOWN)
+            .divide(BigDecimal.TEN.pow(decimals), scale, RoundingMode.DOWN)
             .toPlainString()
     }
+
+    /** Drops the padding zeros a fixed [scale] leaves behind: `"1.840"` reads as `"1.84"`. */
+    fun trimTrailingZeros(display: String): String =
+        display.toBigDecimalOrNull()?.stripTrailingZeros()?.toPlainString() ?: display
 }

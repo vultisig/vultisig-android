@@ -112,6 +112,9 @@ import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyValidatorRow
+import com.vultisig.wallet.ui.models.defi.LpTabUiModel
+import com.vultisig.wallet.ui.models.defi.PendingLpDepositUiModel
+import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
@@ -222,11 +225,13 @@ import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
+import com.vultisig.wallet.ui.screens.v2.defi.maya.RemoveLpScreenContent
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.solana.KaminoAmountContent
 import com.vultisig.wallet.ui.screens.v2.defi.solana.KaminoEarnRow
 import com.vultisig.wallet.ui.screens.v2.defi.solana.KaminoEarnUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.solana.SolanaStakingPositionsContent
+import com.vultisig.wallet.ui.screens.v2.defi.thorchain.ThorchainDefiPositionScreenContent
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
@@ -242,6 +247,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.math.sin
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.delay
@@ -296,6 +302,49 @@ class PreviewActivity : ComponentActivity() {
                                     error = PasscodeLockError.Wrong(remainingAttempts = 2)
                                 ),
                             textFieldState = TextFieldState(),
+                        )
+                    "remove_thor_lp" ->
+                        RemoveLpScreenContent(
+                            state =
+                                DepositFormUiModel(
+                                    removeLpPercent = 0.92f,
+                                    removeLpCacaoDisplay = "1.84",
+                                    removeLpTokenSymbol = "RUNE",
+                                    removeLpAssetDisplay = "0.07149251",
+                                    removeLpAssetSymbol = "VVV",
+                                    availableLpUnits = "1000",
+                                    removeLpUnitsDivisor = BigInteger("1000"),
+                                    balance = UiText.DynamicString("2.083 RUNE"),
+                                )
+                        )
+                    "thor_lp_pending" ->
+                        ThorchainDefiPositionScreenContent(
+                            state =
+                                ThorchainDefiPositionsUiModel(
+                                    totalAmountPrice = "$1,204.55",
+                                    isTotalAmountLoading = false,
+                                    selectedTab = R.string.defi_tab_lp,
+                                    lpDialogLoaded = true,
+                                    selectedPositions = emptyList(),
+                                    lp =
+                                        LpTabUiModel(
+                                            pendingDeposits =
+                                                listOf(
+                                                    PendingLpDepositUiModel(
+                                                        poolId = "BASE.VVV",
+                                                        icon = R.drawable.base,
+                                                        chainLogo = R.drawable.base,
+                                                        awaitedTicker = "VVV",
+                                                        depositedAmount = "2 RUNE",
+                                                        pairedAddress = "0x14F6…89B6",
+                                                        refundsIn = UiText.DynamicString("21h 14m"),
+                                                    )
+                                                )
+                                        ),
+                                ),
+                            onClickBondToNode = {},
+                            onClickUnbond = {},
+                            onClickBond = {},
                         )
                     "limit_swap_form" -> LimitSwapFormPreview()
                     "limit_swap_form_assets" ->

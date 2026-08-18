@@ -134,6 +134,14 @@ internal data class DepositFormUiModel(
     // and the on-chain memo in sync at sub-percent granularity.
     val removeLpBasisPoints: Int = 0,
     val removeLpCacaoDisplay: String = "",
+    // THORChain remove-LP withdraws both sides of the pool, so the form shows the asset leg
+    // alongside the RUNE one. Maya's CACAO pools are single-sided here and leave these empty,
+    // which is what hides the second leg on that flow.
+    val removeLpAssetDisplay: String = "",
+    val removeLpAssetSymbol: String = "",
+    // The user's full asset-side redeem value (base units), scaled by the slider the same way
+    // removeLpPoolDepth is for the RUNE side.
+    val removeLpAssetRedeemBase: BigInteger = BigInteger.ZERO,
 )
 
 @HiltViewModel

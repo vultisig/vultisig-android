@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.repositories.LpBondablePool
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.defi.parseThorChainPool
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.RemoveLpCalculator
 import com.vultisig.wallet.ui.utils.UiText
@@ -166,6 +167,11 @@ constructor(
                 removeLpPoolDepth = BigInteger.ZERO,
                 removeLpPercent = 0f,
                 removeLpCacaoDisplay = "",
+                // Maya pools withdraw CACAO only; clear any asset leg a previous THORChain
+                // selection left behind so the second amount does not linger on this form.
+                removeLpAssetDisplay = "",
+                removeLpAssetSymbol = "",
+                removeLpAssetRedeemBase = BigInteger.ZERO,
                 balance = R.string.share_balance_loading.asUiText(),
                 errorText = null,
             )
@@ -267,6 +273,9 @@ constructor(
                             removeLpPoolDepth = BigInteger.ZERO,
                             removeLpDecimals = RemoveLpCalculator.RUNE_DECIMALS,
                             removeLpTokenSymbol = Coins.ThorChain.RUNE.ticker,
+                            removeLpAssetDisplay = "",
+                            removeLpAssetSymbol = "",
+                            removeLpAssetRedeemBase = BigInteger.ZERO,
                             balance = UiText.Empty,
                             errorText = UiText.StringResource(R.string.dialog_default_error_body),
                         )
@@ -282,6 +291,9 @@ constructor(
                 removeLpTokenSymbol = Coins.ThorChain.RUNE.ticker,
                 removeLpPercent = 0f,
                 removeLpCacaoDisplay = "",
+                removeLpAssetDisplay = "",
+                removeLpAssetSymbol = "",
+                removeLpAssetRedeemBase = BigInteger.ZERO,
                 balance = R.string.share_balance_loading.asUiText(),
                 errorText = null,
             )
@@ -360,6 +372,8 @@ constructor(
                         removeLpPoolDepth = runeRedeemBase,
                         removeLpDecimals = RemoveLpCalculator.RUNE_DECIMALS,
                         removeLpTokenSymbol = symbol,
+                        removeLpAssetRedeemBase = position.assetRedeemValue,
+                        removeLpAssetSymbol = parseThorChainPool(poolId).ticker,
                         balance = balanceText,
                     )
                 }
@@ -386,17 +400,34 @@ constructor(
             availableUnits.multiply(basisPoints.toBigInteger()).divide(BigInteger.valueOf(10_000L))
         val cacaoDisplay =
             RemoveLpCalculator.computeAmountDisplay(
-                selectedUnits = selectedUnits,
-                poolDepth = s.removeLpPoolDepth,
-                totalPoolUnits = s.removeLpUnitsDivisor,
-                decimals = s.removeLpDecimals,
-            ) ?: return
+                    selectedUnits = selectedUnits,
+                    poolDepth = s.removeLpPoolDepth,
+                    totalPoolUnits = s.removeLpUnitsDivisor,
+                    decimals = s.removeLpDecimals,
+                )
+                ?.let(RemoveLpCalculator::trimTrailingZeros) ?: return
+        // The asset leg is priced per unit far above RUNE on some pools, so it keeps thornode's
+        // full 1e8 precision instead of the three decimals that suit RUNE and CACAO — at three it
+        // would round to 0.000 and read as nothing to withdraw.
+        val assetDisplay =
+            if (s.removeLpAssetSymbol.isEmpty()) ""
+            else
+                RemoveLpCalculator.computeAmountDisplay(
+                        selectedUnits = selectedUnits,
+                        poolDepth = s.removeLpAssetRedeemBase,
+                        totalPoolUnits = s.removeLpUnitsDivisor,
+                        decimals = RemoveLpCalculator.RUNE_DECIMALS,
+                        scale = RemoveLpCalculator.RUNE_DECIMALS,
+                    )
+                    ?.let(RemoveLpCalculator::trimTrailingZeros)
+                    .orEmpty()
         lpUnitsFieldState.setTextAndPlaceCursorAtEnd(selectedUnits.toString())
         state.update {
             it.copy(
                 removeLpPercent = percent,
                 removeLpBasisPoints = basisPoints,
                 removeLpCacaoDisplay = cacaoDisplay,
+                removeLpAssetDisplay = assetDisplay,
             )
         }
     }
