@@ -336,6 +336,23 @@ constructor(
         val rate = KaminoRate.parse(metrics?.tokensPerShare)
         val held = eligibility.withdrawableShares?.maximum
 
+        // A real position whose rate could not be read is not "nothing to withdraw" — it is a
+        // failed read, same as the positions call failing outright. Without this, a `/metrics`
+        // outage would publish `Withdrawable` with a zero maximum, which reads as an emptied
+        // position rather than an unresolved one. `rate == null` alone misses a `tokensPerShare`
+        // of `"0"`: `KaminoRate.parse` accepts it as a valid non-positive rate, so it must be
+        // caught via `!rate.isPositive` too, or `maximumTokens` rejecting it downstream leaves the
+        // same zero-maximum-with-no-warning fold this guard exists to close.
+        val resolvedEligibility =
+            if (
+                eligibility is KaminoWithdrawEligibility.Withdrawable &&
+                    (rate == null || !rate.isPositive)
+            ) {
+                KaminoWithdrawEligibility.Unreadable
+            } else {
+                eligibility
+            }
+
         val maximum =
             if (held != null && rate != null) {
                 KaminoWithdrawMath.maximumTokens(held, rate, vault.tokenDecimals)
@@ -389,7 +406,7 @@ constructor(
                 ticker = coin.ticker,
                 available = maximum.toDecimalOrZero(vault.tokenDecimals),
                 minimum = minimum?.let { m -> BigDecimal(m.baseUnits).movePointLeft(m.decimals) },
-                eligibility = eligibility,
+                eligibility = resolvedEligibility,
             )
         }
     }
