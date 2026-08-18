@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.passcode
 
+import io.kotest.matchers.shouldBe
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -426,6 +427,36 @@ internal class PasscodeRepositoryImplTest {
 
         assertEquals(PasscodeState.StoreUnavailable, repository.state.value)
         assertEquals(true, repository.isLocked(), "stored keyshares stay unreadable")
+    }
+
+    @Test
+    fun `retry re-reads a store that has come back`() = runTest {
+        // The screen it backs has no other way out, so a keystore that stalled once would
+        // otherwise cost the user a relaunch to repeat a read the app can just do again.
+        repository().setPasscode("123456")
+        store.readFailure = IllegalStateException("keystore is stalled")
+        val reopened = repository()
+        reopened.initialize()
+        reopened.state.value shouldBe PasscodeState.StoreUnavailable
+
+        store.readFailure = null
+        reopened.retry()
+
+        reopened.state.value shouldBe PasscodeState.Locked
+    }
+
+    @Test
+    fun `retry leaves a state that was already read alone`() = runTest {
+        repository().setPasscode("123456")
+        val reopened = repository()
+        reopened.initialize()
+        reopened.state.value shouldBe PasscodeState.Locked
+
+        // Would surface as StoreUnavailable if retry re-read a state nothing asked it to.
+        store.readFailure = IllegalStateException("keystore is stalled")
+        reopened.retry()
+
+        reopened.state.value shouldBe PasscodeState.Locked
     }
 
     @Test

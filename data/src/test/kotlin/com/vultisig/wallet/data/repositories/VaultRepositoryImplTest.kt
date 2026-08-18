@@ -184,6 +184,21 @@ internal class VaultRepositoryImplTest {
         assertEquals("Ethereum", captured.captured.coins[0].chain)
     }
 
+    // ---- replace ------------------------------------------------------------
+
+    /** Both statements have to reach the DAO as one call, or an interruption loses both vaults. */
+    @Test
+    fun `replace hands the dao one call carrying the superseded id and the replacement`() =
+        runTest {
+            val stored = slot<VaultWithKeySharesAndTokens>()
+            coJustRun { vaultDao.replace("old-id", capture(stored)) }
+
+            repository.replace("old-id", makeVault().copy(keyshares = listOf(KeyShare("p", "s"))))
+
+            assertEquals("vault-1", stored.captured.vault.id)
+            assertEquals("s", stored.captured.keyShares.single().keyShare)
+        }
+
     // ---- delete -------------------------------------------------------------
 
     /** Verifies [delete] passes the vault id to the DAO delete method. */
@@ -638,6 +653,24 @@ internal class VaultRepositoryImplTest {
         repository.upsert(makeVault().copy(keyshares = listOf(KeyShare("pub-1", "share-1"))))
 
         assertEquals("share-1", stored.captured.keyShares.single().keyShare)
+    }
+
+    /**
+     * Verifies a backup cannot smuggle in a share that claims to be encrypted.
+     *
+     * Only the cipher writes that marker, so a share carrying one came from a file. Stored as-is it
+     * would leave the table holding ciphertext no key opens, which every launch from then on reads
+     * as "the credentials are gone" — locking a device that may never have had a passcode.
+     */
+    @Test
+    fun `add refuses a keyshare that already carries the encrypted marker`() = runTest {
+        val forged = keyShareCipher.encrypt("share-1", dataKey, keyShareIdentity)
+
+        assertFailsWith<IllegalStateException> {
+            repository.add(makeVault().copy(keyshares = listOf(KeyShare("pub-1", forged))))
+        }
+
+        coVerify(exactly = 0) { vaultDao.insert(any()) }
     }
 
     /** Returns a minimal domain [Vault]. */

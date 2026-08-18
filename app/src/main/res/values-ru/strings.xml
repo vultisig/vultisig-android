@@ -184,6 +184,7 @@
     <string name="passcode_settings_title">Шифрование код-паролем</string>
     <string name="passcode_settings_encryption_title">Шифрование код-паролем</string>
     <string name="passcode_settings_encryption_subtitle">Шифрует хранилище на этом устройстве и блокирует приложение.</string>
+    <string name="passcode_settings_encryption_explanation">Шифрование код-паролем привязано к этому устройству. Храните резервную копию .vult, и вы всегда сможете восстановить хранилища.</string>
     <string name="passcode_settings_change">Изменить код-пароль</string>
     <string name="passcode_settings_auto_lock">Автоблокировка</string>
     <string name="auto_lock_setting_title">Автоблокировка</string>
@@ -206,10 +207,12 @@
     <string name="passcode_entry_mismatch">Коды-пароли не совпадают. Придумайте заново.</string>
     <string name="passcode_operation_failed">Не удалось. Код-пароль не изменён.</string>
     <string name="passcode_not_digits">Вводите только цифры.</string>
-    <string name="passcode_key_unavailable_title">Хранилища недоступны</string>
-    <string name="passcode_key_unavailable_message">Ключи, защищающие данные хранилищ на этом устройстве, утрачены, поэтому его доли ключа больше нельзя прочитать. Переустановите приложение и восстановите хранилища из резервной копии.</string>
-    <string name="passcode_store_unavailable_title">Хранилища временно недоступны</string>
-    <string name="passcode_store_unavailable_message">На этот раз не удалось открыть защищённое хранилище ключей этого устройства, поэтому ваши хранилища остаются заблокированными. Перезапустите приложение и попробуйте снова. Ваши хранилища по-прежнему на этом устройстве, переустанавливать приложение не нужно.</string>
+    <string name="passcode_key_unavailable_title">На этом устройстве нет ключа от ваших хранилищ</string>
+    <string name="passcode_key_unavailable_message">Ваши хранилища всё ещё на этом устройстве. Восстановите их из резервной копии .vult, чтобы снова открыть.</string>
+    <string name="passcode_key_unavailable_restore">Восстановить из резервной копии</string>
+    <string name="passcode_key_unavailable_restored">Хранилище восстановлено. Ещё одному хранилищу на этом устройстве нужна его резервная копия.</string>
+    <string name="passcode_store_unavailable_title">Ваши хранилища пока заблокированы</string>
+    <string name="passcode_store_unavailable_message">На этот раз не удалось открыть защищённое хранилище ключей устройства. Всё на месте, поэтому перезапустите приложение, а не переустанавливайте его.</string>
     <string name="passcode_input_field_content_description">Введено %1$d из %2$d цифр</string>
     <string name="swap_form_from_title">Из</string>
     <string name="swap_form_estimated_fees_title">Комиссия за обмен</string>

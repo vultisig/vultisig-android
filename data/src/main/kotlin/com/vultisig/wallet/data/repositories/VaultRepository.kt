@@ -68,6 +68,13 @@ interface VaultRepository {
 
     suspend fun upsert(vault: Vault)
 
+    /**
+     * Stores [vault] and removes [supersededVaultId] as one atomic step. Only for a vault whose
+     * keyshares this device can no longer open; `SupersedeUnopenableVaultUseCase` holds every guard
+     * on when that is allowed.
+     */
+    suspend fun replace(supersededVaultId: VaultId, vault: Vault)
+
     suspend fun setVaultName(vaultId: VaultId, name: String)
 
     suspend fun delete(vaultId: VaultId)
@@ -136,6 +143,13 @@ constructor(
 
     override suspend fun upsert(vault: Vault) {
         vaultDao.upsert(vault.toVaultDb())
+    }
+
+    override suspend fun replace(supersededVaultId: VaultId, vault: Vault) {
+        // Mapped out here because a suspend @Transaction body may only reach the DAO, and this
+        // reads
+        // the data key.
+        vaultDao.replace(supersededVaultId, vault.toVaultDb())
     }
 
     override suspend fun setVaultName(vaultId: String, name: String) {
@@ -219,8 +233,16 @@ constructor(
      * already considers created. The next successful unlock sweeps every plaintext row back under
      * the data key; the states that can never unlock leave it in the clear.
      */
-    private fun protect(keyShare: String, identity: KeyShareIdentity, dataKey: ByteArray?): String =
-        if (dataKey != null) keyShareCipher.encrypt(keyShare, dataKey, identity) else keyShare
+    private fun protect(keyShare: String, identity: KeyShareIdentity, dataKey: ByteArray?): String {
+        // Only the cipher writes this marker, so a share arriving with one came from a backup file.
+        // Stored verbatim it would leave ciphertext no key opens, which every later launch reads as
+        // credentials gone — on a device that may never have had a passcode.
+        check(!keyShareCipher.isEncrypted(keyShare)) {
+            "Refusing to store a keyshare that claims to be encrypted"
+        }
+        return if (dataKey != null) keyShareCipher.encrypt(keyShare, dataKey, identity)
+        else keyShare
+    }
 
     private suspend fun VaultWithKeySharesAndTokens.toVault(): Vault {
         val vault = this

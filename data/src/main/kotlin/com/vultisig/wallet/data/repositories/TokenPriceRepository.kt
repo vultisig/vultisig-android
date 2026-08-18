@@ -78,7 +78,9 @@ constructor(
     private val tokenIdToPrice = MutableStateFlow(mapOf<String, CurrencyToPrice>())
 
     override suspend fun getCachedPrice(tokenId: String, appCurrency: AppCurrency): BigDecimal? =
-        tokenPriceDao.getTokenPrice(tokenId, appCurrency.ticker.lowercase())?.let { BigDecimal(it) }
+        tokenPriceDao.getTokenPrice(Coins.pricedAs(tokenId), appCurrency.ticker.lowercase())?.let {
+            BigDecimal(it)
+        }
 
     override suspend fun getCachedPrices(
         tokenIds: List<String>,
@@ -89,28 +91,39 @@ constructor(
         }
 
     @ExperimentalCoroutinesApi
-    override fun getPrice(token: Coin, appCurrency: AppCurrency): Flow<BigDecimal> =
-        tokenIdToPrice.map { prices ->
+    override fun getPrice(token: Coin, appCurrency: AppCurrency): Flow<BigDecimal> {
+        // Read the row the token is valued from, which for a receipt reported in the asset it wraps
+        // is that asset's row rather than one of its own (see [Coins.pricedAs]).
+        val tokenId = Coins.pricedAs(token).id
+        return tokenIdToPrice.map { prices ->
             // Fall back to the last-known persisted price when the in-memory map has no entry yet.
             // The map is empty on every cold start, so without this fallback a balance fetch that
             // decoupled from the price refresh would price fresh balances at $0 until the refresh
             // lands, flashing the cached fiat to zero. The cached price holds the last-known fiat
             // until the refresh updates the StateFlow.
-            prices[token.id]?.get(appCurrency.ticker.lowercase())
-                ?: getCachedPrice(token.id, appCurrency)
+            prices[tokenId]?.get(appCurrency.ticker.lowercase())
+                ?: getCachedPrice(tokenId, appCurrency)
                 ?: BigDecimal.ZERO
         }
+    }
 
     override suspend fun refresh(tokens: List<Coin>) {
         val currency = appCurrencyRepository.currency.first().ticker.lowercase()
         val currencies = listOf(currency)
+
+        // Refresh the rows these tokens are valued from, not the tokens themselves: a receipt
+        // reported in the asset it wraps reads that asset's row (see [Coins.pricedAs]), so filling
+        // a row of its own would only add a second, separately-sourced price for one asset. The
+        // substitution can collapse two requests onto one row — a vault holding RUJI alongside the
+        // auto-compounding position — and a duplicate would be sent to CoinGecko twice.
+        val pricedTokens = tokens.map(Coins::pricedAs).distinctBy { it.id.lowercase() }
 
         // A NAV-priced receipt is deliberately kept out of the generic routes below.
         // [fetchThorContractPrices] is the only thing that may price these denoms, and sTCY
         // carries TCY's `tcy` priceProviderID: left in, the provider batch would cache raw TCY
         // under sTCY's row before the NAV correction runs, and leave it stuck at bare TCY parity
         // for the cycle whenever that correction fails.
-        val batchTokens = tokens.filterNot(Coins::isNavPricedDenom)
+        val batchTokens = pricedTokens.filterNot(Coins::isNavPricedDenom)
 
         val tokensByPriceProviderIds = batchTokens.groupBy { it.priceProviderID.lowercase() }
 
@@ -173,7 +186,7 @@ constructor(
         // Restricted to EVM so non-EVM contract formats (e.g. THORChain x/… tokens handled by
         // fetchThorContractPrices) aren't fanned out to CoinGecko/LI.FI per-contract calls.
         val pricedTokenIds = pricesWithProviderIds.keys
-        tokens.forEach { token ->
+        pricedTokens.forEach { token ->
             if (
                 token.chain.standard == TokenStandard.EVM &&
                     token.priceProviderID.isNotEmpty() &&
@@ -212,11 +225,11 @@ constructor(
             savePrices(pricesWithContractAddress, currency)
         }
 
-        fetchThorPoolPrices(tokenList = tokens, currency = currency)
+        fetchThorPoolPrices(tokenList = pricedTokens, currency = currency)
 
-        fetchMayaPoolPrices(tokenList = tokens, currency = currency)
+        fetchMayaPoolPrices(tokenList = pricedTokens, currency = currency)
 
-        fetchThorContractPrices(currency = currency, tokenList = tokens)
+        fetchThorContractPrices(currency = currency, tokenList = pricedTokens)
     }
 
     override suspend fun getPriceByContactAddress(
@@ -650,8 +663,9 @@ constructor(
                 // screens so the lists can't drift apart — a denom this route claims must be kept
                 // out of the generic provider batch, or a borrowed priceProviderID writes the
                 // wrong price into its row first.
-                val thorTokens =
-                    Coins.coins[Chain.ThorChain]?.filter(Coins::isNavPricedDenom) ?: emptyList()
+                // allResolvable, not `coins[ThorChain]`: ybRUNE is a DeFi-only receipt and so
+                // lives outside the wallet catalogue, yet this is the only route that can price it.
+                val thorTokens = Coins.allResolvable.filter(Coins::isNavPricedDenom)
 
                 val matchingTokens =
                     tokenList.filter { token -> thorTokens.any { it.id.equals(token.id, true) } }

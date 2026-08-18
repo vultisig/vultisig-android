@@ -23,11 +23,14 @@ constructor(
     private val defaultChainsRepository: DefaultChainsRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val discoverTokenUseCase: DiscoverTokenUseCase,
+    private val supersedeUnopenableVault: SupersedeUnopenableVaultUseCase,
 ) : SaveVaultUseCase {
     override suspend fun invoke(vault: Vault, shouldOverrideVault: Boolean) {
         if (shouldOverrideVault) {
             vaultRepository.upsert(vault)
-        } else {
+        } else if (!supersedeUnopenableVault(vault)) {
+            // Reached unless the vault replaced one this device can no longer open — the single
+            // collision a restore may resolve rather than refuse.
             vaultRepository.getByEcdsa(vault.pubKeyECDSA)?.let {
                 Timber.d("saveVault: vault already exists, updating")
                 throw DuplicateVaultException()

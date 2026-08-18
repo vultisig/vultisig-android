@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.send
 import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
 import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenValue
@@ -87,7 +88,7 @@ internal class AccountsLoader(
                     scope.safeLaunch(onError = ::onLoadError) {
                         accountsRepository
                             .loadDeFiAddresses(vaultId, false)
-                            .map { addrs -> addrs.flatMap { it.accounts } }
+                            .map { addrs -> addrs.spendableAccounts() }
                             .collect { publishLoaded(it, generation) }
                     }
             }
@@ -117,7 +118,7 @@ internal class AccountsLoader(
                         accountsRepository.loadDeFiAddresses(vaultId, false)
                     }
                 addressesFlow
-                    .map { addrs -> addrs.flatMap { it.accounts } }
+                    .map { addrs -> addrs.spendableAccounts() }
                     .collect { accounts ->
                         if (publishLoaded(accounts, generation)) {
                             onAccountsLoaded(accounts)
@@ -125,6 +126,17 @@ internal class AccountsLoader(
                     }
             }
     }
+
+    /**
+     * The accounts a form may draw on.
+     *
+     * loadDeFiAddresses also carries an account for each position that is never a wallet token —
+     * the sRUJI receipt kept out of token discovery, or a Kamino Earn deposit in a token the wallet
+     * itself has none of — so the DeFi tab can total it. Those are not holdings a form can draw on,
+     * so they are dropped here rather than offered in the token picker.
+     */
+    private fun List<Address>.spendableAccounts(): List<Account> =
+        flatMap { it.accounts }.filterNot { Coins.isDefiOnly(it.token) || it.isPositionOnly }
 
     private fun publishLoaded(accounts: List<Account>, generation: Long): Boolean {
         if (generation != currentGeneration) return false
@@ -338,7 +350,7 @@ internal class AccountsLoader(
         val bondedAmount = bondedAmountProvider()
         accountsRepository
             .loadDeFiAddresses(vaultId, false)
-            .map { addrs -> addrs.flatMap { it.accounts } }
+            .map { addrs -> addrs.spendableAccounts() }
             .collect { accounts -> publishUnbond(accounts, bondedAmount, generation) }
     }
 

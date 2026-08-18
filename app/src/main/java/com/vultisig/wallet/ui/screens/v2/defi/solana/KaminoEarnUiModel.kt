@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.v2.defi.solana
 
 import androidx.compose.runtime.Immutable
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRiskTier
+import com.vultisig.wallet.ui.screens.v2.defi.DefiFiatTotal
 import java.math.BigDecimal
 
 /** State of the Kamino Earn segment of the Solana DeFi tab. */
@@ -16,6 +17,13 @@ data class KaminoEarnUiModel(
     val rows: List<KaminoEarnRow> = emptyList(),
     /** Summed across vaults in the user's currency; null while unresolved. */
     val totalFiat: String? = null,
+    /**
+     * The same sum before formatting, so the chain header can add it to native staking without
+     * re-parsing [totalFiat]. Zero when no vault is enabled — that is the user holding nothing
+     * here, a known value — and null whenever any enabled vault is unread or unpriced, because a
+     * sum that silently omits one of them is not this wallet's Kamino total.
+     */
+    val totalValue: DefiFiatTotal? = null,
     val isBalanceVisible: Boolean = true,
     /** Whether the last load stopped on an error, so the tab can say so rather than look empty. */
     val loadFailed: Boolean = false,
@@ -50,13 +58,14 @@ data class KaminoEarnRow(
     val pnlDirection: PnlDirection,
     /**
      * The row's fiat value, kept alongside its formatted form so the screen total can be summed
-     * without re-parsing display strings. Zero when the position or its price is unresolved.
+     * without re-parsing display strings. Null when the position or its price is unresolved — never
+     * folded to zero, which would silently understate the total by this row's real value.
      */
-    val fiatValue: BigDecimal = BigDecimal.ZERO,
+    val fiatValue: BigDecimal? = null,
     /**
      * Whether the wallet actually holds shares here. Kept separate from [fiatValue] because a
-     * failed price lookup leaves that at zero, and a position must not disappear because it could
-     * not be priced.
+     * failed price lookup leaves that unresolved, and a position must not disappear because it
+     * could not be priced.
      */
     val hasPosition: Boolean = false,
 ) {
