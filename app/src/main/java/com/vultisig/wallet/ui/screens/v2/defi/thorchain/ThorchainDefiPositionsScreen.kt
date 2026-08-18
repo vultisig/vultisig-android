@@ -91,6 +91,7 @@ internal fun ThorchainDefiPositionsScreen(
         onClickTransfer = { model.onClickTransfer() },
         onClickAddLp = model::onClickAddLp,
         onClickRemoveLp = model::onClickRemoveLp,
+        onClickCompletePendingLp = model::onClickCompletePendingLp,
     )
 }
 
@@ -115,6 +116,7 @@ internal fun ThorchainDefiPositionScreenContent(
     onClickTransfer: () -> Unit = {},
     onClickAddLp: (String) -> Unit = {},
     onClickRemoveLp: (String) -> Unit = {},
+    onClickCompletePendingLp: (String) -> Unit = {},
 ) {
     val searchTextFieldState = remember { TextFieldState() }
 
@@ -218,14 +220,20 @@ internal fun ThorchainDefiPositionScreenContent(
                                     state = state.lp.copy(isLoading = true),
                                     onClickAdd = onClickAddLp,
                                     onClickRemove = onClickRemoveLp,
+                                    onClickCompletePending = onClickCompletePendingLp,
                                 )
-                            !state.selectedPositions.hasLpPositions(state.lpPositionsDialog) ->
+                            // A pending half-deposit is on a refund timer and belongs to no
+                            // selected pool, so it must survive the empty-selection branch —
+                            // otherwise the one user who has to act sees "no positions".
+                            !state.selectedPositions.hasLpPositions(state.lpPositionsDialog) &&
+                                state.lp.pendingDeposits.isEmpty() ->
                                 NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
                             else ->
                                 LpTabContent(
                                     state = state.lp,
                                     onClickAdd = onClickAddLp,
                                     onClickRemove = onClickRemoveLp,
+                                    onClickCompletePending = onClickCompletePendingLp,
                                 )
                         }
                     }

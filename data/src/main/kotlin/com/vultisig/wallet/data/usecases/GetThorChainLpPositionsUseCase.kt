@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainLiquidityProviderJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolStatsJson
 import com.vultisig.wallet.data.models.ThorChainLpPosition
 import com.vultisig.wallet.data.utils.NetworkException
@@ -110,8 +111,13 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainLpPositionsUse
     ): PoolFetch {
         val lp =
             try {
-                thorChainApi.getLiquidityProvider(pool.asset, runeAddress)
+                val runeSide = thorChainApi.getLiquidityProvider(pool.asset, runeAddress)
+                // An empty rune-side record must not shadow the asset side: symmetric adds are
+                // keyed by whichever address THORChain recorded them under, and a stale husk on
+                // the other side reads exactly like a live one until its amounts are inspected.
+                runeSide?.takeIf { it.hasLiquidity() }
                     ?: assetAddress?.let { thorChainApi.getLiquidityProvider(pool.asset, it) }
+                    ?: runeSide
             } catch (e: IOException) {
                 Timber.w(e, "Failed to fetch LP position for pool %s", pool.asset)
                 return PoolFetch.Failed
@@ -133,6 +139,12 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainLpPositionsUse
             )
         )
     }
+
+    /** True when the record holds units or a pending half-deposit — i.e. it is worth reporting. */
+    private fun ThorChainLiquidityProviderJson.hasLiquidity(): Boolean =
+        (units.toBigIntegerOrNull()?.signum() ?: 0) > 0 ||
+            (pendingRune.toBigIntegerOrNull()?.signum() ?: 0) > 0 ||
+            (pendingAsset.toBigIntegerOrNull()?.signum() ?: 0) > 0
 
     // Midgard returns "NaN" for periods with insufficient history; treat as missing.
     private fun String.toFiniteDoubleOrNull(): Double? = toDoubleOrNull()?.takeIf { it.isFinite() }

@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
+import com.vultisig.wallet.data.usecases.GetThorChainPendingLpDepositsUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPositions
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.decimals
@@ -90,6 +91,7 @@ internal class ThorchainDefiPositionsViewModelTest {
     private lateinit var defaultStakingPositionService: DefaultStakingPositionService
     private lateinit var balanceVisibilityRepository: BalanceVisibilityRepository
     private lateinit var getThorChainLpPositionsUseCase: GetThorChainLpPositionsUseCase
+    private lateinit var getThorChainPendingLpDepositsUseCase: GetThorChainPendingLpDepositsUseCase
 
     @BeforeEach
     fun setUp() {
@@ -109,6 +111,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         defaultStakingPositionService = mockk(relaxed = true)
         balanceVisibilityRepository = mockk(relaxed = true)
         getThorChainLpPositionsUseCase = mockk(relaxed = true)
+        getThorChainPendingLpDepositsUseCase = mockk(relaxed = true)
 
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { balanceVisibilityRepository.getVisibility(VAULT_ID) } returns true
@@ -123,6 +126,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         coEvery { tcyStakingService.getStakingDetails(any(), any()) } returns flowOf()
         coEvery { defaultStakingPositionService.getStakingDetails(any(), any()) } returns flowOf()
         coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns emptyList()
+        coEvery { getThorChainPendingLpDepositsUseCase(any(), any()) } returns emptyList()
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions()
     }
@@ -1269,6 +1273,7 @@ internal class ThorchainDefiPositionsViewModelTest {
             defaultStakingPositionService = defaultStakingPositionService,
             balanceVisibilityRepository = balanceVisibilityRepository,
             getThorChainLpPositionsUseCase = getThorChainLpPositionsUseCase,
+            getThorChainPendingLpDepositsUseCase = getThorChainPendingLpDepositsUseCase,
             ioDispatcher = testDispatcher,
         )
 

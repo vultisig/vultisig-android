@@ -51,6 +51,32 @@ internal data class StakingTabUiModel(val positions: List<StakePositionUiModel> 
 internal data class LpTabUiModel(
     val isLoading: Boolean = false,
     val positions: List<LpPositionUiModel> = emptyList(),
+    /**
+     * Half-finished symmetric adds, listed above the positions. They are deliberately not gated on
+     * the pool being selected in the Manage-Positions dialog: a deposit the user cannot see is the
+     * one that silently gets refunded.
+     */
+    val pendingDeposits: List<PendingLpDepositUiModel> = emptyList(),
+)
+
+/**
+ * A symmetric add-liquidity that THORChain is still holding because only one side has arrived.
+ * Mirrors [com.vultisig.wallet.data.models.ThorChainPendingLpDeposit] for display.
+ */
+internal data class PendingLpDepositUiModel(
+    val poolId: String,
+    val icon: ImageModel,
+    val chainLogo: Int? = null,
+    /** Ticker of the side still missing — the one the user has to send to complete the add. */
+    val awaitedTicker: String,
+    /** What already arrived, e.g. `"2 RUNE"`. */
+    val depositedAmount: String,
+    /** Address the missing side must be sent from, shortened for display. */
+    val pairedAddress: String?,
+    /** Time left before THORChain refunds the deposit, or `null` when it could not be resolved. */
+    val refundsIn: UiText?,
+    /** False when the missing side is on a chain this vault has no account for. */
+    val canComplete: Boolean = true,
 )
 
 internal data class LpPositionUiModel(

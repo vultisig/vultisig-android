@@ -1235,6 +1235,15 @@
     <string name="bond_node_state_active">활성</string>
     <string name="bond_node_state_disabled">비활성</string>
     <string name="bond_node_state_unknown">알 수 없음</string>
+    <string name="lp_pending_title">%1$s 입금 대기 중</string>
+    <string name="lp_pending_subtitle">THORChain은 반대편 입금이 도착할 때까지 이 입금을 보관하며, 도착하지 않으면 환불합니다.</string>
+    <string name="lp_pending_deposited">입금됨</string>
+    <string name="lp_pending_from">보낼 주소</string>
+    <string name="lp_pending_refunds_in">환불까지</string>
+    <string name="lp_pending_duration_days_hours_format">%1$d일 %2$d시간</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$d시간 %2$d분</string>
+    <string name="lp_pending_refund_time_unknown">알 수 없음</string>
+    <string name="lp_pending_complete_deposit">입금 완료하기</string>
     <string name="lp_position">포지션</string>
     <string name="add">추가</string>
     <string name="remove">제거</string>

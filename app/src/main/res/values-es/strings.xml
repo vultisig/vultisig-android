@@ -1203,6 +1203,15 @@
     <string name="onboarding_desc_page_1_part_2">Recursos compartidos de la bóveda</string>
     <string name="verify_swap_youre_swapping_title">Estás intercambiando</string>
     <string name="keysign_app_version_text">Versión %1$s (%2$s)</string>
+    <string name="lp_pending_title">Esperando el depósito correspondiente de %1$s</string>
+    <string name="lp_pending_subtitle">THORChain retiene este depósito hasta que llegue la parte correspondiente y lo reembolsa si no llega.</string>
+    <string name="lp_pending_deposited">Depositado</string>
+    <string name="lp_pending_from">Desde</string>
+    <string name="lp_pending_refunds_in">Se reembolsa en</string>
+    <string name="lp_pending_duration_days_hours_format">%1$dd %2$dh</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$dh %2$dm</string>
+    <string name="lp_pending_refund_time_unknown">Desconocido</string>
+    <string name="lp_pending_complete_deposit">Completar depósito</string>
     <string name="lp_position">Posición</string>
     <string name="add">Añadir</string>
     <string name="remove">Eliminar</string>

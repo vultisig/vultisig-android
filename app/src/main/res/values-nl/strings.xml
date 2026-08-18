@@ -1200,6 +1200,15 @@
     <string name="onboarding_desc_page_1_part_2">Vault-shares,</string>
     <string name="verify_swap_youre_swapping_title">Je wisselt</string>
     <string name="keysign_app_version_text">Versie %1$s (%2$s)</string>
+    <string name="lp_pending_title">Wachten op bijbehorende %1$s-storting</string>
+    <string name="lp_pending_subtitle">THORChain houdt deze storting vast tot de bijbehorende kant binnenkomt en betaalt hem anders terug.</string>
+    <string name="lp_pending_deposited">Gestort</string>
+    <string name="lp_pending_from">Van</string>
+    <string name="lp_pending_refunds_in">Terugbetaling over</string>
+    <string name="lp_pending_duration_days_hours_format">%1$dd %2$du</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$du %2$dm</string>
+    <string name="lp_pending_refund_time_unknown">Onbekend</string>
+    <string name="lp_pending_complete_deposit">Storting voltooien</string>
     <string name="lp_position">Positie</string>
     <string name="add">Toevoegen</string>
     <string name="remove">Verwijderen</string>

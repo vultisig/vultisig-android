@@ -17,6 +17,8 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.ThorChainLpPosition
+import com.vultisig.wallet.data.models.ThorChainPendingLpDeposit
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getCoinLogo
@@ -30,6 +32,7 @@ import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
+import com.vultisig.wallet.data.usecases.GetThorChainPendingLpDepositsUseCase
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.toValue
@@ -55,6 +58,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.thorchainSupportStakingDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.formatTokenAmount
+import com.vultisig.wallet.ui.utils.lpRefundsInUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -133,6 +137,7 @@ constructor(
     private val defaultStakingPositionService: DefaultStakingPositionService,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val getThorChainLpPositionsUseCase: GetThorChainLpPositionsUseCase,
+    private val getThorChainPendingLpDepositsUseCase: GetThorChainPendingLpDepositsUseCase,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -173,6 +178,7 @@ constructor(
     private var currencyJob: Job? = null
     private var lpDialogJob: Job? = null
     private var loadLpJob: Job? = null
+    private var loadPendingLpJob: Job? = null
     private var loadBondedNodesJob: Job? = null
     private var loadStakingPositionsJob: Job? = null
 
@@ -489,7 +495,89 @@ constructor(
             loadStakingPositions()
 
             reloadLpTab()
+
+            loadPendingLpDeposits()
         }
+    }
+
+    /**
+     * Loads half-finished symmetric adds. Deliberately independent of [reloadLpTab]: those are
+     * gated on the pools the user picked in Manage Positions, and a deposit stuck in a pool they
+     * never selected is exactly the one that would otherwise be refunded unseen.
+     */
+    private fun loadPendingLpDeposits() {
+        loadPendingLpJob?.cancel()
+        loadPendingLpJob =
+            viewModelScope.launch {
+                try {
+                    val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
+                    val runeCoin =
+                        vault?.coins?.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
+                            ?: return@launch
+
+                    val pending =
+                        withContext(ioDispatcher) {
+                            getThorChainPendingLpDepositsUseCase(
+                                runeAddress = runeCoin.address,
+                                resolveAssetAddress = { poolId ->
+                                    vault.assetAddressForPool(poolId)
+                                },
+                            )
+                        }
+
+                    val models = pending.map { it.toUiModel(vault.assetAddressForPool(it.pool)) }
+                    state.update { it.copy(lp = it.lp.copy(pendingDeposits = models)) }
+                } catch (e: Throwable) {
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "Failed to load pending THORChain LP deposits")
+                }
+            }
+    }
+
+    private fun String.shortenForDisplay(): String =
+        if (length > 12) "${take(6)}…${takeLast(4)}" else this
+
+    /** The vault's address on a pool's non-RUNE chain, or `null` when it holds no account there. */
+    private fun Vault.assetAddressForPool(poolId: String): String? {
+        val assetChain = parseThorChainPool(poolId).chain ?: return null
+        if (assetChain == Chain.ThorChain) return null
+        val coin =
+            coins.firstOrNull { it.chain == assetChain && it.isNativeToken }
+                ?: coins.firstOrNull { it.chain == assetChain }
+        return coin?.address
+    }
+
+    private fun ThorChainPendingLpDeposit.toUiModel(
+        assetAddress: String?
+    ): PendingLpDepositUiModel {
+        val parsed = parseThorChainPool(pool)
+        val assetTicker = parsed.ticker
+        val runeTicker = Coins.ThorChain.RUNE.ticker
+        val depositedAmount =
+            if (isRunePending) {
+                CoinType.THORCHAIN.toValue(pendingRune)
+                    .stripTrailingZeros()
+                    .formatTokenAmount(runeTicker)
+            } else {
+                CoinType.THORCHAIN.toValue(pendingAsset)
+                    .stripTrailingZeros()
+                    .formatTokenAmount(assetTicker)
+            }
+
+        return PendingLpDepositUiModel(
+            poolId = pool,
+            icon =
+                lpAssetLogoRes(parsed.chain, assetTicker, parsed.contractAddress)
+                    ?: getCoinLogo(assetTicker.lowercase()),
+            chainLogo = parsed.chain?.monoToneLogo,
+            awaitedTicker = if (isRunePending) assetTicker else runeTicker,
+            depositedAmount = depositedAmount,
+            pairedAddress = pairedAddress?.shortenForDisplay(),
+            refundsIn = blocksUntilRefund?.let { lpRefundsInUiText(it * THORCHAIN_BLOCK_SECONDS) },
+            // Completing means sending the missing side, which needs an account on its chain. When
+            // RUNE is the missing half the vault always has one.
+            canComplete = !isRunePending || assetAddress != null,
+        )
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -1235,6 +1323,29 @@ constructor(
         }
     }
 
+    /**
+     * Sends the user into the deposit flow for the half they still owe, on that half's own chain,
+     * with the pool pre-selected. The memo the flow builds is what THORChain matches against the
+     * pending record, so this completes the add rather than opening a second one.
+     */
+    fun onClickCompletePendingLp(poolId: String) {
+        val pending = state.value.lp.pendingDeposits.find { it.poolId == poolId } ?: return
+        val missingSideChain =
+            if (pending.awaitedTicker == Coins.ThorChain.RUNE.ticker) Chain.ThorChain
+            else parseThorChainPool(poolId).chain ?: return
+
+        viewModelScope.safeLaunch {
+            navigator.route(
+                Route.Deposit(
+                    vaultId = vaultId,
+                    chainId = missingSideChain.id,
+                    depositType = DeFiNavActions.ADD_LP.type,
+                    poolId = poolId,
+                )
+            )
+        }
+    }
+
     fun onClickRemoveLp(poolId: String) {
         viewModelScope.safeLaunch {
             navigator.route(
@@ -1451,6 +1562,7 @@ constructor(
         private const val RUJI_SYMBOL = "RUJI"
         private const val RUJI_REWARDS_SYMBOL = "USDC"
         private const val POSITION_DISPLAY_SCALE = 4
+        private const val THORCHAIN_BLOCK_SECONDS = 6L
 
         /**
          * The Manage-Positions key a placeholder is gated on. Both RUJI positions are toggled by
