@@ -61,8 +61,9 @@ object KaminoTransactionValidator {
     private const val TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
     private const val TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
 
-    /** `Transfer` (3) and `TransferChecked` (12) in the SPL Token instruction enum. */
-    private val TOKEN_TRANSFER_DISCRIMINATORS = setOf(3, 12)
+    /** `CloseAccount` and `SyncNative` in the SPL Token instruction enum. */
+    private const val TOKEN_CLOSE_ACCOUNT = 9
+    private const val TOKEN_SYNC_NATIVE = 17
 
     /** `SystemInstruction::Transfer`. */
     private const val SYSTEM_TRANSFER = 2
@@ -128,7 +129,7 @@ object KaminoTransactionValidator {
             reject("memo must be the final instruction")
         }
 
-        rejectValueMovementAwayFromTheSigner(instructions, vault, wrappedSolAccount)
+        rejectValueMovementAwayFromTheSigner(instructions, vault, signerAddress, wrappedSolAccount)
         rejectAnotherAccountsAuthority(decoded.feePayer, signerAddress)
         rejectTheWithdrawEverythingSentinel(instructions)
     }
@@ -178,66 +179,184 @@ object KaminoTransactionValidator {
      * to.
      *
      * Program allow-listing alone is not enough: a deposit legitimately needs the System and Token
-     * programs, so a compromised response could add a plain transfer to an attacker and still
-     * invoke kVault and end with the memo. These checks are about *what* those programs are asked
-     * to do.
+     * programs, so a compromised response could add a transfer to an attacker and still invoke
+     * kVault and end with the memo. These checks are about *what* those programs are asked to do.
+     *
+     * Both are allow-lists, and deliberately so. A deny-list of the opcodes that look dangerous is
+     * no control at all here — the same compromised response picks the opcode, so everything not
+     * thought of is waved through, and the ones that matter most do not look like transfers:
+     * `Assign` hands the wallet's system account to another program, `SetAuthority` hands over a
+     * token account, and neither moves a lamport itself.
+     *
+     * The permitted set is what live Kamino responses carry. A wrapped-SOL vault deposit wraps with
+     * `System::Transfer` then `Token::SyncNative`; its withdraw unwraps with `Token::CloseAccount`.
+     * A plain-token vault carries none of the three — it moves its tokens entirely through the
+     * kVault program's own CPI.
      */
     private fun rejectValueMovementAwayFromTheSigner(
         instructions: List<KaminoTxInstruction>,
         vault: KaminoVault,
+        signerAddress: String?,
         wrappedSolAccount: String?,
     ) {
         instructions.forEachIndexed { index, instruction ->
             when (instruction.programId) {
                 TOKEN_PROGRAM_ID,
-                TOKEN_2022_PROGRAM_ID -> {
-                    // The vault moves tokens through its own program's CPI. A *top-level* token
-                    // transfer is not part of any shape observed here, and is exactly how a stray
-                    // instruction would drain an account the wallet has already authorised.
-                    val discriminator = instruction.data.firstOrNull()?.toInt()?.and(0xFF)
-                    if (discriminator in TOKEN_TRANSFER_DISCRIMINATORS) {
-                        reject(
-                            "instruction $index is a top-level SPL token transfer, which no Kamino " +
-                                "deposit or withdraw performs"
-                        )
-                    }
-                }
+                TOKEN_2022_PROGRAM_ID ->
+                    rejectUnlessPermittedTokenInstruction(
+                        index = index,
+                        instruction = instruction,
+                        vault = vault,
+                        signerAddress = signerAddress,
+                        wrappedSolAccount = wrappedSolAccount,
+                    )
 
-                SYSTEM_PROGRAM_ID -> {
-                    // Lamports only ever move to wrap SOL, and only for the wrapped-SOL vault.
-                    val discriminator = instruction.data.take(4).let(::littleEndianInt)
-                    if (discriminator == SYSTEM_TRANSFER) {
-                        if (vault.tokenMint != KaminoVaultRegistry.WRAPPED_SOL_MINT) {
-                            reject(
-                                "instruction $index moves lamports, which only the wrapped-SOL " +
-                                    "vault has cause to do"
-                            )
-                        }
-                        // Permitted, but only to one address: the wrapped-SOL account derived from
-                        // the signer and the vault's own mint.
-                        //
-                        // An earlier version accepted any destination the kVault instruction also
-                        // named, which is no check at all against a compromised response — the same
-                        // response chooses that instruction's account list, so it could name an
-                        // attacker there and have the transfer waved through. The expected address
-                        // is
-                        // derived locally by the caller and compared exactly.
-                        val destination = instruction.accounts.getOrNull(1)
-                        if (wrappedSolAccount == null) {
-                            reject(
-                                "instruction $index moves lamports but the wrapped-SOL account " +
-                                    "could not be derived, so its destination cannot be checked"
-                            )
-                        }
-                        if (destination != wrappedSolAccount) {
-                            reject(
-                                "instruction $index moves lamports to $destination rather than to " +
-                                    "the wallet's wrapped-SOL account"
-                            )
-                        }
-                    }
+                SYSTEM_PROGRAM_ID ->
+                    rejectUnlessWrap(
+                        index = index,
+                        instruction = instruction,
+                        vault = vault,
+                        wrappedSolAccount = wrappedSolAccount,
+                    )
+            }
+        }
+    }
+
+    /**
+     * The only SPL Token instructions one of these transactions has cause to carry at top level.
+     *
+     * `SyncNative` credits the lamports a wrap just sent, and is pinned to the wrapped-SOL account
+     * derived locally from the signer: the deposit carrying it was captured, so its shape is known
+     * exactly.
+     *
+     * `CloseAccount` returns what an unwrap released, and is checked by *recipient* rather than by
+     * subject — both the destination it pays out to and the authority closing it must be the
+     * signer. The looser subject is deliberate. Only the unstaked withdraw could be captured, and a
+     * staked exit may close accounts this app has never seen; pinning the subject would refuse
+     * those, while pinning the recipient still refuses the redirect the check exists for. Nothing
+     * is given up by it: the wallet can only close accounts it owns, and every lamport released
+     * lands on the wallet either way.
+     *
+     * Comparisons are exact, so an account the response hides behind its own address lookup table —
+     * which decodes to [KaminoTransactionDecoder.UNKNOWN_ACCOUNT] — fails them rather than skipping
+     * them.
+     */
+    private fun rejectUnlessPermittedTokenInstruction(
+        index: Int,
+        instruction: KaminoTxInstruction,
+        vault: KaminoVault,
+        signerAddress: String?,
+        wrappedSolAccount: String?,
+    ) {
+        val discriminator =
+            instruction.data.firstOrNull()?.toInt()?.and(0xFF)
+                ?: reject("instruction $index carries no SPL token instruction to check")
+
+        when (discriminator) {
+            TOKEN_SYNC_NATIVE -> {
+                if (vault.tokenMint != KaminoVaultRegistry.WRAPPED_SOL_MINT) {
+                    reject(
+                        "instruction $index credits a wrap, which only the wrapped-SOL vault has " +
+                            "cause to do"
+                    )
+                }
+                if (wrappedSolAccount == null) {
+                    reject(
+                        "instruction $index credits a wrap but the wrapped-SOL account could not " +
+                            "be derived, so the account it credits cannot be checked"
+                    )
+                }
+                val subject = instruction.accounts.firstOrNull()
+                if (subject != wrappedSolAccount) {
+                    reject(
+                        "instruction $index credits $subject rather than the wallet's wrapped-SOL " +
+                            "account"
+                    )
                 }
             }
+
+            TOKEN_CLOSE_ACCOUNT -> {
+                // Closing pays out the account's entire lamport balance, which on a full exit is
+                // the whole withdrawn amount, so the recipient is what has to be pinned.
+                if (signerAddress == null) {
+                    reject(
+                        "instruction $index closes a token account but the signer is unknown, so " +
+                            "its recipient cannot be checked"
+                    )
+                }
+                val destination = instruction.accounts.getOrNull(1)
+                if (destination != signerAddress) {
+                    reject(
+                        "instruction $index pays a closed token account out to $destination " +
+                            "rather than to the wallet"
+                    )
+                }
+                val owner = instruction.accounts.getOrNull(2)
+                if (owner != signerAddress) {
+                    reject(
+                        "instruction $index closes a token account under the authority of $owner " +
+                            "rather than the wallet's"
+                    )
+                }
+            }
+
+            else ->
+                reject(
+                    "instruction $index is SPL token instruction $discriminator, which no Kamino " +
+                        "deposit or withdraw performs"
+                )
+        }
+    }
+
+    /**
+     * Lamports only ever move to wrap SOL, and only for the wrapped-SOL vault.
+     *
+     * Every other `SystemInstruction` is refused rather than ignored. `Assign` on the signer's own
+     * account reassigns it to a program the response chose, and `CreateAccountWithSeed` funds an
+     * account it chose with an amount it chose — both authorised by the fee-payer signature this
+     * message already carries, and neither one a transfer.
+     */
+    private fun rejectUnlessWrap(
+        index: Int,
+        instruction: KaminoTxInstruction,
+        vault: KaminoVault,
+        wrappedSolAccount: String?,
+    ) {
+        val discriminator =
+            littleEndianInt(instruction.data.take(4))
+                ?: reject("instruction $index carries no System instruction to check")
+
+        if (discriminator != SYSTEM_TRANSFER) {
+            reject(
+                "instruction $index is System instruction $discriminator, which no Kamino deposit " +
+                    "or withdraw performs"
+            )
+        }
+        if (vault.tokenMint != KaminoVaultRegistry.WRAPPED_SOL_MINT) {
+            reject(
+                "instruction $index moves lamports, which only the wrapped-SOL vault has cause to do"
+            )
+        }
+        // Permitted, but only to one address: the wrapped-SOL account derived from the signer and
+        // the vault's own mint.
+        //
+        // An earlier version accepted any destination the kVault instruction also named, which is
+        // no check at all against a compromised response — the same response chooses that
+        // instruction's account list, so it could name an attacker there and have the transfer
+        // waved through. The expected address is derived locally by the caller and compared
+        // exactly.
+        if (wrappedSolAccount == null) {
+            reject(
+                "instruction $index moves lamports but the wrapped-SOL account could not be " +
+                    "derived, so its destination cannot be checked"
+            )
+        }
+        val destination = instruction.accounts.getOrNull(1)
+        if (destination != wrappedSolAccount) {
+            reject(
+                "instruction $index moves lamports to $destination rather than to the wallet's " +
+                    "wrapped-SOL account"
+            )
         }
     }
 

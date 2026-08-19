@@ -11,6 +11,7 @@ import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import wallet.core.jni.SolanaAddress
 import wallet.core.jni.SolanaTransaction
 
 /**
@@ -329,9 +330,80 @@ class KaminoTransactionPreparerTest {
     }
 
     @Test
+    fun a_prepared_Allez_SOL_deposit_validates_with_its_wrap_intact() {
+        // The wrapped-SOL path no USDC fixture reaches: a top-level System transfer into the wSOL
+        // account, then a SyncNative over it. Both are opcodes the validator has to permit by name,
+        // which is the half of an allow-list that a deny-list never had to get right — too strict a
+        // rule here refuses every real SOL deposit rather than letting an extra one through.
+        val prepared =
+            prepare(
+                api = KaminoFixtureApi(KaminoFixtures.ALLEZ_SOL_DEPOSIT),
+                vault = KaminoVaultRegistry.ALLEZ_SOL,
+            )
+        val instructions = KaminoTransactionDecoder.decode(prepared).instructions
+
+        // The address the validator derives locally, cross-checked against the one Kamino chose.
+        val wrappedSol =
+            SolanaAddress(KaminoFixtures.WALLET)
+                .defaultTokenAddress(KaminoVaultRegistry.WRAPPED_SOL_MINT)
+        assertEquals(KaminoFixtures.WALLET_WRAPPED_SOL, wrappedSol)
+
+        val transfer = instructions.single { it.programId == SYSTEM_PROGRAM }
+        assertEquals(wrappedSol, transfer.accounts[1])
+
+        val token = instructions.single { it.programId == TOKEN_PROGRAM }
+        // SPL Token `SyncNative` is discriminator 17.
+        assertEquals(17, token.data.first().toInt())
+        assertEquals(wrappedSol, token.accounts.first())
+    }
+
+    @Test
+    fun the_captured_Allez_SOL_withdraw_unwraps_to_the_wallet_and_nowhere_else() {
+        // The instruction #5603 is about. A compromised response need only re-address this one
+        // account to take the whole withdrawn amount, while every other instruction still reads as
+        // the withdraw the user asked for.
+        //
+        // Asserted twice over: the shape itself, and that validating gets as far as the sentinel
+        // refusal — which sits after the value-movement rules, so reaching it is proof the unwrap
+        // passed them rather than that nothing looked.
+        val decoded =
+            KaminoTransactionDecoder.decode(
+                KaminoAttributionMemo.append(KaminoFixtures.ALLEZ_SOL_WITHDRAW)
+            )
+
+        val close = decoded.instructions.single { it.programId == TOKEN_PROGRAM }
+        // SPL Token `CloseAccount` is discriminator 9: account, destination, owner.
+        assertEquals(9, close.data.first().toInt())
+        assertEquals(
+            listOf(KaminoFixtures.WALLET_WRAPPED_SOL, KaminoFixtures.WALLET, KaminoFixtures.WALLET),
+            close.accounts,
+        )
+
+        val rejection =
+            assertThrows(KaminoTransactionRejected::class.java) {
+                KaminoTransactionValidator.validate(
+                    decoded = decoded,
+                    vault = KaminoVaultRegistry.ALLEZ_SOL,
+                    action = KaminoAction.WITHDRAW,
+                    signerAddress = KaminoFixtures.WALLET,
+                    wrappedSolAccount = KaminoFixtures.WALLET_WRAPPED_SOL,
+                )
+            }
+        assertTrue(
+            "the unwrap must not be what is refused: ${rejection.message}",
+            rejection.message.orEmpty().contains("withdraw-everything sentinel"),
+        )
+    }
+
+    @Test
     fun a_malformed_response_from_Kamino_fails_loudly_instead_of_reaching_keysign() {
         assertThrows(IllegalStateException::class.java) {
             prepare(api = KaminoFixtureApi("not-base64-tx"))
         }
+    }
+
+    private companion object {
+        const val SYSTEM_PROGRAM = "11111111111111111111111111111111"
+        const val TOKEN_PROGRAM = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
     }
 }

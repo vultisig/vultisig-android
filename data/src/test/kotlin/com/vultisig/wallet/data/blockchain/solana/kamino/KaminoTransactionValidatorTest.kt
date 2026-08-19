@@ -187,11 +187,11 @@ class KaminoTransactionValidatorTest {
                 listOf(
                     ix(KaminoVaultRegistry.PROGRAM_ID),
                     // SPL Token `Transfer` is discriminator 3.
-                    ix("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", byteArrayOf(3, 0, 0, 0)),
+                    ix(TOKEN_PROGRAM, byteArrayOf(3, 0, 0, 0)),
                     memo,
                 )
             )
-        assertTrue(reason.contains("top-level SPL token transfer"), reason)
+        assertTrue(reason.contains("SPL token instruction 3"), reason)
     }
 
     @Test
@@ -201,11 +201,11 @@ class KaminoTransactionValidatorTest {
                 listOf(
                     ix(KaminoVaultRegistry.PROGRAM_ID),
                     // `TransferChecked` is discriminator 12.
-                    ix("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", byteArrayOf(12, 0)),
+                    ix(TOKEN_PROGRAM, byteArrayOf(12, 0)),
                     memo,
                 )
             )
-        assertTrue(reason.contains("top-level SPL token transfer"), reason)
+        assertTrue(reason.contains("SPL token instruction 12"), reason)
     }
 
     @Test
@@ -468,8 +468,176 @@ class KaminoTransactionValidatorTest {
         )
     }
 
+    private fun tokenIx(discriminator: Int, accounts: List<String>) =
+        KaminoTxInstruction(
+            programId = TOKEN_PROGRAM,
+            data = byteArrayOf(discriminator.toByte()),
+            accounts = accounts,
+        )
+
+    private fun systemIx(discriminator: Int, accounts: List<String>) =
+        KaminoTxInstruction(
+            programId = SYSTEM_PROGRAM,
+            data = byteArrayOf(discriminator.toByte(), 0, 0, 0, 1, 2, 3, 4),
+            accounts = accounts,
+        )
+
+    /** [instruction] riding along on an otherwise valid wrapped-SOL vault transaction. */
+    private fun validateOnSolVault(
+        instruction: KaminoTxInstruction,
+        wrappedSolAccount: String? = WRAPPED_SOL_ACCOUNT,
+    ) =
+        KaminoTransactionValidator.validate(
+            decoded(listOf(ix(KaminoVaultRegistry.PROGRAM_ID, byteArrayOf(1)), instruction, memo)),
+            KaminoVaultRegistry.ALLEZ_SOL,
+            KaminoAction.DEPOSIT,
+            signerAddress = DEFAULT_FEE_PAYER,
+            wrappedSolAccount = wrappedSolAccount,
+        )
+
+    private fun solVaultRejection(
+        instruction: KaminoTxInstruction,
+        wrappedSolAccount: String? = WRAPPED_SOL_ACCOUNT,
+    ): String =
+        assertThrows<KaminoTransactionRejected> {
+                validateOnSolVault(instruction, wrappedSolAccount)
+            }
+            .message
+            .orEmpty()
+
+    @Test
+    fun `every System instruction other than the wrap is refused`() {
+        // What a deny-list of transfers cannot reach, all of it authorised by the fee-payer
+        // signature the message already carries: `Assign` (1) hands the signer's own system account
+        // to a program the response chose, `CreateAccountWithSeed` (3) funds an account it chose
+        // with an amount it chose, `AssignWithSeed` (10) does the first through a derived address.
+        // None of them is a transfer.
+        for (discriminator in listOf(0, 1, 3, 8, 10, 11)) {
+            val reason =
+                solVaultRejection(
+                    systemIx(discriminator, listOf(DEFAULT_FEE_PAYER, WRAPPED_SOL_ACCOUNT))
+                )
+            assertTrue(reason.contains("System instruction $discriminator"), reason)
+        }
+    }
+
+    @Test
+    fun `every SPL token instruction other than the wrapped-SOL bookkeeping is refused`() {
+        // Likewise on the token side: `Approve` (4) and `SetAuthority` (6) hand the account over
+        // instead of draining it, so the drain arrives later and unsigned by this wallet, and
+        // `Burn` (8) destroys the balance where it stands.
+        for (discriminator in listOf(3, 4, 6, 7, 8, 12)) {
+            val reason = solVaultRejection(tokenIx(discriminator, listOf(WRAPPED_SOL_ACCOUNT)))
+            assertTrue(reason.contains("SPL token instruction $discriminator"), reason)
+        }
+    }
+
+    @Test
+    fun `the wrap's sync and the unwrap are allowed on the wrapped-SOL vault`() {
+        // The other half of an allow-list, and the half a deny-list never had to get right: these
+        // two are what a live Allez SOL deposit and withdraw actually carry, so refusing them would
+        // block every real SOL position rather than let an extra instruction through.
+        assertDoesNotThrow { validateOnSolVault(tokenIx(17, listOf(WRAPPED_SOL_ACCOUNT))) }
+        assertDoesNotThrow {
+            validateOnSolVault(
+                tokenIx(9, listOf(WRAPPED_SOL_ACCOUNT, DEFAULT_FEE_PAYER, DEFAULT_FEE_PAYER))
+            )
+        }
+    }
+
+    @Test
+    fun `an unwrap paid out to another account is refused`() {
+        // Closing the wrapped-SOL account pays its whole balance out, which on a full exit is the
+        // entire withdrawn amount. Rewriting this one address redirects the lot while every other
+        // instruction still reads as the withdraw the user asked for.
+        val reason =
+            solVaultRejection(
+                tokenIx(9, listOf(WRAPPED_SOL_ACCOUNT, OTHER_ACCOUNT, DEFAULT_FEE_PAYER))
+            )
+        assertTrue(reason.contains("rather than to the wallet"), reason)
+    }
+
+    @Test
+    fun `an unwrap authorised by another account is refused`() {
+        val reason =
+            solVaultRejection(
+                tokenIx(9, listOf(WRAPPED_SOL_ACCOUNT, DEFAULT_FEE_PAYER, OTHER_ACCOUNT))
+            )
+        assertTrue(reason.contains("under the authority of"), reason)
+    }
+
+    @Test
+    fun `a wrap credited to another account is refused`() {
+        val reason = solVaultRejection(tokenIx(17, listOf(OTHER_ACCOUNT)))
+        assertTrue(reason.contains("credits $OTHER_ACCOUNT"), reason)
+    }
+
+    @Test
+    fun `an unwrap of an account this app has never seen is allowed once the wallet is paid`() {
+        // Deliberately looser than the wrap: only the unstaked withdraw could be captured, and a
+        // staked exit may close accounts no fixture shows, so the close is pinned by recipient
+        // rather than by subject. Nothing is conceded — the wallet can only close accounts it owns,
+        // and the lamports land on the wallet either way. Pinning the subject instead would refuse
+        // a real staked withdraw to buy no extra protection.
+        assertDoesNotThrow {
+            validateOnSolVault(
+                tokenIx(9, listOf(OTHER_ACCOUNT, DEFAULT_FEE_PAYER, DEFAULT_FEE_PAYER))
+            )
+        }
+    }
+
+    @Test
+    fun `an account hidden behind a lookup table is refused rather than skipped`() {
+        // A versioned message may load accounts from a lookup table, and the decoder cannot resolve
+        // those without fetching the tables, so it names them unresolved. A response that puts the
+        // recipient behind its own table must therefore fail the comparison — a check that treats
+        // "cannot tell" as "not a mismatch" is the same hole in a different place.
+        val reason =
+            solVaultRejection(
+                tokenIx(
+                    9,
+                    listOf(
+                        WRAPPED_SOL_ACCOUNT,
+                        KaminoTransactionDecoder.UNKNOWN_ACCOUNT,
+                        DEFAULT_FEE_PAYER,
+                    ),
+                )
+            )
+        assertTrue(reason.contains("rather than to the wallet"), reason)
+    }
+
+    @Test
+    fun `crediting a wrap is refused on a plain-token vault`() {
+        // Neither captured USDC shape carries a top-level token instruction at all — that vault
+        // moves its tokens through the kVault program's own CPI — so a wrap is allowed only where
+        // there is something to wrap.
+        val reason =
+            rejection(
+                listOf(
+                    ix(KaminoVaultRegistry.PROGRAM_ID),
+                    tokenIx(17, listOf(WRAPPED_SOL_ACCOUNT)),
+                    memo,
+                )
+            )
+        assertTrue(reason.contains("only the wrapped-SOL vault"), reason)
+    }
+
+    @Test
+    fun `crediting a wrap is refused when the wrapped-SOL account could not be derived`() {
+        // Same posture the transfer already took: with nothing to compare against, refuse rather
+        // than wave through.
+        val reason =
+            solVaultRejection(tokenIx(17, listOf(WRAPPED_SOL_ACCOUNT)), wrappedSolAccount = null)
+        assertTrue(reason.contains("could not be derived"), reason)
+    }
+
     private companion object {
         const val DEFAULT_FEE_PAYER = "9ceRgz579BcfWogs3RE11FKNQaWW7Lmtnev3MXspxUjF"
         const val OTHER_ACCOUNT = "SomeoneElsesAccount11111111111111111111111"
+        const val SYSTEM_PROGRAM = "11111111111111111111111111111111"
+        const val TOKEN_PROGRAM = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+
+        /** [DEFAULT_FEE_PAYER]'s wrapped-SOL account, as the Allez SOL fixtures derive it. */
+        const val WRAPPED_SOL_ACCOUNT = "GppmkdEmuqNgS7uY5SSN3gXEamJrcPG9197wBdQ37NLc"
     }
 }
