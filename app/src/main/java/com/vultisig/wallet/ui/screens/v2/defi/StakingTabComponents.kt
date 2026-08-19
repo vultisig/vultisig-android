@@ -90,7 +90,7 @@ internal fun StakingWidget(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
-                painter = painterResource(id = getHeaderIcon(state.stakedAmountDisplay)),
+                painter = painterResource(id = getHeaderIcon(state.coin.ticker)),
                 contentDescription = null,
                 modifier = Modifier.size(48.dp),
             )
@@ -305,14 +305,23 @@ internal fun StakingHeader(title: String, amount: String, icon: Int) {
     }
 }
 
-private fun getHeaderIcon(assetStake: String): Int {
+/**
+ * The card's asset icon, matched on the position's own ticker.
+ *
+ * Reading it off the formatted amount instead was a trap the receipts fell into: `ybRUNE` carries
+ * none of these substrings — the `b` breaks `yrune` — so the compounded bRUNE card took the `om`
+ * fallback and rendered an unrelated logo. The order matters: the prefixed tickers have to be tried
+ * before the asset they are a receipt for, or `ytcy`/`stcy` would both match `tcy`.
+ */
+internal fun getHeaderIcon(ticker: String): Int {
     return when {
-        assetStake.contains("yrune", ignoreCase = true) -> R.drawable.yrune
-        assetStake.contains("ytcy", ignoreCase = true) -> R.drawable.ytcy
-        assetStake.contains("stcy", ignoreCase = true) -> R.drawable.stcy
-        assetStake.contains("ruji", ignoreCase = true) -> R.drawable.ruji_staking
-        assetStake.contains("tcy", ignoreCase = true) -> R.drawable.tcy_staking
-        assetStake.contains("cacao", ignoreCase = true) -> R.drawable.cacao
+        ticker.contains("yrune", ignoreCase = true) -> R.drawable.yrune
+        ticker.contains("ytcy", ignoreCase = true) -> R.drawable.ytcy
+        ticker.contains("stcy", ignoreCase = true) -> R.drawable.stcy
+        ticker.contains("ybrune", ignoreCase = true) -> R.drawable.brune
+        ticker.contains("ruji", ignoreCase = true) -> R.drawable.ruji_staking
+        ticker.contains("tcy", ignoreCase = true) -> R.drawable.tcy_staking
+        ticker.contains("cacao", ignoreCase = true) -> R.drawable.cacao
         else -> R.drawable.om
     }
 }

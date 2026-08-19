@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import com.vultisig.wallet.data.models.Coins
 import java.math.BigInteger
 import vultisig.keysign.v1.CosmosCoin
 import vultisig.keysign.v1.WasmExecuteContractPayload
@@ -260,7 +261,11 @@ private object Memo {
     const val TCY_UNSTAKE_PREFIX = "TCY-:"
     const val DENOM_STAKING_TCY = "x/staking-tcy"
     const val DENOM_STAKING_RUJI = "x/staking-x/ruji"
-    const val DENOM_STAKING_BRUNE = "x/staking-x/brune"
+
+    // Read off the catalogue rather than spelled out. The unbond is funded with this denom and
+    // sized by a clamp that measures the same coin's `contractAddress`, so a literal here could
+    // drift away from the balance the clamp reads and attach funds the vault does not hold.
+    val DENOM_STAKING_BRUNE = Coins.ThorChain.ybRUNE.contractAddress
 }
 
 private object ExecMsg {

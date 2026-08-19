@@ -903,17 +903,16 @@ constructor(
                                 } else {
                                     R.string.defi_header_staked
                                 }
-                            // The bonded position is named after what was bonded, not after the
-                            // receipt that tracks it: "Compounded bRUNE", the way the sRUJI card
-                            // is titled off RUJI.
-                            val headerTicker =
-                                if (isBondedRuneReceipt) Coins.ThorChain.bRUNE.ticker
-                                else coin.ticker
+                            // Titled in the same unit the amount below it is counted in. The
+                            // sRUJI card can say RUJI because its amount is the pool's RUJI
+                            // liquidSize; this one is the raw receipt balance, and a share is
+                            // worth more than one bRUNE, so naming it bRUNE would understate the
+                            // position by the compounding it exists to earn.
                             val position =
                                 StakePositionUiModel(
                                     coin = defaultPosition.coin,
                                     stakeAssetHeader =
-                                        UiText.FormattedText(headerResId, listOf(headerTicker)),
+                                        UiText.FormattedText(headerResId, listOf(coin.ticker)),
                                     stakedAmountDisplay =
                                         stakeAmount.formatTokenAmount(coin.ticker),
                                     // No .orEmpty(): a missed lookup means "we have no price",
@@ -1484,7 +1483,6 @@ constructor(
             val stcy = Coins.ThorChain.sTCY
             val ytcy = Coins.ThorChain.yTCY
             val yrune = Coins.ThorChain.yRUNE
-            val brune = Coins.ThorChain.bRUNE
             val ybrune = Coins.ThorChain.ybRUNE
 
             return listOf(
@@ -1567,7 +1565,10 @@ constructor(
                 StakePositionUiModel(
                     coin = ybrune,
                     stakeAssetHeader =
-                        UiText.FormattedText(R.string.defi_header_compounded, listOf(brune.ticker)),
+                        UiText.FormattedText(
+                            R.string.defi_header_compounded,
+                            listOf(ybrune.ticker),
+                        ),
                     stakedAmountDisplay = "0 ${ybrune.ticker}",
                     apy = null,
                     canWithdraw = false,

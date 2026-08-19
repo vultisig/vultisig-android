@@ -69,6 +69,40 @@ internal class DefaultStakingPositionServiceTest {
         )
     }
 
+    @Test
+    fun `getReceiptBalance reads one receipt off the same denom the position is built from`() =
+        runTest {
+            // The unbond form's ceiling and the clamp that sizes the execute both come through
+            // here, so all three can only agree while they match on the one contract address.
+            givenBalances(
+                "rune" to "2000000000",
+                Coins.ThorChain.ybRUNE.contractAddress to "523400000000",
+            )
+
+            assertEquals(
+                BigInteger("523400000000"),
+                service.getReceiptBalance(ADDRESS, Coins.ThorChain.ybRUNE),
+            )
+        }
+
+    @Test
+    fun `getReceiptBalance reads a denom the bank omits as a genuine zero`() = runTest {
+        // The bank drops empty balances, so an absent denom is a position of nothing rather than
+        // a missing answer.
+        givenBalances("rune" to "2000000000")
+
+        assertEquals(BigInteger.ZERO, service.getReceiptBalance(ADDRESS, Coins.ThorChain.ybRUNE))
+    }
+
+    @Test
+    fun `getReceiptBalance never mistakes the bond token for its receipt`() = runTest {
+        // bRUNE and ybRUNE are separate denoms; redeeming against the liquid balance would attach
+        // funds the bond contract does not accept.
+        givenBalances(Coins.ThorChain.bRUNE.contractAddress to "900000000")
+
+        assertEquals(BigInteger.ZERO, service.getReceiptBalance(ADDRESS, Coins.ThorChain.ybRUNE))
+    }
+
     private fun givenBalances(vararg denoms: Pair<String, String>) {
         coEvery { thorChainApi.getBalance(ADDRESS) } returns
             denoms.map { (denom, amount) -> CosmosBalance(denom = denom, amount = amount) }

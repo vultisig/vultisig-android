@@ -8,6 +8,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.thorchain.RujiStakeBalances
+import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -672,6 +673,10 @@ internal class UnstakeStrategyTest {
             depositTransactionRepository = depositTransactionRepository,
             navigator = navigator,
             thorChainApi = thorChainApi,
+            // The real service rather than a stub, so these cases still cover the denom the
+            // receipt balance is actually matched on.
+            defaultStakingPositionService =
+                DefaultStakingPositionService(thorChainApi, mockk(relaxed = true)),
             defiTypeProvider = { defiType },
             isAutocompoundProvider = { false },
             showLoading = {},

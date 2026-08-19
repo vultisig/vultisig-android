@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.send
 
 import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
+import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -14,6 +15,7 @@ import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import java.math.BigDecimal
 import java.math.BigInteger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -26,6 +28,7 @@ internal class AccountsLoader(
     private val accountsState: MutableStateFlow<AccountsLoadState>,
     private val accountsRepository: AccountsRepository,
     private val stakingDetailsRepository: StakingDetailsRepository,
+    private val defaultStakingPositionService: DefaultStakingPositionService,
     private val defiTypeProvider: () -> DeFiNavActions?,
     private val mscaAddressProvider: () -> String?,
     private val bondedAmountProvider: () -> BigInteger?,
@@ -254,21 +257,55 @@ internal class AccountsLoader(
 
     /**
      * The ybRUNE receipt is not a wallet token either, so the unbond form has no account to draw on
-     * until one is synthesized from the position the DeFi tab cached.
+     * until one is synthesized from the vault's receipt balance.
      *
      * Denominated in receipt units — the vault's `x/staking-x/brune` bank balance, which is what
      * the position reports — so the amount the form carries is already what funds the unbond. No
      * conversion happens at submit, unlike the RUJI receipt above, whose position is reported in
      * RUJI.
+     *
+     * Cached first, then re-read from the chain, the way the balance rows around it hydrate. The
+     * cached figure is whatever the DeFi tab last stored, and this account is what MAX fills the
+     * form from: left at the cache, a bond made since that refresh would cap MAX below the true
+     * position and quietly redeem less than everything, with the submit-time clamp — which only
+     * ever lowers an amount — unable to notice.
      */
     private suspend fun loadBondedRuneReceiptAccount(vaultId: VaultId, generation: Long) {
-        val cachedDetails =
-            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.ybRUNE.id)
+        var receiptAmount =
+            stakingDetailsRepository
+                .getStakingDetailsByCoindId(vaultId, Coins.ThorChain.ybRUNE.id)
+                ?.stakeAmount
+        var hydrated = false
         accountsRepository
             .loadAddresses(vaultId)
             .map { addrs -> addrs.flatMap { it.accounts } }
             .collect { accountsLoaded ->
-                publishBondedRuneReceipt(accountsLoaded, cachedDetails?.stakeAmount, generation)
+                publishBondedRuneReceipt(accountsLoaded, receiptAmount, generation)
+
+                val address =
+                    accountsLoaded
+                        .find { it.token.id.equals(Coins.ThorChain.RUNE.id, true) }
+                        ?.token
+                        ?.address
+                if (hydrated || address.isNullOrEmpty()) return@collect
+                hydrated = true
+
+                // A failed read leaves the cached figure standing rather than emptying the form:
+                // the submit clamp reads the balance again and refuses to build on a guess.
+                val live =
+                    try {
+                        defaultStakingPositionService.getReceiptBalance(
+                            address,
+                            Coins.ThorChain.ybRUNE,
+                        )
+                    } catch (t: Throwable) {
+                        if (t is CancellationException) throw t
+                        Timber.e(t, "Failed to read the live ybRUNE receipt balance")
+                        return@collect
+                    }
+
+                receiptAmount = live
+                publishBondedRuneReceipt(accountsLoaded, live, generation)
             }
     }
 

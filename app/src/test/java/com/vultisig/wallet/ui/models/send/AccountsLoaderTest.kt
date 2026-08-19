@@ -3,6 +3,7 @@
 package com.vultisig.wallet.ui.models.send
 
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
+import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -52,6 +53,7 @@ internal class AccountsLoaderTest {
     private val accountsState = MutableStateFlow<AccountsLoadState>(AccountsLoadState.Uninitialized)
     private val accountsRepository: AccountsRepository = mockk(relaxed = true)
     private val stakingDetailsRepository: StakingDetailsRepository = mockk(relaxed = true)
+    private val defaultStakingPositionService: DefaultStakingPositionService = mockk(relaxed = true)
 
     private var defiType: DeFiNavActions? = null
     private var mscaAddress: String? = null
@@ -268,6 +270,9 @@ internal class AccountsLoaderTest {
                     Coins.ThorChain.ybRUNE.id,
                 )
             } returns stakingDetails(stakeAmount = BigInteger("523400000000"))
+            coEvery {
+                defaultStakingPositionService.getReceiptBalance("thor1", Coins.ThorChain.ybRUNE)
+            } returns BigInteger("523400000000")
             every { accountsRepository.loadAddresses(VAULT_ID) } returns
                 flowOf(
                     listOf(
@@ -309,6 +314,9 @@ internal class AccountsLoaderTest {
                     Coins.ThorChain.ybRUNE.id,
                 )
             } returns null
+            coEvery {
+                defaultStakingPositionService.getReceiptBalance(any(), Coins.ThorChain.ybRUNE)
+            } returns BigInteger.ZERO
             every { accountsRepository.loadAddresses(VAULT_ID) } returns
                 flowOf(
                     listOf(
@@ -327,6 +335,85 @@ internal class AccountsLoaderTest {
             val ybRune =
                 loadedAccounts.single { it.token.id.equals(Coins.ThorChain.ybRUNE.id, true) }
             assertEquals(BigInteger.ZERO, ybRune.tokenValue?.value)
+        }
+
+    @Test
+    fun `UNSTAKE_YBRUNE lifts a stale cached ceiling to the live receipt balance`() =
+        runTest(mainDispatcher) {
+            // MAX fills the form from this account. Left at whatever the DeFi tab last cached, a
+            // bond made since that refresh would cap it below the position and quietly redeem
+            // less than everything — the submit clamp only ever lowers an amount, never raises it.
+            defiType = DeFiNavActions.UNSTAKE_YBRUNE
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.ybRUNE.id,
+                )
+            } returns stakingDetails(stakeAmount = BigInteger("100000000"))
+            coEvery {
+                defaultStakingPositionService.getReceiptBalance("thor1", Coins.ThorChain.ybRUNE)
+            } returns BigInteger("523400000000")
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts =
+                                listOf(
+                                    thorAccount(
+                                        Coins.ThorChain.RUNE.copy(
+                                            address = "thor1",
+                                            hexPublicKey = THOR_PUBLIC_KEY,
+                                        )
+                                    )
+                                ),
+                        )
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            val ybRune =
+                loadedAccounts.single { it.token.id.equals(Coins.ThorChain.ybRUNE.id, true) }
+            assertEquals(BigInteger("523400000000"), ybRune.tokenValue?.value)
+        }
+
+    @Test
+    fun `UNSTAKE_YBRUNE keeps the cached ceiling when the live read fails`() =
+        runTest(mainDispatcher) {
+            // A fetch that failed says nothing about the position, and emptying the form over it
+            // would strand a vault that does hold a receipt. The submit-time read fails closed.
+            defiType = DeFiNavActions.UNSTAKE_YBRUNE
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.ybRUNE.id,
+                )
+            } returns stakingDetails(stakeAmount = BigInteger("100000000"))
+            coEvery {
+                defaultStakingPositionService.getReceiptBalance(any(), Coins.ThorChain.ybRUNE)
+            } throws RuntimeException("status 502")
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts = listOf(thorAccount(Coins.ThorChain.RUNE)),
+                        )
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            val ybRune =
+                loadedAccounts.single { it.token.id.equals(Coins.ThorChain.ybRUNE.id, true) }
+            assertEquals(BigInteger("100000000"), ybRune.tokenValue?.value)
         }
 
     @Test
@@ -960,6 +1047,7 @@ internal class AccountsLoaderTest {
             accountsState = accountsState,
             accountsRepository = accountsRepository,
             stakingDetailsRepository = stakingDetailsRepository,
+            defaultStakingPositionService = defaultStakingPositionService,
             defiTypeProvider = { defiType },
             mscaAddressProvider = { mscaAddress },
             bondedAmountProvider = { bondedAmount },

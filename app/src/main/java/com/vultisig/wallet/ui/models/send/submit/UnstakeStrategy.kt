@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.send.submit
 import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -51,6 +52,7 @@ internal class UnstakeStrategy(
     private val depositTransactionRepository: DepositTransactionRepository,
     private val navigator: Navigator<Destination>,
     private val thorChainApi: ThorChainApi,
+    private val defaultStakingPositionService: DefaultStakingPositionService,
     private val defiTypeProvider: () -> DeFiNavActions?,
     private val isAutocompoundProvider: () -> Boolean,
     private val showLoading: () -> Unit,
@@ -450,16 +452,18 @@ internal class UnstakeStrategy(
     }
 
     /**
-     * The vault's live ybRUNE bank balance — the same `x/staking-x/brune` denom the position card
-     * is read from, so the two never disagree about what the receipt is worth.
+     * The vault's live ybRUNE bank balance, read through the service the position card is built
+     * from so the ceiling, the clamp and the card can never disagree about the receipt's size.
      *
      * Fails closed on an unreadable balance: that is a fetch problem, not an empty position, and
      * sizing a redemption off a guessed balance is what the clamp exists to prevent. Translate it
      * as the RUJI redemption above does, so submit()'s generic catch does not surface the raw
-     * transport text. A denom the response omits is a genuine zero — the bank drops empty balances.
+     * transport text.
      */
     private suspend fun readBondedRuneReceiptBalance(address: String): BigInteger =
-        withContext(Dispatchers.IO) { runCatching { thorChainApi.getBalance(address) } }
+        runCatching {
+                defaultStakingPositionService.getReceiptBalance(address, Coins.ThorChain.ybRUNE)
+            }
             .getOrElse { error: Throwable ->
                 if (error is CancellationException) throw error
                 Timber.e(error, "Failed to read the ybRUNE receipt balance for the unbond")
@@ -467,9 +471,6 @@ internal class UnstakeStrategy(
                     UiText.StringResource(R.string.dialog_default_error_body)
                 )
             }
-            .firstOrNull { it.denom == Coins.ThorChain.ybRUNE.contractAddress }
-            ?.amount
-            ?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
     private suspend fun createRUJIRewardsDepositTransaction(
         vaultId: String,

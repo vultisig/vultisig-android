@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataMigration
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.vultisig.wallet.data.models.Chain
@@ -16,7 +17,9 @@ import kotlinx.coroutines.flow.map
 private val Context.dataStore by
     preferencesDataStore(
         name = "defi_positions_preferences",
-        produceMigrations = { listOf(SelectedPositionsPerChainMigration) },
+        produceMigrations = {
+            listOf(SelectedPositionsPerChainMigration, NewThorchainPositionsMigration)
+        },
     )
 
 // Every DeFi screen used to share one key per vault, so each screen's save overwrote the other's
@@ -40,6 +43,72 @@ private val THORCHAIN_DEFAULT_POSITION_KEYS = setOf("RUNE", "RUJI", "TCY", "sTCY
 
 private fun selectedPositionsKey(chain: Chain, vaultId: String) =
     stringSetPreferencesKey("$SELECTED_POSITIONS_PREFIX${chain.id}_$vaultId")
+
+// How many rounds of THORChain positions the stored selections have been brought up to date with.
+// Absent means none, which is both a fresh install and every vault that saved a selection before
+// the counter existed.
+private val SELECTED_POSITIONS_VERSION_KEY = intPreferencesKey("defi_selected_positions_version")
+
+/**
+ * THORChain positions added to the Manage Positions dialog after vaults could already have saved a
+ * selection, keyed by the version that introduced them.
+ *
+ * A stored selection is returned verbatim, so a position that did not exist when it was written is
+ * missing from it forever: the card and its leg of the tab total stay hidden with no row in the
+ * dialog switched off to explain why. Adding a position to the defaults only reaches vaults that
+ * have never chosen. Add the ticker here in a new version whenever one joins the dialog.
+ *
+ * Tickers are spelled out rather than read off the catalogue for the same reason the key prefixes
+ * are: a migration has to keep writing the shape that was on disk when it shipped.
+ */
+private val THORCHAIN_POSITIONS_BY_VERSION: Map<Int, Set<String>> = mapOf(1 to setOf("ybRUNE"))
+
+private val CURRENT_SELECTED_POSITIONS_VERSION =
+    THORCHAIN_POSITIONS_BY_VERSION.keys.maxOrNull() ?: 0
+
+/**
+ * Switches on every THORChain position introduced since a vault last saved, so a newly supported
+ * one is visible to vaults that have chosen before, exactly as it is to vaults that never did.
+ *
+ * Runs after [SelectedPositionsPerChainMigration] because it reads the per-chain keys that
+ * migration produces. The version counter is what keeps it from being a standing rule: without it
+ * the next run would switch the position back on after the user had switched it off.
+ *
+ * A selection the user cleared to nothing is left alone. That shape is a deliberate "show me none",
+ * and handing it a row it never asked for would be the same override in the other direction.
+ */
+internal object NewThorchainPositionsMigration : DataMigration<Preferences> {
+    override suspend fun shouldMigrate(currentData: Preferences): Boolean =
+        currentData.selectedPositionsVersion() < CURRENT_SELECTED_POSITIONS_VERSION
+
+    override suspend fun migrate(currentData: Preferences): Preferences =
+        addNewThorchainPositions(currentData)
+
+    override suspend fun cleanUp() = Unit
+}
+
+internal fun addNewThorchainPositions(currentData: Preferences): Preferences {
+    val migrated = currentData.toMutablePreferences()
+    migrated[SELECTED_POSITIONS_VERSION_KEY] = CURRENT_SELECTED_POSITIONS_VERSION
+
+    val introduced =
+        THORCHAIN_POSITIONS_BY_VERSION.filterKeys { it > currentData.selectedPositionsVersion() }
+            .values
+            .flatten()
+            .toSet()
+    if (introduced.isEmpty()) return migrated
+
+    val thorchainPrefix = "$SELECTED_POSITIONS_PREFIX${Chain.ThorChain.id}_"
+    currentData.asMap().forEach { (key, value) ->
+        if (!key.name.startsWith(thorchainPrefix)) return@forEach
+        val positions = (value as? Set<*>)?.filterIsInstance<String>()?.toSet() ?: return@forEach
+        if (positions.isEmpty()) return@forEach
+        migrated[stringSetPreferencesKey(key.name)] = positions + introduced
+    }
+    return migrated
+}
+
+private fun Preferences.selectedPositionsVersion(): Int = this[SELECTED_POSITIONS_VERSION_KEY] ?: 0
 
 /**
  * Splits every pre-upgrade selection into the two per-chain keys so nobody's current choice is
