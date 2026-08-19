@@ -20,12 +20,14 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import vultisig.keysign.v1.SignSolana
 
 internal class BlockaidSimulationServiceImplTest {
 
@@ -59,8 +61,9 @@ internal class BlockaidSimulationServiceImplTest {
     fun `evm scan does not cache on operational RPC failure`() = runTest {
         // Operational failures from the RPC layer are wrapped in [NetworkException] (transport
         // errors and HTTP non-2xx alike — see RpcExtensions.bodyOrThrow + HttpCallValidator).
-        // These MUST be swallowed into EMPTY so the next screen can retry; failures must not
-        // poison the cache.
+        // These MUST be swallowed into FAILED (not the plain EMPTY "no balance change" verdict) so
+        // the next screen can retry; failures must not poison the cache, and callers must be able
+        // to tell a genuine empty verdict apart from a scan that never happened.
         val rpc = FakeRpc(evmThrows = NetworkException(503, "boom"))
         val service = BlockaidSimulationServiceImpl(rpc)
         val payload = evmPayload(memo = "0xfeed")
@@ -70,9 +73,41 @@ internal class BlockaidSimulationServiceImplTest {
         rpc.evmResponse = singleTransferEvmResponse()
         val second = service.scan(payload)
 
-        assertSame(BlockaidKeysignScanResult.EMPTY, first)
+        assertSame(BlockaidKeysignScanResult.FAILED, first)
         assertNotNull(second.simulation)
         assertEquals(2, rpc.evmCalls, "operational failure should not poison the cache")
+    }
+
+    @Test
+    fun `solana scan on network failure returns FAILED, not a legitimate empty verdict`() =
+        runTest {
+            // A joining device on a plain in-app raw-Solana flow (staking, Kamino) must fall back
+            // to
+            // the trustworthy native-amount hero when Blockaid is unreachable, not the Unverified
+            // hero
+            // — that requires telling this apart from a completed scan that legitimately found no
+            // balance change, which `didLoadSimulation` exists to do.
+            val rpc = FakeRpc(solanaThrows = NetworkException(503, "boom"))
+            val service = BlockaidSimulationServiceImpl(rpc)
+            val payload = solanaPayload(rawTransactions = listOf("dGVzdA=="))
+
+            val result = service.scan(payload)
+
+            assertSame(BlockaidKeysignScanResult.FAILED, result)
+            assertFalse(result.didLoadSimulation)
+        }
+
+    @Test
+    fun `solana scan on undecodable raw transaction returns FAILED`() = runTest {
+        val rpc = FakeRpc()
+        val service = BlockaidSimulationServiceImpl(rpc)
+        val payload = solanaPayload(rawTransactions = listOf("not-valid-base64!!!"))
+
+        val result = service.scan(payload)
+
+        assertSame(BlockaidKeysignScanResult.FAILED, result)
+        assertFalse(result.didLoadSimulation)
+        assertEquals(0, rpc.solanaCalls, "malformed payload must never reach the RPC")
     }
 
     @Test
@@ -286,6 +321,20 @@ internal class BlockaidSimulationServiceImplTest {
             every { signSolana } returns null
             every { toAddress } returns to
             every { toAmount } returns BigInteger.ZERO
+        }
+    }
+
+    private fun solanaPayload(rawTransactions: List<String>): KeysignPayload {
+        val coin =
+            mockk<Coin>(relaxed = true) {
+                every { chain } returns Chain.Solana
+                every { address } returns "Sol1..."
+            }
+        val solana = SignSolana(rawTransactions = rawTransactions)
+        return mockk<KeysignPayload>(relaxed = true) {
+            every { this@mockk.coin } returns coin
+            every { memo } returns null
+            every { signSolana } returns solana
         }
     }
 
