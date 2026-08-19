@@ -150,7 +150,7 @@ object KaminoTransactionValidator {
     private fun rejectTheWithdrawEverythingSentinel(instructions: List<KaminoTxInstruction>) {
         instructions.forEachIndexed { index, instruction ->
             if (instruction.programId != KaminoVaultRegistry.PROGRAM_ID) return@forEachIndexed
-            val amount = kvaultAmount(instruction.data) ?: return@forEachIndexed
+            val amount = kvaultAmountArgument(instruction.data) ?: return@forEachIndexed
             if (amount == U64_MAX) {
                 reject(
                     "instruction $index carries the withdraw-everything sentinel, which this app " +
@@ -158,19 +158,6 @@ object KaminoTransactionValidator {
                 )
             }
         }
-    }
-
-    /**
-     * The `u64` amount argument of a kVault instruction: an 8-byte Anchor discriminator followed by
-     * the amount, little-endian. Null when the instruction is too short to carry one.
-     */
-    private fun kvaultAmount(data: ByteArray): BigInteger? {
-        if (data.size < 16) return null
-        var value = BigInteger.ZERO
-        for (offset in 7 downTo 0) {
-            value = value.shiftLeft(8).or(BigInteger.valueOf((data[8 + offset].toLong() and 0xFF)))
-        }
-        return value
     }
 
     /**
