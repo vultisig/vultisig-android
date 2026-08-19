@@ -2,6 +2,8 @@
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Логотип токена</string>
     <string name="tokens">Токены</string>
+    <string name="edit_chains">Сети</string>
+    <string name="edit_tokens">Токены</string>
     <string name="keysign">Ключевая подпись</string>
     <string name="signing_error_please_try_again_s">Ошибка подписи. Пожалуйста, попробуйте еще раз. %s</string>
     <string name="try_again">Попробуйте еще раз</string>
