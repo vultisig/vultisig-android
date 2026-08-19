@@ -26,11 +26,16 @@ private const val MAX_FRACTION_SCALE = 18
  *
  * Truth table:
  * - simulation present → resolved [HeroContent.Send] / [HeroContent.Swap]
- * - simulation loaded but null AND function name decoded → [HeroContent.Unverified]. The decoded
- *   name is intentionally NOT surfaced in the hero — it lives in the function-signature row below
- *   so it doesn't read as the action.
- * - simulation loaded but null AND no function name → null (caller falls back to the existing
- *   native-amount hero)
+ * - simulation loaded but null AND (function name decoded OR a raw dApp transaction) →
+ *   [HeroContent.Unverified]. The decoded name is intentionally NOT surfaced in the hero — it lives
+ *   in the function-signature row below so it doesn't read as the action. Solana never decodes a
+ *   function name (there is no EVM-style ABI to decode against), so [isRawDappTransaction] is its
+ *   only signal that the payload is an opaque dApp-signed transaction rather than a plain transfer
+ *   — without it, a Solana program call whose simulation comes back null (e.g. the SOL/WSOL
+ *   swap-noise guard) would fall through to the native-amount hero and show the payload's
+ *   unverified wire amount as a bogus "You're sending" transfer.
+ * - simulation loaded but null AND no function name AND not a raw dApp transaction → null (caller
+ *   falls back to the existing native-amount hero, trustworthy for a plain transfer)
  * - simulation not yet loaded → null (caller treats this as "loading")
  */
 class BuildHeroContentUseCase @Inject constructor() {
@@ -39,6 +44,7 @@ class BuildHeroContentUseCase @Inject constructor() {
         simulation: BlockaidSimulationInfo?,
         decodedFunctionName: String?,
         didLoadSimulation: Boolean,
+        isRawDappTransaction: Boolean = false,
     ): HeroContent? =
         when (simulation) {
             is BlockaidSimulationInfo.Transfer ->
@@ -53,7 +59,8 @@ class BuildHeroContentUseCase @Inject constructor() {
                     to = simulation.toCoin.toHeroAmount(simulation.toAmountText()),
                 )
             null ->
-                if (didLoadSimulation && decodedFunctionName != null) HeroContent.Unverified
+                if (didLoadSimulation && (decodedFunctionName != null || isRawDappTransaction))
+                    HeroContent.Unverified
                 else null
         }
 
