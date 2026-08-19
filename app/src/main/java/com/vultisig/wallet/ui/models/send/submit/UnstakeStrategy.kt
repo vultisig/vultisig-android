@@ -113,16 +113,16 @@ internal class UnstakeStrategy(
 
                     val defiType = defiTypeProvider()
 
-                    // The auto-compounding position is the one case where this ceiling is not the
+                    // The two receipt redemptions are the cases where this ceiling is not the
                     // balance the transaction is sized against: the form is seeded from the
                     // position the DeFi tab cached, while the redemption re-reads the live one.
                     // Enforcing the stale ceiling would reject amounts the live position can
-                    // honour, so the live read below is the sole authority — it clamps to the
+                    // honour, so the live reads below are the sole authority — each clamps to the
                     // whole position and so can never over-redeem.
-                    if (
-                        defiType != DeFiNavActions.UNSTAKE_SRUJI &&
-                            tokenAmountInt > availableTokenBalance
-                    ) {
+                    val isReceiptRedemption =
+                        defiType == DeFiNavActions.UNSTAKE_SRUJI ||
+                            defiType == DeFiNavActions.UNSTAKE_YBRUNE
+                    if (!isReceiptRedemption && tokenAmountInt > availableTokenBalance) {
                         throw InvalidTransactionDataException(
                             UiText.FormattedText(
                                 R.string.send_error_insufficient_native_balance_with_fees,
@@ -401,6 +401,19 @@ internal class UnstakeStrategy(
             )
         }
 
+        // The form is sized off the position the DeFi tab cached, which can lag the vault's bank
+        // balance in either direction: a bond made since the last refresh leaves the ceiling too
+        // low, and an unbond made since leaves it too high — and too high attaches funds the vault
+        // no longer holds, which the chain rejects only after the user has paid for the keysign.
+        // The live receipt balance is the authority; the entered amount is clamped to it.
+        val heldReceipt = readBondedRuneReceiptBalance(srcAddress)
+        if (heldReceipt < BigInteger.ONE) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_insufficient_balance)
+            )
+        }
+        val unbondUnits = tokenAmountInt.coerceAtMost(heldReceipt)
+
         val specific =
             withContext(Dispatchers.IO) {
                 blockChainSpecificRepository.getSpecific(
@@ -422,19 +435,41 @@ internal class UnstakeStrategy(
             srcAddress = srcAddress,
             dstAddress = dstAddress,
             memo = "",
-            srcTokenValue = TokenValue(value = tokenAmountInt, token = selectedToken),
+            srcTokenValue = TokenValue(value = unbondUnits, token = selectedToken),
             estimatedFees = gasFee,
             estimateFeesFiat =
                 gasFeeToEstimatedFee.fiatFeesFor(gasFee, selectedToken).formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
             wasmExecuteContractPayload =
                 ThorchainFunctions.unstakeBRune(
-                    units = tokenAmountInt,
+                    units = unbondUnits,
                     stakingContract = STAKING_BRUNE_CONTRACT,
                     fromAddress = srcAddress,
                 ),
         )
     }
+
+    /**
+     * The vault's live ybRUNE bank balance — the same `x/staking-x/brune` denom the position card
+     * is read from, so the two never disagree about what the receipt is worth.
+     *
+     * Fails closed on an unreadable balance: that is a fetch problem, not an empty position, and
+     * sizing a redemption off a guessed balance is what the clamp exists to prevent. Translate it
+     * as the RUJI redemption above does, so submit()'s generic catch does not surface the raw
+     * transport text. A denom the response omits is a genuine zero — the bank drops empty balances.
+     */
+    private suspend fun readBondedRuneReceiptBalance(address: String): BigInteger =
+        withContext(Dispatchers.IO) { runCatching { thorChainApi.getBalance(address) } }
+            .getOrElse { error: Throwable ->
+                if (error is CancellationException) throw error
+                Timber.e(error, "Failed to read the ybRUNE receipt balance for the unbond")
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.dialog_default_error_body)
+                )
+            }
+            .firstOrNull { it.denom == Coins.ThorChain.ybRUNE.contractAddress }
+            ?.amount
+            ?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
     private suspend fun createRUJIRewardsDepositTransaction(
         vaultId: String,

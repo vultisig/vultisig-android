@@ -209,6 +209,22 @@ internal class TokenPreselectionServiceTest {
         }
 
     @Test
+    fun `preSelect UNSTAKE_YBRUNE - Loaded(empty) does not preselect static template coin`() =
+        runTest(mainDispatcher) {
+            // Same shape as sRUJI above: the ybRUNE account is synthesized on top of the vault's
+            // RUNE account, so an empty load means the vault has no THORChain account to unbond
+            // from. The static receipt template carries no address and no balance.
+            defiType = DeFiNavActions.UNSTAKE_YBRUNE
+            accountsState.value = AccountsLoadState.Loaded(emptyList())
+            val service = build(backgroundScope)
+
+            service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
+            advanceUntilIdle()
+
+            assertEquals(emptyList<Any>(), selectedTokens)
+        }
+
+    @Test
     fun `preSelect STAKE_YBRUNE - default coin is bRUNE, not the receipt`() =
         runTest(mainDispatcher) {
             // Bonding spends bRUNE. Starting the form on ybRUNE would offer the receipt as the
