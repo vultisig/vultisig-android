@@ -544,6 +544,7 @@
     <string name="verify_deposit_depositing">Você está depositando</string>
     <string name="verify_deposit_withdrawing">Você está retirando</string>
     <string name="kamino_verify_vault">Vault</string>
+    <string name="kamino_verify_withdraw_unverified">Este dispositivo não consegue confirmar este valor. A transação retira %1$s cotas do vault.</string>
     <string name="kamino_error_build_failed">Não foi possível preparar esta transação</string>
     <string name="kamino_withdraw_nothing">Não há nada a retirar deste vault</string>
     <string name="kamino_withdraw_unreadable">Não foi possível ler esta posição, então a retirada não pode ser preparada</string>

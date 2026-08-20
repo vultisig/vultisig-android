@@ -16,6 +16,16 @@ enum class KaminoAction {
 }
 
 /**
+ * The ComputeBudget a transaction carries: the unit limit it reserves and the micro-lamport price
+ * it pays per unit.
+ *
+ * The two together are the priority fee — one without the other prices nothing — so they are
+ * compared as a pair. A co-signing device holds a second, independent claim about them in
+ * `BlockChainSpecific.Solana`, and the two have to agree before either is put on a screen.
+ */
+data class KaminoPriorityFee(val limit: BigInteger, val price: BigInteger)
+
+/**
  * Compute-unit budget for Kamino transactions.
  *
  * Kamino builds its transactions with no ComputeBudget instruction at all and ignores priority-fee
@@ -28,6 +38,28 @@ object KaminoComputeBudget {
 
     /** The ComputeBudget program both injected instructions invoke. */
     const val PROGRAM_ID = "ComputeBudget111111111111111111111111111111"
+
+    /**
+     * Stands for a ComputeBudget that is present but unreadable — a duplicate, a truncated
+     * argument, an instruction that is neither of the two. Negative on purpose: it can equal no
+     * budget a payload could legitimately record, so a comparison against it always disagrees.
+     */
+    val MALFORMED =
+        KaminoPriorityFee(limit = BigInteger.ONE.negate(), price = BigInteger.ONE.negate())
+
+    /**
+     * Where the two injected instructions sit, and the order they sit in.
+     *
+     * A cross-platform contract rather than a preference: iOS emits the limit at 0 and the price at
+     * 1 and matches the remaining instructions positionally, so a transaction laid out any other
+     * way is one an iPhone co-signer reads as unsigned-for and will not join. Defined here because
+     * both the device that builds the layout ([KaminoTransactionPreparer]) and the one that refuses
+     * anything else ([KaminoTransactionValidator]) have to mean the same thing by it.
+     */
+    const val UNIT_LIMIT_INDEX = 0
+
+    /** Right after the limit, which is where iOS puts it. */
+    const val UNIT_PRICE_INDEX = UNIT_LIMIT_INDEX + 1
 
     /** `ComputeBudgetInstruction::SetComputeUnitLimit`, borsh discriminator 2, then a `u32`. */
     const val SET_UNIT_LIMIT_DISCRIMINATOR = 2
@@ -90,6 +122,56 @@ object KaminoComputeBudget {
      * 100,000,000, so every congested-network sample would land above the ceiling unclamped.
      */
     val MAX_UNIT_PRICE: BigInteger = BigInteger.valueOf(1_000_000)
+
+    /**
+     * The compute budget carried by [instructions], or null when they carry none.
+     *
+     * Reads what the bytes say rather than what anything alongside them claims: this is the figure
+     * the runtime will charge against, and on a co-signing device it is the only side of the fee
+     * row that is not a display field somebody else filled in.
+     *
+     * Malformed is not the same as absent, so a ComputeBudget instruction this cannot parse — or a
+     * second one of either kind — answers [MALFORMED] rather than null. A caller comparing against
+     * a payload must refuse it: "cannot be read" agreeing with "there is none" is how a stripped
+     * budget would pass for a matching one.
+     */
+    fun readFrom(instructions: List<KaminoTxInstruction>): KaminoPriorityFee? {
+        val budget = instructions.filter { it.programId == PROGRAM_ID }
+        if (budget.isEmpty()) return null
+
+        val limits = budget.mapNotNull { unitLimitArgument(it.data) }
+        val prices = budget.mapNotNull { unitPriceArgument(it.data) }
+        if (budget.size != 2 || limits.size != 1 || prices.size != 1) return MALFORMED
+
+        return KaminoPriorityFee(limit = limits.single(), price = prices.single())
+    }
+
+    /** `SetComputeUnitLimit`'s `u32` argument, or null when [data] is not that instruction. */
+    fun unitLimitArgument(data: ByteArray): BigInteger? =
+        littleEndianArgument(data, SET_UNIT_LIMIT_DISCRIMINATOR, UNSIGNED_INT_BYTES)
+
+    /** `SetComputeUnitPrice`'s `u64` argument, or null when [data] is not that instruction. */
+    fun unitPriceArgument(data: ByteArray): BigInteger? =
+        littleEndianArgument(data, SET_UNIT_PRICE_DISCRIMINATOR, UNSIGNED_LONG_BYTES)
+
+    /**
+     * The little-endian argument of a ComputeBudget instruction, when [data] is exactly the
+     * discriminator followed by [width] bytes. A longer instruction is refused rather than read
+     * from its prefix: trailing bytes mean this is not the instruction it appears to be.
+     */
+    private fun littleEndianArgument(data: ByteArray, discriminator: Int, width: Int): BigInteger? {
+        if (data.size != width + 1) return null
+        if ((data[0].toInt() and 0xFF) != discriminator) return null
+        var value = BigInteger.ZERO
+        for (offset in width - 1 downTo 0) {
+            value = value.shiftLeft(8).or(BigInteger.valueOf(data[1 + offset].toLong() and 0xFF))
+        }
+        return value
+    }
+
+    private const val UNSIGNED_INT_BYTES = 4
+
+    private const val UNSIGNED_LONG_BYTES = 8
 
     fun unitLimitFor(vault: KaminoVault, action: KaminoAction): BigInteger =
         when (action) {

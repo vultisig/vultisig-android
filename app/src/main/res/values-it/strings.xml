@@ -546,6 +546,7 @@
     <string name="verify_deposit_depositing">Stai depositando</string>
     <string name="verify_deposit_withdrawing">Stai prelevando</string>
     <string name="kamino_verify_vault">Vault</string>
+    <string name="kamino_verify_withdraw_unverified">Questo dispositivo non può confermare questo importo. La transazione preleva %1$s quote del vault.</string>
     <string name="kamino_error_build_failed">Impossibile preparare questa transazione</string>
     <string name="kamino_withdraw_nothing">Non c\'è nulla da prelevare da questo vault</string>
     <string name="kamino_withdraw_unreadable">Impossibile leggere questa posizione, quindi il prelievo non può essere preparato</string>
