@@ -264,26 +264,71 @@ class KaminoRelayedTransactionTest {
     ) =
         budget +
             listOfNotNull(
-                KaminoTxInstruction(ASSOCIATED_TOKEN, byteArrayOf(1)),
+                createAta(shareAccount),
                 kvault(depositDiscriminator, amount),
-                KaminoTxInstruction(KaminoVaultRegistry.FARMS_PROGRAM_ID, hex("6f11b9fa3c7a26fe")),
-                KaminoTxInstruction(KaminoVaultRegistry.FARMS_PROGRAM_ID, hex("ceb0ca12c8d1b36c")),
+                farms(hex("6f11b9fa3c7a26fe"), userStateSlot = 4),
+                farms(
+                    hex("ceb0ca12c8d1b36c"),
+                    userStateSlot = 1,
+                    argument = U64_MAX.toLittleEndianU64(),
+                    shareAccountSlot = 4,
+                ),
                 memoInstruction,
             )
 
     private fun withdrawInstructions(amount: BigInteger) =
         computeBudgetInstructions(vault, KaminoAction.WITHDRAW) +
             listOf(
-                KaminoTxInstruction(ASSOCIATED_TOKEN, byteArrayOf(1)),
+                createAta(fakeTokenAccount(signer, vault.tokenMint)),
                 kvault(withdrawDiscriminator, amount),
                 memo,
             )
 
-    private fun kvault(discriminator: ByteArray, amount: BigInteger) =
-        KaminoTxInstruction(
+    /**
+     * The kVault instruction at the layout the validator reads: the signer as authority, the
+     * wallet's token account where the action puts it, and its share account at slot 7 — which is
+     * also what names the vault to [KaminoRelayedTransactionReader].
+     */
+    private fun kvault(discriminator: ByteArray, amount: BigInteger): KaminoTxInstruction {
+        val deposit = discriminator.contentEquals(depositDiscriminator)
+        val accounts = MutableList(9) { KaminoTransactionDecoder.UNKNOWN_ACCOUNT }
+        accounts[0] = signer
+        accounts[if (deposit) 6 else 5] = fakeTokenAccount(signer, vault.tokenMint).orEmpty()
+        accounts[7] = shareAccount
+        return KaminoTxInstruction(
             programId = KVAULT,
             data = discriminator + amount.toLittleEndianU64(),
-            accounts = listOf(signer, KaminoTransactionDecoder.UNKNOWN_ACCOUNT, shareAccount),
+            accounts = accounts,
+        )
+    }
+
+    /**
+     * A farms instruction naming the state this wallet derives for the vault's farm — the account
+     * that says which stake is moving, since the farm itself rides in a lookup table.
+     */
+    private fun farms(
+        discriminator: ByteArray,
+        userStateSlot: Int,
+        argument: ByteArray = ByteArray(0),
+        shareAccountSlot: Int? = null,
+    ): KaminoTxInstruction {
+        val accounts = MutableList(6) { KaminoTransactionDecoder.UNKNOWN_ACCOUNT }
+        accounts[0] = signer
+        accounts[userStateSlot] = KaminoFarmsUserState.derive(vault.farm, signer).orEmpty()
+        shareAccountSlot?.let { accounts[it] = shareAccount }
+        return KaminoTxInstruction(
+            programId = KaminoVaultRegistry.FARMS_PROGRAM_ID,
+            data = discriminator + argument,
+            accounts = accounts,
+        )
+    }
+
+    /** `CreateIdempotent` for one of the wallet's own accounts, as every captured shape opens. */
+    private fun createAta(account: String?) =
+        KaminoTxInstruction(
+            programId = ASSOCIATED_TOKEN,
+            data = byteArrayOf(1),
+            accounts = listOf(signer, account.orEmpty(), signer),
         )
 
     private fun BigInteger.toLittleEndianU64(): ByteArray =
@@ -303,5 +348,8 @@ class KaminoRelayedTransactionTest {
         const val RAW = "relayed-transaction"
 
         val ONE_USDC: BigInteger = BigInteger.valueOf(1_000_000)
+
+        /** What `farms::stake` always carries: stake the whole share balance. */
+        val U64_MAX: BigInteger = BigInteger("18446744073709551615")
     }
 }

@@ -91,14 +91,29 @@ object KaminoRelayedTransactionReader {
  * The `u64` amount argument of a kVault instruction: an 8-byte Anchor discriminator followed by the
  * amount, little-endian. Null when the instruction is too short to carry one.
  */
-fun kvaultAmountArgument(data: ByteArray): BigInteger? {
-    if (data.size < 16) return null
+fun kvaultAmountArgument(data: ByteArray): BigInteger? = anchorArgument(data, bytes = 8)
+
+/**
+ * The little-endian argument of [bytes] bytes that follows an Anchor discriminator. Null when the
+ * instruction is too short to carry one.
+ *
+ * Width is a parameter because the arguments here are not all `u64`: the farms unstake amount is a
+ * `u128` scaled by 10^18, and reading its low half would compare a number that means nothing.
+ */
+internal fun anchorArgument(data: ByteArray, bytes: Int): BigInteger? {
+    if (data.size < ANCHOR_DISCRIMINATOR + bytes) return null
     var value = BigInteger.ZERO
-    for (offset in 7 downTo 0) {
-        value = value.shiftLeft(8).or(BigInteger.valueOf((data[8 + offset].toLong() and 0xFF)))
+    for (offset in bytes - 1 downTo 0) {
+        value =
+            value
+                .shiftLeft(8)
+                .or(BigInteger.valueOf(data[ANCHOR_DISCRIMINATOR + offset].toLong() and 0xFF))
     }
     return value
 }
+
+/** Anchor prefixes every instruction with eight discriminator bytes; arguments follow them. */
+internal const val ANCHOR_DISCRIMINATOR = 8
 
 /**
  * The wallet's associated token account for [mint], or null when WalletCore cannot derive one.
@@ -129,6 +144,10 @@ internal constructor(
     // Derives an associated token account. Backed by WalletCore JNI in production; overridable so
     // the recognition rules can be unit-tested without the native library.
     private val tokenAccount: (owner: String, mint: String) -> String?,
+    // The wallet's state in a vault's farm. Pure Kotlin, so it needs no override to be testable —
+    // it is a parameter only so the two derivations read the same way at the call site.
+    private val farmUserState: (farm: String, owner: String) -> String? =
+        KaminoFarmsUserState::derive,
 ) {
 
     @Inject constructor() : this(KaminoTransactionDecoder::decode, ::deriveAssociatedTokenAccount)
@@ -155,20 +174,25 @@ internal constructor(
         val intent =
             KaminoRelayedTransactionReader.read(decoded, vaultsByShareAccount) ?: return null
 
-        val wrappedSolAccount =
-            if (intent.vault.tokenMint == KaminoVaultRegistry.WRAPPED_SOL_MINT) {
-                tokenAccount(signerAddress, KaminoVaultRegistry.WRAPPED_SOL_MINT)
-            } else {
-                null
-            }
-
         return try {
             KaminoTransactionValidator.validate(
                 decoded = decoded,
                 vault = intent.vault,
                 action = intent.action,
                 signerAddress = signerAddress,
-                wrappedSolAccount = wrappedSolAccount,
+                // Every account here is derived from the vault's own address and a mint or farm the
+                // registry pins, so a co-signer reproduces exactly what the initiating device
+                // derived without being told any of it.
+                tokenAccount = tokenAccount(signerAddress, intent.vault.tokenMint),
+                shareAccount = tokenAccount(signerAddress, intent.vault.sharesMint),
+                farmUserState = farmUserState(intent.vault.farm, signerAddress),
+                // The amount the kVault instruction itself carries, because this device has no
+                // request to compare against — it was handed bytes. So the kVault amount check
+                // restates itself here, and that is fine: what the figure is *for* on this side is
+                // the instructions that must agree with it. A wrap has to move exactly these
+                // lamports, and an unstake may not release more than this withdraw burns. iOS takes
+                // the same posture on a co-signer, `KaminoInstructionSequence.FarmUnstake.unknown`.
+                amountBaseUnits = intent.amount,
             )
             intent
         } catch (e: KaminoTransactionRejected) {
