@@ -50,19 +50,26 @@ class KaminoTransactionValidatorTest {
         }
 
     /**
-     * A farms instruction with the wallet as authority and its share account in both slots the
-     * checked instructions read one of — slot 4 for the stake, slot 3 for the unstaked withdrawal.
+     * A farms instruction with the wallet as authority, its state in the farm, and its share
+     * account in both slots the checked instructions read one of — slot 4 for the stake, slot 3 for
+     * the unstaked withdrawal.
+     *
+     * The user state sits at slot 4 on `initialize_user` and at slot 1 on the other three, which is
+     * the layout the captured deposits carry: the instruction that *creates* the account is handed
+     * the authority, the payer, the owner and the delegatee first.
      */
     private fun farms(
         discriminator: String,
         argument: ByteArray = ByteArray(0),
         owner: String = DEFAULT_FEE_PAYER,
         shareAccount: String = SHARE_ACCOUNT,
+        userState: String = FARM_USER_STATE,
     ): KaminoTxInstruction {
         val accounts = MutableList(6) { KaminoTransactionDecoder.UNKNOWN_ACCOUNT }
         accounts[0] = owner
         accounts[3] = shareAccount
         accounts[4] = shareAccount
+        accounts[if (discriminator == FARMS_INITIALIZE_USER) 4 else 1] = userState
         return KaminoTxInstruction(
             programId = KaminoVaultRegistry.FARMS_PROGRAM_ID,
             data = bytes(discriminator) + argument,
@@ -102,6 +109,7 @@ class KaminoTransactionValidatorTest {
         signerAddress: String? = DEFAULT_FEE_PAYER,
         tokenAccount: String? = TOKEN_ACCOUNT,
         shareAccount: String? = SHARE_ACCOUNT,
+        farmUserState: String? = FARM_USER_STATE,
         amountBaseUnits: BigInteger? = AMOUNT,
     ) =
         KaminoTransactionValidator.validate(
@@ -111,6 +119,7 @@ class KaminoTransactionValidatorTest {
             signerAddress = signerAddress,
             tokenAccount = tokenAccount,
             shareAccount = shareAccount,
+            farmUserState = farmUserState,
             amountBaseUnits = amountBaseUnits,
         )
 
@@ -122,6 +131,7 @@ class KaminoTransactionValidatorTest {
         signerAddress: String? = DEFAULT_FEE_PAYER,
         tokenAccount: String? = TOKEN_ACCOUNT,
         shareAccount: String? = SHARE_ACCOUNT,
+        farmUserState: String? = FARM_USER_STATE,
         amountBaseUnits: BigInteger? = AMOUNT,
     ): String =
         assertThrows<KaminoTransactionRejected> {
@@ -133,6 +143,7 @@ class KaminoTransactionValidatorTest {
                     signerAddress = signerAddress,
                     tokenAccount = tokenAccount,
                     shareAccount = shareAccount,
+                    farmUserState = farmUserState,
                     amountBaseUnits = amountBaseUnits,
                 )
             }
@@ -618,6 +629,63 @@ class KaminoTransactionValidatorTest {
     }
 
     @Test
+    fun `a farms instruction moving another holder's stake is refused`() {
+        // The authority alone binds a farms instruction to nothing: the farm it names travels in a
+        // lookup table, so without the user state the response picks which stake moves. `stake`
+        // carries the whole-balance sentinel, so the one it picks gives up the wallet's entire
+        // share balance.
+        val reason =
+            rejection(
+                listOf(
+                    kvault(),
+                    farms(
+                        FARMS_STAKE,
+                        argument = littleEndian(U64_MAX, bytes = 8),
+                        userState = OTHER_ACCOUNT,
+                    ),
+                    memo,
+                )
+            )
+        assertTrue(reason.contains("state in the vault's farm"), reason)
+    }
+
+    @Test
+    fun `the user state is what tells one vault's farm from another`() {
+        // A program address over the farm and the owner, so the same wallet has a different one in
+        // every farm. That is what makes it the offline answer to "which vault is this?" on an
+        // instruction whose farm slot cannot be read.
+        val reason =
+            rejection(
+                depositInstructions(),
+                farmUserState = SOL_FARM_USER_STATE,
+                amountBaseUnits = AMOUNT,
+            )
+        assertTrue(reason.contains(FARM_USER_STATE), reason)
+    }
+
+    @Test
+    fun `initialize_user is pinned at its own slot, not the one the other three use`() {
+        // It is the instruction that creates the account, so the IDL puts the authority, the payer,
+        // the owner and the delegatee ahead of it. Reading slot 1 here would compare the wallet
+        // against the user state and refuse every real deposit.
+        val reason =
+            rejection(
+                listOf(kvault(), farms(FARMS_INITIALIZE_USER, userState = OTHER_ACCOUNT), memo)
+            )
+        assertTrue(reason.contains("state in the vault's farm"), reason)
+
+        assertDoesNotThrow { validate(depositInstructions()) }
+    }
+
+    @Test
+    fun `a farms instruction is refused when the wallet's state in the farm could not be derived`() {
+        // Same rule the other derived accounts follow: an address that could not be computed is one
+        // that cannot be compared, and treating that as "not a mismatch" is the hole moved.
+        val reason = rejection(depositInstructions(), farmUserState = null)
+        assertTrue(reason.contains("could not be derived"), reason)
+    }
+
+    @Test
     fun `a second unstake is refused rather than releasing twice what the withdraw burns`() {
         // The bound each unstake is held to is per-instruction, so two of them each carrying the
         // requested figure both pass it. The withdraw then burns that figure once, and the shares
@@ -1066,6 +1134,15 @@ class KaminoTransactionValidatorTest {
         const val SHARE_ACCOUNT = "GSayQpRaoh1LFdBbja4vensNKDfihcixzCcQShKMCdMJ"
         const val WRAPPED_SOL_ACCOUNT = "GppmkdEmuqNgS7uY5SSN3gXEamJrcPG9197wBdQ37NLc"
         const val SOL_SHARE_ACCOUNT = "Hq6N6sNE638VLULNEeAZRTMFmYtsG9ZLLPJYefxwPNWf"
+
+        /**
+         * [DEFAULT_FEE_PAYER]'s state in the Steakhouse vault's farm, as the captured deposit names
+         * it — and as [KaminoFarmsUserState] derives it from the farm the registry pins.
+         */
+        const val FARM_USER_STATE = "A1b83WVHAKXeRQAHsdAzJY23ShXCPjqKshzmFFXwGP4Z"
+
+        /** The same wallet's state in the Allez SOL farm, which is a different account entirely. */
+        const val SOL_FARM_USER_STATE = "8ULTfRg47DWt5VBDT7UURTPW6P5Fc5vPMfncfPKpZc3J"
 
         /** Anchor discriminators: the first eight bytes of `sha256("global:<name>")`. */
         const val KVAULT_DEPOSIT = "f223c68952e1f2b6"

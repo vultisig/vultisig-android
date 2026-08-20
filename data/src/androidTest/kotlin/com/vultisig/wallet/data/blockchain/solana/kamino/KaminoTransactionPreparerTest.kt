@@ -7,6 +7,7 @@ import java.util.Base64
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -88,6 +89,7 @@ class KaminoTransactionPreparerTest {
             signerAddress = signerAddress,
             tokenAccount = ownAccount(vault.tokenMint),
             shareAccount = ownAccount(vault.sharesMint),
+            farmUserState = KaminoFarmsUserState.derive(vault.farm, KaminoFixtures.WALLET),
             amountBaseUnits = amountBaseUnits,
         )
 
@@ -543,6 +545,71 @@ class KaminoTransactionPreparerTest {
                 assertEquals(ownAccount(vault.tokenMint), move.accounts[tokenAccountSlot])
                 assertEquals(ownAccount(vault.sharesMint), move.accounts[7])
             }
+    }
+
+    @Test
+    fun every_captured_farms_instruction_names_the_state_this_wallet_derives_for_the_farm() {
+        // The farm account is a lookup-table entry in both captured deposits, so it cannot identify
+        // anything offline. The wallet's state *in* that farm can: it is a program address over the
+        // farm and the owner, and both responses carry it as a STATIC key — which is what lets the
+        // validator recompute it locally and compare rather than trust the slot.
+        //
+        // The two slots differ because `initialize_user` is the instruction that creates the
+        // account: the IDL puts the authority, the payer, the owner and the delegatee ahead of it.
+        // If either index ever drifted, it would show here rather than as a refusal on a device.
+        listOf(
+                KaminoFixtures.DEPOSIT to KaminoVaultRegistry.STEAKHOUSE_USDC,
+                KaminoFixtures.ALLEZ_SOL_DEPOSIT to KaminoVaultRegistry.ALLEZ_SOL,
+            )
+            .forEach { (transaction, vault) ->
+                val expected = KaminoFarmsUserState.derive(vault.farm, KaminoFixtures.WALLET)
+                assertNotNull("the farm user state must derive for ${vault.address}", expected)
+
+                val farms =
+                    KaminoTransactionDecoder.decode(transaction).instructions.filter {
+                        it.programId == KaminoVaultRegistry.FARMS_PROGRAM_ID
+                    }
+                assertEquals(2, farms.size)
+
+                val initializeUser =
+                    farms.single { it.data.toHex().startsWith(FARMS_INITIALIZE_USER) }
+                val stake = farms.single { it.data.toHex().startsWith(FARMS_STAKE) }
+                assertEquals(expected, initializeUser.accounts[4])
+                assertEquals(expected, stake.accounts[1])
+
+                // And the farm itself is exactly what cannot be compared, in both of them.
+                assertEquals(KaminoTransactionDecoder.UNKNOWN_ACCOUNT, stake.accounts[2])
+            }
+    }
+
+    @Test
+    fun a_deposit_prepared_against_another_vaults_farm_is_refused() {
+        // The substitution the derivation exists to stop: the captured Steakhouse deposit checked
+        // against the state this wallet holds in the Allez SOL farm. Nothing else about the
+        // transaction changes, and the farm slot the mismatch would show in is unreadable.
+        val decoded =
+            KaminoTransactionDecoder.decode(KaminoAttributionMemo.append(KaminoFixtures.DEPOSIT))
+        val rejection =
+            assertThrows(KaminoTransactionRejected::class.java) {
+                KaminoTransactionValidator.validate(
+                    decoded = decoded,
+                    vault = KaminoVaultRegistry.STEAKHOUSE_USDC,
+                    action = KaminoAction.DEPOSIT,
+                    signerAddress = KaminoFixtures.WALLET,
+                    tokenAccount = ownAccount(KaminoVaultRegistry.STEAKHOUSE_USDC.tokenMint),
+                    shareAccount = ownAccount(KaminoVaultRegistry.STEAKHOUSE_USDC.sharesMint),
+                    farmUserState =
+                        KaminoFarmsUserState.derive(
+                            KaminoVaultRegistry.ALLEZ_SOL.farm,
+                            KaminoFixtures.WALLET,
+                        ),
+                    amountBaseUnits = CAPTURED_AMOUNT_BASE_UNITS,
+                )
+            }
+        assertTrue(
+            "unexpected reason: ${rejection.message}",
+            rejection.message.orEmpty().contains("state in the vault's farm"),
+        )
     }
 
     @Test

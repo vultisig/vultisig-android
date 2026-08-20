@@ -131,6 +131,7 @@ class KaminoTransactionPreparer @Inject constructor(private val kaminoApi: Kamin
             signerAddress = walletAddress,
             tokenAccount = associatedTokenAccount(walletAddress, vault.tokenMint),
             shareAccount = associatedTokenAccount(walletAddress, vault.sharesMint),
+            farmUserState = KaminoFarmsUserState.derive(vault.farm, walletAddress),
             amountBaseUnits = baseUnits(amount, vault, action),
         )
 

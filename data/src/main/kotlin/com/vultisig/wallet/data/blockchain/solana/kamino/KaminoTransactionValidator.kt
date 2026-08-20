@@ -143,6 +143,17 @@ object KaminoTransactionValidator {
 
     private const val FARMS_OWNER = 0
 
+    /**
+     * Where each farms instruction names the wallet's state in the farm.
+     *
+     * `initialize_user` is the odd one out because it is the instruction that *creates* the
+     * account: the IDL puts the authority, the payer, the owner and the delegatee ahead of it,
+     * where the other three take the owner and then the state it already has.
+     */
+    private const val FARMS_USER_STATE = 1
+
+    private const val FARMS_INITIALIZE_USER_STATE = 4
+
     private const val FARMS_STAKE_SHARE_ACCOUNT = 4
 
     private const val FARMS_UNSTAKED_SHARE_DESTINATION = 3
@@ -160,7 +171,11 @@ object KaminoTransactionValidator {
      * @param tokenAccount the wallet's associated token account for [vault]'s underlying mint,
      *   derived locally by the caller — on the SOL vault that is its wrapped-SOL account
      * @param shareAccount the wallet's associated token account for [vault]'s share mint, likewise
-     *   derived locally: offline it is the only thing that binds an instruction to *this* vault
+     *   derived locally: offline it is the only thing that binds a kVault instruction to *this*
+     *   vault
+     * @param farmUserState the wallet's state in [vault]'s farm, a program address over the two and
+     *   so likewise derived locally — what binds a farms instruction to this vault's farm, which
+     *   the farm account itself cannot do from a lookup table
      * @param amountBaseUnits what the user asked for, in the unit the instruction carries — the
      *   underlying token for a deposit, shares for a withdraw
      * @throws KaminoTransactionRejected if [decoded] is not a transaction the app is willing to
@@ -173,6 +188,7 @@ object KaminoTransactionValidator {
         signerAddress: String? = null,
         tokenAccount: String? = null,
         shareAccount: String? = null,
+        farmUserState: String? = null,
         amountBaseUnits: BigInteger? = null,
     ) {
         val instructions = decoded.instructions
@@ -266,6 +282,7 @@ object KaminoTransactionValidator {
             signerAddress = signerAddress,
             tokenAccount = tokenAccount,
             shareAccount = shareAccount,
+            farmUserState = farmUserState,
             amountBaseUnits = amountBaseUnits,
         )
     }
@@ -325,6 +342,7 @@ object KaminoTransactionValidator {
         signerAddress: String?,
         tokenAccount: String?,
         shareAccount: String?,
+        farmUserState: String?,
         amountBaseUnits: BigInteger?,
     ) {
         instructions.forEachIndexed { index, instruction ->
@@ -375,6 +393,7 @@ object KaminoTransactionValidator {
                         action = action,
                         signerAddress = signerAddress,
                         shareAccount = shareAccount,
+                        farmUserState = farmUserState,
                         amountBaseUnits = amountBaseUnits,
                     )
             }
@@ -463,9 +482,16 @@ object KaminoTransactionValidator {
      * transfer. iOS names exactly these four at `KaminoInstructionSequence.swift:301`, and the
      * shapes match its live template — a deposit stakes, a withdraw unstakes, neither does both.
      *
-     * The farm and the farms user state are lookup-table entries in every captured response, so
-     * they cannot be compared offline here; what is compared is what stays static — the authority
-     * and the share account each instruction moves shares through, both derived locally.
+     * The authority alone does not bind one of these to this vault, and the farm account cannot: it
+     * is an address-lookup-table entry in every captured response and this decode resolves no
+     * tables, so comparing it would be a check that passes by being unreadable. The farms **user
+     * state** does bind it. Its address is a program address over the farm and the owner, it is a
+     * static key in both captured deposits, and the caller derives it locally — so an instruction
+     * naming another farm's state, or another holder's, is refused. Without that check
+     * `farms::stake` sweeps the wallet's whole share balance into a farm the response made, since
+     * the argument it carries is the whole-balance sentinel. iOS derives the same address and pins
+     * it at `KaminoTransactionValidator.swift:1006`; it is pinned on all four here rather than on
+     * the two it names, because the farm slot it checks alongside is unreadable offline.
      *
      * Everything below is per-instruction; how many of each may appear at all is bounded in
      * [validate], since a check an instruction passes on its own it also passes twice.
@@ -476,6 +502,7 @@ object KaminoTransactionValidator {
         action: KaminoAction,
         signerAddress: String?,
         shareAccount: String?,
+        farmUserState: String?,
         amountBaseUnits: BigInteger?,
     ) {
         val data = instruction.data
@@ -486,6 +513,14 @@ object KaminoTransactionValidator {
             )
         }
         rejectUnlessAccountIs(index, instruction, FARMS_OWNER, signerAddress, "the farm authority")
+        rejectUnlessAccountIs(
+            index,
+            instruction,
+            if (data.startsWith(FARMS_INITIALIZE_USER)) FARMS_INITIALIZE_USER_STATE
+            else FARMS_USER_STATE,
+            farmUserState,
+            "this wallet's state in the vault's farm",
+        )
 
         when {
             data.startsWith(FARMS_INITIALIZE_USER) -> {
