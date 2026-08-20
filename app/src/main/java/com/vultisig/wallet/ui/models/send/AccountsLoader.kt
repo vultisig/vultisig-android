@@ -18,7 +18,6 @@ import java.math.BigInteger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
@@ -99,22 +98,10 @@ internal class AccountsLoader(
                     scope.safeLaunch(onError = ::onLoadError) {
                         accountsRepository
                             .loadDeFiAddresses(vaultId, false)
-                            .spendableAccounts()
+                            .map { addrs -> addrs.spendableAccounts() }
                             .collect { publishLoaded(it, generation) }
                     }
             }
-    }
-
-    /**
-     * The accounts a form may offer, flattened out of an addresses flow.
-     *
-     * loadDeFiAddresses also carries an account for each position that is never a wallet token, so
-     * the DeFi tab can total it. Those are not holdings a form can draw on — the sRUJI receipt is
-     * spent through the position's own unstake flow, which synthesizes its account below — so they
-     * are dropped here rather than offered in the token picker.
-     */
-    private fun Flow<List<Address>>.spendableAccounts(): Flow<List<Account>> = map { addresses ->
-        addresses.flatMap { it.accounts }.filterNot { Coins.isDefiOnly(it.token) }
     }
 
     // Routes the autocompound switch through this single component so accountsState only
@@ -140,13 +127,26 @@ internal class AccountsLoader(
                     } else {
                         accountsRepository.loadDeFiAddresses(vaultId, false)
                     }
-                addressesFlow.spendableAccounts().collect { accounts ->
-                    if (publishLoaded(accounts, generation)) {
-                        onAccountsLoaded(accounts)
+                addressesFlow
+                    .map { addrs -> addrs.spendableAccounts() }
+                    .collect { accounts ->
+                        if (publishLoaded(accounts, generation)) {
+                            onAccountsLoaded(accounts)
+                        }
                     }
-                }
             }
     }
+
+    /**
+     * The accounts a form may draw on.
+     *
+     * loadDeFiAddresses also carries an account for each position that is never a wallet token —
+     * the sRUJI receipt kept out of token discovery, or a Kamino Earn deposit in a token the wallet
+     * itself has none of — so the DeFi tab can total it. Those are not holdings a form can draw on,
+     * so they are dropped here rather than offered in the token picker.
+     */
+    private fun List<Address>.spendableAccounts(): List<Account> =
+        flatMap { it.accounts }.filterNot { Coins.isDefiOnly(it.token) || it.isPositionOnly }
 
     private fun publishLoaded(accounts: List<Account>, generation: Long): Boolean {
         if (generation != currentGeneration) return false
@@ -442,9 +442,10 @@ internal class AccountsLoader(
     // iOS/Windows.
     private suspend fun loadUnbondAccount(vaultId: VaultId, generation: Long) {
         val bondedAmount = bondedAmountProvider()
-        accountsRepository.loadDeFiAddresses(vaultId, false).spendableAccounts().collect {
-            publishUnbond(it, bondedAmount, generation)
-        }
+        accountsRepository
+            .loadDeFiAddresses(vaultId, false)
+            .map { addrs -> addrs.spendableAccounts() }
+            .collect { accounts -> publishUnbond(accounts, bondedAmount, generation) }
     }
 
     private fun publishUnbond(

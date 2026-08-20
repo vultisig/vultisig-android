@@ -3,6 +3,8 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
+import com.vultisig.wallet.data.blockchain.solana.kamino.coin
 import com.vultisig.wallet.data.mappers.ChainAndTokens
 import com.vultisig.wallet.data.mappers.ChainAndTokensToAddressMapper
 import com.vultisig.wallet.data.models.Account
@@ -427,14 +429,19 @@ constructor(
         val vault = getVault(vaultId)
         val defiCoins = vault.coins.filter { it.isValidForDeFi() }.distinctBy { it.id.lowercase() }
 
+        val groupedDefiCoins = defiCoins.groupBy { it.chain }
+        val positionOnlyTokensByChain =
+            groupedDefiCoins.mapValues { (chain, tokens) -> positionOnlyTokens(chain, tokens) }
         val coins =
-            defiCoins
-                .groupBy { it.chain }
-                .mapValues { (chain, tokens) -> tokens + defiOnlyTokens(chain, tokens) }
+            groupedDefiCoins.mapValues { (chain, tokens) ->
+                tokens + defiOnlyTokens(chain, tokens) + positionOnlyTokensByChain[chain].orEmpty()
+            }
+        val positionOnlyIds =
+            positionOnlyTokensByChain.values.flatten().mapTo(mutableSetOf()) { it.id.lowercase() }
 
-        // Price the DeFi-only positions alongside the vault's own coins: a price is cached under
-        // its own coin's token id, and that is the row the cached path reads, so a refresh that
-        // left them out would keep valuing a resolved position at $0.00.
+        // Price the injected tokens too: a price is cached under its own coin's token id, and that
+        // is the row the cached path reads, so leaving them out would keep valuing a resolved
+        // position at $0.00.
         val loadPrices =
             if (isRefresh) {
                 async { tokenPriceRepository.refresh(coins.values.flatten()) }
@@ -444,7 +451,9 @@ constructor(
 
         val addresses =
             coins.mapNotNullTo(mutableListOf()) { (chain, tokens) ->
-                chainAndTokensToAddressMapper.map(ChainAndTokens(chain, tokens))
+                chainAndTokensToAddressMapper
+                    .map(ChainAndTokens(chain, tokens))
+                    ?.markPositionOnly(positionOnlyIds)
             }
 
         // emit cached
@@ -502,8 +511,7 @@ constructor(
 
                         val updatedAccounts =
                             address.accounts.map { account ->
-                                val cachedBalance =
-                                    balancesByTicker[account.token.ticker.lowercase()]
+                                val cachedBalance = balancesByTicker[account.token.ticker.lowercase()]
                                 if (cachedBalance != null) {
                                     account.applyBalance(
                                         cachedBalance.tokenBalance,
@@ -529,7 +537,8 @@ constructor(
                         val canBeDeFiProvider = address.chain.isDeFiSupported
 
                         address.copy(
-                            accounts = updatedAccounts.dropUnfundedDefiOnly(),
+                            accounts =
+                                updatedAccounts.dropUnfundedDefiOnly().dropUnfundedPositionOnly(),
                             isDefiProvider = canBeDeFiProvider,
                         )
                     }
@@ -574,7 +583,8 @@ constructor(
                             val canBeDeFiProvider = account.chain.isDeFiSupported
 
                             account.copy(
-                                accounts = newAccounts.dropUnfundedDefiOnly(),
+                                accounts =
+                                    newAccounts.dropUnfundedDefiOnly().dropUnfundedPositionOnly(),
                                 isDefiProvider = canBeDeFiProvider,
                             )
                         } catch (e: Exception) {
@@ -666,6 +676,45 @@ constructor(
                 }
         )
 
+    /**
+     * Tokens this chain's DeFi positions are denominated in that the vault does not carry as a
+     * wallet coin, stamped with the address and public key the chain's own tokens share.
+     *
+     * A Kamino Earn position is held in its vault's underlying token, and a wallet can hold one
+     * without ever holding that token itself — it may have deposited its whole balance, or
+     * deposited from another device. Accounts here are built from `vault.coins`, so without this
+     * the position resolves to an account that is not there and is silently dropped.
+     *
+     * Every curated vault's token is offered rather than only the enabled ones: an unfunded
+     * injection is dropped once its balance resolves, so opting out removes it either way.
+     */
+    private fun positionOnlyTokens(chain: Chain, tokens: List<Coin>): List<Coin> {
+        if (chain != Chain.Solana) return emptyList()
+        val template = tokens.firstOrNull() ?: return emptyList()
+        val held = tokens.mapTo(mutableSetOf()) { it.id.lowercase() }
+        return KaminoVaultRegistry.ALLOW_LIST.mapNotNull { it.coin }
+            .distinctBy { it.id.lowercase() }
+            .filterNot { it.id.lowercase() in held }
+            .map { it.copy(address = template.address, hexPublicKey = template.hexPublicKey) }
+    }
+
+    private fun Address.markPositionOnly(tokenIds: Set<String>): Address =
+        if (tokenIds.isEmpty()) this
+        else
+            copy(
+                accounts =
+                    accounts.map { it.copy(isPositionOnly = it.token.id.lowercase() in tokenIds) }
+            )
+
+    /**
+     * Drops injected accounts that resolved to nothing, so a token the vault holds neither in its
+     * wallet nor in a position never reaches the list — it would otherwise add an empty row and
+     * inflate the chain's asset count.
+     */
+    private fun List<Account>.dropUnfundedPositionOnly(): List<Account> = filterNot { account ->
+        account.isPositionOnly && (account.tokenValue?.value ?: BigInteger.ZERO) <= BigInteger.ZERO
+    }
+
     private fun Coin.isValidForDeFi(): Boolean {
         return when (this.chain) {
             Chain.ThorChain -> true
@@ -692,8 +741,8 @@ constructor(
     /**
      * The chain's DeFi-only positions, stamped with the key its tokens share.
      *
-     * These back a DeFi position but are never wallet tokens — the sRUJI receipt is kept out of
-     * token discovery on purpose — so no vault carries one and the accounts built from
+     * These back a DeFi position but are never wallet tokens — the sRUJI and ybRUNE receipts are
+     * kept out of token discovery on purpose — so no vault carries one and the accounts built from
      * [Vault.coins] alone leave the position with nowhere for its balance to land. It is then
      * dropped from the chain's row and from the portfolio total above it, which read $0.00 over a
      * funded position.

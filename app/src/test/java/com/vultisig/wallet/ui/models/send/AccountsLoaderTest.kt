@@ -155,6 +155,33 @@ internal class AccountsLoaderTest {
         }
 
     @Test
+    fun `the DeFi form path drops accounts that only ever hold a position`() =
+        runTest(mainDispatcher) {
+            // loadDeFiAddresses carries an account for a Kamino Earn deposit in a token the wallet
+            // holds none of, so the DeFi portfolio can total it. Its balance is the position, not
+            // something a form may spend, so it must not reach the token picker.
+            defiType = DeFiNavActions.UNSTAKE_TCY
+            val runeAccount = thorAccount(Coins.ThorChain.RUNE)
+            val positionOnly = thorAccount(Coins.Solana.USDC).copy(isPositionOnly = true)
+            coEvery { accountsRepository.loadDeFiAddresses(VAULT_ID, false) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts = listOf(runeAccount, positionOnly),
+                        )
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            assertEquals(listOf(runeAccount), loadedAccounts)
+        }
+
+    @Test
     fun `load with BOND uses the regular loadAddresses flow`() =
         runTest(mainDispatcher) {
             defiType = DeFiNavActions.BOND

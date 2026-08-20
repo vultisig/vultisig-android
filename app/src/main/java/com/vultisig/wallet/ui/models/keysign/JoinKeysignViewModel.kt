@@ -720,7 +720,18 @@ constructor(
                     buildHeroContent(
                         simulation = result.simulation,
                         decodedFunctionName = decodedFunctionName,
-                        didLoadSimulation = true,
+                        // A network failure or an undecodable payload never produced a real
+                        // Blockaid verdict (see [BlockaidKeysignScanResult.didLoadSimulation]) —
+                        // only a completed scan (including a legitimate "no balance change" empty
+                        // one) is eligible to flip the hero to Unverified below. Otherwise a
+                        // Blockaid outage would hide the trustworthy native amount on every
+                        // in-app raw-Solana flow (staking, Kamino) that also sets [signSolana].
+                        didLoadSimulation = result.didLoadSimulation,
+                        // Solana never decodes a function name (no ABI to decode against), so a
+                        // raw dApp-signed Solana transaction (Kamino, other program calls) is the
+                        // only other signal that the payload's wire amount is unverified rather
+                        // than a plain transfer's trustworthy amount.
+                        isRawDappTransaction = payload.signSolana != null,
                     )
                 updateSendUiModel(verifyUiModel) { current ->
                     current.copy(transaction = current.transaction.copy(heroContent = hero))
