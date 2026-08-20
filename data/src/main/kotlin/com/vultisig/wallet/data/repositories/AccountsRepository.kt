@@ -511,7 +511,8 @@ constructor(
 
                         val updatedAccounts =
                             address.accounts.map { account ->
-                                val cachedBalance = balancesByTicker[account.token.ticker.lowercase()]
+                                val cachedBalance =
+                                    balancesByTicker[account.token.ticker.lowercase()]
                                 if (cachedBalance != null) {
                                     account.applyBalance(
                                         cachedBalance.tokenBalance,
