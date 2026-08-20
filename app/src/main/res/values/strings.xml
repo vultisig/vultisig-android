@@ -93,6 +93,7 @@
     <string name="verify_deposit_depositing">You\'re depositing</string>
     <string name="verify_deposit_withdrawing">You\'re withdrawing</string>
     <string name="kamino_verify_vault">Vault</string>
+    <string name="kamino_verify_withdraw_unverified">This device can\'t confirm this amount. The transaction withdraws %1$s vault shares.</string>
     <string name="kamino_error_build_failed">Couldn\'t prepare this transaction</string>
     <string name="kamino_withdraw_nothing">Nothing to withdraw from this vault</string>
     <string name="kamino_withdraw_unreadable">This position couldn\'t be read, so no withdrawal can be prepared</string>

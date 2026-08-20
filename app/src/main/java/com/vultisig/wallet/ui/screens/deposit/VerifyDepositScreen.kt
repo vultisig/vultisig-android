@@ -165,6 +165,20 @@ internal fun VerifyDepositScreen(
 
                     SwapToken(valuedToken = tx.token, isLoading = state.isLoading)
 
+                    // A joining co-signer's Kamino withdraw: the amount above is a token
+                    // projection of a share figure, at a rate that never crossed the wire. Naming
+                    // the share count the instruction does carry is the difference between a
+                    // number this device checked and one it only relayed.
+                    tx.unverifiedWithdrawShares?.let { shares ->
+                        UiSpacer(12.dp)
+                        Text(
+                            text =
+                                stringResource(R.string.kamino_verify_withdraw_unverified, shares),
+                            style = Theme.brockmann.supplementary.caption,
+                            color = Theme.v2.colors.text.tertiary,
+                        )
+                    }
+
                     // Stated before signing, not after: cancelling refunds only what has not
                     // filled, and on the L1 route the amount above is dust that is DONATED — it has
                     // no refund path — so that route gets a sentence that names it rather than the

@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.api.KaminoVaultMetricsJson
 import com.vultisig.wallet.data.api.KaminoVaultStateJson
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.blockchain.solana.kamino.BuildKaminoKeysignPayloadUseCase
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoDepositRentReserve
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawEligibility
 import com.vultisig.wallet.data.models.Chain
@@ -153,6 +154,9 @@ internal class KaminoAmountViewModelTest {
             balanceRepository = balanceRepository,
             blockChainSpecificRepository = blockChainSpecificRepository,
             buildKeysignPayload = buildKeysignPayload,
+            // The real reserve over the same stubbed APIs: it is the rent arithmetic these tests
+            // assert on, and it now runs on the co-signing device too.
+            depositRentReserve = KaminoDepositRentReserve(solanaApi, kaminoApi),
             depositTransactionRepository = depositTransactionRepository,
             navigator = navigator,
         )

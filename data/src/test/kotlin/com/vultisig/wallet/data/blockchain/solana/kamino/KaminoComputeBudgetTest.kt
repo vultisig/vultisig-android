@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.blockchain.solana.kamino
 
 import java.math.BigInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -190,4 +191,68 @@ class KaminoComputeBudgetTest {
             KaminoComputeBudget.setUnitPriceData(BigInteger.valueOf(-1))
         }
     }
+
+    @Test
+    fun `the budget is read back out of the instructions it was encoded into`() {
+        val budget =
+            KaminoComputeBudget.readFrom(
+                computeBudgetInstructions(solVault, KaminoAction.DEPOSIT, price = MILLION)
+            )
+
+        assertEquals(
+            KaminoPriorityFee(limit = BigInteger.valueOf(350_000), price = MILLION),
+            budget,
+        )
+    }
+
+    @Test
+    fun `instructions carrying no compute budget read as none`() {
+        // Distinct from unreadable: the caller has to be able to tell "there is no budget" from
+        // "there is one and it does not parse", because only the second contradicts a payload.
+        assertNull(
+            KaminoComputeBudget.readFrom(
+                listOf(KaminoTxInstruction(KaminoVaultRegistry.PROGRAM_ID, byteArrayOf(1)))
+            )
+        )
+    }
+
+    @Test
+    fun `a truncated argument is unreadable rather than read from its prefix`() {
+        // A shorter or longer instruction is not the one it claims to be, and reading a partial
+        // little-endian argument would answer some smaller number with full confidence.
+        assertEquals(
+            KaminoComputeBudget.MALFORMED,
+            KaminoComputeBudget.readFrom(
+                listOf(
+                    KaminoTxInstruction(KaminoComputeBudget.PROGRAM_ID, byteArrayOf(2, 0x20, 0x4E)),
+                    KaminoTxInstruction(
+                        KaminoComputeBudget.PROGRAM_ID,
+                        KaminoComputeBudget.setUnitPriceData(MILLION),
+                    ),
+                )
+            ),
+        )
+    }
+
+    @Test
+    fun `a second price instruction is unreadable rather than resolved to one of them`() {
+        val duplicated =
+            computeBudgetInstructions(solVault, KaminoAction.DEPOSIT) +
+                KaminoTxInstruction(
+                    KaminoComputeBudget.PROGRAM_ID,
+                    KaminoComputeBudget.setUnitPriceData(MILLION),
+                )
+
+        assertEquals(KaminoComputeBudget.MALFORMED, KaminoComputeBudget.readFrom(duplicated))
+    }
+
+    @Test
+    fun `the unreadable marker matches no budget a payload could record`() {
+        // It is compared for equality against what the payload claims, so it has to be a value no
+        // legitimate claim can take — the payload's fields are unsigned.
+        assertTrue(KaminoComputeBudget.MALFORMED.limit.signum() < 0)
+        assertTrue(KaminoComputeBudget.MALFORMED.price.signum() < 0)
+    }
+
+    private val MILLION: BigInteger = BigInteger.valueOf(1_000_000)
 }
