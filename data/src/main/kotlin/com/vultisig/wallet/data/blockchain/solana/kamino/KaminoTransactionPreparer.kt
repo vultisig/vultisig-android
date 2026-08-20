@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.blockchain.solana.kamino
 import com.vultisig.wallet.data.api.KaminoApi
 import io.ktor.util.decodeBase64Bytes
 import java.math.BigInteger
+import java.math.RoundingMode
 import javax.inject.Inject
 import wallet.core.jni.CoinType
 import wallet.core.jni.SolanaAddress
@@ -128,25 +129,55 @@ class KaminoTransactionPreparer @Inject constructor(private val kaminoApi: Kamin
             vault = vault,
             action = action,
             signerAddress = walletAddress,
-            wrappedSolAccount = wrappedSolAccountFor(vault, walletAddress),
+            tokenAccount = associatedTokenAccount(walletAddress, vault.tokenMint),
+            shareAccount = associatedTokenAccount(walletAddress, vault.sharesMint),
+            amountBaseUnits = baseUnits(amount, vault, action),
         )
 
         return withMemo
     }
 
     /**
-     * The wrapped-SOL associated token account a wrap must pay into, derived from the signer and
-     * the vault's own mint rather than read out of the transaction being checked.
+     * The wallet's associated token account for [mint], derived from the signer and a mint the
+     * registry pins rather than read out of the transaction being checked — which is the whole
+     * point of it: an address that came out of the response could not check the response.
      *
-     * Null for vaults whose underlying is a plain token, which have no wrap to make.
+     * Two of these are derived per transaction. The one for the vault's underlying mint is where a
+     * deposit's tokens come from and where a withdraw pays out — and on the SOL vault it is also
+     * the wrapped-SOL account a wrap funds. The one for its share mint is what ties an instruction
+     * to *this* vault at all: the vault account itself travels in an address lookup table that this
+     * decode does not resolve.
+     *
+     * Null when WalletCore cannot derive it, which the validator treats as a refusal rather than as
+     * a check it may skip.
      */
-    private fun wrappedSolAccountFor(vault: KaminoVault, walletAddress: String): String? {
-        if (vault.tokenMint != KaminoVaultRegistry.WRAPPED_SOL_MINT) return null
-        return runCatching {
-                SolanaAddress(walletAddress)
-                    .defaultTokenAddress(KaminoVaultRegistry.WRAPPED_SOL_MINT)
+    private fun associatedTokenAccount(walletAddress: String, mint: String): String? =
+        runCatching { SolanaAddress(walletAddress).defaultTokenAddress(mint) }.getOrNull()
+
+    /**
+     * The amount that was sent, in the base units the instruction carries — tokens for a deposit,
+     * shares for a withdraw, matching the `u64` each kVault instruction takes.
+     *
+     * Converted from the very string this app handed the API, so the comparison downstream is
+     * against the request rather than against anything the response echoed back.
+     *
+     * Truncates rather than throwing on sub-unit precision: the amount screen already quantises
+     * input to the token's own scale before it gets here, so this is a floor over a number that has
+     * nothing to floor. Null when the string is not a positive decimal at all, which the validator
+     * refuses rather than skips.
+     */
+    private fun baseUnits(amount: String, vault: KaminoVault, action: KaminoAction): BigInteger? {
+        val decimals =
+            when (action) {
+                KaminoAction.DEPOSIT -> vault.tokenDecimals
+                KaminoAction.WITHDRAW -> vault.sharesDecimals
             }
-            .getOrNull()
+        return amount
+            .toBigDecimalOrNull()
+            ?.movePointRight(decimals)
+            ?.setScale(0, RoundingMode.DOWN)
+            ?.toBigInteger()
+            ?.takeIf { it.signum() > 0 }
     }
 
     private fun injectComputeBudget(
