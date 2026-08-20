@@ -151,6 +151,60 @@ class KaminoRelayedTransactionTest {
     }
 
     @Test
+    fun `the intent carries the budget from the instructions, not from beside them`() {
+        // What the fee row is priced from on the joining device. Read here rather than taken from
+        // the payload's own field, which is a display value the initiating device filled in.
+        val intent =
+            read(
+                depositInstructions(
+                    budget =
+                        computeBudgetInstructions(
+                            vault,
+                            KaminoAction.DEPOSIT,
+                            price = BigInteger.valueOf(250_000),
+                        )
+                )
+            )
+
+        assertEquals(
+            KaminoPriorityFee(
+                limit = KaminoComputeBudget.unitLimitFor(vault, KaminoAction.DEPOSIT),
+                price = BigInteger.valueOf(250_000),
+            ),
+            intent?.priorityFee,
+        )
+    }
+
+    @Test
+    fun `a transaction priced outside the app's own range never reaches the caller`() {
+        // Recognition re-runs the initiating device's validator, so an unbounded price is refused
+        // here too rather than quoted under a fee row that clamps its own display.
+        assertNull(
+            resolve(
+                depositInstructions(
+                    budget =
+                        computeBudgetInstructions(
+                            vault,
+                            KaminoAction.DEPOSIT,
+                            price = KaminoComputeBudget.MAX_UNIT_PRICE.add(BigInteger.ONE),
+                        )
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `a transaction needing a second signature never reaches the caller`() {
+        val useCase =
+            ResolveKaminoRelayedIntentUseCase(
+                decode = { decoded(depositInstructions(), requiredSignatures = 2) },
+                tokenAccount = ::fakeTokenAccount,
+            )
+
+        assertNull(useCase(listOf(RAW), signer))
+    }
+
+    @Test
     fun `the network fee is the relayed budget plus the rent the deposit spends`() {
         val rent = BigInteger.valueOf(10_377_640)
 
@@ -195,30 +249,35 @@ class KaminoRelayedTransactionTest {
     private fun fakeTokenAccount(owner: String, mint: String): String? =
         if (owner == signer && mint == vault.sharesMint) shareAccount else "other-$mint"
 
-    private fun decoded(instructions: List<KaminoTxInstruction>) =
-        KaminoDecodedTransaction(feePayer = signer, instructions = instructions)
+    private fun decoded(instructions: List<KaminoTxInstruction>, requiredSignatures: Int = 1) =
+        KaminoDecodedTransaction(
+            feePayer = signer,
+            instructions = instructions,
+            requiredSignatures = requiredSignatures,
+            isUnsigned = true,
+        )
 
     private fun depositInstructions(
         amount: BigInteger = ONE_USDC,
         memoInstruction: KaminoTxInstruction? = memo,
+        budget: List<KaminoTxInstruction> = computeBudgetInstructions(vault, KaminoAction.DEPOSIT),
     ) =
-        listOfNotNull(
-            KaminoTxInstruction(COMPUTE_BUDGET, byteArrayOf(2)),
-            KaminoTxInstruction(COMPUTE_BUDGET, byteArrayOf(3)),
-            KaminoTxInstruction(ASSOCIATED_TOKEN, byteArrayOf(1)),
-            kvault(depositDiscriminator, amount),
-            KaminoTxInstruction(KaminoVaultRegistry.FARMS_PROGRAM_ID, hex("6f11b9fa3c7a26fe")),
-            KaminoTxInstruction(KaminoVaultRegistry.FARMS_PROGRAM_ID, hex("ceb0ca12c8d1b36c")),
-            memoInstruction,
-        )
+        budget +
+            listOfNotNull(
+                KaminoTxInstruction(ASSOCIATED_TOKEN, byteArrayOf(1)),
+                kvault(depositDiscriminator, amount),
+                KaminoTxInstruction(KaminoVaultRegistry.FARMS_PROGRAM_ID, hex("6f11b9fa3c7a26fe")),
+                KaminoTxInstruction(KaminoVaultRegistry.FARMS_PROGRAM_ID, hex("ceb0ca12c8d1b36c")),
+                memoInstruction,
+            )
 
     private fun withdrawInstructions(amount: BigInteger) =
-        listOf(
-            KaminoTxInstruction(COMPUTE_BUDGET, byteArrayOf(2)),
-            KaminoTxInstruction(ASSOCIATED_TOKEN, byteArrayOf(1)),
-            kvault(withdrawDiscriminator, amount),
-            memo,
-        )
+        computeBudgetInstructions(vault, KaminoAction.WITHDRAW) +
+            listOf(
+                KaminoTxInstruction(ASSOCIATED_TOKEN, byteArrayOf(1)),
+                kvault(withdrawDiscriminator, amount),
+                memo,
+            )
 
     private fun kvault(discriminator: ByteArray, amount: BigInteger) =
         KaminoTxInstruction(
@@ -238,7 +297,6 @@ class KaminoRelayedTransactionTest {
 
     private companion object {
         const val KVAULT = KaminoVaultRegistry.PROGRAM_ID
-        const val COMPUTE_BUDGET = KaminoComputeBudget.PROGRAM_ID
         const val ASSOCIATED_TOKEN = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
 
         /** Any string: the decode is faked, so the bytes themselves are never read. */

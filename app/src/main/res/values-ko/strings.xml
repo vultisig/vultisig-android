@@ -90,6 +90,7 @@
     <string name="verify_deposit_depositing">예치 중</string>
     <string name="verify_deposit_withdrawing">출금 중</string>
     <string name="kamino_verify_vault">볼트</string>
+    <string name="kamino_verify_withdraw_unverified">이 기기에서는 이 금액을 확인할 수 없습니다. 이 트랜잭션은 볼트 지분 %1$s개를 출금합니다.</string>
     <string name="kamino_error_build_failed">이 거래를 준비할 수 없습니다</string>
     <string name="kamino_withdraw_nothing">이 볼트에서 출금할 것이 없습니다</string>
     <string name="kamino_withdraw_unreadable">이 포지션을 읽을 수 없어 출금을 준비할 수 없습니다</string>

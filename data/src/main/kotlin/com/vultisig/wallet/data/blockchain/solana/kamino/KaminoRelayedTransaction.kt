@@ -15,11 +15,16 @@ import wallet.core.jni.SolanaAddress
  * @property amount the kVault instruction's own `u64` argument — token base units for a deposit,
  *   vault shares for a withdraw. The two are not interchangeable, and only the deposit figure is
  *   comparable with the payload's `toAmount`.
+ * @property priorityFee the compute budget the bytes carry, which is what the runtime charges
+ *   against. Never null in practice — [KaminoTransactionValidator] refuses a transaction without
+ *   one — but read from the instructions rather than from the fields relayed beside them, because
+ *   the fee row on the verify screen is priced off it.
  */
 data class KaminoRelayedIntent(
     val vault: KaminoVault,
     val action: KaminoAction,
     val amount: BigInteger,
+    val priorityFee: KaminoPriorityFee?,
 )
 
 /**
@@ -67,7 +72,12 @@ object KaminoRelayedTransactionReader {
         val vault = kvault.accounts.firstNotNullOfOrNull(vaultsByShareAccount::get) ?: return null
         val amount = kvaultAmountArgument(kvault.data) ?: return null
 
-        return KaminoRelayedIntent(vault = vault, action = action, amount = amount)
+        return KaminoRelayedIntent(
+            vault = vault,
+            action = action,
+            amount = amount,
+            priorityFee = KaminoComputeBudget.readFrom(decoded.instructions),
+        )
     }
 
     private fun ByteArray.startsWith(prefix: ByteArray): Boolean =

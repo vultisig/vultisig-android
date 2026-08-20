@@ -613,7 +613,10 @@ constructor(
     private suspend fun loadTransaction(payload: KeysignPayload) {
         val currency = appCurrencyRepository.currency.first()
         val swapPayload = payload.swapPayload
-        val kamino = resolveKaminoIntent(payload)
+        // Resolved after the swap branch, not before it: recognition decodes the relayed bytes and
+        // derives an associated token account per allow-listed vault, none of which a swap payload
+        // has any use for.
+        val kamino = if (swapPayload == null) resolveKaminoIntent(payload) else null
         when {
             swapPayload != null ->
                 applyVerifyResult(

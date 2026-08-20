@@ -6,6 +6,9 @@ import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.utils.runCatchingCancellable
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import timber.log.Timber
 
 /**
  * Rent-exempt minimum for a 165-byte SPL token account. Used only when the live read fails —
@@ -66,25 +69,35 @@ class KaminoDepositRentReserve
 @Inject
 constructor(private val solanaApi: SolanaApi, private val kaminoApi: KaminoApi) {
 
-    suspend operator fun invoke(vault: KaminoVault, walletAddress: String): BigInteger {
-        if (vault.tokenMint != KaminoVaultRegistry.WRAPPED_SOL_MINT) return BigInteger.ZERO
+    /**
+     * The four reads are independent of one another, so they run together: this sits in front of a
+     * verify screen that cannot quote a fee until it answers, on both the initiating and the
+     * co-signing device.
+     */
+    suspend operator fun invoke(vault: KaminoVault, walletAddress: String): BigInteger =
+        coroutineScope {
+            if (vault.tokenMint != KaminoVaultRegistry.WRAPPED_SOL_MINT)
+                return@coroutineScope BigInteger.ZERO
 
-        val tokenAccountRent = tokenAccountRentReserve()
-        val wrappedSolRent =
-            tokenAccountRent.takeUnless { tokenAccountExists(walletAddress, vault.tokenMint) }
-                ?: BigInteger.ZERO
-        val shareAccountRent =
-            tokenAccountRent.takeUnless { tokenAccountExists(walletAddress, vault.sharesMint) }
-                ?: BigInteger.ZERO
-        val farmUserStateRent =
-            FARM_USER_STATE_RENT_LAMPORTS.takeUnless { hasVaultPosition(walletAddress, vault) }
-                ?: BigInteger.ZERO
+            val tokenAccountRent = async { tokenAccountRentReserve() }
+            val hasWrappedSolAccount = async { tokenAccountExists(walletAddress, vault.tokenMint) }
+            val hasShareAccount = async { tokenAccountExists(walletAddress, vault.sharesMint) }
+            val hasPosition = async { hasVaultPosition(walletAddress, vault) }
 
-        return wrappedSolRent + shareAccountRent + farmUserStateRent
-    }
+            val rent = tokenAccountRent.await()
+            val wrappedSolRent = if (hasWrappedSolAccount.await()) BigInteger.ZERO else rent
+            val shareAccountRent = if (hasShareAccount.await()) BigInteger.ZERO else rent
+            val farmUserStateRent =
+                if (hasPosition.await()) BigInteger.ZERO else FARM_USER_STATE_RENT_LAMPORTS
+
+            wrappedSolRent + shareAccountRent + farmUserStateRent
+        }
 
     private suspend fun tokenAccountRentReserve(): BigInteger =
         runCatchingCancellable { solanaApi.getMinimumBalanceForRentExemption() }
+            .onFailure {
+                Timber.w(it, "Kamino rent-exemption read failed, reserving the pinned minimum")
+            }
             .getOrNull()
             ?.takeIf { it.signum() > 0 } ?: SPL_TOKEN_ACCOUNT_RENT_LAMPORTS
 
@@ -92,6 +105,10 @@ constructor(private val solanaApi: SolanaApi, private val kaminoApi: KaminoApi) 
         runCatchingCancellable {
                 solanaApi.getTokenAssociatedAccountByOwner(walletAddress, mint).first != null
             }
+            // A failed read reserves the rent for an account that may already exist, which
+            // overstates the fee rather than understating it — but it is a guess either way, and a
+            // silent one is a fee nobody can account for afterwards.
+            .onFailure { Timber.w(it, "Kamino token-account read failed for mint %s", mint) }
             .getOrDefault(false)
 
     /**
@@ -112,5 +129,6 @@ constructor(private val solanaApi: SolanaApi, private val kaminoApi: KaminoApi) 
                 KaminoWithdrawEligibility.resolve(entry, vault.sharesDecimals) is
                     KaminoWithdrawEligibility.Withdrawable
             }
+            .onFailure { Timber.w(it, "Kamino positions read failed for vault %s", vault.address) }
             .getOrDefault(false)
 }

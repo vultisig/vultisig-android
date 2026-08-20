@@ -483,7 +483,10 @@ constructor(
             // Through [kaminoNetworkFeeLamports] rather than inline, because a co-signing device
             // quotes this same fee for this same transaction off the relayed payload, and one
             // shared derivation is what keeps the two screens from disagreeing.
-            val recordedBudget = keysignPayload.blockChainSpecific as BlockChainSpecific.Solana
+            val recordedBudget =
+                checkNotNull(keysignPayload.blockChainSpecific as? BlockChainSpecific.Solana) {
+                    "a Kamino payload must carry a Solana compute budget"
+                }
             // A first native-SOL deposit also spends the rent [spendableBalance] reserved against
             // the same balance, on the wSOL ATA, share ATA and farm UserState it creates. Folded in
             // here too, or the amount plus this fee would undercount the wallet's starting balance

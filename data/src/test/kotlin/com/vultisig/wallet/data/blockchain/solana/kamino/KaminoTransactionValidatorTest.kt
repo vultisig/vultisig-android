@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain.solana.kamino
 
+import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
@@ -16,16 +17,26 @@ class KaminoTransactionValidatorTest {
     private val memo =
         ix(KaminoAttributionMemo.MEMO_PROGRAM_ID, KaminoAttributionMemo.TAG.toByteArray())
 
-    /** The shape a prepared deposit actually has: ATA, kVault, two farms, compute budget, memo. */
-    private fun depositInstructions(memoInstruction: KaminoTxInstruction? = memo) =
-        listOfNotNull(
-            ix("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
-            ix(KaminoVaultRegistry.PROGRAM_ID, byteArrayOf(1, 2, 3)),
-            ix(KaminoVaultRegistry.FARMS_PROGRAM_ID),
-            ix(KaminoVaultRegistry.FARMS_PROGRAM_ID),
-            ix("ComputeBudget111111111111111111111111111111"),
-            memoInstruction,
-        )
+    /** The shape a prepared deposit actually has: compute budget, ATA, kVault, two farms, memo. */
+    private fun depositInstructions(
+        memoInstruction: KaminoTxInstruction? = memo,
+        budget: List<KaminoTxInstruction> = budget(),
+    ) =
+        budget +
+            listOfNotNull(
+                ix("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+                ix(KaminoVaultRegistry.PROGRAM_ID, byteArrayOf(1, 2, 3)),
+                ix(KaminoVaultRegistry.FARMS_PROGRAM_ID),
+                ix(KaminoVaultRegistry.FARMS_PROGRAM_ID),
+                memoInstruction,
+            )
+
+    private fun budget(
+        forVault: KaminoVault = vault,
+        action: KaminoAction = KaminoAction.DEPOSIT,
+        price: BigInteger = KaminoComputeBudget.FALLBACK_UNIT_PRICE,
+        limit: BigInteger = KaminoComputeBudget.unitLimitFor(forVault, action),
+    ) = computeBudgetInstructions(forVault, action, price, limit)
 
     /**
      * Most rules do not care who pays, so the fee payer defaults to a benign value; the fee-payer
@@ -34,7 +45,13 @@ class KaminoTransactionValidatorTest {
     private fun decoded(
         instructions: List<KaminoTxInstruction>,
         feePayer: String? = DEFAULT_FEE_PAYER,
-    ) = KaminoDecodedTransaction(feePayer = feePayer, instructions = instructions)
+    ) =
+        KaminoDecodedTransaction(
+            feePayer = feePayer,
+            instructions = instructions,
+            requiredSignatures = 1,
+            isUnsigned = true,
+        )
 
     private fun rejection(instructions: List<KaminoTxInstruction>): String =
         assertThrows<KaminoTransactionRejected> {
@@ -63,11 +80,8 @@ class KaminoTransactionValidatorTest {
         assertDoesNotThrow {
             KaminoTransactionValidator.validate(
                 decoded(
-                    listOf(
-                        ix(KaminoVaultRegistry.PROGRAM_ID, byteArrayOf(9)),
-                        ix("ComputeBudget111111111111111111111111111111"),
-                        memo,
-                    )
+                    budget(action = KaminoAction.WITHDRAW) +
+                        listOf(ix(KaminoVaultRegistry.PROGRAM_ID, byteArrayOf(9)), memo)
                 ),
                 vault,
                 KaminoAction.WITHDRAW,
@@ -228,7 +242,8 @@ class KaminoTransactionValidatorTest {
                 data = byteArrayOf(1),
                 accounts = listOf(wrappedSolAccount),
             )
-        val instructions = listOf(kvault, systemTransfer, memo)
+        val instructions =
+            budget(forVault = KaminoVaultRegistry.ALLEZ_SOL) + listOf(kvault, systemTransfer, memo)
 
         val reason = rejection(instructions)
         assertTrue(reason.contains("moves lamports"), reason)
@@ -274,14 +289,15 @@ class KaminoTransactionValidatorTest {
         assertDoesNotThrow {
             KaminoTransactionValidator.validate(
                 decoded(
-                    listOf(
-                        KaminoTxInstruction(
-                            programId = KaminoVaultRegistry.PROGRAM_ID,
-                            data = byteArrayOf(1),
-                            accounts = listOf(signer),
+                    budget() +
+                        listOf(
+                            KaminoTxInstruction(
+                                programId = KaminoVaultRegistry.PROGRAM_ID,
+                                data = byteArrayOf(1),
+                                accounts = listOf(signer),
+                            ),
+                            memo,
                         ),
-                        memo,
-                    ),
                     feePayer = signer,
                 ),
                 vault,
@@ -440,7 +456,10 @@ class KaminoTransactionValidatorTest {
             }
         assertDoesNotThrow {
             KaminoTransactionValidator.validate(
-                decoded(listOf(ix(KaminoVaultRegistry.PROGRAM_ID, justUnder), memo)),
+                decoded(
+                    budget(action = KaminoAction.WITHDRAW) +
+                        listOf(ix(KaminoVaultRegistry.PROGRAM_ID, justUnder), memo)
+                ),
                 vault,
                 KaminoAction.WITHDRAW,
             )
@@ -451,11 +470,108 @@ class KaminoTransactionValidatorTest {
     fun `a short kVault instruction carrying no amount is not mistaken for the sentinel`() {
         assertDoesNotThrow {
             KaminoTransactionValidator.validate(
-                decoded(listOf(ix(KaminoVaultRegistry.PROGRAM_ID, byteArrayOf(1, 2, 3)), memo)),
+                decoded(
+                    budget() +
+                        listOf(ix(KaminoVaultRegistry.PROGRAM_ID, byteArrayOf(1, 2, 3)), memo)
+                ),
                 vault,
                 KaminoAction.DEPOSIT,
             )
         }
+    }
+
+    @Test
+    fun `a transaction carrying no compute budget is refused`() {
+        // Not a fee question alone: these consume 250,000-310,000 units against a 200,000 default,
+        // so a budget-less Kamino transaction aborts on chain after a full signing ceremony.
+        val reason = rejection(depositInstructions(budget = emptyList()))
+
+        assertTrue(reason.contains("no compute budget"), reason)
+    }
+
+    @Test
+    fun `a compute-unit price above the ceiling is refused`() {
+        // The price is a u64 multiplied by a six-figure limit, so unbounded here is an unbounded
+        // fee — while the row that displays it clamps at MAX_UNIT_PRICE and would show a hundredth
+        // of what the runtime charges. It is also the range iOS's own decoder accepts.
+        val reason =
+            rejection(
+                depositInstructions(
+                    budget = budget(price = KaminoComputeBudget.MAX_UNIT_PRICE.multiply(TEN))
+                )
+            )
+
+        assertTrue(reason.contains("outside"), reason)
+    }
+
+    @Test
+    fun `a compute-unit limit this app would not reserve is refused`() {
+        // The fee row multiplies the local limit by the relayed price, so bytes reserving some
+        // other limit are charged for work the quoted figure never priced.
+        val reason =
+            rejection(depositInstructions(budget = budget(limit = BigInteger.valueOf(1_400_000))))
+
+        assertTrue(reason.contains("compute-unit limit"), reason)
+    }
+
+    @Test
+    fun `a deposit carrying the withdraw limit is refused`() {
+        // The limit is per action, so the pair is checked against the action in hand rather than
+        // against "some limit this app uses somewhere".
+        val reason = rejection(depositInstructions(budget = budget(action = KaminoAction.WITHDRAW)))
+
+        assertTrue(reason.contains("compute-unit limit"), reason)
+    }
+
+    @Test
+    fun `a compute budget behind the instructions Kamino built is refused`() {
+        // The leading pair is a cross-platform contract: iOS emits them at 0 and 1 and reads the
+        // rest positionally, so a budget appended at the end is a transaction it will not join.
+        val misplaced = depositInstructions(budget = emptyList()).dropLast(1) + budget() + memo
+
+        val reason = rejection(misplaced)
+        assertTrue(reason.contains("leading two instructions"), reason)
+    }
+
+    @Test
+    fun `a duplicated compute budget is refused rather than read from its first entry`() {
+        val reason = rejection(depositInstructions(budget = budget() + budget()))
+
+        assertTrue(reason.contains("cannot read"), reason)
+    }
+
+    @Test
+    fun `a transaction needing a second signature is refused`() {
+        // The signing path fills slot 0 and leaves the rest as it found them, so this would be
+        // broadcast a signature short — or completed by whoever supplied the bytes.
+        val reason =
+            assertThrows<KaminoTransactionRejected> {
+                    KaminoTransactionValidator.validate(
+                        decoded(depositInstructions()).copy(requiredSignatures = 2),
+                        vault,
+                        KaminoAction.DEPOSIT,
+                    )
+                }
+                .message
+                .orEmpty()
+
+        assertTrue(reason.contains("required signatures"), reason)
+    }
+
+    @Test
+    fun `a transaction whose signature slot is already filled is refused`() {
+        val reason =
+            assertThrows<KaminoTransactionRejected> {
+                    KaminoTransactionValidator.validate(
+                        decoded(depositInstructions()).copy(isUnsigned = false),
+                        vault,
+                        KaminoAction.DEPOSIT,
+                    )
+                }
+                .message
+                .orEmpty()
+
+        assertTrue(reason.contains("already carries a signature"), reason)
     }
 
     @Test
@@ -470,6 +586,7 @@ class KaminoTransactionValidatorTest {
 
     private companion object {
         const val DEFAULT_FEE_PAYER = "9ceRgz579BcfWogs3RE11FKNQaWW7Lmtnev3MXspxUjF"
+        val TEN: BigInteger = BigInteger.valueOf(10)
         const val OTHER_ACCOUNT = "SomeoneElsesAccount11111111111111111111111"
     }
 }

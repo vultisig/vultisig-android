@@ -76,6 +76,17 @@ internal data class DepositTransactionUiModel(
      * `MsgDeposit` carries no coins and whose whole cost really is one network fee.
      */
     val limitCancelDonatesDust: Boolean = false,
+    /**
+     * The share count a Kamino withdraw's own instruction carries, formatted, on a device that
+     * cannot check the amount above it. Null everywhere else.
+     *
+     * A withdraw is requested in vault shares and displayed in the tokens those shares are worth,
+     * at a rate that never crosses the wire — so a joining co-signer holds a headline figure it has
+     * no way to confirm and no Blockaid badge to qualify it. Rather than leaving the number looking
+     * as checked as the vault name beside it, the screen says which figure did come from the bytes
+     * (issue #5644). iOS surfaces the same case as `.amountUnverifiable`.
+     */
+    val unverifiedWithdrawShares: String? = null,
 )
 
 internal data class VerifyDepositUiModel(

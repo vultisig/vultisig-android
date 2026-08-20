@@ -543,6 +543,7 @@
     <string name="verify_deposit_depositing">Вы вносите</string>
     <string name="verify_deposit_withdrawing">Вы выводите</string>
     <string name="kamino_verify_vault">Vault Kamino</string>
+    <string name="kamino_verify_withdraw_unverified">Это устройство не может подтвердить сумму. Транзакция выводит долей vault‑а: %1$s.</string>
     <string name="kamino_error_build_failed">Не удалось подготовить эту транзакцию</string>
     <string name="kamino_withdraw_nothing">Из этого vault‑а нечего выводить</string>
     <string name="kamino_withdraw_unreadable">Не удалось прочитать эту позицию, поэтому вывод невозможно подготовить</string>

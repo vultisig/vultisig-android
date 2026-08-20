@@ -545,6 +545,7 @@
     <string name="verify_deposit_depositing">Deponirate</string>
     <string name="verify_deposit_withdrawing">Povlačite</string>
     <string name="kamino_verify_vault">Vault</string>
+    <string name="kamino_verify_withdraw_unverified">Ovaj uređaj ne može potvrditi ovaj iznos. Transakcija povlači %1$s udjela vaulta.</string>
     <string name="kamino_error_build_failed">Ovu transakciju nije bilo moguće pripremiti</string>
     <string name="kamino_withdraw_nothing">Iz ovog vaulta nema se što povući</string>
     <string name="kamino_withdraw_unreadable">Ovu poziciju nije bilo moguće pročitati, pa se povlačenje ne može pripremiti</string>

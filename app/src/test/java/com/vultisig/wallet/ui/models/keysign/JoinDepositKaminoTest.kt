@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoAction
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoDepositRentReserve
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoPriorityFee
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRelayedIntent
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
 import com.vultisig.wallet.data.models.Chain
@@ -21,6 +22,7 @@ import com.vultisig.wallet.data.usecases.ThorchainMemoParser
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapperImpl
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -29,6 +31,7 @@ import io.mockk.slot
 import java.math.BigInteger
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import vultisig.keysign.v1.SignSolana
 
 /**
@@ -74,9 +77,18 @@ internal class JoinDepositKaminoTest {
             chainAccountAddressRepository = mockk<ChainAccountAddressRepository>(relaxed = true),
             feeResolver = feeResolver,
             depositRentReserve = depositRentReserve,
+            mapTokenValueToDecimalUiString = TokenValueToDecimalUiStringMapperImpl(),
         )
 
     private suspend fun build(intent: KaminoRelayedIntent, toAddress: String): DepositTransaction {
+        buildResult(intent, toAddress)
+        return captured.captured
+    }
+
+    private suspend fun buildResult(
+        intent: KaminoRelayedIntent?,
+        toAddress: String,
+    ): JoinKeysignVerifyResult {
         val storedVault = mockk<Vault>(relaxed = true)
         coEvery { vaultRepository.get(VAULT_ID) } returns storedVault
         coEvery { vaultRepository.getAll() } returns emptyList()
@@ -92,8 +104,7 @@ internal class JoinDepositKaminoTest {
             DepositTransactionUiModel()
         coEvery { mapDepositTransactionHistoryData(any()) } returns mockk(relaxed = true)
 
-        builder.build(payload(toAddress), VAULT_ID, intent)
-        return captured.captured
+        return builder.build(payload(toAddress), VAULT_ID, intent)
     }
 
     @Test
@@ -136,11 +147,52 @@ internal class JoinDepositKaminoTest {
         coVerify(exactly = 0) { depositRentReserve(any(), any()) }
     }
 
+    @Test
+    fun `a withdraw names the share count its instruction carries`() = runTest {
+        // The amount above it is a token projection at a rate that never crossed the wire, and no
+        // Blockaid badge qualifies it — so the screen says which figure did come from the bytes.
+        val result = buildResult(intent(KaminoAction.WITHDRAW), toAddress = SIGNER)
+
+        // 500,000 at the vault's six share decimals, which are not the token's nine.
+        result.transactionTypeUiModel
+            .let { it as TransactionTypeUiModel.Deposit }
+            .depositTransactionUiModel
+            .unverifiedWithdrawShares shouldBe "0.5"
+    }
+
+    @Test
+    fun `a deposit's amount was checked against the bytes, so nothing is disclaimed`() = runTest {
+        coEvery { depositRentReserve(vault, SIGNER) } returns RENT
+
+        val result = buildResult(intent(KaminoAction.DEPOSIT), toAddress = vault.address)
+
+        result.transactionTypeUiModel
+            .let { it as TransactionTypeUiModel.Deposit }
+            .depositTransactionUiModel
+            .unverifiedWithdrawShares shouldBe null
+    }
+
+    @Test
+    fun `a Solana payload that is not a recognised Kamino transaction is refused`() = runTest {
+        // Bytes nobody could read are still a send. Rendering them as a deposit would put a
+        // deposit's framing — an operation, a vault name — around a transaction this device cannot
+        // describe, which is the shape issue #5644 reported in the first place.
+        assertThrows<IllegalArgumentException> { buildResult(intent = null, toAddress = SIGNER) }
+    }
+
     private fun intent(action: KaminoAction) =
         KaminoRelayedIntent(
             vault = vault,
             action = action,
             amount = if (action == KaminoAction.DEPOSIT) AMOUNT else BigInteger.valueOf(500_000),
+            priorityFee =
+                KaminoPriorityFee(
+                    limit =
+                        BigInteger.valueOf(
+                            if (action == KaminoAction.DEPOSIT) 350_000 else 400_000
+                        ),
+                    price = BigInteger.valueOf(250_000),
+                ),
         )
 
     private fun payload(toAddress: String) =

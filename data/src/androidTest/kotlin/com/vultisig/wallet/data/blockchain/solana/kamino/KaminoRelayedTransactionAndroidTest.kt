@@ -62,14 +62,36 @@ class KaminoRelayedTransactionAndroidTest {
         assertEquals(KaminoAction.WITHDRAW, intent?.action)
     }
 
+    @Test
+    fun a_recognised_deposit_carries_the_budget_wallet_core_encoded_into_it() {
+        // The limit instruction is encoded inside WalletCore's `setComputeUnitLimit`, so this is
+        // where the reader meets the real encoding rather than one the tests wrote themselves. The
+        // joining device prices its fee row off this pair, and refuses the payload when the fields
+        // relayed beside the bytes disagree with it.
+        val intent =
+            ResolveKaminoRelayedIntentUseCase()(
+                listOf(preparedDeposit(price = BigInteger.valueOf(250_000))),
+                KaminoFixtures.WALLET,
+            )
+
+        assertEquals(
+            KaminoPriorityFee(
+                limit = KaminoComputeBudget.unitLimitFor(vault, KaminoAction.DEPOSIT),
+                price = BigInteger.valueOf(250_000),
+            ),
+            intent?.priorityFee,
+        )
+    }
+
     /** The bytes the initiating device would relay: the live response, budgeted and memo'd. */
-    private fun preparedDeposit(): String = runBlocking {
+    private fun preparedDeposit(price: BigInteger? = null): String = runBlocking {
         KaminoTransactionPreparer(KaminoFixtureApi(KaminoFixtures.DEPOSIT))
             .prepare(
                 vault = vault,
                 action = KaminoAction.DEPOSIT,
                 walletAddress = KaminoFixtures.WALLET,
                 amount = "1",
+                networkUnitPrice = price,
             )
     }
 

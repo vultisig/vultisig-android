@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.usecases.ThorchainMemoParser
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import java.math.BigInteger
 import java.util.UUID
@@ -48,6 +49,7 @@ constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val feeResolver: JoinKeysignFeeResolver,
     private val depositRentReserve: KaminoDepositRentReserve,
+    private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
 ) {
 
     /**
@@ -184,6 +186,7 @@ constructor(
                     srcVaultName = srcVaultName,
                     dstVaultName = dstVaultName,
                     dstAddressBookTitle = dstAddressBookTitle,
+                    unverifiedWithdrawShares = kamino?.let(::withdrawShares),
                 )
         return JoinKeysignVerifyResult(
             verifyUiModel = VerifyUiModel.Deposit(VerifyDepositUiModel(depositTransactionUiModel)),
@@ -191,6 +194,22 @@ constructor(
             transactionHistoryData = mapDepositTransactionHistoryData(depositTransactionUiModel),
         )
     }
+
+    /**
+     * The share figure a withdraw's kVault instruction carries, formatted, or null for a deposit —
+     * whose headline amount this device already checked against the same instruction.
+     *
+     * Sized by the vault's own share scale, which is not the token's: Allez SOL's shares carry six
+     * decimals against the token's nine.
+     */
+    private fun withdrawShares(kamino: KaminoRelayedIntent): String? =
+        kamino
+            .takeIf { it.action == KaminoAction.WITHDRAW }
+            ?.let {
+                mapTokenValueToDecimalUiString(
+                    TokenValue(value = it.amount, unit = "", decimals = it.vault.sharesDecimals)
+                )
+            }
 
     private fun kaminoOperation(kamino: KaminoRelayedIntent): String =
         when (kamino.action) {
@@ -213,7 +232,6 @@ constructor(
         payload: KeysignPayload,
         nativeCoin: Coin,
     ): TokenValue {
-        val specific = payload.blockChainSpecific as BlockChainSpecific.Solana
         val rentReserve =
             if (kamino.action == KaminoAction.DEPOSIT) {
                 withContext(Dispatchers.IO) {
@@ -227,7 +245,10 @@ constructor(
                 kaminoNetworkFeeLamports(
                     vault = kamino.vault,
                     action = kamino.action,
-                    relayedUnitPrice = specific.priorityFee,
+                    // From the instructions, not from the field relayed beside them. The two are
+                    // pinned equal by KaminoRelayedIntent.takeIfDescribedBy before this runs, and
+                    // the one inside the bytes is the one the runtime charges.
+                    relayedUnitPrice = kamino.priorityFee?.price,
                     rentReserve = rentReserve,
                 ),
             token = nativeCoin,

@@ -70,6 +70,11 @@ object KaminoTransactionValidator {
     /** What the kVault program reads as "withdraw everything". */
     private val U64_MAX = BigInteger("18446744073709551615")
 
+    /** Where [KaminoTransactionPreparer] puts the compute budget, and where iOS expects it. */
+    private const val UNIT_LIMIT_INDEX = 0
+
+    private const val UNIT_PRICE_INDEX = UNIT_LIMIT_INDEX + 1
+
     /**
      * @throws KaminoTransactionRejected if [instructions] is not a transaction the app is willing
      *   to sign for [vault].
@@ -131,6 +136,96 @@ object KaminoTransactionValidator {
         rejectValueMovementAwayFromTheSigner(instructions, vault, wrappedSolAccount)
         rejectAnotherAccountsAuthority(decoded.feePayer, signerAddress)
         rejectTheWithdrawEverythingSentinel(instructions)
+        rejectAForeignComputeBudget(instructions, vault, action)
+        rejectAnythingButOneEmptySignatureSlot(decoded)
+    }
+
+    /**
+     * Refuses a compute budget that is not the one this app injects.
+     *
+     * The budget is what the transaction will be charged: price × limit, in lamports, on top of the
+     * base fee. Both devices quote it on their verify screens — the initiating one from the values
+     * it recorded, a co-signing one from the values relayed beside the bytes — and neither of those
+     * is the budget the runtime reads. That one is here, in the instructions.
+     *
+     * So the shape is pinned rather than merely allow-listed. The program alone being permitted is
+     * what let a deposit legitimately carry a ComputeBudget instruction while its argument said
+     * anything at all: a price is an unbounded `u64` multiplied by a six-figure limit, so an
+     * unchecked one is an unbounded fee sitting under a fee row that clamps its own display into
+     * [KaminoComputeBudget.MAX_UNIT_PRICE]. iOS refuses the same disagreement
+     * (`KaminoVerifyPresentation.priorityFeeAgrees`).
+     *
+     * Position is pinned too, not for the fee's sake but because the layout is a cross-platform
+     * contract: iOS emits the limit at 0 and the price at 1 and reads the remaining instructions
+     * positionally, so anything else is a transaction an iPhone co-signer will not join.
+     */
+    private fun rejectAForeignComputeBudget(
+        instructions: List<KaminoTxInstruction>,
+        vault: KaminoVault,
+        action: KaminoAction,
+    ) {
+        val budget =
+            KaminoComputeBudget.readFrom(instructions)
+                ?: reject(
+                    "transaction carries no compute budget, so it would run against the runtime " +
+                        "default and abort"
+                )
+        if (budget == KaminoComputeBudget.MALFORMED) {
+            reject("transaction carries a compute budget this app cannot read")
+        }
+
+        val budgetIndices =
+            instructions.indices.filter {
+                instructions[it].programId == KaminoComputeBudget.PROGRAM_ID
+            }
+        if (budgetIndices != listOf(UNIT_LIMIT_INDEX, UNIT_PRICE_INDEX)) {
+            reject(
+                "compute budget must be the leading two instructions, found it at $budgetIndices"
+            )
+        }
+        if (KaminoComputeBudget.unitLimitArgument(instructions[UNIT_LIMIT_INDEX].data) == null) {
+            reject("instruction $UNIT_LIMIT_INDEX must be the compute-unit limit")
+        }
+
+        val expectedLimit = KaminoComputeBudget.unitLimitFor(vault, action)
+        if (budget.limit != expectedLimit) {
+            reject(
+                "compute-unit limit is ${budget.limit} rather than the $expectedLimit this app " +
+                    "reserves for a $action"
+            )
+        }
+        // `unitPriceFor` is the clamp itself, so a price it does not move is a price already inside
+        // the range — the same range iOS clamps into and the only one its decoder accepts.
+        if (budget.price != KaminoComputeBudget.unitPriceFor(budget.price)) {
+            reject(
+                "compute-unit price ${budget.price} is outside " +
+                    "[${KaminoComputeBudget.FALLBACK_UNIT_PRICE}, " +
+                    "${KaminoComputeBudget.MAX_UNIT_PRICE}]"
+            )
+        }
+    }
+
+    /**
+     * Refuses anything but a transaction with one still-empty signature slot.
+     *
+     * The raw-signing path splices this vault's signature into slot 0 and leaves the message and
+     * every further slot exactly as received — which is right for a dApp co-sign and wrong here. A
+     * second required signer means the app signs and broadcasts something incomplete, or something
+     * completed by whoever supplied the bytes; a slot that already holds bytes means a signature
+     * over some message this device never saw riding along with its own.
+     *
+     * Fail-closed on both devices. iOS gates the same decode with `validateUnsignedSingleSigner`.
+     */
+    private fun rejectAnythingButOneEmptySignatureSlot(decoded: KaminoDecodedTransaction) {
+        if (decoded.requiredSignatures != 1) {
+            reject(
+                "transaction declares ${decoded.requiredSignatures} required signatures; only " +
+                    "signer 0's slot is ever filled"
+            )
+        }
+        if (!decoded.isUnsigned) {
+            reject("transaction already carries a signature in a slot this app does not write")
+        }
     }
 
     /**
