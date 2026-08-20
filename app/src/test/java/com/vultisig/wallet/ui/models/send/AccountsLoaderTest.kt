@@ -56,6 +56,7 @@ internal class AccountsLoaderTest {
     private val defaultStakingPositionService: DefaultStakingPositionService = mockk(relaxed = true)
 
     private var defiType: DeFiNavActions? = null
+    private var preselectedTokenId: String? = null
     private var mscaAddress: String? = null
     private var bondedAmount: BigInteger? = null
 
@@ -441,6 +442,192 @@ internal class AccountsLoaderTest {
             val ybRune =
                 loadedAccounts.single { it.token.id.equals(Coins.ThorChain.ybRUNE.id, true) }
             assertEquals(BigInteger("100000000"), ybRune.tokenValue?.value)
+        }
+
+    @Test
+    fun `UNSTAKE_YBRUNE retries the live read on a later emission after one fails`() =
+        runTest(mainDispatcher) {
+            // Marking the account hydrated before the read could fail retired the retry for the
+            // rest of the form's life, so MAX went on filling from the cached ceiling — which the
+            // submit clamp can only ever lower, never raise.
+            defiType = DeFiNavActions.UNSTAKE_YBRUNE
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.ybRUNE.id,
+                )
+            } returns stakingDetails(stakeAmount = BigInteger("100000000"))
+            coEvery {
+                defaultStakingPositionService.getReceiptBalance("thor1", Coins.ThorChain.ybRUNE)
+            } throws RuntimeException("status 502") andThen BigInteger("523400000000")
+            val runeAccounts =
+                listOf(
+                    Address(
+                        chain = Chain.ThorChain,
+                        address = "thor1",
+                        accounts =
+                            listOf(
+                                thorAccount(
+                                    Coins.ThorChain.RUNE.copy(
+                                        address = "thor1",
+                                        hexPublicKey = THOR_PUBLIC_KEY,
+                                    )
+                                )
+                            ),
+                    )
+                )
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(runeAccounts, runeAccounts)
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            val ybRune =
+                loadedAccounts.single { it.token.id.equals(Coins.ThorChain.ybRUNE.id, true) }
+            assertEquals(BigInteger("523400000000"), ybRune.tokenValue?.value)
+        }
+
+    @Test
+    fun `UNSTAKE_YBRUNE reads the live balance once after it succeeds`() =
+        runTest(mainDispatcher) {
+            // The retry above must not turn into a fetch per emission: once a read lands, the
+            // hydrated account stands for the rest of the form.
+            defiType = DeFiNavActions.UNSTAKE_YBRUNE
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.ybRUNE.id,
+                )
+            } returns stakingDetails(stakeAmount = BigInteger("100000000"))
+            coEvery {
+                defaultStakingPositionService.getReceiptBalance("thor1", Coins.ThorChain.ybRUNE)
+            } returns BigInteger("523400000000")
+            val runeAccounts =
+                listOf(
+                    Address(
+                        chain = Chain.ThorChain,
+                        address = "thor1",
+                        accounts = listOf(thorAccount(Coins.ThorChain.RUNE.copy(address = "thor1"))),
+                    )
+                )
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(runeAccounts, runeAccounts)
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) {
+                defaultStakingPositionService.getReceiptBalance("thor1", Coins.ThorChain.ybRUNE)
+            }
+        }
+
+    @Test
+    fun `a plain send opened on ybRUNE carries the receipt next to the wallet accounts`() =
+        runTest(mainDispatcher) {
+            // The Transfer action on the position card lands here: an ordinary send, whose token
+            // is a bank denom kept out of token discovery, so nothing in the addresses flow can
+            // offer the form an account to send it from.
+            defiType = null
+            preselectedTokenId = Coins.ThorChain.ybRUNE.id
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.ybRUNE.id,
+                )
+            } returns stakingDetails(stakeAmount = BigInteger("100000000"))
+            coEvery {
+                defaultStakingPositionService.getReceiptBalance("thor1", Coins.ThorChain.ybRUNE)
+            } returns BigInteger("523400000000")
+            val ethAccount = ethAccount()
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts =
+                                listOf(
+                                    thorAccount(
+                                        Coins.ThorChain.RUNE.copy(
+                                            address = "thor1",
+                                            hexPublicKey = THOR_PUBLIC_KEY,
+                                        )
+                                    )
+                                ),
+                        ),
+                        Address(
+                            chain = Chain.Ethereum,
+                            address = "0x1",
+                            accounts = listOf(ethAccount),
+                        ),
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            val ybRune =
+                loadedAccounts.single { it.token.id.equals(Coins.ThorChain.ybRUNE.id, true) }
+            assertEquals(BigInteger("523400000000"), ybRune.tokenValue?.value)
+            assertEquals("thor1", ybRune.token.address)
+            assertEquals(THOR_PUBLIC_KEY, ybRune.token.hexPublicKey)
+            // The rest of the wallet stays selectable — this is a send, not a receipt-only form.
+            assertTrue(loadedAccounts.contains(ethAccount))
+            assertTrue(loadedAccounts.any { it.token.id.equals(Coins.ThorChain.RUNE.id, true) })
+        }
+
+    @Test
+    fun `a plain send opened on ybRUNE keeps the wallet when the vault has no THORChain account`() =
+        runTest(mainDispatcher) {
+            // Nothing to synthesize the receipt from, but every other holding is still sendable —
+            // the unbond form empties itself in this case, a send must not.
+            defiType = null
+            preselectedTokenId = Coins.ThorChain.ybRUNE.id
+            val ethAccount = ethAccount()
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.Ethereum,
+                            address = "0x1",
+                            accounts = listOf(ethAccount),
+                        )
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            assertEquals(listOf(ethAccount), loadedAccounts)
+        }
+
+    @Test
+    fun `a plain send opened on another token never synthesizes the receipt`() =
+        runTest(mainDispatcher) {
+            defiType = null
+            preselectedTokenId = Coins.ThorChain.RUNE.id
+            val runeAccount = thorAccount(Coins.ThorChain.RUNE.copy(address = "thor1"))
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts = listOf(runeAccount),
+                        )
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            assertEquals(listOf(runeAccount), loadedAccounts)
+            coVerify(exactly = 0) { defaultStakingPositionService.getReceiptBalance(any(), any()) }
         }
 
     @Test
@@ -1076,6 +1263,7 @@ internal class AccountsLoaderTest {
             stakingDetailsRepository = stakingDetailsRepository,
             defaultStakingPositionService = defaultStakingPositionService,
             defiTypeProvider = { defiType },
+            preselectedTokenIdProvider = { preselectedTokenId },
             mscaAddressProvider = { mscaAddress },
             bondedAmountProvider = { bondedAmount },
         )

@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
@@ -126,10 +127,12 @@ internal class SendFormGraph(
     private var defiType: DeFiNavActions? = null // Default is send, no defi form
     private var mscaAddress: String? = null
     private var bondedAmount: BigInteger? = null
+    private var preselectedTokenId: TokenId? = null
 
     private val vaultProvider: () -> Vault? = { vault }
     private val vaultIdProvider: () -> VaultId? = { vaultId }
     private val defiTypeProvider: () -> DeFiNavActions? = { defiType }
+    private val preselectedTokenIdProvider: () -> TokenId? = { preselectedTokenId }
     private val mscaAddressProvider: () -> String? = { mscaAddress }
     private val bondedAmountProvider: () -> BigInteger? = { bondedAmount }
 
@@ -168,6 +171,7 @@ internal class SendFormGraph(
             stakingDetailsRepository = stakingDetailsRepository,
             defaultStakingPositionService = defaultStakingPositionService,
             defiTypeProvider = defiTypeProvider,
+            preselectedTokenIdProvider = preselectedTokenIdProvider,
             mscaAddressProvider = mscaAddressProvider,
             bondedAmountProvider = bondedAmountProvider,
         )
@@ -366,6 +370,9 @@ internal class SendFormGraph(
         mscaAddress = args.mscaAddress
         bondedAmount = args.bondedAmount?.toBigIntegerOrNull()
         vaultId = args.vaultId
+        // Seeded before the load: the accounts a plain send may draw on depend on the token it was
+        // opened for — the ybRUNE receipt is not a wallet token and has to be synthesized.
+        preselectedTokenId = args.tokenId
         accountsLoader.load(args.vaultId)
         loadVaultName()
         initFormType()

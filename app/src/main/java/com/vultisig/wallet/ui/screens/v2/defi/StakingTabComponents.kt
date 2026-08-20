@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -48,7 +49,7 @@ internal fun StakingTabContent(
     onClickStake: (DeFiNavActions) -> Unit,
     onClickUnstake: (DeFiNavActions) -> Unit,
     onClickWithdraw: () -> Unit,
-    onClickTransfer: () -> Unit,
+    onClickTransfer: (Coin) -> Unit,
     isBalanceVisible: Boolean = true,
 ) {
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -73,7 +74,7 @@ internal fun StakingWidget(
     onClickStake: (DeFiNavActions) -> Unit,
     onClickUnstake: (DeFiNavActions) -> Unit,
     onClickWithdraw: () -> Unit,
-    onClickTransfer: () -> Unit,
+    onClickTransfer: (Coin) -> Unit,
     isBalanceVisible: Boolean = true,
 ) {
     Column(
@@ -207,7 +208,7 @@ internal fun StakingWidget(
             VsButton(
                 label = stringResource(R.string.staking_transfer),
                 modifier = Modifier.fillMaxWidth(),
-                onClick = onClickTransfer,
+                onClick = { onClickTransfer(state.coin) },
                 state = VsButtonState.Enabled,
             )
 

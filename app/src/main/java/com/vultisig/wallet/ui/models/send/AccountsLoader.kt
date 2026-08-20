@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -29,6 +30,7 @@ internal class AccountsLoader(
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val defaultStakingPositionService: DefaultStakingPositionService,
     private val defiTypeProvider: () -> DeFiNavActions?,
+    private val preselectedTokenIdProvider: () -> TokenId?,
     private val mscaAddressProvider: () -> String?,
     private val bondedAmountProvider: () -> BigInteger?,
 ) {
@@ -88,10 +90,7 @@ internal class AccountsLoader(
                 DeFiNavActions.REDEEM_YTCY,
                 DeFiNavActions.FREEZE_TRX ->
                     scope.safeLaunch(onError = ::onLoadError) {
-                        accountsRepository
-                            .loadAddresses(vaultId)
-                            .map { addrs -> addrs.flatMap { it.accounts } }
-                            .collect { publishLoaded(it, generation) }
+                        loadWalletAccounts(vaultId, generation)
                     }
 
                 else ->
@@ -136,6 +135,29 @@ internal class AccountsLoader(
                     }
             }
     }
+
+    /**
+     * The vault's own accounts: what an ordinary send, and every DeFi form funded with a wallet
+     * token, draws on.
+     *
+     * A send that was opened on the ybRUNE receipt carries it alongside them. The receipt is an
+     * ordinary bank denom the vault can move like any other token — the Transfer action on its
+     * position card is exactly that — but it is deliberately kept out of token discovery, so
+     * nothing in the addresses flow would give the form an account to send it from.
+     */
+    private suspend fun loadWalletAccounts(vaultId: VaultId, generation: Long) {
+        if (defiTypeProvider() == null && isBondedRuneReceipt(preselectedTokenIdProvider())) {
+            loadBondedRuneReceiptAccount(vaultId, generation, alongsideWalletAccounts = true)
+            return
+        }
+        accountsRepository
+            .loadAddresses(vaultId)
+            .map { addrs -> addrs.flatMap { it.accounts } }
+            .collect { publishLoaded(it, generation) }
+    }
+
+    private fun isBondedRuneReceipt(tokenId: TokenId?): Boolean =
+        tokenId.equals(Coins.ThorChain.ybRUNE.id, true)
 
     /**
      * The accounts a form may draw on.
@@ -264,13 +286,21 @@ internal class AccountsLoader(
      * conversion happens at submit, unlike the RUJI receipt above, whose position is reported in
      * RUJI.
      *
+     * With [alongsideWalletAccounts] the receipt joins the vault's own accounts instead of
+     * replacing them — that is the plain send the position card's Transfer action opens, where
+     * every other holding stays selectable.
+     *
      * Cached first, then re-read from the chain, the way the balance rows around it hydrate. The
      * cached figure is whatever the DeFi tab last stored, and this account is what MAX fills the
      * form from: left at the cache, a bond made since that refresh would cap MAX below the true
      * position and quietly redeem less than everything, with the submit-time clamp — which only
      * ever lowers an amount — unable to notice.
      */
-    private suspend fun loadBondedRuneReceiptAccount(vaultId: VaultId, generation: Long) {
+    private suspend fun loadBondedRuneReceiptAccount(
+        vaultId: VaultId,
+        generation: Long,
+        alongsideWalletAccounts: Boolean = false,
+    ) {
         var receiptAmount =
             stakingDetailsRepository
                 .getStakingDetailsByCoindId(vaultId, Coins.ThorChain.ybRUNE.id)
@@ -280,7 +310,12 @@ internal class AccountsLoader(
             .loadAddresses(vaultId)
             .map { addrs -> addrs.flatMap { it.accounts } }
             .collect { accountsLoaded ->
-                publishBondedRuneReceipt(accountsLoaded, receiptAmount, generation)
+                publishBondedRuneReceipt(
+                    accountsLoaded,
+                    receiptAmount,
+                    generation,
+                    alongsideWalletAccounts,
+                )
 
                 val address =
                     accountsLoaded
@@ -288,7 +323,6 @@ internal class AccountsLoader(
                         ?.token
                         ?.address
                 if (hydrated || address.isNullOrEmpty()) return@collect
-                hydrated = true
 
                 // A failed read leaves the cached figure standing rather than emptying the form:
                 // the submit clamp reads the balance again and refuses to build on a guess.
@@ -304,8 +338,12 @@ internal class AccountsLoader(
                         return@collect
                     }
 
+                // Marked hydrated only once a read has actually landed. Set before the attempt, a
+                // single transient failure retired the retry for the rest of the form's life, and
+                // MAX went back to the cached ceiling the submit clamp can only ever lower.
+                hydrated = true
                 receiptAmount = live
-                publishBondedRuneReceipt(accountsLoaded, live, generation)
+                publishBondedRuneReceipt(accountsLoaded, live, generation, alongsideWalletAccounts)
             }
     }
 
@@ -313,16 +351,29 @@ internal class AccountsLoader(
         accountsLoaded: List<Account>,
         receiptAmount: BigInteger?,
         generation: Long,
+        alongsideWalletAccounts: Boolean = false,
     ) {
         if (generation != currentGeneration) return
         // As with sRUJI: the RUNE account carries the address the unbond is sent from, funds the
         // gas fee, and supplies the derived key the receipt's catalogue entry has no copy of.
         val thorchainAccount =
-            accountsLoaded.findSourceOrPublishEmpty(
-                tokenId = Coins.ThorChain.RUNE.id,
-                generation = generation,
-                missingReason = "THORChain account not available for ybRUNE unstake",
-            ) ?: return
+            if (alongsideWalletAccounts) {
+                // A plain send that merely started on the receipt. Without a THORChain account
+                // there is nothing to synthesize it from, but the rest of the vault is still
+                // perfectly sendable — leave the form the accounts it does have rather than
+                // emptying it over a token it can simply drop.
+                accountsLoaded.find { it.token.id.equals(Coins.ThorChain.RUNE.id, true) }
+                    ?: run {
+                        publishLoaded(accountsLoaded, generation)
+                        return
+                    }
+            } else {
+                accountsLoaded.findSourceOrPublishEmpty(
+                    tokenId = Coins.ThorChain.RUNE.id,
+                    generation = generation,
+                    missingReason = "THORChain account not available for ybRUNE unstake",
+                ) ?: return
+            }
 
         val ybRune =
             Coins.ThorChain.ybRUNE.copy(
@@ -336,7 +387,17 @@ internal class AccountsLoader(
                 fiatValue = null,
                 price = null,
             )
-        publishLoaded(listOf(ybRuneAccount, thorchainAccount), generation)
+        val accounts =
+            if (alongsideWalletAccounts) {
+                // The whole wallet stays in the picker, with the receipt appended: this is an
+                // ordinary send, not a form that may only ever draw on the position. Any receipt
+                // already in the list is dropped in favour of the one carrying the live balance.
+                accountsLoaded.filterNot { it.token.id.equals(Coins.ThorChain.ybRUNE.id, true) } +
+                    ybRuneAccount
+            } else {
+                listOf(ybRuneAccount, thorchainAccount)
+            }
+        publishLoaded(accounts, generation)
     }
 
     // Collect both cached and hydrated emissions so the form renders cached RUNE/RUJI

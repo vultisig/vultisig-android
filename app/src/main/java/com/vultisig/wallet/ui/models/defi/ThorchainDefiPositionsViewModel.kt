@@ -887,10 +887,16 @@ constructor(
                                 coin.ticker.contains("yrune", ignoreCase = true) ||
                                     coin.ticker.contains("ytcy", ignoreCase = true)
 
-                            val canTransfer = coin.ticker.contains("stcy", ignoreCase = true)
-
                             val isBondedRuneReceipt =
                                 coin.id.equals(Coins.ThorChain.ybRUNE.id, true)
+
+                            // Both compounding receipts are plain THORChain bank denoms, so the
+                            // vault can move either one to another address — #5585 asks for it on
+                            // ybRUNE, and iOS offers Transfer on every compound position. Matched
+                            // on the coin id: a substring of the ticker is what left this card
+                            // with the wrong logo, since ybRUNE contains none of the others.
+                            val canTransfer =
+                                coin.id.equals(Coins.ThorChain.sTCY.id, true) || isBondedRuneReceipt
 
                             val headerResId =
                                 if (supportsMint) {
@@ -1448,14 +1454,16 @@ constructor(
         }
     }
 
-    fun onClickTransfer() {
+    /**
+     * Opens the plain send form on [coin], the position's own receipt.
+     *
+     * Carries the position's coin rather than a fixed one: sTCY was the only transferable card when
+     * this was written, and the ybRUNE receipt would otherwise have sent the wrong token.
+     */
+    fun onClickTransfer(coin: Coin) {
         viewModelScope.launch {
             navigator.route(
-                Route.Send(
-                    vaultId = vaultId,
-                    chainId = Chain.ThorChain.id,
-                    tokenId = Coins.ThorChain.sTCY.id,
-                )
+                Route.Send(vaultId = vaultId, chainId = coin.chain.id, tokenId = coin.id)
             )
         }
     }

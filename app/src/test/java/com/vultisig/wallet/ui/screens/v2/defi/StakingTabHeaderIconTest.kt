@@ -2,8 +2,8 @@ package com.vultisig.wallet.ui.screens.v2.defi
 
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coins
-import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 
 internal class StakingTabHeaderIconTest {
@@ -13,26 +13,26 @@ internal class StakingTabHeaderIconTest {
         // ybRUNE holds none of the other tickers' substrings — the b breaks yrune — so before it
         // was matched explicitly the card fell through to the generic fallback and rendered an
         // unrelated logo.
-        assertEquals(R.drawable.brune, getHeaderIcon(Coins.ThorChain.ybRUNE.ticker))
-        assertNotEquals(R.drawable.om, getHeaderIcon(Coins.ThorChain.ybRUNE.ticker))
+        getHeaderIcon(Coins.ThorChain.ybRUNE.ticker) shouldBe R.drawable.brune
+        getHeaderIcon(Coins.ThorChain.ybRUNE.ticker) shouldNotBe R.drawable.om
     }
 
     @Test
     fun `a receipt ticker never takes the logo of the asset it receipts`() {
-        assertEquals(R.drawable.ytcy, getHeaderIcon(Coins.ThorChain.yTCY.ticker))
-        assertEquals(R.drawable.stcy, getHeaderIcon(Coins.ThorChain.sTCY.ticker))
-        assertEquals(R.drawable.yrune, getHeaderIcon(Coins.ThorChain.yRUNE.ticker))
-        assertEquals(R.drawable.tcy_staking, getHeaderIcon(Coins.ThorChain.TCY.ticker))
+        getHeaderIcon(Coins.ThorChain.yTCY.ticker) shouldBe R.drawable.ytcy
+        getHeaderIcon(Coins.ThorChain.sTCY.ticker) shouldBe R.drawable.stcy
+        getHeaderIcon(Coins.ThorChain.yRUNE.ticker) shouldBe R.drawable.yrune
+        getHeaderIcon(Coins.ThorChain.TCY.ticker) shouldBe R.drawable.tcy_staking
     }
 
     @Test
     fun `both RUJI positions share the RUJI staking logo`() {
-        assertEquals(R.drawable.ruji_staking, getHeaderIcon(Coins.ThorChain.RUJI.ticker))
-        assertEquals(R.drawable.ruji_staking, getHeaderIcon(Coins.ThorChain.sRUJI.ticker))
+        getHeaderIcon(Coins.ThorChain.RUJI.ticker) shouldBe R.drawable.ruji_staking
+        getHeaderIcon(Coins.ThorChain.sRUJI.ticker) shouldBe R.drawable.ruji_staking
     }
 
     @Test
     fun `the Cacao position keeps its own logo`() {
-        assertEquals(R.drawable.cacao, getHeaderIcon(Coins.MayaChain.CACAO.ticker))
+        getHeaderIcon(Coins.MayaChain.CACAO.ticker) shouldBe R.drawable.cacao
     }
 }

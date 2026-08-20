@@ -407,12 +407,37 @@ internal class ThorchainDefiPositionsViewModelTest {
         assertEquals(R.string.defi_header_compounded, header.resId)
         assertEquals(listOf(Coins.ThorChain.ybRUNE.ticker), header.formatArgs)
         assertTrue(ybRune.stakedAmountDisplay.endsWith(Coins.ThorChain.ybRUNE.ticker))
-        // Auto-compounding: nothing is separately claimable, and it is not a transferable balance.
+        // Auto-compounding: nothing is separately claimable. The receipt itself is a plain bank
+        // denom, so it can be moved to another address like the sTCY one above it.
         assertFalse(ybRune.supportsMint)
-        assertFalse(ybRune.canTransfer)
+        assertTrue(ybRune.canTransfer)
         assertFalse(ybRune.canWithdraw)
         assertTrue(ybRune.canStake)
         assertTrue(ybRune.canUnstake)
+    }
+
+    @Test
+    fun `transfer routes to send against the position's own receipt`() = runTest {
+        // Fixed to sTCY, the ybRUNE card's Transfer button would have opened the form on someone
+        // else's token.
+        selectPositions("ybRUNE")
+        coEvery { defaultStakingPositionService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(listOf(stakingDetails(Coins.ThorChain.ybRUNE, BigInteger("523400000000"))))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        val ybRune =
+            vm.state.value.staking.positions.single { it.coin.id == Coins.ThorChain.ybRUNE.id }
+        vm.onClickTransfer(ybRune.coin)
+
+        coVerify(exactly = 1) {
+            navigator.route(
+                Route.Send(
+                    vaultId = VAULT_ID,
+                    chainId = Chain.ThorChain.id,
+                    tokenId = Coins.ThorChain.ybRUNE.id,
+                )
+            )
+        }
     }
 
     @Test
