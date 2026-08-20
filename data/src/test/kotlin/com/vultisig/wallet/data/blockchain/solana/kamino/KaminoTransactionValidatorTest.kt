@@ -618,6 +618,49 @@ class KaminoTransactionValidatorTest {
     }
 
     @Test
+    fun `a second unstake is refused rather than releasing twice what the withdraw burns`() {
+        // The bound each unstake is held to is per-instruction, so two of them each carrying the
+        // requested figure both pass it. The withdraw then burns that figure once, and the shares
+        // the second release took out of the farm stay out of it — earning nothing, and invisible
+        // on a screen that shows one amount. Exactly the harm the per-instruction bound names, and
+        // the only way to close it is to count them.
+        val unstake =
+            farms(FARMS_UNSTAKE, argument = littleEndian(unstakeScaled(AMOUNT), bytes = 16))
+        val reason =
+            rejection(
+                listOf(
+                    unstake,
+                    unstake,
+                    farms(FARMS_WITHDRAW_UNSTAKED_DEPOSITS),
+                    kvault(action = KaminoAction.WITHDRAW),
+                    memo,
+                ),
+                action = KaminoAction.WITHDRAW,
+            )
+        assertTrue(reason.contains("at most one farms unstake instruction, found 2"), reason)
+    }
+
+    @Test
+    fun `each of the four farms instructions is bounded to one, not merely checked one at a time`() {
+        // Every one of the four passes its own checks a second time, so each needs the count as
+        // well: a repeated `initialize_user` funds another farm's user state out of the wallet's
+        // rent, and a repeated stake or unstaked withdrawal moves shares a second time. iOS names
+        // all four `repeatable: false` in `KaminoInstructionSequence.expected`.
+        val bounded =
+            mapOf(
+                FARMS_INITIALIZE_USER to "initialize_user",
+                FARMS_STAKE to "stake",
+                FARMS_UNSTAKE to "unstake",
+                FARMS_WITHDRAW_UNSTAKED_DEPOSITS to "withdraw_unstaked_deposits",
+            )
+        bounded.forEach { (discriminator, name) ->
+            val duplicate = farms(discriminator)
+            val reason = rejection(listOf(kvault(), duplicate, duplicate, memo))
+            assertTrue(reason.contains("at most one farms $name instruction, found 2"), reason)
+        }
+    }
+
+    @Test
     fun `a stake that moves shares through another account is refused`() {
         val reason =
             rejection(

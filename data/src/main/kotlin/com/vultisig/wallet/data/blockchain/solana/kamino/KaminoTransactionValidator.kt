@@ -109,6 +109,21 @@ object KaminoTransactionValidator {
     private val FARMS_WITHDRAW_UNSTAKED_DEPOSITS = anchor("2466bb31dc248443")
 
     /**
+     * The four farms instructions above, under the name each is bounded and reported by.
+     *
+     * One list rather than two: the walk asks whether an instruction is in here and [validate]
+     * counts each entry, so a farms instruction cannot become permitted in one place and unbounded
+     * in the other.
+     */
+    private val FARMS_INSTRUCTIONS =
+        mapOf(
+            "initialize_user" to FARMS_INITIALIZE_USER,
+            "stake" to FARMS_STAKE,
+            "unstake" to FARMS_UNSTAKE,
+            "withdraw_unstaked_deposits" to FARMS_WITHDRAW_UNSTAKED_DEPOSITS,
+        )
+
+    /**
      * Positions of the accounts each instruction is checked on.
      *
      * An Anchor instruction's account list is fixed by its IDL — only the trailing
@@ -193,6 +208,22 @@ object KaminoTransactionValidator {
         val systemInstructions = instructions.count { it.programId == SYSTEM_PROGRAM_ID }
         if (systemInstructions > 1) {
             reject("expected at most one System instruction, found $systemInstructions")
+        }
+
+        // And one of each on the farms side, where the same reasoning meets a program that carries
+        // more than one instruction. Every farms check below is per-instruction too: two unstakes
+        // each sitting within the bound release twice what the withdraw burns, and the surplus
+        // leaves the farm to sit in the share account earning nothing while the screen still shows
+        // one figure. A second `initialize_user` funds another farm's user state out of the
+        // wallet's rent. iOS bounds each of the four the same way — every farms step in
+        // `KaminoInstructionSequence.expected` is `repeatable: false`.
+        val farmsInstructions =
+            instructions.filter { it.programId == KaminoVaultRegistry.FARMS_PROGRAM_ID }
+        FARMS_INSTRUCTIONS.forEach { (name, discriminator) ->
+            val found = farmsInstructions.count { it.data.startsWith(discriminator) }
+            if (found > 1) {
+                reject("expected at most one farms $name instruction, found $found")
+            }
         }
 
         val memos = instructions.filter { it.programId == KaminoAttributionMemo.MEMO_PROGRAM_ID }
@@ -435,6 +466,9 @@ object KaminoTransactionValidator {
      * The farm and the farms user state are lookup-table entries in every captured response, so
      * they cannot be compared offline here; what is compared is what stays static — the authority
      * and the share account each instruction moves shares through, both derived locally.
+     *
+     * Everything below is per-instruction; how many of each may appear at all is bounded in
+     * [validate], since a check an instruction passes on its own it also passes twice.
      */
     private fun rejectUnlessPermittedFarmsInstruction(
         index: Int,
@@ -445,14 +479,7 @@ object KaminoTransactionValidator {
         amountBaseUnits: BigInteger?,
     ) {
         val data = instruction.data
-        val isOneWePerform =
-            listOf(
-                    FARMS_INITIALIZE_USER,
-                    FARMS_STAKE,
-                    FARMS_UNSTAKE,
-                    FARMS_WITHDRAW_UNSTAKED_DEPOSITS,
-                )
-                .any { data.startsWith(it) }
+        val isOneWePerform = FARMS_INSTRUCTIONS.values.any { data.startsWith(it) }
         if (!isOneWePerform) {
             reject(
                 "instruction $index is a farms instruction no Kamino deposit or withdraw performs"

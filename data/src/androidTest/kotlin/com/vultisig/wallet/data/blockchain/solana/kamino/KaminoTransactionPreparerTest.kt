@@ -64,7 +64,7 @@ class KaminoTransactionPreparerTest {
         vault: KaminoVault,
         action: KaminoAction,
         signerAddress: String = KaminoFixtures.WALLET,
-        amountBaseUnits: BigInteger? = BigInteger.ONE,
+        amountBaseUnits: BigInteger? = CAPTURED_AMOUNT_BASE_UNITS,
     ) =
         validateDecoded(
             decoded = KaminoTransactionDecoder.decode(KaminoAttributionMemo.append(transaction)),
@@ -79,7 +79,7 @@ class KaminoTransactionPreparerTest {
         vault: KaminoVault,
         action: KaminoAction = KaminoAction.DEPOSIT,
         signerAddress: String = KaminoFixtures.WALLET,
-        amountBaseUnits: BigInteger? = BigInteger.valueOf(1_000_000),
+        amountBaseUnits: BigInteger? = CAPTURED_AMOUNT_BASE_UNITS,
     ) =
         KaminoTransactionValidator.validate(
             decoded = decoded,
@@ -567,6 +567,13 @@ class KaminoTransactionPreparerTest {
 
         /** 1 USDC, which is what the captured Steakhouse deposit moves. */
         const val AMOUNT = "1"
+
+        /**
+         * The same figure in base units, shared by both validation helpers so a test that gets as
+         * far as the amount check fails on the property it is about rather than on a stand-in
+         * amount that never matched the fixture.
+         */
+        val CAPTURED_AMOUNT_BASE_UNITS: BigInteger = BigInteger.valueOf(1_000_000)
 
         /** 0.05 SOL, which is what the captured Allez SOL deposit wraps and deposits. */
         const val SOL_AMOUNT = "0.05"
