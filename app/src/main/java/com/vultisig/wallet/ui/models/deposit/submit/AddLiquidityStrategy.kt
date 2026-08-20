@@ -76,8 +76,12 @@ internal class AddLiquidityStrategy(
         // keys. Refuses to build the keysign payload when the network would refund the inbound,
         // sparing the user the inbound gas spend. It asks about the pool, not about the inbound's
         // source chain, so it must also cover the asset-side add that completes a pending
-        // half-deposit — that inbound is refundable on exactly the same terms.
-        if (chain == Chain.ThorChain || isSymmetricPool) {
+        // half-deposit — that inbound is refundable on exactly the same terms, and it arrives on
+        // the pool's own asset chain. Maya reuses this strategy with chain == MayaChain and its
+        // own pool ids, which thornode knows nothing about: a THORChain-wide PAUSELP, or a
+        // same-named THOR pool sitting Staged, would reject a perfectly valid CACAO add.
+        val isThorChainLpAdd = chain == Chain.ThorChain || (isSymmetricPool && chain == assetChain)
+        if (isThorChainLpAdd) {
             thorChainLpPreflight(poolId)?.let { block -> throw block.toError() }
         }
 
