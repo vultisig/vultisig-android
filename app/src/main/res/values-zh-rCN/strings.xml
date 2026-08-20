@@ -1604,6 +1604,9 @@
     <string name="ripple_field_buying_issuer">买入发行方</string>
     <string name="ripple_field_limit">限额</string>
     <string name="ripple_field_limit_issuer">限额发行方</string>
+    <string name="ripple_field_flags">Flags</string>
+    <string name="ripple_field_paths">支付路径</string>
+    <string name="ripple_partial_payment_warning">部分支付：显示的金额为上限，并非保证值。实际交付可能更少。</string>
     <string name="sui_sender">从</string>
     <string name="sui_gas_budget">Gas 预算：%1$s SUI</string>
     <string name="sui_gas_price">Gas 价格：%1$s MIST</string>

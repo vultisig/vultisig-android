@@ -3,11 +3,46 @@ package com.vultisig.wallet.data.chains.helpers
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import timber.log.Timber
+
+/**
+ * `tfPartialPayment` (`0x00020000`). On a `Payment` it turns `Amount` from a guaranteed delivery
+ * into a ceiling: the ledger decides the delivered value at execution, and without a `DeliverMin`
+ * floor that value can be dust while the sender still spends up to `SendMax`. Other transaction
+ * types reuse the same bit for unrelated meanings (`tfImmediateOrCancel` on an `OfferCreate`), so
+ * it is only ever read for a `Payment`.
+ */
+internal const val TF_PARTIAL_PAYMENT = 0x00020000L
+
+/**
+ * The XRPL `Flags` bitfield as a uint32, or null when it is absent, explicitly null, or not a plain
+ * integer. Callers that gate signing on a flag must treat null as "cannot rule the bit out" rather
+ * than as "no flags set".
+ */
+internal fun JsonObject.flagsOrNull(): Long? =
+    (this["Flags"] as? JsonPrimitive)?.contentOrNull?.toLongOrNull()
+
+/**
+ * True when [key] carries a usable amount — a non-blank drops string, or an issued-currency object
+ * with a non-blank `value`.
+ */
+internal fun JsonObject.hasAmount(key: String): Boolean =
+    when (val element = this[key]) {
+        null,
+        is JsonNull -> false
+        is JsonPrimitive -> !element.contentOrNull.isNullOrBlank()
+        is JsonObject -> {
+            val value = (element["value"] as? JsonPrimitive)?.contentOrNull
+            !value.isNullOrBlank()
+        }
+        else -> false
+    }
 
 /**
  * Semantic identifier of a decoded XRPL field row. The data layer stores this key (never an English
@@ -31,6 +66,8 @@ enum class RippleDappTxFieldKey {
     BUYING_ISSUER,
     LIMIT,
     LIMIT_ISSUER,
+    FLAGS,
+    PATHS,
     FEE,
 }
 
@@ -42,11 +79,15 @@ data class RippleDappTxField(val key: RippleDappTxFieldKey, val value: String)
  *
  * [fields] is empty when the JSON can't be decoded into known terms — the verify screen then falls
  * back to showing [rawJson] verbatim so a co-signer is never left with a blank/misleading screen.
+ *
+ * [isPartialPayment] drives the verify screen's warning: when it is set, the `Amount` row is a
+ * ceiling rather than the value that will actually land.
  */
 data class RippleDappTx(
     val transactionType: String?,
     val fields: List<RippleDappTxField>,
     val rawJson: String,
+    val isPartialPayment: Boolean = false,
 ) {
     /** Value of the decoded field with [key], or null if absent. */
     fun value(key: RippleDappTxFieldKey): String? = fields.firstOrNull { it.key == key }?.value
@@ -78,6 +119,9 @@ object RippleDappTransactionDecoder {
             }
 
         val transactionType = obj.stringOrNull("TransactionType")
+        val flags = obj.flagsOrNull()
+        val isPartialPayment =
+            transactionType == "Payment" && flags != null && (flags and TF_PARTIAL_PAYMENT) != 0L
         val fields = buildList {
             transactionType?.let { add(RippleDappTxField(RippleDappTxFieldKey.TYPE, it)) }
             obj.stringOrNull("Account")?.let {
@@ -128,6 +172,15 @@ object RippleDappTransactionDecoder {
                 issuerKey = RippleDappTxFieldKey.LIMIT_ISSUER,
                 obj = obj,
             )
+            // Flags and Paths change how a Payment settles — tfPartialPayment makes Amount a
+            // ceiling, Paths steers the route — so they get their own rows instead of being left
+            // for a co-signer to spot inside the raw JSON blob.
+            flags
+                ?.takeIf { it != 0L }
+                ?.let { add(RippleDappTxField(RippleDappTxFieldKey.FLAGS, it.toString())) }
+            (obj["Paths"] as? JsonArray)
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { add(RippleDappTxField(RippleDappTxFieldKey.PATHS, it.size.toString())) }
             // The Fee that is actually signed (drops). Surfaced so the verify screen shows the real
             // network fee baked into the JSON rather than a live re-estimate (a malicious inflated
             // Fee must be visible, not masked by a normal-looking estimate).
@@ -136,7 +189,12 @@ object RippleDappTransactionDecoder {
             }
         }
 
-        return RippleDappTx(transactionType = transactionType, fields = fields, rawJson = rawJson)
+        return RippleDappTx(
+            transactionType = transactionType,
+            fields = fields,
+            rawJson = rawJson,
+            isPartialPayment = isPartialPayment,
+        )
     }
 
     /**
@@ -159,7 +217,12 @@ object RippleDappTransactionDecoder {
      * notification banner where the native `toAmount` is 0 (the real amounts live in the JSON).
      * Returns null when the JSON can't be decoded into a known type, so callers can fall back.
      *
-     * Examples: `OfferCreate: 1 XRP → 2.5 USD`, `Payment: 1 XRP`, `TrustSet`.
+     * A `tfPartialPayment` amount is a ceiling, so it is rendered with `≤` (bounded below by
+     * `DeliverMin` when one is set) rather than as a plain figure the banner would imply is
+     * guaranteed. Comparison symbols keep this locale-neutral in a data-layer string.
+     *
+     * Examples: `OfferCreate: 1 XRP → 2.5 USD`, `Payment: 1 XRP`, `Payment: ≤ 1 XRP`, `Payment: ≥
+     * 0.5 XRP, ≤ 1 XRP`, `TrustSet`.
      */
     fun summarize(rawJson: String): String? {
         val tx = decode(rawJson)
@@ -170,7 +233,16 @@ object RippleDappTransactionDecoder {
                 val pays = tx.value(RippleDappTxFieldKey.BUYING)
                 if (gets != null && pays != null) "$type: $gets → $pays" else type
             }
-            "Payment" -> tx.value(RippleDappTxFieldKey.AMOUNT)?.let { "$type: $it" } ?: type
+            "Payment" -> {
+                val amount = tx.value(RippleDappTxFieldKey.AMOUNT)
+                val deliverMin = tx.value(RippleDappTxFieldKey.DELIVER_MIN)
+                when {
+                    amount == null -> type
+                    !tx.isPartialPayment -> "$type: $amount"
+                    deliverMin != null -> "$type: ≥ $deliverMin, ≤ $amount"
+                    else -> "$type: ≤ $amount"
+                }
+            }
             else -> type
         }
     }
