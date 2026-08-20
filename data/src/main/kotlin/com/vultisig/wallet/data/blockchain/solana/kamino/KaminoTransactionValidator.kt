@@ -79,8 +79,6 @@ object KaminoTransactionValidator {
     /** The farms program holds stake at `WAD`: its `u128` amounts are share base units × 10^18. */
     private val FARMS_STAKE_SCALE = BigInteger.TEN.pow(18)
 
-    private const val ANCHOR_DISCRIMINATOR = 8
-
     /**
      * Anchor discriminators — the first eight bytes of `sha256("global:<name>")` — for the two
      * programs whose instructions Kamino's builder composes itself rather than reaching through a
@@ -968,22 +966,6 @@ object KaminoTransactionValidator {
         if (action != KaminoAction.WITHDRAW) {
             reject("instruction $index $detail, which no Kamino deposit performs")
         }
-    }
-
-    /**
-     * The little-endian argument of [bytes] bytes that follows an Anchor discriminator. Null when
-     * the instruction is too short to carry one.
-     */
-    private fun anchorArgument(data: ByteArray, bytes: Int): BigInteger? {
-        if (data.size < ANCHOR_DISCRIMINATOR + bytes) return null
-        var value = BigInteger.ZERO
-        for (offset in bytes - 1 downTo 0) {
-            value =
-                value
-                    .shiftLeft(8)
-                    .or(BigInteger.valueOf(data[ANCHOR_DISCRIMINATOR + offset].toLong() and 0xFF))
-        }
-        return value
     }
 
     private fun littleEndianInt(bytes: List<Byte>): Int? {

@@ -91,14 +91,29 @@ object KaminoRelayedTransactionReader {
  * The `u64` amount argument of a kVault instruction: an 8-byte Anchor discriminator followed by the
  * amount, little-endian. Null when the instruction is too short to carry one.
  */
-fun kvaultAmountArgument(data: ByteArray): BigInteger? {
-    if (data.size < 16) return null
+fun kvaultAmountArgument(data: ByteArray): BigInteger? = anchorArgument(data, bytes = 8)
+
+/**
+ * The little-endian argument of [bytes] bytes that follows an Anchor discriminator. Null when the
+ * instruction is too short to carry one.
+ *
+ * Width is a parameter because the arguments here are not all `u64`: the farms unstake amount is a
+ * `u128` scaled by 10^18, and reading its low half would compare a number that means nothing.
+ */
+internal fun anchorArgument(data: ByteArray, bytes: Int): BigInteger? {
+    if (data.size < ANCHOR_DISCRIMINATOR + bytes) return null
     var value = BigInteger.ZERO
-    for (offset in 7 downTo 0) {
-        value = value.shiftLeft(8).or(BigInteger.valueOf((data[8 + offset].toLong() and 0xFF)))
+    for (offset in bytes - 1 downTo 0) {
+        value =
+            value
+                .shiftLeft(8)
+                .or(BigInteger.valueOf(data[ANCHOR_DISCRIMINATOR + offset].toLong() and 0xFF))
     }
     return value
 }
+
+/** Anchor prefixes every instruction with eight discriminator bytes; arguments follow them. */
+internal const val ANCHOR_DISCRIMINATOR = 8
 
 /**
  * The wallet's associated token account for [mint], or null when WalletCore cannot derive one.
