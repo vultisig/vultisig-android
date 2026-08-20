@@ -47,6 +47,20 @@ object KaminoComputeBudget {
     val MALFORMED =
         KaminoPriorityFee(limit = BigInteger.ONE.negate(), price = BigInteger.ONE.negate())
 
+    /**
+     * Where the two injected instructions sit, and the order they sit in.
+     *
+     * A cross-platform contract rather than a preference: iOS emits the limit at 0 and the price at
+     * 1 and matches the remaining instructions positionally, so a transaction laid out any other
+     * way is one an iPhone co-signer reads as unsigned-for and will not join. Defined here because
+     * both the device that builds the layout ([KaminoTransactionPreparer]) and the one that refuses
+     * anything else ([KaminoTransactionValidator]) have to mean the same thing by it.
+     */
+    const val UNIT_LIMIT_INDEX = 0
+
+    /** Right after the limit, which is where iOS puts it. */
+    const val UNIT_PRICE_INDEX = UNIT_LIMIT_INDEX + 1
+
     /** `ComputeBudgetInstruction::SetComputeUnitLimit`, borsh discriminator 2, then a `u32`. */
     const val SET_UNIT_LIMIT_DISCRIMINATOR = 2
 

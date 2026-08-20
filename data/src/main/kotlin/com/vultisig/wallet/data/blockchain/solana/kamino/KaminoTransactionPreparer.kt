@@ -202,8 +202,9 @@ class KaminoTransactionPreparer @Inject constructor(private val kaminoApi: Kamin
             instructions.indices.filter {
                 instructions[it].programId == KaminoComputeBudget.PROGRAM_ID
             }
-        check(budgetIndices == listOf(UNIT_LIMIT_INDEX)) {
-            "expected the app's compute-unit limit alone at index $UNIT_LIMIT_INDEX, " +
+        check(budgetIndices == listOf(KaminoComputeBudget.UNIT_LIMIT_INDEX)) {
+            "expected the app's compute-unit limit alone at index " +
+                "${KaminoComputeBudget.UNIT_LIMIT_INDEX}, " +
                 "found ComputeBudget instructions at $budgetIndices"
         }
 
@@ -217,18 +218,11 @@ class KaminoTransactionPreparer @Inject constructor(private val kaminoApi: Kamin
         return checkNotNull(
             SolanaTransaction.insertInstruction(
                 withLimit,
-                UNIT_PRICE_INDEX,
+                KaminoComputeBudget.UNIT_PRICE_INDEX,
                 KaminoComputeBudget.setUnitPriceInstructionJson(price),
             )
         ) {
             "WalletCore could not set the Kamino compute-unit price"
         }
-    }
-
-    private companion object {
-        private const val UNIT_LIMIT_INDEX = 0
-
-        /** Right after the limit, which is where iOS puts it. */
-        private const val UNIT_PRICE_INDEX = UNIT_LIMIT_INDEX + 1
     }
 }

@@ -70,11 +70,6 @@ object KaminoTransactionValidator {
     /** What the kVault program reads as "withdraw everything". */
     private val U64_MAX = BigInteger("18446744073709551615")
 
-    /** Where [KaminoTransactionPreparer] puts the compute budget, and where iOS expects it. */
-    private const val UNIT_LIMIT_INDEX = 0
-
-    private const val UNIT_PRICE_INDEX = UNIT_LIMIT_INDEX + 1
-
     /**
      * @throws KaminoTransactionRejected if [instructions] is not a transaction the app is willing
      *   to sign for [vault].
@@ -178,13 +173,22 @@ object KaminoTransactionValidator {
             instructions.indices.filter {
                 instructions[it].programId == KaminoComputeBudget.PROGRAM_ID
             }
-        if (budgetIndices != listOf(UNIT_LIMIT_INDEX, UNIT_PRICE_INDEX)) {
+        if (
+            budgetIndices !=
+                listOf(KaminoComputeBudget.UNIT_LIMIT_INDEX, KaminoComputeBudget.UNIT_PRICE_INDEX)
+        ) {
             reject(
                 "compute budget must be the leading two instructions, found it at $budgetIndices"
             )
         }
-        if (KaminoComputeBudget.unitLimitArgument(instructions[UNIT_LIMIT_INDEX].data) == null) {
-            reject("instruction $UNIT_LIMIT_INDEX must be the compute-unit limit")
+        if (
+            KaminoComputeBudget.unitLimitArgument(
+                instructions[KaminoComputeBudget.UNIT_LIMIT_INDEX].data
+            ) == null
+        ) {
+            reject(
+                "instruction ${KaminoComputeBudget.UNIT_LIMIT_INDEX} must be the compute-unit limit"
+            )
         }
 
         val expectedLimit = KaminoComputeBudget.unitLimitFor(vault, action)
