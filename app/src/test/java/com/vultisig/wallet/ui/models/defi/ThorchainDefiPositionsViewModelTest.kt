@@ -467,9 +467,9 @@ internal class ThorchainDefiPositionsViewModelTest {
         // lpDialogLoaded means settled, not succeeded: leaving it false parks the tab in a spinner
         // no retry can clear, while a pending half-deposit still renders through it. Settled, the
         // tab falls through to its no-positions container and its Manage Positions retry.
-        assertTrue(vm.state.value.lpDialogLoaded)
+        vm.state.value.lpDialogLoaded shouldBe true
         // availablePools stays null so the next interaction re-fetches instead of soft-locking.
-        assertTrue(vm.state.value.lpPositionsDialog.isEmpty())
+        vm.state.value.lpPositionsDialog.isEmpty() shouldBe true
     }
 
     @Test

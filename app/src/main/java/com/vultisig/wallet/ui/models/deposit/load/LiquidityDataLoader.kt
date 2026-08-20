@@ -154,6 +154,11 @@ constructor(
                             availableLpUnits = null,
                             removeLpUnitsDivisor = BigInteger.ZERO,
                             removeLpPoolDepth = BigInteger.ZERO,
+                            // This branch returns before the reset below, so it has to clear the
+                            // asset leg itself or a previous pool's second amount stays on screen.
+                            removeLpAssetDisplay = "",
+                            removeLpAssetSymbol = "",
+                            removeLpAssetRedeemBase = BigInteger.ZERO,
                             balance = UiText.Empty,
                             errorText = UiText.StringResource(R.string.dialog_default_error_body),
                         )

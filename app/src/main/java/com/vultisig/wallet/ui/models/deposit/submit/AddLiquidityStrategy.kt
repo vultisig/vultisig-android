@@ -69,10 +69,15 @@ internal class AddLiquidityStrategy(
         }
         val tokenAmountInt = tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
 
+        val assetChain = parseThorChainPool(poolId).chain
+        val isSymmetricPool = assetChain != null && assetChain != Chain.ThorChain
+
         // Preflight against THORChain network state — pool status and the relevant mimir pause
         // keys. Refuses to build the keysign payload when the network would refund the inbound,
-        // sparing the user the inbound gas spend.
-        if (chain == Chain.ThorChain) {
+        // sparing the user the inbound gas spend. It asks about the pool, not about the inbound's
+        // source chain, so it must also cover the asset-side add that completes a pending
+        // half-deposit — that inbound is refundable on exactly the same terms.
+        if (chain == Chain.ThorChain || isSymmetricPool) {
             thorChainLpPreflight(poolId)?.let { block -> throw block.toError() }
         }
 
@@ -83,8 +88,6 @@ internal class AddLiquidityStrategy(
         // separate asymmetric position rather than crediting the pair: a RUNE-side add carries the
         // asset address, and the asset-side add that completes a pending half-deposit carries the
         // RUNE address.
-        val assetChain = parseThorChainPool(poolId).chain
-        val isSymmetricPool = assetChain != null && assetChain != Chain.ThorChain
         if (isSymmetricPool && pairedAddress == null) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_address)

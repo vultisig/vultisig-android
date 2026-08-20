@@ -513,6 +513,15 @@ constructor(
      */
     private fun loadPendingLpDeposits() {
         loadPendingLpJob?.cancel()
+        // Re-arm the gate only when there is a list that could now be wrong. A deposit found before
+        // the app was backgrounded may already have been refunded, and Complete Deposit on a
+        // refunded one just burns inbound gas — so hide it behind the spinner until this scan
+        // confirms it. With nothing pending there is nothing to invalidate, and re-arming would
+        // flash the whole tab to a spinner on every resume for the users who have no half-deposit
+        // at all.
+        if (state.value.lp.pendingDeposits.isNotEmpty()) {
+            state.update { it.copy(lp = it.lp.copy(pendingDepositsLoaded = false)) }
+        }
         loadPendingLpJob =
             viewModelScope.safeLaunch(
                 onError = {
