@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EstimatedGasFee
+import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -34,6 +35,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.utils.UiText
+import io.kotest.matchers.shouldBe
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -65,6 +67,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
+
+private val GWEI = BigInteger.TEN.pow(9)
 
 internal class DefaultSendStrategyTest {
 
@@ -99,6 +103,7 @@ internal class DefaultSendStrategyTest {
     private val gasSettings = MutableStateFlow<GasSettings?>(null)
     private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
     private val planFee = MutableStateFlow<Long?>(null)
+    private val capturedFeeParams = slot<GasFeeParams>()
 
     @BeforeEach
     fun setUp() {
@@ -942,6 +947,277 @@ internal class DefaultSendStrategyTest {
             // Still a Max — the snapshot moves onto the adjusted value so the form's 100%
             // selection survives the fee moving under it.
             verify { amountManager.markMax(BigDecimal("0.9985")) }
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    /**
+     * #5491: an EVM native Max is sized from the cached gas fee, but `getSpecific` re-reads the fee
+     * market a moment later and its `maxFeePerGas`/`gasLimit` are what get signed. When the base
+     * fee ticks up in between, `balance − amount` no longer covers `gasLimit × maxFeePerGas` and
+     * the node rejects the broadcast — after the MPC ceremony has already been paid for.
+     *
+     * The assertion is the invariant itself: the amount the clamp produced and the fee the payload
+     * carries are two paths out of one balance, and the node admits the transaction only if they
+     * fit inside it.
+     */
+    @Test
+    fun `submit re-clamps an EVM native Max down to the fee that gets signed`() = runTest {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            val ethCoin = ethCoin()
+            val balance = BigInteger("1000000000000000000") // 1 ETH
+            val gasLimit = BigInteger("21000")
+            val cachedFee = gasLimit * GWEI * BigInteger.valueOf(20)
+            val signedMaxFeePerGas = GWEI * BigInteger.valueOf(25) // the tick that breaks the send
+            arrangeEvmSubmit(
+                coin = ethCoin,
+                balance = balance,
+                cachedFee = cachedFee,
+                // Max was filled as balance − cachedFee.
+                enteredAmount = "0.99958",
+                isMaxAmount = true,
+                signed =
+                    BlockChainSpecific.Ethereum(
+                        maxFeePerGasWei = signedMaxFeePerGas,
+                        priorityFeeWei = GWEI,
+                        nonce = BigInteger.ZERO,
+                        gasLimit = gasLimit,
+                    ),
+            )
+            val captured = slot<Transaction>()
+            coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this).submit()
+            advanceUntilIdle()
+
+            lastError shouldBe null
+            val signed = captured.captured.blockChainSpecific as BlockChainSpecific.Ethereum
+            captured.captured.tokenValue.value + signed.gasLimit * signed.maxFeePerGasWei shouldBe
+                balance
+            tokenAmountFieldState.text.toString() shouldBe "0.999475"
+            verify { amountManager.markMax(BigDecimal("0.999475")) }
+            // The fee Verify quotes is the one the amount was reserved against, so the screen still
+            // reads as amount + fee = balance.
+            val quotedFee = capturedFeeParams.captured
+            quotedFee.gasFee.value * quotedFee.gasLimit shouldBe
+                signed.gasLimit * signed.maxFeePerGasWei
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    /**
+     * On an OP-stack rollup op-geth checks `value + gasLimit × maxFeePerGas + l1Cost` against the
+     * balance, and the L1 term has no field in the signed transaction — it rides beside it on
+     * `extraFeeReserve`. A Max that reserves only the gas product is short by the whole L1 fee,
+     * which on Optimism runs orders of magnitude above the L2 execution cost.
+     */
+    @Test
+    fun `submit reserves the OP-stack L1 data fee on top of the signed gas`() = runTest {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            val ethCoin = ethCoin()
+            val balance = BigInteger("1000000000000000000") // 1 ETH
+            val gasLimit = BigInteger("21000")
+            val layer1Fee = BigInteger("3000000000000000") // 0.003 ETH
+            arrangeEvmSubmit(
+                coin = ethCoin,
+                balance = balance,
+                // The cached reading landed before the L1 estimate did.
+                cachedFee = gasLimit * GWEI,
+                enteredAmount = "0.999979",
+                isMaxAmount = true,
+                signed =
+                    BlockChainSpecific.Ethereum(
+                        maxFeePerGasWei = GWEI,
+                        priorityFeeWei = GWEI,
+                        nonce = BigInteger.ZERO,
+                        gasLimit = gasLimit,
+                    ),
+                extraFeeReserve = layer1Fee,
+            )
+            val captured = slot<Transaction>()
+            coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this).submit()
+            advanceUntilIdle()
+
+            lastError shouldBe null
+            val signed = captured.captured.blockChainSpecific as BlockChainSpecific.Ethereum
+            captured.captured.tokenValue.value +
+                signed.gasLimit * signed.maxFeePerGasWei +
+                layer1Fee shouldBe balance
+            captured.captured.tokenValue.value shouldBe BigInteger("996979000000000000")
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    /**
+     * The re-clamp only ever reduces. A fee that FELL between the two readings makes more
+     * affordable than the Max was filled with, and signing more than the user was shown is never
+     * right.
+     */
+    @Test
+    fun `submit leaves an EVM native Max alone when the signed fee is lower`() = runTest {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            val ethCoin = ethCoin()
+            val balance = BigInteger("1000000000000000000") // 1 ETH
+            arrangeEvmSubmit(
+                coin = ethCoin,
+                balance = balance,
+                cachedFee = BigInteger("10000000000000000"), // 0.01 ETH
+                enteredAmount = "0.99",
+                isMaxAmount = true,
+                signed =
+                    BlockChainSpecific.Ethereum(
+                        maxFeePerGasWei = GWEI,
+                        priorityFeeWei = GWEI,
+                        nonce = BigInteger.ZERO,
+                        gasLimit = BigInteger("21000"),
+                    ),
+            )
+            val captured = slot<Transaction>()
+            coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this).submit()
+            advanceUntilIdle()
+
+            lastError shouldBe null
+            captured.captured.tokenValue.value shouldBe BigInteger("990000000000000000")
+            tokenAmountFieldState.text.toString() shouldBe "0.99"
+            verify(exactly = 0) { amountManager.markMax(any()) }
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    /**
+     * A typed amount the balance comfortably covers is the user's number and must be signed as is.
+     */
+    @Test
+    fun `submit signs a typed EVM native amount untouched when the fee rises`() = runTest {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            val ethCoin = ethCoin()
+            arrangeEvmSubmit(
+                coin = ethCoin,
+                balance = BigInteger("1000000000000000000"), // 1 ETH
+                cachedFee = BigInteger("21000000000000"),
+                enteredAmount = "0.5",
+                isMaxAmount = false,
+                signed =
+                    BlockChainSpecific.Ethereum(
+                        maxFeePerGasWei = GWEI * BigInteger.valueOf(200),
+                        priorityFeeWei = GWEI,
+                        nonce = BigInteger.ZERO,
+                        gasLimit = BigInteger("21000"),
+                    ),
+            )
+            val captured = slot<Transaction>()
+            coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this).submit()
+            advanceUntilIdle()
+
+            lastError shouldBe null
+            captured.captured.tokenValue.value shouldBe BigInteger("500000000000000000")
+            tokenAmountFieldState.text.toString() shouldBe "0.5"
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    /**
+     * An ERC-20 Max moves the whole token balance and pays gas out of the native sibling, so a
+     * native fee that moved can never underfund it — the amount must not be shaved.
+     */
+    @Test
+    fun `submit leaves an ERC-20 Max at the full token balance when the signed fee rises`() =
+        runTest {
+            mockkStatic(Dispatchers::class)
+            every { Dispatchers.IO } returns mainDispatcher
+            try {
+                val usdtCoin = usdtCoin()
+                val ethCoin = ethCoin()
+                val tokenBalance = BigInteger("100000000") // 100 USDT
+                accounts.value =
+                    listOf(
+                        Account(
+                            token = ethCoin,
+                            tokenValue = TokenValue(BigInteger("1000000000000000000"), ethCoin),
+                            fiatValue = null,
+                            price = null,
+                        )
+                    )
+                arrangeEvmSubmit(
+                    coin = usdtCoin,
+                    balance = tokenBalance,
+                    cachedFee = BigInteger("21000000000000"),
+                    enteredAmount = "100",
+                    isMaxAmount = true,
+                    signed =
+                        BlockChainSpecific.Ethereum(
+                            maxFeePerGasWei = GWEI * BigInteger.valueOf(200),
+                            priorityFeeWei = GWEI,
+                            nonce = BigInteger.ZERO,
+                            gasLimit = BigInteger("65000"),
+                        ),
+                )
+                val captured = slot<Transaction>()
+                coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+                build(this).submit()
+                advanceUntilIdle()
+
+                lastError shouldBe null
+                captured.captured.tokenValue.value shouldBe tokenBalance
+            } finally {
+                unmockkStatic(Dispatchers::class)
+            }
+        }
+
+    /**
+     * When the signed fee swallows the whole balance the clamp has nothing to fall back to, so the
+     * send must stop here rather than stage a transaction the node will refuse once the ceremony
+     * has run.
+     */
+    @Test
+    fun `submit blocks an EVM native Max whose signed fee exceeds the balance`() = runTest {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            val ethCoin = ethCoin()
+            arrangeEvmSubmit(
+                coin = ethCoin,
+                balance = BigInteger("1000000000000000000"), // 1 ETH
+                cachedFee = BigInteger("21000000000000"),
+                enteredAmount = "0.999979",
+                isMaxAmount = true,
+                signed =
+                    BlockChainSpecific.Ethereum(
+                        maxFeePerGasWei = GWEI * BigInteger.valueOf(100_000),
+                        priorityFeeWei = GWEI,
+                        nonce = BigInteger.ZERO,
+                        gasLimit = BigInteger("21000"),
+                    ),
+            )
+            val captured = slot<Transaction>()
+            coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this).submit()
+            advanceUntilIdle()
+
+            (lastError as UiText.FormattedText).resId shouldBe
+                R.string.send_error_insufficient_native_balance_with_fees
+            captured.isCaptured shouldBe false
         } finally {
             unmockkStatic(Dispatchers::class)
         }
@@ -1878,23 +2154,51 @@ internal class DefaultSendStrategyTest {
         ethCoin: Coin,
         blockChainSpecific: BlockChainSpecific.Ethereum,
     ): CapturingSlot<Transaction> {
+        arrangeEvmSubmit(
+            coin = ethCoin,
+            balance = BigInteger.valueOf(1_000_000_000_000_000_000L),
+            cachedFee = BigInteger.valueOf(21_000),
+            enteredAmount = "0.5",
+            isMaxAmount = false,
+            signed = blockChainSpecific,
+        )
+        val captured = slot<Transaction>()
+        coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+        return captured
+    }
+
+    /**
+     * Arranges an EVM submit whose two fee readings differ: [cachedFee] is what
+     * `GasFeeOrchestrator` had cached when the amount was filled, [signed] is what `getSpecific`
+     * returns and the payload carries. The available-balance stub tracks the fee it is handed — a
+     * fee-blind one cannot tell the two readings apart.
+     */
+    private fun arrangeEvmSubmit(
+        coin: Coin,
+        balance: BigInteger,
+        cachedFee: BigInteger,
+        enteredAmount: String,
+        isMaxAmount: Boolean,
+        signed: BlockChainSpecific.Ethereum,
+        extraFeeReserve: BigInteger = BigInteger.ZERO,
+    ) {
         val account =
             Account(
-                token = ethCoin,
-                tokenValue = TokenValue(BigInteger.valueOf(1_000_000_000_000_000_000L), ethCoin),
+                token = coin,
+                tokenValue = TokenValue(balance, coin),
                 fiatValue = null,
                 price = null,
             )
         vaultId = "vault-1"
         selectedAccount = account
         addressFieldState.setTextAndPlaceCursorAtEnd("0xdest")
-        tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(enteredAmount)
         coEvery { accountValidator.validate() } returns
             ValidatedAccount(
                 vaultId = "vault-1",
                 selectedAccount = account,
-                chain = Chain.Ethereum,
-                gasFee = TokenValue(BigInteger.valueOf(21_000), ethCoin),
+                chain = coin.chain,
+                gasFee = TokenValue(cachedFee, coin),
                 dstAddress = "0xdest",
             )
         coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
@@ -1912,21 +2216,28 @@ internal class DefaultSendStrategyTest {
                 memo = any(),
                 isThorchainRouterDeposit = any(),
             )
-        } returns BlockChainSpecificAndUtxo(blockChainSpecific)
-        every { amountManager.currentMaxAmount } returns BigDecimal.ONE
-        coEvery { getAvailableTokenBalance(any(), any()) } returns
-            TokenValue(BigInteger.valueOf(1_000_000_000_000_000_000L), ethCoin)
-        coEvery { gasFeeToEstimatedFee(any()) } returns
+        } returns BlockChainSpecificAndUtxo(signed, extraFeeReserve = extraFeeReserve)
+        every { amountManager.currentMaxAmount } returns
+            if (isMaxAmount) BigDecimal(enteredAmount) else BigDecimal.ZERO
+        // Mirrors GetAvailableTokenBalanceUseCase: a native coin reserves gas out of its own
+        // balance, a token pays it from the native sibling and reserves nothing.
+        coEvery { getAvailableTokenBalance(any(), any()) } answers
+            {
+                val queried = firstArg<Account>()
+                val held = queried.tokenValue?.value ?: BigInteger.ZERO
+                val available =
+                    if (queried.token.isNativeToken) {
+                        (held - secondArg<BigInteger>()).coerceAtLeast(BigInteger.ZERO)
+                    } else held
+                TokenValue(available, queried.token)
+            }
+        coEvery { gasFeeToEstimatedFee(capture(capturedFeeParams)) } returns
             EstimatedGasFee(
                 formattedFiatValue = "$0.10",
                 formattedTokenValue = "0.0001 ETH",
-                tokenValue = TokenValue(BigInteger.ONE, ethCoin),
+                tokenValue = TokenValue(BigInteger.ONE, coin),
                 fiatValue = mockk(relaxed = true),
             )
-
-        val captured = slot<Transaction>()
-        coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
-        return captured
     }
 
     private fun btcCoin(): Coin =

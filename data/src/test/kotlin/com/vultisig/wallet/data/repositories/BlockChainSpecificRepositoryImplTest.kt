@@ -40,6 +40,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.increaseByPercent
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -87,6 +88,44 @@ internal class BlockChainSpecificRepositoryImplTest {
             maxFeePerGas = BigInteger("111"),
             priorityFee = BigInteger("22"),
         )
+        result.extraFeeReserve shouldBe BigInteger.ZERO
+    }
+
+    @Test
+    fun `OP-stack L1 data fee is carried out of the EVM specific as an extra reserve`() = runTest {
+        val destination = "0xdestination"
+        val coin = evmCoin(chain = Chain.Optimism, isNativeToken = true)
+        val result =
+            repository(
+                    evmApi =
+                        evmApi(nativeGasByRecipient = mapOf(destination to BigInteger("40000"))),
+                    evmFeeService =
+                        evmFeeService(
+                            feesByRecipient =
+                                mapOf(destination to (BigInteger("111") to BigInteger("22"))),
+                            layer1Amount = BigInteger("3000000000"),
+                        ),
+                )
+                .getSpecific(
+                    chain = Chain.Optimism,
+                    address = SOURCE_ADDRESS,
+                    token = coin,
+                    gasFee = TokenValue(BigInteger.ONE, coin),
+                    isSwap = false,
+                    isMaxAmountEnabled = true,
+                    isDeposit = false,
+                    dstAddress = destination,
+                    tokenAmountValue = BigInteger.TEN,
+                )
+
+        // The L1 fee has no home in the signed payload, so it travels beside it.
+        assertEthereumSpecific(
+            result = result,
+            gasLimit = BigInteger("40000"),
+            maxFeePerGas = BigInteger("111"),
+            priorityFee = BigInteger("22"),
+        )
+        result.extraFeeReserve shouldBe BigInteger("3000000000")
     }
 
     @Test
@@ -1031,7 +1070,8 @@ internal class BlockChainSpecificRepositoryImplTest {
     }
 
     private fun evmFeeService(
-        feesByRecipient: Map<String, Pair<BigInteger, BigInteger>>
+        feesByRecipient: Map<String, Pair<BigInteger, BigInteger>>,
+        layer1Amount: BigInteger = BigInteger.ZERO,
     ): FeeService = mockk {
         coEvery { calculateFees(any()) } answers
             {
@@ -1043,7 +1083,8 @@ internal class BlockChainSpecificRepositoryImplTest {
                     networkPrice = BigInteger.ZERO,
                     maxFeePerGas = maxFee,
                     maxPriorityFeePerGas = priorityFee,
-                    amount = maxFee,
+                    amount = maxFee + layer1Amount,
+                    layer1Amount = layer1Amount,
                 )
             }
 

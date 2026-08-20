@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.utils.NetworkException
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -478,6 +479,15 @@ internal class EthereumFeeServiceTest {
         val fee = service.calculateDefaultFees(transfer(Chain.Optimism)) as Eip1559
 
         assertEquals(fee.maxFeePerGas.multiply(fee.limit).add(BigInteger("777")), fee.amount)
+        fee.layer1Amount shouldBe BigInteger("777")
+    }
+
+    @Test
+    fun `Ethereum reports no L1 share of the amount`() = runTest {
+        val fee = service.calculateDefaultFees(transfer(Chain.Ethereum)) as Eip1559
+
+        fee.amount shouldBe fee.maxFeePerGas.multiply(fee.limit)
+        fee.layer1Amount shouldBe BigInteger.ZERO
     }
 
     @Test

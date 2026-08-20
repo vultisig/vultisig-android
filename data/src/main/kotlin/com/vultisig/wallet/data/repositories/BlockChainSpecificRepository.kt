@@ -61,6 +61,11 @@ import wallet.core.jni.Base58
 data class BlockChainSpecificAndUtxo(
     val blockChainSpecific: BlockChainSpecific,
     val utxos: List<UtxoInfo> = emptyList(),
+    /**
+     * Balance the chain charges beyond the fee fields [blockChainSpecific] carries — the OP-stack
+     * L1 data fee. Zero everywhere else.
+     */
+    val extraFeeReserve: BigInteger = BigInteger.ZERO,
 )
 
 interface BlockChainSpecificRepository {
@@ -182,6 +187,8 @@ constructor(
                             error("Unsupported fee type ${fees::class.simpleName} for chain=$chain")
                     }
 
+                val layer1Fee = (fees as? Eip1559)?.layer1Amount ?: BigInteger.ZERO
+
                 val gasLimitFee =
                     if (chain == Chain.ZkSync) {
                         // zks_estimateFee prices by calldata size, so the signed gas limit has to
@@ -246,12 +253,14 @@ constructor(
                 val nonce = evmApi.getNonce(address)
 
                 BlockChainSpecificAndUtxo(
-                    BlockChainSpecific.Ethereum(
-                        maxFeePerGasWei = maxFeePerGas,
-                        priorityFeeWei = priorityFeeWei,
-                        nonce = nonce,
-                        gasLimit = gasLimitFee,
-                    )
+                    blockChainSpecific =
+                        BlockChainSpecific.Ethereum(
+                            maxFeePerGasWei = maxFeePerGas,
+                            priorityFeeWei = priorityFeeWei,
+                            nonce = nonce,
+                            gasLimit = gasLimitFee,
+                        ),
+                    extraFeeReserve = layer1Fee,
                 )
             }
 

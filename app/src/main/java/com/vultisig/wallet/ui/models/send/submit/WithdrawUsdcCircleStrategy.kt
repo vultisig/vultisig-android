@@ -135,6 +135,15 @@ internal class WithdrawUsdcCircleStrategy(
                             )
                         }
 
+                    // The gate above ran against the cached estimate; this is the fee getSpecific
+                    // just returned and the payload will sign (#5491).
+                    val signedGasFee = specific.evmSignedFee(gasFee) ?: gasFee
+                    if (nonDeFiBalance < signedGasFee.value) {
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_insufficient_balance)
+                        )
+                    }
+
                     val depositTx =
                         DepositTransaction(
                             id = UUID.randomUUID().toString(),
@@ -148,10 +157,10 @@ internal class WithdrawUsdcCircleStrategy(
                                     ),
                             memo = memo,
                             srcTokenValue = TokenValue(value = BigInteger.ZERO, token = nativeCoin),
-                            estimatedFees = gasFee,
+                            estimatedFees = signedGasFee,
                             estimateFeesFiat =
                                 gasFeeToEstimatedFee
-                                    .fiatFeesFor(gasFee, selectedToken)
+                                    .fiatFeesFor(signedGasFee, selectedToken)
                                     .formattedFiatValue,
                             blockChainSpecific = specific.blockChainSpecific,
                             operation = OPERATION_CIRCLE_WITHDRAW,
