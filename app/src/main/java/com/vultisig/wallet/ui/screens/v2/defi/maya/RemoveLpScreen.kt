@@ -214,7 +214,7 @@ private fun RemoveLpLeg(amount: String, symbol: String, percentLabel: String) {
 
         Text(
             text = percentLabel,
-            style = Theme.brockmann.headings.subtitle,
+            style = Theme.brockmann.body.m.medium,
             color = Theme.v2.colors.text.tertiary,
             textAlign = TextAlign.Center,
         )

@@ -16,8 +16,11 @@ import timber.log.Timber
 /** Mimir key for the number of blocks THORChain holds a half-deposit before refunding it. */
 private const val PENDING_LIQUIDITY_AGE_LIMIT_MIMIR = "PENDINGLIQUIDITYAGELIMIT"
 
-/** `PendingLiquidityAgeLimit`'s constant value, used when mimir carries no override (~1 day). */
-private const val DEFAULT_PENDING_LIQUIDITY_AGE_LIMIT = 17_280L
+/**
+ * `PendingLiquidityAgeLimit`'s base constant, used when mimir carries no override. 100,800 blocks
+ * at THORChain's ~6s block time is roughly a week.
+ */
+private const val DEFAULT_PENDING_LIQUIDITY_AGE_LIMIT = 100_800L
 
 interface GetThorChainPendingLpDepositsUseCase {
     /**
@@ -30,26 +33,19 @@ interface GetThorChainPendingLpDepositsUseCase {
      *
      * The scan starts from `/thorchain/pools`, whose `pending_inbound_*` fields say which pools
      * hold *anyone's* pending liquidity. Only those pools are then checked against the user's
-     * addresses, so the usual cost is one request rather than one per pool.
+     * address, so the usual cost is one request rather than one per pool.
      *
-     * @param runeAddress the user's RUNE address — one side of every symmetric add.
-     * @param resolveAssetAddress the user's address on a pool's non-RUNE chain, or `null` when the
-     *   vault has no account there. Called only for pools that hold pending liquidity.
+     * @param runeAddress the user's RUNE address — one side of every symmetric add, and the side
+     *   thornode keys the record by.
      */
-    suspend operator fun invoke(
-        runeAddress: String,
-        resolveAssetAddress: suspend (poolId: String) -> String?,
-    ): List<ThorChainPendingLpDeposit>
+    suspend operator fun invoke(runeAddress: String): List<ThorChainPendingLpDeposit>
 }
 
 internal class GetThorChainPendingLpDepositsUseCaseImpl
 @Inject
 constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepositsUseCase {
 
-    override suspend fun invoke(
-        runeAddress: String,
-        resolveAssetAddress: suspend (poolId: String) -> String?,
-    ): List<ThorChainPendingLpDeposit> {
+    override suspend fun invoke(runeAddress: String): List<ThorChainPendingLpDeposit> {
         val candidates =
             try {
                 thorChainApi.getPools().filter { it.holdsPendingLiquidity() }
@@ -64,9 +60,7 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
 
         val found = coroutineScope {
             candidates
-                .map { pool ->
-                    async { fetchPending(pool.asset, runeAddress, resolveAssetAddress(pool.asset)) }
-                }
+                .map { pool -> async { fetchPending(pool.asset, runeAddress) } }
                 .awaitAll()
                 .filterNotNull()
         }
@@ -80,24 +74,13 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
             (pendingInboundAsset.toBigIntegerOrNull()?.signum() ?: 0) > 0
 
     /**
-     * Reads the user's LP record on [pool] from whichever side carries it. THORChain keys a
-     * symmetric add by the address that opened it, which may be either side, and the unused side
-     * can still answer with an empty husk — so a record without pending amounts does not end the
-     * search.
+     * Reads the user's LP record on [pool]. Looking it up by RUNE address alone is sufficient:
+     * thornode keys every record by the RUNE address whenever the add carries one, and a symmetric
+     * add always does — so an asset-address lookup can only ever return what this one already did.
      */
-    private suspend fun fetchPending(
-        pool: String,
-        runeAddress: String,
-        assetAddress: String?,
-    ): PendingFetch? =
+    private suspend fun fetchPending(pool: String, runeAddress: String): PendingFetch? =
         try {
-            val runeSide = thorChainApi.getLiquidityProvider(pool, runeAddress)
-            val record =
-                runeSide?.takeIf { it.hasPending() }
-                    ?: assetAddress
-                        ?.takeIf { it.isNotBlank() }
-                        ?.let { thorChainApi.getLiquidityProvider(pool, it) }
-            record?.toPendingFetch(pool)
+            thorChainApi.getLiquidityProvider(pool, runeAddress)?.toPendingFetch(pool)
         } catch (e: IOException) {
             Timber.w(e, "Failed to read pending liquidity for pool %s", pool)
             null
@@ -152,18 +135,15 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
             null
         }
 
-    private fun ThorChainLiquidityProviderJson.hasPending(): Boolean =
-        (pendingRune.toBigIntegerOrNull()?.signum() ?: 0) > 0 ||
-            (pendingAsset.toBigIntegerOrNull()?.signum() ?: 0) > 0
-
     /**
      * Reads an LP record as a half-finished symmetric add, or `null` when nothing is pending on it.
-     * Both sides are checked: the user may have sent either half first. A record that already holds
-     * units is a live position, not a pending deposit, even if a later add is still settling.
+     * Both sides are checked: the user may have sent either half first.
+     *
+     * A nonzero `units` does not rule a record out. Thornode stages a top-up's pending halves onto
+     * the same record that already holds a live position, so skipping those would hide exactly the
+     * half-deposit a returning LP needs to complete before it is refunded.
      */
     private fun ThorChainLiquidityProviderJson.toPendingFetch(pool: String): PendingFetch? {
-        if ((units.toBigIntegerOrNull()?.signum() ?: 0) > 0) return null
-
         val runePending = pendingRune.toBigIntegerOrNull() ?: BigInteger.ZERO
         val assetPending = pendingAsset.toBigIntegerOrNull() ?: BigInteger.ZERO
         if (runePending.signum() <= 0 && assetPending.signum() <= 0) return null

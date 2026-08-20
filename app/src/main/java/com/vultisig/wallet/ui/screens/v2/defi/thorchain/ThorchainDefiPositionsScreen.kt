@@ -26,6 +26,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.VaultId
@@ -69,6 +71,8 @@ internal fun ThorchainDefiPositionsScreen(
     }
 
     LaunchedEffect(vaultId) { model.setData(vaultId = vaultId) }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.onScreenResumed() }
 
     ThorchainDefiPositionScreenContent(
         state = state,
@@ -208,16 +212,22 @@ internal fun ThorchainDefiPositionScreenContent(
                     }
 
                     DeFiTab.LP.displayNameRes -> {
-                        // Until the dialog dataset has loaded, treat the LP tab as still
-                        // loading
-                        // rather than flashing the no-positions container — the
-                        // lpPositionsDialog
-                        // list arrives asynchronously and "no match" is meaningless before
-                        // then.
+                        // Both feeds must settle before the tab can say anything definitive: the
+                        // dialog dataset decides which selected pools resolve to positions, and
+                        // the pending scan decides whether there is a half-deposit to act on.
+                        // "No match" and "nothing pending" are both meaningless until then, and
+                        // acting on either early flashes the no-positions container.
                         when {
-                            !state.lpDialogLoaded ->
+                            !state.lpDialogLoaded || !state.lp.pendingDepositsLoaded ->
                                 LpTabContent(
-                                    state = state.lp.copy(isLoading = true),
+                                    state =
+                                        state.lp.copy(
+                                            isLoading = true,
+                                            // Hide half-loaded pending cards behind the spinner
+                                            // rather than showing them inside a tab that is still
+                                            // declaring itself unloaded.
+                                            pendingDeposits = emptyList(),
+                                        ),
                                     onClickAdd = onClickAddLp,
                                     onClickRemove = onClickRemoveLp,
                                     onClickCompletePending = onClickCompletePendingLp,

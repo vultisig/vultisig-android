@@ -559,23 +559,30 @@ constructor(
     }
 
     /**
-     * For symmetric LP add the memo carries the user's address on the *paired* chain so THORChain
-     * can credit them when the asset half is later deposited from that chain. Returns null when the
-     * pool refers to the native chain (no pair) or when the asset chain can't be resolved.
+     * The vault's address on the *other* half of [poolId], as seen from the half being deposited
+     * from [chain]. A RUNE-side add names the asset address; the asset-side add that completes a
+     * pending half-deposit names the RUNE address. Either way THORChain needs both to match the two
+     * inbounds into one symmetric position instead of opening a second, asymmetric one.
+     *
+     * Returns `null` for a RUNE-only pool, which has no paired side, and for a [chain] belonging to
+     * neither half — callers treat that as "cannot build this memo".
      */
     private suspend fun resolvePairedAddress(
         chain: Chain,
         vaultId: String,
         poolId: String,
     ): String? {
-        if (chain != Chain.ThorChain) return null
-        val parsed =
-            parseThorChainPool(poolId).takeIf { it.chain != null && it.chain != Chain.ThorChain }
-                ?: return null
-        val assetChain = parsed.chain ?: return null
+        val assetChain =
+            parseThorChainPool(poolId).chain?.takeIf { it != Chain.ThorChain } ?: return null
+        val pairedChain =
+            when (chain) {
+                Chain.ThorChain -> assetChain
+                assetChain -> Chain.ThorChain
+                else -> return null
+            }
         return try {
             val vault = vaultRepository.get(vaultId) ?: return null
-            chainAccountAddressRepository.getAddress(chain = assetChain, vault = vault).first
+            chainAccountAddressRepository.getAddress(chain = pairedChain, vault = vault).first
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
             Timber.e(e, "Failed to resolve paired address for $poolId")

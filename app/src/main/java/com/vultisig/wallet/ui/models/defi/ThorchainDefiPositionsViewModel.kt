@@ -104,9 +104,11 @@ internal data class ThorchainDefiPositionsUiModel(
     val bondPositionsDialog: List<PositionUiModelDialog> = defaultPositionsBondDialog(),
     val stakingPositionsDialog: List<PositionUiModelDialog> = defaultPositionsStakingDialog(),
     val lpPositionsDialog: List<PositionUiModelDialog> = emptyList(),
-    // Flips true once the available-pools fetch returns. Until then the LP tab should stay in
-    // loading state instead of flashing the empty/no-positions UI when the user has selected
-    // positions whose keys don't yet match the (empty) dialog list.
+    // Flips true once the available-pools fetch settles, success or failure. Until then the LP tab
+    // should stay in loading state instead of flashing the empty/no-positions UI when the user has
+    // selected positions whose keys don't yet match the (empty) dialog list. A failed fetch settles
+    // too: an unclearable spinner is worse than the no-positions container, which at least carries
+    // the Manage Positions retry.
     val lpDialogLoaded: Boolean = false,
     val selectedPositions: List<String> = defaultSelectedPositionsDialog(),
     val tempSelectedPositions: List<String> = defaultSelectedPositionsDialog(),
@@ -219,10 +221,14 @@ constructor(
                 Timber.e(e, "Failed to load THORChain LP pools for dialog")
                 // Leave availablePools null so the next user interaction (e.g. opening Manage
                 // Positions or saving a selection) retries instead of soft-locking.
-                // The tab deliberately stays in its loading state (see above), but the header total
-                // is a separate concern: reloadLpTab parks the LP leg unreported while it waits for
-                // this dataset, so report it as zero here or the total would never see all five
-                // legs and would spin forever.
+                // lpDialogLoaded means "settled", not "succeeded": leaving it false parks the tab
+                // in a spinner that nothing can ever clear, while any pending half-deposit still
+                // renders through it. Settling drops the tab to its no-positions container, whose
+                // Manage Positions button is the retry, and lets a pending card stand on its own.
+                state.update { it.copy(lpDialogLoaded = true) }
+                // The header total is a separate concern: reloadLpTab parks the LP leg unreported
+                // while it waits for this dataset, so report it as zero here or the total would
+                // never see all five legs and would spin forever.
                 reportLpFiat(BigDecimal.ZERO)
             }
         }
@@ -509,24 +515,48 @@ constructor(
         loadPendingLpJob?.cancel()
         loadPendingLpJob =
             viewModelScope.safeLaunch(
-                onError = { Timber.e(it, "Failed to load pending THORChain LP deposits") }
+                onError = {
+                    Timber.e(it, "Failed to load pending THORChain LP deposits")
+                    markPendingLpDepositsSettled()
+                }
             ) {
                 val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
                 val runeCoin =
                     vault?.coins?.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
-                        ?: return@safeLaunch
+                if (runeCoin == null) {
+                    markPendingLpDepositsSettled()
+                    return@safeLaunch
+                }
 
                 val pending =
                     withContext(ioDispatcher) {
-                        getThorChainPendingLpDepositsUseCase(
-                            runeAddress = runeCoin.address,
-                            resolveAssetAddress = { poolId -> vault.assetAddressForPool(poolId) },
-                        )
+                        getThorChainPendingLpDepositsUseCase(runeAddress = runeCoin.address)
                     }
 
                 val models = pending.map { it.toUiModel(vault.assetAddressForPool(it.pool)) }
-                state.update { it.copy(lp = it.lp.copy(pendingDeposits = models)) }
+                state.update {
+                    it.copy(lp = it.lp.copy(pendingDeposits = models, pendingDepositsLoaded = true))
+                }
             }
+    }
+
+    /**
+     * Marks the scan as settled without touching [LpTabUiModel.pendingDeposits]. A failed reload
+     * must not erase a list an earlier one found — the refund timer is still running on it.
+     */
+    private fun markPendingLpDepositsSettled() {
+        state.update { it.copy(lp = it.lp.copy(pendingDepositsLoaded = true)) }
+    }
+
+    /**
+     * Re-scans for pending half-deposits when the screen comes back to the foreground. They sit on
+     * a refund timer that keeps running while the app is backgrounded, so a stale list can offer
+     * Complete Deposit on a deposit THORChain has already refunded. Positions are left to
+     * pull-to-refresh; only this leg goes stale on its own.
+     */
+    fun onScreenResumed() {
+        if (!::vaultId.isInitialized) return
+        loadPendingLpDeposits()
     }
 
     private fun String.shortenForDisplay(): String =

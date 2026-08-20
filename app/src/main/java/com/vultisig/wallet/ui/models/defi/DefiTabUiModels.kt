@@ -57,6 +57,12 @@ internal data class LpTabUiModel(
      * one that silently gets refunded.
      */
     val pendingDeposits: List<PendingLpDepositUiModel> = emptyList(),
+    /**
+     * Flips true once the pending scan settles, success or failure. An empty [pendingDeposits] is
+     * only meaningful after that: before it, "no pending deposits" is indistinguishable from "not
+     * asked yet", and the tab would flash its no-positions state at the one user who has to act.
+     */
+    val pendingDepositsLoaded: Boolean = false,
 )
 
 /**

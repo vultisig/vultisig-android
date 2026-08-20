@@ -126,7 +126,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         coEvery { tcyStakingService.getStakingDetails(any(), any()) } returns flowOf()
         coEvery { defaultStakingPositionService.getStakingDetails(any(), any()) } returns flowOf()
         coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns emptyList()
-        coEvery { getThorChainPendingLpDepositsUseCase(any(), any()) } returns emptyList()
+        coEvery { getThorChainPendingLpDepositsUseCase(any()) } returns emptyList()
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions()
     }
@@ -457,16 +457,19 @@ internal class ThorchainDefiPositionsViewModelTest {
     }
 
     @Test
-    fun `the LP tab stays loading until the available-pool fetch resolves`() = runTest {
+    fun `a failed available-pool fetch still settles the LP tab`() = runTest {
         selectPositions("RUNE")
         coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } throws
             RuntimeException("midgard down")
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
-        // availablePools stays null so the tab must not flash an empty state.
-        assertTrue(vm.state.value.lp.isLoading)
-        assertFalse(vm.state.value.lpDialogLoaded)
+        // lpDialogLoaded means settled, not succeeded: leaving it false parks the tab in a spinner
+        // no retry can clear, while a pending half-deposit still renders through it. Settled, the
+        // tab falls through to its no-positions container and its Manage Positions retry.
+        assertTrue(vm.state.value.lpDialogLoaded)
+        // availablePools stays null so the next interaction re-fetches instead of soft-locking.
+        assertTrue(vm.state.value.lpPositionsDialog.isEmpty())
     }
 
     @Test

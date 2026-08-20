@@ -79,15 +79,16 @@ internal class AddLiquidityStrategy(
         val srcAddress = selectedToken.address
         val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
         val pairedAddress = resolvePairedAddress(chain, vaultId, poolId)
-        // For a RUNE-side add into a non-THOR pool the memo MUST carry the paired-chain address —
-        // otherwise THORChain can't credit the LP when the asset half is later deposited.
-        if (chain == Chain.ThorChain && pairedAddress == null) {
-            val assetChain = parseThorChainPool(poolId).chain
-            if (assetChain != null && assetChain != Chain.ThorChain) {
-                throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-            }
+        // Either half of a symmetric add MUST name the other half's address, or THORChain opens a
+        // separate asymmetric position rather than crediting the pair: a RUNE-side add carries the
+        // asset address, and the asset-side add that completes a pending half-deposit carries the
+        // RUNE address.
+        val assetChain = parseThorChainPool(poolId).chain
+        val isSymmetricPool = assetChain != null && assetChain != Chain.ThorChain
+        if (isSymmetricPool && pairedAddress == null) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
         }
         val memo = DepositMemo.AddLiquidity(poolId, pairedAddress)
 

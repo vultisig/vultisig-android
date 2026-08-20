@@ -167,8 +167,8 @@ constructor(
                 removeLpPoolDepth = BigInteger.ZERO,
                 removeLpPercent = 0f,
                 removeLpCacaoDisplay = "",
-                // Maya pools withdraw CACAO only; clear any asset leg a previous THORChain
-                // selection left behind so the second amount does not linger on this form.
+                // Clear the asset leg a previous selection left behind; the Maya pool's own asset
+                // depth fills it back in below, once loaded.
                 removeLpAssetDisplay = "",
                 removeLpAssetSymbol = "",
                 removeLpAssetRedeemBase = BigInteger.ZERO,
@@ -230,6 +230,12 @@ constructor(
                         }
                 val totalPoolUnits = pool.units.toBigIntegerOrNull() ?: BigInteger.ZERO
                 val cacaoDepth = pool.cacaoDepth.toBigIntegerOrNull() ?: BigInteger.ZERO
+                // A symmetric Maya withdrawal returns both halves, same as THORChain, so the form
+                // shows the paired asset leg too. It shares removeLpUnitsDivisor with the CACAO
+                // leg: selectedUnits * assetDepth / totalPoolUnits.
+                val assetDepth = pool.assetDepth.toBigIntegerOrNull() ?: BigInteger.ZERO
+                val assetSymbol =
+                    if (assetDepth.signum() > 0) parseThorChainPool(poolId).ticker else ""
                 val userAvailableUnits = userLpUnits.toBigIntegerOrNull()
                 val userCacao =
                     if (userAvailableUnits != null) {
@@ -254,6 +260,8 @@ constructor(
                         removeLpPoolDepth = cacaoDepth,
                         removeLpDecimals = RemoveLpCalculator.CACAO_DECIMALS,
                         removeLpTokenSymbol = "CACAO",
+                        removeLpAssetRedeemBase = assetDepth,
+                        removeLpAssetSymbol = assetSymbol,
                         balance = balanceText,
                     )
                 }
