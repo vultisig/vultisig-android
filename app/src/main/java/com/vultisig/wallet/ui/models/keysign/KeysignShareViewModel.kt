@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.OPERATION_CIRCLE_WITHDRAW
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TransactionId
@@ -82,9 +83,14 @@ constructor(
 
         val pubKeyECDSA = vault.pubKeyECDSA
         val coin =
-            vault.coins.find {
-                it.id == transaction.token.id && it.chain.id == transaction.chainId
-            }!!
+            vault.coins.find { it.id == transaction.token.id && it.chain.id == transaction.chainId }
+                // The DeFi-only receipts are never vault coins — they are kept out of token
+                // discovery so a position can't show up as a wallet holding — yet they are plain
+                // bank denoms the vault can transfer. The account the send form was built from
+                // carries the chain's own address and derived key, so the staged token is complete
+                // and is the only place the receipt can be resolved from.
+                ?: transaction.token.takeIf { Coins.isDefiOnly(it) }
+                ?: error("Coin ${transaction.token.id} is not in vault ${transaction.vaultId}")
 
         this@KeysignShareViewModel.vault = vault
         amount.value = mapTokenValueToStringWithUnit(transaction.tokenValue)

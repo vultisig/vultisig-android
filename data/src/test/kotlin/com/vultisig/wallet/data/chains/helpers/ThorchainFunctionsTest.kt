@@ -344,4 +344,76 @@ class ThorchainFunctionsTest {
             ThorchainFunctions.unstakeRujiCompound(BigInteger.valueOf(-1L), "contract", "addr")
         }
     }
+
+    @Test
+    fun `stakeBRune produces liquid bond funded with the bRUNE bond denom`() {
+        // The bond is funded with bRUNE itself; the ybRUNE receipt is what comes back, and must
+        // never be what goes in.
+        val payload =
+            ThorchainFunctions.stakeBRune(
+                fromAddress = "thor1sender",
+                stakingContract = "thor1contract",
+                denom = "x/brune",
+                amount = BigInteger.valueOf(250_000_000L),
+            )
+        assertEquals("thor1sender", payload.senderAddress)
+        assertEquals("thor1contract", payload.contractAddress)
+        assertEquals("""{ "liquid": { "bond": {} } }""", payload.executeMsg)
+        val funds = requireNotNull(payload.coins.single())
+        assertEquals("x/brune", funds.denom)
+        assertEquals("250000000", funds.amount)
+    }
+
+    @Test
+    fun `stakeBRune throws on blank inputs or sub-unit amounts`() {
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.stakeBRune("", "contract", "x/brune", BigInteger.ONE)
+        }
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.stakeBRune("addr", "", "x/brune", BigInteger.ONE)
+        }
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.stakeBRune("addr", "contract", "", BigInteger.ONE)
+        }
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.stakeBRune("addr", "contract", "x/brune", BigInteger.ZERO)
+        }
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.stakeBRune("addr", "contract", "x/brune", BigInteger.valueOf(-1))
+        }
+    }
+
+    @Test
+    fun `unstakeBRune funds liquid unbond with the ybRUNE receipt denom`() {
+        // Redemption is funded with the receipt the bond minted, never with bRUNE — funding it
+        // with the bond denom would bond again rather than unbond.
+        val payload =
+            ThorchainFunctions.unstakeBRune(
+                units = BigInteger.valueOf(97_531_246_800L),
+                stakingContract = "thor1contract",
+                fromAddress = "thor1sender",
+            )
+        assertEquals("thor1sender", payload.senderAddress)
+        assertEquals("thor1contract", payload.contractAddress)
+        assertEquals("""{ "liquid": { "unbond": {} } }""", payload.executeMsg)
+        val funds = requireNotNull(payload.coins.single())
+        assertEquals("x/staking-x/brune", funds.denom)
+        assertEquals("97531246800", funds.amount)
+    }
+
+    @Test
+    fun `unstakeBRune throws when units is zero or below one`() {
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.unstakeBRune(BigInteger.ZERO, "contract", "addr")
+        }
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.unstakeBRune(BigInteger.valueOf(-1L), "contract", "addr")
+        }
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.unstakeBRune(BigInteger.ONE, "", "addr")
+        }
+        assertThrows<IllegalArgumentException> {
+            ThorchainFunctions.unstakeBRune(BigInteger.ONE, "contract", "")
+        }
+    }
 }

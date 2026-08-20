@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.blockchain.thorchain
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import java.math.BigInteger
@@ -11,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 class DefaultStakingPositionService
@@ -20,8 +22,16 @@ constructor(
     private val stakingDetailsRepository: StakingDetailsRepository,
 ) {
 
+    // Every one of these is read the same way: a bank denom whose balance is the position. ybRUNE
+    // is the auto-compounding receipt for bonded bRUNE, and since it is no longer a wallet token
+    // this read is the only thing that surfaces it.
     val supportedStakingCoins =
-        listOf(Coins.ThorChain.sTCY, Coins.ThorChain.yRUNE, Coins.ThorChain.yTCY)
+        listOf(
+            Coins.ThorChain.sTCY,
+            Coins.ThorChain.yRUNE,
+            Coins.ThorChain.yTCY,
+            Coins.ThorChain.ybRUNE,
+        )
 
     fun getStakingDetails(address: String, vaultId: String): Flow<List<StakingDetails>> =
         flow {
@@ -64,6 +74,28 @@ constructor(
                 }
             }
             .flowOn(Dispatchers.IO)
+
+    /**
+     * The vault's live balance of one receipt denom, in base units.
+     *
+     * Every position here is a bank balance, so this is the same read
+     * [getStakingDetailsFromNetwork] makes — offered on its own for the callers that need one
+     * receipt's size right now rather than the whole set: the unbond form's ceiling and the clamp
+     * that sizes the execute. Both have to agree with the card, and they only do while all three
+     * match on the same [Coin.contractAddress].
+     *
+     * A denom the response omits is a genuine zero — the bank drops empty balances. A transport
+     * failure throws: that is not an empty position, and a caller that treats it as one would size
+     * a redemption off a guess.
+     */
+    suspend fun getReceiptBalance(address: String, coin: Coin): BigInteger =
+        withContext(Dispatchers.IO) {
+            thorChainApi
+                .getBalance(address)
+                .firstOrNull { balance -> balance.denom == coin.contractAddress }
+                ?.amount
+                ?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        }
 
     suspend fun getStakingDetailsFromNetwork(address: String): List<StakingDetails> {
         val balances =
