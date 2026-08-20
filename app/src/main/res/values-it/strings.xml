@@ -143,6 +143,8 @@
     <string name="swap_error_no_amount">La quantità deve essere un numero positivo.</string>
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
+    <string name="edit_chains">Catene</string>
+    <string name="edit_tokens">Tokens</string>
     <string name="transaction_type_button_swap">Scambia</string>
     <string name="swap_form_vault">Cassaforte</string>
     <string name="swap_form_min_pay">pagamento min.</string>

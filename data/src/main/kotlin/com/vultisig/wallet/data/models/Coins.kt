@@ -4136,6 +4136,8 @@ object Coins {
                 isNativeToken = false,
             )
 
+        // The auto-compounding receipt for bonded bRUNE — a DeFi position, never a wallet token,
+        // so it is kept out of [all] and reached through [defiOnly] instead.
         val ybRUNE =
             Coin(
                 chain = Chain.ThorChain,
@@ -4150,22 +4152,7 @@ object Coins {
             )
 
         val all =
-            listOf(
-                RUNE,
-                TCY,
-                RUJI,
-                KUJI,
-                FUZN,
-                NSTK,
-                WINK,
-                LVN,
-                RKUJI,
-                sTCY,
-                yRUNE,
-                yTCY,
-                bRUNE,
-                ybRUNE,
-            )
+            listOf(RUNE, TCY, RUJI, KUJI, FUZN, NSTK, WINK, LVN, RKUJI, sTCY, yRUNE, yTCY, bRUNE)
     }
 
     object Ton {
@@ -4475,7 +4462,7 @@ object Coins {
      * out of [coins] so token discovery and the token-selection list never offer them, but they
      * must stay resolvable by id because a persisted position round-trips through its coin id.
      */
-    val defiOnly: List<Coin> = listOf(ThorChain.sRUJI)
+    val defiOnly: List<Coin> = listOf(ThorChain.sRUJI, ThorChain.ybRUNE)
 
     /** [all] plus [defiOnly] — use whenever a stored coin id is resolved back to its [Coin]. */
     val allResolvable: List<Coin> = all + defiOnly

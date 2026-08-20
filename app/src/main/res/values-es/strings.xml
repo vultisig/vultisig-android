@@ -228,6 +228,8 @@
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Logotipo de token</string>
     <string name="tokens">Tokens</string>
+    <string name="edit_chains">Cadenas</string>
+    <string name="edit_tokens">Tokens</string>
     <string name="swap_screen_invalid_vault">La transacción probablemente fallará, la bóveda no pudo cargarse.</string>
     <string name="vault_settings_error_backup_file">ocurrió un error</string>
     <string name="vault_settings_error_backup_failed">La copia de seguridad falló. No se guardó ningún archivo. Inténtalo de nuevo.</string>

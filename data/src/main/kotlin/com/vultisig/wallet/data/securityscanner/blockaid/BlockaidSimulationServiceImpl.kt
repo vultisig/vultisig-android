@@ -80,7 +80,10 @@ internal class BlockaidSimulationServiceImpl(private val rpcClient: BlockaidRpcC
         // allowed to propagate so they surface as bugs rather than being silently muted into
         // EMPTY; the calling coroutine in [JoinKeysignViewModel.loadBlockaidSimulation] is wrapped
         // in `safeLaunch` so a propagated defect still cannot crash the verify flow.
-        var result = BlockaidKeysignScanResult.EMPTY
+        // Defaults to FAILED (not EMPTY) so a NetworkException — or a cancellation racing the
+        // leader's own completion below — is never mistaken for a genuine "no balance change"
+        // verdict; only a value assigned by a completed [dispatchScan] call overwrites it.
+        var result = BlockaidKeysignScanResult.FAILED
         var failure: NetworkException? = null
         var cancellation: CancellationException? = null
         try {
@@ -174,7 +177,10 @@ internal class BlockaidSimulationServiceImpl(private val rpcClient: BlockaidRpcC
                 runCatching { Base58.encodeNoCheck(base64.decodeBase64Bytes()) }
                     .getOrElse {
                         Timber.w(it, "Solana raw transaction base64 decode failed")
-                        return BlockaidKeysignScanResult.EMPTY
+                        // FAILED, not EMPTY: a malformed payload never reached Blockaid, so this
+                        // carries no "no balance change" verdict — the caller must not treat it as
+                        // one (see [BlockaidKeysignScanResult.didLoadSimulation]).
+                        return BlockaidKeysignScanResult.FAILED
                     }
             }
         val response =

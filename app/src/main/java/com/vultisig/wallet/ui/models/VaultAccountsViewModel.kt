@@ -56,19 +56,21 @@ import com.vultisig.wallet.ui.utils.throttleLatest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
@@ -166,6 +168,15 @@ constructor(
     private var loadAccountsJob: Job? = null
     private var loadDeFiBalancesJob: Job? = null
     private var bannerJob: Job? = null
+    private var deFiRefreshThrottleJob: Job? = null
+
+    // The tab a pull-to-refresh was started on, and the only load allowed to take the spinner back
+    // down. On the DeFi tab the rows under the user's finger come from loadDeFiBalances, so the
+    // wallet stream reaching isComplete says nothing about whether they are still stale.
+    private var refreshOwner: CryptoConnectionType? = null
+
+    // True while a network DeFi read is recent enough to stand in for a resume-triggered one.
+    private var isDeFiRefreshThrottled = false
 
     // Last merged snapshot per stream (wallet / DeFi), keyed in-memory so a chain that comes back
     // with a null balance mid-refetch can carry its previously-shown value forward (#4768). Reset
@@ -235,6 +246,11 @@ constructor(
         viewModelScope.safeLaunch {
             updateLastOpenedVault()
             lastOpenedVaultRepository.lastOpenedVaultId
+                // AppDataStore reads the whole preferences file, so every unrelated write
+                // re-emits the same id. Without this, each one re-ran loadData: cancelling the
+                // balance loads in flight and starting them over, a cached DeFi read landing on
+                // top of a pull's network read among them.
+                .distinctUntilChanged()
                 .map { lastOpenedVaultId ->
                     lastOpenedVaultId?.let { vaultRepository.get(it) }
                         ?: vaultRepository.getAll().firstOrNull()
@@ -345,8 +361,35 @@ constructor(
 
     fun refreshData() {
         val vaultId = vaultId ?: return
+        val pulledTab = uiState.value.cryptoConnectionType
+        refreshOwner = pulledTab
         updateRefreshing(true)
         loadAccounts(vaultId)
+        // A pull on the DeFi tab has to reload the DeFi rows: they come from their own load, so
+        // refreshing only the wallet accounts left the list the user was pulling on untouched.
+        if (pulledTab == CryptoConnectionType.Defi) {
+            loadDeFiBalances(vaultId, isRefresh = true)
+        }
+    }
+
+    /**
+     * Re-reads the DeFi list when home comes back to the front.
+     *
+     * Positions are changed a screen deeper — a Kamino vault switched on under Manage Positions, a
+     * deposit signed — and nothing on the way back asks this list to look again, so it kept
+     * rendering the figures it had loaded before the change. The wallet tab has its own streaming
+     * load and is left alone.
+     *
+     * Every return to home resumes, including ones that changed nothing (Receive, the vault list)
+     * and ones that already asked for the list themselves ([openAddChainAccount] reloads once the
+     * chain picker's result lands), so a read that recent stands in for this one — the same
+     * throttled-on-appear iOS puts on its DeFi screen.
+     */
+    fun onScreenResumed() {
+        val vaultId = vaultId ?: return
+        if (uiState.value.cryptoConnectionType != CryptoConnectionType.Defi) return
+        if (isDeFiRefreshThrottled) return
+        loadDeFiBalances(vaultId, isRefresh = true)
     }
 
     fun send() {
@@ -490,8 +533,12 @@ constructor(
                         isChainSelectionEnabled = vault.libType != SigningLibType.KeyImport,
                     )
                 }
-                val isVaultBackedUp = vaultDataStoreRepository.readBackupStatus(vaultId).first()
-                uiState.update { it.copy(showBackupWarning = !isVaultBackedUp) }
+                // Collected, not read once: backing the vault up is what takes this warning
+                // down, and it happens on another screen while this one is still alive.
+                vaultDataStoreRepository.readBackupStatus(vaultId).distinctUntilChanged().collect {
+                    isBackedUp ->
+                    uiState.update { it.copy(showBackupWarning = !isBackedUp) }
+                }
             }
     }
 
@@ -508,10 +555,12 @@ constructor(
                             .throttleLatest(BALANCE_RENDER_WINDOW) { it.isComplete }
                             // Keep the pull-to-refresh spinner up until every chain has resolved,
                             // matching iOS/Windows, instead of clearing it on the cached snapshot.
-                            .onEach { if (it.isComplete) updateRefreshing(false) }
+                            .onEach {
+                                if (it.isComplete) finishRefreshing(CryptoConnectionType.Wallet)
+                            }
                             .map { it.addresses.sortByAccountsTotalFiatValue() }
                             .catch {
-                                updateRefreshing(false)
+                                finishRefreshing(CryptoConnectionType.Wallet)
                                 Timber.e(it)
                             },
                         uiState.value.searchTextFieldState.textAsFlow(),
@@ -534,16 +583,37 @@ constructor(
     }
 
     private fun loadDeFiBalances(vaultId: String, isRefresh: Boolean = false) {
+        // A load that replaces the one an outstanding DeFi pull is waiting on has to carry that
+        // pull's network read forward: the job it cancels never clears the spinner, and answering
+        // the pull off the cache would take the spinner down over the very rows it was pulled to
+        // replace.
+        val readsNetwork = isRefresh || refreshOwner == CryptoConnectionType.Defi
         loadDeFiBalancesJob?.cancel()
+        // Only a network read covers a later resume; the cached-only load fetches nothing, so it
+        // must not stand in for one.
+        if (readsNetwork) throttleDeFiRefresh()
         loadDeFiBalancesJob =
             viewModelScope.safeLaunch {
                 combine(
                         accountsRepository
-                            .loadDeFiAddresses(vaultId, isRefresh)
+                            .loadDeFiAddresses(vaultId, readsNetwork)
                             .map { addresses -> addresses.sortByAccountsTotalFiatValue() }
                             .catch { error ->
-                                updateRefreshing(false)
-                                Timber.e(error, "Error loading DeFi balances for vault: $vaultId")
+                                Timber.e(
+                                    error,
+                                    "Error loading DeFi balances for vault: %s",
+                                    vaultId,
+                                )
+                            }
+                            // This load, not the wallet stream, is what a pull on the DeFi tab is
+                            // waiting on. A cancelled one is superseded by the load that replaced
+                            // it, which clears the spinner in its turn. Gated on the network
+                            // read so a cache-only load can't clear the spinner off the cache
+                            // instead of the fetch the pull is waiting on.
+                            .onCompletion { cause ->
+                                if (cause == null && readsNetwork) {
+                                    finishRefreshing(CryptoConnectionType.Defi)
+                                }
                             },
                         uiState.value.searchTextFieldState.textAsFlow(),
                         defaultDeFiChainsRepository.getDefaultChains(vaultId),
@@ -662,6 +732,27 @@ constructor(
     private fun updateRefreshing(isRefreshing: Boolean) {
         Timber.d("UpdateRefresh $isRefreshing")
         uiState.update { it.copy(isRefreshing = isRefreshing) }
+    }
+
+    /**
+     * Takes the pull-to-refresh spinner down once [source] — the tab the pull was started on — has
+     * finished loading. The other tab's load runs on its own schedule and is ignored: it would
+     * otherwise report the refresh done while the rows the user is looking at are still stale.
+     */
+    private fun finishRefreshing(source: CryptoConnectionType) {
+        if (refreshOwner != source) return
+        refreshOwner = null
+        updateRefreshing(false)
+    }
+
+    private fun throttleDeFiRefresh() {
+        deFiRefreshThrottleJob?.cancel()
+        isDeFiRefreshThrottled = true
+        deFiRefreshThrottleJob =
+            viewModelScope.launch {
+                delay(DEFI_REFRESH_THROTTLE)
+                isDeFiRefreshThrottled = false
+            }
     }
 
     fun toggleBalanceVisibility() {
@@ -860,5 +951,9 @@ constructor(
         // Window for coalescing per-chain balance updates so rows settle once per window instead
         // of reordering on every chain arrival; matches the leading debounce iOS uses (#4337).
         private val BALANCE_RENDER_WINDOW = 250.milliseconds
+
+        // How recent a network DeFi read has to be for a resume to reuse it rather than fetch
+        // again; the interval iOS throttles its DeFi screen's on-appear refresh by.
+        private val DEFI_REFRESH_THROTTLE = 15.seconds
     }
 }

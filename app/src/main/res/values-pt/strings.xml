@@ -2,6 +2,8 @@
 <resources>
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
+    <string name="edit_chains">Cadeias</string>
+    <string name="edit_tokens">Tokens</string>
     <string name="signing_error_please_try_again_s">Erro ao Assinar. Por favor, tente novamente. %s</string>
     <string name="try_again">Tentar Novamente</string>
     <string name="vault_settings_title">Configurações do Cofre</string>

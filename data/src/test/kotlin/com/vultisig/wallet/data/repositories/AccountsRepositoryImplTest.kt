@@ -26,6 +26,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
@@ -503,38 +504,73 @@ internal class AccountsRepositoryImplTest {
     }
 
     @Test
-    fun `a cached DeFi balance stays on the chain that reported it`() = runTest {
+    fun `a cached DeFi balance lands on its own chain's account, not another chain's`() = runTest {
+        // USDC is a DeFi position on two chains at once — Circle on Ethereum, Kamino on Solana —
+        // so a ticker that is not qualified by its chain applies one chain's balance to the other.
         val eth = Coins.Ethereum.ETH.copy(address = ETH_ADDRESS)
         val ethUsdc = Coins.Ethereum.USDC.copy(address = ETH_ADDRESS)
         val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
         val solUsdc = Coins.Solana.USDC.copy(address = SOL_ADDRESS)
+        stubVault(eth, ethUsdc, sol, solUsdc)
         coEvery { vaultRepository.get(VAULT_ID) } returns
             Vault(id = VAULT_ID, name = "Test Vault", coins = listOf(eth, ethUsdc, sol, solUsdc))
 
-        // Only Ethereum has a funded position — the Circle deposit, reported as Ethereum USDC.
         coEvery {
             balanceRepository.getDeFiCachedTokeBalanceAndPrice(ETH_ADDRESS, any(), VAULT_ID)
-        } returns listOf(defiBalance(Coins.Ethereum.USDC, amount = DEPOSIT, fiat = DEPOSIT_FIAT))
+        } returns listOf(balanceWithFiat(amount = ETH_DEFI, fiat = ETH_DEFI, coin = ethUsdc))
         coEvery {
             balanceRepository.getDeFiCachedTokeBalanceAndPrice(SOL_ADDRESS, any(), VAULT_ID)
-        } returns emptyList()
+        } returns listOf(balanceWithFiat(amount = SOL_DEFI, fiat = SOL_DEFI, coin = solUsdc))
 
-        val addresses = repository.loadDeFiAddresses(VAULT_ID, isRefresh = false).toList().last()
+        val addresses = repository.loadDeFiAddresses(VAULT_ID, isRefresh = false).first()
 
-        // Balances arrive carrying a ticker and nothing else, so a lookup pooled across chains
-        // handed this one deposit to the Solana USDC account as well.
-        val solanaUsdc =
-            addresses
-                .first { it.chain == Chain.Solana }
-                .accounts
-                .first { it.token.id == solUsdc.id }
-        assertEquals(0L, solanaUsdc.tokenValue?.value?.toLong())
+        assertEquals(ETH_DEFI, addresses.tokenValue(Chain.Ethereum, ethUsdc.ticker))
+        assertEquals(SOL_DEFI, addresses.tokenValue(Chain.Solana, solUsdc.ticker))
+    }
+
+    @Test
+    fun `a Kamino position lands on an account even when the vault holds none of the token`() =
+        runTest {
+            // The wallet deposited its whole USDC balance, so the vault carries only SOL. Without
+            // an account for USDC the position has nowhere to land and the row stays staking-only.
+            val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
+            val solUsdc = Coins.Solana.USDC.copy(address = SOL_ADDRESS)
+            stubVault(sol)
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                Vault(id = VAULT_ID, name = "Test Vault", coins = listOf(sol))
+
+            coEvery {
+                balanceRepository.getDeFiCachedTokeBalanceAndPrice(SOL_ADDRESS, any(), VAULT_ID)
+            } returns
+                listOf(
+                    balanceWithFiat(amount = SOL_DEFI, fiat = SOL_DEFI, coin = sol),
+                    balanceWithFiat(amount = ETH_DEFI, fiat = ETH_DEFI, coin = solUsdc),
+                )
+
+            val addresses = repository.loadDeFiAddresses(VAULT_ID, isRefresh = false).first()
+
+            assertEquals(ETH_DEFI, addresses.tokenValue(Chain.Solana, solUsdc.ticker))
+            assertEquals(SOL_DEFI, addresses.tokenValue(Chain.Solana, sol.ticker))
+        }
+
+    @Test
+    fun `a token held neither in the wallet nor in a position adds no account`() = runTest {
+        val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
+        stubVault(sol)
+        coEvery { vaultRepository.get(VAULT_ID) } returns
+            Vault(id = VAULT_ID, name = "Test Vault", coins = listOf(sol))
+
+        coEvery {
+            balanceRepository.getDeFiCachedTokeBalanceAndPrice(SOL_ADDRESS, any(), VAULT_ID)
+        } returns listOf(balanceWithFiat(amount = SOL_DEFI, fiat = SOL_DEFI, coin = sol))
+
+        val addresses = repository.loadDeFiAddresses(VAULT_ID, isRefresh = false).first()
+
+        // An injected account that resolved to nothing would otherwise show an empty row and
+        // inflate the chain's asset count.
         assertEquals(
-            DEPOSIT_FIAT,
-            addresses.sumOf { address ->
-                address.accounts.sumOf { it.fiatValue?.value?.toLong() ?: 0L }
-            },
-            "the DeFi total must count the deposit once, not once per chain sharing its ticker",
+            listOf(sol.ticker),
+            addresses.first { it.chain == Chain.Solana }.accounts.map { it.token.ticker },
         )
     }
 
@@ -632,6 +668,14 @@ internal class AccountsRepositoryImplTest {
             price = FiatValue(BigDecimal.ONE, currency),
         )
 
+    private fun List<Address>.tokenValue(chain: Chain, ticker: String): Long? =
+        firstOrNull { it.chain == chain }
+            ?.accounts
+            ?.firstOrNull { it.token.ticker == ticker }
+            ?.tokenValue
+            ?.value
+            ?.toLong()
+
     private fun stubVault(vararg coins: Coin) {
         val vault = Vault(id = VAULT_ID, name = "Test Vault", coins = coins.toList())
         every { vaultRepository.getAsFlow(VAULT_ID) } returns flowOf(vault)
@@ -709,5 +753,7 @@ internal class AccountsRepositoryImplTest {
         const val NETWORK = 10L
         const val ETH_NETWORK = 100L
         const val SOL_NETWORK = 200L
+        const val ETH_DEFI = 300L
+        const val SOL_DEFI = 700L
     }
 }

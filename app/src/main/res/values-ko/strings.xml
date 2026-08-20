@@ -116,6 +116,8 @@
     <string name="app_name">Vultisig</string>
     <string name="token_logo">토큰 로고</string>
     <string name="tokens">토큰</string>
+    <string name="edit_chains">체인</string>
+    <string name="edit_tokens">토큰</string>
     <string name="keysign">서명</string>
     <string name="signing_error_please_try_again_s">서명 오류. 다시 시도해 주세요. %s</string>
     <string name="try_again">다시 시도</string>

@@ -111,6 +111,8 @@
     <string name="app_name">Vultisig</string>
     <string name="token_logo">代币标志</string>
     <string name="tokens">代币</string>
+    <string name="edit_chains">区块链</string>
+    <string name="edit_tokens">代币</string>
     <string name="keysign">密钥签名</string>
     <string name="signing_error_please_try_again_s">签名错误。请重试。%s</string>
     <string name="try_again">重试</string>

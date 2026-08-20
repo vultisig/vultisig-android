@@ -150,6 +150,8 @@
     <string name="swap_error_no_amount">Die Menge muss eine positive Zahl sein</string>
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
+    <string name="edit_chains">Blockchains</string>
+    <string name="edit_tokens">Tokens</string>
     <string name="vault_list_vaults_list">Tresore</string>
     <string name="tx_done_address_copied">%1$s in die Zwischenablage kopiert</string>
     <string name="token_logo">Token-Logo</string>

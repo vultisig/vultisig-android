@@ -95,6 +95,22 @@ class BuildHeroContentUseCaseTest {
     }
 
     @Test
+    fun `no simulation but raw dapp transaction renders Unverified even without function name`() {
+        // Solana never decodes a function name, so a raw dApp-signed Solana transaction (e.g. a
+        // program call the SOL-WSOL swap-noise guard punted on) needs this flag to avoid falling
+        // through to the native-amount hero and showing the payload's unverified wire amount.
+        val hero =
+            build(
+                simulation = null,
+                decodedFunctionName = null,
+                didLoadSimulation = true,
+                isRawDappTransaction = true,
+            )
+
+        assertSame(HeroContent.Unverified, hero)
+    }
+
+    @Test
     fun `simulation not loaded yet returns null even with function name`() {
         // Pre-load tick: we don't want to flash "Unverified function" before
         // the simulation has even had a chance to come back. Caller should
