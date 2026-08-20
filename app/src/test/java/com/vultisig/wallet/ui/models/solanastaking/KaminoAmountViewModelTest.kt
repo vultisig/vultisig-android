@@ -31,6 +31,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -46,6 +47,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -161,6 +163,49 @@ internal class KaminoAmountViewModelTest {
     private fun givenTokenBalance(baseUnits: String) {
         coEvery { balanceRepository.getTokenValue(any(), any()) } returns
             flowOf(TokenValue(value = BigInteger(baseUnits), token = COIN))
+    }
+
+    /**
+     * The native balance every Kamino transaction is paid out of, whatever the vault's underlying
+     * token is. Stubbed after [givenTokenBalance] so the narrower matcher wins for SOL alone.
+     */
+    private fun givenSolBalance(lamports: String) {
+        coEvery { balanceRepository.getTokenValue(any(), match { it.isNativeToken }) } returns
+            flowOf(TokenValue(value = BigInteger(lamports), token = SOL))
+    }
+
+    /** A position large enough to withdraw from, with a readable rate. */
+    private fun givenPosition(shares: String = "1000000000") {
+        coEvery { kaminoApi.getUserPositions(WALLET) } returns
+            listOf(
+                KaminoUserPositionJson(
+                    vaultAddress = STEAKHOUSE.address,
+                    stakedShares = "0",
+                    unstakedShares = shares,
+                    totalShares = shares,
+                )
+            )
+        coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.0544278224860290217")
+    }
+
+    private fun givenBuiltPayload(): io.mockk.CapturingSlot<DepositTransaction> {
+        val captured = slot<DepositTransaction>()
+        coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+        coEvery {
+            buildKeysignPayload(
+                vault = any(),
+                action = any(),
+                apiAmount = any(),
+                tokenAmount = any(),
+                coin = any(),
+                blockChainSpecific = any(),
+                vaultPublicKeyECDSA = any(),
+                vaultLocalPartyID = any(),
+                libType = any(),
+            )
+        } returns keysignPayloadWithKaminoBudget()
+        return captured
     }
 
     @Test
@@ -506,6 +551,7 @@ internal class KaminoAmountViewModelTest {
         // it lands on the generic Send screen with no withdraw framing at all, so the vault address
         // reads as an ordinary payee.
         givenTokenBalance("0")
+        givenSolBalance(FUNDED_SOL)
         coEvery { kaminoApi.getUserPositions(WALLET) } returns
             listOf(
                 KaminoUserPositionJson(
@@ -659,6 +705,129 @@ internal class KaminoAmountViewModelTest {
     }
 
     /**
+     * A token vault's form is denominated in USDC and its transaction is paid for in SOL, so a
+     * wallet holding no SOL used to pass the form, the verify screen and the whole MPC ceremony and
+     * be refused only at broadcast (#5607).
+     */
+    @Test
+    fun `a USDC deposit is refused when the wallet holds no SOL to pay for it`() = runTest {
+        givenTokenBalance("2500000000")
+        givenSolBalance("0")
+
+        val vm = viewModel()
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
+        vm.submit()
+
+        val error = vm.state.value.error
+        assertTrue(
+            error is UiText.FormattedText,
+            "expected a formatted resource, was ${error?.let { it::class.simpleName }}",
+        )
+        assertEquals(R.string.insufficient_native_token, (error as UiText.FormattedText).resId)
+        assertEquals(listOf("SOL"), error.formatArgs)
+        coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
+    }
+
+    /**
+     * The fee is the smaller half of what a first deposit costs. A USDC deposit also creates the
+     * share account (2,039,280) and the farms user-state (6,299,080), both paid in SOL — checking
+     * the fee alone would wave through a wallet that cannot fund either.
+     */
+    @Test
+    fun `a USDC deposit counts the accounts it creates, not only the network fee`() = runTest {
+        givenTokenBalance("2500000000")
+        givenSolBalance(FEE_ONLY_LAMPORTS)
+
+        val vm = viewModel()
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
+        vm.submit()
+
+        assertEquals(
+            R.string.insufficient_native_token,
+            (vm.state.value.error as UiText.FormattedText).resId,
+        )
+        coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
+    }
+
+    /** 1,000,000 base fee + 320,000 priority + 2,039,280 share account + 6,299,080 user-state. */
+    @Test
+    fun `a USDC deposit goes through on a wallet holding exactly what it costs`() = runTest {
+        givenTokenBalance("2500000000")
+        givenSolBalance(FIRST_DEPOSIT_LAMPORTS)
+        val captured = givenBuiltPayload()
+
+        val vm = viewModel()
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
+        vm.submit()
+
+        assertNull(vm.state.value.error)
+        assertEquals(OPERATION_KAMINO_DEPOSIT, captured.captured.operation)
+    }
+
+    /**
+     * `createIdempotent` charges nothing for an account that already exists, and Kamino does not
+     * re-create a user-state it finds. Charging the rent anyway would refuse a redeposit the wallet
+     * can comfortably afford.
+     */
+    @Test
+    fun `a redeposit is not charged rent for the accounts it already has`() = runTest {
+        givenTokenBalance("2500000000")
+        givenSolBalance(FEE_ONLY_LAMPORTS)
+        coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns
+            ("existing-account" to true)
+        givenPosition()
+        val captured = givenBuiltPayload()
+
+        val vm = viewModel()
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
+        vm.submit()
+
+        assertNull(vm.state.value.error)
+        assertEquals(OPERATION_KAMINO_DEPOSIT, captured.captured.operation)
+    }
+
+    /**
+     * A withdraw takes its amount from the position, but it is still a Solana transaction the
+     * wallet pays for — and the withdraw form reserves nothing at all against SOL.
+     */
+    @Test
+    fun `a withdraw is refused when the wallet cannot pay the Solana fee`() = runTest {
+        givenTokenBalance("0")
+        givenSolBalance("0")
+        givenPosition()
+
+        val vm = viewModel(isWithdraw = true)
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("1")
+        vm.submit()
+
+        assertEquals(
+            R.string.insufficient_native_token,
+            (vm.state.value.error as UiText.FormattedText).resId,
+        )
+        coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
+    }
+
+    /**
+     * The check exists to save a wasted ceremony, not to protect funds — nothing lands when the
+     * wallet is short. Refusing on a balance that could not be read would turn one flaky RPC call
+     * into a form that cannot be submitted at all.
+     */
+    @Test
+    fun `an unreadable SOL balance lets the transaction through`() = runTest {
+        givenTokenBalance("2500000000")
+        coEvery { balanceRepository.getTokenValue(any(), match { it.isNativeToken }) } returns
+            flow { throw IllegalStateException("rpc unavailable") }
+        val captured = givenBuiltPayload()
+
+        val vm = viewModel()
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
+        vm.submit()
+
+        assertNull(vm.state.value.error)
+        assertEquals(OPERATION_KAMINO_DEPOSIT, captured.captured.operation)
+    }
+
+    /**
      * What [BuildKaminoKeysignPayloadUseCase] returns in production: a payload whose chain-specific
      * records the compute budget injected into the bytes, rather than the generic Solana values it
      * was built from. A relaxed mock cannot stand in — the ViewModel reads this back.
@@ -694,6 +863,18 @@ internal class KaminoAmountViewModelTest {
         val ALLEZ = KaminoVaultRegistry.ALLEZ_SOL
 
         val COIN = com.vultisig.wallet.data.models.Coins.Solana.USDC
+        val SOL = com.vultisig.wallet.data.models.Coins.Solana.SOL
+
+        /** Base fee plus the 320,000-unit token-deposit priority fee, and nothing else. */
+        const val FEE_ONLY_LAMPORTS = "1320000"
+
+        /**
+         * The fee plus rent for the share account and the farms user-state a first deposit opens.
+         */
+        const val FIRST_DEPOSIT_LAMPORTS = "9658360"
+
+        /** More SOL than any of these transactions costs. */
+        const val FUNDED_SOL = "50000000"
 
         val VAULT =
             Vault(

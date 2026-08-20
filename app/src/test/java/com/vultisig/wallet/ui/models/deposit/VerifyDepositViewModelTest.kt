@@ -50,13 +50,15 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 
 /**
- * Unit tests for [VerifyDepositViewModel], pinning the QBTC fee-affordability gate that decides
- * whether a deposit/vote keysign may start (#5044).
+ * Unit tests for [VerifyDepositViewModel], pinning the fee-affordability gate that decides whether
+ * a deposit keysign may start (#5044, #5607).
  *
- * The gate guards a fund-critical path: a QBTC account that can't cover the network fee must never
- * be allowed to launch the keysign ceremony, because the chain rejects the resulting vote at
- * broadcast. These tests cover the three branches that matter — affordable, unaffordable, and an
- * unresolved balance (which must fail closed rather than default to affordable).
+ * Two shapes are covered because the amount and the fee are not always drawn from one balance. A
+ * QBTC vote's whole cost is its fee, and an account that cannot cover it must never launch the
+ * ceremony — the chain rejects the vote at broadcast — so an unresolved balance there fails closed.
+ * A Kamino USDC deposit pays its Solana fee in SOL, so the fee is checked against the native
+ * balance instead, and an unresolved balance leaves Sign enabled rather than blocking a fundable
+ * transaction.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @Timeout(value = 30, unit = TimeUnit.SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
@@ -124,18 +126,23 @@ internal class VerifyDepositViewModelTest {
      * srcTokenValue`, so [feeValue] alone (with a zero send amount) drives the affordability
      * threshold.
      */
-    private fun givenTransaction(chain: Chain, feeValue: Long) {
+    private fun givenTransaction(
+        chain: Chain,
+        feeValue: Long,
+        srcTicker: String = "QBTC",
+        feeUnit: String = srcTicker,
+    ) {
         val coin =
             mockk<Coin>(relaxed = true).apply {
                 every { this@apply.chain } returns chain
-                every { ticker } returns "QBTC"
+                every { ticker } returns srcTicker
             }
         val tx =
             mockk<DepositTransaction>(relaxed = true).apply {
                 every { srcToken } returns coin
                 every { srcAddress } returns SRC_ADDRESS
-                every { estimatedFees } returns TokenValue(BigInteger.valueOf(feeValue), "QBTC", 8)
-                every { srcTokenValue } returns TokenValue(BigInteger.ZERO, "QBTC", 8)
+                every { estimatedFees } returns TokenValue(BigInteger.valueOf(feeValue), feeUnit, 8)
+                every { srcTokenValue } returns TokenValue(BigInteger.ZERO, srcTicker, 8)
             }
         coEvery { depositTransactionRepository.getTransaction(TX_ID) } returns tx
     }
@@ -198,19 +205,82 @@ internal class VerifyDepositViewModelTest {
             coVerify(exactly = 0) { launchKeysign(any(), any(), any(), any(), any()) }
         }
 
-    /** Non-QBTC deposits skip the balance gate entirely and remain signable. */
+    /**
+     * A non-QBTC deposit is checked too (#5607) — but where QBTC fails closed, an unresolved
+     * balance here leaves Sign enabled. The amount has already been sized against the same balance
+     * by the form, so reading one flaky RPC call as "cannot afford" would block a transaction the
+     * wallet can fund.
+     */
     @Test
-    fun `confirm launches keysign for a non-QBTC deposit without a balance check`() =
+    fun `an unreadable balance leaves a non-QBTC deposit signable`() =
         runTest(testDispatcher) {
             givenTransaction(Chain.ThorChain, feeValue = 10)
+            every { balanceRepository.getTokenValue(SRC_ADDRESS, any()) } returns
+                flow { throw NetworkException(0, "offline", NetworkErrorKind.NoConnectivity) }
             val vm = createViewModel()
             advanceUntilIdle()
 
             vm.state.value.hasEnoughBalance.shouldBeTrue()
+            vm.state.value.insufficientBalanceError.shouldBeNull()
 
             vm.confirm()
 
-            coVerify(exactly = 0) { balanceRepository.getTokenValue(any(), any()) }
+            coVerify { launchKeysign(any(), any(), any(), any(), any()) }
+        }
+
+    /**
+     * A Kamino USDC deposit pays its Solana fee in SOL, so the fee and the amount come out of two
+     * different balances. The gate has to read the one the fee is denominated in: a vault holding
+     * USDC and no SOL passed this screen and the whole MPC ceremony before the node rejected it at
+     * broadcast (#5607).
+     */
+    @Test
+    fun `a deposit whose fee is paid in the native token is checked against the native balance`() =
+        runTest(testDispatcher) {
+            givenTransaction(
+                chain = Chain.Solana,
+                feeValue = 9_658_360,
+                srcTicker = "USDC",
+                feeUnit = "SOL",
+            )
+            // The USDC the deposit spends is there; the SOL its fee needs is not.
+            every {
+                balanceRepository.getTokenValue(SRC_ADDRESS, match { !it.isNativeToken })
+            } returns flowOf(TokenValue(BigInteger.valueOf(2_500_000_000), "USDC", 6))
+            every {
+                balanceRepository.getTokenValue(SRC_ADDRESS, match { it.isNativeToken })
+            } returns flowOf(TokenValue(BigInteger.valueOf(1_320_000), "SOL", 9))
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.state.value.hasEnoughBalance.shouldBeFalse()
+            vm.state.value.insufficientBalanceError.shouldNotBeNull()
+
+            vm.confirm()
+
+            coVerify(exactly = 0) { launchKeysign(any(), any(), any(), any(), any()) }
+        }
+
+    /** The same deposit, on a wallet that does hold the SOL, stays signable. */
+    @Test
+    fun `a deposit is signable when the native balance covers the fee`() =
+        runTest(testDispatcher) {
+            givenTransaction(
+                chain = Chain.Solana,
+                feeValue = 9_658_360,
+                srcTicker = "USDC",
+                feeUnit = "SOL",
+            )
+            every { balanceRepository.getTokenValue(SRC_ADDRESS, any()) } returns
+                flowOf(TokenValue(BigInteger.valueOf(50_000_000), "SOL", 9))
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.state.value.hasEnoughBalance.shouldBeTrue()
+            vm.state.value.insufficientBalanceError.shouldBeNull()
+
+            vm.confirm()
+
             coVerify { launchKeysign(any(), any(), any(), any(), any()) }
         }
 

@@ -8,6 +8,9 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.nativeToken
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -26,6 +29,7 @@ import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -222,42 +226,41 @@ constructor(
     }
 
     /**
-     * Verifies the source account holds enough native balance to cover the required network fee
-     * (plus any amount being sent) before the keysign ceremony can be started. Scoped to QBTC,
-     * whose unfunded accounts otherwise stage a vote that the chain rejects at broadcast (#5044
-     * / #5043). Fails closed: if the balance cannot be resolved (a network error, or an empty
-     * lookup result) the Sign button is left disabled rather than defaulting to affordable —
-     * mirroring iOS `canCoverVoteFee` — so an unverified balance can never start the doomed
-     * ceremony this guards against.
+     * Verifies the wallet can cover what the transaction spends, before the keysign ceremony can be
+     * started.
+     *
+     * The amount and the fee are not always drawn from one balance. Where the fee is denominated in
+     * the source token they are, and the balance has to carry both — QBTC's vote is that shape, and
+     * its whole cost is the fee (#5044 / #5043). Where they differ the fee is checked on its own
+     * against the chain's native balance, and the amount is left to the form that already sized it
+     * against the source balance. A Kamino USDC deposit is the second shape: it pays its Solana fee
+     * in SOL, so a vault holding only USDC passed this screen and the entire MPC ceremony before
+     * being rejected at broadcast (#5607).
+     *
+     * An unresolved balance fails closed on QBTC alone. There the gate mirrors iOS
+     * `canCoverVoteFee` and guards a vote the chain refuses outright, so an unverified balance must
+     * not start it. Reading one flaky RPC call as "cannot afford" everywhere else would disable
+     * Sign on transactions that are perfectly fundable.
      */
-    private suspend fun checkFeeAffordability(
-        transaction: com.vultisig.wallet.data.models.DepositTransaction
-    ) {
-        if (transaction.srcToken.chain != Chain.Qbtc) return
+    private suspend fun checkFeeAffordability(transaction: DepositTransaction) {
+        val srcToken = transaction.srcToken
+        val fee = transaction.estimatedFees
+        // Tickers rather than coins: TokenValue records the unit it was built with, which is the
+        // only statement the transaction makes about which balance pays the fee.
+        val feeLeavesSourceBalance = fee.unit.equals(srcToken.ticker, ignoreCase = true)
+
+        val feeToken =
+            if (feeLeavesSourceBalance) srcToken
+            else srcToken.chain.nativeToken.copy(address = transaction.srcAddress)
+        val requiredSpend =
+            if (feeLeavesSourceBalance) fee.value + transaction.srcTokenValue.value else fee.value
 
         val balance =
-            try {
-                balanceRepository
-                    .getTokenValue(transaction.srcAddress, transaction.srcToken)
-                    .first()
-                    .value
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e)
-                // Fail closed: an unresolved balance keeps Sign disabled so a QBTC voter can't
-                // start a doomed ceremony on a balance we never confirmed can cover the fee
-                // (#5044).
-                state.update {
-                    it.copy(
-                        hasEnoughBalance = false,
-                        insufficientBalanceError =
-                            UiText.StringResource(R.string.network_connection_lost),
-                    )
-                }
-                return
-            }
-        val requiredSpend = transaction.estimatedFees.value + transaction.srcTokenValue.value
+            readBalance(
+                address = transaction.srcAddress,
+                token = feeToken,
+                failClosed = srcToken.chain == Chain.Qbtc,
+            ) ?: return
 
         if (balance < requiredSpend) {
             state.update {
@@ -266,12 +269,39 @@ constructor(
                     insufficientBalanceError =
                         UiText.FormattedText(
                             R.string.insufficient_native_token,
-                            listOf(transaction.srcToken.ticker),
+                            listOf(feeToken.ticker),
                         ),
                 )
             }
         }
     }
+
+    /**
+     * The balance in [token], or null when it could not be read — disabling Sign on the way out
+     * when [failClosed], so an unverified balance cannot start a ceremony that must not run.
+     */
+    private suspend fun readBalance(
+        address: String,
+        token: Coin,
+        failClosed: Boolean,
+    ): BigInteger? =
+        try {
+            balanceRepository.getTokenValue(address, token).first().value
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e)
+            if (failClosed) {
+                state.update {
+                    it.copy(
+                        hasEnoughBalance = false,
+                        insufficientBalanceError =
+                            UiText.StringResource(R.string.network_connection_lost),
+                    )
+                }
+            }
+            null
+        }
 
     fun dismissError() {
         state.update { it.copy(errorText = null) }
