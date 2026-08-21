@@ -57,7 +57,8 @@ internal class ThorChainQuoteSource @Inject constructor(private val thorChainApi
     /**
      * Fetches a THORChain quote, falling back to a streaming swap when rapid is unavailable or its
      * slippage is unacceptable. When both rapid and streaming succeed, picks whichever yields more
-     * output.
+     * output. A rapid failure that streaming cannot fix — an upstream trading halt — short-circuits
+     * instead of paying for the fallback round-trip.
      */
     private suspend fun fetchWithStreamingFallback(
         rapidRequest: ThorChainSwapQuoteRequest
@@ -65,6 +66,15 @@ internal class ThorChainQuoteSource @Inject constructor(private val thorChainApi
         val rapid = fetchRapid(rapidRequest)
         if (rapid is RapidQuote.Success && !rapid.needsStreaming()) {
             return rapid.data
+        }
+
+        // A trading halt is a property of the pool or the chain, not of the swap interval, so the
+        // streaming request would be refused the same way. Failing here surfaces the halt at once
+        // instead of spending a second round-trip on a node that is already refusing to quote —
+        // the wait that pushed the whole candidate past the caller's fetch timeout and surfaced as
+        // "swap request timed out" (#5656).
+        if (rapid is RapidQuote.Failed && rapid.error is SwapException.TradingHalted) {
+            throw rapid.error
         }
 
         when (rapid) {

@@ -685,8 +685,8 @@ constructor(
     /**
      * Ranks a failed-quote [error] so the most actionable failure is surfaced when every provider
      * fails. Lower values win. Amount-related errors mean the pair is routable and the user can
-     * recover by adjusting the amount, so they rank above recoverable/transient errors, which in
-     * turn rank above generic "no route" fallbacks.
+     * recover by adjusting the amount, so they rank above an upstream trading halt, which in turn
+     * ranks above the remaining recoverable/transient errors and then generic "no route" fallbacks.
      */
     private fun swapFailurePriority(error: Throwable): Int =
         when (error) {
@@ -695,24 +695,28 @@ constructor(
             is SwapException.InsufficentSwapAmount,
             is SwapException.AmountCannotBeZero,
             is SwapException.SameAssets -> 1
+            // A halt explains the whole outage, and every other provider routing through the
+            // paused protocol just stalls until its fetch times out. Ranked ahead of the rest of
+            // the transient group so the user reads "trading is halted, try later" rather than a
+            // sibling's timeout, which reads as "retry now" and never succeeds (#5656).
+            is SwapException.TradingHalted -> 2
             is SwapException.InsufficientFunds,
             is SwapException.HighPriceImpact,
             is SwapException.RateLimitExceeded,
-            is SwapException.TradingHalted,
             is SwapException.TimeOut,
             is TimeoutCancellationException,
             is SwapException.NetworkConnection,
             is SwapKitError.Network,
             is SwapKitError.InsufficientBalance,
-            is SwapKitError.InsufficientAllowance -> 2
+            is SwapKitError.InsufficientAllowance -> 3
             is SwapException.SwapRouteNotAvailable,
             is SwapException.SwapIsNotSupported,
             is SwapException.UnkownSwapError,
             is SwapKitError.NoRoutes,
             is SwapKitError.SwapRouteNotFound,
             is SwapKitError.RouteFiltered,
-            is SwapKitError.ProviderNotEnabled -> 3
-            else -> 4
+            is SwapKitError.ProviderNotEnabled -> 4
+            else -> 5
         }
 
     private suspend fun fetchThorMayaQuote(
