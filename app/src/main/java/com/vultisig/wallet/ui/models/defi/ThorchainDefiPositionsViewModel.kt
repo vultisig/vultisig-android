@@ -835,7 +835,8 @@ constructor(
                     settleStakingPositions {
                         it.coin.id == Coins.ThorChain.yRUNE.id ||
                             it.coin.id == Coins.ThorChain.yTCY.id ||
-                            it.coin.id == Coins.ThorChain.sTCY.id
+                            it.coin.id == Coins.ThorChain.sTCY.id ||
+                            it.coin.id == Coins.ThorChain.ybRUNE.id
                     }
                 }
                 .onCompletion { cause ->
@@ -886,18 +887,33 @@ constructor(
                                 coin.ticker.contains("yrune", ignoreCase = true) ||
                                     coin.ticker.contains("ytcy", ignoreCase = true)
 
-                            val canTransfer = coin.ticker.contains("stcy", ignoreCase = true)
+                            val isBondedRuneReceipt =
+                                coin.id.equals(Coins.ThorChain.ybRUNE.id, true)
+
+                            // Both compounding receipts are plain THORChain bank denoms, so the
+                            // vault can move either one to another address — #5585 asks for it on
+                            // ybRUNE, and iOS offers Transfer on every compound position. Matched
+                            // on the coin id: a substring of the ticker is what left this card
+                            // with the wrong logo, since ybRUNE contains none of the others.
+                            val canTransfer =
+                                coin.id.equals(Coins.ThorChain.sTCY.id, true) || isBondedRuneReceipt
 
                             val headerResId =
                                 if (supportsMint) {
                                     R.string.defi_header_minted
                                 } else if (
-                                    defaultPosition.coin.id.equals(Coins.ThorChain.sTCY.id, true)
+                                    defaultPosition.coin.id.equals(Coins.ThorChain.sTCY.id, true) ||
+                                        isBondedRuneReceipt
                                 ) {
                                     R.string.defi_header_compounded
                                 } else {
                                     R.string.defi_header_staked
                                 }
+                            // Titled in the same unit the amount below it is counted in. The
+                            // sRUJI card can say RUJI because its amount is the pool's RUJI
+                            // liquidSize; this one is the raw receipt balance, and a share is
+                            // worth more than one bRUNE, so naming it bRUNE would understate the
+                            // position by the compounding it exists to earn.
                             val position =
                                 StakePositionUiModel(
                                     coin = defaultPosition.coin,
@@ -1406,6 +1422,9 @@ constructor(
                     DeFiNavActions.UNSTAKE_TCY -> Coins.ThorChain.TCY.id
                     DeFiNavActions.STAKE_STCY -> Coins.ThorChain.TCY.id
                     DeFiNavActions.UNSTAKE_STCY -> Coins.ThorChain.sTCY.id
+                    // Bonding spends bRUNE; only the unbond starts from the receipt.
+                    DeFiNavActions.STAKE_YBRUNE -> Coins.ThorChain.bRUNE.id
+                    DeFiNavActions.UNSTAKE_YBRUNE -> Coins.ThorChain.ybRUNE.id
                     DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY.id
                     DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY.id
                     DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE.id
@@ -1435,14 +1454,16 @@ constructor(
         }
     }
 
-    fun onClickTransfer() {
+    /**
+     * Opens the plain send form on [coin], the position's own receipt.
+     *
+     * Carries the position's coin rather than a fixed one: sTCY was the only transferable card when
+     * this was written, and the ybRUNE receipt would otherwise have sent the wrong token.
+     */
+    fun onClickTransfer(coin: Coin) {
         viewModelScope.launch {
             navigator.route(
-                Route.Send(
-                    vaultId = vaultId,
-                    chainId = Chain.ThorChain.id,
-                    tokenId = Coins.ThorChain.sTCY.id,
-                )
+                Route.Send(vaultId = vaultId, chainId = coin.chain.id, tokenId = coin.id)
             )
         }
     }
@@ -1470,6 +1491,7 @@ constructor(
             val stcy = Coins.ThorChain.sTCY
             val ytcy = Coins.ThorChain.yTCY
             val yrune = Coins.ThorChain.yRUNE
+            val ybrune = Coins.ThorChain.ybRUNE
 
             return listOf(
                 StakePositionUiModel(
@@ -1540,6 +1562,22 @@ constructor(
                     coin = yrune,
                     stakeAssetHeader = UiText.StringResource(R.string.staked_yrune_header),
                     stakedAmountDisplay = "0 ${yrune.ticker}",
+                    apy = null,
+                    canWithdraw = false,
+                    canStake = true,
+                    canUnstake = false,
+                    rewards = null,
+                    nextReward = null,
+                    nextPayout = null,
+                ),
+                StakePositionUiModel(
+                    coin = ybrune,
+                    stakeAssetHeader =
+                        UiText.FormattedText(
+                            R.string.defi_header_compounded,
+                            listOf(ybrune.ticker),
+                        ),
+                    stakedAmountDisplay = "0 ${ybrune.ticker}",
                     apy = null,
                     canWithdraw = false,
                     canStake = true,

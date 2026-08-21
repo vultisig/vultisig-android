@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.screens.v2.defi.STAKING_BRUNE_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.STAKING_RUJI_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.utils.UiText
@@ -142,6 +143,31 @@ internal class StakeStrategyTest {
                 assertEquals("50000000", payload.coins[0]!!.amount)
             }
         }
+
+    @Test
+    fun `submit STAKE_YBRUNE bonds bRUNE into the liquid bond`() = runTest {
+        withMockedIoDispatcher {
+            givenSuccessfulStake(selectedToken = bRuneCoin())
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1.25")
+
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this, DeFiNavActions.STAKE_YBRUNE).submit()
+            advanceUntilIdle()
+
+            val tx = captured.captured
+            // A wasm execute, not a memo: bRUNE has no memo-based staking path at all.
+            assertEquals("", tx.memo)
+            val payload = tx.wasmExecuteContractPayload
+            assertNotNull(payload)
+            assertEquals(STAKING_BRUNE_CONTRACT, payload.contractAddress)
+            assertEquals("""{ "liquid": { "bond": {} } }""", payload.executeMsg)
+            // Funded with bRUNE — funding it with the ybRUNE receipt would be an unbond's shape.
+            assertEquals(Coins.ThorChain.bRUNE.contractAddress, payload.coins[0]!!.denom)
+            assertEquals("125000000", payload.coins[0]!!.amount)
+        }
+    }
 
     @Test
     fun `submit surfaces no_address error when chain validates dst as invalid`() = runTest {
@@ -342,6 +368,8 @@ internal class StakeStrategyTest {
             hideLoading = {},
             showError = { lastError = it },
         )
+
+    private fun bRuneCoin(): Coin = Coins.ThorChain.bRUNE.copy(address = "thor1self")
 
     private fun rujiCoin(): Coin =
         Coin(

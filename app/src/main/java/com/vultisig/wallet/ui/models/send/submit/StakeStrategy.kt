@@ -19,6 +19,7 @@ import com.vultisig.wallet.ui.models.send.toPlainBigDecimalOrNull
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.v2.defi.STAKING_BRUNE_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.STAKING_RUJI_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.STAKING_TCY_COMPOUND_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
@@ -131,6 +132,17 @@ internal class StakeStrategy(
 
                             DeFiNavActions.STAKE_SRUJI ->
                                 createRujiCompoundStakeDepositTransaction(
+                                    vaultId = vaultId,
+                                    selectedToken = selectedToken,
+                                    srcAddress = srcAddress,
+                                    dstAddress = dstAddress,
+                                    tokenAmountInt = tokenAmountInt,
+                                    gasFee = gasFee,
+                                    chain = chain,
+                                )
+
+                            DeFiNavActions.STAKE_YBRUNE ->
+                                createBRuneStakeDepositTransaction(
                                     vaultId = vaultId,
                                     selectedToken = selectedToken,
                                     srcAddress = srcAddress,
@@ -269,6 +281,58 @@ internal class StakeStrategy(
                 ThorchainFunctions.stakeRujiCompound(
                     fromAddress = srcAddress,
                     stakingContract = STAKING_RUJI_CONTRACT,
+                    denom = selectedToken.contractAddress,
+                    amount = tokenAmountInt,
+                ),
+        )
+    }
+
+    /**
+     * Bonds bRUNE into the Rujira liquid bond (`liquid.bond`), which mints the ybRUNE receipt.
+     *
+     * There is no memo-based path here the way TCY has one: bRUNE staking is always the
+     * auto-compounding liquid bond, so this always carries the wasm payload and a generic-contract
+     * transaction type.
+     */
+    private suspend fun createBRuneStakeDepositTransaction(
+        vaultId: String,
+        selectedToken: Coin,
+        srcAddress: String,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+        gasFee: TokenValue,
+        chain: Chain,
+    ): DepositTransaction {
+        val specific =
+            withContext(Dispatchers.IO) {
+                blockChainSpecificRepository.getSpecific(
+                    chain,
+                    srcAddress,
+                    selectedToken,
+                    gasFee,
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                    transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+                )
+            }
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = dstAddress,
+            memo = "",
+            srcTokenValue = TokenValue(value = tokenAmountInt, token = selectedToken),
+            estimatedFees = gasFee,
+            estimateFeesFiat =
+                gasFeeToEstimatedFee.fiatFeesFor(gasFee, selectedToken).formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+            wasmExecuteContractPayload =
+                ThorchainFunctions.stakeBRune(
+                    fromAddress = srcAddress,
+                    stakingContract = STAKING_BRUNE_CONTRACT,
                     denom = selectedToken.contractAddress,
                     amount = tokenAmountInt,
                 ),

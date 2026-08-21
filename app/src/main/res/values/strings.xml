@@ -93,6 +93,7 @@
     <string name="verify_deposit_depositing">You\'re depositing</string>
     <string name="verify_deposit_withdrawing">You\'re withdrawing</string>
     <string name="kamino_verify_vault">Vault</string>
+    <string name="kamino_verify_withdraw_unverified">This device can\'t confirm this amount. The transaction withdraws %1$s vault shares.</string>
     <string name="kamino_error_build_failed">Couldn\'t prepare this transaction</string>
     <string name="kamino_withdraw_nothing">Nothing to withdraw from this vault</string>
     <string name="kamino_withdraw_unreadable">This position couldn\'t be read, so no withdrawal can be prepared</string>
@@ -254,6 +255,7 @@
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA Key Copied</string>
     <string name="welcome_screen_skip">Skip</string>
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
+    <string name="keysign_malicious_party_detected">The device \"%1$s\" in this keysign session was detected acting maliciously. Do not use it for signing again.</string>
     <string name="vault_settings_delete_vault_caution1">I am aware that the vault will be deleted permanently</string>
     <string name="vault_settings_delete_vault_caution2">I am aware that I can lose funds</string>
     <string name="vault_settings_delete_vault_caution3">I have made a vault backup to restore later</string>

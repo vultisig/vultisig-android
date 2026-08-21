@@ -6,7 +6,9 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.thorchain.RujiStakeBalances
+import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -26,6 +28,7 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.screens.v2.defi.STAKING_BRUNE_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.STAKING_RUJI_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.utils.UiText
@@ -384,6 +387,137 @@ internal class UnstakeStrategyTest {
         }
 
     @Test
+    fun `submit UNSTAKE_YBRUNE funds the unbond with the receipt units entered`() = runTest {
+        withMockedIoDispatcher {
+            givenSuccessfulFlow(selectedToken = ybRuneCoin())
+            givenBondedRuneReceipt(BigInteger.valueOf(100_000_000))
+            // The position is reported in receipt units, so what the form carries is what funds
+            // the execute — no share conversion, unlike the sRUJI redemption above.
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.4")
+
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this, DeFiNavActions.UNSTAKE_YBRUNE).submit()
+            advanceUntilIdle()
+
+            val payload = captured.captured.wasmExecuteContractPayload
+            assertNotNull(payload)
+            assertEquals("""{ "liquid": { "unbond": {} } }""", payload!!.executeMsg)
+            assertEquals(STAKING_BRUNE_CONTRACT, payload.contractAddress)
+            assertEquals(Coins.ThorChain.ybRUNE.contractAddress, payload.coins[0]!!.denom)
+            assertEquals("40000000", payload.coins[0]!!.amount)
+            assertEquals("", captured.captured.memo)
+        }
+    }
+
+    @Test
+    fun `submit UNSTAKE_YBRUNE refuses an amount below one receipt unit`() = runTest {
+        withMockedIoDispatcher {
+            givenSuccessfulFlow(selectedToken = ybRuneCoin())
+            givenBondedRuneReceipt(BigInteger.valueOf(100_000_000))
+            // Rounds to zero base units at 8 decimals: the execute would carry no funds, so the
+            // ceremony could only ever fail on-chain after the user paid for it.
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.000000001")
+
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this, DeFiNavActions.UNSTAKE_YBRUNE).submit()
+            advanceUntilIdle()
+
+            assertEquals(R.string.send_error_no_amount, lastError.stringId())
+            assertFalse(captured.isCaptured)
+        }
+    }
+
+    @Test
+    fun `submit UNSTAKE_YBRUNE clamps the unbond to the live receipt balance`() = runTest {
+        withMockedIoDispatcher {
+            givenSuccessfulFlow(selectedToken = ybRuneCoin())
+            // The cached position the form was seeded from still shows 1.0, but the vault has
+            // unbonded down to 0.25 since. Attaching the entered 0.4 would send funds the bank no
+            // longer holds, and the chain would refuse it only after the keysign was paid for.
+            givenBondedRuneReceipt(BigInteger.valueOf(25_000_000))
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.4")
+
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this, DeFiNavActions.UNSTAKE_YBRUNE).submit()
+            advanceUntilIdle()
+
+            val payload = captured.captured.wasmExecuteContractPayload
+            assertNotNull(payload)
+            assertEquals("25000000", payload!!.coins[0]!!.amount)
+            assertEquals(BigInteger.valueOf(25_000_000), captured.captured.srcTokenValue.value)
+        }
+    }
+
+    @Test
+    fun `submit UNSTAKE_YBRUNE honours an amount the stale form ceiling would reject`() = runTest {
+        withMockedIoDispatcher {
+            givenSuccessfulFlow(selectedToken = ybRuneCoin())
+            // A bond made since the last DeFi refresh leaves the cached ceiling below what the
+            // vault holds. The live balance is the authority, so the entered amount stands.
+            coEvery { getAvailableTokenBalance(any(), any()) } returns
+                TokenValue(BigInteger.valueOf(10_000_000), ybRuneCoin())
+            givenBondedRuneReceipt(BigInteger.valueOf(100_000_000))
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.4")
+
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this, DeFiNavActions.UNSTAKE_YBRUNE).submit()
+            advanceUntilIdle()
+
+            val payload = captured.captured.wasmExecuteContractPayload
+            assertNotNull(payload)
+            assertEquals("40000000", payload!!.coins[0]!!.amount)
+        }
+    }
+
+    @Test
+    fun `submit UNSTAKE_YBRUNE refuses when the vault no longer holds the receipt`() = runTest {
+        withMockedIoDispatcher {
+            givenSuccessfulFlow(selectedToken = ybRuneCoin())
+            // The bank omits empty balances, so a missing denom is a genuine zero position.
+            coEvery { thorChainApi.getBalance(any()) } returns
+                listOf(CosmosBalance(denom = "rune", amount = "2000000000"))
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.4")
+
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this, DeFiNavActions.UNSTAKE_YBRUNE).submit()
+            advanceUntilIdle()
+
+            assertEquals(R.string.send_error_insufficient_balance, lastError.stringId())
+            assertFalse(captured.isCaptured)
+        }
+    }
+
+    @Test
+    fun `submit UNSTAKE_YBRUNE fails closed when the receipt balance cannot be read`() = runTest {
+        withMockedIoDispatcher {
+            givenSuccessfulFlow(selectedToken = ybRuneCoin())
+            // An unreadable balance is a fetch problem, not an empty position — sizing the unbond
+            // off a guess is exactly what the clamp exists to prevent.
+            coEvery { thorChainApi.getBalance(any()) } throws RuntimeException("status 502")
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.4")
+
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this, DeFiNavActions.UNSTAKE_YBRUNE).submit()
+            advanceUntilIdle()
+
+            assertEquals(R.string.dialog_default_error_body, lastError.stringId())
+            assertFalse(captured.isCaptured)
+        }
+    }
+
+    @Test
     fun `submit surfaces no_address when chain validates dst as invalid`() = runTest {
         givenValidatedAccount()
         coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns false
@@ -404,11 +538,14 @@ internal class UnstakeStrategyTest {
         }
     }
 
-    private fun givenSuccessfulFlow(includeRuji: Boolean = false) {
-        givenValidatedAccount()
+    private fun givenSuccessfulFlow(
+        includeRuji: Boolean = false,
+        selectedToken: Coin = rujiCoin(),
+    ) {
+        givenValidatedAccount(selectedToken = selectedToken)
         coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
         coEvery { getAvailableTokenBalance(any(), any()) } returns
-            TokenValue(BigInteger.valueOf(100_000_000), rujiCoin())
+            TokenValue(BigInteger.valueOf(100_000_000), selectedToken)
         val accounts =
             mutableListOf(
                 Account(
@@ -477,14 +614,28 @@ internal class UnstakeStrategyTest {
             )
     }
 
-    private fun givenValidatedAccount(gasFeeValue: BigInteger = BigInteger.valueOf(2_000_000)) {
+    private fun givenBondedRuneReceipt(receiptBalance: BigInteger) {
+        coEvery { thorChainApi.getBalance(any()) } returns
+            listOf(
+                CosmosBalance(denom = "rune", amount = "2000000000"),
+                CosmosBalance(
+                    denom = Coins.ThorChain.ybRUNE.contractAddress,
+                    amount = receiptBalance.toString(),
+                ),
+            )
+    }
+
+    private fun givenValidatedAccount(
+        gasFeeValue: BigInteger = BigInteger.valueOf(2_000_000),
+        selectedToken: Coin = rujiCoin(),
+    ) {
         coEvery { accountValidator.validate() } returns
             ValidatedAccount(
                 vaultId = VAULT_ID,
                 selectedAccount =
                     Account(
-                        token = rujiCoin(),
-                        tokenValue = TokenValue(BigInteger.valueOf(2_000_000_000), rujiCoin()),
+                        token = selectedToken,
+                        tokenValue = TokenValue(BigInteger.valueOf(2_000_000_000), selectedToken),
                         fiatValue = null,
                         price = null,
                     ),
@@ -522,12 +673,18 @@ internal class UnstakeStrategyTest {
             depositTransactionRepository = depositTransactionRepository,
             navigator = navigator,
             thorChainApi = thorChainApi,
+            // The real service rather than a stub, so these cases still cover the denom the
+            // receipt balance is actually matched on.
+            defaultStakingPositionService =
+                DefaultStakingPositionService(thorChainApi, mockk(relaxed = true)),
             defiTypeProvider = { defiType },
             isAutocompoundProvider = { false },
             showLoading = {},
             hideLoading = {},
             showError = { lastError = it },
         )
+
+    private fun ybRuneCoin(): Coin = Coins.ThorChain.ybRUNE.copy(address = "thor1self")
 
     private fun rujiCoin(): Coin =
         Coin(

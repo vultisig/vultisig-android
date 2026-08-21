@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.send.submit
 import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -20,6 +21,7 @@ import com.vultisig.wallet.ui.models.send.toPlainBigDecimalOrNull
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.v2.defi.STAKING_BRUNE_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.STAKING_RUJI_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.STAKING_TCY_COMPOUND_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
@@ -50,6 +52,7 @@ internal class UnstakeStrategy(
     private val depositTransactionRepository: DepositTransactionRepository,
     private val navigator: Navigator<Destination>,
     private val thorChainApi: ThorChainApi,
+    private val defaultStakingPositionService: DefaultStakingPositionService,
     private val defiTypeProvider: () -> DeFiNavActions?,
     private val isAutocompoundProvider: () -> Boolean,
     private val showLoading: () -> Unit,
@@ -112,16 +115,16 @@ internal class UnstakeStrategy(
 
                     val defiType = defiTypeProvider()
 
-                    // The auto-compounding position is the one case where this ceiling is not the
+                    // The two receipt redemptions are the cases where this ceiling is not the
                     // balance the transaction is sized against: the form is seeded from the
                     // position the DeFi tab cached, while the redemption re-reads the live one.
                     // Enforcing the stale ceiling would reject amounts the live position can
-                    // honour, so the live read below is the sole authority — it clamps to the
+                    // honour, so the live reads below are the sole authority — each clamps to the
                     // whole position and so can never over-redeem.
-                    if (
-                        defiType != DeFiNavActions.UNSTAKE_SRUJI &&
-                            tokenAmountInt > availableTokenBalance
-                    ) {
+                    val isReceiptRedemption =
+                        defiType == DeFiNavActions.UNSTAKE_SRUJI ||
+                            defiType == DeFiNavActions.UNSTAKE_YBRUNE
+                    if (!isReceiptRedemption && tokenAmountInt > availableTokenBalance) {
                         throw InvalidTransactionDataException(
                             UiText.FormattedText(
                                 R.string.send_error_insufficient_native_balance_with_fees,
@@ -145,6 +148,17 @@ internal class UnstakeStrategy(
 
                             DeFiNavActions.UNSTAKE_SRUJI ->
                                 createRujiCompoundUnstakeDepositTransaction(
+                                    vaultId = vaultId,
+                                    selectedToken = selectedToken,
+                                    srcAddress = srcAddress,
+                                    dstAddress = dstAddress,
+                                    tokenAmountInt = tokenAmountInt,
+                                    gasFee = gasFee,
+                                    chain = chain,
+                                )
+
+                            DeFiNavActions.UNSTAKE_YBRUNE ->
+                                createBRuneUnstakeDepositTransaction(
                                     vaultId = vaultId,
                                     selectedToken = selectedToken,
                                     srcAddress = srcAddress,
@@ -363,6 +377,100 @@ internal class UnstakeStrategy(
                 ),
         )
     }
+
+    /**
+     * Unbonds from the Rujira liquid bond (`liquid.unbond`), returning bRUNE.
+     *
+     * The position is reported in ybRUNE receipt units — AccountsLoader synthesizes the account
+     * from that same bank balance — so the entered amount funds the execute directly. That is the
+     * whole difference from the sRUJI redemption above, which has to convert a RUJI-denominated
+     * amount into shares first.
+     */
+    private suspend fun createBRuneUnstakeDepositTransaction(
+        vaultId: String,
+        selectedToken: Coin,
+        srcAddress: String,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+        gasFee: TokenValue,
+        chain: Chain,
+    ): DepositTransaction {
+        // An amount that rounds below one base unit would build an execute the contract rejects;
+        // say so on the form instead of sending the user through a ceremony that cannot land.
+        if (tokenAmountInt < BigInteger.ONE) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+
+        // The form is sized off the position the DeFi tab cached, which can lag the vault's bank
+        // balance in either direction: a bond made since the last refresh leaves the ceiling too
+        // low, and an unbond made since leaves it too high — and too high attaches funds the vault
+        // no longer holds, which the chain rejects only after the user has paid for the keysign.
+        // The live receipt balance is the authority; the entered amount is clamped to it.
+        val heldReceipt = readBondedRuneReceiptBalance(srcAddress)
+        if (heldReceipt < BigInteger.ONE) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_insufficient_balance)
+            )
+        }
+        val unbondUnits = tokenAmountInt.coerceAtMost(heldReceipt)
+
+        val specific =
+            withContext(Dispatchers.IO) {
+                blockChainSpecificRepository.getSpecific(
+                    chain,
+                    srcAddress,
+                    selectedToken,
+                    gasFee,
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                    transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+                )
+            }
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = dstAddress,
+            memo = "",
+            srcTokenValue = TokenValue(value = unbondUnits, token = selectedToken),
+            estimatedFees = gasFee,
+            estimateFeesFiat =
+                gasFeeToEstimatedFee.fiatFeesFor(gasFee, selectedToken).formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+            wasmExecuteContractPayload =
+                ThorchainFunctions.unstakeBRune(
+                    units = unbondUnits,
+                    stakingContract = STAKING_BRUNE_CONTRACT,
+                    fromAddress = srcAddress,
+                ),
+        )
+    }
+
+    /**
+     * The vault's live ybRUNE bank balance, read through the service the position card is built
+     * from so the ceiling, the clamp and the card can never disagree about the receipt's size.
+     *
+     * Fails closed on an unreadable balance: that is a fetch problem, not an empty position, and
+     * sizing a redemption off a guessed balance is what the clamp exists to prevent. Translate it
+     * as the RUJI redemption above does, so submit()'s generic catch does not surface the raw
+     * transport text.
+     */
+    private suspend fun readBondedRuneReceiptBalance(address: String): BigInteger =
+        runCatching {
+                defaultStakingPositionService.getReceiptBalance(address, Coins.ThorChain.ybRUNE)
+            }
+            .getOrElse { error: Throwable ->
+                if (error is CancellationException) throw error
+                Timber.e(error, "Failed to read the ybRUNE receipt balance for the unbond")
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.dialog_default_error_body)
+                )
+            }
 
     private suspend fun createRUJIRewardsDepositTransaction(
         vaultId: String,

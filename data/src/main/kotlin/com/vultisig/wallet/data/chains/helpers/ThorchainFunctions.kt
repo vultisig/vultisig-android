@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import com.vultisig.wallet.data.models.Coins
 import java.math.BigInteger
 import vultisig.keysign.v1.CosmosCoin
 import vultisig.keysign.v1.WasmExecuteContractPayload
@@ -181,6 +182,58 @@ object ThorchainFunctions {
     }
 
     /**
+     * Bonds bRUNE into the Rujira liquid-bond position, which mints ybRUNE receipt shares.
+     *
+     * The same `liquid.bond` execute as [stakeRujiCompound] against a different contract: bRUNE has
+     * no bonded, non-compounding side, so this is the only way into the position. Funded with the
+     * bond token (`x/brune`), never with the receipt.
+     */
+    fun stakeBRune(
+        fromAddress: String,
+        stakingContract: String,
+        denom: String,
+        amount: BigInteger,
+    ): WasmExecuteContractPayload {
+        require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
+        require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
+        require(denom.isNotEmpty()) { "Denom cannot be empty" }
+        require(amount >= BigInteger.ONE) { "amount cannot be lower than 1" }
+
+        return WasmExecuteContractPayload(
+            senderAddress = fromAddress,
+            contractAddress = stakingContract,
+            executeMsg = ExecMsg.liquidBond(),
+            coins = listOf(CosmosCoin(denom = denom, amount = amount.toString())),
+        )
+    }
+
+    /**
+     * Unbonds from the Rujira liquid-bond position, returning bRUNE.
+     *
+     * Funded with ybRUNE receipt units. Unlike [unstakeRujiCompound], no share conversion happens
+     * on the way in: the position is reported in receipt units — the vault's `x/staking-x/brune`
+     * bank balance — so the amount the form carries is already the funding amount.
+     *
+     * @param units the ybRUNE receipt units to unbond, in base units
+     */
+    fun unstakeBRune(
+        units: BigInteger,
+        stakingContract: String,
+        fromAddress: String,
+    ): WasmExecuteContractPayload {
+        require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
+        require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
+        require(units >= BigInteger.ONE) { "units cannot be lower than 1" }
+
+        return WasmExecuteContractPayload(
+            senderAddress = fromAddress,
+            contractAddress = stakingContract,
+            executeMsg = ExecMsg.liquidUnbond(),
+            coins = listOf(CosmosCoin(denom = Memo.DENOM_STAKING_BRUNE, amount = units.toString())),
+        )
+    }
+
+    /**
      * Builds the THORChain memo for claiming RUJI staking rewards.
      *
      * @param contractAddress the RUJI staking contract address
@@ -208,6 +261,11 @@ private object Memo {
     const val TCY_UNSTAKE_PREFIX = "TCY-:"
     const val DENOM_STAKING_TCY = "x/staking-tcy"
     const val DENOM_STAKING_RUJI = "x/staking-x/ruji"
+
+    // Read off the catalogue rather than spelled out. The unbond is funded with this denom and
+    // sized by a clamp that measures the same coin's `contractAddress`, so a literal here could
+    // drift away from the balance the clamp reads and attach funds the vault does not hold.
+    val DENOM_STAKING_BRUNE = Coins.ThorChain.ybRUNE.contractAddress
 }
 
 private object ExecMsg {

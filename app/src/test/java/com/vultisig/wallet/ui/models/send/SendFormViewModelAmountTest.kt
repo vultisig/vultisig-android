@@ -244,6 +244,7 @@ internal class SendFormViewModelAmountTest {
             vaultRepository = mockk(relaxed = true),
             tokenRepository = mockk(relaxed = true),
             stakingDetailsRepository = mockk(relaxed = true),
+            defaultStakingPositionService = mockk(relaxed = true),
             feeServiceComposite = mockk(relaxed = true),
             chainValidationService = mockk(relaxed = true),
             requestAddressBookEntry = mockk(relaxed = true),

@@ -165,6 +165,7 @@ internal class SendFormViewModelTronStakingTest {
             vaultRepository = vaultRepository,
             tokenRepository = mockk(relaxed = true),
             stakingDetailsRepository = mockk(relaxed = true),
+            defaultStakingPositionService = mockk(relaxed = true),
             feeServiceComposite = mockk(relaxed = true),
             chainValidationService = mockk(relaxed = true),
             requestAddressBookEntry = mockk(relaxed = true),

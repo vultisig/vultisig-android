@@ -149,6 +149,7 @@
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA-sleutel gekopieerd</string>
     <string name="welcome_screen_skip">Overslaan</string>
     <string name="keysign_screen_preparing_vault">Kluis voorbereiden…</string>
+    <string name="keysign_malicious_party_detected">Het apparaat \"%1$s\" in deze keysign-sessie is betrapt op kwaadaardig gedrag. Gebruik het niet opnieuw om te ondertekenen.</string>
     <string name="vault_settings_delete_vault_caution1">Ik ben me ervan bewust dat de kluis permanent zal worden verwijderd</string>
     <string name="vault_settings_delete_vault_caution2">Ik ben me ervan bewust dat ik geld kan verliezen</string>
     <string name="vault_settings_delete_vault_caution3">Ik heb een kluisback-up gemaakt om later te kunnen herstellen</string>
@@ -543,6 +544,7 @@
     <string name="verify_deposit_depositing">Je stort</string>
     <string name="verify_deposit_withdrawing">Je neemt op</string>
     <string name="kamino_verify_vault">Vault</string>
+    <string name="kamino_verify_withdraw_unverified">Dit apparaat kan dit bedrag niet bevestigen. De transactie neemt %1$s vault-aandelen op.</string>
     <string name="kamino_error_build_failed">Kan deze transactie niet voorbereiden</string>
     <string name="kamino_withdraw_nothing">Er is niets op te nemen uit deze vault</string>
     <string name="kamino_withdraw_unreadable">Deze positie kon niet worden gelezen, dus er kan geen opname worden voorbereid</string>

@@ -35,6 +35,30 @@ import kotlinx.coroutines.Dispatchers
 import tss.KeysignResponse
 
 /**
+ * Thrown when `godkls` reports that it aborted the session and banned [partyID] for protocol-level
+ * misbehavior (`LIB_ABORT_PROTOCOL_AND_BAN_PARTY_1..10`). Never retried.
+ */
+class MaliciousPartyException(val partyID: String) :
+    Exception("party $partyID was banned for malicious behavior")
+
+// LIB_ABORT_PROTOCOL_AND_BAN_PARTY_1...10 (godkls.h): the library aborted the session and
+// banned a co-signer for protocol-level misbehavior. Hardcoded (not read off the lib_error
+// enum) so this check stays testable on the host JVM without loading the native godkls lib.
+private val BAN_PARTY_RANGE = 100..109
+
+/**
+ * Throws [MaliciousPartyException] if [resultValue] (a `lib_error.swigValue()`) is one of
+ * `LIB_ABORT_PROTOCOL_AND_BAN_PARTY_1..10`. Party N (1-based) is `keysignCommittee[N-1]`: the setup
+ * message embeds party ids in exactly this array order (see [DKLSKeysign]).
+ */
+internal fun checkForBannedParty(resultValue: Int, keysignCommittee: List<String>) {
+    if (resultValue !in BAN_PARTY_RANGE) return
+    val partyIndex = resultValue - BAN_PARTY_RANGE.first
+    val partyID = keysignCommittee.getOrNull(partyIndex) ?: "#${partyIndex + 1}"
+    throw MaliciousPartyException(partyID)
+}
+
+/**
  * Performs DKLS keysigning for one or more messages.
  *
  * @param onWaitingForPeers Invoked when no inbound messages have arrived for ~10 s; receives the
@@ -279,6 +303,7 @@ class DKLSKeysign(
                 } finally {
                     decryptedBodySlice.free()
                 }
+            checkForBannedParty(result.swigValue(), keysignCommittee)
             if (result != LIB_OK) {
                 error("fail to apply message to dkls, $result")
             }
@@ -378,6 +403,7 @@ class DKLSKeysign(
                     decodedSetupMsg.free()
                     localPartySlice.free()
                 }
+            checkForBannedParty(sessionResult.swigValue(), keysignCommittee)
             if (sessionResult != LIB_OK) {
                 error("fail to create sign session from setup message, error: $sessionResult")
             }
@@ -398,6 +424,10 @@ class DKLSKeysign(
                 signatures[messageToSign] = resp
             }
         } catch (e: CancellationException) {
+            throw e
+        } catch (e: MaliciousPartyException) {
+            // A banned party is a protocol-level verdict from the library, not a transient
+            // failure — retrying would just re-sign against a peer DKLS already banned.
             throw e
         } catch (e: Exception) {
             println("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
@@ -428,6 +458,7 @@ class DKLSKeysign(
         val buf = tss_buffer()
         try {
             val result = dkls_sign_session_finish(handle, buf)
+            checkForBannedParty(result.swigValue(), keysignCommittee)
             if (result != LIB_OK) {
                 error("fail to get keysign signature $result")
             }

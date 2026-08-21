@@ -90,6 +90,7 @@
     <string name="verify_deposit_depositing">예치 중</string>
     <string name="verify_deposit_withdrawing">출금 중</string>
     <string name="kamino_verify_vault">볼트</string>
+    <string name="kamino_verify_withdraw_unverified">이 기기에서는 이 금액을 확인할 수 없습니다. 이 트랜잭션은 볼트 지분 %1$s개를 출금합니다.</string>
     <string name="kamino_error_build_failed">이 거래를 준비할 수 없습니다</string>
     <string name="kamino_withdraw_nothing">이 볼트에서 출금할 것이 없습니다</string>
     <string name="kamino_withdraw_unreadable">이 포지션을 읽을 수 없어 출금을 준비할 수 없습니다</string>
@@ -250,6 +251,7 @@
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA 키 복사됨</string>
     <string name="welcome_screen_skip">건너뛰기</string>
     <string name="keysign_screen_preparing_vault">볼트 준비 중…</string>
+    <string name="keysign_malicious_party_detected">이 keysign 세션의 기기 \"%1$s\"가 악의적으로 동작한 것이 감지되었습니다. 다시는 서명에 사용하지 마세요.</string>
     <string name="vault_settings_delete_vault_caution1">볼트가 영구적으로 삭제된다는 것을 알고 있습니다</string>
     <string name="vault_settings_delete_vault_caution2">자금을 잃을 수 있다는 것을 알고 있습니다</string>
     <string name="vault_settings_delete_vault_caution3">나중에 복원할 수 있도록 볼트 백업을 완료했습니다</string>

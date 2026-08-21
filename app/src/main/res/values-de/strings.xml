@@ -120,6 +120,7 @@
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA-Schlüssel kopiert</string>
     <string name="welcome_screen_skip">Überspringen</string>
     <string name="keysign_screen_preparing_vault">TRESOR VORBEREITEN…</string>
+    <string name="keysign_malicious_party_detected">Das Gerät „%1$s“ in dieser Keysign-Sitzung wurde bei böswilligem Verhalten erkannt. Verwende es nicht erneut zum Signieren.</string>
     <string name="vault_settings_delete_vault_caution1">Mir ist bewusst, dass der Tresor dauerhaft gelöscht wird</string>
     <string name="vault_settings_delete_vault_caution2">Mir ist bewusst, dass ich Geld verlieren kann</string>
     <string name="vault_settings_delete_vault_caution3">Ich habe eine Sicherung des Tresors für eine spätere Wiederherstellung erstellt</string>
@@ -546,6 +547,7 @@
     <string name="verify_deposit_depositing">Du zahlst ein</string>
     <string name="verify_deposit_withdrawing">Du hebst ab</string>
     <string name="kamino_verify_vault">Vault</string>
+    <string name="kamino_verify_withdraw_unverified">Dieses Gerät kann diesen Betrag nicht bestätigen. Die Transaktion zieht %1$s Vault-Anteile ab.</string>
     <string name="kamino_error_build_failed">Diese Transaktion konnte nicht vorbereitet werden</string>
     <string name="kamino_withdraw_nothing">Aus diesem Vault gibt es nichts abzuheben</string>
     <string name="kamino_withdraw_unreadable">Diese Position konnte nicht gelesen werden, daher ist keine Abhebung möglich</string>

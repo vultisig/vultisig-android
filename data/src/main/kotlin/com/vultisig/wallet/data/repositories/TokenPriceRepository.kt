@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.LiQuestApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.thorchain.VaultRedemptionResponseJson
+import com.vultisig.wallet.data.blockchain.thorchain.ThorchainStakingContracts
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
 import com.vultisig.wallet.data.models.Chain
@@ -847,8 +848,7 @@ constructor(
         private val BRUNE_DENOM = Coins.ThorChain.bRUNE.contractAddress
         private val YBRUNE_DENOM = Coins.ThorChain.ybRUNE.contractAddress
         private val STAKING_TCY_DENOM = Coins.ThorChain.sTCY.contractAddress
-        private const val BRUNE_STAKING_CONTRACT =
-            "thor179fex2rxd45caedmz4hxsnu42sw20lu0djyh4yukyh965sq8muuqptru2g"
+        private const val BRUNE_STAKING_CONTRACT = ThorchainStakingContracts.BRUNE_LIQUID_BOND
         private const val STAKING_TCY_CONTRACT =
             "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
     }
