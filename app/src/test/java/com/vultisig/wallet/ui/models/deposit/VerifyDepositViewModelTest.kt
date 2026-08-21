@@ -17,8 +17,6 @@ import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
-import com.vultisig.wallet.data.utils.NetworkErrorKind
-import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
@@ -37,8 +35,6 @@ import java.math.BigInteger
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -53,12 +49,12 @@ import org.junit.jupiter.api.Timeout
  * Unit tests for [VerifyDepositViewModel], pinning the fee-affordability gate that decides whether
  * a deposit keysign may start (#5044, #5607).
  *
- * Two shapes are covered because the amount and the fee are not always drawn from one balance. A
- * QBTC vote's whole cost is its fee, and an account that cannot cover it must never launch the
- * ceremony — the chain rejects the vote at broadcast — so an unresolved balance there fails closed.
- * A Kamino USDC deposit pays its Solana fee in SOL, so the fee is checked against the native
- * balance instead, and an unresolved balance leaves Sign enabled rather than blocking a fundable
- * transaction.
+ * The gate weighs the fee alone, against whichever balance the fee is denominated in. A QBTC vote's
+ * whole cost is its fee, and an account that cannot cover it must never launch the ceremony — the
+ * chain rejects the vote at broadcast — so an unresolved balance there fails closed. A Kamino USDC
+ * deposit pays its Solana fee in SOL, so the fee is checked against the native balance instead, and
+ * an unresolved balance leaves Sign enabled rather than blocking a fundable transaction. A withdraw
+ * stages an amount that arrives rather than leaves, so the amount is never added to the fee.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @Timeout(value = 30, unit = TimeUnit.SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
@@ -122,15 +118,16 @@ internal class VerifyDepositViewModelTest {
         )
 
     /**
-     * Stubs the transaction the VM loads in `init`. The required spend is `estimatedFees +
-     * srcTokenValue`, so [feeValue] alone (with a zero send amount) drives the affordability
-     * threshold.
+     * Stubs the transaction the VM loads in `init`. [feeValue] alone drives the affordability
+     * threshold; [sentValue] is what the transaction stages as its amount, which the gate must not
+     * add to the fee — see the withdraw test below for why.
      */
     private fun givenTransaction(
         chain: Chain,
         feeValue: Long,
         srcTicker: String = "QBTC",
         feeUnit: String = srcTicker,
+        sentValue: Long = 0,
     ) {
         val coin =
             mockk<Coin>(relaxed = true).apply {
@@ -142,9 +139,25 @@ internal class VerifyDepositViewModelTest {
                 every { srcToken } returns coin
                 every { srcAddress } returns SRC_ADDRESS
                 every { estimatedFees } returns TokenValue(BigInteger.valueOf(feeValue), feeUnit, 8)
-                every { srcTokenValue } returns TokenValue(BigInteger.ZERO, srcTicker, 8)
+                every { srcTokenValue } returns
+                    TokenValue(BigInteger.valueOf(sentValue), srcTicker, 8)
             }
         coEvery { depositTransactionRepository.getTransaction(TX_ID) } returns tx
+    }
+
+    /** The balance every read of the source address resolves to. */
+    private fun givenBalance(value: Long) {
+        coEvery { balanceRepository.getBalanceOrNull(SRC_ADDRESS, any()) } returns
+            BigInteger.valueOf(value)
+    }
+
+    /**
+     * A balance that could not be read at all. The repository reports this as null whether the node
+     * threw or answered an error — `SolanaApi.getBalance`'s zero-for-everything is exactly what
+     * [BalanceRepository.getBalanceOrNull] exists to keep out of this gate.
+     */
+    private fun givenUnreadableBalance() {
+        coEvery { balanceRepository.getBalanceOrNull(SRC_ADDRESS, any()) } returns null
     }
 
     /** A QBTC balance that covers the fee leaves Sign enabled and lets the keysign launch. */
@@ -152,8 +165,7 @@ internal class VerifyDepositViewModelTest {
     fun `confirm launches keysign when QBTC balance covers the fee`() =
         runTest(testDispatcher) {
             givenTransaction(Chain.Qbtc, feeValue = 10)
-            every { balanceRepository.getTokenValue(SRC_ADDRESS, any()) } returns
-                flowOf(TokenValue(BigInteger.valueOf(100), "QBTC", 8))
+            givenBalance(100)
             val vm = createViewModel()
             advanceUntilIdle()
 
@@ -170,8 +182,7 @@ internal class VerifyDepositViewModelTest {
     fun `confirm blocks keysign when QBTC balance cannot cover the fee`() =
         runTest(testDispatcher) {
             givenTransaction(Chain.Qbtc, feeValue = 10)
-            every { balanceRepository.getTokenValue(SRC_ADDRESS, any()) } returns
-                flowOf(TokenValue(BigInteger.valueOf(5), "QBTC", 8))
+            givenBalance(5)
             val vm = createViewModel()
             advanceUntilIdle()
 
@@ -184,16 +195,15 @@ internal class VerifyDepositViewModelTest {
         }
 
     /**
-     * Regression for #5044: when the QBTC balance lookup fails (`NetworkException`, a
-     * `RuntimeException` thrown by the RPC layer), the gate must fail closed — Sign stays disabled
-     * and no keysign launches — rather than defaulting to the affordable `hasEnoughBalance = true`.
+     * Regression for #5044: when the QBTC balance cannot be read, the gate must fail closed — Sign
+     * stays disabled and no keysign launches — rather than defaulting to the affordable
+     * `hasEnoughBalance = true`.
      */
     @Test
     fun `confirm fails closed and blocks keysign when QBTC balance lookup fails`() =
         runTest(testDispatcher) {
             givenTransaction(Chain.Qbtc, feeValue = 10)
-            every { balanceRepository.getTokenValue(SRC_ADDRESS, any()) } returns
-                flow { throw NetworkException(0, "offline", NetworkErrorKind.NoConnectivity) }
+            givenUnreadableBalance()
             val vm = createViewModel()
             advanceUntilIdle()
 
@@ -215,8 +225,7 @@ internal class VerifyDepositViewModelTest {
     fun `an unreadable balance leaves a non-QBTC deposit signable`() =
         runTest(testDispatcher) {
             givenTransaction(Chain.ThorChain, feeValue = 10)
-            every { balanceRepository.getTokenValue(SRC_ADDRESS, any()) } returns
-                flow { throw NetworkException(0, "offline", NetworkErrorKind.NoConnectivity) }
+            givenUnreadableBalance()
             val vm = createViewModel()
             advanceUntilIdle()
 
@@ -244,12 +253,12 @@ internal class VerifyDepositViewModelTest {
                 feeUnit = "SOL",
             )
             // The USDC the deposit spends is there; the SOL its fee needs is not.
-            every {
-                balanceRepository.getTokenValue(SRC_ADDRESS, match { !it.isNativeToken })
-            } returns flowOf(TokenValue(BigInteger.valueOf(2_500_000_000), "USDC", 6))
-            every {
-                balanceRepository.getTokenValue(SRC_ADDRESS, match { it.isNativeToken })
-            } returns flowOf(TokenValue(BigInteger.valueOf(1_320_000), "SOL", 9))
+            coEvery {
+                balanceRepository.getBalanceOrNull(SRC_ADDRESS, match { !it.isNativeToken })
+            } returns BigInteger.valueOf(2_500_000_000)
+            coEvery {
+                balanceRepository.getBalanceOrNull(SRC_ADDRESS, match { it.isNativeToken })
+            } returns BigInteger.valueOf(1_320_000)
             val vm = createViewModel()
             advanceUntilIdle()
 
@@ -271,8 +280,37 @@ internal class VerifyDepositViewModelTest {
                 srcTicker = "USDC",
                 feeUnit = "SOL",
             )
-            every { balanceRepository.getTokenValue(SRC_ADDRESS, any()) } returns
-                flowOf(TokenValue(BigInteger.valueOf(50_000_000), "SOL", 9))
+            givenBalance(50_000_000)
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.state.value.hasEnoughBalance.shouldBeTrue()
+            vm.state.value.insufficientBalanceError.shouldBeNull()
+
+            vm.confirm()
+
+            coVerify { launchKeysign(any(), any(), any(), any(), any()) }
+        }
+
+    /**
+     * A Kamino SOL withdraw stages the withdrawn lamports as its amount, and its fee is denominated
+     * in that same SOL — but the amount arrives from the vault rather than leaving the wallet, so
+     * only the fee has to be affordable. Adding the amount disabled Sign on every transaction of
+     * this shape whenever the position was larger than the liquid balance: a stake withdraw
+     * (`SolanaStakingPositionsViewModel`), Move Stake, Finish Move and a Cosmos undelegate all
+     * stage it the same way.
+     */
+    @Test
+    fun `a withdraw is signable on the fee alone though its amount dwarfs the balance`() =
+        runTest(testDispatcher) {
+            givenTransaction(
+                chain = Chain.Solana,
+                feeValue = 1_320_000,
+                srcTicker = "SOL",
+                sentValue = 5_000_000_000, // 5 SOL coming back out of the position
+            )
+            givenBalance(2_000_000) // covers the fee, nothing like the amount
+
             val vm = createViewModel()
             advanceUntilIdle()
 

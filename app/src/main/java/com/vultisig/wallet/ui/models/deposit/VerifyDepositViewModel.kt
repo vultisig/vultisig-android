@@ -33,7 +33,6 @@ import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -88,9 +87,9 @@ internal data class VerifyDepositUiModel(
     val hasFastSign: Boolean = false,
     val isLoading: Boolean = false,
     /**
-     * Whether the source account balance can cover the required network fee (plus any sent amount).
-     * When false the Sign button is disabled and an inline fee-balance error is shown so the
-     * keysign ceremony cannot start for an account that can never pay the fee (issue #5044).
+     * Whether the balance the network fee is drawn from can cover it. When false the Sign button is
+     * disabled and an inline fee-balance error is shown so the keysign ceremony cannot start for an
+     * account that can never pay the fee (issues #5044, #5607).
      */
     val hasEnoughBalance: Boolean = true,
     val insufficientBalanceError: UiText? = null,
@@ -226,16 +225,19 @@ constructor(
     }
 
     /**
-     * Verifies the wallet can cover what the transaction spends, before the keysign ceremony can be
-     * started.
+     * Verifies the wallet can pay the network fee, before the keysign ceremony can be started.
      *
-     * The amount and the fee are not always drawn from one balance. Where the fee is denominated in
-     * the source token they are, and the balance has to carry both — QBTC's vote is that shape, and
-     * its whole cost is the fee (#5044 / #5043). Where they differ the fee is checked on its own
-     * against the chain's native balance, and the amount is left to the form that already sized it
-     * against the source balance. A Kamino USDC deposit is the second shape: it pays its Solana fee
-     * in SOL, so a vault holding only USDC passed this screen and the entire MPC ceremony before
-     * being rejected at broadcast (#5607).
+     * Only the fee: the amount is left to the form that sized it against the source balance in the
+     * first place. A deposit's `srcTokenValue` is not reliably money leaving the wallet — a Kamino
+     * withdraw, a stake withdraw, Move Stake, Finish Move and a Cosmos undelegate all stage the
+     * position's own size in it, and it arrives rather than departs. Adding it here disabled Sign
+     * on every one of those whenever the position was bigger than the liquid balance.
+     *
+     * What varies is which balance the fee comes out of. Where it is denominated in the source
+     * token it leaves that one — QBTC's vote is that shape, and its whole cost is the fee (#5044
+     * / #5043). Otherwise it leaves the chain's native balance: a Kamino USDC deposit pays its
+     * Solana fee in SOL, so a vault holding only USDC passed this screen and the entire MPC
+     * ceremony before being rejected at broadcast (#5607).
      *
      * An unresolved balance fails closed on QBTC alone. There the gate mirrors iOS
      * `canCoverVoteFee` and guards a vote the chain refuses outright, so an unverified balance must
@@ -252,8 +254,6 @@ constructor(
         val feeToken =
             if (feeLeavesSourceBalance) srcToken
             else srcToken.chain.nativeToken.copy(address = transaction.srcAddress)
-        val requiredSpend =
-            if (feeLeavesSourceBalance) fee.value + transaction.srcTokenValue.value else fee.value
 
         val balance =
             readBalance(
@@ -262,7 +262,7 @@ constructor(
                 failClosed = srcToken.chain == Chain.Qbtc,
             ) ?: return
 
-        if (balance < requiredSpend) {
+        if (balance < fee.value) {
             state.update {
                 it.copy(
                     hasEnoughBalance = false,
@@ -279,29 +279,28 @@ constructor(
     /**
      * The balance in [token], or null when it could not be read — disabling Sign on the way out
      * when [failClosed], so an unverified balance cannot start a ceremony that must not run.
+     *
+     * Read through [BalanceRepository.getBalanceOrNull] rather than `getTokenValue`, which on
+     * Solana cannot say "unknown": `SolanaApi.getBalance` answers every RPC error with zero, so a
+     * flaky node read as an empty wallet and refused a funded one.
      */
     private suspend fun readBalance(
         address: String,
         token: Coin,
         failClosed: Boolean,
-    ): BigInteger? =
-        try {
-            balanceRepository.getTokenValue(address, token).first().value
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Timber.e(e)
-            if (failClosed) {
-                state.update {
-                    it.copy(
-                        hasEnoughBalance = false,
-                        insufficientBalanceError =
-                            UiText.StringResource(R.string.network_connection_lost),
-                    )
-                }
+    ): BigInteger? {
+        val balance = balanceRepository.getBalanceOrNull(address, token)
+        if (balance == null && failClosed) {
+            state.update {
+                it.copy(
+                    hasEnoughBalance = false,
+                    insufficientBalanceError =
+                        UiText.StringResource(R.string.network_connection_lost),
+                )
             }
-            null
         }
+        return balance
+    }
 
     fun dismissError() {
         state.update { it.copy(errorText = null) }

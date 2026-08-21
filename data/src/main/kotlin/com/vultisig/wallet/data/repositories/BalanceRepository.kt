@@ -70,6 +70,7 @@ import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.utils.SimpleCache
+import com.vultisig.wallet.data.utils.runCatchingCancellable
 import com.vultisig.wallet.data.utils.scaledFor
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -84,6 +85,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import timber.log.Timber
 
 /** Interface for the BalanceRepository. */
 interface BalanceRepository {
@@ -106,6 +108,17 @@ interface BalanceRepository {
     fun getTokenBalanceAndPrice(address: String, coin: Coin): Flow<TokenBalanceAndPrice>
 
     fun getTokenValue(address: String, coin: Coin): Flow<TokenValue>
+
+    /**
+     * The balance in [coin], or null when it could not be read.
+     *
+     * [getTokenValue] cannot express "unknown": a chain whose API answers failures with a zero
+     * balance — Solana does, see [SolanaApi.getBalance] — is indistinguishable from an empty
+     * wallet, and a chain whose API throws takes the whole flow down. Gates that refuse a
+     * transaction on a balance need that distinction, or one flaky node turns into "you cannot
+     * afford this" on a funded wallet.
+     */
+    suspend fun getBalanceOrNull(address: String, coin: Coin): BigInteger?
 
     /**
      * Batch-fetches balances for every coin in [coins] (all sharing one EVM [address] and chain) in
@@ -602,6 +615,18 @@ constructor(
                     )
                 )
             }
+
+    override suspend fun getBalanceOrNull(address: String, coin: Coin): BigInteger? =
+        // Solana native is the one read that reports failure as a value rather than as a throw, so
+        // it is asked through the nullable overload; every other chain surfaces a failed read as an
+        // exception out of the flow, which [runCatchingCancellable] turns into the same null.
+        if (coin.chain == Solana && coin.isNativeToken) {
+            solanaApi.getBalanceOrNull(address)
+        } else {
+            runCatchingCancellable { getTokenValue(address, coin).first().value }
+                .onFailure { Timber.w(it, "balance read failed for %s", coin.ticker) }
+                .getOrNull()
+        }
 
     override suspend fun getEvmTokenBalancesAndPrices(
         address: String,

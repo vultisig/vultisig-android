@@ -742,16 +742,18 @@ constructor(
      * A balance that cannot be read lets the transaction through instead of blocking it. This gate
      * exists to stop a ceremony being wasted, not to protect funds — nothing lands when the wallet
      * is short — and refusing on an unresolved read would turn one flaky RPC call into a form that
-     * cannot be submitted at all.
+     * cannot be submitted at all. That is also why the balance is asked for through
+     * [BalanceRepository.getBalanceOrNull]: `SolanaApi.getBalance` answers an RPC error with zero
+     * lamports, which is indistinguishable from an empty wallet and would refuse a funded one.
      */
     private suspend fun refuseIfSolCannotCover(vault: KaminoVault, coin: Coin, amount: BigDecimal) {
         val solCoin = Coins.Solana.SOL.copy(address = coin.address)
         val balance =
-            runCatchingCancellable {
-                    balanceRepository.getTokenValue(coin.address, solCoin).first().value
+            balanceRepository.getBalanceOrNull(coin.address, solCoin)
+                ?: run {
+                    Timber.w("Kamino SOL balance unreadable, fee check skipped")
+                    return
                 }
-                .onFailure { Timber.w(it, "Kamino SOL balance read failed, fee check skipped") }
-                .getOrNull() ?: return
 
         val cost = solCostLamports(vault, coin, action)
         val required =

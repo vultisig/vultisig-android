@@ -30,6 +30,9 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -47,7 +50,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -167,11 +169,20 @@ internal class KaminoAmountViewModelTest {
 
     /**
      * The native balance every Kamino transaction is paid out of, whatever the vault's underlying
-     * token is. Stubbed after [givenTokenBalance] so the narrower matcher wins for SOL alone.
+     * token is.
+     *
+     * Read through `getBalanceOrNull`, not `getTokenValue`: on Solana a failed read and an empty
+     * wallet are the same zero out of `SolanaApi.getBalance`, and the gate has to tell them apart.
      */
     private fun givenSolBalance(lamports: String) {
-        coEvery { balanceRepository.getTokenValue(any(), match { it.isNativeToken }) } returns
-            flowOf(TokenValue(value = BigInteger(lamports), token = SOL))
+        coEvery { balanceRepository.getBalanceOrNull(any(), match { it.isNativeToken }) } returns
+            BigInteger(lamports)
+    }
+
+    /** A SOL balance the node would not answer for. */
+    private fun givenUnreadableSolBalance() {
+        coEvery { balanceRepository.getBalanceOrNull(any(), match { it.isNativeToken }) } returns
+            null
     }
 
     /** A position large enough to withdraw from, with a readable rate. */
@@ -718,13 +729,9 @@ internal class KaminoAmountViewModelTest {
         vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
         vm.submit()
 
-        val error = vm.state.value.error
-        assertTrue(
-            error is UiText.FormattedText,
-            "expected a formatted resource, was ${error?.let { it::class.simpleName }}",
-        )
-        assertEquals(R.string.insufficient_native_token, (error as UiText.FormattedText).resId)
-        assertEquals(listOf("SOL"), error.formatArgs)
+        val error = vm.state.value.error.shouldBeInstanceOf<UiText.FormattedText>()
+        error.resId shouldBe R.string.insufficient_native_token
+        error.formatArgs shouldBe listOf("SOL")
         coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
     }
 
@@ -742,10 +749,8 @@ internal class KaminoAmountViewModelTest {
         vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
         vm.submit()
 
-        assertEquals(
-            R.string.insufficient_native_token,
-            (vm.state.value.error as UiText.FormattedText).resId,
-        )
+        vm.state.value.error.shouldBeInstanceOf<UiText.FormattedText>().resId shouldBe
+            R.string.insufficient_native_token
         coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
     }
 
@@ -760,8 +765,8 @@ internal class KaminoAmountViewModelTest {
         vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
         vm.submit()
 
-        assertNull(vm.state.value.error)
-        assertEquals(OPERATION_KAMINO_DEPOSIT, captured.captured.operation)
+        vm.state.value.error.shouldBeNull()
+        captured.captured.operation shouldBe OPERATION_KAMINO_DEPOSIT
     }
 
     /**
@@ -782,8 +787,8 @@ internal class KaminoAmountViewModelTest {
         vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
         vm.submit()
 
-        assertNull(vm.state.value.error)
-        assertEquals(OPERATION_KAMINO_DEPOSIT, captured.captured.operation)
+        vm.state.value.error.shouldBeNull()
+        captured.captured.operation shouldBe OPERATION_KAMINO_DEPOSIT
     }
 
     /**
@@ -800,10 +805,8 @@ internal class KaminoAmountViewModelTest {
         vm.amountFieldState.setTextAndPlaceCursorAtEnd("1")
         vm.submit()
 
-        assertEquals(
-            R.string.insufficient_native_token,
-            (vm.state.value.error as UiText.FormattedText).resId,
-        )
+        vm.state.value.error.shouldBeInstanceOf<UiText.FormattedText>().resId shouldBe
+            R.string.insufficient_native_token
         coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
     }
 
@@ -815,16 +818,15 @@ internal class KaminoAmountViewModelTest {
     @Test
     fun `an unreadable SOL balance lets the transaction through`() = runTest {
         givenTokenBalance("2500000000")
-        coEvery { balanceRepository.getTokenValue(any(), match { it.isNativeToken }) } returns
-            flow { throw IllegalStateException("rpc unavailable") }
+        givenUnreadableSolBalance()
         val captured = givenBuiltPayload()
 
         val vm = viewModel()
         vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
         vm.submit()
 
-        assertNull(vm.state.value.error)
-        assertEquals(OPERATION_KAMINO_DEPOSIT, captured.captured.operation)
+        vm.state.value.error.shouldBeNull()
+        captured.captured.operation shouldBe OPERATION_KAMINO_DEPOSIT
     }
 
     /**
@@ -863,7 +865,6 @@ internal class KaminoAmountViewModelTest {
         val ALLEZ = KaminoVaultRegistry.ALLEZ_SOL
 
         val COIN = com.vultisig.wallet.data.models.Coins.Solana.USDC
-        val SOL = com.vultisig.wallet.data.models.Coins.Solana.SOL
 
         /** Base fee plus the 320,000-unit token-deposit priority fee, and nothing else. */
         const val FEE_ONLY_LAMPORTS = "1320000"
