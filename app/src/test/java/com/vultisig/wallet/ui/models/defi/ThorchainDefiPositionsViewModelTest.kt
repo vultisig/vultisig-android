@@ -394,6 +394,70 @@ internal class ThorchainDefiPositionsViewModelTest {
         assertFalse(sTcy.supportsMint)
     }
 
+    @Test
+    fun `the ybRUNE receipt renders as a compounded position counted in receipt units`() = runTest {
+        selectPositions("ybRUNE")
+        coEvery { defaultStakingPositionService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(listOf(stakingDetails(Coins.ThorChain.ybRUNE, BigInteger("523400000000"))))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val ybRune =
+            vm.state.value.staking.positions.single { it.coin.id == Coins.ThorChain.ybRUNE.id }
+        // Header and amount name the same unit. The sRUJI card can say RUJI because its amount is
+        // the pool's RUJI liquidSize; this one is the raw receipt balance, and a share is worth
+        // more than one bRUNE, so titling it bRUNE would understate the position.
+        val header = ybRune.stakeAssetHeader as UiText.FormattedText
+        assertEquals(R.string.defi_header_compounded, header.resId)
+        assertEquals(listOf(Coins.ThorChain.ybRUNE.ticker), header.formatArgs)
+        assertTrue(ybRune.stakedAmountDisplay.endsWith(Coins.ThorChain.ybRUNE.ticker))
+        // Auto-compounding: nothing is separately claimable. The receipt itself is a plain bank
+        // denom, so it can be moved to another address like the sTCY one above it.
+        assertFalse(ybRune.supportsMint)
+        assertTrue(ybRune.canTransfer)
+        assertFalse(ybRune.canWithdraw)
+        assertTrue(ybRune.canStake)
+        assertTrue(ybRune.canUnstake)
+    }
+
+    @Test
+    fun `transfer routes to send against the position's own receipt`() = runTest {
+        // Fixed to sTCY, the ybRUNE card's Transfer button would have opened the form on someone
+        // else's token.
+        selectPositions("ybRUNE")
+        coEvery { defaultStakingPositionService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(listOf(stakingDetails(Coins.ThorChain.ybRUNE, BigInteger("523400000000"))))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        val ybRune =
+            vm.state.value.staking.positions.single { it.coin.id == Coins.ThorChain.ybRUNE.id }
+        vm.onClickTransfer(ybRune.coin)
+
+        coVerify(exactly = 1) {
+            navigator.route(
+                Route.Send(
+                    vaultId = VAULT_ID,
+                    chainId = Chain.ThorChain.id,
+                    tokenId = Coins.ThorChain.ybRUNE.id,
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `a ybRUNE position nobody holds cannot be unbonded`() = runTest {
+        selectPositions("ybRUNE")
+        coEvery { defaultStakingPositionService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(listOf(stakingDetails(Coins.ThorChain.ybRUNE, BigInteger.ZERO)))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val ybRune =
+            vm.state.value.staking.positions.single { it.coin.id == Coins.ThorChain.ybRUNE.id }
+        assertFalse(ybRune.canUnstake)
+        assertTrue(ybRune.canStake)
+    }
+
     /**
      * These position tokens usually aren't vault coins, and the periodic price refresh only ever
      * covers vault coins — so unless the screen refreshes them itself they have no cache row, and

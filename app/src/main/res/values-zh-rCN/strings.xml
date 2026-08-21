@@ -85,6 +85,7 @@
     <string name="verify_deposit_depositing">正在存入</string>
     <string name="verify_deposit_withdrawing">正在提取</string>
     <string name="kamino_verify_vault">金库</string>
+    <string name="kamino_verify_withdraw_unverified">此设备无法确认该金额。该交易将提取 %1$s 份金库份额。</string>
     <string name="kamino_error_build_failed">无法准备此交易</string>
     <string name="kamino_withdraw_nothing">该金库没有可提取的资产</string>
     <string name="kamino_withdraw_unreadable">无法读取该仓位，因此无法准备提取</string>
@@ -296,6 +297,7 @@
 
     <!-- Keysign Screen -->
     <string name="keysign_screen_preparing_vault">准备保险库…</string>
+    <string name="keysign_malicious_party_detected">检测到此 keysign 会话中的设备“%1$s”存在恶意行为。请勿再使用它进行签名。</string>
 
     <!-- Camera Bind Error -->
 

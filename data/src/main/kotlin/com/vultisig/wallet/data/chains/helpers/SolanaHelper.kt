@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import com.vultisig.wallet.data.blockchain.solana.SolanaSignatureEnvelope
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingOpType
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingPayload
 import com.vultisig.wallet.data.common.toHexByteArray
@@ -44,7 +45,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         val DefaultFeeInLamports: BigInteger = 1000000.toBigInteger()
 
         /** Byte length of an ed25519 signature, and of each slot in a Solana signature array. */
-        private const val SIGNATURE_LENGTH = 64
+        private const val SIGNATURE_LENGTH = SolanaSignatureEnvelope.SIGNATURE_LENGTH
 
         /**
          * The Solana transaction id is the first signature in the signed transaction. WalletCore
@@ -469,64 +470,13 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
     }
 
     /**
-     * A dApp-supplied raw Solana transaction split into its wire envelope `[compact-u16 signature
-     * count][count × 64-byte signature slot][message]`.
-     *
-     * [message] is the pre-image ed25519 signs verbatim; [firstSignatureOffset] is where signer 0's
-     * slot begins, so the produced signature can be spliced back into [bytes] without disturbing
-     * anything else.
-     */
-    private class RawSolanaTransaction(
-        val bytes: ByteArray,
-        val firstSignatureOffset: Int,
-        val message: ByteArray,
-    )
-
-    /**
      * Parses the `[shortvec(numSignatures)][numSignatures × 64-byte slot][message]` envelope of a
-     * dApp-supplied raw transaction and returns its message bytes verbatim.
+     * dApp-supplied raw transaction.
      *
-     * Signing over these original bytes — rather than decoding into WalletCore's representation and
-     * re-serializing it (the `TransactionDecoder` → `SigningInput.rawMessage` →
-     * `TransactionCompiler` round trip) — keeps the pre-image hash independent of WalletCore's
-     * encoder. That re-encode is not guaranteed to reproduce the original bytes for a v0 message
-     * referencing an Address Lookup Table (the standard shape for DEX/aggregator swaps), which
-     * would make co-signing devices compute mismatching hashes and stall the ceremony.
+     * Shared with the checks that decide whether a transaction may be signed this way at all — see
+     * [SolanaSignatureEnvelope], which is also where the reasons for parsing the original bytes
+     * rather than round-tripping them through WalletCore live.
      */
-    private fun parseRawTransaction(base64Transaction: String): RawSolanaTransaction {
-        val bytes = base64Transaction.decodeBase64Bytes()
-
-        val (signatureCount, firstSignatureOffset) = readCompactU16(bytes)
-        check(signatureCount >= 1) { "Solana transaction declares no signatures" }
-
-        val messageOffset = firstSignatureOffset + signatureCount * SIGNATURE_LENGTH
-        check(messageOffset < bytes.size) {
-            "Solana transaction too short for its $signatureCount declared signature(s)"
-        }
-        return RawSolanaTransaction(
-            bytes = bytes,
-            firstSignatureOffset = firstSignatureOffset,
-            message = bytes.copyOfRange(messageOffset, bytes.size),
-        )
-    }
-
-    /**
-     * Decodes the Solana compact-u16 (shortvec) at the start of [bytes] — up to three bytes, 7
-     * payload bits each with the high bit signalling "more bytes follow" — and returns the decoded
-     * value together with the offset just past it (where the signature slots begin).
-     */
-    private fun readCompactU16(bytes: ByteArray): Pair<Int, Int> {
-        var value = 0
-        var offset = 0
-        var shift = 0
-        while (offset < bytes.size) {
-            val byte = bytes[offset].toInt() and 0xFF
-            value = value or ((byte and 0x7F) shl shift)
-            offset++
-            if (byte and 0x80 == 0) return value to offset
-            shift += 7
-            if (shift > 14) error("Malformed compact-u16 in Solana transaction")
-        }
-        error("Truncated compact-u16 in Solana transaction")
-    }
+    private fun parseRawTransaction(base64Transaction: String): SolanaSignatureEnvelope =
+        SolanaSignatureEnvelope.parse(base64Transaction.decodeBase64Bytes())
 }

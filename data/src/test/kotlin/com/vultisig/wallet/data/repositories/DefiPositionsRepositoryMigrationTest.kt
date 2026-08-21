@@ -208,6 +208,94 @@ internal class DefiPositionsRepositoryMigrationTest {
         after[mayachainKey(VAULT_ID)] shouldBe setOf(MAYA_BOND_CACAO_KEY)
     }
 
+    // ──────── positions introduced after a vault had already chosen ────────
+
+    @Test
+    fun `a selection saved before ybRUNE existed gets the new position switched on`() = runTest {
+        // The stored set is handed back verbatim, so without this the compounded bRUNE card and
+        // its leg of the tab total stay hidden on every vault that had ever opened the dialog —
+        // with no row switched off to explain why.
+        val before = mutablePreferencesOf(thorchainKey(VAULT_ID) to setOf("RUNE", "TCY"))
+
+        val after = addNewThorchainPositions(before)
+
+        after[thorchainKey(VAULT_ID)] shouldBe setOf("RUNE", "TCY", "ybRUNE")
+    }
+
+    @Test
+    fun `every vault gets the new position, not just the first`() = runTest {
+        val before =
+            mutablePreferencesOf(
+                thorchainKey("vault-a") to setOf("RUNE"),
+                thorchainKey("vault-b") to setOf("TCY", "BTC.BTC"),
+            )
+
+        val after = addNewThorchainPositions(before)
+
+        after[thorchainKey("vault-a")] shouldBe setOf("RUNE", "ybRUNE")
+        after[thorchainKey("vault-b")] shouldBe setOf("TCY", "BTC.BTC", "ybRUNE")
+    }
+
+    @Test
+    fun `a cleared selection is not handed a row it never asked for`() = runTest {
+        val before = mutablePreferencesOf(thorchainKey(VAULT_ID) to emptySet<String>())
+
+        val after = addNewThorchainPositions(before)
+
+        after[thorchainKey(VAULT_ID)] shouldBe emptySet()
+    }
+
+    @Test
+    fun `a vault that never chose is left without a key`() = runTest {
+        // Null is what tells the screen to answer with its own defaults, which already carry the
+        // new position. Writing a set here would turn that into a choice the vault never made.
+        val after = addNewThorchainPositions(mutablePreferencesOf())
+
+        after[thorchainKey(VAULT_ID)].shouldBeNull()
+    }
+
+    @Test
+    fun `the Maya selection is left alone`() = runTest {
+        val before = mutablePreferencesOf(mayachainKey(VAULT_ID) to setOf(MAYA_BOND_CACAO_KEY))
+
+        val after = addNewThorchainPositions(before)
+
+        after[mayachainKey(VAULT_ID)] shouldBe setOf(MAYA_BOND_CACAO_KEY)
+    }
+
+    @Test
+    fun `switching the new position back off survives the next launch`() = runTest {
+        // shouldMigrate is consulted on every store creation. Without the version counter this
+        // would be a standing rule that undid the user's choice on the very next cold start.
+        val before = mutablePreferencesOf(thorchainKey(VAULT_ID) to setOf("RUNE"))
+        NewThorchainPositionsMigration.shouldMigrate(before) shouldBe true
+
+        val migrated = NewThorchainPositionsMigration.migrate(before)
+        val userSwitchedItOff =
+            migrated.toMutablePreferences().apply { this[thorchainKey(VAULT_ID)] = setOf("RUNE") }
+
+        NewThorchainPositionsMigration.shouldMigrate(userSwitchedItOff) shouldBe false
+        addNewThorchainPositions(userSwitchedItOff)[thorchainKey(VAULT_ID)] shouldBe setOf("RUNE")
+    }
+
+    @Test
+    fun `a fresh install is only stamped with the current version`() = runTest {
+        val after = NewThorchainPositionsMigration.migrate(mutablePreferencesOf())
+
+        NewThorchainPositionsMigration.shouldMigrate(after) shouldBe false
+        after.asMap().keys.map { it.name } shouldBe listOf("defi_selected_positions_version")
+    }
+
+    @Test
+    fun `the legacy split runs first, so the vault it moves gets the new position too`() = runTest {
+        // Both migrations run in one pass, in list order, each seeing the previous one's output.
+        val before = preferencesWithLegacySelection(VAULT_ID, setOf("RUNE", "TCY"))
+
+        val after = addNewThorchainPositions(migrateSelectedPositionsPerChain(before))
+
+        after[thorchainKey(VAULT_ID)] shouldBe setOf("RUNE", "TCY", "ybRUNE")
+    }
+
     private fun preferencesWithLegacySelection(vaultId: String, positions: Set<String>) =
         mutablePreferencesOf(legacyKey(vaultId) to positions)
 

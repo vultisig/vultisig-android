@@ -1,8 +1,10 @@
 package com.vultisig.wallet.data.blockchain.solana.kamino
 
 import com.vultisig.wallet.data.api.KaminoApi
+import com.vultisig.wallet.data.blockchain.solana.SolanaSignatureEnvelope
 import io.ktor.util.decodeBase64Bytes
 import java.math.BigInteger
+import java.math.RoundingMode
 import javax.inject.Inject
 import wallet.core.jni.CoinType
 import wallet.core.jni.SolanaAddress
@@ -16,18 +18,31 @@ import wallet.core.jni.proto.Solana
  * [feePayer] is the message's own account key 0 — the fee payer and first required signer. It has
  * to come from the message header rather than from any instruction's account list: an instruction
  * that happens to name the wallet first says nothing about who is authorising the transaction.
+ *
+ * @property requiredSignatures how many signatures the message declares. Carried because the
+ *   raw-signing path fills slot 0 and leaves every other slot as it received it, so a second
+ *   required signer is a transaction this app would sign and then broadcast incomplete — or
+ *   alongside somebody else's signature.
+ * @property isUnsigned whether every declared slot is still an all-zero placeholder, which is what
+ *   makes that splice safe.
+ *
+ * Neither carries a default. A default would have to be the permissive value, and the whole point
+ * of both is that nothing was checking them.
  */
 data class KaminoDecodedTransaction(
     val feePayer: String?,
     val instructions: List<KaminoTxInstruction>,
+    val requiredSignatures: Int,
+    val isUnsigned: Boolean,
 )
 
 /** Decodes a base64 Solana transaction into the instructions validation reasons about. */
 object KaminoTransactionDecoder {
 
     fun decode(base64Transaction: String): KaminoDecodedTransaction {
-        val decoded =
-            TransactionDecoder.decode(CoinType.SOLANA, base64Transaction.decodeBase64Bytes())
+        val wireBytes = base64Transaction.decodeBase64Bytes()
+        val envelope = SolanaSignatureEnvelope.parse(wireBytes)
+        val decoded = TransactionDecoder.decode(CoinType.SOLANA, wireBytes)
         val output = Solana.DecodingTransactionOutput.parseFrom(decoded)
         check(output.hasTransaction()) { "transaction could not be decoded" }
 
@@ -66,6 +81,8 @@ object KaminoTransactionDecoder {
         return KaminoDecodedTransaction(
             feePayer = accountKeys.firstOrNull(),
             instructions = decodedInstructions,
+            requiredSignatures = envelope.requiredSignatures,
+            isUnsigned = envelope.isUnsigned,
         )
     }
 
@@ -128,25 +145,56 @@ class KaminoTransactionPreparer @Inject constructor(private val kaminoApi: Kamin
             vault = vault,
             action = action,
             signerAddress = walletAddress,
-            wrappedSolAccount = wrappedSolAccountFor(vault, walletAddress),
+            tokenAccount = associatedTokenAccount(walletAddress, vault.tokenMint),
+            shareAccount = associatedTokenAccount(walletAddress, vault.sharesMint),
+            farmUserState = KaminoFarmsUserState.derive(vault.farm, walletAddress),
+            amountBaseUnits = baseUnits(amount, vault, action),
         )
 
         return withMemo
     }
 
     /**
-     * The wrapped-SOL associated token account a wrap must pay into, derived from the signer and
-     * the vault's own mint rather than read out of the transaction being checked.
+     * The wallet's associated token account for [mint], derived from the signer and a mint the
+     * registry pins rather than read out of the transaction being checked — which is the whole
+     * point of it: an address that came out of the response could not check the response.
      *
-     * Null for vaults whose underlying is a plain token, which have no wrap to make.
+     * Two of these are derived per transaction. The one for the vault's underlying mint is where a
+     * deposit's tokens come from and where a withdraw pays out — and on the SOL vault it is also
+     * the wrapped-SOL account a wrap funds. The one for its share mint is what ties an instruction
+     * to *this* vault at all: the vault account itself travels in an address lookup table that this
+     * decode does not resolve.
+     *
+     * Null when WalletCore cannot derive it, which the validator treats as a refusal rather than as
+     * a check it may skip.
      */
-    private fun wrappedSolAccountFor(vault: KaminoVault, walletAddress: String): String? {
-        if (vault.tokenMint != KaminoVaultRegistry.WRAPPED_SOL_MINT) return null
-        return runCatching {
-                SolanaAddress(walletAddress)
-                    .defaultTokenAddress(KaminoVaultRegistry.WRAPPED_SOL_MINT)
+    private fun associatedTokenAccount(walletAddress: String, mint: String): String? =
+        runCatching { SolanaAddress(walletAddress).defaultTokenAddress(mint) }.getOrNull()
+
+    /**
+     * The amount that was sent, in the base units the instruction carries — tokens for a deposit,
+     * shares for a withdraw, matching the `u64` each kVault instruction takes.
+     *
+     * Converted from the very string this app handed the API, so the comparison downstream is
+     * against the request rather than against anything the response echoed back.
+     *
+     * Truncates rather than throwing on sub-unit precision: the amount screen already quantises
+     * input to the token's own scale before it gets here, so this is a floor over a number that has
+     * nothing to floor. Null when the string is not a positive decimal at all, which the validator
+     * refuses rather than skips.
+     */
+    private fun baseUnits(amount: String, vault: KaminoVault, action: KaminoAction): BigInteger? {
+        val decimals =
+            when (action) {
+                KaminoAction.DEPOSIT -> vault.tokenDecimals
+                KaminoAction.WITHDRAW -> vault.sharesDecimals
             }
-            .getOrNull()
+        return amount
+            .toBigDecimalOrNull()
+            ?.movePointRight(decimals)
+            ?.setScale(0, RoundingMode.DOWN)
+            ?.toBigInteger()
+            ?.takeIf { it.signum() > 0 }
     }
 
     private fun injectComputeBudget(
@@ -186,8 +234,9 @@ class KaminoTransactionPreparer @Inject constructor(private val kaminoApi: Kamin
             instructions.indices.filter {
                 instructions[it].programId == KaminoComputeBudget.PROGRAM_ID
             }
-        check(budgetIndices == listOf(UNIT_LIMIT_INDEX)) {
-            "expected the app's compute-unit limit alone at index $UNIT_LIMIT_INDEX, " +
+        check(budgetIndices == listOf(KaminoComputeBudget.UNIT_LIMIT_INDEX)) {
+            "expected the app's compute-unit limit alone at index " +
+                "${KaminoComputeBudget.UNIT_LIMIT_INDEX}, " +
                 "found ComputeBudget instructions at $budgetIndices"
         }
 
@@ -201,18 +250,11 @@ class KaminoTransactionPreparer @Inject constructor(private val kaminoApi: Kamin
         return checkNotNull(
             SolanaTransaction.insertInstruction(
                 withLimit,
-                UNIT_PRICE_INDEX,
+                KaminoComputeBudget.UNIT_PRICE_INDEX,
                 KaminoComputeBudget.setUnitPriceInstructionJson(price),
             )
         ) {
             "WalletCore could not set the Kamino compute-unit price"
         }
-    }
-
-    private companion object {
-        private const val UNIT_LIMIT_INDEX = 0
-
-        /** Right after the limit, which is where iOS puts it. */
-        private const val UNIT_PRICE_INDEX = UNIT_LIMIT_INDEX + 1
     }
 }

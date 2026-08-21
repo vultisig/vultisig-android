@@ -27,4 +27,5 @@ internal fun fakeSendStrategyFactory(
         chainValidationService = mockk(relaxed = true),
         navigator = navigator,
         thorChainApi = mockk(relaxed = true),
+        defaultStakingPositionService = mockk(relaxed = true),
     )

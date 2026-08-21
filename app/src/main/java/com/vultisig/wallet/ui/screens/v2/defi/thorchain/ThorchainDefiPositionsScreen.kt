@@ -30,6 +30,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
@@ -92,7 +93,7 @@ internal fun ThorchainDefiPositionsScreen(
         onClickWithdraw = { model.onNavigateToFunctions(it) },
         onClickStake = { model.onNavigateToFunctions(it) },
         onClickUnstake = { model.onNavigateToFunctions(it) },
-        onClickTransfer = { model.onClickTransfer() },
+        onClickTransfer = model::onClickTransfer,
         onClickAddLp = model::onClickAddLp,
         onClickRemoveLp = model::onClickRemoveLp,
         onClickCompletePendingLp = model::onClickCompletePendingLp,
@@ -117,7 +118,7 @@ internal fun ThorchainDefiPositionScreenContent(
     onClickWithdraw: (DeFiNavActions) -> Unit = {},
     onClickStake: (DeFiNavActions) -> Unit = {},
     onClickUnstake: (DeFiNavActions) -> Unit = {},
-    onClickTransfer: () -> Unit = {},
+    onClickTransfer: (Coin) -> Unit = {},
     onClickAddLp: (String) -> Unit = {},
     onClickRemoveLp: (String) -> Unit = {},
     onClickCompletePendingLp: (String) -> Unit = {},

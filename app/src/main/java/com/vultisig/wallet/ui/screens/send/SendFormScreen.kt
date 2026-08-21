@@ -207,10 +207,12 @@ internal fun SendFormScreen(
             when (state.defiType) {
                 DeFiNavActions.STAKE_RUJI,
                 DeFiNavActions.STAKE_TCY,
-                DeFiNavActions.STAKE_STCY -> stringResource(R.string.stake_screen_title)
+                DeFiNavActions.STAKE_STCY,
+                DeFiNavActions.STAKE_YBRUNE -> stringResource(R.string.stake_screen_title)
                 DeFiNavActions.UNSTAKE_TCY,
                 DeFiNavActions.UNSTAKE_RUJI,
-                DeFiNavActions.UNSTAKE_STCY -> stringResource(R.string.unstake_screen_title)
+                DeFiNavActions.UNSTAKE_STCY,
+                DeFiNavActions.UNSTAKE_YBRUNE -> stringResource(R.string.unstake_screen_title)
                 DeFiNavActions.MINT_YRUNE,
                 DeFiNavActions.MINT_YTCY -> stringResource(R.string.mint_screen_title)
                 DeFiNavActions.REDEEM_YRUNE,

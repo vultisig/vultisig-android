@@ -144,6 +144,7 @@
     <string name="vault_detail_screen_mldsa_key_copied">Clave MLDSA Copiada</string>
     <string name="welcome_screen_skip">Saltar</string>
     <string name="keysign_screen_preparing_vault">PREPARANDO BÓVEDA..</string>
+    <string name="keysign_malicious_party_detected">Se detectó que el dispositivo \"%1$s\" en esta sesión de keysign actuó de forma maliciosa. No lo uses de nuevo para firmar.</string>
     <string name="vault_settings_delete_vault_caution1">Soy consciente de que la bóveda será eliminada permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Soy consciente de que puedo perder fondos.</string>
     <string name="vault_settings_delete_vault_caution3">He hecho una copia de seguridad de la bóveda para restaurarla más tarde</string>
@@ -546,6 +547,7 @@
     <string name="verify_deposit_depositing">Estás depositando</string>
     <string name="verify_deposit_withdrawing">Estás retirando</string>
     <string name="kamino_verify_vault">Vault</string>
+    <string name="kamino_verify_withdraw_unverified">Este dispositivo no puede confirmar este importe. La transacción retira %1$s participaciones del vault.</string>
     <string name="kamino_error_build_failed">No se pudo preparar esta transacción</string>
     <string name="kamino_withdraw_nothing">No hay nada que retirar de este vault</string>
     <string name="kamino_withdraw_unreadable">No se pudo leer esta posición, así que no se puede preparar el retiro</string>
