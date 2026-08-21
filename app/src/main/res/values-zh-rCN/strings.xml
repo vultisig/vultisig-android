@@ -297,6 +297,7 @@
 
     <!-- Keysign Screen -->
     <string name="keysign_screen_preparing_vault">准备保险库…</string>
+    <string name="keysign_malicious_party_detected">检测到此 keysign 会话中的设备“%1$s”存在恶意行为。请勿再使用它进行签名。</string>
 
     <!-- Camera Bind Error -->
 

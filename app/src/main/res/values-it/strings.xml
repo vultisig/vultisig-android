@@ -118,6 +118,7 @@
     <string name="vault_detail_screen_mldsa_key_copied">Chiave MLDSA Copiata</string>
     <string name="welcome_screen_skip">Salta</string>
     <string name="keysign_screen_preparing_vault">PREPARANDO LA CASSAFORTE…</string>
+    <string name="keysign_malicious_party_detected">È stato rilevato che il dispositivo \"%1$s\" in questa sessione di keysign si è comportato in modo malevolo. Non utilizzarlo più per firmare.</string>
     <string name="vault_settings_delete_vault_caution1">Sono consapevole che il caveau sarà eliminato permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Sono consapevole che posso perdere fondi</string>
     <string name="vault_settings_delete_vault_caution3">Ho fatto un backup del caveau per ripristinarlo in seguito</string>

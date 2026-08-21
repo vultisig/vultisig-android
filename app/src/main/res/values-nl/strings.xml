@@ -149,6 +149,7 @@
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA-sleutel gekopieerd</string>
     <string name="welcome_screen_skip">Overslaan</string>
     <string name="keysign_screen_preparing_vault">Kluis voorbereiden…</string>
+    <string name="keysign_malicious_party_detected">Het apparaat \"%1$s\" in deze keysign-sessie is betrapt op kwaadaardig gedrag. Gebruik het niet opnieuw om te ondertekenen.</string>
     <string name="vault_settings_delete_vault_caution1">Ik ben me ervan bewust dat de kluis permanent zal worden verwijderd</string>
     <string name="vault_settings_delete_vault_caution2">Ik ben me ervan bewust dat ik geld kan verliezen</string>
     <string name="vault_settings_delete_vault_caution3">Ik heb een kluisback-up gemaakt om later te kunnen herstellen</string>
