@@ -88,11 +88,14 @@ internal class AddLiquidityStrategy(
         val srcAddress = selectedToken.address
         val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
         val pairedAddress = resolvePairedAddress(chain, vaultId, poolId)
-        // Either half of a symmetric add MUST name the other half's address, or THORChain opens a
-        // separate asymmetric position rather than crediting the pair: a RUNE-side add carries the
-        // asset address, and the asset-side add that completes a pending half-deposit carries the
-        // RUNE address.
-        if (isSymmetricPool && pairedAddress == null) {
+        // Either half of a symmetric THORChain add MUST name the other half's address, or
+        // THORChain opens a separate asymmetric position rather than crediting the pair: a
+        // RUNE-side add carries the asset address, and the asset-side add that completes a pending
+        // half-deposit carries the RUNE address. Gated on the preflight's THORChain-only condition
+        // as well as the pool shape: resolvePairedAddress has no Maya branch and always returns
+        // null there, so isSymmetricPool alone would reject every real Maya pool add, while
+        // isThorChainLpAdd alone would reject a THOR.* pool that has no paired side at all.
+        if (isSymmetricPool && isThorChainLpAdd && pairedAddress == null) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_address)
             )

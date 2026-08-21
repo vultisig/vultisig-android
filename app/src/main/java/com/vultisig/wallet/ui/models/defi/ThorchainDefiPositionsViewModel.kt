@@ -550,11 +550,27 @@ constructor(
     }
 
     /**
-     * Marks the scan as settled without touching [LpTabUiModel.pendingDeposits]. A failed reload
-     * must not erase a list an earlier one found — the refund timer is still running on it.
+     * Marks the scan as settled without erasing [LpTabUiModel.pendingDeposits]: a failed reload
+     * must still show a list an earlier one found, because the refund timer is running on it and
+     * the user needs to know. Completion is withdrawn instead — the whole point of re-scanning is
+     * that THORChain may already have refunded the deposit, and nothing downstream re-checks:
+     * onClickCompletePendingLp reads this list directly, and the add-liquidity preflight only asks
+     * about pool-wide pause and status, never about this record. A card the scan could not confirm
+     * therefore stays visible but cannot spend inbound gas on a dead deposit.
      */
     private fun markPendingLpDepositsSettled() {
-        state.update { it.copy(lp = it.lp.copy(pendingDepositsLoaded = true)) }
+        state.update {
+            it.copy(
+                lp =
+                    it.lp.copy(
+                        pendingDeposits =
+                            it.lp.pendingDeposits.map { deposit ->
+                                deposit.copy(canComplete = false)
+                            },
+                        pendingDepositsLoaded = true,
+                    )
+            )
+        }
     }
 
     /**
@@ -1362,6 +1378,9 @@ constructor(
      */
     fun onClickCompletePendingLp(poolId: String) {
         val pending = state.value.lp.pendingDeposits.find { it.poolId == poolId } ?: return
+        // Also enforced by the card's disabled button; held here too so a card the last scan
+        // could not confirm can never route into a deposit, whatever the UI does.
+        if (!pending.canComplete) return
         val missingSideChain =
             if (pending.awaitedTicker == Coins.ThorChain.RUNE.ticker) Chain.ThorChain
             else parseThorChainPool(poolId).chain ?: return
