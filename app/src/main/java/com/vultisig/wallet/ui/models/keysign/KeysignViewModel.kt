@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.keygen.DKLSKeysign
+import com.vultisig.wallet.data.keygen.MaliciousPartyException
 import com.vultisig.wallet.data.keygen.MldsaKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
 import com.vultisig.wallet.data.models.Chain
@@ -719,6 +720,16 @@ constructor(
         } catch (e: CancellationException) {
             if (cancelPullJobOnFinish) pullTssMessagesJob?.cancel()
             throw e
+        } catch (e: MaliciousPartyException) {
+            Timber.e(e)
+            _state.update {
+                it.copy(
+                    signingState =
+                        KeysignState.Error(
+                            R.string.keysign_malicious_party_detected.asUiText(e.partyID)
+                        )
+                )
+            }
         } catch (e: Exception) {
             Timber.e(e)
             _state.update {

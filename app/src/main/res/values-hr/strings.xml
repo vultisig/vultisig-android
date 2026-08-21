@@ -118,6 +118,7 @@
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA ključ kopiran</string>
     <string name="welcome_screen_skip">Preskoči</string>
     <string name="keysign_screen_preparing_vault">PRIPREMA SEFA…</string>
+    <string name="keysign_malicious_party_detected">Otkriveno je da se uređaj \"%1$s\" u ovoj keysign sesiji zlonamjerno ponaša. Nemoj ga ponovno koristiti za potpisivanje.</string>
     <string name="vault_settings_delete_vault_caution1">Ovaj sef će biti trajno uklonjen</string>
     <string name="vault_settings_delete_vault_caution2">Svjestan sam da mogu izgubiti sredstva</string>
     <string name="vault_settings_delete_vault_caution3">Napravio sam sigurnosnu kopiju spremišta za kasniju obnovu</string>

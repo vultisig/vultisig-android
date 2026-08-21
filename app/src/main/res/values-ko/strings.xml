@@ -251,6 +251,7 @@
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA 키 복사됨</string>
     <string name="welcome_screen_skip">건너뛰기</string>
     <string name="keysign_screen_preparing_vault">볼트 준비 중…</string>
+    <string name="keysign_malicious_party_detected">이 keysign 세션의 기기 \"%1$s\"가 악의적으로 동작한 것이 감지되었습니다. 다시는 서명에 사용하지 마세요.</string>
     <string name="vault_settings_delete_vault_caution1">볼트가 영구적으로 삭제된다는 것을 알고 있습니다</string>
     <string name="vault_settings_delete_vault_caution2">자금을 잃을 수 있다는 것을 알고 있습니다</string>
     <string name="vault_settings_delete_vault_caution3">나중에 복원할 수 있도록 볼트 백업을 완료했습니다</string>
