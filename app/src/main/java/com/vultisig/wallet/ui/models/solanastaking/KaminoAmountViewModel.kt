@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawEligibili
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawLiquidity
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawMath
 import com.vultisig.wallet.data.blockchain.solana.kamino.coin
+import com.vultisig.wallet.data.blockchain.solana.kamino.kaminoChargeableLamports
 import com.vultisig.wallet.data.blockchain.solana.kamino.kaminoDestinationAddress
 import com.vultisig.wallet.data.blockchain.solana.kamino.kaminoNetworkFeeLamports
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
@@ -261,8 +262,12 @@ constructor(
      * of #5607: a form denominated in USDC still spends SOL, out of a balance it never reads.
      *
      * Through [kaminoNetworkFeeLamports] rather than inline, for the same reason the verify screen
-     * goes through it: one derivation, so what the form checks the wallet against and what the two
-     * devices quote for the transaction cannot drift apart.
+     * goes through it: one derivation, so what the form reserves and what the two devices quote for
+     * the transaction cannot drift apart. Its base term is the padded 1,000,000 both platforms
+     * display, which is deliberate *here* — a Max amount holding back more SOL than the chain will
+     * charge is headroom the wallet keeps, and it is the headroom the exit is later paid out of.
+     * Measuring a balance against that padding is a different matter, and that is
+     * [solChargeableLamports].
      */
     private suspend fun solCostLamports(
         vault: KaminoVault,
@@ -270,6 +275,22 @@ constructor(
         action: KaminoAction,
     ): BigInteger =
         kaminoNetworkFeeLamports(
+            vault = vault,
+            action = action,
+            unitPrice = medianUnitPrice(coin),
+            rentReserve = rentReserve(vault, coin.address, action),
+        )
+
+    /**
+     * The same cost with the base term the runtime charges rather than the one both platforms quote
+     * — what a wallet has to hold for this transaction to land, and nothing beyond it.
+     */
+    private suspend fun solChargeableLamports(
+        vault: KaminoVault,
+        coin: Coin,
+        action: KaminoAction,
+    ): BigInteger =
+        kaminoChargeableLamports(
             vault = vault,
             action = action,
             unitPrice = medianUnitPrice(coin),
@@ -522,12 +543,9 @@ constructor(
             // start quoting a term the other device does not. The wallet is still checked against
             // the full cost by [refuseIfSolCannotCover] before the form lets the transaction
             // through.
+            val actionRent = rentReserve(vault, coin.address, action)
             val depositRent =
-                if (!route.isWithdraw && coin.isNativeToken) {
-                    rentReserve(vault, coin.address, KaminoAction.DEPOSIT)
-                } else {
-                    BigInteger.ZERO
-                }
+                if (!route.isWithdraw && coin.isNativeToken) actionRent else BigInteger.ZERO
             val gasFee =
                 TokenValue(
                     value =
@@ -552,6 +570,21 @@ constructor(
                     // withdraw branch has to be applied here too or nothing the user sees changes.
                     dstAddress = kaminoDestinationAddress(vault, action, coin.address),
                     estimatedFees = gasFee,
+                    // What the runtime will actually deduct, carried alongside the padded figure
+                    // above so the verify screen weighs the wallet against the charge rather than
+                    // against the placeholder — see [refuseIfSolCannotCover], which is the same
+                    // check one screen earlier.
+                    chargedFees =
+                        TokenValue(
+                            value =
+                                kaminoChargeableLamports(
+                                    vault = vault,
+                                    action = action,
+                                    unitPrice = recordedBudget.priorityFee,
+                                    rentReserve = actionRent,
+                                ),
+                            token = solCoin,
+                        ),
                     estimateFeesFiat = "",
                     // The payload's, not `specific`'s. `KeysignShareViewModel` rebuilds the relayed
                     // KeysignPayload out of this transaction, so whatever is stored here is what a
@@ -656,6 +689,12 @@ constructor(
      * On a native-SOL deposit the amount leaves the same balance, so it is required on top. A
      * withdraw's amount arrives from the position rather than leaving the wallet, so it is not.
      *
+     * Weighed against [solChargeableLamports], not the padded figure the screens quote. The quoted
+     * base fee is 1,000,000 lamports where the runtime deducts 5,000, and [spendableBalance]
+     * reserves the padded one — so a Max deposit into the SOL vault leaves exactly the 995,000
+     * lamports of padding behind, and a gate that demanded it back refused the withdraw that exits
+     * the position while the chain would have charged 405,000 for it.
+     *
      * A balance that cannot be read lets the transaction through instead of blocking it. This gate
      * exists to stop a ceremony being wasted, not to protect funds — nothing lands when the wallet
      * is short — and refusing on an unresolved read would turn one flaky RPC call into a form that
@@ -672,7 +711,7 @@ constructor(
                     return
                 }
 
-        val cost = solCostLamports(vault, coin, action)
+        val cost = solChargeableLamports(vault, coin, action)
         val required =
             if (!route.isWithdraw && coin.isNativeToken) {
                 cost + amount.movePointRight(coin.decimal).toBigInteger()

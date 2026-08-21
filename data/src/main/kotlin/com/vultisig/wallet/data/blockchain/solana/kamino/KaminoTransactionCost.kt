@@ -24,6 +24,16 @@ val SPL_TOKEN_ACCOUNT_RENT_LAMPORTS: BigInteger = BigInteger.valueOf(2_039_280)
 val FARM_USER_STATE_RENT_LAMPORTS: BigInteger = BigInteger.valueOf(6_299_080)
 
 /**
+ * What the Solana runtime deducts per signature. These transactions carry exactly one.
+ *
+ * Deliberately not [SolanaHelper.DefaultFeeInLamports]: that 1,000,000 is a placeholder both
+ * platforms *quote*, two hundred times what is charged. Padding a displayed figure costs nothing;
+ * padding the figure a wallet is measured against refuses transactions it can afford, which is why
+ * [kaminoChargeableLamports] exists alongside [kaminoNetworkFeeLamports].
+ */
+val SOLANA_SIGNATURE_FEE_LAMPORTS: BigInteger = BigInteger.valueOf(5_000)
+
+/**
  * What a Kamino transaction costs its signer in SOL, beyond the amount itself.
  *
  * Shared by the initiating and the co-signing device on purpose. Both quote this figure on their
@@ -48,7 +58,52 @@ fun kaminoNetworkFeeLamports(
     unitPrice: BigInteger?,
     rentReserve: BigInteger = BigInteger.ZERO,
 ): BigInteger =
-    SolanaHelper.DefaultFeeInLamports +
+    costLamports(
+        base = SolanaHelper.DefaultFeeInLamports,
+        vault = vault,
+        action = action,
+        unitPrice = unitPrice,
+        rentReserve = rentReserve,
+    )
+
+/**
+ * The least SOL the same transaction can be charged: the signature fee the runtime deducts, the
+ * priority fee the bytes carry, and the rent for the accounts it creates.
+ *
+ * Separate from [kaminoNetworkFeeLamports] because the two answer different questions. That figure
+ * goes on a screen and has to equal what an iPhone co-signer derives from the same payload, so its
+ * base term is the 1,000,000-lamport placeholder both platforms pad with. This one decides whether
+ * a wallet may submit at all, and there the padding is a refusal rather than a rounding: a Max
+ * deposit into the SOL vault reserves the padded base and is charged 5,000, so it leaves exactly
+ * 995,000 lamports behind — and a gate built on the padded figure then demands 1,400,000 for the
+ * withdraw that exits the position, which the chain charges 405,000 for. The position could only be
+ * unwound by funding SOL from outside the app.
+ *
+ * Every other term is shared with the quoted figure on purpose: what the wallet is checked against
+ * must not drift from what it is told, beyond the padding this exists to drop.
+ */
+fun kaminoChargeableLamports(
+    vault: KaminoVault,
+    action: KaminoAction,
+    unitPrice: BigInteger?,
+    rentReserve: BigInteger = BigInteger.ZERO,
+): BigInteger =
+    costLamports(
+        base = SOLANA_SIGNATURE_FEE_LAMPORTS,
+        vault = vault,
+        action = action,
+        unitPrice = unitPrice,
+        rentReserve = rentReserve,
+    )
+
+private fun costLamports(
+    base: BigInteger,
+    vault: KaminoVault,
+    action: KaminoAction,
+    unitPrice: BigInteger?,
+    rentReserve: BigInteger,
+): BigInteger =
+    base +
         KaminoComputeBudget.priorityFeeLamports(
             vault = vault,
             action = action,
@@ -119,20 +174,32 @@ constructor(private val solanaApi: SolanaApi, private val kaminoApi: KaminoApi) 
         }
 
     /**
-     * Rent a withdraw spends: the destination token account, when the wallet no longer has one. The
-     * captured withdraw opens with `AssociatedToken::createIdempotent` before `kVault::withdraw`.
+     * Rent a withdraw spends on the accounts it creates: the destination it pays the tokens into,
+     * and the share account a staked exit releases the shares into. The captured unstaked withdraw
+     * opens with one `AssociatedToken::createIdempotent` before `kVault::withdraw`; the staked
+     * shape runs `farms::unstake` and `farms::withdraw_unstaked_deposits` ahead of it, and those
+     * shares have to land in the wallet's own share account, created the same idempotent way.
      *
-     * A withdraw against a *staked* position carries a second creation on top, which no capture of
-     * ours covers, so this is a floor rather than a promise — see the fixture note in
-     * `KaminoFixtures`. Under-reserving here costs a wasted ceremony, which is the same failure the
-     * figure exists to reduce, not a worse one.
+     * Two terms are the whole of it rather than a floor because the app already refuses anything
+     * else: `KaminoTransactionValidator` rejects a Kamino transaction that creates an account other
+     * than these two, so a third creation is one no device here would sign in the first place.
+     *
+     * The share term is not gated on the position being staked. Shares that are already unstaked
+     * are sitting in that very account, so a wallet without one has no unstaked shares to withdraw
+     * — and `createIdempotent` charges nothing for an account that is already there, which is what
+     * keeps the ordinary exit costing the fee alone.
      */
     private suspend fun withdrawRent(vault: KaminoVault, walletAddress: String): BigInteger =
         coroutineScope {
             val tokenAccountRent = async { tokenAccountRentReserve() }
             val hasDestination = async { tokenAccountExists(walletAddress, vault.tokenMint) }
+            val hasShareAccount = async { tokenAccountExists(walletAddress, vault.sharesMint) }
 
-            if (hasDestination.await()) BigInteger.ZERO else tokenAccountRent.await()
+            val rent = tokenAccountRent.await()
+            val destinationRent = if (hasDestination.await()) BigInteger.ZERO else rent
+            val shareAccountRent = if (hasShareAccount.await()) BigInteger.ZERO else rent
+
+            destinationRent + shareAccountRent
         }
 
     private suspend fun tokenAccountRentReserve(): BigInteger =

@@ -758,7 +758,7 @@ internal class KaminoAmountViewModelTest {
         coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
     }
 
-    /** 1,000,000 base fee + 320,000 priority + 2,039,280 share account + 6,299,080 user-state. */
+    /** 5,000 signature fee + 320,000 priority + 2,039,280 share account + 6,299,080 user-state. */
     @Test
     fun `a USDC deposit goes through on a wallet holding exactly what it costs`() = runTest {
         givenTokenBalance("2500000000")
@@ -812,6 +812,115 @@ internal class KaminoAmountViewModelTest {
         vm.state.value.error.shouldBeInstanceOf<UiText.FormattedText>().resId shouldBe
             R.string.insufficient_native_token
         coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
+    }
+
+    /**
+     * The gate weighs the wallet against what the chain charges, not against the padded figure both
+     * platforms quote.
+     *
+     * A Max deposit into the SOL vault reserves `SolanaHelper.DefaultFeeInLamports` and is charged
+     * 5,000, so it leaves exactly 995,000 lamports of padding behind. Demanding the padded
+     * 1,400,000 back stranded that position: the withdraw that exits it costs 405,000 and could
+     * only be started by funding SOL from outside the app.
+     */
+    @Test
+    fun `a withdraw is affordable on the padding a Max deposit leaves, not on the quoted fee`() =
+        runTest {
+            givenTokenBalance("0")
+            givenSolBalance(MAX_DEPOSIT_LEFTOVER_LAMPORTS)
+            givenPosition()
+            // The accounts a withdraw would otherwise open are already the wallet's, which is what
+            // makes its whole cost the fee.
+            coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns
+                ("existing-account" to true)
+            val captured = givenBuiltPayload()
+
+            val vm = viewModel(isWithdraw = true)
+            vm.amountFieldState.setTextAndPlaceCursorAtEnd("1")
+            vm.submit()
+
+            vm.state.value.error.shouldBeNull()
+            captured.captured.operation shouldBe OPERATION_KAMINO_WITHDRAW
+        }
+
+    /** 5,000 signature fee + the 400,000-unit withdraw priority fee, and no rent to pay. */
+    @Test
+    fun `a withdraw is refused one lamport below what the chain charges for it`() = runTest {
+        givenTokenBalance("0")
+        givenSolBalance("404999")
+        givenPosition()
+        coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns
+            ("existing-account" to true)
+
+        val vm = viewModel(isWithdraw = true)
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("1")
+        vm.submit()
+
+        vm.state.value.error.shouldBeInstanceOf<UiText.FormattedText>().resId shouldBe
+            R.string.insufficient_native_token
+        coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
+    }
+
+    /**
+     * A staked exit runs `farms::unstake` and `farms::withdraw_unstaked_deposits` ahead of the
+     * vault withdraw, and the shares those release land in the wallet's own share account — created
+     * idempotently, and paid for in SOL, exactly as the payout account is. Reserving only the
+     * payout account let a wallet holding one rent start a ceremony that needs two.
+     */
+    @Test
+    fun `a withdraw reserves the share account a staked exit releases into`() = runTest {
+        givenTokenBalance("0")
+        // Both rents less one lamport: 405,000 fee + 2,039,280 payout + 2,039,280 share account.
+        givenSolBalance("4483559")
+        givenPosition()
+
+        val vm = viewModel(isWithdraw = true)
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("1")
+        vm.submit()
+
+        vm.state.value.error.shouldBeInstanceOf<UiText.FormattedText>().resId shouldBe
+            R.string.insufficient_native_token
+        coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
+    }
+
+    /** The same wallet, one lamport better off, opens both accounts and goes through. */
+    @Test
+    fun `a withdraw goes through on exactly the fee and both account rents`() = runTest {
+        givenTokenBalance("0")
+        givenSolBalance("4483560")
+        givenPosition()
+        val captured = givenBuiltPayload()
+
+        val vm = viewModel(isWithdraw = true)
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("1")
+        vm.submit()
+
+        vm.state.value.error.shouldBeNull()
+        captured.captured.operation shouldBe OPERATION_KAMINO_WITHDRAW
+    }
+
+    /**
+     * The verify screen asks the same question one step later, and it reads the transaction rather
+     * than the form — so the charge has to travel on the transaction, or the padded quote would
+     * refuse there everything this gate just let through.
+     */
+    @Test
+    fun `the transaction carries what the chain charges, alongside the fee it quotes`() = runTest {
+        givenTokenBalance("2500000000")
+        givenSolBalance(FUNDED_SOL)
+        coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns
+            ("existing-account" to true)
+        givenPosition()
+        val captured = givenBuiltPayload()
+
+        val vm = viewModel()
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
+        vm.submit()
+
+        // Quoted: the padded 1,000,000 both platforms display, plus 320,000 priority. Charged:
+        // 5,000 plus the same priority, the accounts already being the wallet's.
+        captured.captured.estimatedFees.value shouldBe BigInteger("1320000")
+        captured.captured.chargedFees?.value shouldBe BigInteger("325000")
     }
 
     /**
@@ -870,16 +979,27 @@ internal class KaminoAmountViewModelTest {
 
         val COIN = com.vultisig.wallet.data.models.Coins.Solana.USDC
 
-        /** Base fee plus the 320,000-unit token-deposit priority fee, and nothing else. */
-        const val FEE_ONLY_LAMPORTS = "1320000"
+        /**
+         * The signature fee the runtime deducts plus the 320,000-unit token-deposit priority fee,
+         * and nothing else. Five thousand rather than `SolanaHelper.DefaultFeeInLamports`: the
+         * 1,000,000 is what both platforms *quote*, not what the chain charges, and a wallet is
+         * measured against the charge.
+         */
+        const val FEE_ONLY_LAMPORTS = "325000"
 
         /**
          * The fee plus rent for the share account and the farms user-state a first deposit opens.
          */
-        const val FIRST_DEPOSIT_LAMPORTS = "9658360"
+        const val FIRST_DEPOSIT_LAMPORTS = "8663360"
 
         /** More SOL than any of these transactions costs. */
         const val FUNDED_SOL = "50000000"
+
+        /**
+         * What a Max deposit into the SOL vault leaves in the wallet: the difference between the
+         * padded base fee it reserved and the 5,000 the runtime deducted.
+         */
+        const val MAX_DEPOSIT_LEFTOVER_LAMPORTS = "995000"
 
         val VAULT =
             Vault(

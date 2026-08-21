@@ -250,6 +250,9 @@ constructor(
      * Solana fee in SOL, so a vault holding only USDC passed this screen and the entire MPC
      * ceremony before being rejected at broadcast (#5607).
      *
+     * Weighed against [DepositTransaction.chargedFees] where the transaction sets it, since a
+     * quoted fee is not always the charge — see that field.
+     *
      * An unresolved balance fails closed on QBTC alone. There the gate mirrors iOS
      * `canCoverVoteFee` and guards a vote the chain refuses outright, so an unverified balance must
      * not start it. Reading one flaky RPC call as "cannot afford" everywhere else would disable
@@ -257,7 +260,11 @@ constructor(
      */
     private suspend fun checkFeeAffordability(transaction: DepositTransaction) {
         val srcToken = transaction.srcToken
-        val fee = transaction.estimatedFees
+        // The charge, not the quote, wherever the transaction distinguishes them. A Kamino fee row
+        // is padded to the 1,000,000-lamport placeholder both platforms display against a runtime
+        // charge of 5,000, and demanding the padding back disabled Sign on the withdraw that exits
+        // a Max deposit — the padding is exactly what such a deposit leaves in the wallet.
+        val fee = transaction.chargedFees ?: transaction.estimatedFees
         // Tickers rather than coins: TokenValue records the unit it was built with, which is the
         // only statement the transaction makes about which balance pays the fee.
         val feeLeavesSourceBalance = fee.unit.equals(srcToken.ticker, ignoreCase = true)

@@ -128,6 +128,7 @@ internal class VerifyDepositViewModelTest {
         srcTicker: String = "QBTC",
         feeUnit: String = srcTicker,
         sentValue: Long = 0,
+        chargedFeeValue: Long? = null,
     ) {
         val coin =
             mockk<Coin>(relaxed = true).apply {
@@ -139,6 +140,11 @@ internal class VerifyDepositViewModelTest {
                 every { srcToken } returns coin
                 every { srcAddress } returns SRC_ADDRESS
                 every { estimatedFees } returns TokenValue(BigInteger.valueOf(feeValue), feeUnit, 8)
+                // Stubbed explicitly, including the null: a relaxed mock answers an unstubbed
+                // nullable with a mock of its own, which would make every flow look like one that
+                // distinguishes its charge from its quote.
+                every { chargedFees } returns
+                    chargedFeeValue?.let { TokenValue(BigInteger.valueOf(it), feeUnit, 8) }
                 every { srcTokenValue } returns
                     TokenValue(BigInteger.valueOf(sentValue), srcTicker, 8)
             }
@@ -320,6 +326,60 @@ internal class VerifyDepositViewModelTest {
             vm.confirm()
 
             coVerify { launchKeysign(any(), any(), any(), any(), any()) }
+        }
+
+    /**
+     * A Kamino fee row is padded to the 1,000,000-lamport placeholder both platforms display where
+     * the runtime deducts 5,000, so the quote is not the question to ask of a balance.
+     *
+     * The padding is precisely what a Max deposit leaves in the wallet — `spendableBalance`
+     * reserves it and the chain does not take it — so weighing the quote disabled Sign on the
+     * withdraw that exits such a position, for a charge the wallet could pay twice over.
+     */
+    @Test
+    fun `a deposit is signable when the balance covers the charge but not the padded quote`() =
+        runTest(testDispatcher) {
+            givenTransaction(
+                chain = Chain.Solana,
+                feeValue = 1_400_000, // quoted: padded base + the withdraw priority fee
+                srcTicker = "SOL",
+                chargedFeeValue = 405_000, // charged: 5,000 signature fee + the same priority fee
+            )
+            givenBalance(995_000)
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.state.value.hasEnoughBalance.shouldBeTrue()
+            vm.state.value.insufficientBalanceError.shouldBeNull()
+
+            vm.confirm()
+
+            coVerify { launchKeysign(any(), any(), any(), any(), any()) }
+        }
+
+    /**
+     * Dropping the padding is not dropping the check: a wallet short of the charge itself is still
+     * refused, and the charge can exceed the quote — a Kamino token deposit pays rent in SOL that
+     * neither device quotes, because a co-signer cannot derive it from the relayed payload.
+     */
+    @Test
+    fun `a deposit is blocked when the balance falls short of a charge larger than the quote`() =
+        runTest(testDispatcher) {
+            givenTransaction(
+                chain = Chain.Solana,
+                feeValue = 1_320_000,
+                srcTicker = "USDC",
+                feeUnit = "SOL",
+                chargedFeeValue = 8_663_360, // the fee plus share-account and user-state rent
+            )
+            givenBalance(2_000_000)
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.state.value.hasEnoughBalance.shouldBeFalse()
+            vm.state.value.insufficientBalanceError.shouldNotBeNull()
         }
 
     /**

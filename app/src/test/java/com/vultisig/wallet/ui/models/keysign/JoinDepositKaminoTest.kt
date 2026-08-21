@@ -23,6 +23,7 @@ import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapperImpl
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -31,7 +32,6 @@ import io.mockk.slot
 import java.math.BigInteger
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import vultisig.keysign.v1.SignSolana
 
 /**
@@ -177,7 +177,7 @@ internal class JoinDepositKaminoTest {
         // Bytes nobody could read are still a send. Rendering them as a deposit would put a
         // deposit's framing — an operation, a vault name — around a transaction this device cannot
         // describe, which is the shape issue #5644 reported in the first place.
-        assertThrows<IllegalArgumentException> { buildResult(intent = null, toAddress = SIGNER) }
+        shouldThrow<IllegalArgumentException> { buildResult(intent = null, toAddress = SIGNER) }
     }
 
     private fun intent(action: KaminoAction) =
