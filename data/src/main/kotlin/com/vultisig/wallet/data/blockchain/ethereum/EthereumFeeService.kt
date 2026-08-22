@@ -155,8 +155,6 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
                             ?.let { Numeric.hexStringToByteArray(it) }
                             ?: REPRESENTATIVE_SWAP_CALLDATA,
                 )
-            else ->
-                error("Unsupported transaction type for L1 fee: ${transaction::class.simpleName}")
         }
     }
 
