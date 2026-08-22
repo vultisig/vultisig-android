@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
+import com.vultisig.wallet.data.blockchain.tron.TRON_WITHDRAW_EXPIRE_UNFREEZE_MEMO
 import com.vultisig.wallet.data.blockchain.tron.TronStakingOperation
 import com.vultisig.wallet.data.chains.helpers.RippleDappTransactionDecoder
 import com.vultisig.wallet.data.chains.helpers.RippleDestinationTag
@@ -46,6 +47,13 @@ constructor(
                 TronStakingOperation.entries.firstOrNull { it.memoPrefix == prefix }
             }
         val tronStakingResource = tronStakingMatch?.groupValues?.get(2)
+        // The claim that returns expired unfrozen TRX carries no resource — it sweeps every
+        // matured entry — so it rides the same memo channel without joining that grammar. The memo
+        // itself stays in the Memo row, matching iOS' Verify screen.
+        val isTronClaim =
+            from.token.chain == Chain.Tron &&
+                from.token.isNativeToken &&
+                from.memo == TRON_WITHDRAW_EXPIRE_UNFREEZE_MEMO
 
         val memo =
             when {
@@ -55,10 +63,13 @@ constructor(
             }
 
         val headerTitleRes =
-            when (tronStakingOperation) {
-                TronStakingOperation.FREEZE -> R.string.tron_freeze_screen_title
-                TronStakingOperation.UNFREEZE -> R.string.tron_unfreeze_screen_title
-                null -> null
+            when {
+                tronStakingOperation == TronStakingOperation.FREEZE ->
+                    R.string.tron_freeze_screen_title
+                tronStakingOperation == TronStakingOperation.UNFREEZE ->
+                    R.string.tron_unfreeze_screen_title
+                isTronClaim -> R.string.tron_claim_screen_title
+                else -> null
             }
 
         return TransactionDetailsUiModel(

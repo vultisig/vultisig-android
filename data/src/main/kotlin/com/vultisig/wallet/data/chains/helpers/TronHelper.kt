@@ -4,6 +4,7 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
+import com.vultisig.wallet.data.blockchain.tron.TRON_WITHDRAW_EXPIRE_UNFREEZE_MEMO
 import com.vultisig.wallet.data.common.toByteStringOrHex
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -51,8 +52,13 @@ class TronHelper(
                 keysignPayload.memo.startsWith("UNFREEZE:") ->
                 buildUnfreezeBalanceV2(keysignPayload, tronSpecific)
             keysignPayload.coin.isNativeToken &&
+                keysignPayload.coin.address == keysignPayload.toAddress &&
+                keysignPayload.memo == TRON_WITHDRAW_EXPIRE_UNFREEZE_MEMO ->
+                buildWithdrawExpireUnfreeze(keysignPayload, tronSpecific)
+            keysignPayload.coin.isNativeToken &&
                 keysignPayload.memo != null &&
-                TRON_STAKING_MEMO_REGEX.matches(keysignPayload.memo) ->
+                (TRON_STAKING_MEMO_REGEX.matches(keysignPayload.memo) ||
+                    keysignPayload.memo == TRON_WITHDRAW_EXPIRE_UNFREEZE_MEMO) ->
                 error("Staking memo requires destination address to match sender address")
             keysignPayload.coin.isNativeToken -> buildCoinTransfer(keysignPayload, tronSpecific)
             else -> buildTokenTransfer(keysignPayload, tronSpecific)
@@ -292,6 +298,35 @@ class TronHelper(
         val txBuild =
             Tron.Transaction.newBuilder()
                 .setUnfreezeBalanceV2(contract)
+                .setTimestamp(tronSpecific.timestamp.toLong())
+                .setBlockHeader(buildBlockHeader(tronSpecific))
+                .setExpiration(tronSpecific.expiration.toLong())
+                .setFeeLimit(tronSpecific.gasFeeEstimation.toLong())
+
+        val input = Tron.SigningInput.newBuilder().setTransaction(txBuild.build()).build()
+        return input.toByteArray()
+    }
+
+    /**
+     * Claims TRX whose unlock period has elapsed back into the spendable balance.
+     * `UnfreezeBalanceV2` only moves it out of `frozenV2`; the chain returns it on this contract
+     * alone.
+     *
+     * The contract carries nothing but the owner — it withdraws every expired entry at once — so
+     * the payload's `toAmount` stays display-only and never reaches the signed bytes.
+     */
+    private fun buildWithdrawExpireUnfreeze(
+        keysignPayload: KeysignPayload,
+        tronSpecific: BlockChainSpecific.Tron,
+    ): ByteArray {
+        val contract =
+            Tron.WithdrawExpireUnfreezeContract.newBuilder()
+                .setOwnerAddress(keysignPayload.coin.address)
+                .build()
+
+        val txBuild =
+            Tron.Transaction.newBuilder()
+                .setWithdrawExpireUnfreeze(contract)
                 .setTimestamp(tronSpecific.timestamp.toLong())
                 .setBlockHeader(buildBlockHeader(tronSpecific))
                 .setExpiration(tronSpecific.expiration.toLong())

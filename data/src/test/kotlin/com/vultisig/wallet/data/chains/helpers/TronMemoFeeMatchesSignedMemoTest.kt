@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.api.models.TronChainParameterJson
 import com.vultisig.wallet.data.api.models.TronChainParametersJson
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
+import com.vultisig.wallet.data.blockchain.tron.TRON_WITHDRAW_EXPIRE_UNFREEZE_MEMO
 import com.vultisig.wallet.data.blockchain.tron.TronFeeService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -64,6 +65,11 @@ class TronMemoFeeMatchesSignedMemoTest {
                 Case("freeze energy", to = SENDER, memo = "FREEZE:ENERGY"),
                 Case("unfreeze bandwidth", to = SENDER, memo = "UNFREEZE:BANDWIDTH"),
                 Case("unfreeze energy", to = SENDER, memo = "UNFREEZE:ENERGY"),
+                Case(
+                    "withdraw expired unfreeze",
+                    to = SENDER,
+                    memo = TRON_WITHDRAW_EXPIRE_UNFREEZE_MEMO,
+                ),
                 // Near-misses of the routing signal: the helper builds a plain transfer and writes
                 // the memo, so the fee must keep charging for it.
                 Case("lowercase lookalike", to = SENDER, memo = "freeze:bandwidth"),
