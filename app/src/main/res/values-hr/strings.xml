@@ -560,11 +560,13 @@
     <string name="tron_defi_frozen">Zamrznuto</string>
     <string name="tron_defi_pending_withdrawals">Čekanje isplate</string>
     <string name="tron_defi_ready_to_claim">Spreman za preuzimanje</string>
+    <string name="tron_defi_claim_button">Preuzmi %1$s</string>
     <string name="tron_defi_countdown_days">%1$d dana, %2$d h</string>
     <string name="tron_defi_countdown_hours">%1$d h, %2$d min</string>
     <string name="tron_defi_error_trx_not_in_vault">TRX token nije pronađen u vaultu</string>
     <string name="tron_freeze_screen_title">Zamrzni TRON</string>
     <string name="tron_unfreeze_screen_title">Odmrzni TRON</string>
+    <string name="tron_claim_screen_title">Preuzmi TRON</string>
     <string name="tron_frozen_balances_error">Nije moguće učitati zamrznuta stanja. Povuci za ponovni pokušaj.</string>
     <string name="tron_resource_type">Vrsta resursa</string>
     <string name="tron_resource_bandwidth">Propusnost</string>

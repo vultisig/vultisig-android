@@ -183,6 +183,10 @@ internal class TronDeFiPositionsViewModelTest {
             tokenPriceRepository = tokenPriceRepository,
             appCurrencyRepository = appCurrencyRepository,
             tronDeFiSnapshotCache = snapshotCache,
+            transactionRepository = mockk(relaxed = true),
+            blockChainSpecificRepository = mockk(relaxed = true),
+            feeServiceComposite = mockk(relaxed = true),
+            gasFeeToEstimatedFee = mockk(relaxed = true),
             navigator = navigator,
         )
 
