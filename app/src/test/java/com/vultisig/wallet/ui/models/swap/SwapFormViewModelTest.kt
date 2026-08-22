@@ -3749,9 +3749,10 @@ internal class SwapFormViewModelTest {
             // Setting a recipient drops the aggregators and keeps only THORChain/Maya. When the
             // pair
             // has no native route at all, the bare "not supported" must instead name the recipient
-            // as the reason (#4858).
+            // as the reason (#4858). LI.FI is in the eligible set so the recipient is what removed
+            // it — clearing the recipient really would give this pair another provider to try.
             every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
-                listOf(SwapProvider.THORCHAIN)
+                listOf(SwapProvider.THORCHAIN, SwapProvider.LIFI)
             coEvery {
                 // 11 matchers: the trailing slippageBps + externalRecipient must be matched
                 // explicitly, else MockK defaults them to null and the non-null recipient set below
@@ -3782,6 +3783,46 @@ internal class SwapFormViewModelTest {
 
             assertEquals(
                 UiText.StringResource(R.string.swap_external_recipient_unsupported),
+                vm.uiState.value.formError,
+            )
+        }
+
+    @Test
+    fun `a recipient that removed no provider leaves the route verdict alone`() =
+        runTest(mainDispatcher) {
+            // A THORChain-to-THORChain pair is offered THORCHAIN alone — MayaChain is dropped for
+            // the pair itself, not for the recipient — so the recipient filter takes nothing away.
+            // Blaming it would send the user to clear the recipient and meet the identical error.
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                // 11 matchers — see the note above; a non-null recipient is set in this test too.
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws SwapException.SwapRouteNotAvailable("pool does not exist")
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.setExternalRecipient("thor1recipientaddress")
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.001")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.StringResource(R.string.swap_route_not_available),
                 vm.uiState.value.formError,
             )
         }

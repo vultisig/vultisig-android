@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.Fees
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
@@ -48,6 +49,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -303,6 +305,98 @@ internal class SwapQuoteManagerTest {
 
             result.exceptionOrNull().shouldBeInstanceOf<SwapException.SwapRouteNotAvailable>()
         }
+
+    @Test
+    fun `fetchBestQuote surfaces a deviating quote over a sibling provider's timeout`() = runTest {
+        // A deviation is the one failure that proves the pair does route — the price moved between
+        // the quote and the build — so it has to outrank a sibling that never answered at all.
+        val chosen =
+            failureRacedAgainstATimeout(
+                stalling = SwapProvider.THORCHAIN,
+                answering = SwapProvider.SWAPKIT,
+                verdict = SwapKitError.QuoteDeviation(),
+            )
+
+        chosen.shouldBeInstanceOf<SwapKitError.QuoteDeviation>()
+    }
+
+    @Test
+    fun `fetchBestQuote surfaces an unbuildable route over a sibling provider's timeout`() =
+        runTest {
+            // "This route is currently unavailable" is a verdict on the pair; "try again" is not.
+            val chosen =
+                failureRacedAgainstATimeout(
+                    stalling = SwapProvider.THORCHAIN,
+                    answering = SwapProvider.SWAPKIT,
+                    verdict = SwapKitError.UnableToBuildTransaction,
+                )
+
+            chosen.shouldBeInstanceOf<SwapKitError.UnableToBuildTransaction>()
+        }
+
+    @Test
+    fun `fetchBestQuote keeps a sibling's timeout over an aggregator breaking on its own terms`() =
+        runTest {
+            // The other side of the ranking: a payload this client could not read says nothing
+            // about the pair, so it must not displace a timeout, whose "try again" is at least
+            // true.
+            val chosen =
+                failureRacedAgainstATimeout(
+                    stalling = SwapProvider.THORCHAIN,
+                    answering = SwapProvider.SWAPKIT,
+                    verdict = SwapKitError.Decoding("unreadable route payload"),
+                )
+
+            chosen.shouldBeInstanceOf<SwapException.TimeOut>()
+        }
+
+    /**
+     * Races [answering]'s [verdict] against [stalling], which never replies, and returns the
+     * failure the manager surfaced. The stalling provider is listed first, so a verdict that only
+     * ties with a timeout would lose to it on provider order.
+     */
+    private suspend fun TestScope.failureRacedAgainstATimeout(
+        stalling: SwapProvider,
+        answering: SwapProvider,
+        verdict: Throwable,
+    ): Throwable? {
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
+        coEvery { swapQuoteRepository.getQuote(stalling, any()) } coAnswers
+            {
+                delay(Long.MAX_VALUE)
+                error("unreachable")
+            }
+        coEvery { swapQuoteRepository.getQuote(answering, any()) } throws verdict
+
+        val manager = createManager()
+        val deferred = async {
+            runCatching {
+                manager.fetchBestQuote(
+                    candidates =
+                        listOf(stalling, answering).map { provider ->
+                            QuoteCandidate(
+                                provider = provider,
+                                vultBPSDiscount = null,
+                                referral = null,
+                            )
+                        },
+                    src = mockk(relaxed = true),
+                    dst = mockk(relaxed = true),
+                    srcToken = mockk(relaxed = true),
+                    dstToken = mockk(relaxed = true),
+                    srcTokenValue = BigInteger.ONE,
+                    tokenValue = mockk(relaxed = true),
+                    currency = AppCurrency.USD,
+                    amount = BigDecimal.ONE,
+                )
+            }
+        }
+
+        advanceTimeBy(15_001L)
+
+        return deferred.await().exceptionOrNull()
+    }
 
     @Test
     fun `fetchQuote keeps the SwapKit sub-provider label across a cache hit (Native path)`() =

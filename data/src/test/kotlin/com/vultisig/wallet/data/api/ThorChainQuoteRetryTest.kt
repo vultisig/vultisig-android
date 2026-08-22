@@ -28,6 +28,10 @@ import org.junit.jupiter.api.Test
  * whose body carries the reason. Under the client-wide policy those bodies were retried three times
  * with exponential backoff, which costs more than the caller's whole quote window, so a pair that
  * can never route reached the user as "swap request timed out" instead of the reason.
+ *
+ * The node is reached through `gateway.liquify.com`, so a 500 can also be the proxy's own. Only the
+ * node's verdict — marked by the cosmos gRPC-gateway block-height header it stamps on everything it
+ * answers — skips the retry; the gateway's 5xx still gets one.
  */
 class ThorChainQuoteRetryTest {
 
@@ -36,8 +40,16 @@ class ThorChainQuoteRetryTest {
         explicitNulls = false
     }
 
-    private val jsonHeaders =
-        headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+    /** What thornode's own reply looks like: JSON, stamped with the height it answered at. */
+    private val thornodeHeaders =
+        headersOf(
+            HttpHeaders.ContentType to listOf(ContentType.Application.Json.toString()),
+            "Grpc-Metadata-X-Cosmos-Block-Height" to listOf("27533810"),
+        )
+
+    /** What liquify's edge looks like when it fails before reaching the node. */
+    private val gatewayHeaders =
+        headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
 
     private val poollessBody =
         """
@@ -71,7 +83,7 @@ class ThorChainQuoteRetryTest {
             api(
                     MockEngine {
                         callCount++
-                        respond(poollessBody, HttpStatusCode.InternalServerError, jsonHeaders)
+                        respond(poollessBody, HttpStatusCode.InternalServerError, thornodeHeaders)
                     }
                 )
                 .getSwapQuotes(request())
@@ -88,15 +100,46 @@ class ThorChainQuoteRetryTest {
                 MockEngine {
                     callCount++
                     if (callCount == 1) {
-                        respond("", HttpStatusCode.TooManyRequests, jsonHeaders)
+                        respond("", HttpStatusCode.TooManyRequests, thornodeHeaders)
                     } else {
-                        respond(poollessBody, HttpStatusCode.InternalServerError, jsonHeaders)
+                        respond(poollessBody, HttpStatusCode.InternalServerError, thornodeHeaders)
                     }
                 }
             )
             .getSwapQuotes(request())
 
         callCount shouldBe 2
+    }
+
+    @Test
+    fun `a 500 the node never answered is retried`() = runTest {
+        var callCount = 0
+        val result =
+            api(
+                    MockEngine {
+                        callCount++
+                        if (callCount == 1) {
+                            respond(
+                                "upstream error",
+                                HttpStatusCode.InternalServerError,
+                                gatewayHeaders,
+                            )
+                        } else {
+                            respond(
+                                poollessBody,
+                                HttpStatusCode.InternalServerError,
+                                thornodeHeaders,
+                            )
+                        }
+                    }
+                )
+                .getSwapQuotes(request())
+
+        // The gateway failed before the node was reached, so the quote is asked for again — and
+        // the answer the user is shown is the node's, not the edge's.
+        callCount shouldBe 2
+        result.shouldBeInstanceOf<THORChainSwapQuoteDeserialized.Error>()
+        result.error.message shouldContain "pool does not exist"
     }
 
     @Test
