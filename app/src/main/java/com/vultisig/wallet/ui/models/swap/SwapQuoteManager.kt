@@ -684,9 +684,15 @@ constructor(
 
     /**
      * Ranks a failed-quote [error] so the most actionable failure is surfaced when every provider
-     * fails. Lower values win. Amount-related errors mean the pair is routable and the user can
-     * recover by adjusting the amount, so they rank above an upstream trading halt, which in turn
-     * ranks above the remaining recoverable/transient errors and then generic "no route" fallbacks.
+     * fails. Lower values win.
+     *
+     * A provider that answered with a verdict outranks one that never answered: the verdict
+     * describes the pair, while a timeout only says this provider was slow, and its "try again"
+     * copy sends the user round a retry loop that a deterministic rejection can never leave. Within
+     * the verdicts, the ones the user can act on come first — adjust the amount, wait out a halt,
+     * top up the balance — and "no route for this pair" last, since nothing about the form can
+     * change it. Below every verdict sits the transient group, and below that an unclassified body,
+     * which carries the provider's words but no reading of them.
      */
     private fun swapFailurePriority(error: Throwable): Int =
         when (error) {
@@ -696,27 +702,27 @@ constructor(
             is SwapException.AmountCannotBeZero,
             is SwapException.SameAssets -> 1
             // A halt explains the whole outage, and every other provider routing through the
-            // paused protocol just stalls until its fetch times out. Ranked ahead of the rest of
-            // the transient group so the user reads "trading is halted, try later" rather than a
-            // sibling's timeout, which reads as "retry now" and never succeeds (#5656).
+            // paused protocol just stalls until its fetch times out. It sits below the amount
+            // errors, which come from a pair that is routable right now, and above everything
+            // else, because no balance or route the user could change clears a paused pool.
             is SwapException.TradingHalted -> 2
             is SwapException.InsufficientFunds,
             is SwapException.HighPriceImpact,
-            is SwapException.RateLimitExceeded,
-            is SwapException.TimeOut,
-            is TimeoutCancellationException,
-            is SwapException.NetworkConnection,
-            is SwapKitError.Network,
             is SwapKitError.InsufficientBalance,
             is SwapKitError.InsufficientAllowance -> 3
             is SwapException.SwapRouteNotAvailable,
             is SwapException.SwapIsNotSupported,
-            is SwapException.UnkownSwapError,
             is SwapKitError.NoRoutes,
             is SwapKitError.SwapRouteNotFound,
             is SwapKitError.RouteFiltered,
             is SwapKitError.ProviderNotEnabled -> 4
-            else -> 5
+            is SwapException.RateLimitExceeded,
+            is SwapException.TimeOut,
+            is TimeoutCancellationException,
+            is SwapException.NetworkConnection,
+            is SwapKitError.Network -> 5
+            is SwapException.UnkownSwapError -> 6
+            else -> 7
         }
 
     private suspend fun fetchThorMayaQuote(

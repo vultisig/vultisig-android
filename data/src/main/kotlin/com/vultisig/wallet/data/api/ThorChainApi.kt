@@ -49,6 +49,7 @@ import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.retry
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -243,6 +244,21 @@ constructor(
 
         val response =
             httpClient.get("$THORNODE_BASE/thorchain/quote/swap") {
+                // Thornode reports a deterministic rejection — no pool for the pair, a paused
+                // pool, an unparseable asset — as a 500 carrying the reason in the body, which
+                // this method reads whatever the status. Under the shared policy those bodies
+                // were retried as if the node had faltered, and three exponential backoffs cost
+                // more than the caller's whole quote window, so the pair surfaced as a timeout
+                // the user could only retry. Transport failures and back-pressure still retry.
+                retry {
+                    maxRetries = 3
+                    retryOnExceptionIf { _, cause -> cause !is CancellationException }
+                    retryIf { _, retryResponse ->
+                        retryResponse.status == HttpStatusCode.TooManyRequests ||
+                            retryResponse.status == HttpStatusCode.RequestTimeout
+                    }
+                    exponentialDelay()
+                }
                 parameter("from_asset", request.fromAsset)
                 parameter("to_asset", request.toAsset)
                 parameter("amount", request.amount)

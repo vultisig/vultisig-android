@@ -161,6 +161,150 @@ internal class SwapQuoteManagerTest {
     }
 
     @Test
+    fun `fetchBestQuote surfaces a no-route verdict over a sibling provider's timeout`() = runTest {
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } throws
+            SwapException.SwapRouteNotAvailable(
+                "failed to calculate min swap amount: fail to convert dest fee to src asset " +
+                    "pool does not exist"
+            )
+        // The pair has no pool anywhere, so the sibling never answers either — it just burns the
+        // whole fetch window. Its timeout must not decide the copy: "try again" cannot route a
+        // pair that does not exist.
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.MAYA, any()) } coAnswers
+            {
+                delay(Long.MAX_VALUE)
+                error("unreachable")
+            }
+
+        val manager = createManager()
+        val deferred = async {
+            runCatching {
+                manager.fetchBestQuote(
+                    candidates =
+                        listOf(
+                            QuoteCandidate(
+                                provider = SwapProvider.THORCHAIN,
+                                vultBPSDiscount = null,
+                                referral = null,
+                            ),
+                            QuoteCandidate(
+                                provider = SwapProvider.MAYA,
+                                vultBPSDiscount = null,
+                                referral = null,
+                            ),
+                        ),
+                    src = mockk(relaxed = true),
+                    dst = mockk(relaxed = true),
+                    srcToken = mockk(relaxed = true),
+                    dstToken = mockk(relaxed = true),
+                    srcTokenValue = BigInteger.ONE,
+                    tokenValue = mockk(relaxed = true),
+                    currency = AppCurrency.USD,
+                    amount = BigDecimal.ONE,
+                )
+            }
+        }
+
+        advanceTimeBy(15_001L)
+
+        deferred.await().exceptionOrNull().shouldBeInstanceOf<SwapException.SwapRouteNotAvailable>()
+    }
+
+    @Test
+    fun `fetchBestQuote surfaces an insufficient-funds verdict over a sibling provider's timeout`() =
+        runTest {
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+                FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
+            // The stalling provider is listed first, so a rank shared with the timeout would
+            // hand the form "try again" over a shortfall the user can actually fix.
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } coAnswers
+                {
+                    delay(Long.MAX_VALUE)
+                    error("unreachable")
+                }
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.MAYA, any()) } throws
+                SwapException.InsufficientFunds("insufficient funds")
+
+            val manager = createManager()
+            val deferred = async {
+                runCatching {
+                    manager.fetchBestQuote(
+                        candidates =
+                            listOf(
+                                QuoteCandidate(
+                                    provider = SwapProvider.THORCHAIN,
+                                    vultBPSDiscount = null,
+                                    referral = null,
+                                ),
+                                QuoteCandidate(
+                                    provider = SwapProvider.MAYA,
+                                    vultBPSDiscount = null,
+                                    referral = null,
+                                ),
+                            ),
+                        src = mockk(relaxed = true),
+                        dst = mockk(relaxed = true),
+                        srcToken = mockk(relaxed = true),
+                        dstToken = mockk(relaxed = true),
+                        srcTokenValue = BigInteger.ONE,
+                        tokenValue = mockk(relaxed = true),
+                        currency = AppCurrency.USD,
+                        amount = BigDecimal.ONE,
+                    )
+                }
+            }
+
+            advanceTimeBy(15_001L)
+
+            deferred.await().exceptionOrNull().shouldBeInstanceOf<SwapException.InsufficientFunds>()
+        }
+
+    @Test
+    fun `fetchBestQuote surfaces a no-route verdict over an unclassified provider body`() =
+        runTest {
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+                FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
+            // Listed first, so first-by-provider-order would hand the user a node body this app
+            // never
+            // read, over a sibling that named the actual outcome.
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } throws
+                SwapException.UnkownSwapError("internal error: 500")
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.MAYA, any()) } throws
+                SwapException.SwapRouteNotAvailable("pool does not exist")
+
+            val manager = createManager()
+            val result = runCatching {
+                manager.fetchBestQuote(
+                    candidates =
+                        listOf(
+                            QuoteCandidate(
+                                provider = SwapProvider.THORCHAIN,
+                                vultBPSDiscount = null,
+                                referral = null,
+                            ),
+                            QuoteCandidate(
+                                provider = SwapProvider.MAYA,
+                                vultBPSDiscount = null,
+                                referral = null,
+                            ),
+                        ),
+                    src = mockk(relaxed = true),
+                    dst = mockk(relaxed = true),
+                    srcToken = mockk(relaxed = true),
+                    dstToken = mockk(relaxed = true),
+                    srcTokenValue = BigInteger.ONE,
+                    tokenValue = mockk(relaxed = true),
+                    currency = AppCurrency.USD,
+                    amount = BigDecimal.ONE,
+                )
+            }
+
+            result.exceptionOrNull().shouldBeInstanceOf<SwapException.SwapRouteNotAvailable>()
+        }
+
+    @Test
     fun `fetchQuote keeps the SwapKit sub-provider label across a cache hit (Native path)`() =
         runTest {
             // Pins the SwapQuoteResult.Native arm + the `is SwapQuote.SwapKit -> subProvider`
