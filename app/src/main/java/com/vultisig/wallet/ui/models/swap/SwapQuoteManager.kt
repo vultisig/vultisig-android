@@ -684,9 +684,16 @@ constructor(
 
     /**
      * Ranks a failed-quote [error] so the most actionable failure is surfaced when every provider
-     * fails. Lower values win. Amount-related errors mean the pair is routable and the user can
-     * recover by adjusting the amount, so they rank above an upstream trading halt, which in turn
-     * ranks above the remaining recoverable/transient errors and then generic "no route" fallbacks.
+     * fails. Lower values win.
+     *
+     * A provider that answered with a verdict outranks one that never answered: the verdict
+     * describes the pair, while a timeout only says this provider was slow, and its "try again"
+     * copy sends the user round a retry loop that a deterministic rejection can never leave. Within
+     * the verdicts, the ones the user can act on come first — adjust the amount, wait out a halt,
+     * top up the balance — and "no route for this pair" last, since nothing about the form can
+     * change it. Below every verdict sits the transient group, then the failures nobody read as a
+     * verdict — an unclassified body, or an aggregator breaking on its own terms — and last a
+     * throwable outside the swap hierarchy altogether.
      */
     private fun swapFailurePriority(error: Throwable): Int =
         when (error) {
@@ -694,29 +701,64 @@ constructor(
             is SwapException.SmallSwapAmount,
             is SwapException.InsufficentSwapAmount,
             is SwapException.AmountCannotBeZero,
-            is SwapException.SameAssets -> 1
+            is SwapException.SameAssets -> PRIORITY_AMOUNT
             // A halt explains the whole outage, and every other provider routing through the
-            // paused protocol just stalls until its fetch times out. Ranked ahead of the rest of
-            // the transient group so the user reads "trading is halted, try later" rather than a
-            // sibling's timeout, which reads as "retry now" and never succeeds (#5656).
-            is SwapException.TradingHalted -> 2
+            // paused protocol just stalls until its fetch times out. It sits below the amount
+            // errors, which come from a pair that is routable right now, and above everything
+            // else, because no balance or route the user could change clears a paused pool.
+            is SwapException.TradingHalted -> PRIORITY_HALT
             is SwapException.InsufficientFunds,
-            is SwapException.HighPriceImpact,
+            is SwapException.HighPriceImpact -> PRIORITY_FIXABLE
+            is SwapException.SwapRouteNotAvailable,
+            is SwapException.SwapIsNotSupported -> PRIORITY_ROUTE
             is SwapException.RateLimitExceeded,
             is SwapException.TimeOut,
             is TimeoutCancellationException,
-            is SwapException.NetworkConnection,
-            is SwapKitError.Network,
+            is SwapException.NetworkConnection -> PRIORITY_TRANSIENT
+            is SwapException.UnkownSwapError -> PRIORITY_UNREAD
+            // Exhaustive over the sealed hierarchy on purpose: every typed verdict has to be
+            // placed, or a new variant would silently fall into the catch-all and lose to a
+            // sibling's timeout — which is the defect this ranking exists to fix.
+            is SwapKitError -> swapKitFailurePriority(error)
+            else -> PRIORITY_UNTYPED
+        }
+
+    /**
+     * Where each [SwapKitError] sits in the tiers [swapFailurePriority] defines. The aggregator
+     * reports a whole taxonomy of verdicts, and all of them reach this ranking: the quote path
+     * builds the transaction, so a `/v3/swap` code arrives while a sibling provider may still be
+     * stalling towards its timeout.
+     */
+    private fun swapKitFailurePriority(error: SwapKitError): Int =
+        when (error) {
+            // Wallet or recipient state the user can still change. A deviating quote joins them:
+            // it is the one failure that proves the pair *does* route — the price simply moved
+            // between the quote and the build — so "refresh" is truer than any route verdict.
             is SwapKitError.InsufficientBalance,
-            is SwapKitError.InsufficientAllowance -> 3
-            is SwapException.SwapRouteNotAvailable,
-            is SwapException.SwapIsNotSupported,
-            is SwapException.UnkownSwapError,
+            is SwapKitError.InsufficientAllowance,
+            is SwapKitError.QuoteDeviation,
+            is SwapKitError.InvalidDestinationAddress,
+            is SwapKitError.AddressScreening -> PRIORITY_FIXABLE
+            // Verdicts on the pair itself. UnableToBuildTransaction is surfaced as "this route is
+            // currently unavailable", and a blocked asset or an unusable source address is the
+            // same answer reached by another door: nothing on the form changes any of them.
             is SwapKitError.NoRoutes,
             is SwapKitError.SwapRouteNotFound,
             is SwapKitError.RouteFiltered,
-            is SwapKitError.ProviderNotEnabled -> 4
-            else -> 5
+            is SwapKitError.ProviderNotEnabled,
+            is SwapKitError.UnableToBuildTransaction,
+            is SwapKitError.BlackListAsset,
+            is SwapKitError.InvalidSourceAddress -> PRIORITY_ROUTE
+            is SwapKitError.Network -> PRIORITY_TRANSIENT
+            // The aggregator failed on its own terms — a rejected key, a payload this client
+            // cannot read or sign, a bare HTTP status. None of it reads as a verdict on the pair,
+            // so it stays below a sibling's timeout, whose "try again" is at least true.
+            is SwapKitError.ApiKeyMissing,
+            is SwapKitError.ApiKeyInvalid,
+            is SwapKitError.UnsupportedTxType,
+            is SwapKitError.MalformedAmount,
+            is SwapKitError.Decoding,
+            is SwapKitError.Server -> PRIORITY_UNREAD
         }
 
     private suspend fun fetchThorMayaQuote(
@@ -1406,6 +1448,16 @@ constructor(
         UiText.FormattedText(resId, emptyList())
 
     companion object {
+        // Failure-ranking tiers, lowest wins. Named so the two ranking functions cannot drift
+        // apart and so a tier's meaning survives a variant moving between them.
+        private const val PRIORITY_AMOUNT = 1
+        private const val PRIORITY_HALT = 2
+        private const val PRIORITY_FIXABLE = 3
+        private const val PRIORITY_ROUTE = 4
+        private const val PRIORITY_TRANSIENT = 5
+        private const val PRIORITY_UNREAD = 6
+        private const val PRIORITY_UNTYPED = 7
+
         // All aggregators charge the same base affiliate as [BASE_AFFILIATE_FEE_BPS]; derive them
         // from it so the displayed percentage ([formatAffiliatePercent]) can't silently go stale if
         // the base changes, and a provider that genuinely needs a different rate has to break the
