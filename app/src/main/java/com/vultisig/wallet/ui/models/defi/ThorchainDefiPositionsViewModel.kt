@@ -614,13 +614,20 @@ constructor(
                     .formatTokenAmount(assetTicker)
             }
 
+        // The card is about the side that has not arrived — its title names that ticker — so the
+        // icon and chain badge have to follow it. Pinning them to the pool's asset put an ETH logo
+        // next to "Waiting for matching RUNE deposit".
+        val awaitedChain = if (isRunePending) parsed.chain else Chain.ThorChain
+        val awaitedTicker = if (isRunePending) assetTicker else runeTicker
+        val awaitedContractAddress = if (isRunePending) parsed.contractAddress else ""
+
         return PendingLpDepositUiModel(
             poolId = pool,
             icon =
-                lpAssetLogoRes(parsed.chain, assetTicker, parsed.contractAddress)
-                    ?: getCoinLogo(assetTicker.lowercase()),
-            chainLogo = parsed.chain?.monoToneLogo,
-            awaitedTicker = if (isRunePending) assetTicker else runeTicker,
+                lpAssetLogoRes(awaitedChain, awaitedTicker, awaitedContractAddress)
+                    ?: getCoinLogo(awaitedTicker.lowercase()),
+            chainLogo = awaitedChain?.monoToneLogo,
+            awaitedTicker = awaitedTicker,
             depositedAmount = depositedAmount,
             pairedAddress = pairedAddress?.shortenForDisplay(),
             refundsIn = blocksUntilRefund?.let { lpRefundsInUiText(it * THORCHAIN_BLOCK_SECONDS) },
