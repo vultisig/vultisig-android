@@ -300,7 +300,12 @@ internal class SwapQuotePipeline(
             )
         } catch (e: SwapKitError) {
             SwapQuotePipelineResult.Failure(
-                error = swapQuoteManager.mapSwapKitErrorToFormError(e),
+                error =
+                    recipientAwareError(
+                        swapQuoteManager.mapSwapKitErrorToFormError(e),
+                        e,
+                        recipientDroppedProviders,
+                    ),
                 cause = e,
                 tag = "swapKitError",
             )
@@ -343,9 +348,52 @@ internal class SwapQuotePipeline(
             is SwapException.SwapIsNotSupported,
             is SwapException.SwapRouteNotAvailable ->
                 UiText.StringResource(R.string.swap_external_recipient_unsupported)
+            // SwapKit survives the recipient filter, so it can be the provider whose verdict wins
+            // the ranking — and its route verdicts are the same news as SwapRouteNotAvailable,
+            // just typed by the aggregator instead of the native protocol.
+            is SwapKitError ->
+                if (swapKitSaysThePairHasNoRoute(cause)) {
+                    UiText.StringResource(R.string.swap_external_recipient_unsupported)
+                } else {
+                    error
+                }
             else -> error
         }
     }
+
+    /**
+     * Whether a SwapKit verdict means "none of the surviving providers can route this pair" — the
+     * only class of failure the recipient rewrite may claim, since it tells the user that clearing
+     * the recipient would hand the pair a provider the filter took away.
+     *
+     * Exhaustive over the sealed class on purpose: a new variant must be placed by hand rather than
+     * default into either answer. A verdict that proves a route *was* found (the id expired, the
+     * build failed) is left alone, as is one whose own copy is more specific than a generic
+     * recipient note — same reasoning that keeps [SwapException.SmallSwapAmount] out of the rewrite
+     * above.
+     */
+    private fun swapKitSaysThePairHasNoRoute(error: SwapKitError): Boolean =
+        when (error) {
+            is SwapKitError.NoRoutes,
+            is SwapKitError.RouteFiltered,
+            is SwapKitError.ProviderNotEnabled -> true
+            is SwapKitError.SwapRouteNotFound,
+            is SwapKitError.UnableToBuildTransaction,
+            is SwapKitError.QuoteDeviation,
+            is SwapKitError.BlackListAsset,
+            is SwapKitError.InsufficientBalance,
+            is SwapKitError.InsufficientAllowance,
+            is SwapKitError.InvalidSourceAddress,
+            is SwapKitError.InvalidDestinationAddress,
+            is SwapKitError.AddressScreening,
+            is SwapKitError.UnsupportedTxType,
+            is SwapKitError.MalformedAmount,
+            is SwapKitError.ApiKeyMissing,
+            is SwapKitError.ApiKeyInvalid,
+            is SwapKitError.Network,
+            is SwapKitError.Server,
+            is SwapKitError.Decoding -> false
+        }
 
     /**
      * Builds the display-ready [SwapQuotePipelineResult.Success] from the winning quote.

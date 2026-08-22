@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -3823,6 +3824,126 @@ internal class SwapFormViewModelTest {
 
             assertEquals(
                 UiText.StringResource(R.string.swap_route_not_available),
+                vm.uiState.value.formError,
+            )
+        }
+
+    @Test
+    fun `a SwapKit no-route verdict is blamed on the recipient that dropped a provider`() =
+        runTest(mainDispatcher) {
+            // SwapKit survives the recipient filter, so its verdict can be the one that wins the
+            // ranking. "No SwapKit route available" is the same news as SwapRouteNotAvailable and
+            // must earn the same recipient-aware copy: LI.FI was removed by the recipient, so
+            // clearing it really would give this pair another provider to try (#4858).
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.SWAPKIT, SwapProvider.LIFI)
+            coEvery {
+                // 11 matchers — see the note above; a non-null recipient is set in this test too.
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws SwapKitError.NoRoutes()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.setExternalRecipient("bc1qrecipientaddress")
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.001")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.StringResource(R.string.swap_external_recipient_unsupported),
+                vm.uiState.value.formError,
+            )
+        }
+
+    @Test
+    fun `a SwapKit build failure keeps its own message even when the recipient dropped a provider`() =
+        runTest(mainDispatcher) {
+            // UnableToBuildTransaction proves a route WAS found and the build failed on it, so the
+            // recipient is not the reason — clearing it would not change this outcome. Only the
+            // verdicts that mean "this pair does not route" may be rewritten.
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.SWAPKIT, SwapProvider.LIFI)
+            coEvery {
+                // 11 matchers — see the note above; a non-null recipient is set in this test too.
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws SwapKitError.UnableToBuildTransaction
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.setExternalRecipient("bc1qrecipientaddress")
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.001")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.StringResource(R.string.swapkit_error_unable_to_build_transaction),
+                vm.uiState.value.formError,
+            )
+        }
+
+    @Test
+    fun `a SwapKit no-route verdict survives a recipient that removed no provider`() =
+        runTest(mainDispatcher) {
+            // The recipient filter keeps SwapKit, so a SwapKit-only pair loses nothing to it.
+            // Blaming the recipient would send the user to clear it and meet the identical error.
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.SWAPKIT)
+            coEvery {
+                // 11 matchers — see the note above; a non-null recipient is set in this test too.
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws SwapKitError.NoRoutes()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.setExternalRecipient("bc1qrecipientaddress")
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.001")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.StringResource(R.string.swapkit_error_no_routes_found),
                 vm.uiState.value.formError,
             )
         }
