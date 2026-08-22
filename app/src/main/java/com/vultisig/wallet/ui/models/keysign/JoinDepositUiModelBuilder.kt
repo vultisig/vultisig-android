@@ -3,8 +3,9 @@ package com.vultisig.wallet.ui.models.keysign
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoAction
-import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoDepositRentReserve
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRelayedIntent
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRentReserve
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
 import com.vultisig.wallet.data.blockchain.solana.kamino.kaminoNetworkFeeLamports
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
@@ -48,7 +49,7 @@ constructor(
     private val addressBookRepository: AddressBookRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val feeResolver: JoinKeysignFeeResolver,
-    private val depositRentReserve: KaminoDepositRentReserve,
+    private val rentReserve: KaminoRentReserve,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
 ) {
 
@@ -232,10 +233,16 @@ constructor(
         payload: KeysignPayload,
         nativeCoin: Coin,
     ): TokenValue {
-        val rentReserve =
-            if (kamino.action == KaminoAction.DEPOSIT) {
+        // Only a native-SOL deposit, matching the gate the initiating device quotes behind: a
+        // token deposit spends rent too, but in SOL rather than in the token it is denominated in,
+        // and neither device folds that into the fee it shows — see KaminoRentReserve.
+        val depositRent =
+            if (
+                kamino.action == KaminoAction.DEPOSIT &&
+                    kamino.vault.tokenMint == KaminoVaultRegistry.WRAPPED_SOL_MINT
+            ) {
                 withContext(Dispatchers.IO) {
-                    depositRentReserve(kamino.vault, payload.coin.address)
+                    rentReserve(kamino.vault, payload.coin.address, KaminoAction.DEPOSIT)
                 }
             } else {
                 BigInteger.ZERO
@@ -248,8 +255,8 @@ constructor(
                     // From the instructions, not from the field relayed beside them. The two are
                     // pinned equal by KaminoRelayedIntent.takeIfDescribedBy before this runs, and
                     // the one inside the bytes is the one the runtime charges.
-                    relayedUnitPrice = kamino.priorityFee?.price,
-                    rentReserve = rentReserve,
+                    unitPrice = kamino.priorityFee?.price,
+                    rentReserve = depositRent,
                 ),
             token = nativeCoin,
         )

@@ -14,9 +14,9 @@ import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.blockchain.solana.kamino.BuildKaminoKeysignPayloadUseCase
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoAction
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoComputeBudget
-import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoDepositRentReserve
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoPositionMath
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRate
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRentReserve
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoShareAmount
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoTokenAmount
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVault
@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawEligibili
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawLiquidity
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawMath
 import com.vultisig.wallet.data.blockchain.solana.kamino.coin
+import com.vultisig.wallet.data.blockchain.solana.kamino.kaminoChargeableLamports
 import com.vultisig.wallet.data.blockchain.solana.kamino.kaminoDestinationAddress
 import com.vultisig.wallet.data.blockchain.solana.kamino.kaminoNetworkFeeLamports
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
@@ -75,11 +76,19 @@ internal enum class KaminoAmountRefusal(@StringRes val messageRes: Int) {
     POSITION_UNREADABLE(R.string.kamino_withdraw_unreadable),
     RATE_UNAVAILABLE(R.string.kamino_refusal_rate_unavailable),
     LARGER_THAN_POSITION(R.string.kamino_refusal_larger_than_position),
+    /**
+     * The wallet cannot cover what the transaction costs in SOL. Reuses the app-wide "Not enough
+     * %1$s to cover gas fees" rather than adding a Kamino-specific phrasing of the same sentence to
+     * ten locale files, which is why this one case carries a format argument.
+     */
+    INSUFFICIENT_SOL(R.string.insufficient_native_token),
 }
 
 /** Thrown to carry a [KaminoAmountRefusal] out to the state, where it becomes localised text. */
-internal class KaminoAmountRefused(val refusal: KaminoAmountRefusal) :
-    IllegalStateException(refusal.name)
+internal class KaminoAmountRefused(
+    val refusal: KaminoAmountRefusal,
+    val formatArgs: List<Any> = emptyList(),
+) : IllegalStateException(refusal.name)
 
 internal data class KaminoAmountUiState(
     val isWithdraw: Boolean = false,
@@ -129,7 +138,7 @@ constructor(
     private val balanceRepository: BalanceRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val buildKeysignPayload: BuildKaminoKeysignPayloadUseCase,
-    private val depositRentReserve: KaminoDepositRentReserve,
+    private val rentReserve: KaminoRentReserve,
     private val depositTransactionRepository: DepositTransactionRepository,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
@@ -231,19 +240,62 @@ constructor(
      * wSOL ATA, share ATA and farm user-state. Reserving only the transfer-shaped fee leaves a Max
      * deposit unable to fund those accounts and it fails at preflight.
      *
-     * A token deposit pays all of that in SOL, so the token balance is spendable in full.
+     * A token deposit pays all of that in SOL rather than in the token, so the token balance is
+     * spendable in full. Whether the wallet holds that SOL is a separate question, asked by
+     * [refuseIfSolCannotCover] against the balance this function never reads.
      */
     private suspend fun spendableBalance(vault: KaminoVault, coin: Coin): BigDecimal {
         val balance = balanceRepository.getTokenValue(coin.address, coin).first().value
         if (!coin.isNativeToken) return BigDecimal(balance).movePointLeft(coin.decimal)
 
-        val priorityFee = kaminoDepositPriorityFee(vault, coin)
-        val rentReserve = depositRentReserve(vault, coin.address)
-
-        val headroom = SolanaHelper.DefaultFeeInLamports + priorityFee + rentReserve
+        val headroom = solCostLamports(vault, coin, KaminoAction.DEPOSIT)
         return BigDecimal((balance - headroom).coerceAtLeast(BigInteger.ZERO))
             .movePointLeft(coin.decimal)
     }
+
+    /**
+     * What a Kamino transaction costs its signer in SOL, beyond the amount itself: the base fee,
+     * the priority fee this flow injects (price × compute limit), and rent for the accounts the
+     * transaction creates.
+     *
+     * Every term is paid in SOL whatever the vault's underlying token is, which is the whole
+     * of #5607: a form denominated in USDC still spends SOL, out of a balance it never reads.
+     *
+     * Through [kaminoNetworkFeeLamports] rather than inline, for the same reason the verify screen
+     * goes through it: one derivation, so what the form reserves and what the two devices quote for
+     * the transaction cannot drift apart. Its base term is the padded 1,000,000 both platforms
+     * display, which is deliberate *here* — a Max amount holding back more SOL than the chain will
+     * charge is headroom the wallet keeps, and it is the headroom the exit is later paid out of.
+     * Measuring a balance against that padding is a different matter, and that is
+     * [solChargeableLamports].
+     */
+    private suspend fun solCostLamports(
+        vault: KaminoVault,
+        coin: Coin,
+        action: KaminoAction,
+    ): BigInteger =
+        kaminoNetworkFeeLamports(
+            vault = vault,
+            action = action,
+            unitPrice = medianUnitPrice(coin),
+            rentReserve = rentReserve(vault, coin.address, action),
+        )
+
+    /**
+     * The same cost with the base term the runtime charges rather than the one both platforms quote
+     * — what a wallet has to hold for this transaction to land, and nothing beyond it.
+     */
+    private suspend fun solChargeableLamports(
+        vault: KaminoVault,
+        coin: Coin,
+        action: KaminoAction,
+    ): BigInteger =
+        kaminoChargeableLamports(
+            vault = vault,
+            action = action,
+            unitPrice = medianUnitPrice(coin),
+            rentReserve = rentReserve(vault, coin.address, action),
+        )
 
     /**
      * Reads the network's median priority price directly rather than through
@@ -255,14 +307,8 @@ constructor(
      * 1,000,000 internally and never throws but for cancellation, so nothing here needs its own
      * fallback.
      */
-    private suspend fun kaminoDepositPriorityFee(vault: KaminoVault, coin: Coin): BigInteger {
-        val networkPrice = solanaApi.getMedianPriorityFee(listOf(coin.address))
-        return KaminoComputeBudget.priorityFeeLamports(
-            vault = vault,
-            action = KaminoAction.DEPOSIT,
-            networkPrice = networkPrice,
-        )
-    }
+    private suspend fun medianUnitPrice(coin: Coin): BigInteger =
+        solanaApi.getMedianPriorityFee(listOf(coin.address))
 
     /**
      * Resolves what the withdraw form may offer, in shares first and tokens only as a projection.
@@ -412,10 +458,8 @@ constructor(
                         // rather than a rejection, so it gets the generic message — with the real
                         // exception already in the log above.
                         error =
-                            UiText.StringResource(
-                                (throwable as? KaminoAmountRefused)?.refusal?.messageRes
-                                    ?: R.string.kamino_error_build_failed
-                            ),
+                            (throwable as? KaminoAmountRefused)?.asUiText()
+                                ?: UiText.StringResource(R.string.kamino_error_build_failed),
                     )
                 }
             }
@@ -430,6 +474,7 @@ constructor(
             _state.value.minimum?.let { minimum ->
                 if (amount < minimum) refuse(KaminoAmountRefusal.BELOW_MINIMUM)
             }
+            refuseIfSolCannotCover(vault, coin, amount)
 
             // The denomination the endpoint expects, sized here rather than anywhere downstream.
             val apiAmount =
@@ -491,20 +536,24 @@ constructor(
             // the same balance, on the wSOL ATA, share ATA and farm UserState it creates. Folded in
             // here too, or the amount plus this fee would undercount the wallet's starting balance
             // by exactly that rent on the verify screen.
-            val rentReserve =
-                if (!route.isWithdraw && coin.isNativeToken) {
-                    depositRentReserve(vault, coin.address)
-                } else {
-                    BigInteger.ZERO
-                }
+            //
+            // A token deposit's rent is deliberately left out, even though it spends it: this
+            // figure is a cross-device contract — a co-signer derives the same number from the
+            // relayed payload, and iOS derives base + price × limit — so it is not the place to
+            // start quoting a term the other device does not. The wallet is still checked against
+            // the full cost by [refuseIfSolCannotCover] before the form lets the transaction
+            // through.
+            val actionRent = rentReserve(vault, coin.address, action)
+            val depositRent =
+                if (!route.isWithdraw && coin.isNativeToken) actionRent else BigInteger.ZERO
             val gasFee =
                 TokenValue(
                     value =
                         kaminoNetworkFeeLamports(
                             vault = vault,
                             action = action,
-                            relayedUnitPrice = recordedBudget.priorityFee,
-                            rentReserve = rentReserve,
+                            unitPrice = recordedBudget.priorityFee,
+                            rentReserve = depositRent,
                         ),
                     token = solCoin,
                 )
@@ -521,6 +570,21 @@ constructor(
                     // withdraw branch has to be applied here too or nothing the user sees changes.
                     dstAddress = kaminoDestinationAddress(vault, action, coin.address),
                     estimatedFees = gasFee,
+                    // What the runtime will actually deduct, carried alongside the padded figure
+                    // above so the verify screen weighs the wallet against the charge rather than
+                    // against the placeholder — see [refuseIfSolCannotCover], which is the same
+                    // check one screen earlier.
+                    chargedFees =
+                        TokenValue(
+                            value =
+                                kaminoChargeableLamports(
+                                    vault = vault,
+                                    action = action,
+                                    unitPrice = recordedBudget.priorityFee,
+                                    rentReserve = actionRent,
+                                ),
+                            token = solCoin,
+                        ),
                     estimateFeesFiat = "",
                     // The payload's, not `specific`'s. `KeysignShareViewModel` rebuilds the relayed
                     // KeysignPayload out of this transaction, so whatever is stored here is what a
@@ -613,7 +677,64 @@ constructor(
         }
     }
 
-    private fun refuse(refusal: KaminoAmountRefusal): Nothing = throw KaminoAmountRefused(refusal)
+    /**
+     * Refuses a transaction whose SOL cost the wallet cannot cover.
+     *
+     * Every Kamino transaction is paid for in SOL — base fee, injected priority fee, and rent for
+     * the accounts it creates — whatever token the form is denominated in. The token form never
+     * reads that balance ([spendableBalance] returns the token balance in full, correctly, since
+     * none of it is spent in the token), so a wallet holding USDC and no SOL passed the form, the
+     * verify screen and the whole MPC ceremony, and was refused only at broadcast (#5607).
+     *
+     * On a native-SOL deposit the amount leaves the same balance, so it is required on top. A
+     * withdraw's amount arrives from the position rather than leaving the wallet, so it is not.
+     *
+     * Weighed against [solChargeableLamports], not the padded figure the screens quote. The quoted
+     * base fee is 1,000,000 lamports where the runtime deducts 5,000, and [spendableBalance]
+     * reserves the padded one — so a Max deposit into the SOL vault leaves exactly the 995,000
+     * lamports of padding behind, and a gate that demanded it back refused the withdraw that exits
+     * the position while the chain would have charged 405,000 for it.
+     *
+     * A balance that cannot be read lets the transaction through instead of blocking it. This gate
+     * exists to stop a ceremony being wasted, not to protect funds — nothing lands when the wallet
+     * is short — and refusing on an unresolved read would turn one flaky RPC call into a form that
+     * cannot be submitted at all. That is also why the balance is asked for through
+     * [BalanceRepository.getBalanceOrNull]: `SolanaApi.getBalance` answers an RPC error with zero
+     * lamports, which is indistinguishable from an empty wallet and would refuse a funded one.
+     */
+    private suspend fun refuseIfSolCannotCover(vault: KaminoVault, coin: Coin, amount: BigDecimal) {
+        val solCoin = Coins.Solana.SOL.copy(address = coin.address)
+        val balance =
+            balanceRepository.getBalanceOrNull(coin.address, solCoin)
+                ?: run {
+                    Timber.w("Kamino SOL balance unreadable, fee check skipped")
+                    return
+                }
+
+        val cost = solChargeableLamports(vault, coin, action)
+        val required =
+            if (!route.isWithdraw && coin.isNativeToken) {
+                cost + amount.movePointRight(coin.decimal).toBigInteger()
+            } else {
+                cost
+            }
+
+        if (balance < required) {
+            refuse(KaminoAmountRefusal.INSUFFICIENT_SOL, listOf(solCoin.ticker))
+        }
+    }
+
+    /**
+     * A refusal's own localised text. Formatted only when the refusal carries arguments: passing an
+     * empty argument list to a resource that takes none renders the same string either way, so the
+     * distinction is kept explicit rather than left to `String.format` to absorb.
+     */
+    private fun KaminoAmountRefused.asUiText(): UiText =
+        if (formatArgs.isEmpty()) UiText.StringResource(refusal.messageRes)
+        else UiText.FormattedText(refusal.messageRes, formatArgs)
+
+    private fun refuse(refusal: KaminoAmountRefusal, formatArgs: List<Any> = emptyList()): Nothing =
+        throw KaminoAmountRefused(refusal, formatArgs)
 
     fun dismissError() {
         _state.update { it.copy(error = null) }

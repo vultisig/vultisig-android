@@ -1,9 +1,9 @@
 package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoAction
-import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoDepositRentReserve
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoPriorityFee
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRelayedIntent
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRentReserve
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -23,6 +23,7 @@ import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapperImpl
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -31,7 +32,6 @@ import io.mockk.slot
 import java.math.BigInteger
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import vultisig.keysign.v1.SignSolana
 
 /**
@@ -58,7 +58,7 @@ internal class JoinDepositKaminoTest {
     private val gasFeeToEstimatedFee = mockk<GasFeeToEstimatedFeeUseCase>()
     private val tokenRepository = mockk<TokenRepository>()
     private val vaultRepository = mockk<VaultRepository>()
-    private val depositRentReserve = mockk<KaminoDepositRentReserve>()
+    private val rentReserve = mockk<KaminoRentReserve>()
     private val feeResolver = mockk<JoinKeysignFeeResolver>()
     private val mapDepositTransactionToUiModel = mockk<DepositTransactionToUiModelMapper>()
     private val mapDepositTransactionHistoryData = mockk<DepositTransactionHistoryDataMapper>()
@@ -76,7 +76,7 @@ internal class JoinDepositKaminoTest {
             addressBookRepository = mockk<AddressBookRepository>(relaxed = true),
             chainAccountAddressRepository = mockk<ChainAccountAddressRepository>(relaxed = true),
             feeResolver = feeResolver,
-            depositRentReserve = depositRentReserve,
+            rentReserve = rentReserve,
             mapTokenValueToDecimalUiString = TokenValueToDecimalUiStringMapperImpl(),
         )
 
@@ -109,7 +109,7 @@ internal class JoinDepositKaminoTest {
 
     @Test
     fun `a deposit is labelled as one, names its vault and carries its bytes`() = runTest {
-        coEvery { depositRentReserve(vault, SIGNER) } returns RENT
+        coEvery { rentReserve(vault, SIGNER, KaminoAction.DEPOSIT) } returns RENT
 
         val deposit = build(intent(KaminoAction.DEPOSIT), toAddress = vault.address)
 
@@ -124,7 +124,7 @@ internal class JoinDepositKaminoTest {
 
     @Test
     fun `a deposit is priced off the relayed compute budget and its account rent`() = runTest {
-        coEvery { depositRentReserve(vault, SIGNER) } returns RENT
+        coEvery { rentReserve(vault, SIGNER, KaminoAction.DEPOSIT) } returns RENT
 
         val deposit = build(intent(KaminoAction.DEPOSIT), toAddress = vault.address)
 
@@ -144,7 +144,7 @@ internal class JoinDepositKaminoTest {
         deposit.operation shouldBe "KaminoWithdraw"
         // 1,000,000 base + (250,000 × 400,000 / 1e6). A withdraw creates no account of its own.
         deposit.estimatedFees.value shouldBe BigInteger.valueOf(1_100_000)
-        coVerify(exactly = 0) { depositRentReserve(any(), any()) }
+        coVerify(exactly = 0) { rentReserve(any(), any(), any()) }
     }
 
     @Test
@@ -162,7 +162,7 @@ internal class JoinDepositKaminoTest {
 
     @Test
     fun `a deposit's amount was checked against the bytes, so nothing is disclaimed`() = runTest {
-        coEvery { depositRentReserve(vault, SIGNER) } returns RENT
+        coEvery { rentReserve(vault, SIGNER, KaminoAction.DEPOSIT) } returns RENT
 
         val result = buildResult(intent(KaminoAction.DEPOSIT), toAddress = vault.address)
 
@@ -177,7 +177,7 @@ internal class JoinDepositKaminoTest {
         // Bytes nobody could read are still a send. Rendering them as a deposit would put a
         // deposit's framing — an operation, a vault name — around a transaction this device cannot
         // describe, which is the shape issue #5644 reported in the first place.
-        assertThrows<IllegalArgumentException> { buildResult(intent = null, toAddress = SIGNER) }
+        shouldThrow<IllegalArgumentException> { buildResult(intent = null, toAddress = SIGNER) }
     }
 
     private fun intent(action: KaminoAction) =

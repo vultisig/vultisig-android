@@ -8,6 +8,9 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.nativeToken
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -26,10 +29,10 @@ import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -95,9 +98,9 @@ internal data class VerifyDepositUiModel(
     val hasFastSign: Boolean = false,
     val isLoading: Boolean = false,
     /**
-     * Whether the source account balance can cover the required network fee (plus any sent amount).
-     * When false the Sign button is disabled and an inline fee-balance error is shown so the
-     * keysign ceremony cannot start for an account that can never pay the fee (issue #5044).
+     * Whether the balance the network fee is drawn from can cover it. When false the Sign button is
+     * disabled and an inline fee-balance error is shown so the keysign ceremony cannot start for an
+     * account that can never pay the fee (issues #5044, #5607).
      */
     val hasEnoughBalance: Boolean = true,
     val insufficientBalanceError: UiText? = null,
@@ -233,55 +236,88 @@ constructor(
     }
 
     /**
-     * Verifies the source account holds enough native balance to cover the required network fee
-     * (plus any amount being sent) before the keysign ceremony can be started. Scoped to QBTC,
-     * whose unfunded accounts otherwise stage a vote that the chain rejects at broadcast (#5044
-     * / #5043). Fails closed: if the balance cannot be resolved (a network error, or an empty
-     * lookup result) the Sign button is left disabled rather than defaulting to affordable —
-     * mirroring iOS `canCoverVoteFee` — so an unverified balance can never start the doomed
-     * ceremony this guards against.
+     * Verifies the wallet can pay the network fee, before the keysign ceremony can be started.
+     *
+     * Only the fee: the amount is left to the form that sized it against the source balance in the
+     * first place. A deposit's `srcTokenValue` is not reliably money leaving the wallet — a Kamino
+     * withdraw, a stake withdraw, Move Stake, Finish Move and a Cosmos undelegate all stage the
+     * position's own size in it, and it arrives rather than departs. Adding it here disabled Sign
+     * on every one of those whenever the position was bigger than the liquid balance.
+     *
+     * What varies is which balance the fee comes out of. Where it is denominated in the source
+     * token it leaves that one — QBTC's vote is that shape, and its whole cost is the fee (#5044
+     * / #5043). Otherwise it leaves the chain's native balance: a Kamino USDC deposit pays its
+     * Solana fee in SOL, so a vault holding only USDC passed this screen and the entire MPC
+     * ceremony before being rejected at broadcast (#5607).
+     *
+     * Weighed against [DepositTransaction.chargedFees] where the transaction sets it, since a
+     * quoted fee is not always the charge — see that field.
+     *
+     * An unresolved balance fails closed on QBTC alone. There the gate mirrors iOS
+     * `canCoverVoteFee` and guards a vote the chain refuses outright, so an unverified balance must
+     * not start it. Reading one flaky RPC call as "cannot afford" everywhere else would disable
+     * Sign on transactions that are perfectly fundable.
      */
-    private suspend fun checkFeeAffordability(
-        transaction: com.vultisig.wallet.data.models.DepositTransaction
-    ) {
-        if (transaction.srcToken.chain != Chain.Qbtc) return
+    private suspend fun checkFeeAffordability(transaction: DepositTransaction) {
+        val srcToken = transaction.srcToken
+        // The charge, not the quote, wherever the transaction distinguishes them. A Kamino fee row
+        // is padded to the 1,000,000-lamport placeholder both platforms display against a runtime
+        // charge of 5,000, and demanding the padding back disabled Sign on the withdraw that exits
+        // a Max deposit — the padding is exactly what such a deposit leaves in the wallet.
+        val fee = transaction.chargedFees ?: transaction.estimatedFees
+        // Tickers rather than coins: TokenValue records the unit it was built with, which is the
+        // only statement the transaction makes about which balance pays the fee.
+        val feeLeavesSourceBalance = fee.unit.equals(srcToken.ticker, ignoreCase = true)
+
+        val feeToken =
+            if (feeLeavesSourceBalance) srcToken
+            else srcToken.chain.nativeToken.copy(address = transaction.srcAddress)
 
         val balance =
-            try {
-                balanceRepository
-                    .getTokenValue(transaction.srcAddress, transaction.srcToken)
-                    .first()
-                    .value
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e)
-                // Fail closed: an unresolved balance keeps Sign disabled so a QBTC voter can't
-                // start a doomed ceremony on a balance we never confirmed can cover the fee
-                // (#5044).
-                state.update {
-                    it.copy(
-                        hasEnoughBalance = false,
-                        insufficientBalanceError =
-                            UiText.StringResource(R.string.network_connection_lost),
-                    )
-                }
-                return
-            }
-        val requiredSpend = transaction.estimatedFees.value + transaction.srcTokenValue.value
+            readBalance(
+                address = transaction.srcAddress,
+                token = feeToken,
+                failClosed = srcToken.chain == Chain.Qbtc,
+            ) ?: return
 
-        if (balance < requiredSpend) {
+        if (balance < fee.value) {
             state.update {
                 it.copy(
                     hasEnoughBalance = false,
                     insufficientBalanceError =
                         UiText.FormattedText(
                             R.string.insufficient_native_token,
-                            listOf(transaction.srcToken.ticker),
+                            listOf(feeToken.ticker),
                         ),
                 )
             }
         }
+    }
+
+    /**
+     * The balance in [token], or null when it could not be read — disabling Sign on the way out
+     * when [failClosed], so an unverified balance cannot start a ceremony that must not run.
+     *
+     * Read through [BalanceRepository.getBalanceOrNull] rather than `getTokenValue`, which on
+     * Solana cannot say "unknown": `SolanaApi.getBalance` answers every RPC error with zero, so a
+     * flaky node read as an empty wallet and refused a funded one.
+     */
+    private suspend fun readBalance(
+        address: String,
+        token: Coin,
+        failClosed: Boolean,
+    ): BigInteger? {
+        val balance = balanceRepository.getBalanceOrNull(address, token)
+        if (balance == null && failClosed) {
+            state.update {
+                it.copy(
+                    hasEnoughBalance = false,
+                    insufficientBalanceError =
+                        UiText.StringResource(R.string.network_connection_lost),
+                )
+            }
+        }
+        return balance
     }
 
     fun dismissError() {

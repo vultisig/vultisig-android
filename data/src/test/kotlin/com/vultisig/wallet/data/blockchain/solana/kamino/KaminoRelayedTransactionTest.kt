@@ -212,7 +212,7 @@ class KaminoRelayedTransactionTest {
             kaminoNetworkFeeLamports(
                 vault = solVault,
                 action = KaminoAction.DEPOSIT,
-                relayedUnitPrice = BigInteger.valueOf(250_000),
+                unitPrice = BigInteger.valueOf(250_000),
                 rentReserve = rent,
             )
 
@@ -226,7 +226,7 @@ class KaminoRelayedTransactionTest {
             kaminoNetworkFeeLamports(
                 vault = solVault,
                 action = KaminoAction.WITHDRAW,
-                relayedUnitPrice = BigInteger.valueOf(250_000),
+                unitPrice = BigInteger.valueOf(250_000),
             )
 
         // 1,000,000 base + (250,000 × 400,000 / 1e6).
