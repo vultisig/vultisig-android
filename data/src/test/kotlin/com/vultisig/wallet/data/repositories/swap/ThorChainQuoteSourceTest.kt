@@ -1,20 +1,24 @@
 package com.vultisig.wallet.data.repositories.swap
 
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.Fees
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.quotes.ThorChainSwapQuoteRequest
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import java.math.BigInteger
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 internal class ThorChainQuoteSourceTest {
 
@@ -95,4 +99,60 @@ internal class ThorChainQuoteSourceTest {
                 requestSlot.captured.toAsset,
             )
         }
+
+    @Test
+    fun `a poolless pair is refused without paying for the streaming round-trip`() = runTest {
+        coEvery { thorChainApi.getSwapQuotes(any()) } returns
+            THORChainSwapQuoteDeserialized.Error(
+                THORChainSwapQuoteError(
+                    "failed to calculate min swap amount: fail to convert dest fee to src asset " +
+                        "pool does not exist"
+                )
+            )
+
+        val rune = coin(Chain.ThorChain, "RUNE", "", isNativeToken = true)
+        val kuji = coin(Chain.ThorChain, "KUJI", "thor.kuji", isNativeToken = false)
+
+        assertThrows<SwapException.SwapRouteNotAvailable> {
+            source()
+                .fetch(
+                    SwapQuoteRequest(
+                        srcToken = rune,
+                        dstToken = kuji,
+                        tokenValue =
+                            TokenValue(value = BigInteger.valueOf(100_000_000), token = rune),
+                        dstAddress = "thor1dst",
+                    )
+                )
+        }
+
+        coVerify(exactly = 1) { thorChainApi.getSwapQuotes(any()) }
+    }
+
+    @Test
+    fun `an amount the rapid path refuses still reaches the streaming request`() = runTest {
+        // Streaming splits the swap, so a minimum the rapid interval cannot meet is not the pair's
+        // final answer — unlike a missing pool, this one is worth asking again.
+        coEvery { thorChainApi.getSwapQuotes(any()) } returns
+            THORChainSwapQuoteDeserialized.Error(
+                THORChainSwapQuoteError("amount less than min swap amount")
+            )
+
+        val btc = coin(Chain.Bitcoin, "BTC", "", isNativeToken = true)
+        val rune = coin(Chain.ThorChain, "RUNE", "", isNativeToken = true)
+
+        assertThrows<SwapException.SmallSwapAmount> {
+            source()
+                .fetch(
+                    SwapQuoteRequest(
+                        srcToken = btc,
+                        dstToken = rune,
+                        tokenValue = TokenValue(value = BigInteger.valueOf(1_000), token = btc),
+                        dstAddress = "thor1dst",
+                    )
+                )
+        }
+
+        coVerify(exactly = 2) { thorChainApi.getSwapQuotes(any()) }
+    }
 }

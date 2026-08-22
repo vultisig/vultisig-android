@@ -181,6 +181,10 @@ internal class SwapQuotePipeline(
             return SwapQuotePipelineResult.Empty
         }
 
+        // Set once the provider set is known, and read again from the catch blocks below, where
+        // the failure may have been thrown after the filter ran.
+        var recipientDroppedProviders = false
+
         return try {
             if (srcTokenValue == null || srcTokenValue <= BigInteger.ZERO) {
                 throw SwapException.AmountCannotBeZero("Amount must be positive")
@@ -210,6 +214,7 @@ internal class SwapQuotePipeline(
                             it == SwapProvider.SWAPKIT
                     }
                 }
+            recipientDroppedProviders = eligibleProviders.size < allEligibleProviders.size
             if (eligibleProviders.isEmpty()) {
                 throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
             }
@@ -262,7 +267,7 @@ internal class SwapQuotePipeline(
                                 recipientAwareError(
                                     resolution.formError,
                                     resolution.cause,
-                                    externalRecipient,
+                                    recipientDroppedProviders,
                                 ),
                             cause = resolution.cause,
                             tag = resolution.tag,
@@ -288,7 +293,7 @@ internal class SwapQuotePipeline(
                             selectedSrcTokenTitle,
                         ),
                         e,
-                        externalRecipient,
+                        recipientDroppedProviders,
                     ),
                 cause = e,
                 tag = "swapError",
@@ -311,12 +316,18 @@ internal class SwapQuotePipeline(
     }
 
     /**
-     * Rewrites a quote failure into a recipient-aware message when an external recipient is active.
+     * Rewrites a quote failure into a recipient-aware message when the recipient is what caused it.
      *
-     * Setting a recipient narrows the eligible providers to THORChain/Maya (the only protocols that
-     * route output to a custom address — see the native-only filter above). When the pair has no
-     * such route at all, the bare "not supported" error never explains that the recipient is the
-     * cause, so name it (#4858).
+     * Setting a recipient narrows the eligible providers to THORChain/Maya/SwapKit (the only ones
+     * that route output to a custom address — see the native-only filter above). When that filter
+     * is what emptied or crippled the candidate set, the bare "not supported" error never explains
+     * that the recipient is the cause, so name it (#4858).
+     *
+     * [recipientDroppedProviders] is the whole test: a pair the filter never touched fails for its
+     * own reasons, and telling the user to clear the recipient would send them to remove it and
+     * meet the identical error. A THORChain→THORChain pair is exactly that case — `bothThorChain`
+     * already leaves THORCHAIN as the only candidate — and it reaches here routinely now that a
+     * poolless pair answers with [SwapException.SwapRouteNotAvailable] instead of timing out.
      *
      * Sub-minimum failures are deliberately NOT rewritten here: THORChain surfaces the concrete
      * required minimum ("Minimum amount is X") via [SwapException.SmallSwapAmount], which is more
@@ -325,9 +336,9 @@ internal class SwapQuotePipeline(
     private fun recipientAwareError(
         error: UiText,
         cause: Throwable,
-        externalRecipient: String?,
+        recipientDroppedProviders: Boolean,
     ): UiText {
-        if (externalRecipient.isNullOrBlank()) return error
+        if (!recipientDroppedProviders) return error
         return when (cause) {
             is SwapException.SwapIsNotSupported,
             is SwapException.SwapRouteNotAvailable ->
