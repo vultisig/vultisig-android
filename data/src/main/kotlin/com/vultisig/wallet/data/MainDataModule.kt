@@ -131,6 +131,7 @@ internal interface MainDataModule {
          * Provides the singleton [SharedPreferences] backed by AndroidKeyStore AES-256-GCM
          * encryption.
          */
+        @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
         @Singleton
         @Provides
         fun provideEncryptedSharedPrefs(@ApplicationContext context: Context): SharedPreferences {
