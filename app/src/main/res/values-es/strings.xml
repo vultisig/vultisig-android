@@ -524,10 +524,11 @@
     <!-- Kamino Earn -->
     <string name="kamino_earn_title">Kamino Earn</string>
     <string name="kamino_earn_curated_by">Curado por %1$s</string>
-    <string name="kamino_earn_deposited">Depositado</string>
-    <string name="kamino_earn_apy_30d">APY (30 d)</string>
-    <string name="kamino_earn_pnl">Ganancias y pérdidas</string>
-    <string name="kamino_earn_lost">Perdido</string>
+    <string name="kamino_earn_deposited">Depositado: %1$s</string>
+    <string name="kamino_earn_apy">APY</string>
+    <string name="kamino_earn_earned">Ganado: %1$s</string>
+    <string name="kamino_earn_lost">Perdido: %1$s</string>
+    <string name="kamino_earn_protocol">Kamino</string>
     <string name="kamino_earn_load_failed">No se pudieron actualizar estos vaults ahora</string>
     <string name="kamino_earn_risk_conservative">Conservador</string>
     <string name="kamino_earn_risk_private_credit">Crédito privado</string>

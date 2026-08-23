@@ -521,10 +521,11 @@
     <!-- Kamino Earn -->
     <string name="kamino_earn_title">Kamino Earn</string>
     <string name="kamino_earn_curated_by">Samengesteld door %1$s</string>
-    <string name="kamino_earn_deposited">Gestort</string>
-    <string name="kamino_earn_apy_30d">APY (30 d)</string>
-    <string name="kamino_earn_pnl">Winst &amp; verlies</string>
-    <string name="kamino_earn_lost">Verloren</string>
+    <string name="kamino_earn_deposited">Gestort: %1$s</string>
+    <string name="kamino_earn_apy">APY</string>
+    <string name="kamino_earn_earned">Verdiend: %1$s</string>
+    <string name="kamino_earn_lost">Verloren: %1$s</string>
+    <string name="kamino_earn_protocol">Kamino</string>
     <string name="kamino_earn_load_failed">Kan deze vaults nu niet verversen</string>
     <string name="kamino_earn_risk_conservative">Conservatief</string>
     <string name="kamino_earn_risk_private_credit">Privaat krediet</string>

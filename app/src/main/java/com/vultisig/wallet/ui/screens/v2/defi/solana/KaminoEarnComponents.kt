@@ -1,9 +1,11 @@
 package com.vultisig.wallet.ui.screens.v2.defi.solana
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoCurator
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRiskTier
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
 import com.vultisig.wallet.data.models.getCoinLogo
@@ -42,6 +45,10 @@ import com.vultisig.wallet.ui.theme.Theme
 import java.math.BigDecimal
 
 private val HIDE_BALANCE_CHARS = "• ".repeat(6).trim()
+
+/** Both marks are 36dp and overlap by 12dp, so the pair measures 60dp rather than 72dp. */
+private val LOGO_SIZE = 36.dp
+private val LOGO_PAIR_WIDTH = 60.dp
 
 /**
  * Picker for which curated vaults the Earn tab shows.
@@ -93,7 +100,11 @@ internal fun KaminoVaultPickerSheet(
                             color = Theme.v2.colors.text.primary,
                         )
                         Text(
-                            text = stringResource(R.string.kamino_earn_curated_by, vault.curator),
+                            text =
+                                stringResource(
+                                    R.string.kamino_earn_curated_by,
+                                    vault.curator.displayName,
+                                ),
                             style = Theme.brockmann.body.s.medium,
                             color = Theme.v2.colors.text.tertiary,
                         )
@@ -120,7 +131,12 @@ internal fun KaminoVaultPickerSheet(
     }
 }
 
-/** The Kamino Earn segment: a total across enabled vaults, then one card each. */
+/**
+ * The Kamino Earn segment: one card per enabled vault.
+ *
+ * No total of its own — the Solana header banner above already adds these to native staking, and
+ * the design draws that as the only total on the screen.
+ */
 @Composable
 internal fun KaminoEarnTabContent(
     state: KaminoEarnUiModel,
@@ -132,14 +148,8 @@ internal fun KaminoEarnTabContent(
         state.rows.isNotEmpty() || state.hasEnabledVaults ->
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                KaminoEarnTotalCard(
-                    totalFiat = state.totalFiat,
-                    isLoading = state.isLoading && state.totalFiat == null,
-                    isBalanceVisible = state.isBalanceVisible,
-                )
-
                 if (state.loadFailed) {
                     Text(
                         text = stringResource(R.string.kamino_earn_load_failed),
@@ -165,34 +175,6 @@ internal fun KaminoEarnTabContent(
 }
 
 @Composable
-private fun KaminoEarnTotalCard(totalFiat: String?, isLoading: Boolean, isBalanceVisible: Boolean) {
-    Column(modifier = Modifier.kaminoCard().padding(16.dp)) {
-        Text(
-            text = stringResource(R.string.kamino_earn_title),
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.tertiary,
-        )
-
-        UiSpacer(2.dp)
-
-        when {
-            isLoading ->
-                UiPlaceholderLoader(modifier = Modifier.size(width = 120.dp, height = 28.dp))
-            else ->
-                Text(
-                    text =
-                        when {
-                            !isBalanceVisible -> HIDE_BALANCE_CHARS
-                            else -> totalFiat ?: FIAT_VALUE_UNAVAILABLE
-                        },
-                    style = Theme.brockmann.headings.title1,
-                    color = Theme.v2.colors.text.primary,
-                )
-        }
-    }
-}
-
-@Composable
 private fun KaminoVaultCard(
     row: KaminoEarnRow,
     isLoading: Boolean,
@@ -202,24 +184,53 @@ private fun KaminoVaultCard(
 ) {
     Column(
         modifier = Modifier.kaminoCard().padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         VaultIdentityRow(row)
-
-        UiHorizontalDivider()
 
         // A vault read as holding nothing describes no position, and rows of zeros describe nothing
         // — so the figures go and Deposit takes the full width, as the design draws an empty card.
         // An *unread* position keeps them: not knowing is not the same as knowing there is nothing.
         if (row.hasPosition) {
-            DepositedRow(row = row, isBalanceVisible = isBalanceVisible)
+            PositionFigureRow(
+                // A deposit of zero is a real value, so the amount is never placeheld — unlike its
+                // price, which is genuinely absent until the quote lands.
+                label =
+                    stringResource(
+                        R.string.kamino_earn_deposited,
+                        row.depositedDisplay.orHidden(isBalanceVisible),
+                    ),
+                fiat = row.depositedFiat,
+                isLoading = isLoading,
+                isBalanceVisible = isBalanceVisible,
+            )
+
+            PositionFigureRow(
+                label =
+                    stringResource(
+                        // Below zero this reads "Lost", not "Earned": the source is totalPnl, which
+                        // goes negative, and the figure beside it is unsigned, so the label is the
+                        // only thing saying which way the position moved.
+                        if (row.pnlDirection == KaminoEarnRow.PnlDirection.DOWN) {
+                            R.string.kamino_earn_lost
+                        } else {
+                            R.string.kamino_earn_earned
+                        },
+                        (row.pnlDisplay ?: FIAT_VALUE_UNAVAILABLE).orHidden(isBalanceVisible),
+                    ),
+                fiat = row.pnlFiat,
+                isLoading = isLoading,
+                isBalanceVisible = isBalanceVisible,
+            )
         }
 
         // APY is a property of the vault rather than of the position, so it stays either way.
         ApyRow(apyDisplay = row.apyDisplay, isLoading = isLoading)
 
+        // The rule the design draws is one divider per card, immediately above two buttons. An
+        // empty card has a single full-width Deposit and no divider at all.
         if (row.hasPosition) {
-            PnlRow(row = row, isLoading = isLoading, isBalanceVisible = isBalanceVisible)
+            UiHorizontalDivider()
         }
 
         VaultActions(
@@ -235,22 +246,14 @@ private fun KaminoVaultCard(
 @Composable
 private fun VaultIdentityRow(row: KaminoEarnRow) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        TokenLogo(
-            // The row carries the logo *name*; Coil needs it resolved to a drawable or it renders
-            // nothing at all.
-            logo = getCoinLogo(row.tokenLogo),
-            title = row.tokenTicker,
-            modifier = Modifier.size(36.dp),
-            errorLogoModifier = Modifier.size(36.dp).clip(Theme.v2.radius.pill),
-        )
+        VaultLogoPair(row)
 
-        UiSpacer(12.dp)
+        UiSpacer(8.dp)
 
         Column(modifier = Modifier.weight(1f)) {
-            // The risk tier shares the name's line rather than the curator's. "Curated by
-            // Steakhouse Financial" needs nearly the full width, so pairing the tier with it
-            // truncated the curator while the name line beside it sat half empty. The tier is two
-            // short fixed strings, so the name is the one that yields.
+            // The risk tier shares the name's line rather than the subtitle's: it is two short
+            // fixed strings against a live vault name that can run to any length, so the name is
+            // the one that yields.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = row.name,
@@ -258,7 +261,7 @@ private fun VaultIdentityRow(row: KaminoEarnRow) {
                     color = Theme.v2.colors.text.primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false),
+                    modifier = Modifier.weight(1f),
                 )
 
                 UiSpacer(8.dp)
@@ -271,50 +274,104 @@ private fun VaultIdentityRow(row: KaminoEarnRow) {
                 )
             }
 
-            UiSpacer(2.dp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TokenLogo(
+                    logo = R.drawable.kamino,
+                    title = "",
+                    modifier = Modifier.size(16.dp),
+                    errorLogoModifier = Modifier.size(16.dp).clip(Theme.v2.radius.pill),
+                )
 
-            Text(
-                text = stringResource(R.string.kamino_earn_curated_by, row.curator),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.tertiary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+                UiSpacer(3.dp)
+
+                Text(
+                    text = stringResource(R.string.kamino_earn_protocol),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.tertiary,
+                    maxLines = 1,
+                )
+            }
         }
     }
 }
 
+/**
+ * The curator's mark with the vault's underlying token overlapping it.
+ *
+ * The token is drawn second so it sits on top, which is the order the design stacks them in.
+ */
 @Composable
-private fun DepositedRow(row: KaminoEarnRow, isBalanceVisible: Boolean) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = stringResource(R.string.kamino_earn_deposited),
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.tertiary,
+private fun VaultLogoPair(row: KaminoEarnRow) {
+    Box(modifier = Modifier.size(width = LOGO_PAIR_WIDTH, height = LOGO_SIZE)) {
+        TokenLogo(
+            logo = row.curator.logoRes,
+            title = row.curator.displayName,
+            modifier = Modifier.size(LOGO_SIZE).align(Alignment.CenterStart),
+            errorLogoModifier = Modifier.size(LOGO_SIZE).clip(Theme.v2.radius.pill),
         )
 
-        UiSpacer(1f)
+        TokenLogo(
+            // The row carries the logo *name*; Coil needs it resolved to a drawable or it renders
+            // nothing at all.
+            logo = getCoinLogo(row.tokenLogo),
+            title = row.tokenTicker,
+            modifier = Modifier.size(LOGO_SIZE).align(Alignment.CenterEnd),
+            errorLogoModifier = Modifier.size(LOGO_SIZE).clip(Theme.v2.radius.pill),
+        )
+    }
+}
 
-        // A deposit of zero is a real value, so this is never placeheld — unlike APY and PnL, which
-        // are genuinely absent until their calls answer.
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                text = if (isBalanceVisible) row.depositedDisplay else HIDE_BALANCE_CHARS,
-                style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.text.primary,
-                textAlign = TextAlign.End,
-            )
+/**
+ * One position figure: the amount inside the label, its price opposite.
+ *
+ * [isLoading] only reaches the price — the amount is either known or stands as
+ * [FIAT_VALUE_UNAVAILABLE], and a shimmer where a figure already sits would read as the position
+ * itself being re-read.
+ */
+@Composable
+private fun PositionFigureRow(
+    label: String,
+    fiat: String?,
+    isLoading: Boolean,
+    isBalanceVisible: Boolean,
+) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = label,
+            style = Theme.brockmann.headings.title3,
+            color = Theme.v2.colors.text.primary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
 
-            Text(
-                text =
-                    when {
-                        !isBalanceVisible -> HIDE_BALANCE_CHARS
-                        else -> row.depositedFiat ?: FIAT_VALUE_UNAVAILABLE
-                    },
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.tertiary,
-                textAlign = TextAlign.End,
-            )
+        UiSpacer(8.dp)
+
+        when {
+            !isBalanceVisible ->
+                Text(
+                    text = HIDE_BALANCE_CHARS,
+                    style = Theme.brockmann.headings.title3,
+                    color = Theme.v2.colors.text.tertiary,
+                    textAlign = TextAlign.End,
+                )
+            fiat != null ->
+                Text(
+                    text = fiat,
+                    style = Theme.brockmann.headings.title3,
+                    color = Theme.v2.colors.text.tertiary,
+                    textAlign = TextAlign.End,
+                )
+            // Sized to the value it stands in for, so the row does not resize when the price lands.
+            isLoading ->
+                UiPlaceholderLoader(modifier = Modifier.size(width = 72.dp, height = 14.dp))
+            else ->
+                Text(
+                    text = FIAT_VALUE_UNAVAILABLE,
+                    style = Theme.brockmann.headings.title3,
+                    color = Theme.v2.colors.text.tertiary,
+                    textAlign = TextAlign.End,
+                )
         }
     }
 }
@@ -324,7 +381,7 @@ private fun ApyRow(apyDisplay: String?, isLoading: Boolean) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         InfoItem(
             icon = R.drawable.ic_icon_percentage,
-            label = stringResource(R.string.kamino_earn_apy_30d),
+            label = stringResource(R.string.kamino_earn_apy),
             value = null,
         )
 
@@ -352,46 +409,6 @@ private fun ApyRow(apyDisplay: String?, isLoading: Boolean) {
 }
 
 @Composable
-private fun PnlRow(row: KaminoEarnRow, isLoading: Boolean, isBalanceVisible: Boolean) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            // Below zero this reads "Lost", not "Earned": the source is totalPnl, which goes
-            // negative, and "Earned: -3 USDC" asserts the loss was earned and leaves the colour to
-            // correct it.
-            text =
-                stringResource(
-                    if (row.pnlDirection == KaminoEarnRow.PnlDirection.DOWN) {
-                        R.string.kamino_earn_lost
-                    } else {
-                        R.string.kamino_earn_pnl
-                    }
-                ),
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.tertiary,
-        )
-
-        UiSpacer(1f)
-
-        when {
-            row.pnlDisplay != null ->
-                Text(
-                    text = if (isBalanceVisible) row.pnlDisplay else HIDE_BALANCE_CHARS,
-                    style = Theme.brockmann.supplementary.caption,
-                    color = row.pnlDirection.color(),
-                )
-            isLoading ->
-                UiPlaceholderLoader(modifier = Modifier.size(width = 72.dp, height = 14.dp))
-            else ->
-                Text(
-                    text = FIAT_VALUE_UNAVAILABLE,
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.tertiary,
-                )
-        }
-    }
-}
-
-@Composable
 private fun VaultActions(hasPosition: Boolean, onDeposit: () -> Unit, onWithdraw: () -> Unit) {
     // Withdraw only appears once there is something to withdraw; an untouched vault offers the one
     // action that makes sense, across the full width.
@@ -403,7 +420,7 @@ private fun VaultActions(hasPosition: Boolean, onDeposit: () -> Unit, onWithdraw
     // visible pill: `backgrounds.tertiary` (#0B1A3A) on a card painted `backgrounds.secondary`
     // (#061B3A) is a difference the eye cannot find, and the icon's circle was the card colour
     // exactly.
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         if (hasPosition) {
             ActionButton(
                 title = stringResource(R.string.withdraw),
@@ -441,6 +458,9 @@ private fun Modifier.kaminoCard(): Modifier =
         .background(Theme.v2.colors.backgrounds.secondary)
         .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = Theme.v2.radius.xl)
 
+private fun String.orHidden(isBalanceVisible: Boolean): String =
+    if (isBalanceVisible) this else HIDE_BALANCE_CHARS
+
 private val KaminoRiskTier.labelRes: Int
     get() =
         when (this) {
@@ -457,14 +477,15 @@ private fun KaminoRiskTier.labelColor(): Color =
         KaminoRiskTier.PRIVATE_CREDIT -> Theme.v2.colors.alerts.warning
     }
 
-@Composable
-private fun KaminoEarnRow.PnlDirection.color(): Color =
-    when (this) {
-        KaminoEarnRow.PnlDirection.UP -> Theme.v2.colors.alerts.success
-        KaminoEarnRow.PnlDirection.DOWN -> Theme.v2.colors.alerts.error
-        // Every vault the user never deposited into sits at zero; green would read as a gain.
-        KaminoEarnRow.PnlDirection.FLAT -> Theme.v2.colors.text.primary
-    }
+/** Exhaustive by construction: a new curator does not compile until it is given a mark. */
+private val KaminoCurator.logoRes: Int
+    @DrawableRes
+    get() =
+        when (this) {
+            KaminoCurator.STEAKHOUSE_FINANCIAL -> R.drawable.curator_steakhouse
+            KaminoCurator.ROCKAWAYX -> R.drawable.curator_rockawayx
+            KaminoCurator.ALLEZ_LABS -> R.drawable.curator_allez
+        }
 
 @Preview(showBackground = true)
 @Composable
@@ -473,13 +494,12 @@ private fun KaminoEarnTabContentPreview() {
         state =
             KaminoEarnUiModel(
                 hasEnabledVaults = true,
-                totalFiat = "$3,010.77",
                 rows =
                     listOf(
                         KaminoEarnRow(
                             vaultAddress = "HDsayqAsDWy3QvANGqh2yNraqcD8Fnjgh73Mhb3WRS5E",
                             name = "Steakhouse USDC",
-                            curator = "Steakhouse Financial",
+                            curator = KaminoCurator.STEAKHOUSE_FINANCIAL,
                             riskTier = KaminoRiskTier.CONSERVATIVE,
                             tokenLogo = "usdc",
                             tokenTicker = "USDC",
@@ -487,13 +507,15 @@ private fun KaminoEarnTabContentPreview() {
                             depositedFiat = "$1,000.23",
                             apyDisplay = "4.00%",
                             pnlDisplay = "200 USDC",
+                            pnlFiat = "$200.54",
                             pnlDirection = KaminoEarnRow.PnlDirection.UP,
                             fiatValue = BigDecimal("1000.23"),
+                            hasPosition = true,
                         ),
                         KaminoEarnRow(
                             vaultAddress = "DWSXb18xZApz29vnQpgR2m6MynCT7PznaXt7Ut7M7KaP",
                             name = "RWA USDC",
-                            curator = "RockawayX",
+                            curator = KaminoCurator.ROCKAWAYX,
                             riskTier = KaminoRiskTier.PRIVATE_CREDIT,
                             tokenLogo = "usdc",
                             tokenTicker = "USDC",
@@ -501,6 +523,7 @@ private fun KaminoEarnTabContentPreview() {
                             depositedFiat = "$0.00",
                             apyDisplay = "5.88%",
                             pnlDisplay = "0 USDC",
+                            pnlFiat = "$0.00",
                             pnlDirection = KaminoEarnRow.PnlDirection.FLAT,
                             fiatValue = BigDecimal.ZERO,
                         ),

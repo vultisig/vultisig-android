@@ -523,10 +523,11 @@
     <!-- Kamino Earn -->
     <string name="kamino_earn_title">Kamino Earn</string>
     <string name="kamino_earn_curated_by">Куратор: %1$s</string>
-    <string name="kamino_earn_deposited">Депонировано</string>
-    <string name="kamino_earn_apy_30d">APY (30 дн.)</string>
-    <string name="kamino_earn_pnl">Прибыль и убыток</string>
-    <string name="kamino_earn_lost">Убыток</string>
+    <string name="kamino_earn_deposited">Депонировано: %1$s</string>
+    <string name="kamino_earn_apy">APY</string>
+    <string name="kamino_earn_earned">Заработано: %1$s</string>
+    <string name="kamino_earn_lost">Убыток: %1$s</string>
+    <string name="kamino_earn_protocol">Kamino</string>
     <string name="kamino_earn_load_failed">Сейчас не удалось обновить эти vault‑ы</string>
     <string name="kamino_earn_risk_conservative">Консервативный</string>
     <string name="kamino_earn_risk_private_credit">Частный кредит</string>

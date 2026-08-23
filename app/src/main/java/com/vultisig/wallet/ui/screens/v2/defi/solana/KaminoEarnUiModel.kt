@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.v2.defi.solana
 
 import androidx.compose.runtime.Immutable
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoCurator
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRiskTier
 import com.vultisig.wallet.ui.screens.v2.defi.DefiFiatTotal
 import java.math.BigDecimal
@@ -15,13 +16,11 @@ data class KaminoEarnUiModel(
      */
     val hasEnabledVaults: Boolean = false,
     val rows: List<KaminoEarnRow> = emptyList(),
-    /** Summed across vaults in the user's currency; null while unresolved. */
-    val totalFiat: String? = null,
     /**
-     * The same sum before formatting, so the chain header can add it to native staking without
-     * re-parsing [totalFiat]. Zero when no vault is enabled — that is the user holding nothing
-     * here, a known value — and null whenever any enabled vault is unread or unpriced, because a
-     * sum that silently omits one of them is not this wallet's Kamino total.
+     * Summed across vaults, for the chain header to add to native staking — the segment itself no
+     * longer carries a total of its own. Zero when no vault is enabled — that is the user holding
+     * nothing here, a known value — and null whenever any enabled vault is unread or unpriced,
+     * because a sum that silently omits one of them is not this wallet's Kamino total.
      */
     val totalValue: DefiFiatTotal? = null,
     val isBalanceVisible: Boolean = true,
@@ -41,7 +40,7 @@ data class KaminoEarnRow(
     val vaultAddress: String,
     /** Live vault name when the API answered, otherwise the pinned fallback. */
     val name: String,
-    val curator: String,
+    val curator: KaminoCurator,
     val riskTier: KaminoRiskTier,
     val tokenLogo: String,
     val tokenTicker: String,
@@ -55,6 +54,10 @@ data class KaminoEarnRow(
     val apyDisplay: String?,
     /** Lifetime profit in token terms. Null while the PnL call is outstanding or failed. */
     val pnlDisplay: String?,
+    /**
+     * The same profit priced in the user's currency. Null whenever [pnlDisplay] is, or unpriced.
+     */
+    val pnlFiat: String?,
     val pnlDirection: PnlDirection,
     /**
      * The row's fiat value, kept alongside its formatted form so the screen total can be summed

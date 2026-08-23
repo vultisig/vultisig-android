@@ -236,7 +236,7 @@ constructor(
                 // through can leave it on screen as though it still answered.
                 if (totalCoverage != enabled || _state.value.totalValue?.currency != currency) {
                     totalCoverage = emptySet()
-                    _state.update { it.copy(totalFiat = null, totalValue = null) }
+                    _state.update { it.copy(totalValue = null) }
                 }
 
                 // The cards carry their own fiat, priced in whatever currency was selected when
@@ -249,7 +249,7 @@ constructor(
                         current.copy(
                             rows =
                                 current.rows.map { row ->
-                                    row.copy(depositedFiat = null, fiatValue = null)
+                                    row.copy(depositedFiat = null, pnlFiat = null, fiatValue = null)
                                 }
                         )
                     }
@@ -261,7 +261,6 @@ constructor(
                             isLoading = false,
                             hasEnabledVaults = false,
                             rows = emptyList(),
-                            totalFiat = null,
                             // Zero, not null: no vault enabled is a read that succeeded and found
                             // nothing, so the chain header can still add it up.
                             totalValue = DefiFiatTotal(BigDecimal.ZERO, currency),
@@ -276,11 +275,6 @@ constructor(
 
                 val walletAddress = resolveSolanaAddress()
                 val positions = fetchPositions(walletAddress)
-                // Pinned to the currency this load priced in, not read live: a switch part-way
-                // through would otherwise stamp the new currency's symbol on figures priced in the
-                // old one.
-                val currencyFormat =
-                    withContext(ioDispatcher) { appCurrencyRepository.getCurrencyFormat(currency) }
 
                 // Each vault is independent: one failing call must not empty the other cards.
                 val rows = supervisorScope {
@@ -345,7 +339,6 @@ constructor(
                             merged.ifEmpty {
                                 current.rows.filter { row -> row.vaultAddress in enabled }
                             },
-                        totalFiat = total?.let { currencyFormat.format(it.value) },
                         totalValue = total,
                     )
                 }
@@ -423,6 +416,9 @@ constructor(
         val apy =
             KaminoPositionMath.decimalOrNull(metrics?.apy30d)?.let(KaminoPositionMath::apyPercent)
         val pnlToken = KaminoPositionMath.decimalOrNull(pnl?.totalPnl?.token)
+        // Unsigned like the token figure beside it: the row's label already says whether this was
+        // earned or lost, and a minus sign in front of "Lost" would state it twice.
+        val pnlAbsolute = pnlToken?.abs()
 
         KaminoEarnRow(
             vaultAddress = vault.address,
@@ -438,12 +434,11 @@ constructor(
                 tokenAmount?.let { amount -> coin?.let { fiatOrNull(amount, it, currency) } },
             apyDisplay = apy?.formatPercent(),
             pnlDisplay =
-                pnlToken?.let {
-                    // Unsigned: the row's label already says whether this was earned or lost, so a
-                    // minus sign in front of "Lost" would state it twice.
-                    val amount = it.abs().setScale(vault.tokenDecimals, RoundingMode.DOWN)
+                pnlAbsolute?.let {
+                    val amount = it.setScale(vault.tokenDecimals, RoundingMode.DOWN)
                     amount.stripTrailingZeros().formatTokenAmount(coin?.ticker).trim()
                 },
+            pnlFiat = pnlAbsolute?.let { amount -> coin?.let { fiatOrNull(amount, it, currency) } },
             pnlDirection =
                 when {
                     pnlToken == null -> KaminoEarnRow.PnlDirection.FLAT
