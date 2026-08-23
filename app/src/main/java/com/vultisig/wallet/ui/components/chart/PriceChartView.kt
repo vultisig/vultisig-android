@@ -31,10 +31,10 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.intl.Locale as ComposeLocale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -115,9 +115,10 @@ private fun ChartHeader(
     isDimmed: Boolean,
 ) {
     val tint = if (isPositive) Theme.v2.colors.alerts.success else Theme.v2.colors.alerts.error
-    // ComposeLocale.current rather than LocalConfiguration: the configuration's locale list is not
-    // a snapshot read, so a locale change would leave an already-composed scrub caption stale.
-    val locale = Locale.forLanguageTag(ComposeLocale.current.toLanguageTag())
+    // LocalLocale, not Locale.current or LocalConfiguration: only the composition local is an
+    // observed read, so a per-app language change re-formats an already-composed scrub caption
+    // instead of leaving it in the previous locale.
+    val locale = LocalLocale.current.platformLocale
 
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Column {

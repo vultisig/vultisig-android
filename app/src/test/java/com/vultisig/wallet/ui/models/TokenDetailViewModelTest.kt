@@ -399,6 +399,23 @@ internal class TokenDetailViewModelTest {
         }
 
     @Test
+    fun `receive does nothing until an address has resolved`() =
+        runTest(testDispatcher) {
+            // The action row hides Receive until chainAddress lands, so this guard is the second
+            // line of defence rather than the only one — but a navigation with an empty address
+            // would open a QR of nothing, so it stays.
+            coEvery { accountsRepository.loadAddress(any(), any()) } returns flowOf()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.receive()
+            advanceUntilIdle()
+
+            vm.uiState.value.chainAddress shouldBe ""
+            coVerify(exactly = 0) { navigator.route(any<Route.AddressQr>()) }
+        }
+
+    @Test
     fun `a native coin's explorer row points at the holder's address page`() =
         runTest(testDispatcher) {
             coEvery {

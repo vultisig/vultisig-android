@@ -217,11 +217,16 @@ internal fun TokenDetailsContent(
                     )
                 }
 
-                AssetActionButton(
-                    action = AssetAction.RECEIVE,
-                    isSelected = false,
-                    onClick = onReceive,
-                )
+                // Gated on the address for the same reason every flag above is gated on the
+                // account: until one resolves there is nothing to put in a QR code, and an action
+                // that is tappable but does nothing is worse than one that has not appeared yet.
+                if (uiModel.chainAddress.isNotEmpty()) {
+                    AssetActionButton(
+                        action = AssetAction.RECEIVE,
+                        isSelected = false,
+                        onClick = onReceive,
+                    )
+                }
             }
         }
 
@@ -284,6 +289,7 @@ private fun TokenDetailsScreenPreview() {
                     ),
                 canSwap = true,
                 canDeposit = true,
+                chainAddress = "0xpreview",
                 chart = ChartUiModel(),
                 marketStats = MarketStatsUiModel(marketCap = "$1.2B", marketCapRank = "#42"),
                 priceExtremes =
