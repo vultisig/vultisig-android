@@ -96,9 +96,9 @@ internal data class VaultAccountsUiModel(
     val accounts: List<AccountUiModel> = emptyList(),
     val defiAccounts: List<AccountUiModel> = emptyList(),
     val searchTextFieldState: TextFieldState = TextFieldState(),
-    // Per-banner visibility, each gated on a global, TTL-based dismissal (#5064). The upgrade
-    // banner
-    // additionally requires the vault to be GG20 (migration-eligible).
+    // Per-banner visibility, each gated on a global dismissal whose lifetime is the banner's own
+    // policy (#5064). The upgrade banner additionally requires the vault to be GG20
+    // (migration-eligible).
     val showUpgradeBanner: Boolean = false,
     val showFollowXBanner: Boolean = false,
     val showBuyVultBanner: Boolean = false,
@@ -435,10 +435,9 @@ constructor(
 
     fun dismissFollowXBanner() = dismissPromoBanner(PromoBanner.FollowXVultisig)
 
-    // Global, TTL-based dismissal: the banner stays hidden across vaults until its TTL elapses,
-    // then
-    // becomes eligible again (#5064). Writing the timestamp re-emits the dismissal flow, so the
-    // banner hides reactively without a session flag.
+    // Global dismissal: the banner stays hidden across vaults for as long as its policy says —
+    // until a TTL elapses, or for good (#5064). Writing the timestamp re-emits the dismissal flow,
+    // so the banner hides reactively without a session flag.
     private fun dismissPromoBanner(banner: PromoBanner) {
         viewModelScope.safeLaunch { promoBannerDismissalRepository.dismiss(banner) }
     }
