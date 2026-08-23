@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.KaminoPnlJson
 import com.vultisig.wallet.data.api.KaminoUserPositionJson
 import com.vultisig.wallet.data.api.KaminoVaultMetricsJson
 import com.vultisig.wallet.data.api.KaminoVaultStateJson
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoCurator
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRiskTier
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
 import com.vultisig.wallet.data.models.Chain
@@ -125,7 +126,6 @@ internal class KaminoEarnViewModelTest {
 
         state.hasEnabledVaults shouldBe false
         state.rows.isEmpty() shouldBe true
-        state.totalFiat.shouldBeNull()
         state.isLoading shouldBe false
     }
 
@@ -181,7 +181,6 @@ internal class KaminoEarnViewModelTest {
         // this figure to native staking — reporting it short would understate the whole chain.
         state.rows.size shouldBe 2
         state.totalValue.shouldBeNull()
-        state.totalFiat.shouldBeNull()
     }
 
     @Test
@@ -199,7 +198,7 @@ internal class KaminoEarnViewModelTest {
                 KaminoVaultMetricsJson(tokensPerShare = "1.0")
 
             val vm = viewModel().apply { setData(VAULT_ID) }
-            vm.state.value.totalFiat shouldBe "$200.00"
+            BigDecimal("200").compareTo(vm.state.value.totalValue?.value) shouldBe 0
 
             // One vault is switched off, and the reload that follows never lands.
             coEvery { chainAccountAddressRepository.getAddress(Chain.Solana, VAULT) } throws
@@ -208,7 +207,6 @@ internal class KaminoEarnViewModelTest {
 
             // $200 covered both vaults; leaving it up for one would report a deselected position.
             vm.state.value.totalValue.shouldBeNull()
-            vm.state.value.totalFiat.shouldBeNull()
         }
 
     @Test
@@ -226,7 +224,7 @@ internal class KaminoEarnViewModelTest {
         state.rows.size shouldBe 1
         val row = state.rows.single()
         row.name shouldBe "Steakhouse USDC"
-        row.curator shouldBe "Steakhouse Financial"
+        row.curator shouldBe KaminoCurator.STEAKHOUSE_FINANCIAL
         row.riskTier shouldBe KaminoRiskTier.CONSERVATIVE
         row.depositedDisplay shouldBe "0 USDC"
         row.apyDisplay shouldBe "4.00%"
@@ -367,9 +365,8 @@ internal class KaminoEarnViewModelTest {
         val state = viewModel().apply { setData(VAULT_ID) }.state.value
 
         state.rows.size shouldBe 2
-        // Priced at 1.0 each, 100 + 100 shares against a 1:1 share ratio.
-        state.totalFiat shouldBe "$200.00"
-        // The same figure unformatted, which is what the chain header adds to native staking.
+        // Priced at 1.0 each, 100 + 100 shares against a 1:1 share ratio. This is what the chain
+        // header adds to native staking — the segment no longer shows a total of its own.
         BigDecimal("200").compareTo(state.totalValue?.value) shouldBe 0
     }
 
@@ -525,7 +522,7 @@ internal class KaminoEarnViewModelTest {
             allezRow.fiatValue.shouldNotBeNull()
             // No prior total exists yet, so a total short by the unresolved row must not be shown
             // as if it were confirmed — $100 would read as the whole position, not half of it.
-            state.totalFiat.shouldBeNull()
+            state.totalValue.shouldBeNull()
         }
 
     @Test
@@ -557,12 +554,12 @@ internal class KaminoEarnViewModelTest {
             KaminoVaultMetricsJson(tokensPerShare = "1.0")
 
         val vm = viewModel().apply { setData(VAULT_ID) }
-        val firstTotal = vm.state.value.totalFiat
+        val firstTotal = vm.state.value.totalValue
         firstTotal.shouldNotBeNull()
 
         vm.refresh()
 
-        vm.state.value.totalFiat shouldBe firstTotal
+        vm.state.value.totalValue shouldBe firstTotal
     }
 
     @Test
@@ -608,13 +605,11 @@ internal class KaminoEarnViewModelTest {
             RuntimeException("503")
 
         val vm = viewModel().apply { setData(VAULT_ID) }
-        val firstTotal = vm.state.value.totalFiat
-        firstTotal shouldBe "$100.00"
+        BigDecimal("100").compareTo(vm.state.value.totalValue?.value) shouldBe 0
 
         vm.refresh()
-        val secondTotal = vm.state.value.totalFiat
 
-        secondTotal shouldBe "$0.00"
+        BigDecimal.ZERO.compareTo(vm.state.value.totalValue?.value) shouldBe 0
     }
 
     @Test
@@ -646,6 +641,9 @@ internal class KaminoEarnViewModelTest {
 
         row.pnlDirection shouldBe KaminoEarnRow.PnlDirection.DOWN
         row.pnlDisplay shouldBe "3 USDC"
+        // The card prints this opposite the label, which already says the position lost — a
+        // "-$3.00" there would say it twice, and it is the same figure the token amount is.
+        row.pnlFiat shouldBe "$3.00"
     }
 
     @Test
@@ -685,10 +683,13 @@ internal class KaminoEarnViewModelTest {
             coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Steakhouse USDC")
             coEvery { kaminoApi.getVaultMetrics(any()) } returns
                 KaminoVaultMetricsJson(tokensPerShare = "1.0")
+            coEvery { kaminoApi.getPositionPnl(any(), any()) } returns
+                KaminoPnlJson(totalPnl = KaminoPnlJson.Amounts(token = "5"))
 
             val vm = viewModel().apply { setData(VAULT_ID) }
             val priced = vm.state.value.rows.single()
             priced.depositedFiat.shouldNotBeNull()
+            priced.pnlFiat.shouldNotBeNull()
 
             // The reload the switch triggers never lands, so nothing rebuilds these cards.
             coEvery { chainAccountAddressRepository.getAddress(Chain.Solana, VAULT) } throws
@@ -698,8 +699,11 @@ internal class KaminoEarnViewModelTest {
             val row = vm.state.value.rows.single()
             row.depositedFiat.shouldBeNull()
             row.fiatValue.shouldBeNull()
+            // Earned carries a price of its own now, and it is priced in the same stale currency.
+            row.pnlFiat.shouldBeNull()
             // What the vault holds is priced in neither currency, so the card keeps saying it.
             row.depositedDisplay shouldBe priced.depositedDisplay
+            row.pnlDisplay shouldBe priced.pnlDisplay
         }
 
     @Test
@@ -723,7 +727,7 @@ internal class KaminoEarnViewModelTest {
         val state = viewModel().apply { setData(VAULT_ID) }.state.value
 
         state.rows.single().depositedFiat.shouldNotBeNull() shouldContain "€"
-        state.totalFiat.shouldNotBeNull() shouldContain "€"
+        state.totalValue.shouldNotBeNull().currency shouldBe AppCurrency.EUR
     }
 
     private companion object {

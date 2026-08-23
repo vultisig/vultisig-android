@@ -48,6 +48,7 @@ import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBlockedReason
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoCurator
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRiskTier
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState
 import com.vultisig.wallet.data.models.Account
@@ -4043,7 +4044,7 @@ private val KAMINO_PREVIEW_ROWS =
         KaminoEarnRow(
             vaultAddress = "HDsayqAsDWy3QvANGqh2yNraqcD8Fnjgh73Mhb3WRS5E",
             name = "Steakhouse USDC",
-            curator = "Steakhouse Financial",
+            curator = KaminoCurator.STEAKHOUSE_FINANCIAL,
             riskTier = KaminoRiskTier.CONSERVATIVE,
             tokenLogo = "usdc",
             tokenTicker = "USDC",
@@ -4051,6 +4052,7 @@ private val KAMINO_PREVIEW_ROWS =
             depositedFiat = "$1,054.22",
             apyDisplay = "4.00%",
             pnlDisplay = "54.427822 USDC",
+            pnlFiat = "$54.42",
             pnlDirection = KaminoEarnRow.PnlDirection.UP,
             fiatValue = java.math.BigDecimal("1054.22"),
             hasPosition = true,
@@ -4058,7 +4060,7 @@ private val KAMINO_PREVIEW_ROWS =
         KaminoEarnRow(
             vaultAddress = "A1so1bPD3W1TfeFwboDh8yfAAVaVtcdAYBYCjhg2mJQ",
             name = "Allez SOL",
-            curator = "Allez Labs",
+            curator = KaminoCurator.ALLEZ_LABS,
             riskTier = KaminoRiskTier.CONSERVATIVE,
             tokenLogo = "sol",
             tokenTicker = "SOL",
@@ -4066,6 +4068,7 @@ private val KAMINO_PREVIEW_ROWS =
             depositedFiat = "$0.00",
             apyDisplay = "5.14%",
             pnlDisplay = "0 SOL",
+            pnlFiat = "$0.00",
             pnlDirection = KaminoEarnRow.PnlDirection.FLAT,
             fiatValue = java.math.BigDecimal.ZERO,
             // Read, and holds nothing: the card drops its figure rows and offers only Deposit.
@@ -4074,7 +4077,7 @@ private val KAMINO_PREVIEW_ROWS =
         KaminoEarnRow(
             vaultAddress = "DWSXb18xZApz29vnQpgR2m6MynCT7PznaXt7Ut7M7KaP",
             name = "RWA USDC",
-            curator = "RockawayX",
+            curator = KaminoCurator.ROCKAWAYX,
             riskTier = KaminoRiskTier.PRIVATE_CREDIT,
             tokenLogo = "usdc",
             tokenTicker = "USDC",
@@ -4082,6 +4085,7 @@ private val KAMINO_PREVIEW_ROWS =
             depositedFiat = "$0.00",
             apyDisplay = "5.88%",
             pnlDisplay = "0 USDC",
+            pnlFiat = "$0.00",
             pnlDirection = KaminoEarnRow.PnlDirection.FLAT,
             fiatValue = java.math.BigDecimal.ZERO,
             hasPosition = false,
@@ -4125,7 +4129,6 @@ private fun SolanaDeFiPreview(tab: DeFiTab, hasEnabledVaults: Boolean = true) {
                 isLoading = false,
                 hasEnabledVaults = hasEnabledVaults,
                 rows = if (hasEnabledVaults) KAMINO_PREVIEW_ROWS else emptyList(),
-                totalFiat = if (hasEnabledVaults) "$1,054.22" else "$0.00",
                 isBalanceVisible = true,
             ),
         selectedTab = tab,

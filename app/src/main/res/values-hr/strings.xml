@@ -525,10 +525,11 @@
     <!-- Kamino Earn -->
     <string name="kamino_earn_title">Kamino Earn</string>
     <string name="kamino_earn_curated_by">Kurirao %1$s</string>
-    <string name="kamino_earn_deposited">Deponirano</string>
-    <string name="kamino_earn_apy_30d">APY (30 d)</string>
-    <string name="kamino_earn_pnl">Dobit i gubitak</string>
-    <string name="kamino_earn_lost">Izgubljeno</string>
+    <string name="kamino_earn_deposited">Deponirano: %1$s</string>
+    <string name="kamino_earn_apy">APY</string>
+    <string name="kamino_earn_earned">Zarađeno: %1$s</string>
+    <string name="kamino_earn_lost">Izgubljeno: %1$s</string>
+    <string name="kamino_earn_protocol">Kamino</string>
     <string name="kamino_earn_load_failed">Ove vaultove trenutno nije moguće osvježiti</string>
     <string name="kamino_earn_risk_conservative">Konzervativno</string>
     <string name="kamino_earn_risk_private_credit">Privatni krediti</string>

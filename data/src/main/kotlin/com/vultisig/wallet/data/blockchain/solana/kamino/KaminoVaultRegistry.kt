@@ -21,6 +21,18 @@ enum class KaminoRiskTier {
 }
 
 /**
+ * Who runs a launch vault's strategy.
+ *
+ * An enum rather than a free string because the card pairs each one with its mark: a new curator
+ * has to be given a logo, and a `when` over this fails to compile until it is.
+ */
+enum class KaminoCurator(val displayName: String) {
+    STEAKHOUSE_FINANCIAL("Steakhouse Financial"),
+    ROCKAWAYX("RockawayX"),
+    ALLEZ_LABS("Allez Labs"),
+}
+
+/**
  * A curated Kamino Earn vault the app offers.
  *
  * Every field here is an immutable property of the vault — its mints, their scales and its farm are
@@ -44,7 +56,7 @@ data class KaminoVault(
     val farm: String,
     /** Shown until live vault state arrives, and as the fallback if it never does. */
     val fallbackName: String,
-    val curator: String,
+    val curator: KaminoCurator,
     val riskTier: KaminoRiskTier,
 )
 
@@ -78,7 +90,7 @@ object KaminoVaultRegistry {
             sharesDecimals = 6,
             farm = "9FVjHqduhDPMVqvu3cXiEBjU6nvxvGdCCLRwd9WpVRZj",
             fallbackName = "Steakhouse USDC",
-            curator = "Steakhouse Financial",
+            curator = KaminoCurator.STEAKHOUSE_FINANCIAL,
             riskTier = KaminoRiskTier.CONSERVATIVE,
         )
 
@@ -91,7 +103,7 @@ object KaminoVaultRegistry {
             sharesDecimals = 6,
             farm = "ArwyAHmnFmbKbUxC2fnK5VUEpspHrnoFtJ22bvEyriKk",
             fallbackName = "RWA USDC",
-            curator = "RockawayX",
+            curator = KaminoCurator.ROCKAWAYX,
             riskTier = KaminoRiskTier.PRIVATE_CREDIT,
         )
 
@@ -108,7 +120,7 @@ object KaminoVaultRegistry {
             sharesDecimals = 6,
             farm = "H6kauPaHmNqpdKtD5U2zw3Eb28ZB7iMeBdHVfLq1i4Kh",
             fallbackName = "Allez SOL",
-            curator = "Allez Labs",
+            curator = KaminoCurator.ALLEZ_LABS,
             riskTier = KaminoRiskTier.CONSERVATIVE,
         )
 
