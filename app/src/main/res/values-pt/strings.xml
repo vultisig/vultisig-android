@@ -1206,6 +1206,15 @@
     <string name="onboarding_desc_page_1_part_2">Partilhas do cofre</string>
     <string name="verify_swap_youre_swapping_title">Está a trocar</string>
     <string name="keysign_app_version_text">Versão %1$s (%2$s)</string>
+    <string name="lp_pending_title">A aguardar o depósito %1$s correspondente</string>
+    <string name="lp_pending_subtitle">A THORChain retém este depósito até chegar a parte correspondente e reembolsa-o caso não chegue.</string>
+    <string name="lp_pending_deposited">Depositado</string>
+    <string name="lp_pending_from">De</string>
+    <string name="lp_pending_refunds_in">Reembolso em</string>
+    <string name="lp_pending_duration_days_hours_format">%1$dd %2$dh</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$dh %2$dm</string>
+    <string name="lp_pending_refund_time_unknown">Desconhecido</string>
+    <string name="lp_pending_complete_deposit">Concluir depósito</string>
     <string name="lp_position">Posição</string>
     <string name="add">Adicionar</string>
     <string name="remove">Remover</string>

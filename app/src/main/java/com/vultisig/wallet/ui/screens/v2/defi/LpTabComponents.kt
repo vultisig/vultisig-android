@@ -25,12 +25,17 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.SubcomposeAsyncImage
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.defi.LpPositionUiModel
 import com.vultisig.wallet.ui.models.defi.LpTabUiModel
+import com.vultisig.wallet.ui.models.defi.PendingLpDepositUiModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 
 /** Tab content listing LP positions, each with add and remove liquidity actions. */
 @Composable
@@ -38,8 +43,18 @@ internal fun LpTabContent(
     state: LpTabUiModel,
     onClickAdd: (String) -> Unit,
     onClickRemove: (String) -> Unit,
+    onClickCompletePending: (String) -> Unit = {},
 ) {
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Above the positions: a half-deposit is on a refund timer, so it is the one thing on this
+        // tab the user may need to act on before it expires.
+        state.pendingDeposits.forEach { pending ->
+            PendingLpWidget(
+                state = pending,
+                onClickComplete = { onClickCompletePending(pending.poolId) },
+            )
+        }
+
         state.positions.forEach { lpPosition ->
             LpWidget(
                 state = lpPosition,
@@ -48,6 +63,154 @@ internal fun LpTabContent(
                 onClickRemove = { onClickRemove(lpPosition.positionKey) },
             )
         }
+    }
+}
+
+/**
+ * A symmetric add that THORChain is still holding because only one side arrived. Shows what was
+ * deposited, the address the missing half has to come from, and how long is left before the deposit
+ * is refunded.
+ */
+@Composable
+internal fun PendingLpWidget(state: PendingLpDepositUiModel, onClickComplete: () -> Unit) {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(Theme.v2.radius.xl)
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.alerts.warning,
+                    shape = Theme.v2.radius.xl,
+                )
+                .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            AssetIconWithChainBadge(
+                icon = state.icon,
+                chainLogo = state.chainLogo,
+                fallbackTicker = state.awaitedTicker,
+            )
+
+            UiSpacer(12.dp)
+
+            Column {
+                Text(
+                    text = stringResource(R.string.lp_pending_title, state.awaitedTicker),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.alerts.warning,
+                )
+
+                UiSpacer(4.dp)
+
+                Text(
+                    text = stringResource(R.string.lp_pending_subtitle),
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+            }
+        }
+
+        UiSpacer(16.dp)
+
+        UiHorizontalDivider()
+
+        UiSpacer(16.dp)
+
+        PendingLpRow(
+            label = stringResource(R.string.lp_pending_deposited),
+            value = state.depositedAmount,
+        )
+
+        if (state.pairedAddress != null) {
+            UiSpacer(8.dp)
+
+            PendingLpRow(
+                label = stringResource(R.string.lp_pending_from),
+                value = state.pairedAddress,
+            )
+        }
+
+        UiSpacer(8.dp)
+
+        PendingLpRow(
+            label = stringResource(R.string.lp_pending_refunds_in),
+            value =
+                state.refundsIn?.asString()
+                    ?: stringResource(R.string.lp_pending_refund_time_unknown),
+            valueColor = Theme.v2.colors.alerts.warning,
+        )
+
+        UiSpacer(16.dp)
+
+        VsButton(
+            label = stringResource(R.string.lp_pending_complete_deposit),
+            onClick = onClickComplete,
+            state = if (state.canComplete) VsButtonState.Enabled else VsButtonState.Disabled,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+/**
+ * The pool asset's logo with its chain badge, falling back to the ticker's initial when the logo
+ * fails to load. Shared by the position and pending-deposit cards so the two stay in step.
+ */
+@Composable
+private fun AssetIconWithChainBadge(icon: ImageModel, chainLogo: Int?, fallbackTicker: String) {
+    Box(modifier = Modifier.size(48.dp)) {
+        SubcomposeAsyncImage(
+            model = icon,
+            contentDescription = null,
+            modifier = Modifier.size(48.dp).clip(CircleShape),
+            error = {
+                Box(
+                    modifier =
+                        Modifier.size(48.dp)
+                            .clip(CircleShape)
+                            .background(Theme.v2.colors.backgrounds.tertiary_2),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = fallbackTicker.firstOrNull()?.toString().orEmpty(),
+                        color = Theme.v2.colors.text.primary,
+                        style = Theme.brockmann.headings.title3,
+                    )
+                }
+            },
+        )
+
+        if (chainLogo != null) {
+            AsyncImage(
+                model = chainLogo,
+                contentDescription = null,
+                modifier =
+                    Modifier.align(Alignment.BottomEnd)
+                        .size(20.dp)
+                        .clip(CircleShape)
+                        .background(Theme.v2.colors.neutrals.n200, CircleShape)
+                        .border(1.dp, Theme.v2.colors.backgrounds.secondary, CircleShape),
+            )
+        }
+    }
+}
+
+@Composable
+private fun PendingLpRow(
+    label: String,
+    value: String,
+    valueColor: Color = Theme.v2.colors.text.primary,
+) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = label,
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.tertiary,
+        )
+
+        UiSpacer(1f)
+
+        Text(text = value, style = Theme.brockmann.body.s.medium, color = valueColor)
     }
 }
 
@@ -71,41 +234,11 @@ internal fun LpWidget(
                 .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(48.dp)) {
-                SubcomposeAsyncImage(
-                    model = state.icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp).clip(CircleShape),
-                    error = {
-                        Box(
-                            modifier =
-                                Modifier.size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(Theme.v2.colors.backgrounds.tertiary_2),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = state.assetTicker.firstOrNull()?.toString().orEmpty(),
-                                color = Theme.v2.colors.text.primary,
-                                style = Theme.brockmann.headings.title3,
-                            )
-                        }
-                    },
-                )
-
-                if (state.chainLogo != null) {
-                    AsyncImage(
-                        model = state.chainLogo,
-                        contentDescription = null,
-                        modifier =
-                            Modifier.align(Alignment.BottomEnd)
-                                .size(20.dp)
-                                .clip(CircleShape)
-                                .background(Theme.v2.colors.neutrals.n200, CircleShape)
-                                .border(1.dp, Theme.v2.colors.backgrounds.secondary, CircleShape),
-                    )
-                }
-            }
+            AssetIconWithChainBadge(
+                icon = state.icon,
+                chainLogo = state.chainLogo,
+                fallbackTicker = state.assetTicker,
+            )
 
             UiSpacer(12.dp)
 

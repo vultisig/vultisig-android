@@ -1207,6 +1207,15 @@
     <string name="onboarding_desc_page_1_part_2">Condivisioni del Vault,</string>
     <string name="verify_swap_youre_swapping_title">Stai effettuando uno scambio</string>
     <string name="keysign_app_version_text">Versione %1$s (%2$s)</string>
+    <string name="lp_pending_title">In attesa del deposito %1$s corrispondente</string>
+    <string name="lp_pending_subtitle">THORChain trattiene questo deposito finché non arriva la parte corrispondente, altrimenti lo rimborsa.</string>
+    <string name="lp_pending_deposited">Depositato</string>
+    <string name="lp_pending_from">Da</string>
+    <string name="lp_pending_refunds_in">Rimborso tra</string>
+    <string name="lp_pending_duration_days_hours_format">%1$dg %2$dh</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$dh %2$dmin</string>
+    <string name="lp_pending_refund_time_unknown">Sconosciuto</string>
+    <string name="lp_pending_complete_deposit">Completa il deposito</string>
     <string name="lp_position">Posizione</string>
     <string name="add">Aggiungi</string>
     <string name="remove">Rimuovi</string>

@@ -104,18 +104,24 @@ constructor(
         val action = depositTypeActionProvider()?.takeIf { it.isNotEmpty() } ?: return
         clearDepositTypeAction()
 
-        val depositOption =
-            when (parseDepositType(action)) {
-                DeFiNavActions.BOND -> DepositOption.Bond
-                DeFiNavActions.UNBOND -> DepositOption.Unbond
-                DeFiNavActions.STAKE_CACAO -> DepositOption.AddCacaoPool
-                DeFiNavActions.UNSTAKE_CACAO -> DepositOption.RemoveCacaoPool
-                DeFiNavActions.ADD_LP -> DepositOption.AddLiquidity
-                DeFiNavActions.REMOVE_LP -> DepositOption.RemoveLiquidity
-                else -> DepositOption.Bond
-            }
-        selectDepositOption(depositOption)
+        selectDepositOption(depositOptionFor(action))
     }
+
+    /**
+     * Maps a `depositTypeAction` deep-link to the option the form should open on. Deep-linked
+     * options are deliberately absent from the per-chain [DepositOption] dropdown: the flow is
+     * entered from the DeFi tab, not picked here.
+     */
+    private fun depositOptionFor(action: String): DepositOption =
+        when (parseDepositType(action)) {
+            DeFiNavActions.BOND -> DepositOption.Bond
+            DeFiNavActions.UNBOND -> DepositOption.Unbond
+            DeFiNavActions.STAKE_CACAO -> DepositOption.AddCacaoPool
+            DeFiNavActions.UNSTAKE_CACAO -> DepositOption.RemoveCacaoPool
+            DeFiNavActions.ADD_LP -> DepositOption.AddLiquidity
+            DeFiNavActions.REMOVE_LP -> DepositOption.RemoveLiquidity
+            else -> DepositOption.Bond
+        }
 
     /**
      * Wires the init-time deposit flow at screen entry: builds the per-[chain] option list and
@@ -178,7 +184,15 @@ constructor(
                         if (chain.ticker() in SECURE_ASSETS_TICKERS) add(DepositOption.SecuredAsset)
                     }
             }
-        val depositOption = depositOptions.first()
+        // The dropdown list is empty for chains that expose no self-service deposit action (any
+        // chain outside the branches above whose ticker is not a secured asset). Those chains are
+        // still reachable by deep link — completing a pending THORChain LP half-deposit routes to
+        // the pool's own asset chain — so seed from the pending action first and never assume the
+        // list has a head.
+        val depositOption =
+            depositTypeActionProvider()?.takeIf { it.isNotEmpty() }?.let { depositOptionFor(it) }
+                ?: depositOptions.firstOrNull()
+                ?: DepositOption.Custom
         val defaultToken =
             when (chain) {
                 Chain.MayaChain -> Coins.MayaChain.CACAO

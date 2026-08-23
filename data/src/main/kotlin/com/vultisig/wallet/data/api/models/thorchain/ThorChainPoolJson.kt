@@ -14,4 +14,9 @@ data class ThorChainPoolJson(
     @Contextual @SerialName("asset_tor_price") val assetTorPrice: BigInteger,
     // pool status — typically Available / Staged / Suspended; absent on older endpoints
     @SerialName("status") val status: String? = null,
+    // Sum of every half-finished symmetric add on this pool, 1e8. Non-zero means at least one
+    // liquidity provider is waiting on a matching deposit — which pools are worth a per-user
+    // lookup, without asking thornode about all ~100 of them.
+    @SerialName("pending_inbound_rune") val pendingInboundRune: String = "0",
+    @SerialName("pending_inbound_asset") val pendingInboundAsset: String = "0",
 )

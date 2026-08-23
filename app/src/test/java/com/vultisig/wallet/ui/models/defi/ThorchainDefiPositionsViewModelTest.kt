@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
+import com.vultisig.wallet.data.usecases.GetThorChainPendingLpDepositsUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPositions
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.decimals
@@ -90,6 +91,7 @@ internal class ThorchainDefiPositionsViewModelTest {
     private lateinit var defaultStakingPositionService: DefaultStakingPositionService
     private lateinit var balanceVisibilityRepository: BalanceVisibilityRepository
     private lateinit var getThorChainLpPositionsUseCase: GetThorChainLpPositionsUseCase
+    private lateinit var getThorChainPendingLpDepositsUseCase: GetThorChainPendingLpDepositsUseCase
 
     @BeforeEach
     fun setUp() {
@@ -109,6 +111,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         defaultStakingPositionService = mockk(relaxed = true)
         balanceVisibilityRepository = mockk(relaxed = true)
         getThorChainLpPositionsUseCase = mockk(relaxed = true)
+        getThorChainPendingLpDepositsUseCase = mockk(relaxed = true)
 
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { balanceVisibilityRepository.getVisibility(VAULT_ID) } returns true
@@ -123,6 +126,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         coEvery { tcyStakingService.getStakingDetails(any(), any()) } returns flowOf()
         coEvery { defaultStakingPositionService.getStakingDetails(any(), any()) } returns flowOf()
         coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns emptyList()
+        coEvery { getThorChainPendingLpDepositsUseCase(any()) } returns emptyList()
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions()
     }
@@ -517,16 +521,19 @@ internal class ThorchainDefiPositionsViewModelTest {
     }
 
     @Test
-    fun `the LP tab stays loading until the available-pool fetch resolves`() = runTest {
+    fun `a failed available-pool fetch still settles the LP tab`() = runTest {
         selectPositions("RUNE")
         coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } throws
             RuntimeException("midgard down")
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
-        // availablePools stays null so the tab must not flash an empty state.
-        assertTrue(vm.state.value.lp.isLoading)
-        assertFalse(vm.state.value.lpDialogLoaded)
+        // lpDialogLoaded means settled, not succeeded: leaving it false parks the tab in a spinner
+        // no retry can clear, while a pending half-deposit still renders through it. Settled, the
+        // tab falls through to its no-positions container and its Manage Positions retry.
+        vm.state.value.lpDialogLoaded shouldBe true
+        // availablePools stays null so the next interaction re-fetches instead of soft-locking.
+        vm.state.value.lpPositionsDialog.isEmpty() shouldBe true
     }
 
     @Test
@@ -1333,6 +1340,7 @@ internal class ThorchainDefiPositionsViewModelTest {
             defaultStakingPositionService = defaultStakingPositionService,
             balanceVisibilityRepository = balanceVisibilityRepository,
             getThorChainLpPositionsUseCase = getThorChainLpPositionsUseCase,
+            getThorChainPendingLpDepositsUseCase = getThorChainPendingLpDepositsUseCase,
             ioDispatcher = testDispatcher,
         )
 

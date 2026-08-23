@@ -112,42 +112,42 @@ internal fun RemoveLpScreenContent(
 
             UiGradientHorizontalDivider()
 
+            val percentLabel =
+                stringResource(
+                    R.string.remove_pool_percent_format,
+                    (state.removeLpPercent * 100).toInt(),
+                )
+
             Box(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 contentAlignment = Alignment.Center,
             ) {
                 Column(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    Text(
-                        text =
-                            if (state.removeLpCacaoDisplay.isEmpty())
-                                stringResource(
-                                    R.string.remove_pool_zero_amount,
-                                    state.removeLpTokenSymbol,
-                                )
-                            else
-                                stringResource(
-                                    R.string.remove_pool_amount_format,
-                                    state.removeLpCacaoDisplay,
-                                    state.removeLpTokenSymbol,
-                                ),
-                        style = Theme.brockmann.headings.largeTitle,
-                        color = Theme.v2.colors.text.primary,
-                        textAlign = TextAlign.Center,
+                    RemoveLpLeg(
+                        amount = state.removeLpCacaoDisplay,
+                        symbol = state.removeLpTokenSymbol,
+                        percentLabel = percentLabel,
                     )
 
-                    Text(
-                        text =
-                            stringResource(
-                                R.string.remove_pool_percent_format,
-                                (state.removeLpPercent * 100).toInt(),
-                            ),
-                        style = Theme.brockmann.body.m.medium,
-                        color = Theme.v2.colors.text.tertiary,
-                        textAlign = TextAlign.Center,
-                    )
+                    // A THORChain withdrawal returns both sides of the pool, so both are shown.
+                    // Maya's CACAO pools leave the asset symbol empty and stay single-leg.
+                    if (state.removeLpAssetSymbol.isNotEmpty()) {
+                        UiSpacer(20.dp)
+
+                        UiGradientHorizontalDivider()
+
+                        UiSpacer(20.dp)
+
+                        RemoveLpLeg(
+                            amount = state.removeLpAssetDisplay,
+                            symbol = state.removeLpAssetSymbol,
+                            percentLabel = percentLabel,
+                        )
+                    }
                 }
             }
 
@@ -191,6 +191,32 @@ internal fun RemoveLpScreenContent(
                 if (state.removeLpPercent > 0f && state.removeLpCacaoDisplay.isNotEmpty())
                     VsButtonState.Enabled
                 else VsButtonState.Disabled,
+        )
+    }
+}
+
+/** One side of the withdrawal: the amount coming back, and the share of the position it is. */
+@Composable
+private fun RemoveLpLeg(amount: String, symbol: String, percentLabel: String) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text =
+                if (amount.isEmpty()) stringResource(R.string.remove_pool_zero_amount, symbol)
+                else stringResource(R.string.remove_pool_amount_format, amount, symbol),
+            style = Theme.brockmann.headings.largeTitle,
+            color = Theme.v2.colors.text.primary,
+            textAlign = TextAlign.Center,
+        )
+
+        Text(
+            text = percentLabel,
+            style = Theme.brockmann.body.m.medium,
+            color = Theme.v2.colors.text.tertiary,
+            textAlign = TextAlign.Center,
         )
     }
 }

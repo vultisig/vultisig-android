@@ -17,6 +17,8 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.ThorChainLpPosition
+import com.vultisig.wallet.data.models.ThorChainPendingLpDeposit
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getCoinLogo
@@ -30,6 +32,7 @@ import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
+import com.vultisig.wallet.data.usecases.GetThorChainPendingLpDepositsUseCase
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.toValue
@@ -55,6 +58,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.thorchainSupportStakingDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.formatTokenAmount
+import com.vultisig.wallet.ui.utils.lpRefundsInUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -100,9 +104,11 @@ internal data class ThorchainDefiPositionsUiModel(
     val bondPositionsDialog: List<PositionUiModelDialog> = defaultPositionsBondDialog(),
     val stakingPositionsDialog: List<PositionUiModelDialog> = defaultPositionsStakingDialog(),
     val lpPositionsDialog: List<PositionUiModelDialog> = emptyList(),
-    // Flips true once the available-pools fetch returns. Until then the LP tab should stay in
-    // loading state instead of flashing the empty/no-positions UI when the user has selected
-    // positions whose keys don't yet match the (empty) dialog list.
+    // Flips true once the available-pools fetch settles, success or failure. Until then the LP tab
+    // should stay in loading state instead of flashing the empty/no-positions UI when the user has
+    // selected positions whose keys don't yet match the (empty) dialog list. A failed fetch settles
+    // too: an unclearable spinner is worse than the no-positions container, which at least carries
+    // the Manage Positions retry.
     val lpDialogLoaded: Boolean = false,
     val selectedPositions: List<String> = defaultSelectedPositionsDialog(),
     val tempSelectedPositions: List<String> = defaultSelectedPositionsDialog(),
@@ -133,6 +139,7 @@ constructor(
     private val defaultStakingPositionService: DefaultStakingPositionService,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val getThorChainLpPositionsUseCase: GetThorChainLpPositionsUseCase,
+    private val getThorChainPendingLpDepositsUseCase: GetThorChainPendingLpDepositsUseCase,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -173,6 +180,7 @@ constructor(
     private var currencyJob: Job? = null
     private var lpDialogJob: Job? = null
     private var loadLpJob: Job? = null
+    private var loadPendingLpJob: Job? = null
     private var loadBondedNodesJob: Job? = null
     private var loadStakingPositionsJob: Job? = null
 
@@ -213,10 +221,14 @@ constructor(
                 Timber.e(e, "Failed to load THORChain LP pools for dialog")
                 // Leave availablePools null so the next user interaction (e.g. opening Manage
                 // Positions or saving a selection) retries instead of soft-locking.
-                // The tab deliberately stays in its loading state (see above), but the header total
-                // is a separate concern: reloadLpTab parks the LP leg unreported while it waits for
-                // this dataset, so report it as zero here or the total would never see all five
-                // legs and would spin forever.
+                // lpDialogLoaded means "settled", not "succeeded": leaving it false parks the tab
+                // in a spinner that nothing can ever clear, while any pending half-deposit still
+                // renders through it. Settling drops the tab to its no-positions container, whose
+                // Manage Positions button is the retry, and lets a pending card stand on its own.
+                state.update { it.copy(lpDialogLoaded = true) }
+                // The header total is a separate concern: reloadLpTab parks the LP leg unreported
+                // while it waits for this dataset, so report it as zero here or the total would
+                // never see all five legs and would spin forever.
                 reportLpFiat(BigDecimal.ZERO)
             }
         }
@@ -489,7 +501,140 @@ constructor(
             loadStakingPositions()
 
             reloadLpTab()
+
+            loadPendingLpDeposits()
         }
+    }
+
+    /**
+     * Loads half-finished symmetric adds. Deliberately independent of [reloadLpTab]: those are
+     * gated on the pools the user picked in Manage Positions, and a deposit stuck in a pool they
+     * never selected is exactly the one that would otherwise be refunded unseen.
+     */
+    private fun loadPendingLpDeposits() {
+        loadPendingLpJob?.cancel()
+        // Re-arm the gate only when there is a list that could now be wrong. A deposit found before
+        // the app was backgrounded may already have been refunded, and Complete Deposit on a
+        // refunded one just burns inbound gas — so hide it behind the spinner until this scan
+        // confirms it. With nothing pending there is nothing to invalidate, and re-arming would
+        // flash the whole tab to a spinner on every resume for the users who have no half-deposit
+        // at all.
+        if (state.value.lp.pendingDeposits.isNotEmpty()) {
+            state.update { it.copy(lp = it.lp.copy(pendingDepositsLoaded = false)) }
+        }
+        loadPendingLpJob =
+            viewModelScope.safeLaunch(
+                onError = {
+                    Timber.e(it, "Failed to load pending THORChain LP deposits")
+                    markPendingLpDepositsSettled()
+                }
+            ) {
+                val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
+                val runeCoin =
+                    vault?.coins?.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
+                if (runeCoin == null) {
+                    markPendingLpDepositsSettled()
+                    return@safeLaunch
+                }
+
+                val pending =
+                    withContext(ioDispatcher) {
+                        getThorChainPendingLpDepositsUseCase(runeAddress = runeCoin.address)
+                    }
+
+                val models = pending.map { it.toUiModel(vault.assetAddressForPool(it.pool)) }
+                state.update {
+                    it.copy(lp = it.lp.copy(pendingDeposits = models, pendingDepositsLoaded = true))
+                }
+            }
+    }
+
+    /**
+     * Marks the scan as settled without erasing [LpTabUiModel.pendingDeposits]: a failed reload
+     * must still show a list an earlier one found, because the refund timer is running on it and
+     * the user needs to know. Completion is withdrawn instead — the whole point of re-scanning is
+     * that THORChain may already have refunded the deposit, and nothing downstream re-checks:
+     * onClickCompletePendingLp reads this list directly, and the add-liquidity preflight only asks
+     * about pool-wide pause and status, never about this record. A card the scan could not confirm
+     * therefore stays visible but cannot spend inbound gas on a dead deposit.
+     */
+    private fun markPendingLpDepositsSettled() {
+        state.update {
+            it.copy(
+                lp =
+                    it.lp.copy(
+                        pendingDeposits =
+                            it.lp.pendingDeposits.map { deposit ->
+                                deposit.copy(canComplete = false)
+                            },
+                        pendingDepositsLoaded = true,
+                    )
+            )
+        }
+    }
+
+    /**
+     * Re-scans for pending half-deposits when the screen comes back to the foreground. They sit on
+     * a refund timer that keeps running while the app is backgrounded, so a stale list can offer
+     * Complete Deposit on a deposit THORChain has already refunded. Positions are left to
+     * pull-to-refresh; only this leg goes stale on its own.
+     */
+    fun onScreenResumed() {
+        if (!::vaultId.isInitialized) return
+        loadPendingLpDeposits()
+    }
+
+    private fun String.shortenForDisplay(): String =
+        if (length > 12) "${take(6)}…${takeLast(4)}" else this
+
+    /** The vault's address on a pool's non-RUNE chain, or `null` when it holds no account there. */
+    private fun Vault.assetAddressForPool(poolId: String): String? {
+        val assetChain = parseThorChainPool(poolId).chain ?: return null
+        if (assetChain == Chain.ThorChain) return null
+        val coin =
+            coins.firstOrNull { it.chain == assetChain && it.isNativeToken }
+                ?: coins.firstOrNull { it.chain == assetChain }
+        return coin?.address
+    }
+
+    private fun ThorChainPendingLpDeposit.toUiModel(
+        assetAddress: String?
+    ): PendingLpDepositUiModel {
+        val parsed = parseThorChainPool(pool)
+        val assetTicker = parsed.ticker
+        val runeTicker = Coins.ThorChain.RUNE.ticker
+        val depositedAmount =
+            if (isRunePending) {
+                CoinType.THORCHAIN.toValue(pendingRune)
+                    .stripTrailingZeros()
+                    .formatTokenAmount(runeTicker)
+            } else {
+                CoinType.THORCHAIN.toValue(pendingAsset)
+                    .stripTrailingZeros()
+                    .formatTokenAmount(assetTicker)
+            }
+
+        // The card is about the side that has not arrived — its title names that ticker — so the
+        // icon and chain badge have to follow it. Pinning them to the pool's asset put an ETH logo
+        // next to "Waiting for matching RUNE deposit".
+        val awaitedChain = if (isRunePending) parsed.chain else Chain.ThorChain
+        val awaitedTicker = if (isRunePending) assetTicker else runeTicker
+        val awaitedContractAddress = if (isRunePending) parsed.contractAddress else ""
+
+        return PendingLpDepositUiModel(
+            poolId = pool,
+            icon =
+                lpAssetLogoRes(awaitedChain, awaitedTicker, awaitedContractAddress)
+                    ?: getCoinLogo(awaitedTicker.lowercase()),
+            chainLogo = awaitedChain?.monoToneLogo,
+            awaitedTicker = awaitedTicker,
+            depositedAmount = depositedAmount,
+            pairedAddress = pairedAddress?.shortenForDisplay(),
+            refundsIn = blocksUntilRefund?.let { lpRefundsInUiText(it * THORCHAIN_BLOCK_SECONDS) },
+            // Completing means sending the missing side, which needs an account on its chain. When
+            // RUNE is the missing half the vault always has one.
+            canComplete = !isRunePending || assetAddress != null,
+        )
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -1009,7 +1154,7 @@ constructor(
 
         if (selectedPools.isEmpty()) {
             loadLpJob?.cancel()
-            state.update { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
+            state.update { it.copy(lp = it.lp.copy(isLoading = false, positions = emptyList())) }
             loadLpJob = viewModelScope.launch { reportLpFiat(BigDecimal.ZERO) }
             return
         }
@@ -1027,7 +1172,7 @@ constructor(
                 // has no liquidity yet should be visible so the Add button is reachable.
                 val placeholders = selectedPools.map { it.toPlaceholderUiModel(zero) }
                 state.update {
-                    it.copy(lp = LpTabUiModel(isLoading = true, positions = placeholders))
+                    it.copy(lp = it.lp.copy(isLoading = true, positions = placeholders))
                 }
 
                 try {
@@ -1042,7 +1187,7 @@ constructor(
                         Timber.e("Vault does not have RUNE coin for LP positions")
                         reportLpFiat(BigDecimal.ZERO)
                         state.update {
-                            it.copy(lp = LpTabUiModel(isLoading = false, positions = placeholders))
+                            it.copy(lp = it.lp.copy(isLoading = false, positions = placeholders))
                         }
                         return@launch
                     }
@@ -1114,15 +1259,13 @@ constructor(
                             // understate the header total rather than admit a value is missing.
                             LpLegTotal.Unavailable
                         }
-                    state.update {
-                        it.copy(lp = LpTabUiModel(isLoading = false, positions = merged))
-                    }
+                    state.update { it.copy(lp = it.lp.copy(isLoading = false, positions = merged)) }
                 } catch (e: Throwable) {
                     if (e is CancellationException) throw e
                     Timber.e(e, "Failed to load THORChain LP positions")
                     reportLpFiat(BigDecimal.ZERO)
                     state.update {
-                        it.copy(lp = LpTabUiModel(isLoading = false, positions = placeholders))
+                        it.copy(lp = it.lp.copy(isLoading = false, positions = placeholders))
                     }
                 }
             }
@@ -1244,6 +1387,32 @@ constructor(
                 Route.Deposit(
                     vaultId = vaultId,
                     chainId = Chain.ThorChain.id,
+                    depositType = DeFiNavActions.ADD_LP.type,
+                    poolId = poolId,
+                )
+            )
+        }
+    }
+
+    /**
+     * Sends the user into the deposit flow for the half they still owe, on that half's own chain,
+     * with the pool pre-selected. The memo the flow builds is what THORChain matches against the
+     * pending record, so this completes the add rather than opening a second one.
+     */
+    fun onClickCompletePendingLp(poolId: String) {
+        val pending = state.value.lp.pendingDeposits.find { it.poolId == poolId } ?: return
+        // Also enforced by the card's disabled button; held here too so a card the last scan
+        // could not confirm can never route into a deposit, whatever the UI does.
+        if (!pending.canComplete) return
+        val missingSideChain =
+            if (pending.awaitedTicker == Coins.ThorChain.RUNE.ticker) Chain.ThorChain
+            else parseThorChainPool(poolId).chain ?: return
+
+        viewModelScope.safeLaunch {
+            navigator.route(
+                Route.Deposit(
+                    vaultId = vaultId,
+                    chainId = missingSideChain.id,
                     depositType = DeFiNavActions.ADD_LP.type,
                     poolId = poolId,
                 )
@@ -1472,6 +1641,7 @@ constructor(
         private const val RUJI_SYMBOL = "RUJI"
         private const val RUJI_REWARDS_SYMBOL = "USDC"
         private const val POSITION_DISPLAY_SCALE = 4
+        private const val THORCHAIN_BLOCK_SECONDS = 6L
 
         /**
          * The Manage-Positions key a placeholder is gated on. Both RUJI positions are toggled by

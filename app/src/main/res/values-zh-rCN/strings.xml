@@ -1538,6 +1538,15 @@
     <string name="onboarding_desc_page_1_part_2">保险库共享</string>
     <string name="verify_swap_youre_swapping_title">您正在交换</string>
     <string name="keysign_app_version_text">版本 %1$s (%2$s)</string>
+    <string name="lp_pending_title">等待配对的 %1$s 存入</string>
+    <string name="lp_pending_subtitle">THORChain 会保留此笔存入，直到配对的另一侧到达；否则将予以退款。</string>
+    <string name="lp_pending_deposited">已存入</string>
+    <string name="lp_pending_from">来自</string>
+    <string name="lp_pending_refunds_in">退款倒计时</string>
+    <string name="lp_pending_duration_days_hours_format">%1$d天 %2$d小时</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$d小时 %2$d分钟</string>
+    <string name="lp_pending_refund_time_unknown">未知</string>
+    <string name="lp_pending_complete_deposit">完成存入</string>
     <string name="lp_position">仓位</string>
     <string name="add">添加</string>
     <string name="remove">移除</string>
