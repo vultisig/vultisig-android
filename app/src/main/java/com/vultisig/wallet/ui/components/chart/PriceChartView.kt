@@ -1,13 +1,16 @@
 package com.vultisig.wallet.ui.components.chart
 
+import android.text.format.DateFormat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,6 +20,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -30,6 +34,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.intl.Locale as ComposeLocale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -42,41 +47,61 @@ import com.vultisig.wallet.ui.theme.Theme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 import java.util.Locale
 import kotlin.math.roundToInt
 
-private val CHART_HEIGHT = 160.dp
+private val CHART_HEIGHT = 168.dp
 
 /**
- * Price chart with a range picker and drag-to-scrub, tinted green/red by [ChartUiModel.isPositive].
+ * Reserved height for the scrub date under the price. The label appears and disappears on every
+ * drag, and a header that changes height would make the chart jump under the finger.
+ */
+private val SCRUB_CAPTION_HEIGHT = 16.dp
+
+/** Opacity a superseded series is held at while the next range loads. */
+private const val DIMMED_ALPHA = 0.3f
+
+/**
+ * The price history card: spot price, period-change chip, the series itself and the range picker.
+ * Scrubbing the series swaps the price for the scrubbed one and dates it.
  */
 @Composable
 internal fun PriceChartSection(
     chart: ChartUiModel,
+    spotPriceText: String?,
     onRangeSelected: (ChartRange) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var scrubbedPoint by remember(chart.points) { mutableStateOf<ChartPointUiModel?>(null) }
 
-    Column(modifier = modifier.fillMaxWidth()) {
-        ChartHeader(
-            isPositive = chart.isPositive,
-            changePercentText = chart.changePercentText,
-            scrubbedPoint = scrubbedPoint,
-        )
-        UiSpacer(size = 12.dp)
-        PriceChartCanvas(
-            points = chart.points,
-            isPositive = chart.isPositive,
-            isLoading = chart.isLoading,
-            isStale = chart.isStale,
-            changePercentText = chart.changePercentText,
-            onScrub = { scrubbedPoint = it },
-            onRetry = { onRangeSelected(chart.selectedRange) },
-        )
-        UiSpacer(size = 16.dp)
-        ChartRangePicker(selectedRange = chart.selectedRange, onRangeSelected = onRangeSelected)
+    // A range switch keeps the previous series on screen while the next resolves; the change chip
+    // still describes the old window, so the two are dimmed together as one stale group rather
+    // than the percentage reading as a live figure for the range already highlighted below.
+    val isDimmed = chart.isLoading && chart.points.isNotEmpty()
+
+    TokenDetailCard(modifier = modifier) {
+        Column(modifier = Modifier.fillMaxWidth().padding(all = 16.dp)) {
+            ChartHeader(
+                isPositive = chart.isPositive,
+                changePercentText = chart.changePercentText,
+                priceText = scrubbedPoint?.priceText ?: spotPriceText,
+                scrubbedPoint = scrubbedPoint,
+                selectedRange = chart.selectedRange,
+                isDimmed = isDimmed,
+            )
+            UiSpacer(size = 16.dp)
+            PriceChartCanvas(
+                points = chart.points,
+                isPositive = chart.isPositive,
+                isLoading = chart.isLoading,
+                isStale = chart.isStale,
+                changePercentText = chart.changePercentText,
+                onScrub = { scrubbedPoint = it },
+                onRetry = { onRangeSelected(chart.selectedRange) },
+            )
+            UiSpacer(size = 16.dp)
+            ChartRangePicker(selectedRange = chart.selectedRange, onRangeSelected = onRangeSelected)
+        }
     }
 }
 
@@ -84,26 +109,47 @@ internal fun PriceChartSection(
 private fun ChartHeader(
     isPositive: Boolean,
     changePercentText: String,
+    priceText: String?,
     scrubbedPoint: ChartPointUiModel?,
+    selectedRange: ChartRange,
+    isDimmed: Boolean,
 ) {
     val tint = if (isPositive) Theme.v2.colors.alerts.success else Theme.v2.colors.alerts.error
-    Column {
-        if (scrubbedPoint != null) {
+    // ComposeLocale.current rather than LocalConfiguration: the configuration's locale list is not
+    // a snapshot read, so a locale change would leave an already-composed scrub caption stale.
+    val locale = Locale.forLanguageTag(ComposeLocale.current.toLanguageTag())
+
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+        Column {
             Text(
-                text = scrubbedPoint.priceText,
+                text = priceText.orEmpty(),
                 style = Theme.satoshi.price.title2,
                 color = Theme.v2.colors.text.primary,
             )
+            UiSpacer(size = 2.dp)
+            Box(modifier = Modifier.height(SCRUB_CAPTION_HEIGHT)) {
+                if (scrubbedPoint != null) {
+                    Text(
+                        text = scrubbedPoint.timestampMillis.toScrubDateText(selectedRange, locale),
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.v2.colors.text.tertiary,
+                    )
+                }
+            }
+        }
+
+        UiSpacer(weight = 1f)
+
+        if (changePercentText.isNotEmpty()) {
             Text(
-                text = scrubbedPoint.timestampMillis.toScrubDateText(),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.tertiary,
-            )
-        } else {
-            Text(
-                text = changePercentText.ifEmpty { " " },
-                style = Theme.brockmann.body.s.medium,
+                text = changePercentText,
+                style = Theme.brockmann.supplementary.caption,
                 color = tint,
+                modifier =
+                    Modifier.alpha(if (isDimmed) DIMMED_ALPHA else 1f)
+                        .clip(Theme.v2.radius.pill)
+                        .background(tint.copy(alpha = 0.12f))
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
             )
         }
     }
@@ -200,6 +246,10 @@ private fun PriceChartCanvas(
                     modifier =
                         Modifier.fillMaxWidth()
                             .height(CHART_HEIGHT)
+                            // A range/currency-switch refetch keeps the previous series on screen
+                            // while it resolves; dim it so isLoading still gives feedback instead
+                            // of looking finished.
+                            .alpha(if (isLoading) DIMMED_ALPHA else 1f)
                             .semantics { contentDescription = chartDescription }
                             .onSizeChanged { canvasSize = it }
                             // Keyed on Unit (not points) so a mid-scrub data refresh (e.g. a
@@ -263,18 +313,6 @@ private fun PriceChartCanvas(
                         )
                     }
                 }
-
-                // A range/currency-switch refetch keeps the previous series on screen while it
-                // resolves; dim it so isLoading still gives feedback instead of looking finished.
-                if (isLoading) {
-                    Box(
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .height(CHART_HEIGHT)
-                                .clip(Theme.v2.radius.md)
-                                .background(Theme.v2.colors.backgrounds.primary.copy(alpha = 0.4f))
-                    )
-                }
             }
 
             isLoading -> {
@@ -319,11 +357,23 @@ private fun nearestPointIndex(x: Float, width: Float, count: Int): Int {
     return (x / stepX).roundToInt().coerceIn(0, count - 1)
 }
 
-private fun Long.toScrubDateText(): String =
-    DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
-        .withLocale(Locale.getDefault())
+/**
+ * Dates a scrubbed point at the resolution its window actually resolves: a time of day says nothing
+ * on the ALL series, and a year says nothing on the 1D one.
+ */
+private fun Long.toScrubDateText(range: ChartRange, locale: Locale): String {
+    val skeleton =
+        when (range) {
+            ChartRange.ONE_DAY -> "jm"
+            ChartRange.ONE_WEEK,
+            ChartRange.ONE_MONTH -> "MMMdjm"
+            ChartRange.ONE_YEAR,
+            ChartRange.ALL -> "yMMMd"
+        }
+    return DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, skeleton), locale)
         .withZone(ZoneId.systemDefault())
         .format(Instant.ofEpochMilli(this))
+}
 
 @Preview
 @Composable
@@ -344,6 +394,7 @@ private fun PriceChartSectionPreview() {
                 isPositive = true,
                 changePercentText = "+3.24%",
             ),
+        spotPriceText = "$1,850.92",
         onRangeSelected = {},
     )
 }

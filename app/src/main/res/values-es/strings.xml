@@ -833,7 +833,7 @@
     <string name="close_sheet_content_description">Cerrar</string>
     <string name="price_chart_retry_hint">No se pudo cargar el gráfico. Toca para reintentar.</string>
     <string name="token_details_market_stats_title">Estadísticas del mercado</string>
-    <string name="token_details_price_extremes_title">Extremos de precio</string>
+    <string name="token_details_price_extremes_title">Rango de precios</string>
     <string name="token_details_token_info_title">Información del token</string>
     <string name="token_details_market_cap">Capitalización de mercado</string>
     <string name="token_details_market_cap_rank">Clasificación</string>
@@ -1384,7 +1384,7 @@
     <string name="transaction_history_detail_fee">Tarifa</string>
     <string name="transaction_history_detail_network">Red</string>
     <string name="transaction_history_detail_provider">Proveedor</string>
-    <string name="transaction_history_view_on_explorer">Ver en el explorador</string>
+    <string name="view_on_explorer">Ver en el explorador</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Ingrese su frase semilla</string>

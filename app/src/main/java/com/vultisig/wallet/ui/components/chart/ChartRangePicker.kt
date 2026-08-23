@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.Text
@@ -26,6 +25,11 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ChartRange
 import com.vultisig.wallet.ui.theme.Theme
 
+/**
+ * Equal-width 1D / 1W / 1M / 1Y / ALL segments, sized to sit inside the chart card rather than
+ * under it: the selected range is a dark surface pill on a recessed track, not a full-height accent
+ * bar competing with the action row above.
+ */
 @Composable
 internal fun ChartRangePicker(
     selectedRange: ChartRange,
@@ -37,8 +41,8 @@ internal fun ChartRangePicker(
             modifier
                 .fillMaxWidth()
                 .clip(Theme.v2.radius.pill)
-                .background(Theme.v2.colors.backgrounds.tertiary)
-                .padding(all = 4.dp),
+                .background(Theme.v2.colors.backgrounds.primary)
+                .padding(all = 3.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
         ChartRange.entries.forEach { range ->
@@ -61,13 +65,14 @@ private fun ChartRangeTab(
 ) {
     val backgroundColor by
         animateColorAsState(
-            targetValue = if (isSelected) Theme.v2.colors.buttons.primary else Color.Transparent,
+            targetValue =
+                if (isSelected) Theme.v2.colors.backgrounds.surface2 else Color.Transparent,
             label = "chartRangeBackground",
         )
     val textColor by
         animateColorAsState(
             targetValue =
-                if (isSelected) Theme.v2.colors.text.inverse else Theme.v2.colors.text.tertiary,
+                if (isSelected) Theme.v2.colors.text.primary else Theme.v2.colors.text.tertiary,
             label = "chartRangeText",
         )
 
@@ -83,11 +88,10 @@ private fun ChartRangeTab(
                     role = Role.Tab,
                     onClick = onClick,
                 )
-                .heightIn(min = 48.dp)
-                .padding(vertical = 8.dp),
+                .padding(vertical = 7.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text = label, style = Theme.brockmann.body.s.medium, color = textColor)
+        Text(text = label, style = Theme.brockmann.supplementary.caption, color = textColor)
     }
 }
 

@@ -143,7 +143,7 @@ internal fun TransactionDetailBottomSheet(
                                 .padding(start = 32.dp, top = 16.dp, end = 32.dp, bottom = 16.dp),
                     ) {
                         Text(
-                            text = stringResource(R.string.transaction_history_view_on_explorer),
+                            text = stringResource(R.string.view_on_explorer),
                             style = Theme.brockmann.button.medium.medium,
                             color = Theme.v2.colors.variables.textPrimary,
                         )

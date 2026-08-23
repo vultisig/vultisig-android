@@ -65,6 +65,13 @@ internal data class TokenDetailUiModel(
     val canBuy: Boolean = false,
     val isBalanceVisible: Boolean = true,
     val explorerUrl: String = "",
+    // The vault's address on this chain, held so the Receive action can open its QR without
+    // re-resolving the account.
+    val chainAddress: String = "",
+    // Where the token info section's "View on Explorer" row points: the contract page when the
+    // chain's explorer has one, the holder's address page otherwise, and empty when the chain has
+    // no explorer at all (the row is then dropped rather than offering a dead link).
+    val tokenExplorerUrl: String = "",
     // Null until the first load attempt resolves for the current coin: stays null forever for a
     // pool-priced coin with no CoinGecko source, so the chart section never renders for it.
     val chart: ChartUiModel? = null,
@@ -121,10 +128,15 @@ internal data class MarketStatsUiModel(
 internal data class PriceExtremesUiModel(
     val low24h: String? = null,
     val high24h: String? = null,
+    // Where the spot price sits between [low24h] and [high24h], 0 at the low and 1 at the high.
+    // Null whenever the band can't be drawn honestly, which is also what hides it.
+    val bandPosition: Float? = null,
     val athPrice: String? = null,
     val athDate: String? = null,
+    val athChangePercent: String? = null,
     val atlPrice: String? = null,
     val atlDate: String? = null,
+    val atlChangePercent: String? = null,
 ) {
     /** CoinGecko can return a markets entry with every field absent (a stale/inactive coin). */
     fun hasAnyValue(): Boolean =
@@ -134,12 +146,17 @@ internal data class PriceExtremesUiModel(
             athDate != null ||
             atlPrice != null ||
             atlDate != null
+
+    /** The 24h band needs both bounds and a placeable marker, or it says nothing. */
+    fun hasBand(): Boolean = low24h != null && high24h != null && bandPosition != null
 }
 
 @Immutable
 internal data class TokenInfoUiModel(
+    val network: String = "",
     val contractAddress: String? = null,
     val decimals: String? = null,
+    val hasExplorerLink: Boolean = false,
 )
 
 @HiltViewModel
@@ -246,6 +263,22 @@ constructor(
         }
     }
 
+    fun receive() {
+        viewModelScope.launch {
+            val state = uiState.value
+            if (state.chainAddress.isEmpty()) return@launch
+            val chain = Chain.fromRaw(chainRaw)
+            navigator.route(
+                Route.AddressQr(
+                    vaultId = vaultId,
+                    address = state.chainAddress,
+                    name = chain.raw,
+                    logo = chain.logo,
+                )
+            )
+        }
+    }
+
     private fun loadData() {
         loadDataJob?.cancel()
         loadDataJob =
@@ -293,6 +326,18 @@ constructor(
                                 val accountAddress = address.address
                                 val explorerUrl =
                                     explorerLinkRepository.getAddressLink(chain, accountAddress)
+                                // Native coins have no contract to point at, and a chain whose
+                                // explorer has no token page falls back to the holder's address
+                                // page — the same rule iOS applies in getExplorerByCoinURL.
+                                val tokenExplorerUrl =
+                                    if (token.isNativeToken) {
+                                        explorerUrl
+                                    } else {
+                                        explorerLinkRepository.getTokenLink(
+                                            chain,
+                                            token.contractAddress,
+                                        ) ?: explorerUrl
+                                    }
 
                                 val isNewCoin = coin?.id != token.id
                                 coin = token
@@ -314,13 +359,17 @@ constructor(
                                         canSend = !token.isReadOnlyAsset,
                                         canBuy = chain.isBuySupported,
                                         explorerUrl = explorerUrl,
+                                        chainAddress = accountAddress,
+                                        tokenExplorerUrl = tokenExplorerUrl,
                                         tokenInfo =
                                             TokenInfoUiModel(
+                                                network = tokenUiModel.network,
                                                 contractAddress =
                                                     token.contractAddress.takeIf {
                                                         !token.isNativeToken && it.isNotEmpty()
                                                     },
                                                 decimals = token.decimal.toString(),
+                                                hasExplorerLink = tokenExplorerUrl.isNotEmpty(),
                                             ),
                                     )
                                 }
@@ -452,7 +501,7 @@ constructor(
                     state.copy(
                         statsLoading = false,
                         marketStats =
-                            stats?.toMarketStatsUiModel(currency.ticker)
+                            stats?.toMarketStatsUiModel(currency.ticker, coin.ticker)
                                 ?: state.marketStats.takeIf { keepHeldOnFailure },
                         priceExtremes =
                             stats?.toPriceExtremesUiModel(currency.ticker)
@@ -482,27 +531,31 @@ constructor(
         )
 
     private suspend fun CoinMarketStats.toMarketStatsUiModel(
-        currencyTicker: String
+        currencyTicker: String,
+        tokenTicker: String,
     ): MarketStatsUiModel =
         MarketStatsUiModel(
-            marketCap = marketCap?.toFiatString(currencyTicker),
+            marketCap = marketCap?.toStatFiatString(currencyTicker),
             marketCapRank = marketCapRank?.let { "#$it" },
-            fullyDilutedValuation = fullyDilutedValuation?.toFiatString(currencyTicker),
-            volume24h = volume24h?.toFiatString(currencyTicker),
-            circulatingSupply = circulatingSupply?.let(::formatSupply),
-            maxSupply = maxSupply?.let(::formatSupply),
+            volume24h = volume24h?.toStatFiatString(currencyTicker),
+            fullyDilutedValuation = fullyDilutedValuation?.toStatFiatString(currencyTicker),
+            circulatingSupply = circulatingSupply?.let { formatSupply(it, tokenTicker) },
+            maxSupply = maxSupply?.let { formatSupply(it, tokenTicker) },
         )
 
     private suspend fun CoinMarketStats.toPriceExtremesUiModel(
         currencyTicker: String
     ): PriceExtremesUiModel =
         PriceExtremesUiModel(
-            low24h = low24h?.toFiatString(currencyTicker),
-            high24h = high24h?.toFiatString(currencyTicker),
+            low24h = low24h?.toFiatString(currencyTicker, asPrice = true),
+            high24h = high24h?.toFiatString(currencyTicker, asPrice = true),
+            bandPosition = positionIn24hRange()?.toFloat(),
             athPrice = athPrice?.toFiatString(currencyTicker, asPrice = true),
             athDate = athDate?.toDisplayDate(),
+            athChangePercent = athChangePercent?.let(MarketStatFormatter::percent),
             atlPrice = atlPrice?.toFiatString(currencyTicker, asPrice = true),
             atlDate = atlDate?.toDisplayDate(),
+            atlChangePercent = atlChangePercent?.let(MarketStatFormatter::percent),
         )
 
     private suspend fun BigDecimal.toFiatString(
@@ -510,21 +563,29 @@ constructor(
         asPrice: Boolean = false,
     ): String = fiatValueToStringMapper(FiatValue(this, currencyTicker), asPrice = asPrice)
 
+    /**
+     * A market-stats fiat figure. Caps, valuations and volumes run to twelve digits, which no
+     * reader compares across a two-column row, so anything from a million up is abbreviated with
+     * the currency's own symbol; smaller figures keep the currency's standard formatting.
+     */
+    private suspend fun BigDecimal.toStatFiatString(currencyTicker: String): String =
+        if (MarketStatFormatter.isAbbreviated(this)) {
+            MarketStatFormatter.currencySymbol(currencyTicker) +
+                MarketStatFormatter.abbreviate(this)
+        } else {
+            toFiatString(currencyTicker)
+        }
+
     private fun updateRefreshing(isRefreshing: Boolean) {
         uiState.update { it.copy(isRefreshing = isRefreshing) }
     }
 }
 
-private fun Double.toChangePercentText(): String {
-    val sign = if (this >= 0) "+" else ""
-    return "$sign${"%.2f".format(Locale.getDefault(), this)}%"
-}
+private fun Double.toChangePercentText(): String = MarketStatFormatter.percent(this)
 
-private fun formatSupply(value: BigDecimal): String {
-    val format = NumberFormat.getNumberInstance(Locale.getDefault())
-    format.maximumFractionDigits = 0
-    return format.format(value)
-}
+/** `120680000` -> `120.68M ETH`. Null for a supply CoinGecko doesn't actually track. */
+private fun formatSupply(value: BigDecimal, ticker: String): String? =
+    MarketStatFormatter.supply(value, ticker)
 
 private fun Instant.toDisplayDate(): String =
     DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)

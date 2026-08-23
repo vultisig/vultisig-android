@@ -834,7 +834,7 @@
     <string name="close_sheet_content_description">Закрыть</string>
     <string name="price_chart_retry_hint">Не удалось загрузить график. Нажмите, чтобы повторить.</string>
     <string name="token_details_market_stats_title">Рыночная статистика</string>
-    <string name="token_details_price_extremes_title">Экстремумы цены</string>
+    <string name="token_details_price_extremes_title">Диапазон цен</string>
     <string name="token_details_token_info_title">Информация о токене</string>
     <string name="token_details_market_cap">Рыночная капитализация</string>
     <string name="token_details_market_cap_rank">Рейтинг</string>
@@ -1391,7 +1391,7 @@
     <string name="transaction_history_detail_fee">Комиссия</string>
     <string name="transaction_history_detail_network">Сеть</string>
     <string name="transaction_history_detail_provider">Провайдер</string>
-    <string name="transaction_history_view_on_explorer">Открыть в обозревателе</string>
+    <string name="view_on_explorer">Открыть в обозревателе</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Введите вашу сид-фразу</string>
