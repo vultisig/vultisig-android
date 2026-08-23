@@ -653,8 +653,7 @@ class ChainHelpersTest {
     @Test
     fun sendUTXO() {
         val transactions =
-            loadTransactionData(UTXO_JSON_FILE) +
-                loadTransactionData(UTXO_DASH_ZCASH_JSON_FILE)
+            loadTransactionData(UTXO_JSON_FILE) + loadTransactionData(UTXO_DASH_ZCASH_JSON_FILE)
         transactions.forEach { transaction ->
             val payload = transaction.keysignPayload.toInternalKeySignPayload()
             val coin = payload.coin.coinType
@@ -1022,8 +1021,7 @@ class ChainHelpersTest {
         private const val CARDANO_JSON_FILE = "cardano.json"
 
         private const val THORCHAIN_SWAP_JSON_FILE = "thorchainswap.json"
-        private const val THORCHAIN_SWAP_LIMIT_ORDER_JSON_FILE =
-            "thorchainswap-limit-order.json"
+        private const val THORCHAIN_SWAP_LIMIT_ORDER_JSON_FILE = "thorchainswap-limit-order.json"
         private const val MAYA_SWAP_JSON_FILE = "mayaswap.json"
         private const val LIFI_SWAP_JSON_FILE = "lifiswap.json"
 
@@ -1069,9 +1067,11 @@ class ChainHelpersTest {
         // +5: cosmos-chain-matrix.json (issue #5421 item 5, Osmosis/Dydx/Noble/Akash + one IBC
         // transfer). +2: utxo-dash-zcash.json (item 4). +1: bittensor.json (item 6).
         // +1: qbtc.json (item 6). +1: thorchainswap-limit-order.json (item 7).
+        // +1: evm-chain-matrix.json "Send SEI" (issue #5673 — Sei is EVM-family, chain ID 1329,
+        // so it belongs in the matrix rather than a standalone file).
         // The standalone fixture files are shared byte-for-byte with the Swift and TS corpora,
         // preserving the cross-signer agreement required by #5421 and vultisig-sdk#1585.
-        private const val EXPECTED_CASE_COUNT = 87
+        private const val EXPECTED_CASE_COUNT = 88
 
         private const val HEX_PUBLIC_KEY =
             "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b"
