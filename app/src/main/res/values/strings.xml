@@ -1160,7 +1160,7 @@
     <string name="close_sheet_content_description">Close</string>
     <string name="price_chart_retry_hint">Couldn\'t load chart. Tap to retry.</string>
     <string name="token_details_market_stats_title">Market Stats</string>
-    <string name="token_details_price_extremes_title">Price Extremes</string>
+    <string name="token_details_price_extremes_title">Price Range</string>
     <string name="token_details_token_info_title">Token Info</string>
     <string name="token_details_market_cap">Market Cap</string>
     <string name="token_details_market_cap_rank">Rank</string>
@@ -1473,7 +1473,7 @@
     <string name="transaction_history_detail_fee">Fee</string>
     <string name="transaction_history_detail_network">Network</string>
     <string name="transaction_history_detail_provider">Provider</string>
-    <string name="transaction_history_view_on_explorer">View on Explorer</string>
+    <string name="view_on_explorer">View on Explorer</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Enter your seed phrase</string>

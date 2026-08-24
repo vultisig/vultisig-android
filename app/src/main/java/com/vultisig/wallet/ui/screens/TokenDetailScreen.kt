@@ -22,13 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ChartRange
-import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.chart.MarketStatsSection
 import com.vultisig.wallet.ui.components.chart.PriceChartSection
@@ -39,9 +37,7 @@ import com.vultisig.wallet.ui.components.v2.buttons.DesignType
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
-import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
-import com.vultisig.wallet.ui.components.v2.tokenitem.TokenMetaRow
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChartUiModel
 import com.vultisig.wallet.ui.models.MarketStatsUiModel
@@ -70,7 +66,11 @@ internal fun TokenDetailScreen(
         onDeposit = viewModel::deposit,
         onDismiss = viewModel::back,
         onBuy = viewModel::buy,
+        onReceive = viewModel::receive,
         onExplorer = { uiModel.explorerUrl.takeIf { it.isNotEmpty() }?.let(uriHandler::openUri) },
+        onTokenExplorer = {
+            uiModel.tokenExplorerUrl.takeIf { it.isNotEmpty() }?.let(uriHandler::openUri)
+        },
         onChartRangeSelected = viewModel::onChartRangeSelected,
     )
 }
@@ -83,7 +83,9 @@ internal fun TokenDetailScreen(
     onDeposit: () -> Unit = {},
     onDismiss: () -> Unit = {},
     onBuy: () -> Unit = {},
+    onReceive: () -> Unit = {},
     onExplorer: () -> Unit = {},
+    onTokenExplorer: () -> Unit = {},
     onChartRangeSelected: (ChartRange) -> Unit = {},
 ) {
     // The sheet opens on the balance and the actions and nothing else, which is what keeps it to
@@ -99,7 +101,9 @@ internal fun TokenDetailScreen(
             onSwap = onSwap,
             onDeposit = onDeposit,
             onBuy = onBuy,
+            onReceive = onReceive,
             onExplorer = onExplorer,
+            onTokenExplorer = onTokenExplorer,
             onChartRangeSelected = onChartRangeSelected,
             onRestHeightMeasured = { restHeight = it },
         )
@@ -113,7 +117,9 @@ internal fun TokenDetailsContent(
     onSwap: () -> Unit,
     onDeposit: () -> Unit,
     onBuy: () -> Unit,
+    onReceive: () -> Unit,
     onExplorer: () -> Unit,
+    onTokenExplorer: () -> Unit,
     onChartRangeSelected: (ChartRange) -> Unit,
     onRestHeightMeasured: (Int) -> Unit = {},
 ) {
@@ -210,47 +216,49 @@ internal fun TokenDetailsContent(
                         onClick = onDeposit,
                     )
                 }
+
+                // Gated on the address for the same reason every flag above is gated on the
+                // account: until one resolves there is nothing to put in a QR code, and an action
+                // that is tappable but does nothing is worse than one that has not appeared yet.
+                if (uiModel.chainAddress.isNotEmpty()) {
+                    AssetActionButton(
+                        action = AssetAction.RECEIVE,
+                        isSelected = false,
+                        onClick = onReceive,
+                    )
+                }
             }
         }
 
         UiSpacer(size = 40.dp)
 
-        TopShineContainer(backgroundColor = Theme.v2.colors.backgrounds.surface1) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                TokenMetaRow(
-                    key = stringResource(R.string.token_details_bottom_sheet_price),
-                    value = uiModel.token.price,
-                )
-                UiHorizontalDivider(modifier = Modifier.fillMaxWidth())
-                TokenMetaRow(
-                    key = stringResource(R.string.token_details_bottom_sheet_network),
-                    value = uiModel.token.network,
-                )
-            }
-        }
-
         uiModel.chart?.let { chart ->
-            UiSpacer(size = 24.dp)
             PriceChartSection(
                 chart = chart,
+                spotPriceText = uiModel.token.price,
                 onRangeSelected = onChartRangeSelected,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
 
         if (uiModel.statsLoading || uiModel.marketStats?.hasAnyValue() == true) {
-            UiSpacer(size = 24.dp)
+            if (uiModel.chart != null) UiSpacer(size = 16.dp)
             MarketStatsSection(stats = uiModel.marketStats, isLoading = uiModel.statsLoading)
         }
 
         if (uiModel.statsLoading || uiModel.priceExtremes?.hasAnyValue() == true) {
-            UiSpacer(size = 24.dp)
+            UiSpacer(size = 16.dp)
             PriceExtremesSection(extremes = uiModel.priceExtremes, isLoading = uiModel.statsLoading)
         }
 
         uiModel.tokenInfo?.let { info ->
-            UiSpacer(size = 24.dp)
-            TokenInfoSection(info = info)
+            UiSpacer(size = 16.dp)
+            TokenInfoSection(
+                info = info,
+                onExplorer = onTokenExplorer,
+                // Pool-priced coins have no chart to headline the price, so it lives here instead.
+                price = uiModel.token.price.takeIf { uiModel.chart == null },
+            )
         }
 
         UiSpacer(size = 12.dp)
@@ -281,17 +289,22 @@ private fun TokenDetailsScreenPreview() {
                     ),
                 canSwap = true,
                 canDeposit = true,
+                chainAddress = "0xpreview",
                 chart = ChartUiModel(),
                 marketStats = MarketStatsUiModel(marketCap = "$1.2B", marketCapRank = "#42"),
-                priceExtremes = PriceExtremesUiModel(low24h = "$0.98", high24h = "$1.02"),
-                tokenInfo = TokenInfoUiModel(decimals = "6"),
+                priceExtremes =
+                    PriceExtremesUiModel(low24h = "$0.98", high24h = "$1.02", bandPosition = 0.4f),
+                tokenInfo =
+                    TokenInfoUiModel(network = "Ethereum", decimals = "6", hasExplorerLink = true),
             ),
         onSend = {},
         onSwap = {},
         onDeposit = {},
         onDismiss = {},
         onBuy = {},
+        onReceive = {},
         onExplorer = {},
+        onTokenExplorer = {},
         onChartRangeSelected = {},
     )
 }

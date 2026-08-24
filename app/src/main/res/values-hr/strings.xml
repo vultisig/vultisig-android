@@ -837,7 +837,7 @@
     <string name="close_sheet_content_description">Zatvori</string>
     <string name="price_chart_retry_hint">Nije moguće učitati grafikon. Dodirni za ponovni pokušaj.</string>
     <string name="token_details_market_stats_title">Tržišna statistika</string>
-    <string name="token_details_price_extremes_title">Ekstremi cijene</string>
+    <string name="token_details_price_extremes_title">Raspon cijena</string>
     <string name="token_details_token_info_title">Informacije o tokenu</string>
     <string name="token_details_market_cap">Tržišna kapitalizacija</string>
     <string name="token_details_market_cap_rank">Rang</string>
@@ -1391,7 +1391,7 @@
     <string name="transaction_history_detail_fee">Naknada</string>
     <string name="transaction_history_detail_network">Mreža</string>
     <string name="transaction_history_detail_provider">Pružatelj</string>
-    <string name="transaction_history_view_on_explorer">Pregled u istraživaču</string>
+    <string name="view_on_explorer">Pregled u istraživaču</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Unesite svoju frazu za oporavak</string>

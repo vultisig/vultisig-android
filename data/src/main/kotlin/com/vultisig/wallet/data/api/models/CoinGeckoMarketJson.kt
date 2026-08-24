@@ -21,6 +21,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class CoinMarketStatsJson(
+    @SerialName("current_price") @Contextual val currentPrice: BigDecimal? = null,
     @SerialName("market_cap") @Contextual val marketCap: BigDecimal? = null,
     @SerialName("market_cap_rank") val marketCapRank: Int? = null,
     @SerialName("fully_diluted_valuation")
