@@ -557,11 +557,13 @@
     <string name="tron_defi_frozen">Bevroren</string>
     <string name="tron_defi_pending_withdrawals">Uitstaande Opnames</string>
     <string name="tron_defi_ready_to_claim">Klaar om te claimen</string>
+    <string name="tron_defi_claim_button">%1$s claimen</string>
     <string name="tron_defi_countdown_days">%1$d dagen, %2$d uur</string>
     <string name="tron_defi_countdown_hours">%1$d uur, %2$d min</string>
     <string name="tron_defi_error_trx_not_in_vault">TRX-coin niet gevonden in kluis</string>
     <string name="tron_freeze_screen_title">TRON bevriezen</string>
     <string name="tron_unfreeze_screen_title">TRON ontdooien</string>
+    <string name="tron_claim_screen_title">TRON claimen</string>
     <string name="tron_frozen_balances_error">Bevroren saldi konden niet worden geladen. Trek om opnieuw te proberen.</string>
     <string name="tron_resource_type">Brontype</string>
     <string name="tron_resource_bandwidth">Bandbreedte</string>

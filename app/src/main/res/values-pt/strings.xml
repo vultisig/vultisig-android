@@ -558,11 +558,13 @@
     <string name="tron_defi_frozen">Congelado</string>
     <string name="tron_defi_pending_withdrawals">Saques Pendentes</string>
     <string name="tron_defi_ready_to_claim">Pronto para resgatar</string>
+    <string name="tron_defi_claim_button">Resgatar %1$s</string>
     <string name="tron_defi_countdown_days">%1$d dias, %2$d h</string>
     <string name="tron_defi_countdown_hours">%1$d h, %2$d min</string>
     <string name="tron_defi_error_trx_not_in_vault">Moeda TRX não encontrada no cofre</string>
     <string name="tron_freeze_screen_title">Congelar TRON</string>
     <string name="tron_unfreeze_screen_title">Descongelar TRON</string>
+    <string name="tron_claim_screen_title">Resgatar TRON</string>
     <string name="tron_frozen_balances_error">Não foi possível carregar os saldos congelados. Puxe para tentar novamente.</string>
     <string name="tron_resource_type">Tipo de Recurso</string>
     <string name="tron_resource_bandwidth">Largura de Banda</string>

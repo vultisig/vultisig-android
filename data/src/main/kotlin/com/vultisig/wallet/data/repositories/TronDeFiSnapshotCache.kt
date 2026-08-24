@@ -27,4 +27,13 @@ class TronDeFiSnapshotCache @Inject constructor() {
     fun write(tronAddress: String, snapshot: TronDeFiSnapshot) {
         snapshots[tronAddress] = snapshot
     }
+
+    /**
+     * Drops the snapshot for an address whose on-chain state is about to change under us — a staged
+     * claim — so the next open re-reads the chain instead of painting a position the transaction
+     * has already settled.
+     */
+    fun clear(tronAddress: String) {
+        snapshots.remove(tronAddress)
+    }
 }

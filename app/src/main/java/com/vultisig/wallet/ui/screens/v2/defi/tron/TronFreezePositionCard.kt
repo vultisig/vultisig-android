@@ -6,37 +6,25 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
-import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.theme.Theme
-
-private val TronFreezeCardIconCircleColor = Color.White.copy(alpha = 0.12f)
 
 /**
  * Card showing frozen TRX balance with Freeze/Unfreeze actions; shows placeholders and disables
@@ -127,96 +115,30 @@ internal fun TronFreezePositionCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                TronFreezeActionButton(
+                TronDeFiActionButton(
                     title = stringResource(R.string.tron_defi_unfreeze),
                     icon = R.drawable.circle_minus,
                     background = Theme.v2.colors.backgrounds.tertiary_2,
                     border = BorderStroke(Dp.Hairline, Color.White.copy(alpha = 0.03f)),
                     contentColor = Theme.v2.colors.text.primary,
-                    iconCircleColor = TronFreezeCardIconCircleColor,
+                    iconCircleColor = TronDeFiActionButtonIconCircleColor,
                     enabled = !isLoading && isUnfreezeEnabled,
                     modifier = Modifier.weight(1f),
                     onClick = onClickUnfreeze,
                 )
-                TronFreezeActionButton(
+                TronDeFiActionButton(
                     title = stringResource(R.string.tron_defi_freeze),
                     icon = R.drawable.circle_plus,
                     background = Theme.v2.colors.buttons.ctaPrimary,
                     border = BorderStroke(Dp.Hairline, Theme.v2.colors.primary.accent3),
                     contentColor = Theme.v2.colors.text.primary,
-                    iconCircleColor = TronFreezeCardIconCircleColor,
+                    iconCircleColor = TronDeFiActionButtonIconCircleColor,
                     enabled = isFreezeEnabled && !isLoading,
                     modifier = Modifier.weight(1f),
                     onClick = onClickFreeze,
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun TronFreezeActionButton(
-    title: String,
-    icon: Int,
-    background: Color,
-    border: BorderStroke,
-    contentColor: Color,
-    iconCircleColor: Color,
-    enabled: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    val resolvedBorder =
-        if (enabled) {
-            border
-        } else {
-            BorderStroke(
-                width = border.width,
-                color =
-                    when (val brush = border.brush) {
-                        is SolidColor -> brush.value.copy(alpha = 0.5f)
-                        else -> Color.Gray.copy(alpha = 0.5f)
-                    },
-            )
-        }
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        colors =
-            ButtonDefaults.buttonColors(
-                containerColor = background,
-                contentColor = contentColor,
-                disabledContainerColor = background.copy(alpha = 0.5f),
-                disabledContentColor = contentColor.copy(alpha = 0.5f),
-            ),
-        border = resolvedBorder,
-        shape = Theme.v2.radius.pill,
-        contentPadding = PaddingValues(start = 4.dp, top = 6.dp, end = 16.dp, bottom = 6.dp),
-        modifier = modifier.height(46.dp),
-    ) {
-        Box(
-            modifier =
-                Modifier.size(34.dp)
-                    .background(
-                        if (enabled) iconCircleColor else iconCircleColor.copy(alpha = 0.5f),
-                        Theme.v2.radius.pill,
-                    ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(id = icon),
-                contentDescription = null,
-                modifier = Modifier.size(12.dp),
-                tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f),
-            )
-        }
-        UiSpacer(5.dp)
-        Text(
-            text = title,
-            style = Theme.brockmann.button.medium.medium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.weight(1f),
-        )
     }
 }
 
