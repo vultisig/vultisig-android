@@ -399,6 +399,213 @@ internal class SwapQuoteManagerTest {
     }
 
     @Test
+    fun `fetchBestQuote retries an aggregator once after a native halt and takes its quote`() =
+        runTest {
+            // ETH -> SOL with THORChain paused (#5672). LI.FI is eligible and merely missed the
+            // first 15s window; the halt describes THORChain, not the pair. One more window and
+            // the form holds a quote instead of "trading is halted".
+            val eth = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
+            val usdc = coin(Chain.Ethereum, "USDC", "0xdst", 6)
+            coEvery { tokenRepository.getNativeToken(any()) } returns eth
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+                FiatValue(BigDecimal.ONE, AppCurrency.USD.ticker)
+            every { mapTokenValueToDecimalUiString(any()) } returns "0"
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } throws
+                SwapException.TradingHalted("trading is halted")
+            var lifiAttempts = 0
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.LIFI, any()) } coAnswers
+                {
+                    lifiAttempts++
+                    if (lifiAttempts == 1) {
+                        delay(Long.MAX_VALUE)
+                        error("unreachable")
+                    }
+                    SwapQuoteResult.Evm(evmQuote(dstAmount = "1000000"))
+                }
+
+            val manager = createManager()
+            val deferred = async {
+                runCatching {
+                    manager.fetchBestQuote(
+                        candidates =
+                            listOf(SwapProvider.THORCHAIN, SwapProvider.LIFI).map { provider ->
+                                QuoteCandidate(provider, vultBPSDiscount = null, referral = null)
+                            },
+                        src = mockk(relaxed = true),
+                        dst = mockk(relaxed = true),
+                        srcToken = eth,
+                        dstToken = usdc,
+                        srcTokenValue = BigInteger.ONE,
+                        tokenValue = TokenValue(BigInteger.ONE, eth),
+                        currency = AppCurrency.USD,
+                        amount = BigDecimal.ONE,
+                    )
+                }
+            }
+
+            // The retry is dispatched the moment the first window closes and answers at once, so
+            // one window carries both attempts.
+            advanceTimeBy(15_001L)
+
+            val ranked = assertNotNull(deferred.await().getOrNull())
+            assertEquals(SwapProvider.LIFI, ranked.best.candidate.provider)
+            assertEquals(2, lifiAttempts)
+        }
+
+    @Test
+    fun `fetchBestQuote surfaces the aggregator timeout, not the halt, when the retry misses too`() =
+        runTest {
+            // Even when the second window closes empty, nobody has said the pair cannot route:
+            // THORChain spoke only for itself. "Try again" is the true copy; the halt tooltip
+            // would send the user off to wait out a pause that is not what blocked them.
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+                FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } throws
+                SwapException.TradingHalted("trading is halted")
+            var lifiAttempts = 0
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.LIFI, any()) } coAnswers
+                {
+                    lifiAttempts++
+                    delay(Long.MAX_VALUE)
+                    error("unreachable")
+                }
+
+            val manager = createManager()
+            val deferred = async {
+                runCatching {
+                    manager.fetchBestQuote(
+                        candidates =
+                            listOf(SwapProvider.THORCHAIN, SwapProvider.LIFI).map { provider ->
+                                QuoteCandidate(provider, vultBPSDiscount = null, referral = null)
+                            },
+                        src = mockk(relaxed = true),
+                        dst = mockk(relaxed = true),
+                        srcToken = mockk(relaxed = true),
+                        dstToken = mockk(relaxed = true),
+                        srcTokenValue = BigInteger.ONE,
+                        tokenValue = mockk(relaxed = true),
+                        currency = AppCurrency.USD,
+                        amount = BigDecimal.ONE,
+                    )
+                }
+            }
+
+            // One window per attempt: the retry buys the aggregator a second full window.
+            advanceTimeBy(15_001L)
+            advanceTimeBy(15_001L)
+
+            deferred.await().exceptionOrNull().shouldBeInstanceOf<SwapException.TimeOut>()
+            assertEquals(2, lifiAttempts)
+        }
+
+    @Test
+    fun `fetchBestQuote keeps the halt when no aggregator is eligible`() = runTest {
+        // A THORChain/MayaChain-only pair is the case #5656 was written for: every provider
+        // routes through a paused protocol, so the sibling's timeout is a symptom of the halt
+        // and the halt is still the only copy that explains the outage.
+        val chosen =
+            failureRacedAgainstATimeout(
+                stalling = SwapProvider.MAYA,
+                answering = SwapProvider.THORCHAIN,
+                verdict = SwapException.TradingHalted("trading is halted"),
+            )
+
+        chosen.shouldBeInstanceOf<SwapException.TradingHalted>()
+    }
+
+    @Test
+    fun `fetchBestQuote keeps the halt when every eligible aggregator answered with a verdict`() =
+        runTest {
+            // The aggregator did reply, and its reply is about the pair rather than the window.
+            // With nothing retryable left, the halt is the most actionable thing to say. LI.FI is
+            // listed first so provider order cannot be what surfaces the halt.
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+                FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
+            var lifiAttempts = 0
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.LIFI, any()) } coAnswers
+                {
+                    lifiAttempts++
+                    throw SwapException.SwapRouteNotAvailable("no route available")
+                }
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } throws
+                SwapException.TradingHalted("trading is halted")
+
+            val error =
+                runCatching {
+                        createManager()
+                            .fetchBestQuote(
+                                candidates =
+                                    listOf(SwapProvider.LIFI, SwapProvider.THORCHAIN).map { provider
+                                        ->
+                                        QuoteCandidate(
+                                            provider,
+                                            vultBPSDiscount = null,
+                                            referral = null,
+                                        )
+                                    },
+                                src = mockk(relaxed = true),
+                                dst = mockk(relaxed = true),
+                                srcToken = mockk(relaxed = true),
+                                dstToken = mockk(relaxed = true),
+                                srcTokenValue = BigInteger.ONE,
+                                tokenValue = mockk(relaxed = true),
+                                currency = AppCurrency.USD,
+                                amount = BigDecimal.ONE,
+                            )
+                    }
+                    .exceptionOrNull()
+
+            error.shouldBeInstanceOf<SwapException.TradingHalted>()
+            assertEquals(1, lifiAttempts)
+        }
+
+    @Test
+    fun `fetchBestQuote does not retry an aggregator when no native provider is halted`() =
+        runTest {
+            // The second window is the halt's price, not every failed run's. With no halt to
+            // contradict, the ranking already surfaces the truest verdict on the first pass.
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+                FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } throws
+                SwapException.SwapRouteNotAvailable("no route available")
+            var lifiAttempts = 0
+            coEvery { swapQuoteRepository.getQuote(SwapProvider.LIFI, any()) } coAnswers
+                {
+                    lifiAttempts++
+                    delay(Long.MAX_VALUE)
+                    error("unreachable")
+                }
+
+            val manager = createManager()
+            val deferred = async {
+                runCatching {
+                    manager.fetchBestQuote(
+                        candidates =
+                            listOf(SwapProvider.THORCHAIN, SwapProvider.LIFI).map { provider ->
+                                QuoteCandidate(provider, vultBPSDiscount = null, referral = null)
+                            },
+                        src = mockk(relaxed = true),
+                        dst = mockk(relaxed = true),
+                        srcToken = mockk(relaxed = true),
+                        dstToken = mockk(relaxed = true),
+                        srcTokenValue = BigInteger.ONE,
+                        tokenValue = mockk(relaxed = true),
+                        currency = AppCurrency.USD,
+                        amount = BigDecimal.ONE,
+                    )
+                }
+            }
+
+            advanceTimeBy(15_001L)
+
+            deferred
+                .await()
+                .exceptionOrNull()
+                .shouldBeInstanceOf<SwapException.SwapRouteNotAvailable>()
+            assertEquals(1, lifiAttempts)
+        }
+
+    @Test
     fun `fetchQuote keeps the SwapKit sub-provider label across a cache hit (Native path)`() =
         runTest {
             // Pins the SwapQuoteResult.Native arm + the `is SwapQuote.SwapKit -> subProvider`
