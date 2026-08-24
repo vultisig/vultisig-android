@@ -251,9 +251,9 @@ class TronHelper(
 
     /**
      * Shared transaction builder for staking operations. Constructs a Tron transaction with common
-     * timestamp, block header, expiration, and optional fee-limit fields, applying a contract-setting
-     * lambda to the transaction builder. WithdrawExpireUnfreeze uses feeLimit = 0 since it consumes
-     * no chain resources; other staking operations use the estimated gas fee.
+     * timestamp, block header, expiration, and optional fee-limit fields, applying a
+     * contract-setting lambda to the transaction builder. WithdrawExpireUnfreeze uses feeLimit = 0
+     * since it consumes no chain resources; other staking operations use the estimated gas fee.
      */
     private inline fun buildStakingTransaction(
         tronSpecific: BlockChainSpecific.Tron,

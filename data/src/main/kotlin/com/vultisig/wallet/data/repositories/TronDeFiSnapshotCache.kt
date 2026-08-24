@@ -29,9 +29,9 @@ class TronDeFiSnapshotCache @Inject constructor() {
     }
 
     /**
-     * Drops the snapshot for an address whose on-chain state is about to change under us — a signed
-     * freeze/unfreeze/claim — so the next open re-reads the chain instead of painting a position
-     * the transaction has already settled.
+     * Drops the snapshot for an address whose on-chain state is about to change under us — a staged
+     * claim — so the next open re-reads the chain instead of painting a position the transaction
+     * has already settled.
      */
     fun clear(tronAddress: String) {
         snapshots.remove(tronAddress)
