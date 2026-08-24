@@ -166,6 +166,11 @@ class RippleHelperTest {
                 // An issued amount naming no issuer names no obligation, so it floors nothing.
                 """"DeliverMin":{"value":"25"}""",
                 """"DeliverMin":{"currency":"USD","value":"25"}""",
+                // A blank currency or issuer names just as little as an absent one, and the verify
+                // screen drops the row entirely, so it must not pass as a floor either.
+                """"DeliverMin":{"currency":"","issuer":"$usdIssuer","value":"25"}""",
+                """"DeliverMin":{"currency":"USD","issuer":"","value":"25"}""",
+                """"DeliverMin":{"currency":"USD","issuer":"   ","value":"25"}""",
             )
             .forEach { floor ->
                 val ex =
