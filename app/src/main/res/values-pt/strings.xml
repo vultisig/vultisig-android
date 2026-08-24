@@ -522,10 +522,11 @@
     <!-- Kamino Earn -->
     <string name="kamino_earn_title">Kamino Earn</string>
     <string name="kamino_earn_curated_by">Curado por %1$s</string>
-    <string name="kamino_earn_deposited">Depositado</string>
-    <string name="kamino_earn_apy_30d">APY (30 d)</string>
-    <string name="kamino_earn_pnl">Lucros e perdas</string>
-    <string name="kamino_earn_lost">Perdido</string>
+    <string name="kamino_earn_deposited">Depositado: %1$s</string>
+    <string name="kamino_earn_apy">APY</string>
+    <string name="kamino_earn_earned">Ganho: %1$s</string>
+    <string name="kamino_earn_lost">Perdido: %1$s</string>
+    <string name="kamino_earn_protocol">Kamino</string>
     <string name="kamino_earn_load_failed">Não foi possível atualizar estes vaults agora</string>
     <string name="kamino_earn_risk_conservative">Conservador</string>
     <string name="kamino_earn_risk_private_credit">Crédito privado</string>
@@ -834,7 +835,7 @@
     <string name="close_sheet_content_description">Fechar</string>
     <string name="price_chart_retry_hint">Não foi possível carregar o gráfico. Toque para tentar novamente.</string>
     <string name="token_details_market_stats_title">Estatísticas de mercado</string>
-    <string name="token_details_price_extremes_title">Extremos de preço</string>
+    <string name="token_details_price_extremes_title">Faixa de preço</string>
     <string name="token_details_token_info_title">Informações do token</string>
     <string name="token_details_market_cap">Capitalização de mercado</string>
     <string name="token_details_market_cap_rank">Classificação</string>
@@ -1208,6 +1209,15 @@
     <string name="onboarding_desc_page_1_part_2">Partilhas do cofre</string>
     <string name="verify_swap_youre_swapping_title">Está a trocar</string>
     <string name="keysign_app_version_text">Versão %1$s (%2$s)</string>
+    <string name="lp_pending_title">A aguardar o depósito %1$s correspondente</string>
+    <string name="lp_pending_subtitle">A THORChain retém este depósito até chegar a parte correspondente e reembolsa-o caso não chegue.</string>
+    <string name="lp_pending_deposited">Depositado</string>
+    <string name="lp_pending_from">De</string>
+    <string name="lp_pending_refunds_in">Reembolso em</string>
+    <string name="lp_pending_duration_days_hours_format">%1$dd %2$dh</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$dh %2$dm</string>
+    <string name="lp_pending_refund_time_unknown">Desconhecido</string>
+    <string name="lp_pending_complete_deposit">Concluir depósito</string>
     <string name="lp_position">Posição</string>
     <string name="add">Adicionar</string>
     <string name="remove">Remover</string>
@@ -1378,7 +1388,7 @@
     <string name="transaction_history_detail_fee">Taxa</string>
     <string name="transaction_history_detail_network">Rede</string>
     <string name="transaction_history_detail_provider">Provedor</string>
-    <string name="transaction_history_view_on_explorer">Ver no explorador</string>
+    <string name="view_on_explorer">Ver no explorador</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Digite sua frase semente</string>

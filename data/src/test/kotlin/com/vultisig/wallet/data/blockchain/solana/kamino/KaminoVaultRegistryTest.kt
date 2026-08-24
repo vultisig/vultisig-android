@@ -85,12 +85,18 @@ class KaminoVaultRegistryTest {
     fun `every launch vault names a curator and a farm`() {
         // A deposit stakes into the farm, so a vault without one would strand the shares.
         KaminoVaultRegistry.ALLOW_LIST.forEach { vault ->
-            assertTrue(vault.curator.isNotBlank(), "${vault.fallbackName} has no curator")
+            assertTrue(
+                vault.curator.displayName.isNotBlank(),
+                "${vault.fallbackName} has no curator",
+            )
             assertTrue(vault.farm.isNotBlank(), "${vault.fallbackName} has no farm")
         }
-        assertEquals("Steakhouse Financial", KaminoVaultRegistry.STEAKHOUSE_USDC.curator)
-        assertEquals("RockawayX", KaminoVaultRegistry.RWA_USDC.curator)
-        assertEquals("Allez Labs", KaminoVaultRegistry.ALLEZ_SOL.curator)
+        assertEquals(
+            KaminoCurator.STEAKHOUSE_FINANCIAL,
+            KaminoVaultRegistry.STEAKHOUSE_USDC.curator,
+        )
+        assertEquals(KaminoCurator.ROCKAWAYX, KaminoVaultRegistry.RWA_USDC.curator)
+        assertEquals(KaminoCurator.ALLEZ_LABS, KaminoVaultRegistry.ALLEZ_SOL.curator)
     }
 
     @Test

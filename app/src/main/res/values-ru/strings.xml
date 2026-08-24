@@ -523,10 +523,11 @@
     <!-- Kamino Earn -->
     <string name="kamino_earn_title">Kamino Earn</string>
     <string name="kamino_earn_curated_by">Куратор: %1$s</string>
-    <string name="kamino_earn_deposited">Депонировано</string>
-    <string name="kamino_earn_apy_30d">APY (30 дн.)</string>
-    <string name="kamino_earn_pnl">Прибыль и убыток</string>
-    <string name="kamino_earn_lost">Убыток</string>
+    <string name="kamino_earn_deposited">Депонировано: %1$s</string>
+    <string name="kamino_earn_apy">APY</string>
+    <string name="kamino_earn_earned">Заработано: %1$s</string>
+    <string name="kamino_earn_lost">Убыток: %1$s</string>
+    <string name="kamino_earn_protocol">Kamino</string>
     <string name="kamino_earn_load_failed">Сейчас не удалось обновить эти vault‑ы</string>
     <string name="kamino_earn_risk_conservative">Консервативный</string>
     <string name="kamino_earn_risk_private_credit">Частный кредит</string>
@@ -836,7 +837,7 @@
     <string name="close_sheet_content_description">Закрыть</string>
     <string name="price_chart_retry_hint">Не удалось загрузить график. Нажмите, чтобы повторить.</string>
     <string name="token_details_market_stats_title">Рыночная статистика</string>
-    <string name="token_details_price_extremes_title">Экстремумы цены</string>
+    <string name="token_details_price_extremes_title">Диапазон цен</string>
     <string name="token_details_token_info_title">Информация о токене</string>
     <string name="token_details_market_cap">Рыночная капитализация</string>
     <string name="token_details_market_cap_rank">Рейтинг</string>
@@ -1214,6 +1215,15 @@
     <string name="onboarding_desc_page_1_part_2">Общие ресурсы хранилища</string>
     <string name="verify_swap_youre_swapping_title">Вы выполняете обмен</string>
     <string name="keysign_app_version_text">Версия %1$s (%2$s)</string>
+    <string name="lp_pending_title">Ожидание парного депозита %1$s</string>
+    <string name="lp_pending_subtitle">THORChain удерживает этот депозит до поступления парной стороны, а иначе возвращает его.</string>
+    <string name="lp_pending_deposited">Внесено</string>
+    <string name="lp_pending_from">Откуда</string>
+    <string name="lp_pending_refunds_in">Возврат через</string>
+    <string name="lp_pending_duration_days_hours_format">%1$dд %2$dч</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$dч %2$dмин</string>
+    <string name="lp_pending_refund_time_unknown">Неизвестно</string>
+    <string name="lp_pending_complete_deposit">Завершить депозит</string>
     <string name="lp_position">Позиция</string>
     <string name="add">Добавить</string>
     <string name="remove">Удалить</string>
@@ -1384,7 +1394,7 @@
     <string name="transaction_history_detail_fee">Комиссия</string>
     <string name="transaction_history_detail_network">Сеть</string>
     <string name="transaction_history_detail_provider">Провайдер</string>
-    <string name="transaction_history_view_on_explorer">Открыть в обозревателе</string>
+    <string name="view_on_explorer">Открыть в обозревателе</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Введите вашу сид-фразу</string>

@@ -48,6 +48,7 @@ import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBlockedReason
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoCurator
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRiskTier
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState
 import com.vultisig.wallet.data.models.Account
@@ -112,6 +113,9 @@ import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyValidatorRow
+import com.vultisig.wallet.ui.models.defi.LpTabUiModel
+import com.vultisig.wallet.ui.models.defi.PendingLpDepositUiModel
+import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
@@ -222,11 +226,13 @@ import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
+import com.vultisig.wallet.ui.screens.v2.defi.maya.RemoveLpScreenContent
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.solana.KaminoAmountContent
 import com.vultisig.wallet.ui.screens.v2.defi.solana.KaminoEarnRow
 import com.vultisig.wallet.ui.screens.v2.defi.solana.KaminoEarnUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.solana.SolanaStakingPositionsContent
+import com.vultisig.wallet.ui.screens.v2.defi.thorchain.ThorchainDefiPositionScreenContent
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
@@ -242,6 +248,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.math.sin
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.delay
@@ -296,6 +303,49 @@ class PreviewActivity : ComponentActivity() {
                                     error = PasscodeLockError.Wrong(remainingAttempts = 2)
                                 ),
                             textFieldState = TextFieldState(),
+                        )
+                    "remove_thor_lp" ->
+                        RemoveLpScreenContent(
+                            state =
+                                DepositFormUiModel(
+                                    removeLpPercent = 0.92f,
+                                    removeLpCacaoDisplay = "1.84",
+                                    removeLpTokenSymbol = "RUNE",
+                                    removeLpAssetDisplay = "0.07149251",
+                                    removeLpAssetSymbol = "VVV",
+                                    availableLpUnits = "1000",
+                                    removeLpUnitsDivisor = BigInteger("1000"),
+                                    balance = UiText.DynamicString("2.083 RUNE"),
+                                )
+                        )
+                    "thor_lp_pending" ->
+                        ThorchainDefiPositionScreenContent(
+                            state =
+                                ThorchainDefiPositionsUiModel(
+                                    totalAmountPrice = "$1,204.55",
+                                    isTotalAmountLoading = false,
+                                    selectedTab = R.string.defi_tab_lp,
+                                    lpDialogLoaded = true,
+                                    selectedPositions = emptyList(),
+                                    lp =
+                                        LpTabUiModel(
+                                            pendingDeposits =
+                                                listOf(
+                                                    PendingLpDepositUiModel(
+                                                        poolId = "BASE.VVV",
+                                                        icon = R.drawable.base,
+                                                        chainLogo = R.drawable.base,
+                                                        awaitedTicker = "VVV",
+                                                        depositedAmount = "2 RUNE",
+                                                        pairedAddress = "0x14F6…89B6",
+                                                        refundsIn = UiText.DynamicString("21h 14m"),
+                                                    )
+                                                )
+                                        ),
+                                ),
+                            onClickBondToNode = {},
+                            onClickUnbond = {},
+                            onClickBond = {},
                         )
                     "limit_swap_form" -> LimitSwapFormPreview()
                     "limit_swap_form_assets" ->
@@ -3994,7 +4044,7 @@ private val KAMINO_PREVIEW_ROWS =
         KaminoEarnRow(
             vaultAddress = "HDsayqAsDWy3QvANGqh2yNraqcD8Fnjgh73Mhb3WRS5E",
             name = "Steakhouse USDC",
-            curator = "Steakhouse Financial",
+            curator = KaminoCurator.STEAKHOUSE_FINANCIAL,
             riskTier = KaminoRiskTier.CONSERVATIVE,
             tokenLogo = "usdc",
             tokenTicker = "USDC",
@@ -4002,6 +4052,7 @@ private val KAMINO_PREVIEW_ROWS =
             depositedFiat = "$1,054.22",
             apyDisplay = "4.00%",
             pnlDisplay = "54.427822 USDC",
+            pnlFiat = "$54.42",
             pnlDirection = KaminoEarnRow.PnlDirection.UP,
             fiatValue = java.math.BigDecimal("1054.22"),
             hasPosition = true,
@@ -4009,7 +4060,7 @@ private val KAMINO_PREVIEW_ROWS =
         KaminoEarnRow(
             vaultAddress = "A1so1bPD3W1TfeFwboDh8yfAAVaVtcdAYBYCjhg2mJQ",
             name = "Allez SOL",
-            curator = "Allez Labs",
+            curator = KaminoCurator.ALLEZ_LABS,
             riskTier = KaminoRiskTier.CONSERVATIVE,
             tokenLogo = "sol",
             tokenTicker = "SOL",
@@ -4017,6 +4068,7 @@ private val KAMINO_PREVIEW_ROWS =
             depositedFiat = "$0.00",
             apyDisplay = "5.14%",
             pnlDisplay = "0 SOL",
+            pnlFiat = "$0.00",
             pnlDirection = KaminoEarnRow.PnlDirection.FLAT,
             fiatValue = java.math.BigDecimal.ZERO,
             // Read, and holds nothing: the card drops its figure rows and offers only Deposit.
@@ -4025,7 +4077,7 @@ private val KAMINO_PREVIEW_ROWS =
         KaminoEarnRow(
             vaultAddress = "DWSXb18xZApz29vnQpgR2m6MynCT7PznaXt7Ut7M7KaP",
             name = "RWA USDC",
-            curator = "RockawayX",
+            curator = KaminoCurator.ROCKAWAYX,
             riskTier = KaminoRiskTier.PRIVATE_CREDIT,
             tokenLogo = "usdc",
             tokenTicker = "USDC",
@@ -4033,6 +4085,7 @@ private val KAMINO_PREVIEW_ROWS =
             depositedFiat = "$0.00",
             apyDisplay = "5.88%",
             pnlDisplay = "0 USDC",
+            pnlFiat = "$0.00",
             pnlDirection = KaminoEarnRow.PnlDirection.FLAT,
             fiatValue = java.math.BigDecimal.ZERO,
             hasPosition = false,
@@ -4076,7 +4129,6 @@ private fun SolanaDeFiPreview(tab: DeFiTab, hasEnabledVaults: Boolean = true) {
                 isLoading = false,
                 hasEnabledVaults = hasEnabledVaults,
                 rows = if (hasEnabledVaults) KAMINO_PREVIEW_ROWS else emptyList(),
-                totalFiat = if (hasEnabledVaults) "$1,054.22" else "$0.00",
                 isBalanceVisible = true,
             ),
         selectedTab = tab,

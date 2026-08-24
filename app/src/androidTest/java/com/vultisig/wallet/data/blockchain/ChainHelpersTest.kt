@@ -652,7 +652,8 @@ class ChainHelpersTest {
 
     @Test
     fun sendUTXO() {
-        val transactions: List<TransactionData> = loadTransactionData(UTXO_JSON_FILE)
+        val transactions =
+            loadTransactionData(UTXO_JSON_FILE) + loadTransactionData(UTXO_DASH_ZCASH_JSON_FILE)
         transactions.forEach { transaction ->
             val payload = transaction.keysignPayload.toInternalKeySignPayload()
             val coin = payload.coin.coinType
@@ -685,7 +686,9 @@ class ChainHelpersTest {
 
     @Test
     fun sendThorchainSwapTest() {
-        val transactions: List<TransactionData> = loadTransactionData(THORCHAIN_SWAP_JSON_FILE)
+        val transactions =
+            loadTransactionData(THORCHAIN_SWAP_JSON_FILE) +
+                loadTransactionData(THORCHAIN_SWAP_LIMIT_ORDER_JSON_FILE)
         val swapHelper = THORChainSwaps(HEX_PUBLIC_KEY, HEX_CHAIN_CODE, HEX_PUBLIC_KEY_EDDSA)
         transactions.forEach { transaction ->
             val payload = transaction.keysignPayload.toInternalKeySignPayload()
@@ -1006,6 +1009,7 @@ class ChainHelpersTest {
         private const val MAYACHAIN_JSON_FILE = "maya.json"
         private const val TERRA_JSON_FILE = "terra.json"
         private const val UTXO_JSON_FILE = "utxo.json"
+        private const val UTXO_DASH_ZCASH_JSON_FILE = "utxo-dash-zcash.json"
         private const val POL_JSON_FILE = "pol.json"
         private const val DOT_JSON_FILE = "dot.json"
         private const val BITTENSOR_JSON_FILE = "bittensor.json"
@@ -1017,6 +1021,7 @@ class ChainHelpersTest {
         private const val CARDANO_JSON_FILE = "cardano.json"
 
         private const val THORCHAIN_SWAP_JSON_FILE = "thorchainswap.json"
+        private const val THORCHAIN_SWAP_LIMIT_ORDER_JSON_FILE = "thorchainswap-limit-order.json"
         private const val MAYA_SWAP_JSON_FILE = "mayaswap.json"
         private const val LIFI_SWAP_JSON_FILE = "lifiswap.json"
 
@@ -1043,6 +1048,7 @@ class ChainHelpersTest {
                 MAYACHAIN_JSON_FILE to "sendMayaChainTest",
                 TERRA_JSON_FILE to "sendTerra",
                 UTXO_JSON_FILE to "sendUTXO",
+                UTXO_DASH_ZCASH_JSON_FILE to "sendUTXO",
                 POL_JSON_FILE to "sendPOLTest",
                 DOT_JSON_FILE to "sendPolkadot",
                 BITTENSOR_JSON_FILE to "sendBittensorTest",
@@ -1052,20 +1058,20 @@ class ChainHelpersTest {
                 KUJIRA_JSON_FILE to "sendKUJIRATest",
                 CARDANO_JSON_FILE to "sendCardano",
                 THORCHAIN_SWAP_JSON_FILE to "sendThorchainSwapTest",
+                THORCHAIN_SWAP_LIMIT_ORDER_JSON_FILE to "sendThorchainSwapTest",
                 MAYA_SWAP_JSON_FILE to "sendMayaChainSwapTest",
                 LIFI_SWAP_JSON_FILE to "oneInchLifiSwapTest",
                 ARB_SWAP_JSON_FILE to "oneInchArbitrumSwapTest",
             )
 
         // +5: cosmos-chain-matrix.json (issue #5421 item 5, Osmosis/Dydx/Noble/Akash + one IBC
-        // transfer). +2: utxo.json's new Dash/Zcash cases (item 4). +1: bittensor.json (item 6).
-        // +1: qbtc.json (item 6). +1: thorchainswap.json's new limit-order case (item 7).
-        // Every new expected_image_hash here was captured by actually running this repo's Kotlin
-        // signer (connectedDebugAndroidTest on a real device/emulator) — not hand-authored. Per
-        // #5421's rule, a hash needs agreement from at least two of the three real signers
-        // (Kotlin/Swift/TS) before it's ground truth; only the Kotlin side has run so far, so
-        // these are pending Swift/TS corroboration.
-        private const val EXPECTED_CASE_COUNT = 87
+        // transfer). +2: utxo-dash-zcash.json (item 4). +1: bittensor.json (item 6).
+        // +1: qbtc.json (item 6). +1: thorchainswap-limit-order.json (item 7).
+        // +1: evm-chain-matrix.json "Send SEI" (issue #5673 — Sei is EVM-family, chain ID 1329,
+        // so it belongs in the matrix rather than a standalone file).
+        // The standalone fixture files are shared byte-for-byte with the Swift and TS corpora,
+        // preserving the cross-signer agreement required by #5421 and vultisig-sdk#1585.
+        private const val EXPECTED_CASE_COUNT = 88
 
         private const val HEX_PUBLIC_KEY =
             "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b"

@@ -524,10 +524,11 @@
     <!-- Kamino Earn -->
     <string name="kamino_earn_title">Kamino Earn</string>
     <string name="kamino_earn_curated_by">Curato da %1$s</string>
-    <string name="kamino_earn_deposited">Depositato</string>
-    <string name="kamino_earn_apy_30d">APY (30 g)</string>
-    <string name="kamino_earn_pnl">Profitti e perdite</string>
-    <string name="kamino_earn_lost">Perso</string>
+    <string name="kamino_earn_deposited">Depositato: %1$s</string>
+    <string name="kamino_earn_apy">APY</string>
+    <string name="kamino_earn_earned">Guadagnato: %1$s</string>
+    <string name="kamino_earn_lost">Perso: %1$s</string>
+    <string name="kamino_earn_protocol">Kamino</string>
     <string name="kamino_earn_load_failed">Impossibile aggiornare questi vault in questo momento</string>
     <string name="kamino_earn_risk_conservative">Conservativo</string>
     <string name="kamino_earn_risk_private_credit">Credito privato</string>
@@ -835,7 +836,7 @@
     <string name="close_sheet_content_description">Chiudi</string>
     <string name="price_chart_retry_hint">Impossibile caricare il grafico. Tocca per riprovare.</string>
     <string name="token_details_market_stats_title">Statistiche di mercato</string>
-    <string name="token_details_price_extremes_title">Estremi di prezzo</string>
+    <string name="token_details_price_extremes_title">Intervallo di prezzo</string>
     <string name="token_details_token_info_title">Informazioni sul token</string>
     <string name="token_details_market_cap">Capitalizzazione di mercato</string>
     <string name="token_details_market_cap_rank">Posizione</string>
@@ -1209,6 +1210,15 @@
     <string name="onboarding_desc_page_1_part_2">Condivisioni del Vault,</string>
     <string name="verify_swap_youre_swapping_title">Stai effettuando uno scambio</string>
     <string name="keysign_app_version_text">Versione %1$s (%2$s)</string>
+    <string name="lp_pending_title">In attesa del deposito %1$s corrispondente</string>
+    <string name="lp_pending_subtitle">THORChain trattiene questo deposito finché non arriva la parte corrispondente, altrimenti lo rimborsa.</string>
+    <string name="lp_pending_deposited">Depositato</string>
+    <string name="lp_pending_from">Da</string>
+    <string name="lp_pending_refunds_in">Rimborso tra</string>
+    <string name="lp_pending_duration_days_hours_format">%1$dg %2$dh</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$dh %2$dmin</string>
+    <string name="lp_pending_refund_time_unknown">Sconosciuto</string>
+    <string name="lp_pending_complete_deposit">Completa il deposito</string>
     <string name="lp_position">Posizione</string>
     <string name="add">Aggiungi</string>
     <string name="remove">Rimuovi</string>
@@ -1379,7 +1389,7 @@
     <string name="transaction_history_detail_fee">Commissione</string>
     <string name="transaction_history_detail_network">Rete</string>
     <string name="transaction_history_detail_provider">Fornitore</string>
-    <string name="transaction_history_view_on_explorer">Visualizza su Explorer</string>
+    <string name="view_on_explorer">Visualizza su Explorer</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Inserisci la tua frase seed</string>

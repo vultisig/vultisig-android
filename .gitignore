@@ -38,3 +38,5 @@ fastlane/report.xml
 .crush/
 .worktrees/
 scripts/release.sh
+__pycache__/
+*.pyc

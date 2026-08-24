@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.calculateAccountsPartialFiatValue
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesPartialFiatValue
 import com.vultisig.wallet.data.models.isFastVault
@@ -54,6 +55,7 @@ import com.vultisig.wallet.ui.utils.pushNotificationErrorUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import com.vultisig.wallet.ui.utils.throttleLatest
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -94,9 +96,9 @@ internal data class VaultAccountsUiModel(
     val accounts: List<AccountUiModel> = emptyList(),
     val defiAccounts: List<AccountUiModel> = emptyList(),
     val searchTextFieldState: TextFieldState = TextFieldState(),
-    // Per-banner visibility, each gated on a global, TTL-based dismissal (#5064). The upgrade
-    // banner
-    // additionally requires the vault to be GG20 (migration-eligible).
+    // Per-banner visibility, each gated on a global dismissal whose lifetime is the banner's own
+    // policy (#5064). The upgrade banner additionally requires the vault to be GG20
+    // (migration-eligible).
     val showUpgradeBanner: Boolean = false,
     val showFollowXBanner: Boolean = false,
     val showBuyVultBanner: Boolean = false,
@@ -433,10 +435,9 @@ constructor(
 
     fun dismissFollowXBanner() = dismissPromoBanner(PromoBanner.FollowXVultisig)
 
-    // Global, TTL-based dismissal: the banner stays hidden across vaults until its TTL elapses,
-    // then
-    // becomes eligible again (#5064). Writing the timestamp re-emits the dismissal flow, so the
-    // banner hides reactively without a session flag.
+    // Global dismissal: the banner stays hidden across vaults for as long as its policy says —
+    // until a TTL elapses, or for good (#5064). Writing the timestamp re-emits the dismissal flow,
+    // so the banner hides reactively without a session flag.
     private fun dismissPromoBanner(banner: PromoBanner) {
         viewModelScope.safeLaunch { promoBannerDismissalRepository.dismiss(banner) }
     }
@@ -597,7 +598,6 @@ constructor(
                 combine(
                         accountsRepository
                             .loadDeFiAddresses(vaultId, readsNetwork)
-                            .map { addresses -> addresses.sortByAccountsTotalFiatValue() }
                             .catch { error ->
                                 Timber.e(
                                     error,
@@ -654,6 +654,22 @@ constructor(
             )
         )
 
+    /**
+     * Orders DeFi rows by the very figure the row paints — the lenient per-address sum
+     * [AddressToUiModelMapper] renders — largest first, chain name as the tie-break, and rows with
+     * nothing resolved yet at the bottom rather than the top.
+     *
+     * Provider rows (Circle) sort on that same key, so a $0.00 position never sits above a funded
+     * chain.
+     */
+    private fun List<Address>.sortByDisplayedFiatValue() =
+        sortedWith(
+            compareBy(nullsLast(reverseOrder<BigDecimal>())) { address: Address ->
+                    address.accounts.calculateAccountsPartialFiatValue()?.value
+                }
+                .thenBy { it.chain.raw }
+        )
+
     private suspend fun List<Address>.updateUiStateFromList(
         searchQuery: String,
         isDefi: Boolean = false,
@@ -662,7 +678,14 @@ constructor(
         // list. The headline figure then always equals the sum its rows render (#4768), rather than
         // the total counting only freshly-resolved chains while a row still shows a cached one.
         val previous = if (isDefi) lastDeFiAddresses else lastWalletAddresses
-        val merged = this.retainLastKnownBalances(previous)
+        // DeFi orders after the merge, on the same sum the row shows. Sorting the incoming list
+        // ranked each chain on whatever that emission happened to carry — a chain still resolving
+        // scored null, which the strict fold puts at the *top* — and the cached values restored
+        // below then landed in that stale order instead of by amount.
+        val merged =
+            this.retainLastKnownBalances(previous).let {
+                if (isDefi) it.sortByDisplayedFiatValue() else it
+            }
         if (isDefi) lastDeFiAddresses = merged else lastWalletAddresses = merged
 
         val totalFiatValue =

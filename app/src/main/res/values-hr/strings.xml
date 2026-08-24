@@ -525,10 +525,11 @@
     <!-- Kamino Earn -->
     <string name="kamino_earn_title">Kamino Earn</string>
     <string name="kamino_earn_curated_by">Kurirao %1$s</string>
-    <string name="kamino_earn_deposited">Deponirano</string>
-    <string name="kamino_earn_apy_30d">APY (30 d)</string>
-    <string name="kamino_earn_pnl">Dobit i gubitak</string>
-    <string name="kamino_earn_lost">Izgubljeno</string>
+    <string name="kamino_earn_deposited">Deponirano: %1$s</string>
+    <string name="kamino_earn_apy">APY</string>
+    <string name="kamino_earn_earned">Zarađeno: %1$s</string>
+    <string name="kamino_earn_lost">Izgubljeno: %1$s</string>
+    <string name="kamino_earn_protocol">Kamino</string>
     <string name="kamino_earn_load_failed">Ove vaultove trenutno nije moguće osvježiti</string>
     <string name="kamino_earn_risk_conservative">Konzervativno</string>
     <string name="kamino_earn_risk_private_credit">Privatni krediti</string>
@@ -838,7 +839,7 @@
     <string name="close_sheet_content_description">Zatvori</string>
     <string name="price_chart_retry_hint">Nije moguće učitati grafikon. Dodirni za ponovni pokušaj.</string>
     <string name="token_details_market_stats_title">Tržišna statistika</string>
-    <string name="token_details_price_extremes_title">Ekstremi cijene</string>
+    <string name="token_details_price_extremes_title">Raspon cijena</string>
     <string name="token_details_token_info_title">Informacije o tokenu</string>
     <string name="token_details_market_cap">Tržišna kapitalizacija</string>
     <string name="token_details_market_cap_rank">Rang</string>
@@ -1214,6 +1215,15 @@
     <string name="onboarding_desc_page_1_part_2">dijeljenja trezora,</string>
     <string name="verify_swap_youre_swapping_title">Zamjenjujete</string>
     <string name="keysign_app_version_text">Verzija %1$s (%2$s)</string>
+    <string name="lp_pending_title">Čeka se odgovarajući %1$s polog</string>
+    <string name="lp_pending_subtitle">THORChain zadržava ovaj polog dok ne stigne odgovarajuća strana, a inače ga vraća.</string>
+    <string name="lp_pending_deposited">Položeno</string>
+    <string name="lp_pending_from">Od</string>
+    <string name="lp_pending_refunds_in">Povrat za</string>
+    <string name="lp_pending_duration_days_hours_format">%1$dd %2$dh</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$dh %2$dm</string>
+    <string name="lp_pending_refund_time_unknown">Nepoznato</string>
+    <string name="lp_pending_complete_deposit">Dovrši polog</string>
     <string name="lp_position">Pozicija</string>
     <string name="add">Dodaj</string>
     <string name="remove">Ukloni</string>
@@ -1383,7 +1393,7 @@
     <string name="transaction_history_detail_fee">Naknada</string>
     <string name="transaction_history_detail_network">Mreža</string>
     <string name="transaction_history_detail_provider">Pružatelj</string>
-    <string name="transaction_history_view_on_explorer">Pregled u istraživaču</string>
+    <string name="view_on_explorer">Pregled u istraživaču</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Unesite svoju frazu za oporavak</string>

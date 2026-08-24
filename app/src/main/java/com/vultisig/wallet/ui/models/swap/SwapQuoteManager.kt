@@ -445,64 +445,115 @@ constructor(
             throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
         }
 
-        val results: List<Result<BestQuote>> = coroutineScope {
-            candidates
+        // Local so the retry pass below can rerun exactly the same fetch without threading every
+        // request parameter through a helper. Outcomes come back paired with the candidate that
+        // produced them, and in the order they were asked for, so a failure stays attributable to
+        // its provider once the results are flattened.
+        suspend fun attempt(
+            subset: List<QuoteCandidate>
+        ): List<Pair<QuoteCandidate, Result<BestQuote>>> = coroutineScope {
+            subset
                 .map { candidate ->
                     async {
-                        runCatching {
-                                withTimeout(QUOTE_FETCH_TIMEOUT_MS) {
-                                    BestQuote(
-                                        candidate = candidate,
-                                        result =
-                                            fetchQuote(
-                                                provider = candidate.provider,
-                                                src = src,
-                                                dst = dst,
-                                                srcToken = srcToken,
-                                                dstToken = dstToken,
-                                                srcTokenValue = srcTokenValue,
-                                                tokenValue = tokenValue,
-                                                currency = currency,
-                                                vultBPSDiscount = candidate.vultBPSDiscount,
-                                                referral = candidate.referral,
-                                                amount = amount,
-                                                slippageBps = slippageBps,
-                                                externalRecipient = externalRecipient,
-                                            ),
+                        candidate to
+                            runCatching {
+                                    withTimeout(QUOTE_FETCH_TIMEOUT_MS) {
+                                        BestQuote(
+                                            candidate = candidate,
+                                            result =
+                                                fetchQuote(
+                                                    provider = candidate.provider,
+                                                    src = src,
+                                                    dst = dst,
+                                                    srcToken = srcToken,
+                                                    dstToken = dstToken,
+                                                    srcTokenValue = srcTokenValue,
+                                                    tokenValue = tokenValue,
+                                                    currency = currency,
+                                                    vultBPSDiscount = candidate.vultBPSDiscount,
+                                                    referral = candidate.referral,
+                                                    amount = amount,
+                                                    slippageBps = slippageBps,
+                                                    externalRecipient = externalRecipient,
+                                                ),
+                                        )
+                                    }
+                                }
+                                .onFailure { e ->
+                                    // TimeoutCancellationException extends CancellationException
+                                    // but is a transient per-provider failure — don't let it
+                                    // cancel sibling fetches via awaitAll.
+                                    if (
+                                        e is CancellationException &&
+                                            e !is TimeoutCancellationException
+                                    )
+                                        throw e
+                                    Timber.w(
+                                        e,
+                                        "Quote fetch failed provider=%s src=%s dst=%s amount=%s",
+                                        candidate.provider,
+                                        srcToken.id,
+                                        dstToken.id,
+                                        srcTokenValue,
                                     )
                                 }
-                            }
-                            .onFailure { e ->
-                                // TimeoutCancellationException extends CancellationException
-                                // but is a transient per-provider failure — don't let it
-                                // cancel sibling fetches via awaitAll.
-                                if (
-                                    e is CancellationException && e !is TimeoutCancellationException
-                                )
-                                    throw e
-                                Timber.w(
-                                    e,
-                                    "Quote fetch failed provider=%s src=%s dst=%s amount=%s",
-                                    candidate.provider,
-                                    srcToken.id,
-                                    dstToken.id,
-                                    srcTokenValue,
-                                )
-                            }
                     }
                 }
                 .awaitAll()
         }
 
-        val successes = results.mapNotNull { it.getOrNull() }
+        var results = attempt(candidates)
+        var successes = results.mapNotNull { it.second.getOrNull() }
+
         if (successes.isEmpty()) {
-            val failures = results.mapNotNull { it.exceptionOrNull() }
+            // A halt is one protocol's verdict on itself, not a verdict on the pair. When a native
+            // protocol reports a pause and an aggregator merely never answered inside the window,
+            // the pair may still route — so give exactly those aggregators one more window before
+            // the form settles on any copy (#5672). Bounded to a single extra pass and reached only
+            // from the all-failed branch, so a run that already holds a quote never pays for it.
+            val retryIndices =
+                results.indices.filter { index ->
+                    val (candidate, result) = results[index]
+                    isAggregator(candidate.provider) &&
+                        result.exceptionOrNull()?.let(::isTransientFailure) == true
+                }
+            val nativeHalt =
+                results.any { (candidate, result) ->
+                    !isAggregator(candidate.provider) &&
+                        result.exceptionOrNull() is SwapException.TradingHalted
+                }
+            if (nativeHalt && retryIndices.isNotEmpty()) {
+                Timber.i(
+                    "Retrying %d aggregator quote(s) after a native halt src=%s dst=%s",
+                    retryIndices.size,
+                    srcToken.id,
+                    dstToken.id,
+                )
+                val retried = attempt(retryIndices.map { results[it].first })
+                results =
+                    results.toMutableList().apply {
+                        retryIndices.forEachIndexed { slot, index -> this[index] = retried[slot] }
+                    }
+                successes = results.mapNotNull { it.second.getOrNull() }
+            }
+        }
+
+        if (successes.isEmpty()) {
+            val failures =
+                results.mapNotNull { (candidate, result) ->
+                    result.exceptionOrNull()?.let { candidate to it }
+                }
             // Surface the most actionable failure instead of the first by provider order
             // (iOS SwapService parity). When THORChain returns a generic "no route" error
             // while MAYA reports a recoverable amount/dust error for the same pair, the user
             // should see the amount error so they can adjust and retry. Ties keep provider
             // order (minBy returns the first match), so all-generic failures are unchanged.
-            val selected = failures.minBy { swapFailurePriority(it) }
+            val haltOutranked =
+                failures.any { (candidate, error) ->
+                    isAggregator(candidate.provider) && isTransientFailure(error)
+                }
+            val selected =
+                failures.minBy { (_, error) -> failurePriority(error, haltOutranked) }.second
             // withTimeout surfaces a raw TimeoutCancellationException; map it into the typed
             // SwapException hierarchy so the form renders the localized timeout copy instead of
             // leaking a coroutine cancellation as the generic "quote failed" error.
@@ -660,6 +711,25 @@ constructor(
         }
 
     /**
+     * Whether [provider] routes on its own book rather than through a native protocol's pools.
+     *
+     * The distinction only matters to failure handling: a native protocol answering "trading is
+     * halted" has described itself, while an aggregator in the same candidate set may still have a
+     * route the halt says nothing about. Exhaustive on purpose — a new provider has to be placed on
+     * one side, or a halt would start speaking for it.
+     */
+    private fun isAggregator(provider: SwapProvider): Boolean =
+        when (provider) {
+            SwapProvider.THORCHAIN,
+            SwapProvider.MAYA -> false
+            SwapProvider.JUPITER,
+            SwapProvider.SWAPKIT,
+            SwapProvider.KYBER,
+            SwapProvider.ONEINCH,
+            SwapProvider.LIFI -> true
+        }
+
+    /**
      * Source-chain gas (`gas × gasPrice`) in native wei for same-chain EVM aggregator quotes, used
      * only as the in-band lower-gas tie-break in [selectBestQuote]. A zero or absent gas/gasPrice
      * reads as "gas unknown" (null) so a quote with no usable gas estimate never wins the
@@ -683,10 +753,44 @@ constructor(
         }
 
     /**
+     * [swapFailurePriority] with the one adjustment the ranking cannot make from the error alone:
+     * when [haltOutranked], a halt drops below the transient tier.
+     *
+     * A halt is reported by one protocol about itself. On a pair where an aggregator is also
+     * eligible, the aggregator failing transiently means nobody has actually said the pair cannot
+     * be swapped — so "trading is halted", which reads as a verdict on the swap the user asked for
+     * and offers nothing to do but wait, must not beat the "try again" that is literally true
+     * (#5672). Where no aggregator is eligible, or every eligible one answered with a verdict of
+     * its own, [haltOutranked] is false and the halt keeps the tier #5656 gave it.
+     */
+    private fun failurePriority(error: Throwable, haltOutranked: Boolean): Int {
+        val priority = swapFailurePriority(error)
+        return if (haltOutranked && priority == PRIORITY_HALT) PRIORITY_HALT_DEMOTED else priority
+    }
+
+    /**
+     * Whether [error] is the kind of failure a second attempt could clear — a timeout, a dropped
+     * connection, a rate limit. Read off [swapFailurePriority] so the retry and demotion rules
+     * cannot drift from the tier table they are named after.
+     */
+    private fun isTransientFailure(error: Throwable): Boolean =
+        swapFailurePriority(error) == PRIORITY_TRANSIENT
+
+    /**
      * Ranks a failed-quote [error] so the most actionable failure is surfaced when every provider
-     * fails. Lower values win. Amount-related errors mean the pair is routable and the user can
-     * recover by adjusting the amount, so they rank above an upstream trading halt, which in turn
-     * ranks above the remaining recoverable/transient errors and then generic "no route" fallbacks.
+     * fails. Lower values win.
+     *
+     * A provider that answered with a verdict outranks one that never answered: the verdict
+     * describes the pair, while a timeout only says this provider was slow, and its "try again"
+     * copy sends the user round a retry loop that a deterministic rejection can never leave. Within
+     * the verdicts, the ones the user can act on come first — adjust the amount, wait out a halt,
+     * top up the balance — and "no route for this pair" last, since nothing about the form can
+     * change it. Below every verdict sits the transient group, then the failures nobody read as a
+     * verdict — an unclassified body, or an aggregator breaking on its own terms — and last a
+     * throwable outside the swap hierarchy altogether.
+     *
+     * Reads the error alone. [failurePriority] wraps this with the one adjustment that needs the
+     * rest of the candidate set, so rank a real failure list through that.
      */
     private fun swapFailurePriority(error: Throwable): Int =
         when (error) {
@@ -694,29 +798,64 @@ constructor(
             is SwapException.SmallSwapAmount,
             is SwapException.InsufficentSwapAmount,
             is SwapException.AmountCannotBeZero,
-            is SwapException.SameAssets -> 1
+            is SwapException.SameAssets -> PRIORITY_AMOUNT
             // A halt explains the whole outage, and every other provider routing through the
-            // paused protocol just stalls until its fetch times out. Ranked ahead of the rest of
-            // the transient group so the user reads "trading is halted, try later" rather than a
-            // sibling's timeout, which reads as "retry now" and never succeeds (#5656).
-            is SwapException.TradingHalted -> 2
+            // paused protocol just stalls until its fetch times out. It sits below the amount
+            // errors, which come from a pair that is routable right now, and above everything
+            // else, because no balance or route the user could change clears a paused pool.
+            is SwapException.TradingHalted -> PRIORITY_HALT
             is SwapException.InsufficientFunds,
-            is SwapException.HighPriceImpact,
+            is SwapException.HighPriceImpact -> PRIORITY_FIXABLE
+            is SwapException.SwapRouteNotAvailable,
+            is SwapException.SwapIsNotSupported -> PRIORITY_ROUTE
             is SwapException.RateLimitExceeded,
             is SwapException.TimeOut,
             is TimeoutCancellationException,
-            is SwapException.NetworkConnection,
-            is SwapKitError.Network,
+            is SwapException.NetworkConnection -> PRIORITY_TRANSIENT
+            is SwapException.UnkownSwapError -> PRIORITY_UNREAD
+            // Exhaustive over the sealed hierarchy on purpose: every typed verdict has to be
+            // placed, or a new variant would silently fall into the catch-all and lose to a
+            // sibling's timeout — which is the defect this ranking exists to fix.
+            is SwapKitError -> swapKitFailurePriority(error)
+            else -> PRIORITY_UNTYPED
+        }
+
+    /**
+     * Where each [SwapKitError] sits in the tiers [swapFailurePriority] defines. The aggregator
+     * reports a whole taxonomy of verdicts, and all of them reach this ranking: the quote path
+     * builds the transaction, so a `/v3/swap` code arrives while a sibling provider may still be
+     * stalling towards its timeout.
+     */
+    private fun swapKitFailurePriority(error: SwapKitError): Int =
+        when (error) {
+            // Wallet or recipient state the user can still change. A deviating quote joins them:
+            // it is the one failure that proves the pair *does* route — the price simply moved
+            // between the quote and the build — so "refresh" is truer than any route verdict.
             is SwapKitError.InsufficientBalance,
-            is SwapKitError.InsufficientAllowance -> 3
-            is SwapException.SwapRouteNotAvailable,
-            is SwapException.SwapIsNotSupported,
-            is SwapException.UnkownSwapError,
+            is SwapKitError.InsufficientAllowance,
+            is SwapKitError.QuoteDeviation,
+            is SwapKitError.InvalidDestinationAddress,
+            is SwapKitError.AddressScreening -> PRIORITY_FIXABLE
+            // Verdicts on the pair itself. UnableToBuildTransaction is surfaced as "this route is
+            // currently unavailable", and a blocked asset or an unusable source address is the
+            // same answer reached by another door: nothing on the form changes any of them.
             is SwapKitError.NoRoutes,
             is SwapKitError.SwapRouteNotFound,
             is SwapKitError.RouteFiltered,
-            is SwapKitError.ProviderNotEnabled -> 4
-            else -> 5
+            is SwapKitError.ProviderNotEnabled,
+            is SwapKitError.UnableToBuildTransaction,
+            is SwapKitError.BlackListAsset,
+            is SwapKitError.InvalidSourceAddress -> PRIORITY_ROUTE
+            is SwapKitError.Network -> PRIORITY_TRANSIENT
+            // The aggregator failed on its own terms — a rejected key, a payload this client
+            // cannot read or sign, a bare HTTP status. None of it reads as a verdict on the pair,
+            // so it stays below a sibling's timeout, whose "try again" is at least true.
+            is SwapKitError.ApiKeyMissing,
+            is SwapKitError.ApiKeyInvalid,
+            is SwapKitError.UnsupportedTxType,
+            is SwapKitError.MalformedAmount,
+            is SwapKitError.Decoding,
+            is SwapKitError.Server -> PRIORITY_UNREAD
         }
 
     private suspend fun fetchThorMayaQuote(
@@ -1406,6 +1545,21 @@ constructor(
         UiText.FormattedText(resId, emptyList())
 
     companion object {
+        // Failure-ranking tiers, lowest wins. Named so the two ranking functions cannot drift
+        // apart and so a tier's meaning survives a variant moving between them.
+        private const val PRIORITY_AMOUNT = 1
+        private const val PRIORITY_HALT = 2
+        private const val PRIORITY_FIXABLE = 3
+        private const val PRIORITY_ROUTE = 4
+        private const val PRIORITY_TRANSIENT = 5
+        /**
+         * Where a halt lands once an eligible aggregator has failed transiently — below the
+         * transient tier, so the retryable failure decides the copy. See [failurePriority].
+         */
+        private const val PRIORITY_HALT_DEMOTED = 6
+        private const val PRIORITY_UNREAD = 7
+        private const val PRIORITY_UNTYPED = 8
+
         // All aggregators charge the same base affiliate as [BASE_AFFILIATE_FEE_BPS]; derive them
         // from it so the displayed percentage ([formatAffiliatePercent]) can't silently go stale if
         // the base changes, and a provider that genuinely needs a different rate has to break the

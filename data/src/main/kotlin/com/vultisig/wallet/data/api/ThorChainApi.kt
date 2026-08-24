@@ -49,11 +49,13 @@ import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.retry
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -243,6 +245,32 @@ constructor(
 
         val response =
             httpClient.get("$THORNODE_BASE/thorchain/quote/swap") {
+                // Thornode reports a deterministic rejection — no pool for the pair, a paused
+                // pool, an unparseable asset — as a 500 carrying the reason in the body, which
+                // this method reads whatever the status. Under the shared policy those bodies
+                // were retried as if the node had faltered, and three exponential backoffs cost
+                // more than the caller's whole quote window, so the pair surfaced as a timeout
+                // the user could only retry. Only thornode's own verdict skips the retry; the
+                // gateway's 5xx, transport failures and back-pressure all still retry.
+                retry {
+                    maxRetries = 3
+                    retryOnExceptionIf { _, cause -> cause !is CancellationException }
+                    retryIf { _, retryResponse ->
+                        retryResponse.status == HttpStatusCode.TooManyRequests ||
+                            retryResponse.status == HttpStatusCode.RequestTimeout ||
+                            (retryResponse.status.value >= HTTP_SERVER_ERROR &&
+                                !retryResponse.isThornodeVerdict())
+                    }
+                    // A retry is only worth attempting inside the caller's 15s quote window, and
+                    // the client-wide 2 + 4 + 8s backoff does not fit in it — nor does an
+                    // upstream `Retry-After` measured in seconds. A short fixed delay lets a
+                    // blip self-heal while the window still belongs to the user.
+                    constantDelay(
+                        millis = RETRY_DELAY_MS,
+                        randomizationMs = RETRY_JITTER_MS,
+                        respectRetryAfterHeader = false,
+                    )
+                }
                 parameter("from_asset", request.fromAsset)
                 parameter("to_asset", request.toAsset)
                 parameter("amount", request.amount)
@@ -800,8 +828,25 @@ constructor(
             .bodyOrThrow<TcyStakersResponse>()
     }
 
+    /**
+     * True when a 5xx is thornode's own answer rather than the gateway's.
+     *
+     * The node sits behind `gateway.liquify.com`, so a 500 can come from either end, and only one
+     * of them is deterministic. Cosmos' gRPC gateway stamps every response it produces — including
+     * the rejections it reports as 500 — with the block height it answered at, and the proxy passes
+     * that header through (it even names it in `Access-Control-Expose-Headers`). Liquify's own
+     * failures are its edge speaking: `Server: fasthttp`, a `text/plain` body, no cosmos metadata.
+     * Verified live against the quote endpoint on 2026-08-22.
+     */
+    private fun HttpResponse.isThornodeVerdict(): Boolean =
+        headers[COSMOS_BLOCK_HEIGHT_HEADER] != null
+
     companion object {
         private const val THORNODE_BASE = "https://gateway.liquify.com/chain/thorchain_api"
+        private const val COSMOS_BLOCK_HEIGHT_HEADER = "Grpc-Metadata-X-Cosmos-Block-Height"
+        private const val HTTP_SERVER_ERROR = 500
+        private const val RETRY_DELAY_MS = 300L
+        private const val RETRY_JITTER_MS = 100L
         private const val MIDGARD_URL = "https://gateway.liquify.com/chain/thorchain_midgard/v2"
         private const val DEFAULT_LP_PERIOD = "30d"
         private const val THORCHAIN_RPC_URL = "https://gateway.liquify.com/chain/thorchain_rpc"

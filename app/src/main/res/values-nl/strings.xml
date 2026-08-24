@@ -521,10 +521,11 @@
     <!-- Kamino Earn -->
     <string name="kamino_earn_title">Kamino Earn</string>
     <string name="kamino_earn_curated_by">Samengesteld door %1$s</string>
-    <string name="kamino_earn_deposited">Gestort</string>
-    <string name="kamino_earn_apy_30d">APY (30 d)</string>
-    <string name="kamino_earn_pnl">Winst &amp; verlies</string>
-    <string name="kamino_earn_lost">Verloren</string>
+    <string name="kamino_earn_deposited">Gestort: %1$s</string>
+    <string name="kamino_earn_apy">APY</string>
+    <string name="kamino_earn_earned">Verdiend: %1$s</string>
+    <string name="kamino_earn_lost">Verloren: %1$s</string>
+    <string name="kamino_earn_protocol">Kamino</string>
     <string name="kamino_earn_load_failed">Kan deze vaults nu niet verversen</string>
     <string name="kamino_earn_risk_conservative">Conservatief</string>
     <string name="kamino_earn_risk_private_credit">Privaat krediet</string>
@@ -832,7 +833,7 @@
     <string name="close_sheet_content_description">Sluiten</string>
     <string name="price_chart_retry_hint">Grafiek kon niet worden geladen. Tik om opnieuw te proberen.</string>
     <string name="token_details_market_stats_title">Marktstatistieken</string>
-    <string name="token_details_price_extremes_title">Prijsuitersten</string>
+    <string name="token_details_price_extremes_title">Prijsbereik</string>
     <string name="token_details_token_info_title">Tokeninformatie</string>
     <string name="token_details_market_cap">Marktkapitalisatie</string>
     <string name="token_details_market_cap_rank">Rang</string>
@@ -1206,6 +1207,15 @@
     <string name="onboarding_desc_page_1_part_2">Vault-shares,</string>
     <string name="verify_swap_youre_swapping_title">Je wisselt</string>
     <string name="keysign_app_version_text">Versie %1$s (%2$s)</string>
+    <string name="lp_pending_title">Wachten op bijbehorende %1$s-storting</string>
+    <string name="lp_pending_subtitle">THORChain houdt deze storting vast tot de bijbehorende kant binnenkomt en betaalt hem anders terug.</string>
+    <string name="lp_pending_deposited">Gestort</string>
+    <string name="lp_pending_from">Van</string>
+    <string name="lp_pending_refunds_in">Terugbetaling over</string>
+    <string name="lp_pending_duration_days_hours_format">%1$dd %2$du</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$du %2$dm</string>
+    <string name="lp_pending_refund_time_unknown">Onbekend</string>
+    <string name="lp_pending_complete_deposit">Storting voltooien</string>
     <string name="lp_position">Positie</string>
     <string name="add">Toevoegen</string>
     <string name="remove">Verwijderen</string>
@@ -1374,7 +1384,7 @@
     <string name="transaction_history_detail_fee">Kosten</string>
     <string name="transaction_history_detail_network">Netwerk</string>
     <string name="transaction_history_detail_provider">Provider</string>
-    <string name="transaction_history_view_on_explorer">Bekijk op Explorer</string>
+    <string name="view_on_explorer">Bekijk op Explorer</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Voer uw herstelzin in</string>

@@ -70,10 +70,11 @@
     <!-- Kamino Earn -->
     <string name="kamino_earn_title">Kamino Earn</string>
     <string name="kamino_earn_curated_by">Curated by %1$s</string>
-    <string name="kamino_earn_deposited">Deposited</string>
-    <string name="kamino_earn_apy_30d">APY (30d)</string>
-    <string name="kamino_earn_pnl">Profit &amp; Loss</string>
-    <string name="kamino_earn_lost">Lost</string>
+    <string name="kamino_earn_deposited">Deposited: %1$s</string>
+    <string name="kamino_earn_apy">APY</string>
+    <string name="kamino_earn_earned">Earned: %1$s</string>
+    <string name="kamino_earn_lost">Lost: %1$s</string>
+    <string name="kamino_earn_protocol">Kamino</string>
     <string name="kamino_earn_load_failed">Couldn\'t refresh these vaults just now</string>
     <string name="kamino_earn_risk_conservative">Conservative</string>
     <string name="kamino_earn_risk_private_credit">Private Credit</string>
@@ -1161,7 +1162,7 @@
     <string name="close_sheet_content_description">Close</string>
     <string name="price_chart_retry_hint">Couldn\'t load chart. Tap to retry.</string>
     <string name="token_details_market_stats_title">Market Stats</string>
-    <string name="token_details_price_extremes_title">Price Extremes</string>
+    <string name="token_details_price_extremes_title">Price Range</string>
     <string name="token_details_token_info_title">Token Info</string>
     <string name="token_details_market_cap">Market Cap</string>
     <string name="token_details_market_cap_rank">Rank</string>
@@ -1272,6 +1273,15 @@
     <string name="bond_node_state_active">Active</string>
     <string name="bond_node_state_disabled">Disabled</string>
     <string name="bond_node_state_unknown">Unknown</string>
+    <string name="lp_pending_title">Waiting for matching %1$s deposit</string>
+    <string name="lp_pending_subtitle">THORChain holds this deposit until the matching side arrives, then refunds it if it doesn\'t.</string>
+    <string name="lp_pending_deposited">Deposited</string>
+    <string name="lp_pending_from">From</string>
+    <string name="lp_pending_refunds_in">Refunds in</string>
+    <string name="lp_pending_duration_days_hours_format">%1$dd %2$dh</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$dh %2$dm</string>
+    <string name="lp_pending_refund_time_unknown">Unknown</string>
+    <string name="lp_pending_complete_deposit">Complete deposit</string>
     <string name="lp_position">Position</string>
     <string name="add">Add</string>
     <string name="remove">Remove</string>
@@ -1465,7 +1475,7 @@
     <string name="transaction_history_detail_fee">Fee</string>
     <string name="transaction_history_detail_network">Network</string>
     <string name="transaction_history_detail_provider">Provider</string>
-    <string name="transaction_history_view_on_explorer">View on Explorer</string>
+    <string name="view_on_explorer">View on Explorer</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Enter your seed phrase</string>
