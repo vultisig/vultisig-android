@@ -26,6 +26,13 @@ class SwapKitQuoteDecodingTest {
         explicitNulls = false
     }
 
+    // Mirrors the production Json provider (encodeDefaults + explicitNulls=false) so encoding
+    // tests exercise the real wire shape — explicitNulls=false is what drops the null slippage.
+    private val encodingJson = Json {
+        encodeDefaults = true
+        explicitNulls = false
+    }
+
     @Test
     fun `decodes v3 quote response with chainflip route`() {
         val payload =
@@ -240,14 +247,7 @@ class SwapKitQuoteDecodingTest {
                 destinationAddress = "0xRecipient",
             )
 
-        // Mirror the production Json provider (encodeDefaults + explicitNulls=false) so the test
-        // exercises the real wire shape — explicitNulls=false is what drops the null slippage.
-        val encoded =
-            Json {
-                    encodeDefaults = true
-                    explicitNulls = false
-                }
-                .encodeToString(request)
+        val encoded = encodingJson.encodeToString(request)
         val body = Json.parseToJsonElement(encoded).jsonObject
 
         // Affiliate identifier is server-side via the partner dashboard — no `affiliate` key on the
@@ -266,12 +266,7 @@ class SwapKitQuoteDecodingTest {
         val request =
             SwapKitQuoteRequest(sellAsset = "ETH.ETH", buyAsset = "ETH.USDC", sellAmount = "1")
 
-        val encoded =
-            Json {
-                    encodeDefaults = true
-                    explicitNulls = false
-                }
-                .encodeToString(request)
+        val encoded = encodingJson.encodeToString(request)
         val body = Json.parseToJsonElement(encoded).jsonObject
 
         assertFalse(body.containsKey("sourceAddress"))

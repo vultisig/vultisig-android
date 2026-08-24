@@ -1503,10 +1503,9 @@ internal class SwapKitQuoteSourceTest {
             assertEquals(BigInteger("5000000000"), quote.data.fromAmount)
             // txPayload is the canonical transfer array — round-trips to the same address + amount.
             val decoded =
-                Json { ignoreUnknownKeys = true }
-                    .decodeFromString<List<SwapKitTonTransfer>>(
-                        quote.data.txPayload.decodeToString()
-                    )
+                json.decodeFromString<List<SwapKitTonTransfer>>(
+                    quote.data.txPayload.decodeToString()
+                )
             assertEquals(1, decoded.size)
             assertEquals("EQvault", decoded[0].address)
             assertEquals("5000000000", decoded[0].amount)
@@ -1541,10 +1540,9 @@ internal class SwapKitQuoteSourceTest {
             // txPayload.
             assertEquals("EQvault1", quote.data.targetAddress)
             val decoded =
-                Json { ignoreUnknownKeys = true }
-                    .decodeFromString<List<SwapKitTonTransfer>>(
-                        quote.data.txPayload.decodeToString()
-                    )
+                json.decodeFromString<List<SwapKitTonTransfer>>(
+                    quote.data.txPayload.decodeToString()
+                )
             assertEquals(2, decoded.size)
             assertEquals("EQvault2", decoded[1].address)
             assertEquals("500000000", decoded[1].amount)
