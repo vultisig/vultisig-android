@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.repositories.AdvanceGasUiRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.RecipientValidity
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
@@ -447,17 +448,23 @@ internal class SendFormGraph(
             }
         }
         scope.launch {
-            addressManager.invalidAddress.collect { invalid ->
+            addressManager.addressError.collect { error ->
                 uiState.update {
                     it.copy(
                         dstAddressError =
-                            if (invalid) {
-                                UiText.StringResource(
-                                    com.vultisig.wallet.R.string
-                                        .send_error_invalid_recipient_address
-                                )
-                            } else {
-                                null
+                            when (error) {
+                                RecipientValidity.InvalidForChain ->
+                                    UiText.StringResource(
+                                        com.vultisig.wallet.R.string
+                                            .send_error_invalid_recipient_address
+                                    )
+                                RecipientValidity.NotAWalletAddress ->
+                                    UiText.StringResource(
+                                        com.vultisig.wallet.R.string
+                                            .error_recipient_not_a_wallet_address
+                                    )
+                                RecipientValidity.Valid,
+                                null -> null
                             }
                     )
                 }

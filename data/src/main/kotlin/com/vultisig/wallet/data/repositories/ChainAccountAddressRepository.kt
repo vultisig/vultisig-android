@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
 import com.vultisig.wallet.data.chains.helpers.PublicKeyHelper
 import com.vultisig.wallet.data.crypto.CardanoUtils
 import com.vultisig.wallet.data.crypto.QbtcHelper
+import com.vultisig.wallet.data.crypto.SolanaProgramDerivedAddress
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainPublicKey
 import com.vultisig.wallet.data.models.Coin
@@ -30,6 +31,29 @@ interface ChainAccountAddressRepository {
     suspend fun getAddress(coin: Coin, vault: Vault): Pair<String, String>
 
     fun isValid(chain: Chain, address: String): Boolean
+
+    /**
+     * Whether [address] can be handed funds on [chain], and why not when it can't.
+     *
+     * Stricter than [isValid] on purpose, and separate from it on purpose: [isValid] also screens
+     * contract and mint addresses, which are routinely program-derived, so the recipient rule
+     * cannot live there without rejecting them.
+     */
+    fun validateRecipient(chain: Chain, address: String): RecipientValidity
+}
+
+/** The verdict [ChainAccountAddressRepository.validateRecipient] returns. */
+enum class RecipientValidity {
+    Valid,
+
+    /** Not an address on this chain at all. */
+    InvalidForChain,
+
+    /**
+     * A well-formed address that no user holds a key to — on Solana, an off-curve address: a token
+     * account or a program address. Sending to one strands the funds.
+     */
+    NotAWalletAddress,
 }
 
 private const val EDDSA_PUB_KEY_HEX_LENGTH = 64
@@ -138,6 +162,14 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
             Chain.Bittensor -> AnyAddress.isValidSS58(address, CoinType.POLKADOT, 42)
 
             else -> chain.coinType.validate(address)
+        }
+
+    override fun validateRecipient(chain: Chain, address: String): RecipientValidity =
+        when {
+            !isValid(chain, address) -> RecipientValidity.InvalidForChain
+            chain == Chain.Solana && !SolanaProgramDerivedAddress.isWalletAddress(address) ->
+                RecipientValidity.NotAWalletAddress
+            else -> RecipientValidity.Valid
         }
 
     /**

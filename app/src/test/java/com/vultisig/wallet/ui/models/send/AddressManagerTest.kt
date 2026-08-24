@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.RecipientValidity
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import io.kotest.assertions.withClue
 import io.kotest.matchers.booleans.shouldBeFalse
@@ -56,6 +57,17 @@ internal class AddressManagerTest {
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(mainDispatcher)
+        // The manager validates through validateRecipient, which only parts ways with isValid for
+        // an off-curve Solana recipient; the cases below are all EVM and XRP, so deriving one from
+        // the other here keeps each test's own isValid stub as the thing that decides the outcome.
+        every { chainAccountAddressRepository.validateRecipient(any(), any()) } answers
+            {
+                if (chainAccountAddressRepository.isValid(firstArg(), secondArg())) {
+                    RecipientValidity.Valid
+                } else {
+                    RecipientValidity.InvalidForChain
+                }
+            }
     }
 
     @AfterEach
@@ -276,7 +288,7 @@ internal class AddressManagerTest {
             advanceTimeBy(400)
             advanceUntilIdle()
 
-            manager.invalidAddress.value.shouldBeTrue()
+            manager.addressError.value shouldBe RecipientValidity.InvalidForChain
             manager.resolvedDstAddress.value.shouldBeNull()
         }
 
@@ -307,9 +319,65 @@ internal class AddressManagerTest {
                 advanceUntilIdle()
 
                 withClue("${coin.chain} should flag $badInput as invalid") {
-                    manager.invalidAddress.value.shouldBeTrue()
+                    manager.addressError.value shouldBe RecipientValidity.InvalidForChain
                 }
             }
+        }
+
+    @Test
+    fun `a solana token account is rejected as a recipient and never sent to the resolver`() =
+        runTest(mainDispatcher) {
+            // An associated token account is a well-formed Solana address, so the resolver has no
+            // name to find; an SPL send to it would create an ATA-of-an-ATA nobody controls.
+            val tokenAccount = "GppmkdEmuqNgS7uY5SSN3gXEamJrcPG9197wBdQ37NLc"
+            every {
+                chainAccountAddressRepository.validateRecipient(Chain.Solana, tokenAccount)
+            } returns RecipientValidity.NotAWalletAddress
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = token(Chain.Solana, "SOL")
+
+            val emissions = collectValidations(manager)
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(tokenAccount)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            manager.addressError.value shouldBe RecipientValidity.NotAWalletAddress
+            manager.resolvedDstAddress.value.shouldBeNull()
+            emissions.shouldBeEmpty()
+            coVerify(exactly = 0) { addressParserRepository.resolveName(tokenAccount, any()) }
+        }
+
+    @Test
+    fun `a solana wallet address that follows a rejected token account clears the error`() =
+        runTest(mainDispatcher) {
+            val tokenAccount = "GppmkdEmuqNgS7uY5SSN3gXEamJrcPG9197wBdQ37NLc"
+            val wallet = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+            every {
+                chainAccountAddressRepository.validateRecipient(Chain.Solana, tokenAccount)
+            } returns RecipientValidity.NotAWalletAddress
+            every { chainAccountAddressRepository.isValid(Chain.Solana, wallet) } returns true
+
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = token(Chain.Solana, "SOL")
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(tokenAccount)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            manager.addressError.value shouldBe RecipientValidity.NotAWalletAddress
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(wallet)
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            manager.addressError.value.shouldBeNull()
+            manager.resolvedDstAddress.value shouldBe wallet
         }
 
     @Test
@@ -328,14 +396,14 @@ internal class AddressManagerTest {
             Snapshot.sendApplyNotifications()
             advanceTimeBy(400)
             advanceUntilIdle()
-            manager.invalidAddress.value.shouldBeTrue()
+            manager.addressError.value shouldBe RecipientValidity.InvalidForChain
 
             addressFieldState.setTextAndPlaceCursorAtEnd("0xabc")
             Snapshot.sendApplyNotifications()
             advanceTimeBy(400)
             advanceUntilIdle()
 
-            manager.invalidAddress.value.shouldBeFalse()
+            manager.addressError.value.shouldBeNull()
             manager.resolvedDstAddress.value shouldBe "0xabc"
         }
 
@@ -354,14 +422,14 @@ internal class AddressManagerTest {
             Snapshot.sendApplyNotifications()
             advanceTimeBy(400)
             advanceUntilIdle()
-            manager.invalidAddress.value.shouldBeTrue()
+            manager.addressError.value shouldBe RecipientValidity.InvalidForChain
 
             addressFieldState.setTextAndPlaceCursorAtEnd("")
             Snapshot.sendApplyNotifications()
             advanceTimeBy(400)
             advanceUntilIdle()
 
-            manager.invalidAddress.value.shouldBeFalse()
+            manager.addressError.value.shouldBeNull()
         }
 
     @Test
@@ -381,7 +449,7 @@ internal class AddressManagerTest {
             advanceTimeBy(400)
             advanceUntilIdle()
 
-            manager.invalidAddress.value.shouldBeTrue()
+            manager.addressError.value shouldBe RecipientValidity.InvalidForChain
         }
 
     private fun TestScope.collectValidations(manager: AddressManager): MutableList<Unit> {

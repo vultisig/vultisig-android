@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.RecipientValidity
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
@@ -61,6 +62,17 @@ internal class AddressEntryViewModelTest {
         requestQrScan = mockk(relaxed = true)
         addressBookRepository = mockk(relaxed = true)
         chainAccountAddressRepository = mockk(relaxed = true)
+        // The screen validates through validateRecipient, which only parts ways with isValid for
+        // an off-curve Solana recipient; deriving one from the other keeps each test's own isValid
+        // stub as the thing that decides the outcome.
+        every { chainAccountAddressRepository.validateRecipient(any(), any()) } answers
+            {
+                if (chainAccountAddressRepository.isValid(firstArg(), secondArg())) {
+                    RecipientValidity.Valid
+                } else {
+                    RecipientValidity.InvalidForChain
+                }
+            }
         orderRepository = mockk(relaxed = true)
         requestResultRepository = mockk(relaxed = true)
     }

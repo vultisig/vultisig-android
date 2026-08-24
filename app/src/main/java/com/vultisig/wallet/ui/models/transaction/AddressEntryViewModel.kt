@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.RecipientValidity
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
@@ -265,12 +266,18 @@ constructor(
         }
     }
 
-    private fun validateAddress(chain: Chain, address: String): UiText? =
-        if (address.isBlank() || !chainAccountAddressRepository.isValid(chain, address)) {
-            UiText.FormattedText(R.string.address_bookmark_error_invalid_address, listOf(chain))
-        } else {
-            null
+    private fun validateAddress(chain: Chain, address: String): UiText? {
+        if (address.isBlank()) return invalidForChain(chain)
+        return when (chainAccountAddressRepository.validateRecipient(chain, address)) {
+            RecipientValidity.Valid -> null
+            RecipientValidity.InvalidForChain -> invalidForChain(chain)
+            RecipientValidity.NotAWalletAddress ->
+                UiText.StringResource(R.string.error_recipient_not_a_wallet_address)
         }
+    }
+
+    private fun invalidForChain(chain: Chain): UiText =
+        UiText.FormattedText(R.string.address_bookmark_error_invalid_address, listOf(chain))
 
     fun scanAddress() {
         viewModelScope.launch {

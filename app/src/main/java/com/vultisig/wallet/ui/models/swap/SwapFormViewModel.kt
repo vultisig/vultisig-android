@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
+import com.vultisig.wallet.data.repositories.RecipientValidity
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
@@ -646,10 +647,12 @@ constructor(
     private fun externalRecipientError(): UiText? {
         val address = externalRecipient.value ?: return null
         val dstChain = selectedDst.value?.account?.token?.chain ?: return null
-        return if (chainAccountAddressRepository.isValid(dstChain, address)) {
-            null
-        } else {
-            UiText.StringResource(R.string.swap_external_recipient_invalid)
+        return when (chainAccountAddressRepository.validateRecipient(dstChain, address)) {
+            RecipientValidity.Valid -> null
+            RecipientValidity.InvalidForChain ->
+                UiText.StringResource(R.string.swap_external_recipient_invalid)
+            RecipientValidity.NotAWalletAddress ->
+                UiText.StringResource(R.string.error_recipient_not_a_wallet_address)
         }
     }
 

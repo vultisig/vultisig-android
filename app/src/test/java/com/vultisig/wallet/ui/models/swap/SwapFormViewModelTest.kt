@@ -28,6 +28,7 @@ import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
+import com.vultisig.wallet.data.repositories.RecipientValidity
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
@@ -172,6 +173,17 @@ internal class SwapFormViewModelTest {
         // are unaffected. The external-recipient validation tests override this per case.
         chainAccountAddressRepository = mockk(relaxed = true)
         every { chainAccountAddressRepository.isValid(any(), any()) } returns true
+        // The form validates through validateRecipient, which only parts ways with isValid for an
+        // off-curve Solana recipient; deriving one from the other keeps each test's own isValid
+        // stub as the thing that decides the outcome.
+        every { chainAccountAddressRepository.validateRecipient(any(), any()) } answers
+            {
+                if (chainAccountAddressRepository.isValid(firstArg(), secondArg())) {
+                    RecipientValidity.Valid
+                } else {
+                    RecipientValidity.InvalidForChain
+                }
+            }
 
         // Limit-order collaborators. The flag is off by default, so the limit form stays inert for
         // every test that doesn't opt into it.
@@ -3681,6 +3693,26 @@ internal class SwapFormViewModelTest {
             io.mockk.verify {
                 chainAccountAddressRepository.isValid(Chain.Bitcoin, "not-a-valid-address")
             }
+        }
+
+    @Test
+    fun `a solana token account as external recipient gets its own error`() =
+        runTest(mainDispatcher) {
+            val tokenAccount = "GppmkdEmuqNgS7uY5SSN3gXEamJrcPG9197wBdQ37NLc"
+            every { chainAccountAddressRepository.validateRecipient(any(), tokenAccount) } returns
+                RecipientValidity.NotAWalletAddress
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.setExternalRecipient(tokenAccount)
+
+            // Not the generic "invalid recipient": the address is well-formed, it just isn't a
+            // wallet, and telling the user which one it is is the difference between retyping the
+            // same account and going to find the owner's address.
+            assertEquals(
+                UiText.StringResource(R.string.error_recipient_not_a_wallet_address),
+                vm.uiState.value.externalRecipientError,
+            )
         }
 
     @Test
