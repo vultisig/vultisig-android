@@ -223,16 +223,8 @@ constructor(
             }
         }
 
-        validateAddress(chain, address)?.let {
-            state.update {
-                it.copy(
-                    addressError =
-                        UiText.FormattedText(
-                            R.string.address_bookmark_error_invalid_address,
-                            listOf(chain),
-                        )
-                )
-            }
+        validateAddress(chain, address)?.let { addressError ->
+            state.update { it.copy(addressError = addressError) }
             return
         }
 
