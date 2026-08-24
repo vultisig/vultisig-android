@@ -283,12 +283,14 @@ object RippleHelper {
     }
 
     /**
-     * Rejects a `Payment` that sets [TF_PARTIAL_PAYMENT] without a `DeliverMin` floor. Such a
-     * transaction is approved against the `Amount` on the confirmation screen, yet the ledger is
-     * free to deliver an arbitrarily smaller value while still spending up to `SendMax` — there is
-     * nothing left for a co-signer to meaningfully verify, so it fails closed instead. With a
-     * `DeliverMin` present the delivery has a floor the co-signer can see and judge, so it is
-     * allowed through and flagged on the verify screen.
+     * Rejects a `Payment` that sets [TF_PARTIAL_PAYMENT] without a positive `DeliverMin` floor.
+     * Such a transaction is approved against the `Amount` on the confirmation screen, yet the
+     * ledger is free to deliver an arbitrarily smaller value while still spending up to `SendMax` —
+     * there is nothing left for a co-signer to meaningfully verify, so it fails closed instead.
+     * With a positive `DeliverMin` the delivery has a floor the co-signer can see and judge, so it
+     * is allowed through and flagged on the verify screen. A `DeliverMin` that is present but does
+     * not parse to a positive amount (`"0"`, `"-1"`, `"abc"`) is no floor, and is refused as if it
+     * were absent.
      *
      * A `Flags` we cannot read — a non-integer, or an explicit null — is refused for the same
      * reason: the bit cannot be ruled out. Scoped to `Payment` because other types reuse the bit
@@ -302,9 +304,9 @@ object RippleHelper {
                 ?: error("SignRipple Payment has an unreadable Flags; refusing to sign")
         if (flags and TF_PARTIAL_PAYMENT == 0L) return
 
-        require(obj.hasAmount("DeliverMin")) {
-            "SignRipple Payment sets tfPartialPayment without a DeliverMin floor; it could deliver " +
-                "far less than the Amount shown"
+        require(obj.hasPositiveAmount("DeliverMin")) {
+            "SignRipple Payment sets tfPartialPayment without a positive DeliverMin floor; it " +
+                "could deliver far less than the Amount shown"
         }
     }
 

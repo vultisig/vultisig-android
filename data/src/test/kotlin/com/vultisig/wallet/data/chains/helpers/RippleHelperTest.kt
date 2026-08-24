@@ -103,6 +103,8 @@ class RippleHelperTest {
         }
     }
 
+    private val usdIssuer = "rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"
+
     private fun paymentWith(extraFields: String) =
         """{"TransactionType":"Payment","Account":"$vaultXrpAddress",""" +
             """"Destination":"rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY","Amount":"1500000",""" +
@@ -142,16 +144,55 @@ class RippleHelperTest {
     }
 
     @Test
-    fun `verifyDappTransaction rejects a partial Payment whose DeliverMin carries no value`() {
-        // A DeliverMin that is present but empty is no floor at all.
-        listOf(""""DeliverMin":"   """", """"DeliverMin":{"currency":"USD"}""").forEach { floor ->
-            assertThrows(IllegalArgumentException::class.java) {
+    fun `verifyDappTransaction rejects a partial Payment whose DeliverMin is not a positive amount`() {
+        // A DeliverMin only bounds the delivery if it parses to a positive amount. Zero, negative
+        // and unreadable values read as a floor on the verify screen while guaranteeing nothing,
+        // so they are refused exactly as an absent DeliverMin is.
+        listOf(
+                """"DeliverMin":"   """",
+                """"DeliverMin":null""",
+                """"DeliverMin":"0"""",
+                """"DeliverMin":"-1"""",
+                """"DeliverMin":"abc"""",
+                // Native amounts are an integer count of drops; a fractional one the ledger would
+                // reject anyway cannot be read as a floor.
+                """"DeliverMin":"1.5"""",
+                // Drops ride the wire string-encoded; a bare number is not a well-formed amount.
+                """"DeliverMin":1400000""",
+                """"DeliverMin":{"currency":"USD"}""",
+                """"DeliverMin":{"currency":"USD","issuer":"$usdIssuer","value":"0"}""",
+                """"DeliverMin":{"currency":"USD","issuer":"$usdIssuer","value":"-1"}""",
+                """"DeliverMin":{"currency":"USD","issuer":"$usdIssuer","value":"abc"}""",
+                // An issued amount naming no issuer names no obligation, so it floors nothing.
+                """"DeliverMin":{"value":"25"}""",
+                """"DeliverMin":{"currency":"USD","value":"25"}""",
+            )
+            .forEach { floor ->
+                val ex =
+                    assertThrows(IllegalArgumentException::class.java) {
+                        RippleHelper.verifyDappTransaction(
+                            paymentWith(""""Flags":131072,$floor"""),
+                            vaultXrpAddress,
+                        )
+                    }
+                assertEquals(true, ex.message?.contains("DeliverMin"), floor)
+            }
+    }
+
+    @Test
+    fun `verifyDappTransaction accepts the smallest positive DeliverMin floors`() {
+        // One drop is a poor floor but a real one, and it surfaces as a Deliver min row the
+        // co-signer can judge; sub-unit issued values must not be rounded away either.
+        listOf(
+                """"DeliverMin":"1"""",
+                """"DeliverMin":{"currency":"USD","issuer":"$usdIssuer","value":"0.000001"}""",
+            )
+            .forEach { floor ->
                 RippleHelper.verifyDappTransaction(
                     paymentWith(""""Flags":131072,$floor"""),
                     vaultXrpAddress,
                 )
             }
-        }
     }
 
     @Test

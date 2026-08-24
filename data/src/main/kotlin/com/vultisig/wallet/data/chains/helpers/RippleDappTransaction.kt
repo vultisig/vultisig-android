@@ -29,17 +29,36 @@ internal fun JsonObject.flagsOrNull(): Long? =
     (this["Flags"] as? JsonPrimitive)?.contentOrNull?.toLongOrNull()
 
 /**
- * True when [key] carries a usable amount — a non-blank drops string, or an issued-currency object
- * with a non-blank `value`.
+ * The value of [key] when it is a JSON *string*, else null. XRPL encodes every amount as a string.
  */
-internal fun JsonObject.hasAmount(key: String): Boolean =
+private fun JsonObject.stringOrNull(key: String): String? =
+    (this[key] as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim()
+
+/**
+ * True when [key] carries a floor a co-signer can actually rely on: a well-formed, strictly
+ * positive XRPL amount. Native amounts are an integer count of drops; issued amounts are an object
+ * carrying `currency`, `issuer` and a decimal `value`, all string-encoded.
+ *
+ * Anything else is no floor at all, and is deliberately not distinguished from an absent field: a
+ * `DeliverMin` of `"0"`, `"-1"`, `"abc"` or `{"value":"25"}` with no issuer would read as a bound
+ * on the verify screen while guaranteeing nothing.
+ *
+ * Kept in step with `isPositiveRippleAmount` in the extension's `sanitizeRippleDappTx`, which is
+ * the initiator-side half of the same defense.
+ */
+internal fun JsonObject.hasPositiveAmount(key: String): Boolean =
     when (val element = this[key]) {
         null,
         is JsonNull -> false
-        is JsonPrimitive -> !element.contentOrNull.isNullOrBlank()
+        is JsonPrimitive -> {
+            val drops = element.takeIf { it.isString }?.content?.trim()?.toBigIntegerOrNull()
+            drops != null && drops > BigInteger.ZERO
+        }
         is JsonObject -> {
-            val value = (element["value"] as? JsonPrimitive)?.contentOrNull
-            !value.isNullOrBlank()
+            val isIssuedAmount =
+                element.stringOrNull("currency") != null && element.stringOrNull("issuer") != null
+            val value = element.stringOrNull("value")?.toBigDecimalOrNull()
+            isIssuedAmount && value != null && value > BigDecimal.ZERO
         }
         else -> false
     }

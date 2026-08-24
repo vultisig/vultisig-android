@@ -1242,7 +1242,7 @@
     <string name="ripple_field_limit_issuer">Emittente limite</string>
     <string name="ripple_field_flags">Flags</string>
     <string name="ripple_field_paths">Percorsi di pagamento</string>
-    <string name="ripple_partial_payment_warning">Pagamento parziale: la quantità mostrata è un massimo, non una garanzia. Potrebbe essere consegnato meno.</string>
+    <string name="ripple_partial_payment_warning">Pagamento parziale: l\'importo mostrato è un massimo, non una garanzia. Potrebbe essere consegnato un importo inferiore.</string>
     <string name="sui_sender">Da</string>
     <string name="sui_gas_budget">Budget gas: %1$s SUI</string>
     <string name="sui_gas_price">Prezzo del gas: %1$s MIST</string>
