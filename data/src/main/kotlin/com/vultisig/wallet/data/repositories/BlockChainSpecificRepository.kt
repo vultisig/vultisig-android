@@ -34,6 +34,8 @@ import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
 import com.vultisig.wallet.data.crypto.SuiHelper
+import com.vultisig.wallet.data.crypto.ton.TonAddressFlags
+import com.vultisig.wallet.data.crypto.ton.TonBounceability
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
@@ -593,13 +595,26 @@ constructor(
                 coroutineScope {
                     val sequenceNumberDeferred = async { tonApi.getSeqno(address) }
                     val isBounceable = async {
+                        // A swap deposit address is a router / escrow contract, and the swap path
+                        // hands us no dstAddress to read a flag off (SwapTransactionBuilder calls
+                        // getSpecificAndUtxo without one; TON SwapKit then signs through the plain
+                        // TonHelper transfer path). A message such a contract rejects — an expired
+                        // quote, a paused pool — has to bounce back instead of being absorbed.
+                        if (isSwap) return@async true
+
                         if (dstAddress == null) return@async false
 
+                        // An undeployed wallet cannot accept a bounceable message; it would return
+                        // the funds and the transfer would simply fail.
                         val isUninitialized =
                             tonApi.getWalletState(dstAddress) == TON_WALLET_STATE_UNINITIALIZED
                         if (isUninitialized) return@async false
 
-                        dstAddress.startsWith("E")
+                        // Raw `0:hex` destinations declare no bounceability, so they default to
+                        // bounceable — the safe side for a contract. Only an explicit `UQ…` opts
+                        // out.
+                        TonAddressFlags.bounceabilityOf(dstAddress) !=
+                            TonBounceability.NON_BOUNCEABLE
                     }
                     val (destinationActive, jettonsAddress) =
                         if (!token.isNativeToken) {
