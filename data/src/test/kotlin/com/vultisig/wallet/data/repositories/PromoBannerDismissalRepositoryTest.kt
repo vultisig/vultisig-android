@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import com.vultisig.wallet.data.sources.AppDataStore
 import io.kotest.matchers.shouldBe
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,8 +15,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**
- * Covers the global, TTL-based dismissal model (#5064): a dismissal persists across reads, is keyed
- * per banner (so banners are independent), and lapses once the banner's TTL elapses.
+ * Covers the global dismissal model (#5064, #5669): a dismissal persists across reads, is keyed per
+ * banner (so banners are independent), and either lapses once the banner's TTL elapses or — under a
+ * permanent policy — never does.
  */
 internal class PromoBannerDismissalRepositoryTest {
 
@@ -42,7 +44,7 @@ internal class PromoBannerDismissalRepositoryTest {
         repo.isDismissed(PromoBanner.BuyVultSwap).first() shouldBe true
 
         // One millisecond before the TTL elapses it is still hidden.
-        now += PromoBanner.BuyVultSwap.ttl.inWholeMilliseconds - 1
+        now += ttlOf(PromoBanner.BuyVultSwap) - 1
         repo.isDismissed(PromoBanner.BuyVultSwap).first() shouldBe true
     }
 
@@ -50,8 +52,7 @@ internal class PromoBannerDismissalRepositoryTest {
     fun `a dismissal lapses once the TTL elapses`() = runTest {
         repo.dismiss(PromoBanner.FollowXVultisig)
 
-        now +=
-            PromoBanner.FollowXVultisig.ttl.inWholeMilliseconds + 1.milliseconds.inWholeMilliseconds
+        now += ttlOf(PromoBanner.FollowXVultisig) + 1.milliseconds.inWholeMilliseconds
 
         repo.isDismissed(PromoBanner.FollowXVultisig).first() shouldBe false
     }
@@ -63,6 +64,38 @@ internal class PromoBannerDismissalRepositoryTest {
         repo.isDismissed(PromoBanner.BuyVultSwap).first() shouldBe true
         repo.isDismissed(PromoBanner.FollowXVultisig).first() shouldBe false
         repo.isDismissed(PromoBanner.UpgradeVaultDkls).first() shouldBe false
+    }
+
+    @Test
+    fun `a permanent dismissal outlasts any TTL`() = runTest {
+        repo.dismiss(PromoBanner.BuyVultSwap)
+
+        now += 3650.days.inWholeMilliseconds
+
+        repo.isDismissed(PromoBanner.BuyVultSwap).first() shouldBe false
+        repo.isDismissed(PromoBanner.BuyVultSwap, DismissPolicy.Permanent).first() shouldBe true
+    }
+
+    @Test
+    fun `a permanent policy still shows a banner that was never dismissed`() = runTest {
+        repo.isDismissed(PromoBanner.BuyVultSwap, DismissPolicy.Permanent).first() shouldBe false
+    }
+
+    @Test
+    fun `a permanent policy on one banner leaves the others on their TTL`() = runTest {
+        repo.dismiss(PromoBanner.BuyVultSwap)
+        repo.dismiss(PromoBanner.FollowXVultisig)
+
+        now += ttlOf(PromoBanner.FollowXVultisig) + 1.milliseconds.inWholeMilliseconds
+
+        repo.isDismissed(PromoBanner.BuyVultSwap, DismissPolicy.Permanent).first() shouldBe true
+        repo.isDismissed(PromoBanner.FollowXVultisig).first() shouldBe false
+    }
+
+    private fun ttlOf(banner: PromoBanner): Long {
+        val policy = banner.dismissPolicy
+        check(policy is DismissPolicy.Ttl) { "Expected a TTL policy for $banner" }
+        return policy.duration.inWholeMilliseconds
     }
 
     private class FakeAppDataStore : AppDataStore {
