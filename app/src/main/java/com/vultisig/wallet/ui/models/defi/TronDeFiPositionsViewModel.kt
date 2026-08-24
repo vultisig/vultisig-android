@@ -248,6 +248,9 @@ constructor(
             (current as? TronDeFiUiState.Success)?.copy(
                 tronData = tronData,
                 isBalanceVisible = isBalanceVisible,
+                // Preserve claim-related fields across refreshes
+                isClaimingWithdrawal = current.isClaimingWithdrawal,
+                claimError = current.claimError,
             ) ?: TronDeFiUiState.Success(tronData = tronData, isBalanceVisible = isBalanceVisible)
         }
     }

@@ -249,6 +249,28 @@ class TronHelper(
         return input.toByteArray()
     }
 
+    /**
+     * Shared transaction builder for staking operations. Constructs a Tron transaction with common
+     * timestamp, block header, expiration, and optional fee-limit fields, applying a contract-setting
+     * lambda to the transaction builder. WithdrawExpireUnfreeze uses feeLimit = 0 since it consumes
+     * no chain resources; other staking operations use the estimated gas fee.
+     */
+    private inline fun buildStakingTransaction(
+        tronSpecific: BlockChainSpecific.Tron,
+        feeLimit: Long = tronSpecific.gasFeeEstimation.toLong(),
+        contractSetter: (Tron.Transaction.Builder) -> Tron.Transaction.Builder,
+    ): ByteArray {
+        val txBuild =
+            contractSetter(Tron.Transaction.newBuilder())
+                .setTimestamp(tronSpecific.timestamp.toLong())
+                .setBlockHeader(buildBlockHeader(tronSpecific))
+                .setExpiration(tronSpecific.expiration.toLong())
+                .setFeeLimit(feeLimit)
+
+        val input = Tron.SigningInput.newBuilder().setTransaction(txBuild.build()).build()
+        return input.toByteArray()
+    }
+
     private fun buildFreezeBalanceV2(
         keysignPayload: KeysignPayload,
         tronSpecific: BlockChainSpecific.Tron,
@@ -266,16 +288,7 @@ class TronHelper(
                 .setResource(resource)
                 .build()
 
-        val txBuild =
-            Tron.Transaction.newBuilder()
-                .setFreezeBalanceV2(contract)
-                .setTimestamp(tronSpecific.timestamp.toLong())
-                .setBlockHeader(buildBlockHeader(tronSpecific))
-                .setExpiration(tronSpecific.expiration.toLong())
-                .setFeeLimit(tronSpecific.gasFeeEstimation.toLong())
-
-        val input = Tron.SigningInput.newBuilder().setTransaction(txBuild.build()).build()
-        return input.toByteArray()
+        return buildStakingTransaction(tronSpecific) { it.setFreezeBalanceV2(contract) }
     }
 
     private fun buildUnfreezeBalanceV2(
@@ -295,16 +308,7 @@ class TronHelper(
                 .setResource(resource)
                 .build()
 
-        val txBuild =
-            Tron.Transaction.newBuilder()
-                .setUnfreezeBalanceV2(contract)
-                .setTimestamp(tronSpecific.timestamp.toLong())
-                .setBlockHeader(buildBlockHeader(tronSpecific))
-                .setExpiration(tronSpecific.expiration.toLong())
-                .setFeeLimit(tronSpecific.gasFeeEstimation.toLong())
-
-        val input = Tron.SigningInput.newBuilder().setTransaction(txBuild.build()).build()
-        return input.toByteArray()
+        return buildStakingTransaction(tronSpecific) { it.setUnfreezeBalanceV2(contract) }
     }
 
     /**
@@ -324,16 +328,9 @@ class TronHelper(
                 .setOwnerAddress(keysignPayload.coin.address)
                 .build()
 
-        val txBuild =
-            Tron.Transaction.newBuilder()
-                .setWithdrawExpireUnfreeze(contract)
-                .setTimestamp(tronSpecific.timestamp.toLong())
-                .setBlockHeader(buildBlockHeader(tronSpecific))
-                .setExpiration(tronSpecific.expiration.toLong())
-                .setFeeLimit(tronSpecific.gasFeeEstimation.toLong())
-
-        val input = Tron.SigningInput.newBuilder().setTransaction(txBuild.build()).build()
-        return input.toByteArray()
+        return buildStakingTransaction(tronSpecific, feeLimit = 0L) {
+            it.setWithdrawExpireUnfreeze(contract)
+        }
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
