@@ -20,6 +20,9 @@ import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.api.models.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.api.models.BlockChairStatusResponse
 import com.vultisig.wallet.data.api.models.ContextData
+import com.vultisig.wallet.data.api.models.SolanaRpcResponseJson
+import com.vultisig.wallet.data.api.models.SolanaSignatureStatus
+import com.vultisig.wallet.data.api.models.SolanaSignatureStatusesResult
 import com.vultisig.wallet.data.api.models.TransactionData
 import com.vultisig.wallet.data.api.models.TransactionInfo
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTxStatusJson
@@ -37,6 +40,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
 class BroadcastTxUseCaseTest {
 
@@ -207,6 +212,61 @@ class BroadcastTxUseCaseTest {
         assertEquals(rejection, thrown)
         coVerify(exactly = 3) { cosmosApi.getTxStatus(KNOWN_TRANSACTION_HASH) }
     }
+
+    @Test
+    fun `solana recovers with local hash when a rejected broadcast already landed cleanly`() =
+        runTest {
+            val solanaApi = mockk<SolanaApi>()
+            coEvery { solanaApi.broadcastTransaction(RAW_TRANSACTION) } throws alreadyProcessed()
+            // The peer's byte-identical tx is on chain and did not revert, so our locally
+            // computed signature is canonical even though our own broadcast was rejected.
+            coEvery { solanaApi.checkStatus(KNOWN_TRANSACTION_HASH) } returns
+                solanaStatus(confirmationStatus = "confirmed")
+
+            val txHash = createUseCase(solanaApi = solanaApi)(Chain.Solana, signedTransaction())
+
+            assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+            coVerify(exactly = 1) { solanaApi.broadcastTransaction(RAW_TRANSACTION) }
+        }
+
+    @Test
+    fun `solana rethrows a rejected broadcast when the landed tx reverted`() = runTest {
+        val solanaApi = mockk<SolanaApi>()
+        val rejection = alreadyProcessed()
+        coEvery { solanaApi.broadcastTransaction(RAW_TRANSACTION) } throws rejection
+        // The signature is on chain but `err` is set: it executed and reverted, so no funds
+        // moved and the rejection must reach the user instead of being reported as success.
+        coEvery { solanaApi.checkStatus(KNOWN_TRANSACTION_HASH) } returns
+            solanaStatus(
+                confirmationStatus = "finalized",
+                err = JsonPrimitive("InsufficientFundsForRent"),
+            )
+
+        val thrown =
+            assertFailsWith<RuntimeException> {
+                createUseCase(solanaApi = solanaApi)(Chain.Solana, signedTransaction())
+            }
+
+        assertEquals(rejection, thrown)
+    }
+
+    @Test
+    fun `solana rethrows a rejected broadcast when the signature is unknown to the cluster`() =
+        runTest {
+            val solanaApi = mockk<SolanaApi>()
+            val rejection = alreadyProcessed()
+            coEvery { solanaApi.broadcastTransaction(RAW_TRANSACTION) } throws rejection
+            // getSignatureStatuses returns a null entry for a signature the cluster never saw.
+            coEvery { solanaApi.checkStatus(KNOWN_TRANSACTION_HASH) } returns unknownSolanaStatus()
+
+            val thrown =
+                assertFailsWith<RuntimeException> {
+                    createUseCase(solanaApi = solanaApi)(Chain.Solana, signedTransaction())
+                }
+
+            assertEquals(rejection, thrown)
+            coVerify(exactly = 3) { solanaApi.checkStatus(KNOWN_TRANSACTION_HASH) }
+        }
 
     @Test
     fun `bitcoin cash broadcast returns hash from blockchair on success`() = runTest {
@@ -455,6 +515,7 @@ class BroadcastTxUseCaseTest {
         blockChairApi: BlockChairApi = mockk(relaxed = true),
         bittensorApi: BittensorApi = mockk(relaxed = true),
         cardanoApi: CardanoApi = mockk(relaxed = true),
+        solanaApi: SolanaApi = mockk(relaxed = true),
         transactionStatusRepository: TransactionStatusRepository = mockk(relaxed = true),
     ) =
         BroadcastTxUseCaseImpl(
@@ -463,7 +524,7 @@ class BroadcastTxUseCaseTest {
             blockChairApi = blockChairApi,
             mayaChainApi = mayaChainApi,
             cosmosApiFactory = cosmosApiFactory,
-            solanaApi = mockk<SolanaApi>(relaxed = true),
+            solanaApi = solanaApi,
             polkadotApi = mockk<PolkadotApi>(relaxed = true),
             bittensorApi = bittensorApi,
             suiApi = mockk<SuiApi>(relaxed = true),
@@ -472,6 +533,34 @@ class BroadcastTxUseCaseTest {
             tronApi = mockk<TronApi>(relaxed = true),
             cardanoApi = cardanoApi,
             transactionStatusRepository = transactionStatusRepository,
+        )
+
+    private fun solanaStatus(confirmationStatus: String?, err: JsonElement? = null) =
+        SolanaRpcResponseJson(
+            id = 1,
+            result =
+                SolanaSignatureStatusesResult(
+                    value =
+                        listOf(
+                            SolanaSignatureStatus(
+                                confirmationStatus = confirmationStatus,
+                                err = err,
+                            )
+                        )
+                ),
+            error = null,
+        )
+
+    private fun unknownSolanaStatus() =
+        SolanaRpcResponseJson(
+            id = 1,
+            result = SolanaSignatureStatusesResult(value = listOf(null)),
+            error = null,
+        )
+
+    private fun alreadyProcessed() =
+        RuntimeException(
+            "Transaction simulation failed: This transaction has already been processed"
         )
 
     private fun txStatus(code: Int) =
