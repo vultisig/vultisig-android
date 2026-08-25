@@ -1,8 +1,8 @@
 package com.vultisig.wallet.data.models.transaction_decoding
 
 import com.vultisig.wallet.data.models.Chain
-import dagger.Reusable
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * A reader for one chain family's signed grammar. `handles == null` requires the reader to
@@ -28,9 +28,10 @@ interface TransactionContentDecoder {
  * chain-family decoders and attempts each in precedence order. The foundation registers no chain
  * readers, so every transaction remains unreadable.
  *
- * Scoped as [Reusable] singleton for dependency injection with shared instance across the app.
+ * Scoped as [Singleton] for true app-level shared instance across the app. All decoder
+ * registrations are visible to any consumer, ensuring consistent provenance verification.
  */
-@Reusable
+@Singleton
 class SignedTransactionDecoder @Inject constructor() {
 
     /** Registered readers in precedence order. Empty in the foundation. */
