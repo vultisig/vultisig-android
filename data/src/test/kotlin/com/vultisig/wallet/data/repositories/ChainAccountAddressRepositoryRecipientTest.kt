@@ -15,8 +15,9 @@ import org.junit.jupiter.api.Test
 /**
  * Covers the ordering in `validateRecipient`. Chain validation itself is WalletCore JNI, so it is
  * stubbed here; what is under test is that an address failing it is reported as such, that the
- * Solana curve rule is applied only after it and only to Solana, and that being off the curve buys
- * the cluster a question rather than a refusal.
+ * ownership question is asked only after it and only on Solana, that it is asked of every Solana
+ * address rather than only the off-curve ones, and that the curve decides nothing but which way an
+ * unreachable cluster resolves.
  */
 class ChainAccountAddressRepositoryRecipientTest {
 
@@ -90,15 +91,48 @@ class ChainAccountAddressRepositoryRecipientTest {
     }
 
     @Test
-    fun `a solana wallet address is a valid recipient without asking the cluster`() = runTest {
+    fun `an on-curve wallet the cluster calls system-owned is a valid recipient`() = runTest {
         every { repository.isValid(Chain.Solana, WALLET) } returns true
+        coEvery { solanaApi.getAccountOwnership(WALLET) } returns
+            SolanaAccountOwnership.Owned(SYSTEM_PROGRAM)
 
         assertEquals(RecipientValidity.Valid, repository.validateRecipient(Chain.Solana, WALLET))
-        coVerify(exactly = 0) { solanaApi.getAccountOwnership(any()) }
     }
 
     @Test
-    fun `failing chain validation is reported as such, not as the curve rule`() = runTest {
+    fun `an on-curve auxiliary token account is not a wallet either`() = runTest {
+        // Being on the curve is not what makes an address a wallet. A token account opened against
+        // a fresh keypair rather than derived as an ATA looks exactly like one, and strands an SPL
+        // transfer exactly like an ATA would, so the cluster is asked about these too.
+        every { repository.isValid(Chain.Solana, AUXILIARY_TOKEN_ACCOUNT) } returns true
+        coEvery { solanaApi.getAccountOwnership(AUXILIARY_TOKEN_ACCOUNT) } returns
+            SolanaAccountOwnership.Owned(TOKEN_PROGRAM)
+
+        assertEquals(
+            RecipientValidity.NotAWalletAddress,
+            repository.validateRecipient(Chain.Solana, AUXILIARY_TOKEN_ACCOUNT),
+        )
+    }
+
+    @Test
+    fun `an on-curve address the cluster cannot be asked about stays a valid recipient`() =
+        runTest {
+            // The opposite fallback to the off-curve case, and deliberately so: an address someone
+            // can
+            // hold the key for is what every user pastes, so a blinking RPC must not refuse them
+            // all.
+            every { repository.isValid(Chain.Solana, WALLET) } returns true
+            coEvery { solanaApi.getAccountOwnership(WALLET) } returns
+                SolanaAccountOwnership.Unavailable
+
+            assertEquals(
+                RecipientValidity.Valid,
+                repository.validateRecipient(Chain.Solana, WALLET),
+            )
+        }
+
+    @Test
+    fun `failing chain validation is reported as such, not as the ownership rule`() = runTest {
         every { repository.isValid(Chain.Solana, "garbage") } returns false
 
         assertEquals(
@@ -109,9 +143,9 @@ class ChainAccountAddressRepositoryRecipientTest {
     }
 
     @Test
-    fun `the curve rule is scoped to solana`() = runTest {
-        // The same bytes on another chain must not be second-guessed: off-curve means nothing
-        // outside ed25519, and every non-Solana chain here validates through its own rules.
+    fun `the ownership rule is scoped to solana`() = runTest {
+        // The same bytes on another chain must not be second-guessed: account ownership means
+        // nothing outside Solana, and every chain here validates through its own rules.
         every { repository.isValid(any(), any()) } returns true
 
         listOf(Chain.Ethereum, Chain.Bitcoin, Chain.Ton, Chain.Sui, Chain.Polkadot).forEach {
@@ -129,6 +163,9 @@ class ChainAccountAddressRepositoryRecipientTest {
         const val TOKEN_ACCOUNT = "GppmkdEmuqNgS7uY5SSN3gXEamJrcPG9197wBdQ37NLc"
 
         const val WALLET = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+
+        /** On the curve, unlike [TOKEN_ACCOUNT]: a token account opened against its own keypair. */
+        const val AUXILIARY_TOKEN_ACCOUNT = "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9"
 
         const val TOKEN_PROGRAM = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
 

@@ -41,8 +41,8 @@ interface ChainAccountAddressRepository {
      * contract and mint addresses, which are routinely program-derived, so the recipient rule
      * cannot live there without rejecting them.
      *
-     * Suspends because an off-curve Solana address is only rejected once the cluster says it is a
-     * token account; see [RecipientValidity.NotAWalletAddress].
+     * Suspends because a Solana address is only judged once the cluster says which program owns the
+     * account at it; see [RecipientValidity.NotAWalletAddress].
      */
     suspend fun validateRecipient(chain: Chain, address: String): RecipientValidity
 }
@@ -59,11 +59,10 @@ enum class RecipientValidity {
      * makes an SPL transfer derive an associated token account *of* a token account, which nobody
      * can spend from.
      *
-     * Off-curve alone does not earn this verdict. Every program-derived address is off-curve, and
-     * plenty of them are real destinations — a Squads vault or a DAO treasury holds SPL through
-     * `ATA(pda, mint)` and spends it with `invoke_signed`. Only an address the cluster reports as
-     * owned by a token program is refused; an off-curve address the cluster cannot be reached about
-     * is refused too, since an unanswered lookup is not an answer.
+     * The address's own bytes do not earn this verdict either way. Every program-derived address is
+     * off-curve, and plenty of them are real destinations — a Squads vault or a DAO treasury holds
+     * SPL through `ATA(pda, mint)` and spends it with `invoke_signed` — while an auxiliary token
+     * account sits on the curve like any wallet. Only what the cluster reports is refused.
      */
     NotAWalletAddress,
 }
@@ -188,21 +187,26 @@ constructor(private val solanaApi: SolanaApi) : ChainAccountAddressRepository {
         when {
             !isValid(chain, address) -> RecipientValidity.InvalidForChain
             chain != Chain.Solana -> RecipientValidity.Valid
-            SolanaProgramDerivedAddress.isWalletAddress(address) -> RecipientValidity.Valid
-            else -> solanaOffCurveVerdict(address)
+            else -> solanaRecipientVerdict(address)
         }
 
     /**
-     * The verdict for a well-formed Solana address that is off the ed25519 curve, which the owning
-     * program alone can sign for. That covers both the account this guard exists for — a token
-     * account, which strands an SPL transfer — and destinations that are perfectly spendable, so
-     * the cluster decides which one this is.
+     * The verdict for a well-formed Solana address, which only the cluster can settle: the account
+     * this guard exists for — a token account, which strands an SPL transfer — is not something an
+     * address can be told apart from a wallet by looking at it.
      *
-     * A lookup that fails is refused rather than waved through: on the send path the same cluster
-     * supplies the blockhash and the fee, so a transaction cannot be built while it is unreachable
-     * anyway, and the address book can be retried.
+     * The curve test is not that answer. A token account is usually an associated one and so
+     * off-curve, but the auxiliary form — `create-account` against a fresh keypair, how wallets
+     * made them before ATAs existed and how some exchanges still hold them — is on the curve like
+     * any wallet, so both get asked about.
+     *
+     * What the curve does decide is how an unreachable cluster resolves. Off the curve, only the
+     * owning program can sign, so an unanswered lookup leaves a real chance this is a token account
+     * and it stays refused. On the curve, someone can hold the key — the ordinary case for every
+     * address a user pastes — and refusing those on a failed lookup would block Solana sends
+     * outright whenever the RPC blinks, so an unanswered lookup lets them through as before.
      */
-    private suspend fun solanaOffCurveVerdict(address: String): RecipientValidity =
+    private suspend fun solanaRecipientVerdict(address: String): RecipientValidity =
         when (val ownership = solanaApi.getAccountOwnership(address)) {
             is SolanaAccountOwnership.Owned ->
                 if (ownership.programId in SOLANA_TOKEN_PROGRAM_IDS) {
@@ -213,7 +217,12 @@ constructor(private val solanaApi: SolanaApi) : ChainAccountAddressRepository {
             // No account at that address, so it is not a token account. A program vault that only
             // ever holds SPL never needs its own account on-chain: the tokens live in ATAs it owns.
             SolanaAccountOwnership.Missing -> RecipientValidity.Valid
-            SolanaAccountOwnership.Unavailable -> RecipientValidity.NotAWalletAddress
+            SolanaAccountOwnership.Unavailable ->
+                if (SolanaProgramDerivedAddress.isWalletAddress(address)) {
+                    RecipientValidity.Valid
+                } else {
+                    RecipientValidity.NotAWalletAddress
+                }
         }
 
     /**
