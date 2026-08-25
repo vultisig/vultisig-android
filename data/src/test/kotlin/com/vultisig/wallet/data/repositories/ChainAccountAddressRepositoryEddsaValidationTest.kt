@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Vault
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -117,7 +118,7 @@ class ChainAccountAddressRepositoryEddsaValidationTest {
      */
     @Test
     fun `getAddress rejects blank pubKeyEDDSA before reaching JNI`() = runBlocking {
-        val repo = ChainAccountAddressRepositoryImpl()
+        val repo = ChainAccountAddressRepositoryImpl(solanaApi = mockk(relaxed = true))
         val vault = Vault(id = "test-vault", name = "test", pubKeyECDSA = "", pubKeyEDDSA = "")
         val ex = assertThrows<IllegalArgumentException> { repo.getAddress(Chain.Solana, vault) }
         assertEquals("EdDSA public key for ${Chain.Solana.raw} is missing", ex.message)

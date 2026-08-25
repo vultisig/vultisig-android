@@ -223,12 +223,12 @@ constructor(
             }
         }
 
-        validateAddress(chain, address)?.let { addressError ->
-            state.update { it.copy(addressError = addressError) }
-            return
-        }
-
         viewModelScope.launch {
+            validateAddress(chain, address)?.let { addressError ->
+                state.update { it.copy(addressError = addressError) }
+                return@launch
+            }
+
             if (
                 !addressBookEntryChainId.isNullOrBlank() &&
                     !addressBookEntryAddress.isNullOrBlank() &&
@@ -258,7 +258,7 @@ constructor(
         }
     }
 
-    private fun validateAddress(chain: Chain, address: String): UiText? {
+    private suspend fun validateAddress(chain: Chain, address: String): UiText? {
         if (address.isBlank()) return invalidForChain(chain)
         return when (chainAccountAddressRepository.validateRecipient(chain, address)) {
             RecipientValidity.Valid -> null

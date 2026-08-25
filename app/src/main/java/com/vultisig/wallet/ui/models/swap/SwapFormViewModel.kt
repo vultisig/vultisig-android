@@ -145,6 +145,8 @@ constructor(
     // address and stamped on the built transaction so it is shown on the verify screen (#4858).
     private val externalRecipient = MutableStateFlow<String?>(null)
 
+    private var externalRecipientRoutingJob: Job? = null
+
     // The recipient actually fed into the quote pipeline: only a present-and-valid address (else
     // null = route to the vault). Gating here keeps partially-typed / invalid addresses from
     // triggering native (THOR/Maya) quote calls with a malformed destination (#4858 review).
@@ -397,45 +399,6 @@ constructor(
         // on-chain deposit) before the UI updates.
         if (isLoadingNextScreen) return
 
-        // Same hard gate as swap(): the recipient is baked into the `=<` memo's dest_addr, and it
-        // survives a destination-chain change unvalidated, so a stale or malformed address must be
-        // rejected here rather than signed into an order that pays out to nowhere.
-        externalRecipientError()?.let { error ->
-            showError(error)
-            return
-        }
-
-        val targetPrice = limitTargetPrice.value
-        if (targetPrice == null) {
-            showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
-            return
-        }
-
-        val inputs =
-            try {
-                isLoadingNextScreen = true
-                swapInputCollector.collect(
-                    vaultId = vaultId,
-                    selectedSrc = selectedSrc.value,
-                    selectedDst = selectedDst.value,
-                    srcAmount = srcAmountState.text.toString(),
-                    quote = quoteState.quote,
-                    gasFee = quotePipeline.gasFee.value,
-                    estimatedNetworkFeeTokenValue =
-                        quotePipeline.estimatedNetworkFeeTokenValue.value,
-                    estimatedNetworkFeeFiatValue = quotePipeline.estimatedNetworkFeeFiatValue.value,
-                )
-            } catch (e: InvalidTransactionDataException) {
-                isLoadingNextScreen = false
-                showError(e.text)
-                return
-            } catch (e: Exception) {
-                isLoadingNextScreen = false
-                Timber.e(e)
-                showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
-                return
-            }
-
         viewModelScope.safeLaunch(
             onError = { e ->
                 isLoadingNextScreen = false
@@ -447,6 +410,47 @@ constructor(
                 }
             }
         ) {
+            // Same hard gate as swap(): the recipient is baked into the `=<` memo's dest_addr, and
+            // it survives a destination-chain change unvalidated, so a stale or malformed address
+            // must be rejected here rather than signed into an order that pays out to nowhere. The
+            // whole body runs in the coroutine because the verdict can need a cluster round trip,
+            // and it stays the first thing checked so its error is the one the user sees.
+            externalRecipientError()?.let { throw InvalidTransactionDataException(it) }
+
+            val targetPrice = limitTargetPrice.value
+            if (targetPrice == null) {
+                showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
+                return@safeLaunch
+            }
+
+            val inputs =
+                try {
+                    isLoadingNextScreen = true
+                    swapInputCollector.collect(
+                        vaultId = vaultId,
+                        selectedSrc = selectedSrc.value,
+                        selectedDst = selectedDst.value,
+                        srcAmount = srcAmountState.text.toString(),
+                        quote = quoteState.quote,
+                        gasFee = quotePipeline.gasFee.value,
+                        estimatedNetworkFeeTokenValue =
+                            quotePipeline.estimatedNetworkFeeTokenValue.value,
+                        estimatedNetworkFeeFiatValue =
+                            quotePipeline.estimatedNetworkFeeFiatValue.value,
+                    )
+                } catch (e: InvalidTransactionDataException) {
+                    isLoadingNextScreen = false
+                    showError(e.text)
+                    return@safeLaunch
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    isLoadingNextScreen = false
+                    Timber.e(e)
+                    showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
+                    return@safeLaunch
+                }
+
             val transaction =
                 buildLimitSwapTransactionUseCase.build(
                     BuildLimitSwapTransactionUseCase.Params(
@@ -644,7 +648,7 @@ constructor(
      * off or valid for the destination chain. Used both for inline feedback and as the [swap]
      * pre-flight gate so a malformed address can never be baked into the swap memo/destination.
      */
-    private fun externalRecipientError(): UiText? {
+    private suspend fun externalRecipientError(): UiText? {
         val address = externalRecipient.value ?: return null
         val dstChain = selectedDst.value?.account?.token?.chain ?: return null
         return when (chainAccountAddressRepository.validateRecipient(dstChain, address)) {
@@ -675,53 +679,10 @@ constructor(
     }
 
     fun swap() {
-        // Hard gate: never stage a keysign that would route funds to a malformed recipient. The
-        // initiator and joiner both sign this address from the shared payload, so an invalid value
-        // must be caught here, before the transaction is built (#4858).
-        externalRecipientError()?.let { error ->
-            showError(error)
-            return
-        }
-
-        val inputs =
-            try {
-                isLoadingNextScreen = true
-                swapInputCollector.collect(
-                    vaultId = vaultId,
-                    selectedSrc = selectedSrc.value,
-                    selectedDst = selectedDst.value,
-                    srcAmount = srcAmountState.text.toString(),
-                    quote = quoteState.quote,
-                    gasFee = quotePipeline.gasFee.value,
-                    estimatedNetworkFeeTokenValue =
-                        quotePipeline.estimatedNetworkFeeTokenValue.value,
-                    estimatedNetworkFeeFiatValue = quotePipeline.estimatedNetworkFeeFiatValue.value,
-                )
-            } catch (e: InvalidTransactionDataException) {
-                isLoadingNextScreen = false
-                showError(e.text)
-                return
-            } catch (e: Exception) {
-                isLoadingNextScreen = false
-                Timber.e(e)
-                showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
-                return
-            }
-
-        // Snapshot the fee/discount display alongside `inputs`, before launching. Reading
-        // _uiState.value inside the coroutine could attach a later quote's fee label or discounts
-        // to this transaction if polling lands a new quote in the meantime (#5358).
-        val feeDisplay =
-            _uiState.value.let { state ->
-                SwapFeeDisplay(
-                    swapFeePercent = state.feeBreakdown.swapFeePercent,
-                    swapFeeIncludedInRate = state.feeBreakdown.swapFeeIncludedInRate,
-                    vultBpsDiscount = state.discountInfo.vultBpsDiscount,
-                    vultBpsDiscountFiatValue = state.discountInfo.vultBpsDiscountFiatValue,
-                    referralBpsDiscount = state.discountInfo.referralBpsDiscount,
-                    referralBpsDiscountFiatValue = state.discountInfo.referralBpsDiscountFiatValue,
-                )
-            }
+        // Re-entry guard, as in placeLimitOrder(): isLoadingNextScreen now flips inside the
+        // coroutine, and the recipient check ahead of it can wait on the cluster, so a fast second
+        // tap could otherwise stage the same swap twice before the CTA disables.
+        if (isLoadingNextScreen) return
 
         viewModelScope.safeLaunch(
             onError = { e ->
@@ -734,6 +695,57 @@ constructor(
                 }
             }
         ) {
+            // Hard gate: never stage a keysign that would route funds to a malformed recipient. The
+            // initiator and joiner both sign this address from the shared payload, so an invalid
+            // value must be caught here, before the transaction is built (#4858). The whole body
+            // runs in the coroutine because the verdict can need a cluster round trip, and it stays
+            // the first thing checked so its error is the one the user sees.
+            externalRecipientError()?.let { throw InvalidTransactionDataException(it) }
+
+            val inputs =
+                try {
+                    isLoadingNextScreen = true
+                    swapInputCollector.collect(
+                        vaultId = vaultId,
+                        selectedSrc = selectedSrc.value,
+                        selectedDst = selectedDst.value,
+                        srcAmount = srcAmountState.text.toString(),
+                        quote = quoteState.quote,
+                        gasFee = quotePipeline.gasFee.value,
+                        estimatedNetworkFeeTokenValue =
+                            quotePipeline.estimatedNetworkFeeTokenValue.value,
+                        estimatedNetworkFeeFiatValue =
+                            quotePipeline.estimatedNetworkFeeFiatValue.value,
+                    )
+                } catch (e: InvalidTransactionDataException) {
+                    isLoadingNextScreen = false
+                    showError(e.text)
+                    return@safeLaunch
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    isLoadingNextScreen = false
+                    Timber.e(e)
+                    showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
+                    return@safeLaunch
+                }
+
+            // Snapshot the fee/discount display alongside `inputs`, before the build. Reading
+            // _uiState.value after it could attach a later quote's fee label or discounts to this
+            // transaction if polling lands a new quote in the meantime (#5358).
+            val feeDisplay =
+                _uiState.value.let { state ->
+                    SwapFeeDisplay(
+                        swapFeePercent = state.feeBreakdown.swapFeePercent,
+                        swapFeeIncludedInRate = state.feeBreakdown.swapFeeIncludedInRate,
+                        vultBpsDiscount = state.discountInfo.vultBpsDiscount,
+                        vultBpsDiscountFiatValue = state.discountInfo.vultBpsDiscountFiatValue,
+                        referralBpsDiscount = state.discountInfo.referralBpsDiscount,
+                        referralBpsDiscountFiatValue =
+                            state.discountInfo.referralBpsDiscountFiatValue,
+                    )
+                }
+
             val transaction =
                 swapTransactionBuilder.build(
                     vaultId = inputs.vaultId,
@@ -1065,7 +1077,11 @@ constructor(
      */
     fun setExternalRecipient(address: String?) {
         externalRecipient.value = address?.trim()?.takeIf { it.isNotEmpty() }
-        syncExternalRecipientRouting()
+        // Cancel the in-flight validation rather than letting two overlap: the verdict can need a
+        // cluster round trip, and a slower one for an earlier keystroke would otherwise land last
+        // and describe an address the user has already replaced.
+        externalRecipientRoutingJob?.cancel()
+        externalRecipientRoutingJob = viewModelScope.launch { syncExternalRecipientRouting() }
     }
 
     /**
@@ -1075,7 +1091,7 @@ constructor(
      * with a malformed destination (#4858 review). The typed value still drives the field and the
      * swap() pre-flight gate.
      */
-    private fun syncExternalRecipientRouting() {
+    private suspend fun syncExternalRecipientRouting() {
         val typed = externalRecipient.value
         val error = externalRecipientError()
         quoteRecipient.value = typed?.takeIf { error == null }

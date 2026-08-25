@@ -60,7 +60,7 @@ internal class AddressManagerTest {
         // The manager validates through validateRecipient, which only parts ways with isValid for
         // an off-curve Solana recipient; the cases below are all EVM and XRP, so deriving one from
         // the other here keeps each test's own isValid stub as the thing that decides the outcome.
-        every { chainAccountAddressRepository.validateRecipient(any(), any()) } answers
+        coEvery { chainAccountAddressRepository.validateRecipient(any(), any()) } answers
             {
                 if (chainAccountAddressRepository.isValid(firstArg(), secondArg())) {
                     RecipientValidity.Valid
@@ -330,7 +330,7 @@ internal class AddressManagerTest {
             // An associated token account is a well-formed Solana address, so the resolver has no
             // name to find; an SPL send to it would create an ATA-of-an-ATA nobody controls.
             val tokenAccount = "GppmkdEmuqNgS7uY5SSN3gXEamJrcPG9197wBdQ37NLc"
-            every {
+            coEvery {
                 chainAccountAddressRepository.validateRecipient(Chain.Solana, tokenAccount)
             } returns RecipientValidity.NotAWalletAddress
 
@@ -356,7 +356,7 @@ internal class AddressManagerTest {
         runTest(mainDispatcher) {
             val tokenAccount = "GppmkdEmuqNgS7uY5SSN3gXEamJrcPG9197wBdQ37NLc"
             val wallet = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
-            every {
+            coEvery {
                 chainAccountAddressRepository.validateRecipient(Chain.Solana, tokenAccount)
             } returns RecipientValidity.NotAWalletAddress
             every { chainAccountAddressRepository.isValid(Chain.Solana, wallet) } returns true

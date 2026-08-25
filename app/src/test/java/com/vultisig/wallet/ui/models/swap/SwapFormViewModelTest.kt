@@ -176,7 +176,7 @@ internal class SwapFormViewModelTest {
         // The form validates through validateRecipient, which only parts ways with isValid for an
         // off-curve Solana recipient; deriving one from the other keeps each test's own isValid
         // stub as the thing that decides the outcome.
-        every { chainAccountAddressRepository.validateRecipient(any(), any()) } answers
+        coEvery { chainAccountAddressRepository.validateRecipient(any(), any()) } answers
             {
                 if (chainAccountAddressRepository.isValid(firstArg(), secondArg())) {
                     RecipientValidity.Valid
@@ -3699,7 +3699,7 @@ internal class SwapFormViewModelTest {
     fun `a solana token account as external recipient gets its own error`() =
         runTest(mainDispatcher) {
             val tokenAccount = "GppmkdEmuqNgS7uY5SSN3gXEamJrcPG9197wBdQ37NLc"
-            every { chainAccountAddressRepository.validateRecipient(any(), tokenAccount) } returns
+            coEvery { chainAccountAddressRepository.validateRecipient(any(), tokenAccount) } returns
                 RecipientValidity.NotAWalletAddress
             val vm = createViewModelWithSwapTokens()
             advanceUntilIdle()

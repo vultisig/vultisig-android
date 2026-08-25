@@ -67,7 +67,7 @@ internal class AddressEntryViewModelTest {
         // The screen validates through validateRecipient, which only parts ways with isValid for
         // an off-curve Solana recipient; deriving one from the other keeps each test's own isValid
         // stub as the thing that decides the outcome.
-        every { chainAccountAddressRepository.validateRecipient(any(), any()) } answers
+        coEvery { chainAccountAddressRepository.validateRecipient(any(), any()) } answers
             {
                 if (chainAccountAddressRepository.isValid(firstArg(), secondArg())) {
                     RecipientValidity.Valid
@@ -138,9 +138,16 @@ internal class AddressEntryViewModelTest {
     @Test
     fun `saveAddress with a token account keeps the non-wallet error`() =
         runTest(testDispatcher) {
+            every { any<SavedStateHandle>().toRoute<Route.AddressEntry>() } returns
+                Route.AddressEntry(
+                    chainId = "Solana",
+                    address = SOL_TOKEN_ACCOUNT,
+                    vaultId = VAULT_ID,
+                )
             every { chainAccountAddressRepository.isValid(any(), any()) } returns true
-            every { chainAccountAddressRepository.validateRecipient(any(), any()) } returns
-                RecipientValidity.NotAWalletAddress
+            coEvery {
+                chainAccountAddressRepository.validateRecipient(Chain.Solana, SOL_TOKEN_ACCOUNT)
+            } returns RecipientValidity.NotAWalletAddress
             val vm = createViewModel()
             vm.titleTextFieldState.edit { replace(0, length, "Alice") }
             vm.addressTextFieldState.edit { replace(0, length, SOL_TOKEN_ACCOUNT) }
@@ -150,6 +157,9 @@ internal class AddressEntryViewModelTest {
 
             vm.state.value.addressError shouldBe
                 UiText.StringResource(R.string.error_recipient_not_a_wallet_address)
+            coVerify {
+                chainAccountAddressRepository.validateRecipient(Chain.Solana, SOL_TOKEN_ACCOUNT)
+            }
             coVerify(exactly = 0) { addressBookRepository.add(any()) }
         }
 
