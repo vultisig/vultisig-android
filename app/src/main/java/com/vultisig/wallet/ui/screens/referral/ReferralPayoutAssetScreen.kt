@@ -88,6 +88,10 @@ private fun ReferralPayoutAssetScreen(
                     ) {
                         VsCircularLoading(modifier = Modifier.size(32.dp))
                     }
+                state.isError ->
+                    Column(modifier = Modifier.padding(all = 16.dp)) {
+                        NoFoundContent(message = stringResource(R.string.error_loading_information))
+                    }
                 assets.isEmpty() ->
                     Column(modifier = Modifier.padding(all = 16.dp)) {
                         NoFoundContent(message = stringResource(R.string.select_asset_no_result))

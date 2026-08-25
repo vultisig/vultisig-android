@@ -56,6 +56,18 @@ class ThorChainPoolCoinTest {
     }
 
     @Test
+    fun `keeps a pool's own contract rather than a registry coin sharing the ticker`() {
+        // Same ticker as the registry's USDC, a different token: resolving to the registry coin
+        // would enable the wrong contract in the vault.
+        val resolved =
+            ThorChainPoolCoin.from("ETH.USDC-0X0000000000000000000000000000000000000001", 6)
+
+        assertEquals("USDC", resolved?.coin?.ticker)
+        assertEquals("0X0000000000000000000000000000000000000001", resolved?.coin?.contractAddress)
+        assertEquals(6, resolved?.coin?.decimal)
+    }
+
+    @Test
     fun `synthesizes a coin for an asset missing from the registry`() {
         val resolved = ThorChainPoolCoin.from("AVAX.SOL-0XFE6B19286885A4F7F55ADAD09C3CD1F906D2478F")
 

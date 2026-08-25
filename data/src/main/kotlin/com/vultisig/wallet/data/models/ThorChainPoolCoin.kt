@@ -57,12 +57,20 @@ data class ThorChainPoolCoin(val asset: String, val coin: Coin) {
                 } ?: return null
 
             val known = Coins.coins[chain].orEmpty()
+            // A pool id that spells out a contract address names one exact token, so a registry
+            // coin sharing only the ticker is a different token: enabling it would put the wrong
+            // contract and precision in the vault. The THORChain denom above is a guess made from
+            // the ticker rather than something the pool id carries, so it keeps the fallback.
+            val isTickerFallbackSound =
+                contractAddress.isEmpty() || chainCode.equals(THORCHAIN_CODE, ignoreCase = true)
             val coin =
                 known.firstOrNull {
                     contractAddress.isNotEmpty() &&
                         it.contractAddress.equals(contractAddress, ignoreCase = true)
                 }
-                    ?: known.firstOrNull { it.ticker.equals(ticker, ignoreCase = true) }
+                    ?: known.firstOrNull {
+                        isTickerFallbackSound && it.ticker.equals(ticker, ignoreCase = true)
+                    }
                     ?: Coin(
                         chain = chain,
                         ticker = ticker.uppercase(),

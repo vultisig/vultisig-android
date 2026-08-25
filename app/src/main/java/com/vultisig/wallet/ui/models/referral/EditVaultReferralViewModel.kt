@@ -27,6 +27,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.utils.decimals
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.referral.CreateReferralViewModel.Companion.BLOCKS_PER_YEAR
@@ -127,25 +128,19 @@ constructor(
      * one.
      */
     private fun loadPayoutAsset() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(
+            onError = { Timber.w(it, "Failed to load the referral's payout asset") }
+        ) {
             val preferredAsset =
-                try {
-                    withContext(Dispatchers.IO) {
-                            thorChainApi.getReferralCodeInfo(vaultReferralCode)
-                        }
-                        .preferredAsset
-                } catch (t: Throwable) {
-                    if (t is kotlinx.coroutines.CancellationException) throw t
-                    Timber.w(t, "Failed to load the referral's payout asset")
-                    return@launch
-                }
+                withContext(Dispatchers.IO) { thorChainApi.getReferralCodeInfo(vaultReferralCode) }
+                    .preferredAsset
 
-            val asset = ThorChainPoolCoin.from(preferredAsset) ?: return@launch
+            val asset = ThorChainPoolCoin.from(preferredAsset) ?: return@safeLaunch
             initialPayoutAsset = asset
             // A pick made while this was in flight is the newer intent, and stands.
             if (hasPickedPayoutAsset) {
                 state.update { it.copy(isSaveEnabled = isSaveEnabled(it.referralCounter)) }
-                return@launch
+                return@safeLaunch
             }
             selectedPayoutAsset = asset
             state.update { it.copy(payoutAsset = asset.toUiModel()) }

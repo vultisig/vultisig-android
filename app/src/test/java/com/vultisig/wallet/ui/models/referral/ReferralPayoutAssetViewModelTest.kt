@@ -67,10 +67,11 @@ internal class ReferralPayoutAssetViewModelTest {
 
             assertEquals(listOf("BTC", "USDC"), model.state.value.assets.map { it.ticker })
             assertEquals(false, model.state.value.isLoading)
+            assertEquals(false, model.state.value.isError)
         }
 
     @Test
-    fun `an empty list is shown rather than a spinner when the pools cannot be read`() =
+    fun `a failed read is reported as an error rather than as an empty pool list`() =
         runTest(testDispatcher) {
             coEvery { getThorChainPoolAssets() } throws IllegalStateException("offline")
 
@@ -79,6 +80,7 @@ internal class ReferralPayoutAssetViewModelTest {
 
             assertTrue(model.state.value.assets.isEmpty())
             assertEquals(false, model.state.value.isLoading)
+            assertEquals(true, model.state.value.isError)
         }
 
     @Test

@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.referral
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +11,7 @@ import com.vultisig.wallet.data.models.ThorChainPoolCoin
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.usecases.GetThorChainPoolAssetsUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -22,6 +24,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+@Immutable
 internal data class PayoutAssetUiModel(
     val asset: String,
     val logo: ImageModel,
@@ -30,9 +33,11 @@ internal data class PayoutAssetUiModel(
     val isSelected: Boolean = false,
 )
 
+@Immutable
 internal data class ReferralPayoutAssetUiState(
     val assets: List<PayoutAssetUiModel> = emptyList(),
     val isLoading: Boolean = true,
+    val isError: Boolean = false,
 )
 
 @HiltViewModel
@@ -58,14 +63,15 @@ constructor(
     }
 
     private fun loadAssets() {
-        viewModelScope.launch {
-            try {
-                assets = getThorChainPoolAssets()
-            } catch (t: Throwable) {
-                if (t is kotlinx.coroutines.CancellationException) throw t
+        viewModelScope.safeLaunch(
+            onError = { t ->
                 Timber.e(t, "Failed to load THORChain pool assets")
                 assets = emptyList()
+                // Told apart from an empty pool list, which reads as "no such asset" instead.
+                state.update { it.copy(isLoading = false, isError = true, assets = emptyList()) }
             }
+        ) {
+            assets = getThorChainPoolAssets()
             state.update {
                 it.copy(isLoading = false, assets = filterAssets(searchFieldState.text.toString()))
             }
