@@ -6,7 +6,7 @@ lottieCompose = "6.7.1"
 minSdk = "26"
 
 accompanistPermissions = "0.37.0"
-agp = "8.9.2"
+agp = "8.12.2"
 apache-compress = "1.27.1"
 apache-compress-xz = "1.10"
 barcodeScanning = "17.3.0"
