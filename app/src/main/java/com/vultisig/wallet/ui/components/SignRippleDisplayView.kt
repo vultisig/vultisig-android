@@ -71,6 +71,27 @@ fun SignRippleDisplayView(
             }
         }
 
+        // Outside the collapsible section on purpose: tfPartialPayment makes the Amount row a
+        // ceiling, so the warning has to reach a co-signer who never expands the card.
+        if (tx.isPartialPayment) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                UiIcon(
+                    drawableResId = R.drawable.ic_triangle_alert,
+                    tint = Theme.v2.colors.alerts.warning,
+                    size = 16.dp,
+                )
+                Text(
+                    text = stringResource(R.string.ripple_partial_payment_warning),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.alerts.warning,
+                )
+            }
+        }
+
         AnimatedVisibility(visible = isExpanded) {
             Column(
                 modifier =
@@ -124,6 +145,8 @@ private val RippleDappTxFieldKey.labelRes: Int
             RippleDappTxFieldKey.BUYING_ISSUER -> R.string.ripple_field_buying_issuer
             RippleDappTxFieldKey.LIMIT -> R.string.ripple_field_limit
             RippleDappTxFieldKey.LIMIT_ISSUER -> R.string.ripple_field_limit_issuer
+            RippleDappTxFieldKey.FLAGS -> R.string.ripple_field_flags
+            RippleDappTxFieldKey.PATHS -> R.string.ripple_field_paths
             RippleDappTxFieldKey.FEE -> R.string.verify_transaction_network_fee
         }
 
@@ -140,11 +163,26 @@ private const val PREVIEW_RIPPLE_JSON =
         "\"SendMax\":{\"currency\":\"USD\",\"issuer\":\"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q\"," +
         "\"value\":\"1.5\"},\"DestinationTag\":\"12345\"}"
 
+private const val PREVIEW_RIPPLE_PARTIAL_PAYMENT_JSON =
+    "{\"TransactionType\":\"Payment\",\"Account\":\"rB5TihdPbKgMrkFqrqUC3yLdE8hhv4BdeY\"," +
+        "\"Destination\":\"rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY\",\"Amount\":\"1500000\"," +
+        "\"DeliverMin\":\"100000\",\"SendMax\":\"1500000\",\"Flags\":131072," +
+        "\"Paths\":[[{\"currency\":\"USD\",\"issuer\":\"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q\"}]]}"
+
 @Preview
 @Composable
 private fun PreviewSignRippleDisplayView() {
     SignRippleDisplayView(
         tx = RippleDappTransactionDecoder.decode(PREVIEW_RIPPLE_JSON),
+        initiallyExpanded = true,
+    )
+}
+
+@Preview
+@Composable
+private fun PreviewSignRipplePartialPaymentDisplayView() {
+    SignRippleDisplayView(
+        tx = RippleDappTransactionDecoder.decode(PREVIEW_RIPPLE_PARTIAL_PAYMENT_JSON),
         initiallyExpanded = true,
     )
 }

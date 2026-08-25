@@ -1352,6 +1352,9 @@
     <string name="ripple_field_buying_issuer">Buying issuer</string>
     <string name="ripple_field_limit">Limit</string>
     <string name="ripple_field_limit_issuer">Limit issuer</string>
+    <string name="ripple_field_flags">Flags</string>
+    <string name="ripple_field_paths">Routing paths</string>
+    <string name="ripple_partial_payment_warning">Partial payment: the amount shown is a maximum, not a guarantee. Less may be delivered.</string>
     <string name="sui_sender">From</string>
     <string name="sui_gas_budget">Gas Budget: %1$s SUI</string>
     <string name="sui_gas_price">Gas Price: %1$s MIST</string>

@@ -1283,6 +1283,9 @@
     <string name="ripple_field_buying_issuer">Uitgever aankoop</string>
     <string name="ripple_field_limit">Limiet</string>
     <string name="ripple_field_limit_issuer">Uitgever limiet</string>
+    <string name="ripple_field_flags">Flags</string>
+    <string name="ripple_field_paths">Betalingsroutes</string>
+    <string name="ripple_partial_payment_warning">Gedeeltelijke betaling: het getoonde bedrag is een maximum, geen garantie. Er kan minder worden geleverd.</string>
     <string name="sui_sender">Van</string>
     <string name="sui_gas_budget">Gasbudget: %1$s SUI</string>
     <string name="sui_gas_price">Gasprijs: %1$s MIST</string>

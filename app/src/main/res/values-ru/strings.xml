@@ -1291,6 +1291,9 @@
     <string name="ripple_field_buying_issuer">Эмитент покупки</string>
     <string name="ripple_field_limit">Лимит</string>
     <string name="ripple_field_limit_issuer">Эмитент лимита</string>
+    <string name="ripple_field_flags">Flags</string>
+    <string name="ripple_field_paths">Маршруты платежа</string>
+    <string name="ripple_partial_payment_warning">Частичный платёж: показанное количество — это максимум, а не гарантия. Может быть доставлено меньше.</string>
     <string name="sui_sender">От</string>
     <string name="sui_gas_budget">Бюджет газа: %1$s SUI</string>
     <string name="sui_gas_price">Цена газа: %1$s MIST</string>
