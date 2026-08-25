@@ -9,6 +9,8 @@ import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
 import java.io.ByteArrayOutputStream
 import java.math.BigInteger
+import wallet.core.jni.AnyAddress
+import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 
@@ -232,33 +234,16 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
         }
 
         /**
-         * SS58 encode raw 32-byte pubkey with Bittensor prefix (42). Format: base58(prefix_byte ++
-         * pubkey ++ blake2b_checksum[0..2])
+         * SS58 encode raw 32-byte pubkey with Bittensor prefix (42), via WalletCore's AnyAddress.
          */
         fun ss58Encode(pubkey: ByteArray): String {
             require(pubkey.size == 32) { "SS58 encode requires 32-byte pubkey, got ${pubkey.size}" }
-            val prefixByte = byteArrayOf(SS58_PREFIX.toByte())
-            val payload = prefixByte + pubkey
-            // Checksum = blake2b-512("SS58PRE" + payload)[0..2]
-            val checksumInput = "SS58PRE".toByteArray() + payload
-            val hash = wallet.core.jni.Hash.blake2b(checksumInput, 64)
-            val checksum = hash.sliceArray(0..1)
-            return base58Encode(payload + checksum)
-        }
-
-        private fun base58Encode(data: ByteArray): String {
-            var n = BigInteger(1, data) // positive big-endian
-            val sb = StringBuilder()
-            while (n > BigInteger.ZERO) {
-                val (quot, rem) = n.divideAndRemainder(BigInteger.valueOf(58))
-                sb.append(BASE58_ALPHABET[rem.toInt()])
-                n = quot
-            }
-            // Leading zeros
-            for (b in data) {
-                if (b == 0.toByte()) sb.append('1') else break
-            }
-            return sb.reverse().toString()
+            return AnyAddress(
+                    PublicKey(pubkey, PublicKeyType.ED25519),
+                    CoinType.POLKADOT,
+                    SS58_PREFIX,
+                )
+                .description()
         }
 
         fun hexToBytes(hex: String): ByteArray {
@@ -268,57 +253,8 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
             }
         }
 
-        /**
-         * Decode SS58 address to raw 32-byte public key. SS58 = base58(prefix ++ pubkey ++
-         * checksum)
-         */
-        fun ss58Decode(address: String): ByteArray {
-            val decoded = base58Decode(address)
-            // For prefix < 64: 1 byte prefix + 32 bytes pubkey + 2 bytes checksum = 35 bytes
-            // For prefix 64-16383: 2 byte prefix + 32 bytes pubkey + 2 bytes checksum = 36 bytes
-            val prefixLen: Int
-            val pubkey: ByteArray
-            val checksum: ByteArray
-            when {
-                decoded.size == 35 -> {
-                    prefixLen = 1
-                    pubkey = decoded.sliceArray(1..32)
-                    checksum = decoded.sliceArray(33..34)
-                }
-                decoded.size == 36 -> {
-                    prefixLen = 2
-                    pubkey = decoded.sliceArray(2..33)
-                    checksum = decoded.sliceArray(34..35)
-                }
-                else ->
-                    throw IllegalArgumentException("Invalid SS58 address length: ${decoded.size}")
-            }
-            // Verify blake2b-512 checksum
-            val payload = decoded.sliceArray(0 until prefixLen + 32)
-            val hash = wallet.core.jni.Hash.blake2b("SS58PRE".toByteArray() + payload, 64)
-            if (!hash.sliceArray(0..1).contentEquals(checksum)) {
-                throw IllegalArgumentException("Invalid SS58 checksum for address: $address")
-            }
-            return pubkey
-        }
-
-        private val BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-
-        private fun base58Decode(input: String): ByteArray {
-            var result = BigInteger.ZERO
-            for (c in input) {
-                val index = BASE58_ALPHABET.indexOf(c)
-                if (index < 0) throw IllegalArgumentException("Invalid base58 character: $c")
-                result =
-                    result.multiply(BigInteger.valueOf(58)).add(BigInteger.valueOf(index.toLong()))
-            }
-            val bytes = result.toByteArray()
-            // Remove leading zero from BigInteger sign byte
-            val trimmed =
-                if (bytes[0] == 0.toByte() && bytes.size > 1) bytes.drop(1).toByteArray() else bytes
-            // Count leading '1's in input (each = leading zero byte)
-            val leadingZeros = input.takeWhile { it == '1' }.length
-            return ByteArray(leadingZeros) + trimmed
-        }
+        /** Decode SS58 address to raw 32-byte public key, via WalletCore's AnyAddress. */
+        fun ss58Decode(address: String): ByteArray =
+            AnyAddress(address, CoinType.POLKADOT, SS58_PREFIX).data()
     }
 }
