@@ -33,6 +33,9 @@ enum class PromoBanner(val id: String, val dismissPolicy: DismissPolicy) {
     UpgradeVaultDkls(id = "upgrade_vault_dkls", dismissPolicy = DismissPolicy.Ttl(15.days)),
     BuyVultSwap(id = "buy_vult_swap", dismissPolicy = DismissPolicy.Ttl(7.days)),
     FollowXVultisig(id = "follow_x_vultisig", dismissPolicy = DismissPolicy.Ttl(15.days)),
+    // A campaign, not a standing promo: the claim entry point also lives on the QBTC chain screen,
+    // so a closed banner has nothing to come back for.
+    ClaimQbtc(id = "claim_qbtc", dismissPolicy = DismissPolicy.Permanent),
 }
 
 interface PromoBannerDismissalRepository {
