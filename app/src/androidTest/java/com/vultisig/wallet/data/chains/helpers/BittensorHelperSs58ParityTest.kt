@@ -1,13 +1,15 @@
 package com.vultisig.wallet.data.chains.helpers
 
-import com.vultisig.wallet.data.WalletCoreNative
 import java.math.BigInteger
-import java.security.SecureRandom
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
-import org.junit.Before
 import org.junit.Test
+import wallet.core.jni.AnyAddress
+import wallet.core.jni.CoinType
+import wallet.core.jni.PrivateKey
+import wallet.core.jni.PublicKey
+import wallet.core.jni.PublicKeyType
 
 /**
  * Parity coverage for #5667: [BittensorHelper.ss58Encode]/[BittensorHelper.ss58Decode] now delegate
@@ -16,13 +18,11 @@ import org.junit.Test
  * checks the new one against it, since the one risk the swap carries — whether `AnyAddress.data()`
  * returns the raw 32-byte account id rather than a hash of it — can only be settled by running both
  * side by side.
+ *
+ * Runs under `app:connectedDebugAndroidTest` (not `:data`) because CI's instrumented-test step only
+ * invokes that module — see `.github/workflows/android.yml`.
  */
 class BittensorHelperSs58ParityTest {
-
-    @Before
-    fun loadWalletCore() {
-        WalletCoreNative.ensureLoaded()
-    }
 
     private object ReferenceImpl {
         private const val SS58_PREFIX = 42
@@ -49,16 +49,24 @@ class BittensorHelperSs58ParityTest {
         }
     }
 
-    private fun randomPubkey(seed: Long): ByteArray {
-        val bytes = ByteArray(32)
-        SecureRandom.getInstance("SHA1PRNG").apply { setSeed(seed) }.nextBytes(bytes)
-        return bytes
+    /**
+     * A random 32-byte string is *not* a valid Ed25519 public key — most bytes don't land on the
+     * curve — and `AnyAddress` silently returns `""` for one instead of throwing. Deriving the key
+     * from a real WalletCore keypair guarantees an actual Edwards point, which is what
+     * encode/decode are meant to round-trip in production.
+     */
+    private fun randomEdwardsPubkey(seed: Long): ByteArray {
+        val seedBytes = ByteArray(32)
+        java.security.SecureRandom.getInstance("SHA1PRNG")
+            .apply { setSeed(seed) }
+            .nextBytes(seedBytes)
+        return PrivateKey(seedBytes).getPublicKeyEd25519().data()
     }
 
     @Test
     fun encode_matches_the_hand_rolled_reference_for_random_pubkeys() {
         for (seed in 1L..20L) {
-            val pubkey = randomPubkey(seed)
+            val pubkey = randomEdwardsPubkey(seed)
             assertEquals(
                 "seed $seed",
                 ReferenceImpl.encode(pubkey),
@@ -69,16 +77,21 @@ class BittensorHelperSs58ParityTest {
 
     @Test
     fun encode_matches_the_reference_for_pubkeys_with_leading_zero_bytes() {
-        // Exercises the leading-'1' base58 path that a naive parity check on random bytes is
-        // unlikely to hit.
-        val pubkey = ByteArray(32) { if (it < 3) 0 else (it + 1).toByte() }
+        // Exercises the leading-'1' base58 path that a naive parity check on random keys is
+        // unlikely to hit organically; force it by masking the first three bytes of a real point.
+        val pubkey =
+            randomEdwardsPubkey(42L).copyOf().also {
+                it[0] = 0
+                it[1] = 0
+                it[2] = 0
+            }
         assertEquals(ReferenceImpl.encode(pubkey), BittensorHelper.ss58Encode(pubkey))
     }
 
     @Test
     fun decode_recovers_exactly_the_pubkey_that_was_encoded() {
         for (seed in 1L..20L) {
-            val pubkey = randomPubkey(seed)
+            val pubkey = randomEdwardsPubkey(seed)
             val address = BittensorHelper.ss58Encode(pubkey)
             assertArrayEquals("seed $seed", pubkey, BittensorHelper.ss58Decode(address))
         }
@@ -89,7 +102,7 @@ class BittensorHelperSs58ParityTest {
         // Cross-checks the new decoder against addresses produced by the old encoder, not just
         // against itself.
         for (seed in 1L..20L) {
-            val pubkey = randomPubkey(seed)
+            val pubkey = randomEdwardsPubkey(seed)
             val referenceAddress = ReferenceImpl.encode(pubkey)
             assertArrayEquals("seed $seed", pubkey, BittensorHelper.ss58Decode(referenceAddress))
         }
@@ -99,14 +112,9 @@ class BittensorHelperSs58ParityTest {
     fun decode_rejects_an_address_encoded_with_a_different_ss58_prefix() {
         // Behavior delta from #5667: the old decoder ignored the prefix byte's value, the new one
         // (via AnyAddress) validates it against SS58_PREFIX = 42.
-        val pubkey = randomPubkey(99L)
+        val pubkey = randomEdwardsPubkey(99L)
         val polkadotAddress =
-            wallet.core.jni
-                .AnyAddress(
-                    wallet.core.jni.PublicKey(pubkey, wallet.core.jni.PublicKeyType.ED25519),
-                    wallet.core.jni.CoinType.POLKADOT,
-                )
-                .description()
+            AnyAddress(PublicKey(pubkey, PublicKeyType.ED25519), CoinType.POLKADOT).description()
 
         assertThrows(IllegalArgumentException::class.java) {
             BittensorHelper.ss58Decode(polkadotAddress)
