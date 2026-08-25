@@ -625,6 +625,7 @@
     <string name="referral_create_search">Pesquisar</string>
     <string name="referral_create_expiration_date">Data de expiração</string>
     <string name="referral_create_set_expiration_years">Definir expiração (em anos)</string>
+    <string name="referral_choose_payout_asset">Escolher ativo de pagamento</string>
     <string name="referral_create_registration_fees">Taxas de registro</string>
     <string name="referral_create_cost">Custo</string>
     <string name="referral_create_fees_error">Falha ao carregar taxas. Tente novamente.</string>

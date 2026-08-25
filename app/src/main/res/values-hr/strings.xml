@@ -628,6 +628,7 @@
     <string name="referral_create_search">Traži</string>
     <string name="referral_create_expiration_date">Datum isteka</string>
     <string name="referral_create_set_expiration_years">Postavi istek (u godinama)</string>
+    <string name="referral_choose_payout_asset">Odaberi isplatni token</string>
     <string name="referral_create_registration_fees">Naknade za registraciju</string>
     <string name="referral_create_cost">Trošak</string>
     <string name="referral_create_fees_error">Učitavanje naknada nije uspjelo. Pokušajte ponovo.</string>
