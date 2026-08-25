@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -213,7 +212,7 @@ fun VsCenterHighlightCarousel(
                         Modifier.align(Alignment.Center)
                             .width(itemWidth)
                             .height(50.dp)
-                            .clip(RoundedCornerShape(30.dp))
+                            .clip(Theme.v2.radius.pill)
                             .border(
                                 width = 2.dp,
                                 brush =
@@ -223,7 +222,7 @@ fun VsCenterHighlightCarousel(
                                             Theme.v2.colors.buttons.tertiary,
                                         )
                                     ),
-                                shape = RoundedCornerShape(30.dp),
+                                shape = Theme.v2.radius.pill,
                             )
                 )
             }
@@ -237,7 +236,7 @@ private fun CarouselChainItem(chain: Chain, logo: ImageModel, modifier: Modifier
         modifier =
             modifier
                 .height(50.dp)
-                .clip(RoundedCornerShape(30.dp))
+                .clip(Theme.v2.radius.pill)
                 .background(Theme.v2.colors.backgrounds.secondary)
                 .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,

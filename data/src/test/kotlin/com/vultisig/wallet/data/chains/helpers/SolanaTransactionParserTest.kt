@@ -97,4 +97,29 @@ class SolanaTransactionParserTest {
     fun `unknown program id yields no instruction type`() {
         assertNull(instructionType("UnknownProgram11111111111111111111111111", 0))
     }
+
+    @Test
+    fun `the programs a Kamino transaction invokes are named, not left unknown`() {
+        // These render on the very screen where the transaction is approved, on either device of a
+        // co-signed vault. Unnamed rows there tell the approver nothing about what they are
+        // signing.
+        assertEquals(
+            "Kamino kVault Program",
+            SolanaTransactionParser.getKnownProgramName(
+                "KvauGMspG5k6rtzrqqn7WNn3oZdyKqLKwK2XWQ8FLjd"
+            ),
+        )
+        assertEquals(
+            "Kamino Farms Program",
+            SolanaTransactionParser.getKnownProgramName(
+                "FarmsPZpWu9i7Kky8tPN37rs2TpmMrAZrC7S7vJa91Hr"
+            ),
+        )
+        assertEquals(
+            "SPL Memo Program",
+            SolanaTransactionParser.getKnownProgramName(
+                "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+            ),
+        )
+    }
 }

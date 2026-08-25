@@ -216,16 +216,26 @@ class MldsaKeysign(
         val session = Handle()
         val keyshareHandle = Handle()
         try {
-            mldsa_keyshare_from_bytes(getKeyshareBytes().toMldsaGoSlice(), keyshareHandle)
+            getKeyshareBytes()
+                .withMldsaGoSlice { keyshareSlice ->
+                    mldsa_keyshare_from_bytes(keyshareSlice, keyshareHandle)
+                }
                 .check("load keyshare")
-            mldsa_sign_session_from_setup(
-                    MldsaSecurityLevel.MlDsa44,
-                    setupMsg.toMldsaGoSlice(),
-                    localPartyID.toByteArray().toMldsaGoSlice(),
-                    keyshareHandle,
-                    session,
-                )
-                .check("create sign session")
+            val setupMsgSlice = setupMsg.toMldsaGoSlice()
+            val localPartySlice = localPartyID.toByteArray().toMldsaGoSlice()
+            try {
+                mldsa_sign_session_from_setup(
+                        MldsaSecurityLevel.MlDsa44,
+                        setupMsgSlice,
+                        localPartySlice,
+                        keyshareHandle,
+                        session,
+                    )
+                    .check("create sign session")
+            } finally {
+                setupMsgSlice.free()
+                localPartySlice.free()
+            }
 
             drainOutbound(session)
             if (poller.poll(msgHash) { applyInboundMessages(session, it, msgHash) }) {
@@ -276,17 +286,21 @@ class MldsaKeysign(
 
             val encoded = Base64.encode(payload)
             val slice = payload.toMldsaGoSlice()
-            for (i in keysignCommittee.indices) {
-                val receiver = getOutboundReceiver(handle, slice, i.toLong())
-                if (receiver.isEmpty()) break
-                val receiverId = String(receiver, Charsets.UTF_8)
-                Timber.d(
-                    "sending from %s to %s, length=%d",
-                    localPartyID,
-                    receiverId,
-                    encoded.length,
-                )
-                messenger?.send(localPartyID, receiverId, encoded)
+            try {
+                for (i in keysignCommittee.indices) {
+                    val receiver = getOutboundReceiver(handle, slice, i.toLong())
+                    if (receiver.isEmpty()) break
+                    val receiverId = String(receiver, Charsets.UTF_8)
+                    Timber.d(
+                        "sending from %s to %s, length=%d",
+                        localPartyID,
+                        receiverId,
+                        encoded.length,
+                    )
+                    messenger?.send(localPartyID, receiverId, encoded)
+                }
+            } finally {
+                slice.free()
             }
         }
     }
@@ -321,11 +335,10 @@ class MldsaKeysign(
 
             // JNI out-param: set to non-zero when the protocol is complete
             val isFinished = intArrayOf(0)
-            mldsa_sign_session_input_message(
-                    handle,
-                    Base64.decode(decrypted).toMldsaGoSlice(),
-                    isFinished,
-                )
+            Base64.decode(decrypted)
+                .withMldsaGoSlice { slice ->
+                    mldsa_sign_session_input_message(handle, slice, isFinished)
+                }
                 .check("apply inbound message")
 
             appliedMessages += cacheKey
@@ -351,11 +364,14 @@ class MldsaKeysign(
 
     /** Extracts the key ID from the local MLDSA keyshare (needed for setup messages). */
     private fun getMldsaKeyshareID(): ByteArray {
-        val keyshareSlice = getKeyshareBytes().toMldsaGoSlice()
         val handle = Handle()
         val buf = tss_buffer()
         try {
-            mldsa_keyshare_from_bytes(keyshareSlice, handle).check("load keyshare")
+            getKeyshareBytes()
+                .withMldsaGoSlice { keyshareSlice ->
+                    mldsa_keyshare_from_bytes(keyshareSlice, handle)
+                }
+                .check("load keyshare")
             mldsa_keyshare_key_id(handle, buf).check("get keyshare ID")
             return BufferUtilJNI.get_bytes_from_tss_buffer(buf)
         } finally {
@@ -367,21 +383,32 @@ class MldsaKeysign(
 
     /** Builds the keysign setup message that the initiating device distributes. */
     private fun getMldsaKeysignSetupMessage(message: String): ByteArray = withTssBuffer { buf ->
-        mldsa_sign_setupmsg_new(
-                MldsaSecurityLevel.MlDsa44,
-                getMldsaKeyshareID().toMldsaGoSlice(),
-                null,
-                message.hexToByteArray().toMldsaGoSlice(),
-                DklsHelper.arrayToBytes(keysignCommittee).toMldsaGoSlice(),
-                buf,
-            )
-            .check("create keysign setup message")
+        val keyIdSlice = getMldsaKeyshareID().toMldsaGoSlice()
+        val msgSlice = message.hexToByteArray().toMldsaGoSlice()
+        val idsSlice = DklsHelper.arrayToBytes(keysignCommittee).toMldsaGoSlice()
+        try {
+            mldsa_sign_setupmsg_new(
+                    MldsaSecurityLevel.MlDsa44,
+                    keyIdSlice,
+                    null,
+                    msgSlice,
+                    idsSlice,
+                    buf,
+                )
+                .check("create keysign setup message")
+        } finally {
+            keyIdSlice.free()
+            msgSlice.free()
+            idsSlice.free()
+        }
         BufferUtilJNI.get_bytes_from_tss_buffer(buf)
     }
 
     /** Extracts the hex-encoded message hash from a setup message for verification. */
     private fun decodeMessage(setupMsg: ByteArray): String = withTssBuffer { buf ->
-        mldsa_decode_message(setupMsg.toMldsaGoSlice(), buf).check("decode setup message")
+        setupMsg
+            .withMldsaGoSlice { slice -> mldsa_decode_message(slice, buf) }
+            .check("decode setup message")
         BufferUtilJNI.get_bytes_from_tss_buffer(buf).toHexString()
     }
 

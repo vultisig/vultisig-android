@@ -25,6 +25,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.formatPercentage
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -207,7 +208,11 @@ constructor(
                     if (position != null) {
                         cachedPoolAddress = primary!!.pool
                         cachedStakedDisplay =
-                            "${staked.toBigDecimal().movePointLeft(tonCoin.decimal).stripTrailingZeros().toPlainString()} ${tonCoin.ticker}"
+                            staked
+                                .toBigDecimal()
+                                .movePointLeft(tonCoin.decimal)
+                                .stripTrailingZeros()
+                                .formatTokenAmount(tonCoin.ticker)
                         position
                     } else {
                         cachedPoolAddress = null
@@ -271,7 +276,7 @@ constructor(
             totalAmountPrice = stakedFiat,
             ticker = coin.ticker,
             poolName = poolInfo?.name?.takeIf { it.isNotBlank() } ?: shortPool(poolAddress),
-            stakedDisplay = "${stakedTon.stripTrailingZeros().toPlainString()} ${coin.ticker}",
+            stakedDisplay = stakedTon.stripTrailingZeros().formatTokenAmount(coin.ticker),
             stakedFiatDisplay = stakedFiat,
             // tonapi `apy` is a percentage (13.27 = 13.27%); `formatPercentage` multiplies by 100,
             // so scale to a fraction first.
@@ -282,7 +287,10 @@ constructor(
                 pendingWithdraw
                     .takeIf { it > BigInteger.ZERO }
                     ?.let {
-                        "${it.toBigDecimal().movePointLeft(coin.decimal).stripTrailingZeros().toPlainString()} ${coin.ticker}"
+                        it.toBigDecimal()
+                            .movePointLeft(coin.decimal)
+                            .stripTrailingZeros()
+                            .formatTokenAmount(coin.ticker)
                     },
             unlockEpochMs = poolInfo?.cycleEnd?.takeIf { isLocked }?.let { it * 1000L },
         )

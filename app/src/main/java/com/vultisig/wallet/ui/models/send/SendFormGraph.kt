@@ -5,6 +5,7 @@ package com.vultisig.wallet.ui.models.send
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.blockchain.tron.GetTronFrozenBalancesUseCase
 import com.vultisig.wallet.data.blockchain.tron.TronFrozenBalanceState
 import com.vultisig.wallet.data.blockchain.tron.TronResourceType
@@ -12,6 +13,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
@@ -23,6 +25,7 @@ import com.vultisig.wallet.data.repositories.AdvanceGasUiRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.RecipientValidity
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
@@ -90,6 +93,7 @@ internal class SendFormGraph(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val stakingDetailsRepository: StakingDetailsRepository,
+    private val defaultStakingPositionService: DefaultStakingPositionService,
     private val feeServiceComposite: FeeServiceComposite,
     private val chainValidationService: ChainValidationService,
     private val getTronFrozenBalances: GetTronFrozenBalancesUseCase,
@@ -124,10 +128,12 @@ internal class SendFormGraph(
     private var defiType: DeFiNavActions? = null // Default is send, no defi form
     private var mscaAddress: String? = null
     private var bondedAmount: BigInteger? = null
+    private var preselectedTokenId: TokenId? = null
 
     private val vaultProvider: () -> Vault? = { vault }
     private val vaultIdProvider: () -> VaultId? = { vaultId }
     private val defiTypeProvider: () -> DeFiNavActions? = { defiType }
+    private val preselectedTokenIdProvider: () -> TokenId? = { preselectedTokenId }
     private val mscaAddressProvider: () -> String? = { mscaAddress }
     private val bondedAmountProvider: () -> BigInteger? = { bondedAmount }
 
@@ -164,7 +170,9 @@ internal class SendFormGraph(
             accountsState = accountsState,
             accountsRepository = accountsRepository,
             stakingDetailsRepository = stakingDetailsRepository,
+            defaultStakingPositionService = defaultStakingPositionService,
             defiTypeProvider = defiTypeProvider,
+            preselectedTokenIdProvider = preselectedTokenIdProvider,
             mscaAddressProvider = mscaAddressProvider,
             bondedAmountProvider = bondedAmountProvider,
         )
@@ -363,6 +371,9 @@ internal class SendFormGraph(
         mscaAddress = args.mscaAddress
         bondedAmount = args.bondedAmount?.toBigIntegerOrNull()
         vaultId = args.vaultId
+        // Seeded before the load: the accounts a plain send may draw on depend on the token it was
+        // opened for — the ybRUNE receipt is not a wallet token and has to be synthesized.
+        preselectedTokenId = args.tokenId
         accountsLoader.load(args.vaultId)
         loadVaultName()
         initFormType()
@@ -437,17 +448,23 @@ internal class SendFormGraph(
             }
         }
         scope.launch {
-            addressManager.invalidAddress.collect { invalid ->
+            addressManager.addressError.collect { error ->
                 uiState.update {
                     it.copy(
                         dstAddressError =
-                            if (invalid) {
-                                UiText.StringResource(
-                                    com.vultisig.wallet.R.string
-                                        .send_error_invalid_recipient_address
-                                )
-                            } else {
-                                null
+                            when (error) {
+                                RecipientValidity.InvalidForChain ->
+                                    UiText.StringResource(
+                                        com.vultisig.wallet.R.string
+                                            .send_error_invalid_recipient_address
+                                    )
+                                RecipientValidity.NotAWalletAddress ->
+                                    UiText.StringResource(
+                                        com.vultisig.wallet.R.string
+                                            .error_recipient_not_a_wallet_address
+                                    )
+                                RecipientValidity.Valid,
+                                null -> null
                             }
                     )
                 }

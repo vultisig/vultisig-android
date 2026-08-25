@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
 import java.security.MessageDigest
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
@@ -242,7 +243,9 @@ object RippleHelper {
      * - the JSON's `Account` equals this vault's derived XRP [expectedAccount], so a co-signer
      *   never signs a spend from an account other than its own;
      * - no signing-mechanics field ([FORBIDDEN_DAPP_FIELDS]) is present, which would mean the JSON
-     *   was tampered with after the initiator sanitized it.
+     *   was tampered with after the initiator sanitized it;
+     * - a `Payment` setting `tfPartialPayment` is bounded by a `DeliverMin` — see
+     *   [verifyPartialPaymentIsBounded].
      *
      * Pure (no JNI), so it is unit-testable independently of WalletCore. Mirrors the Windows
      * `sanitizeRippleDappTx` defense.
@@ -274,6 +277,36 @@ object RippleHelper {
         val tamperedField = FORBIDDEN_DAPP_FIELDS.firstOrNull { obj.containsKey(it) }
         require(tamperedField == null) {
             "SignRipple rawJson carries a signing-mechanics field ($tamperedField); refusing to sign"
+        }
+
+        verifyPartialPaymentIsBounded(obj, transactionType)
+    }
+
+    /**
+     * Rejects a `Payment` that sets [TF_PARTIAL_PAYMENT] without a positive `DeliverMin` floor.
+     * Such a transaction is approved against the `Amount` on the confirmation screen, yet the
+     * ledger is free to deliver an arbitrarily smaller value while still spending up to `SendMax` —
+     * there is nothing left for a co-signer to meaningfully verify, so it fails closed instead.
+     * With a positive `DeliverMin` the delivery has a floor the co-signer can see and judge, so it
+     * is allowed through and flagged on the verify screen. A `DeliverMin` that is present but does
+     * not parse to a positive amount (`"0"`, `"-1"`, `"abc"`) is no floor, and is refused as if it
+     * were absent.
+     *
+     * A `Flags` we cannot read — a non-integer, or an explicit null — is refused for the same
+     * reason: the bit cannot be ruled out. Scoped to `Payment` because other types reuse the bit
+     * (`tfImmediateOrCancel` on an `OfferCreate`).
+     */
+    private fun verifyPartialPaymentIsBounded(obj: JsonObject, transactionType: String) {
+        if (transactionType != "Payment" || !obj.containsKey("Flags")) return
+
+        val flags =
+            obj.flagsOrNull()
+                ?: error("SignRipple Payment has an unreadable Flags; refusing to sign")
+        if (flags and TF_PARTIAL_PAYMENT == 0L) return
+
+        require(obj.hasPositiveAmount("DeliverMin")) {
+            "SignRipple Payment sets tfPartialPayment without a positive DeliverMin floor; it " +
+                "could deliver far less than the Amount shown"
         }
     }
 

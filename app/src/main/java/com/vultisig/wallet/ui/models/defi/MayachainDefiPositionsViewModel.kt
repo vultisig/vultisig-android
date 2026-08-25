@@ -41,6 +41,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState.Companion.from
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -279,27 +280,18 @@ constructor(
     private fun loadSavedPositions(): Job =
         viewModelScope.launch {
             defiPositionsRepository
-                .getSelectedPositions(vaultId)
-                .map { saved ->
-                    when {
-                        // A vault that never chose reads back as the store's own defaults, never
-                        // as an empty set, so empty is a selection the user cleared on purpose.
-                        // It has to be taken at face value: falling through to the Maya defaults
-                        // below would derive it back to what it just replaced, and the dedup would
-                        // then drop the reload it needs.
-                        saved.isEmpty() -> emptyList()
-                        // The THORChain screen writes this same key. A set holding nothing this
-                        // screen can show is that screen's selection, not a choice made here.
-                        saved.any { it in MAYA_STATIC_POSITION_KEYS || it.contains(".") } ->
-                            saved.toList()
-                        else -> MAYA_DEFAULT_SELECTED_POSITIONS
-                    }
-                }
-                // The store re-emits for writes that leave this vault's selection alone — the
-                // first-ever save flips the key from absent to present, which it cannot read as
-                // unchanged — and a reload for one of those would blank a settled header for
-                // nothing. Compared as sets: only membership decides what gets loaded, and a stored
-                // set can come back in a different order than the default list.
+                .getSelectedPositions(Chain.MayaChain, vaultId)
+                // Null is a vault that has never chosen on this chain, and it is the only case the
+                // defaults belong to. That is what makes an empty set unambiguous here: it is a
+                // selection the user cleared on purpose, and taking it at face value is safe now
+                // that no other screen can write this key.
+                .map { saved -> saved?.toList() ?: MAYA_DEFAULT_SELECTED_POSITIONS }
+                // The store re-emits for writes that leave this vault's selection alone — another
+                // screen saving into the same file, or this vault's first-ever save flipping the
+                // key from absent to present, which it cannot read as unchanged — and a reload for
+                // one of those would blank a settled header for nothing. Compared as sets: only
+                // membership decides what gets loaded, and a stored set can come back in a
+                // different order than the default list.
                 .distinctUntilChanged { old, new -> old.toSet() == new.toSet() }
                 .collect { positions ->
                     updateModel {
@@ -509,7 +501,9 @@ constructor(
                             stakeAssetHeader = UiText.StringResource(R.string.cacao_pool),
                             stakeAmount = stakeAmount,
                             stakedAmountDisplay =
-                                "${stakeAmount.setScale(4, RoundingMode.DOWN).toPlainString()} CACAO",
+                                stakeAmount
+                                    .setScale(4, RoundingMode.DOWN)
+                                    .formatTokenAmount("CACAO"),
                             stakedFiatDisplay = stakedFiat,
                             apy = details.apr?.formatPercentage(),
                             isLoading = false,
@@ -819,7 +813,12 @@ constructor(
                         val assetCoin =
                             vault.coins.find {
                                 it.chain == assetChain &&
-                                    it.ticker == assetCoinTicker &&
+                                    // Case-insensitive, as the THORChain LP tab already matches:
+                                    // chain metadata is not uniformly uppercased the way the EVM
+                                    // token lists are, so an exact match dropped a held token
+                                    // whose case differed from the pool string and priced its leg
+                                    // at zero.
+                                    it.ticker.equals(assetCoinTicker, ignoreCase = true) &&
                                     (assetContractAddress.isEmpty() ||
                                         it.contractAddress.equals(
                                             assetContractAddress,
@@ -869,7 +868,15 @@ constructor(
                             assetTicker = assetCoinTicker,
                             apr = apr?.formatPercentage(),
                             position =
-                                "${cacaoAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} CACAO + ${assetAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} $assetCoinTicker",
+                                cacaoAmount
+                                    .setScale(4, RoundingMode.DOWN)
+                                    .stripTrailingZeros()
+                                    .formatTokenAmount("CACAO") +
+                                    " + " +
+                                    assetAmount
+                                        .setScale(4, RoundingMode.DOWN)
+                                        .stripTrailingZeros()
+                                        .formatTokenAmount(assetCoinTicker),
                             positionKey = pool.positionKey,
                             canRemove = liquidityUnits > BigDecimal.ZERO,
                             chainLogo = assetChain?.monoToneLogo,
@@ -923,14 +930,17 @@ constructor(
         viewModelScope.launch {
             val selectedPositions = currentModel.tempSelectedPositions
 
-            // A Done that changed nothing has nothing to persist. Writing anyway would also clobber
-            // the stored selection this screen only reads through its Maya defaults.
+            // A Done that changed nothing has nothing to persist and nothing to refetch.
             if (selectedPositions.toSet() == currentModel.selectedPositions.toSet()) {
                 updateModel { it.copy(showPositionSelectionDialog = false) }
                 return@launch
             }
 
-            defiPositionsRepository.saveSelectedPositions(vaultId, selectedPositions)
+            defiPositionsRepository.saveSelectedPositions(
+                Chain.MayaChain,
+                vaultId,
+                selectedPositions,
+            )
             updateModel {
                 it.copy(showPositionSelectionDialog = false, selectedPositions = selectedPositions)
             }
@@ -1026,5 +1036,5 @@ private fun mayaPoolChainPrefixToChain(prefix: String): Chain? =
 private fun formatCacaoReward(reward: Double): String {
     val rewardBase = BigDecimal.valueOf(reward).setScale(0, RoundingMode.DOWN).toBigInteger()
     val cacaoAmount = rewardBase.toValue(10).setScale(4, RoundingMode.DOWN)
-    return "${cacaoAmount.toPlainString()} ${Coins.MayaChain.CACAO.ticker}"
+    return cacaoAmount.formatTokenAmount(Coins.MayaChain.CACAO.ticker)
 }

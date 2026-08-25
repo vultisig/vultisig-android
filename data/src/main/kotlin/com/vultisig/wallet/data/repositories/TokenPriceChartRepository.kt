@@ -142,6 +142,7 @@ constructor(private val coinGeckoApi: CoinGeckoApi) : TokenPriceChartRepository 
 
 private fun CoinMarketStatsJson.toDomain(): CoinMarketStats =
     CoinMarketStats(
+        currentPrice = currentPrice,
         marketCap = marketCap,
         marketCapRank = marketCapRank,
         fullyDilutedValuation = fullyDilutedValuation,

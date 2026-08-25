@@ -2,6 +2,8 @@
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Логотип токена</string>
     <string name="tokens">Токены</string>
+    <string name="edit_chains">Сети</string>
+    <string name="edit_tokens">Токены</string>
     <string name="keysign">Ключевая подпись</string>
     <string name="signing_error_please_try_again_s">Ошибка подписи. Пожалуйста, попробуйте еще раз. %s</string>
     <string name="try_again">Попробуйте еще раз</string>
@@ -102,6 +104,7 @@
     <string name="send_error_no_gas_fee">Нет платы за газ</string>
     <string name="send_error_no_address">Адрес недействителен</string>
     <string name="send_error_invalid_recipient_address">Этот получатель не является действительным адресом для этой сети.</string>
+    <string name="error_recipient_not_a_wallet_address">Этот получатель — токен-аккаунт или адрес программы, а не кошелёк. Введите адрес кошелька владельца.</string>
     <string name="send_error_memo_too_long">Мемо слишком длинное: %1$d байт (максимум %2$d).</string>
     <string name="send_error_no_amount">Сумма должна быть положительным числом</string>
     <string name="send_error_too_many_decimals">Сумма может содержать не более %1$d знаков после запятой</string>
@@ -147,6 +150,7 @@
     <string name="vault_detail_screen_mldsa_key_copied">Ключ MLDSA скопирован</string>
     <string name="welcome_screen_skip">Пропустить</string>
     <string name="keysign_screen_preparing_vault">Подготовка хранилища…</string>
+    <string name="keysign_malicious_party_detected">Устройство \"%1$s\" в этой сессии keysign было замечено в злонамеренном поведении. Не используйте его для подписания снова.</string>
     <string name="vault_settings_delete_vault_caution1">Я понимаю, что хранилище будет удалено навсегда</string>
     <string name="vault_settings_delete_vault_caution2">Я понимаю, что могу потерять средства</string>
     <string name="vault_settings_delete_vault_caution3">Я сделал резервную копию хранилища для последующего восстановления</string>
@@ -184,6 +188,7 @@
     <string name="passcode_settings_title">Шифрование код-паролем</string>
     <string name="passcode_settings_encryption_title">Шифрование код-паролем</string>
     <string name="passcode_settings_encryption_subtitle">Шифрует хранилище на этом устройстве и блокирует приложение.</string>
+    <string name="passcode_settings_encryption_explanation">Шифрование код-паролем привязано к этому устройству. Храните резервную копию .vult, и вы всегда сможете восстановить хранилища.</string>
     <string name="passcode_settings_change">Изменить код-пароль</string>
     <string name="passcode_settings_auto_lock">Автоблокировка</string>
     <string name="auto_lock_setting_title">Автоблокировка</string>
@@ -206,10 +211,12 @@
     <string name="passcode_entry_mismatch">Коды-пароли не совпадают. Придумайте заново.</string>
     <string name="passcode_operation_failed">Не удалось. Код-пароль не изменён.</string>
     <string name="passcode_not_digits">Вводите только цифры.</string>
-    <string name="passcode_key_unavailable_title">Хранилища недоступны</string>
-    <string name="passcode_key_unavailable_message">Ключи, защищающие данные хранилищ на этом устройстве, утрачены, поэтому его доли ключа больше нельзя прочитать. Переустановите приложение и восстановите хранилища из резервной копии.</string>
-    <string name="passcode_store_unavailable_title">Хранилища временно недоступны</string>
-    <string name="passcode_store_unavailable_message">На этот раз не удалось открыть защищённое хранилище ключей этого устройства, поэтому ваши хранилища остаются заблокированными. Перезапустите приложение и попробуйте снова. Ваши хранилища по-прежнему на этом устройстве, переустанавливать приложение не нужно.</string>
+    <string name="passcode_key_unavailable_title">На этом устройстве нет ключа от ваших хранилищ</string>
+    <string name="passcode_key_unavailable_message">Ваши хранилища всё ещё на этом устройстве. Восстановите их из резервной копии .vult, чтобы снова открыть.</string>
+    <string name="passcode_key_unavailable_restore">Восстановить из резервной копии</string>
+    <string name="passcode_key_unavailable_restored">Хранилище восстановлено. Ещё одному хранилищу на этом устройстве нужна его резервная копия.</string>
+    <string name="passcode_store_unavailable_title">Ваши хранилища пока заблокированы</string>
+    <string name="passcode_store_unavailable_message">На этот раз не удалось открыть защищённое хранилище ключей устройства. Всё на месте, поэтому перезапустите приложение, а не переустанавливайте его.</string>
     <string name="passcode_input_field_content_description">Введено %1$d из %2$d цифр</string>
     <string name="swap_form_from_title">Из</string>
     <string name="swap_form_estimated_fees_title">Комиссия за обмен</string>
@@ -246,6 +253,7 @@
     <string name="swap_form_minimum_amount">Сумма обмена слишком мала. Рекомендуемая сумма %1$s %2$s</string>
     <string name="backup_password_screen_title">Резервное копирование</string>
     <string name="import_file_not_supported">Тип файла не поддерживается.</string>
+    <string name="import_file_zip_incomplete">Не удалось прочитать некоторые части хранилища из этого файла</string>
     <string name="import_file_screen_password_error">Неверный пароль, попробуйте еще раз.</string>
     <string name="add_vault_save">Сохранить</string>
     <string name="backup_password_screen_enter_password">Введите пароль</string>
@@ -471,9 +479,6 @@
     <string name="deposit_option_unstake">Unstake</string>
     <string name="deposit_option_custom">Пользовательский</string>
     <string name="deposit_option_ibc_transfer">IBC-перевод</string>
-    <string name="deposit_option_switch">Переключить</string>
-    <string name="deposit_option_merge">Объединить</string>
-    <string name="deposit_option_withdraw_ruji">Вывести RUJI</string>
     <string name="withdraw_amount">Вывести %s</string>
     <string name="deposit_form_unstake_percentage_hint">Введите процент для вывода из стейкинга</string>
     <string name="verify_transaction_function_signature_title">Подпись функции</string>
@@ -482,9 +487,6 @@
     <string name="dapp_hero_unverified_function_subtitle">Просмотрите детали ниже перед подписанием</string>
     <string name="dapp_unverified_function_done_caution">Непроверенная функция. Просмотрите детали транзакции.</string>
     <string name="request_from">Запрос от</string>
-    <string name="send_shares_currency_hint">Введите доли</string>
-    <string name="send_error_max_shares">Сумма не должна превышать баланс</string>
-    <string name="deposit_form_shares_title">Доли (Баланс: %1$s)</string>
     <string name="fast_vault_password_reminder_title">Подтвердите пароль для:</string>
     <string name="fast_vault_password_reminder_done_button">Готово</string>
     <string name="periodically_ask_verify_password">Мы периодически просим подтвердить пароль, чтобы вы его не забыли.</string>
@@ -507,7 +509,6 @@
     <string name="keygen_step_generating_mldsa">Генерация ключа MLDSA</string>
     <string name="keygen_step_generating_chain_keys">Генерация ключей сетей</string>
     <string name="reshare_step_generating_ecdsa">Генерация ключа ECDSA</string>
-    <string name="merge_account_doesnt_exist">Выбранный токен не найден для этого адреса</string>
     <string name="keygen_email_error">Неверный адрес электронной почты, пожалуйста, проверьте</string>
     <string name="tx_overview_screen_tx_send">Отправить</string>
     <string name="tx_overview_screen_tx_deposit">Депозит</string>
@@ -516,9 +517,42 @@
     <string name="defi_tab_staked">стейкинге</string>
     <string name="defi_tab_bonded">Забондено</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_tab_earn">Доход</string>
     <string name="defi_bond">Бонд</string>
     <string name="defi_stake">Стейк</string>
     <string name="liquidity_pool">Пул ликвидности</string>
+    <!-- Kamino Earn -->
+    <string name="kamino_earn_title">Kamino Earn</string>
+    <string name="kamino_earn_curated_by">Куратор: %1$s</string>
+    <string name="kamino_earn_deposited">Депонировано: %1$s</string>
+    <string name="kamino_earn_apy">APY</string>
+    <string name="kamino_earn_earned">Заработано: %1$s</string>
+    <string name="kamino_earn_lost">Убыток: %1$s</string>
+    <string name="kamino_earn_protocol">Kamino</string>
+    <string name="kamino_earn_load_failed">Сейчас не удалось обновить эти vault‑ы</string>
+    <string name="kamino_earn_risk_conservative">Консервативный</string>
+    <string name="kamino_earn_risk_private_credit">Частный кредит</string>
+    <string name="kamino_earn_deposit">Внести</string>
+    <string name="kamino_earn_empty_title">Нет активных позиций Earn</string>
+    <string name="kamino_earn_empty_description">Включите vault Kamino в разделе «Управление Позициями», чтобы начать получать доход от своих активов Solana.</string>
+    <string name="kamino_deposit_title">Внести</string>
+    <string name="kamino_withdraw_title">Вывести</string>
+    <string name="kamino_amount_exceeds_available">Сумма превышает доступный баланс</string>
+    <string name="kamino_amount_below_minimum">Минимум — %1$s %2$s</string>
+    <string name="kamino_error_unknown_vault">Этот vault не поддерживается приложением</string>
+    <string name="kamino_error_load_failed">Сейчас не удалось загрузить этот vault</string>
+    <string name="kamino_refusal_below_smallest_unit">Сумма меньше минимальной единицы этого актива</string>
+    <string name="kamino_refusal_below_minimum">Сумма ниже минимума этого vault‑а</string>
+    <string name="kamino_refusal_rate_unavailable">Курс доли этого vault‑а сейчас недоступен</string>
+    <string name="kamino_refusal_larger_than_position">Эта сумма больше вашей позиции</string>
+    <string name="verify_deposit_depositing">Вы вносите</string>
+    <string name="verify_deposit_withdrawing">Вы выводите</string>
+    <string name="kamino_verify_vault">Vault Kamino</string>
+    <string name="kamino_verify_withdraw_unverified">Это устройство не может подтвердить сумму. Количество выводимых долей vault‑а: %1$s.</string>
+    <string name="kamino_error_build_failed">Не удалось подготовить эту транзакцию</string>
+    <string name="kamino_withdraw_nothing">Из этого vault‑а нечего выводить</string>
+    <string name="kamino_withdraw_unreadable">Не удалось прочитать эту позицию, поэтому вывод невозможно подготовить</string>
+    <string name="kamino_withdraw_delayed">Превышает мгновенную ликвидность vault‑а %1$s %2$s. Этот вывод может задержаться.</string>
     <!-- Tron DeFi -->
     <string name="tron_defi_freeze">Заморозить</string>
     <string name="tron_defi_unfreeze">Разморозить</string>
@@ -526,11 +560,13 @@
     <string name="tron_defi_frozen">Заморожено</string>
     <string name="tron_defi_pending_withdrawals">Ожидающие выводы</string>
     <string name="tron_defi_ready_to_claim">Готово к получению</string>
+    <string name="tron_defi_claim_button">Получить %1$s</string>
     <string name="tron_defi_countdown_days">%1$d дн., %2$d ч</string>
     <string name="tron_defi_countdown_hours">%1$d ч, %2$d мин</string>
     <string name="tron_defi_error_trx_not_in_vault">Монета TRX не найдена в хранилище</string>
     <string name="tron_freeze_screen_title">Заморозить TRON</string>
     <string name="tron_unfreeze_screen_title">Разморозить TRON</string>
+    <string name="tron_claim_screen_title">Получить TRON</string>
     <string name="tron_frozen_balances_error">Не удалось загрузить замороженные балансы. Потяните, чтобы повторить.</string>
     <string name="tron_resource_type">Тип ресурса</string>
     <string name="tron_resource_bandwidth">Пропускная способность</string>
@@ -802,7 +838,7 @@
     <string name="close_sheet_content_description">Закрыть</string>
     <string name="price_chart_retry_hint">Не удалось загрузить график. Нажмите, чтобы повторить.</string>
     <string name="token_details_market_stats_title">Рыночная статистика</string>
-    <string name="token_details_price_extremes_title">Экстремумы цены</string>
+    <string name="token_details_price_extremes_title">Диапазон цен</string>
     <string name="token_details_token_info_title">Информация о токене</string>
     <string name="token_details_market_cap">Рыночная капитализация</string>
     <string name="token_details_market_cap_rank">Рейтинг</string>
@@ -1093,6 +1129,10 @@
     <string name="swap_advanced_slippage_title">Допустимое проскальзывание</string>
     <string name="swap_advanced_slippage_page_title">Проскальзывание</string>
     <string name="swap_advanced_gas_limit_title">Предел газа</string>
+    <string name="swap_advanced_select_route_title">Выбрать маршрут</string>
+    <string name="swap_select_route_helper">Маршруты отсортированы по сумме на выходе. Выбор маршрута отменяет автоматический режим.</string>
+    <string name="swap_route_fee_prefix">Комиссия</string>
+    <string name="swap_route_eta">~%1$ds</string>
     <string name="swap_advanced_external_recipient_title">Использовать внешнего получателя</string>
     <string name="swap_advanced_locked_title">Расширенные настройки обмена</string>
     <string name="swap_advanced_locked_subtitle">Точная настройка проскальзывания, газа, маршрута и получателя для каждого обмена.</string>
@@ -1168,7 +1208,6 @@
     <string name="onboarding_desc_page_6_part_1">Эти общие ресурсы взаимодействуют с</string>
     <string name="enter_email_screen_desc">Этот адрес электронной почты используется только для отправки резервной копии сервера.</string>
     <string name="keygen_connecting_with_server_take_a_second">Это займёт всего секунду.</string>
-    <string name="function_switch_thorchain_address">Адрес THORChain</string>
     <string name="tx_transaction_successful_screen_title">Транзакция выполнена успешно</string>
     <string name="migration_onboarding_step_3_text_end">при обновлении</string>
     <string name="migration_onboarding_upgrade_your_vault">Обновите своё хранилище</string>
@@ -1177,6 +1216,15 @@
     <string name="onboarding_desc_page_1_part_2">Общие ресурсы хранилища</string>
     <string name="verify_swap_youre_swapping_title">Вы выполняете обмен</string>
     <string name="keysign_app_version_text">Версия %1$s (%2$s)</string>
+    <string name="lp_pending_title">Ожидание парного депозита %1$s</string>
+    <string name="lp_pending_subtitle">THORChain удерживает этот депозит до поступления парной стороны, а иначе возвращает его.</string>
+    <string name="lp_pending_deposited">Внесено</string>
+    <string name="lp_pending_from">Откуда</string>
+    <string name="lp_pending_refunds_in">Возврат через</string>
+    <string name="lp_pending_duration_days_hours_format">%1$dд %2$dч</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$dч %2$dмин</string>
+    <string name="lp_pending_refund_time_unknown">Неизвестно</string>
+    <string name="lp_pending_complete_deposit">Завершить депозит</string>
     <string name="lp_position">Позиция</string>
     <string name="add">Добавить</string>
     <string name="remove">Удалить</string>
@@ -1243,6 +1291,9 @@
     <string name="ripple_field_buying_issuer">Эмитент покупки</string>
     <string name="ripple_field_limit">Лимит</string>
     <string name="ripple_field_limit_issuer">Эмитент лимита</string>
+    <string name="ripple_field_flags">Flags</string>
+    <string name="ripple_field_paths">Маршруты платежа</string>
+    <string name="ripple_partial_payment_warning">Частичный платёж: показанное количество — это максимум, а не гарантия. Может быть доставлено меньше.</string>
     <string name="sui_sender">От</string>
     <string name="sui_gas_budget">Бюджет газа: %1$s SUI</string>
     <string name="sui_gas_price">Цена газа: %1$s MIST</string>
@@ -1347,7 +1398,7 @@
     <string name="transaction_history_detail_fee">Комиссия</string>
     <string name="transaction_history_detail_network">Сеть</string>
     <string name="transaction_history_detail_provider">Провайдер</string>
-    <string name="transaction_history_view_on_explorer">Открыть в обозревателе</string>
+    <string name="view_on_explorer">Открыть в обозревателе</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Введите вашу сид-фразу</string>

@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.RecipientValidity
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.utils.asAddressInput
@@ -60,13 +61,12 @@ internal class AddressManager(
     private val _isDstAddressComplete = MutableStateFlow(false)
     val isDstAddressComplete: StateFlow<Boolean> = _isDstAddressComplete.asStateFlow()
 
-    // True when a non-empty recipient failed chain validation and couldn't resolve to a valid
-    // address. Drives the inline "not a valid address for this chain" error; false once the input
-    // is valid or empty. While name resolution is in flight the flag holds its previous value, so a
+    // Why a non-empty recipient was rejected, or null once the input is accepted or empty. Drives
+    // the inline recipient error. While name resolution is in flight the value is held, so a
     // standing error stays put until the new input resolves instead of blinking off and back on.
     // Chain-general: every send chain validates through the same path below.
-    private val _invalidAddress = MutableStateFlow(false)
-    val invalidAddress: StateFlow<Boolean> = _invalidAddress.asStateFlow()
+    private val _addressError = MutableStateFlow<RecipientValidity?>(null)
+    val addressError: StateFlow<RecipientValidity?> = _addressError.asStateFlow()
 
     private val _onAddressValidated = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val onAddressValidated: SharedFlow<Unit> = _onAddressValidated.asSharedFlow()
@@ -144,27 +144,36 @@ internal class AddressManager(
             }
         }
 
-        when {
-            chainAccountAddressRepository.isValid(chain, addressStr) -> {
+        if (addressStr.isEmpty()) {
+            _resolvedDstAddress.value = null
+            _dstAddressLabel.value = null
+            _addressError.value = null
+            return
+        }
+
+        when (chainAccountAddressRepository.validateRecipient(chain, addressStr)) {
+            RecipientValidity.Valid -> {
                 // Only clear ENS label if the user typed a new raw address,
                 // not when we programmatically set the field to the resolved address.
                 if (addressStr != _resolvedDstAddress.value) {
                     _dstAddressLabel.value = null
                 }
                 _resolvedDstAddress.value = addressStr
-                _invalidAddress.value = false
+                _addressError.value = null
                 _onAddressValidated.tryEmit(Unit)
             }
-            addressStr.isNotEmpty() -> {
+            // A token account or program address is a well-formed address, so there is no name for
+            // the resolver to find — reject it here instead of sending it round that path.
+            RecipientValidity.NotAWalletAddress -> {
+                _resolvedDstAddress.value = null
+                _dstAddressLabel.value = null
+                _addressError.value = RecipientValidity.NotAWalletAddress
+            }
+            RecipientValidity.InvalidForChain -> {
                 // Clear stale resolved address while async resolution is in-flight
                 _resolvedDstAddress.value = null
                 _dstAddressLabel.value = null
                 tryResolveName(addressStr, token)
-            }
-            else -> {
-                _resolvedDstAddress.value = null
-                _dstAddressLabel.value = null
-                _invalidAddress.value = false
             }
         }
     }
@@ -196,7 +205,7 @@ internal class AddressManager(
             addressFieldState.setTextAndPlaceCursorAtEnd(decoded.classicAddress)
         }
         _resolvedDstAddress.value = decoded.classicAddress
-        _invalidAddress.value = false
+        _addressError.value = null
         // Surface the pasted X-address as the label so Verify/Done show what the user entered.
         _dstAddressLabel.value = originalInput
         _onAddressValidated.tryEmit(Unit)
@@ -208,16 +217,17 @@ internal class AddressManager(
             val resolved = addressParserRepository.resolveName(addressStr, chain)
             // Ignore stale result if user changed input while resolving
             if (addressFieldState.text.asAddressInput() != addressStr) return
-            if (chainAccountAddressRepository.isValid(chain, resolved)) {
+            val validity = chainAccountAddressRepository.validateRecipient(chain, resolved)
+            if (validity == RecipientValidity.Valid) {
                 _dstAddressLabel.value = addressStr
                 _resolvedDstAddress.value = resolved
-                _invalidAddress.value = false
+                _addressError.value = null
                 addressFieldState.setTextAndPlaceCursorAtEnd(resolved)
                 _onAddressValidated.tryEmit(Unit)
             } else {
                 _resolvedDstAddress.value = null
                 _dstAddressLabel.value = null
-                _invalidAddress.value = true
+                _addressError.value = validity
             }
         } catch (e: CancellationException) {
             throw e
@@ -227,7 +237,7 @@ internal class AddressManager(
             Timber.w(e, "Failed to resolve address %s on %s", addressStr, chain)
             _resolvedDstAddress.value = null
             _dstAddressLabel.value = null
-            _invalidAddress.value = true
+            _addressError.value = RecipientValidity.InvalidForChain
         }
     }
 }

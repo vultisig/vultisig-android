@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.solanastaking
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingService
 import com.vultisig.wallet.data.blockchain.solana.staking.ValidatorMetadataProvider
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.ui.utils.formatPercent
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -41,7 +42,7 @@ constructor(
                     md?.apyEstimate?.let {
                         it.multiply(BigDecimal(100))
                             .setScale(2, RoundingMode.HALF_UP)
-                            .toPlainString() + "%"
+                            .formatPercent()
                     },
             )
         }

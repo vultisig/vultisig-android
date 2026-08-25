@@ -39,7 +39,11 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.theme.Theme
 
-internal data class ErrorViewButtonUiModel(val text: String, val onClick: () -> Unit)
+internal data class ErrorViewButtonUiModel(
+    val text: String,
+    val onClick: () -> Unit,
+    val isLoading: Boolean = false,
+)
 
 @Composable
 internal fun ErrorView(
@@ -76,6 +80,7 @@ internal fun ErrorView(
                     variant = VsButtonVariant.Secondary,
                     label = it.text,
                     modifier = Modifier.fillMaxWidth(),
+                    isLoading = it.isLoading,
                     onClick = it.onClick,
                 )
                 UiSpacer(12.dp)
@@ -86,6 +91,7 @@ internal fun ErrorView(
                     variant = VsButtonVariant.CTA,
                     label = it.text,
                     modifier = Modifier.fillMaxWidth(),
+                    isLoading = it.isLoading,
                     onClick = it.onClick,
                 )
             }

@@ -47,6 +47,7 @@ import io.mockk.mockk
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
@@ -988,6 +989,73 @@ internal class BlockChainSpecificRepositoryImplTest {
             isNativeToken = true,
         )
 
+    @Test
+    fun `TON swap deposit is bounceable even though the swap path supplies no destination`() =
+        runTest {
+            assertTrue(tonSpecific(dstAddress = null, isSwap = true).bounceable)
+        }
+
+    @Test
+    fun `TON send to an EQ destination is bounceable`() = runTest {
+        assertTrue(tonSpecific(dstAddress = TON_EQ).bounceable)
+    }
+
+    @Test
+    fun `TON send to the UQ spelling of that same account is not bounceable`() = runTest {
+        assertFalse(tonSpecific(dstAddress = TON_UQ).bounceable)
+    }
+
+    @Test
+    fun `TON send to the raw spelling of that same account is bounceable`() = runTest {
+        assertTrue(tonSpecific(dstAddress = TON_RAW).bounceable)
+    }
+
+    @Test
+    fun `TON send to an uninitialized destination is not bounceable`() = runTest {
+        assertFalse(tonSpecific(dstAddress = TON_EQ, walletState = "uninit").bounceable)
+    }
+
+    private suspend fun tonSpecific(
+        dstAddress: String?,
+        isSwap: Boolean = false,
+        walletState: String = "active",
+    ): BlockChainSpecific.Ton {
+        val coin = tonCoin()
+        val tonApi =
+            mockk<TonApi> {
+                coEvery { getSeqno(any()) } returns BigInteger("3")
+                coEvery { getWalletState(any()) } returns walletState
+            }
+
+        val result =
+            repository(tonApi = tonApi)
+                .getSpecific(
+                    chain = Chain.Ton,
+                    address = SOURCE_ADDRESS,
+                    token = coin,
+                    gasFee = TokenValue(BigInteger.ONE, coin),
+                    isSwap = isSwap,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                    dstAddress = dstAddress,
+                )
+
+        return result.blockChainSpecific as BlockChainSpecific.Ton
+    }
+
+    private fun tonCoin() =
+        Coin(
+            chain = Chain.Ton,
+            ticker = "TON",
+            logo = "",
+            address = SOURCE_ADDRESS,
+            decimal = 9,
+            hexPublicKey = "pub",
+            priceProviderID = "the-open-network",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
     private fun repository(
         evmApi: EvmApi = mockk<EvmApi>(relaxed = true),
         evmFeeService: FeeService = NoOpFeeService,
@@ -997,6 +1065,7 @@ internal class BlockChainSpecificRepositoryImplTest {
         dashApi: DashApi = mockk<DashApi>(relaxed = true),
         zcashApi: ZcashApi = mockk<ZcashApi>(relaxed = true),
         solanaApi: SolanaApi = mockk<SolanaApi>(relaxed = true),
+        tonApi: TonApi = mockk<TonApi>(relaxed = true),
     ): BlockChainSpecificRepositoryImpl {
         val evmApiFactory =
             object : EvmApiFactory {
@@ -1015,7 +1084,7 @@ internal class BlockChainSpecificRepositoryImplTest {
             polkadotApi = mockk<PolkadotApi>(relaxed = true),
             bittensorApi = mockk<BittensorApi>(relaxed = true),
             suiApi = suiApi,
-            tonApi = mockk<TonApi>(relaxed = true),
+            tonApi = tonApi,
             rippleApi = mockk<RippleApi>(relaxed = true),
             tronApi = mockk<TronApi>(relaxed = true),
             cardanoApi = mockk<CardanoApi>(relaxed = true),
@@ -1120,6 +1189,11 @@ internal class BlockChainSpecificRepositoryImplTest {
     private companion object {
         val NONCE: BigInteger = BigInteger("7")
         const val SOURCE_ADDRESS = "0xsource"
+        // One STON.fi v2 router account in its three spellings: bounceable, non-bounceable,
+        // and raw (which declares no bounceability at all).
+        const val TON_EQ = "EQABT9GCyDI60CbC4c6uS33HFDwaqd6MddiwIIw7CXTgNR3A"
+        const val TON_UQ = "UQABT9GCyDI60CbC4c6uS33HFDwaqd6MddiwIIw7CXTgNUAF"
+        const val TON_RAW = "0:014fd182c8323ad026c2e1ceae4b7dc7143c1aa9de8c75d8b0208c3b0974e035"
         const val MEMO = "hi there"
         // "hi there" UTF-8 encoded — the payload the signed transaction carries.
         const val MEMO_CALL_DATA = "0x6869207468657265"

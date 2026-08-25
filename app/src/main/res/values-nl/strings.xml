@@ -2,6 +2,8 @@
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Token logo</string>
     <string name="tokens">Tokens</string>
+    <string name="edit_chains">Ketens</string>
+    <string name="edit_tokens">Tokens</string>
     <string name="keysign">Sleutel tekenen</string>
     <string name="signing_error_please_try_again_s">Ondertekeningsfout. Probeer het opnieuw. %s</string>
     <string name="try_again">Probeer opnieuw</string>
@@ -102,6 +104,7 @@
     <string name="send_error_no_gas_fee">Geen gasvergoeding</string>
     <string name="send_error_no_address">Adres is ongeldig</string>
     <string name="send_error_invalid_recipient_address">Die ontvanger is geen geldig adres voor deze keten.</string>
+    <string name="error_recipient_not_a_wallet_address">Die ontvanger is een tokenaccount of programma-adres, geen wallet. Voer het walletadres van de eigenaar in.</string>
     <string name="send_error_memo_too_long">Memo is te lang: %1$d bytes (maximaal %2$d).</string>
     <string name="send_error_no_amount">Het bedrag moet een positief getal zijn</string>
     <string name="send_error_too_many_decimals">Het bedrag mag maximaal %1$d decimalen hebben</string>
@@ -147,6 +150,7 @@
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA-sleutel gekopieerd</string>
     <string name="welcome_screen_skip">Overslaan</string>
     <string name="keysign_screen_preparing_vault">Kluis voorbereiden…</string>
+    <string name="keysign_malicious_party_detected">Het apparaat \"%1$s\" in deze keysign-sessie is betrapt op kwaadaardig gedrag. Gebruik het niet opnieuw om te ondertekenen.</string>
     <string name="vault_settings_delete_vault_caution1">Ik ben me ervan bewust dat de kluis permanent zal worden verwijderd</string>
     <string name="vault_settings_delete_vault_caution2">Ik ben me ervan bewust dat ik geld kan verliezen</string>
     <string name="vault_settings_delete_vault_caution3">Ik heb een kluisback-up gemaakt om later te kunnen herstellen</string>
@@ -184,6 +188,7 @@
     <string name="passcode_settings_title">Toegangscodeversleuteling</string>
     <string name="passcode_settings_encryption_title">Toegangscodeversleuteling</string>
     <string name="passcode_settings_encryption_subtitle">Versleutelt de kluisopslag op dit apparaat en vergrendelt de app.</string>
+    <string name="passcode_settings_encryption_explanation">Toegangscodeversleuteling is gekoppeld aan dit apparaat. Bewaar een .vult-back-up, dan kun je je kluizen altijd herstellen.</string>
     <string name="passcode_settings_change">Toegangscode wijzigen</string>
     <string name="passcode_settings_auto_lock">Automatisch vergrendelen</string>
     <string name="auto_lock_setting_title">Automatisch vergrendelen</string>
@@ -206,10 +211,12 @@
     <string name="passcode_entry_mismatch">Die toegangscodes komen niet overeen. Kies opnieuw.</string>
     <string name="passcode_operation_failed">Dat is niet gelukt. Je toegangscode is ongewijzigd.</string>
     <string name="passcode_not_digits">Voer alleen cijfers in.</string>
-    <string name="passcode_key_unavailable_title">Kluizen niet beschikbaar</string>
-    <string name="passcode_key_unavailable_message">De sleutels die de kluisopslag van dit apparaat beschermen zijn verdwenen, waardoor de kluisshares niet meer gelezen kunnen worden. Installeer de app opnieuw en herstel je kluizen vanaf een back-up.</string>
-    <string name="passcode_store_unavailable_title">Kluizen tijdelijk niet beschikbaar</string>
-    <string name="passcode_store_unavailable_message">De beveiligde opslag van dit apparaat kon deze keer niet geopend worden, dus je kluizen blijven vergrendeld. Start de app opnieuw om het nog eens te proberen. Je kluizen staan nog op dit apparaat, dus opnieuw installeren is niet nodig.</string>
+    <string name="passcode_key_unavailable_title">Dit apparaat mist je kluissleutel</string>
+    <string name="passcode_key_unavailable_message">Je kluizen staan nog op dit apparaat. Herstel vanaf je .vult-back-up om ze weer te openen.</string>
+    <string name="passcode_key_unavailable_restore">Herstellen vanaf back-up</string>
+    <string name="passcode_key_unavailable_restored">Kluis hersteld. Een andere kluis op dit apparaat heeft nog zijn back-up nodig.</string>
+    <string name="passcode_store_unavailable_title">Je kluizen zijn even vergrendeld</string>
+    <string name="passcode_store_unavailable_message">De beveiligde opslag van dit apparaat ging deze keer niet open. Alles staat er nog, dus herstart de app in plaats van hem opnieuw te installeren.</string>
     <string name="passcode_input_field_content_description">%1$d van %2$d cijfers ingevoerd</string>
     <string name="swap_form_from_title">Van</string>
     <string name="swap_form_estimated_fees_title">Wisselkosten</string>
@@ -287,6 +294,7 @@
     <string name="settings_screen_privacy_policy">Privacybeleid</string>
     <string name="settings_screen_tos">Servicevoorwaarden</string>
     <string name="import_file_not_supported">Bestandstype wordt niet ondersteund</string>
+    <string name="import_file_zip_incomplete">Sommige vault-aandelen in dit bestand konden niet worden gelezen</string>
     <string name="failed_to_resolve_address">Mislukt om adres op te lossen</string>
     <string name="verify_transaction_network_fee">Netwerkkosten (automatisch)</string>
     <string name="vault_settings_success_backup_message">Bestand succesvol opgeslagen</string>
@@ -469,9 +477,6 @@
     <string name="deposit_option_unstake">Unstake</string>
     <string name="deposit_option_custom">Aangepast</string>
     <string name="deposit_option_ibc_transfer">IBC-overdracht</string>
-    <string name="deposit_option_switch">Wisselen</string>
-    <string name="deposit_option_merge">Samenvoegen</string>
-    <string name="deposit_option_withdraw_ruji">RUJI opnemen</string>
     <string name="withdraw_amount">%s opnemen</string>
     <string name="deposit_form_unstake_percentage_hint">Voer percentage in om te unstaken</string>
     <string name="verify_transaction_function_signature_title">Functiehandtekening</string>
@@ -480,9 +485,6 @@
     <string name="dapp_hero_unverified_function_subtitle">Bekijk de details hieronder voordat je ondertekent</string>
     <string name="dapp_unverified_function_done_caution">Niet-geverifieerde functie. Bekijk de transactiedetails.</string>
     <string name="request_from">Verzoek van</string>
-    <string name="send_shares_currency_hint">Voer aandelen in</string>
-    <string name="send_error_max_shares">Bedrag mag het saldo niet overschrijden</string>
-    <string name="deposit_form_shares_title">Aandelen (Saldo: %1$s)</string>
     <string name="fast_vault_password_reminder_title">Verifieer uw wachtwoord voor:</string>
     <string name="fast_vault_password_reminder_done_button">Klaar</string>
     <string name="periodically_ask_verify_password">We vragen regelmatig om verificatie zodat u uw wachtwoord niet vergeet.</string>
@@ -505,7 +507,6 @@
     <string name="keygen_step_generating_mldsa">MLDSA-sleutel genereren</string>
     <string name="keygen_step_generating_chain_keys">Ketensleutels genereren</string>
     <string name="reshare_step_generating_ecdsa">ECDSA-sleutel genereren</string>
-    <string name="merge_account_doesnt_exist">Geselecteerde token niet gevonden voor dit adres</string>
     <string name="keygen_email_error">Onjuist emailadres, controleer dit</string>
     <string name="tx_overview_screen_tx_send">Sturen</string>
     <string name="tx_overview_screen_tx_deposit">Storting</string>
@@ -514,9 +515,42 @@
     <string name="defi_tab_staked">Gestaked</string>
     <string name="defi_tab_bonded">Gebonden</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_tab_earn">Verdienen</string>
     <string name="defi_bond">Bond</string>
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Liquiditeitspool</string>
+    <!-- Kamino Earn -->
+    <string name="kamino_earn_title">Kamino Earn</string>
+    <string name="kamino_earn_curated_by">Samengesteld door %1$s</string>
+    <string name="kamino_earn_deposited">Gestort: %1$s</string>
+    <string name="kamino_earn_apy">APY</string>
+    <string name="kamino_earn_earned">Verdiend: %1$s</string>
+    <string name="kamino_earn_lost">Verloren: %1$s</string>
+    <string name="kamino_earn_protocol">Kamino</string>
+    <string name="kamino_earn_load_failed">Kan deze vaults nu niet verversen</string>
+    <string name="kamino_earn_risk_conservative">Conservatief</string>
+    <string name="kamino_earn_risk_private_credit">Privaat krediet</string>
+    <string name="kamino_earn_deposit">Storten</string>
+    <string name="kamino_earn_empty_title">Geen Earn-posities geactiveerd</string>
+    <string name="kamino_earn_empty_description">Activeer een Kamino-vault onder ‘Posities Beheren’ om rendement te behalen op je Solana-assets.</string>
+    <string name="kamino_deposit_title">Storten</string>
+    <string name="kamino_withdraw_title">Opnemen</string>
+    <string name="kamino_amount_exceeds_available">Bedrag is hoger dan het beschikbare saldo</string>
+    <string name="kamino_amount_below_minimum">Minimum is %1$s %2$s</string>
+    <string name="kamino_error_unknown_vault">Deze vault wordt niet ondersteund door de app</string>
+    <string name="kamino_error_load_failed">Kan deze vault nu niet laden</string>
+    <string name="kamino_refusal_below_smallest_unit">Bedrag is kleiner dan de kleinste eenheid van dit asset</string>
+    <string name="kamino_refusal_below_minimum">Bedrag ligt onder het minimum van deze vault</string>
+    <string name="kamino_refusal_rate_unavailable">De koers per aandeel van deze vault is nu niet beschikbaar</string>
+    <string name="kamino_refusal_larger_than_position">Dat bedrag is groter dan deze positie</string>
+    <string name="verify_deposit_depositing">Je stort</string>
+    <string name="verify_deposit_withdrawing">Je neemt op</string>
+    <string name="kamino_verify_vault">Vault</string>
+    <string name="kamino_verify_withdraw_unverified">Dit apparaat kan dit bedrag niet bevestigen. De transactie neemt %1$s vault-aandelen op.</string>
+    <string name="kamino_error_build_failed">Kan deze transactie niet voorbereiden</string>
+    <string name="kamino_withdraw_nothing">Er is niets op te nemen uit deze vault</string>
+    <string name="kamino_withdraw_unreadable">Deze positie kon niet worden gelezen, dus er kan geen opname worden voorbereid</string>
+    <string name="kamino_withdraw_delayed">Boven de directe liquiditeit van de vault van %1$s %2$s. Deze opname kan vertraging oplopen.</string>
     <!-- Tron DeFi -->
     <string name="tron_defi_freeze">Bevriezen</string>
     <string name="tron_defi_unfreeze">Ontdooien</string>
@@ -524,11 +558,13 @@
     <string name="tron_defi_frozen">Bevroren</string>
     <string name="tron_defi_pending_withdrawals">Uitstaande Opnames</string>
     <string name="tron_defi_ready_to_claim">Klaar om te claimen</string>
+    <string name="tron_defi_claim_button">%1$s claimen</string>
     <string name="tron_defi_countdown_days">%1$d dagen, %2$d uur</string>
     <string name="tron_defi_countdown_hours">%1$d uur, %2$d min</string>
     <string name="tron_defi_error_trx_not_in_vault">TRX-coin niet gevonden in kluis</string>
     <string name="tron_freeze_screen_title">TRON bevriezen</string>
     <string name="tron_unfreeze_screen_title">TRON ontdooien</string>
+    <string name="tron_claim_screen_title">TRON claimen</string>
     <string name="tron_frozen_balances_error">Bevroren saldi konden niet worden geladen. Trek om opnieuw te proberen.</string>
     <string name="tron_resource_type">Brontype</string>
     <string name="tron_resource_bandwidth">Bandbreedte</string>
@@ -798,7 +834,7 @@
     <string name="close_sheet_content_description">Sluiten</string>
     <string name="price_chart_retry_hint">Grafiek kon niet worden geladen. Tik om opnieuw te proberen.</string>
     <string name="token_details_market_stats_title">Marktstatistieken</string>
-    <string name="token_details_price_extremes_title">Prijsuitersten</string>
+    <string name="token_details_price_extremes_title">Prijsbereik</string>
     <string name="token_details_token_info_title">Tokeninformatie</string>
     <string name="token_details_market_cap">Marktkapitalisatie</string>
     <string name="token_details_market_cap_rank">Rang</string>
@@ -1085,6 +1121,10 @@
     <string name="swap_advanced_slippage_title">Slippage-tolerantie</string>
     <string name="swap_advanced_slippage_page_title">Slippage</string>
     <string name="swap_advanced_gas_limit_title">Gaslimiet</string>
+    <string name="swap_advanced_select_route_title">Route selecteren</string>
+    <string name="swap_select_route_helper">Routes gesorteerd op uitvoerbedrag. Een route selecteren overschrijft de automatische keuze.</string>
+    <string name="swap_route_fee_prefix">Kosten</string>
+    <string name="swap_route_eta">~%1$ds</string>
     <string name="swap_advanced_external_recipient_title">Externe ontvanger gebruiken</string>
     <string name="swap_advanced_locked_title">Geavanceerde swap-instellingen</string>
     <string name="swap_advanced_locked_subtitle">Stem slippage, gas, routering en ontvanger af voor elke swap.</string>
@@ -1160,7 +1200,6 @@
     <string name="onboarding_desc_page_6_part_1">Deze shares werken samen om</string>
     <string name="enter_email_screen_desc">Dit emailadres wordt alleen gebruikt om de serverback-up te verzenden</string>
     <string name="keygen_connecting_with_server_take_a_second">Dit zou slechts een seconde moeten duren</string>
-    <string name="function_switch_thorchain_address">THORChain-adres</string>
     <string name="tx_transaction_successful_screen_title">Transactie succesvol</string>
     <string name="migration_onboarding_step_3_text_end">bij het upgraden</string>
     <string name="migration_onboarding_upgrade_your_vault">Upgrade uw kluis</string>
@@ -1169,6 +1208,15 @@
     <string name="onboarding_desc_page_1_part_2">Vault-shares,</string>
     <string name="verify_swap_youre_swapping_title">Je wisselt</string>
     <string name="keysign_app_version_text">Versie %1$s (%2$s)</string>
+    <string name="lp_pending_title">Wachten op bijbehorende %1$s-storting</string>
+    <string name="lp_pending_subtitle">THORChain houdt deze storting vast tot de bijbehorende kant binnenkomt en betaalt hem anders terug.</string>
+    <string name="lp_pending_deposited">Gestort</string>
+    <string name="lp_pending_from">Van</string>
+    <string name="lp_pending_refunds_in">Terugbetaling over</string>
+    <string name="lp_pending_duration_days_hours_format">%1$dd %2$du</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$du %2$dm</string>
+    <string name="lp_pending_refund_time_unknown">Onbekend</string>
+    <string name="lp_pending_complete_deposit">Storting voltooien</string>
     <string name="lp_position">Positie</string>
     <string name="add">Toevoegen</string>
     <string name="remove">Verwijderen</string>
@@ -1235,6 +1283,9 @@
     <string name="ripple_field_buying_issuer">Uitgever aankoop</string>
     <string name="ripple_field_limit">Limiet</string>
     <string name="ripple_field_limit_issuer">Uitgever limiet</string>
+    <string name="ripple_field_flags">Flags</string>
+    <string name="ripple_field_paths">Betalingsroutes</string>
+    <string name="ripple_partial_payment_warning">Gedeeltelijke betaling: het getoonde bedrag is een maximum, geen garantie. Er kan minder worden geleverd.</string>
     <string name="sui_sender">Van</string>
     <string name="sui_gas_budget">Gasbudget: %1$s SUI</string>
     <string name="sui_gas_price">Gasprijs: %1$s MIST</string>
@@ -1337,7 +1388,7 @@
     <string name="transaction_history_detail_fee">Kosten</string>
     <string name="transaction_history_detail_network">Netwerk</string>
     <string name="transaction_history_detail_provider">Provider</string>
-    <string name="transaction_history_view_on_explorer">Bekijk op Explorer</string>
+    <string name="view_on_explorer">Bekijk op Explorer</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Voer uw herstelzin in</string>

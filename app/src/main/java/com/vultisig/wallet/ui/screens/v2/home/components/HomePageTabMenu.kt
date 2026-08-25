@@ -21,6 +21,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.v2.buttons.VsEditPill
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
@@ -78,19 +79,7 @@ internal fun HomePageTabMenu(
 
             // Hidden for KeyImport vaults where chains are fixed at import time
             if (isEditVisible) {
-                V2Container(
-                    modifier = Modifier.clickOnce(onClick = onEditClick),
-                    radius = Theme.v2.radius.pill,
-                    type = ContainerType.SECONDARY,
-                    borderType = ContainerBorderType.Borderless,
-                ) {
-                    UiIcon(
-                        drawableResId = R.drawable.edit_chain,
-                        size = 16.dp,
-                        tint = Theme.v2.colors.primary.accent4,
-                        modifier = Modifier.padding(12.dp),
-                    )
-                }
+                VsEditPill(label = stringResource(R.string.edit_chains), onClick = onEditClick)
             }
         }
     }

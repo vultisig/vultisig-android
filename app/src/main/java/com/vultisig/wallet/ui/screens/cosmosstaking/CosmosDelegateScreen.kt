@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -53,7 +52,10 @@ import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosDelegateUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosDelegateViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.formatPercent
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Stake form for LUNA / LUNC — mirrors iOS `CosmosDelegateTransactionScreen`: centered amount
@@ -167,11 +169,11 @@ internal fun StakingAmountCard(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -216,7 +218,7 @@ internal fun BalanceAvailableRow(ticker: String, available: BigDecimal) {
             Modifier.fillMaxWidth()
                 .background(
                     color = Theme.v2.colors.backgrounds.secondary,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(all = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -227,7 +229,7 @@ internal fun BalanceAvailableRow(ticker: String, available: BigDecimal) {
             color = Theme.v2.colors.text.primary,
         )
         Text(
-            text = "${available.stripTrailingZeros().toPlainString()} $ticker",
+            text = available.stripTrailingZeros().formatTokenAmount(ticker),
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.secondary,
             textAlign = TextAlign.End,
@@ -246,11 +248,11 @@ internal fun ValidatorPickerField(selected: CosmosValidator?, onClick: () -> Uni
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .clickable(onClick = onClick)
                 .padding(horizontal = 16.dp, vertical = 16.dp),
@@ -355,12 +357,12 @@ internal fun ValidatorPickerSheet(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier =
                     Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(99.dp))
+                        .clip(Theme.v2.radius.pill)
                         .background(Theme.v2.colors.backgrounds.surface1)
                         .border(
                             width = 1.dp,
                             color = Theme.v2.colors.border.light,
-                            shape = RoundedCornerShape(99.dp),
+                            shape = Theme.v2.radius.pill,
                         )
                         .padding(horizontal = 12.dp, vertical = 12.dp),
             ) {
@@ -558,7 +560,7 @@ private fun ValidatorPickerRow(
             UiSpacer(size = 8.dp)
         }
         Text(
-            text = "${formatCommissionPercent(validator.commission)}%",
+            text = formatCommissionPercent(validator.commission),
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
             maxLines = 1,
@@ -574,9 +576,9 @@ private fun ValidatorPickerRow(
 private fun formatCommissionPercent(commission: BigDecimal): String =
     commission
         .movePointRight(2)
-        .setScale(2, java.math.RoundingMode.HALF_UP)
+        .setScale(2, RoundingMode.HALF_UP)
         .stripTrailingZeros()
-        .toPlainString()
+        .formatPercent()
 
 /**
  * Voting power arrives as bond-denom base units (uint string). Render it in whole-token units with

@@ -13,6 +13,13 @@ interface ExplorerLinkRepository {
 
     fun getAddressLink(chain: Chain, address: String): String
 
+    /**
+     * The explorer's dedicated page for a token's contract, or null when [chain]'s explorer has no
+     * such page (UTXO and Cosmos-SDK chains have no per-token concept). Callers fall back to the
+     * holder's address page, which is what [getAddressLink] already gives them.
+     */
+    fun getTokenLink(chain: Chain, contractAddress: String): String?
+
     fun getSwapProgressLink(tx: String, payload: SwapPayload?): String?
 }
 
@@ -32,6 +39,11 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             return ""
         }
         return "${chain.blockExplorerUrl}$address"
+    }
+
+    override fun getTokenLink(chain: Chain, contractAddress: String): String? {
+        if (contractAddress.isEmpty()) return null
+        return chain.tokenExplorerUrl?.let { "$it$contractAddress" }
     }
 
     override fun getSwapProgressLink(tx: String, payload: SwapPayload?): String? {
@@ -91,6 +103,39 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Bittensor -> "https://taostats.io/extrinsic/"
 
                 else -> "${explorerUrl}tx/"
+            }
+
+    // Only the chains whose explorer actually renders a contract page. Everything else — the UTXO
+    // family, the Cosmos-SDK chains, THORChain/Maya, Ripple, the Substrate chains — is absent
+    // rather than mapped to a URL that 404s, so the caller can drop the row instead of offering a
+    // dead link.
+    private val Chain.tokenExplorerUrl: String?
+        get() =
+            when (this) {
+                Chain.Solana -> "${explorerUrl}address/"
+                Chain.Sui -> "${explorerUrl}coin/"
+                // tonviewer addresses a jetton by its master contract at the root, same shape as
+                // an account.
+                Chain.Ton -> explorerUrl
+                Chain.Tron -> "${explorerUrl}token20/"
+
+                Chain.Arbitrum,
+                Chain.Avalanche,
+                Chain.Base,
+                Chain.Blast,
+                Chain.BscChain,
+                Chain.Cardano,
+                Chain.CronosChain,
+                Chain.Ethereum,
+                Chain.Hyperliquid,
+                Chain.Mantle,
+                Chain.Optimism,
+                Chain.Polygon,
+                Chain.Robinhood,
+                Chain.Sei,
+                Chain.ZkSync -> "${explorerUrl}token/"
+
+                else -> null
             }
 
     private val Chain.blockExplorerUrl: String

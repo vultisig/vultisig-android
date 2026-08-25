@@ -19,6 +19,7 @@ class TonStatusProviderTest {
 
     private val tonApi = mockk<TonApi>()
     private val provider = TonStatusProvider(tonApi)
+    private val json = Json { ignoreUnknownKeys = true }
 
     @Test
     fun `empty transactions returns NotFound`() = runTest {
@@ -229,7 +230,7 @@ class TonStatusProviderTest {
             }
             """
                 .trimIndent()
-        val decoded = Json { ignoreUnknownKeys = true }.decodeFromString<TonStatusResult>(realJson)
+        val decoded = json.decodeFromString<TonStatusResult>(realJson)
         coEvery { tonApi.getTsStatus(any()) } returns decoded
 
         assertEquals(TransactionResult.Confirmed, provider.checkStatus("hash", Chain.Ton))

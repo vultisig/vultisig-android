@@ -1046,3 +1046,32 @@ internal val MIGRATION_40_41 =
             )
         }
     }
+
+// The sRUJI and ybRUNE receipts back a DeFi position and were never meant to be wallet tokens, but
+// both were auto-discoverable before the DeFi-only denom gate covered them (#5583), so vaults that
+// held one carry a persisted `coin` row for it. TokenRefreshWorker deletes those rows too, but only
+// once WorkManager gets round to running it with a network — until then the receipt is still listed
+// as a spendable token on the chain screen. Drop it here so the upgrade itself settles it, before
+// anything reads the table.
+//
+// Denoms are spelled out rather than read off the catalogue: a migration has to keep matching what
+// was on disk when it shipped even if the definitions are later renamed. Matched on
+// `contractAddress` (lowercased, as node casing is not guaranteed) rather than `id`, because rows
+// written before the ticker was canonicalized carry the derived ticker instead of the curated one.
+// The `tokenValue` cache is deliberately left alone: the DeFi position reads the same cached
+// balance, and clearing it would only blank the card until the next fetch.
+internal val MIGRATION_41_42 =
+    object : Migration(41, 42) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            DELETE FROM coin
+            WHERE chain = 'THORChain'
+            AND LOWER(contractAddress) IN (
+                'x/staking-ruji', 'x/staking-x/ruji', 'x/staking-x/brune'
+            )
+            """
+                    .trimIndent()
+            )
+        }
+    }

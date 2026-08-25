@@ -1,0 +1,17 @@
+<!--
+  DeFi Button's leading glyph, filled rather than outlined. Figma names it `circle-minus-filled`
+  and insets it by 10% inside a 16dp box, which is why the 12.8-unit glyph is translated by 1.6.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="16dp"
+    android:height="16dp"
+    android:viewportWidth="16"
+    android:viewportHeight="16">
+  <group
+      android:translateX="1.6"
+      android:translateY="1.6">
+    <path
+        android:pathData="M6.4,0C2.8712,0 0,2.8712 0,6.4C0,9.9288 2.8712,12.8 6.4,12.8C9.9288,12.8 12.8,9.9288 12.8,6.4C12.8,2.8712 9.9288,0 6.4,0ZM9.2,7.2H3.6C3.1584,7.2 2.8,6.8416 2.8,6.4C2.8,5.9584 3.1584,5.6 3.6,5.6H9.2C9.6416,5.6 10,5.9584 10,6.4C10,6.8416 9.6416,7.2 9.2,7.2Z"
+        android:fillColor="#F0F4FC"/>
+  </group>
+</vector>

@@ -2,8 +2,16 @@ package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoAction
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRelayedIntent
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRentReserve
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
+import com.vultisig.wallet.data.blockchain.solana.kamino.kaminoNetworkFeeLamports
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.GasFeeParams
+import com.vultisig.wallet.data.models.OPERATION_KAMINO_DEPOSIT
+import com.vultisig.wallet.data.models.OPERATION_KAMINO_WITHDRAW
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -17,6 +25,7 @@ import com.vultisig.wallet.data.usecases.ThorchainMemoParser
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import java.math.BigInteger
 import java.util.UUID
@@ -40,13 +49,24 @@ constructor(
     private val addressBookRepository: AddressBookRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val feeResolver: JoinKeysignFeeResolver,
+    private val rentReserve: KaminoRentReserve,
+    private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
 ) {
 
     /**
      * Builds the deposit [JoinKeysignVerifyResult] from [payload] for the vault identified by
      * [vaultId], resolving fees and parsing the THOR memo.
+     *
+     * @param kamino what the relayed Solana bytes turned out to be, when they were recognised as a
+     *   Kamino Earn deposit or withdraw. It carries everything a THOR memo carries for the chains
+     *   above — which vault, which direction — none of which a Kamino payload states in a field
+     *   (issue #5644).
      */
-    suspend fun build(payload: KeysignPayload, vaultId: String): JoinKeysignVerifyResult {
+    suspend fun build(
+        payload: KeysignPayload,
+        vaultId: String,
+        kamino: KaminoRelayedIntent? = null,
+    ): JoinKeysignVerifyResult {
         when (payload.blockChainSpecific) {
             is BlockChainSpecific.MayaChain,
             is BlockChainSpecific.THORChain,
@@ -56,6 +76,14 @@ constructor(
             // to render its verify screen so multi-device staking ceremonies aren't blocked.
             is BlockChainSpecific.Ton,
             is BlockChainSpecific.UTXO -> Unit
+
+            // Solana arrives here only as a recognised Kamino transaction. A raw Solana payload
+            // nobody could read is still a send, and rendering it as a deposit would put a
+            // deposit's framing around bytes this device cannot describe.
+            is BlockChainSpecific.Solana ->
+                requireNotNull(kamino) {
+                    "a Solana deposit must be a recognised Kamino transaction"
+                }
 
             else -> error("BlockChainSpecific ${payload.blockChainSpecific} is not supported")
         }
@@ -89,12 +117,13 @@ constructor(
 
         val nativeCoin = withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
         val estimatedTokenFees =
-            feeResolver.resolveJoinKeysignNetworkFee(
-                payload = payload,
-                chain = chain,
-                nativeCoin = nativeCoin,
-                blockchainTransaction = blockchainTransaction,
-            )
+            kamino?.let { kaminoNetworkFee(it, payload, nativeCoin) }
+                ?: feeResolver.resolveJoinKeysignNetworkFee(
+                    payload = payload,
+                    chain = chain,
+                    nativeCoin = nativeCoin,
+                    blockchainTransaction = blockchainTransaction,
+                )
 
         val totalGasAndFee =
             gasFeeToEstimatedFee(
@@ -119,11 +148,17 @@ constructor(
                 estimatedFees = estimatedTokenFees,
                 estimateFeesFiat = totalGasAndFee.formattedFiatValue,
                 blockChainSpecific = payload.blockChainSpecific,
-                operation = parsedThorMemo?.operation.orEmpty(),
+                operation = kamino?.let(::kaminoOperation) ?: parsedThorMemo?.operation.orEmpty(),
                 nodeAddress = parsedThorMemo?.nodeAddress.orEmpty(),
                 pairedAddress = parsedThorMemo?.pairedAddress.orEmpty(),
                 thorAddress = parsedThorMemo?.thorAddress.orEmpty(),
                 pool = parsedThorMemo?.pool.orEmpty(),
+                // The verify screen labels this row as the vault for a Kamino operation, so the
+                // co-signer reads the destination by name rather than as a bare program address.
+                validatorName = kamino?.vault?.fallbackName,
+                // Renders the instruction breakdown the initiating device shows, which for a
+                // pre-built transaction is the only place its real work is visible.
+                signSolana = payload.signSolana,
             )
         // Resolve the same From/To labels the initiator renders (issue #5301), so the joining
         // co-signer sees "VaultName (address)" instead of raw thor1… addresses. Mirrors
@@ -152,11 +187,78 @@ constructor(
                     srcVaultName = srcVaultName,
                     dstVaultName = dstVaultName,
                     dstAddressBookTitle = dstAddressBookTitle,
+                    unverifiedWithdrawShares = kamino?.let(::withdrawShares),
                 )
         return JoinKeysignVerifyResult(
             verifyUiModel = VerifyUiModel.Deposit(VerifyDepositUiModel(depositTransactionUiModel)),
             transactionTypeUiModel = TransactionTypeUiModel.Deposit(depositTransactionUiModel),
             transactionHistoryData = mapDepositTransactionHistoryData(depositTransactionUiModel),
+        )
+    }
+
+    /**
+     * The share figure a withdraw's kVault instruction carries, formatted, or null for a deposit —
+     * whose headline amount this device already checked against the same instruction.
+     *
+     * Sized by the vault's own share scale, which is not the token's: Allez SOL's shares carry six
+     * decimals against the token's nine.
+     */
+    private fun withdrawShares(kamino: KaminoRelayedIntent): String? =
+        kamino
+            .takeIf { it.action == KaminoAction.WITHDRAW }
+            ?.let {
+                mapTokenValueToDecimalUiString(
+                    TokenValue(value = it.amount, unit = "", decimals = it.vault.sharesDecimals)
+                )
+            }
+
+    private fun kaminoOperation(kamino: KaminoRelayedIntent): String =
+        when (kamino.action) {
+            KaminoAction.DEPOSIT -> OPERATION_KAMINO_DEPOSIT
+            KaminoAction.WITHDRAW -> OPERATION_KAMINO_WITHDRAW
+        }
+
+    /**
+     * The fee the initiating device quotes for these bytes, derived here from the relayed compute
+     * budget rather than re-estimated.
+     *
+     * A fee service can only price the transfer it is handed, and this is not one: it is a
+     * pre-built transaction carrying its own compute-unit limit — 320,000 to 400,000 against a
+     * transfer's 100,000 — plus, on a first native-SOL deposit, the rent for the accounts it
+     * creates. Estimating it as a transfer is how the two devices came to quote fees a hundredfold
+     * apart for one transaction (issue #5644).
+     */
+    private suspend fun kaminoNetworkFee(
+        kamino: KaminoRelayedIntent,
+        payload: KeysignPayload,
+        nativeCoin: Coin,
+    ): TokenValue {
+        // Only a native-SOL deposit, matching the gate the initiating device quotes behind: a
+        // token deposit spends rent too, but in SOL rather than in the token it is denominated in,
+        // and neither device folds that into the fee it shows — see KaminoRentReserve.
+        val depositRent =
+            if (
+                kamino.action == KaminoAction.DEPOSIT &&
+                    kamino.vault.tokenMint == KaminoVaultRegistry.WRAPPED_SOL_MINT
+            ) {
+                withContext(Dispatchers.IO) {
+                    rentReserve(kamino.vault, payload.coin.address, KaminoAction.DEPOSIT)
+                }
+            } else {
+                BigInteger.ZERO
+            }
+        return TokenValue(
+            value =
+                kaminoNetworkFeeLamports(
+                    vault = kamino.vault,
+                    action = kamino.action,
+                    // From the instructions, not from the field relayed beside them. The two are
+                    // pinned equal by KaminoRelayedIntent.takeIfDescribedBy before this runs, and
+                    // the one inside the bytes is the one the runtime charges.
+                    unitPrice = kamino.priorityFee?.price,
+                    rentReserve = depositRent,
+                ),
+            token = nativeCoin,
         )
     }
 }

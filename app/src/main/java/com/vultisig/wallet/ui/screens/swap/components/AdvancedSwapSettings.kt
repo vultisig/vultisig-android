@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -25,10 +24,12 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.inputs.VsBasicTextField
@@ -37,7 +38,10 @@ import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.models.swap.SwapRouteUiModel
+import com.vultisig.wallet.ui.screens.transaction.components.TokenCircle
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 import java.math.BigDecimal
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -58,6 +62,7 @@ private enum class AdvancedPage {
     Menu,
     Slippage,
     GasLimit,
+    SelectRoute,
     ExternalRecipient,
 }
 
@@ -79,6 +84,12 @@ private enum class AdvancedPage {
  * @param onGasLimitSelected invoked on confirm with the chosen gas limit (null = Auto).
  * @param externalRecipient the current external recipient address, or null/blank = off.
  * @param onExternalRecipientSelected invoked with the entered address (null/blank = off).
+ * @param routeOptions fetched routes for the Select-route page, active route first; empty when
+ *   fewer than two routes exist, which disables the row.
+ * @param isRouteManuallySelected whether the active route is a manual pick (row shows the provider
+ *   name) rather than the automatic winner (row shows "Auto").
+ * @param onRouteSelected invoked with the picked provider; applied immediately (no staging) since
+ *   the pick only chooses among already-fetched quotes.
  */
 @Composable
 internal fun AdvancedSwapSettingsSheet(
@@ -90,6 +101,9 @@ internal fun AdvancedSwapSettingsSheet(
     externalRecipient: String?,
     externalRecipientError: String?,
     onExternalRecipientSelected: (String?) -> Unit,
+    routeOptions: List<SwapRouteUiModel>,
+    isRouteManuallySelected: Boolean,
+    onRouteSelected: (SwapProvider) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var page by remember { mutableStateOf(AdvancedPage.Menu) }
@@ -114,6 +128,7 @@ internal fun AdvancedSwapSettingsSheet(
                     AdvancedPage.Menu -> R.string.swap_advanced_sheet_title
                     AdvancedPage.Slippage -> R.string.swap_advanced_slippage_page_title
                     AdvancedPage.GasLimit -> R.string.swap_advanced_gas_limit_title
+                    AdvancedPage.SelectRoute -> R.string.swap_advanced_select_route_title
                     AdvancedPage.ExternalRecipient ->
                         R.string.swap_advanced_external_recipient_title
                 }
@@ -153,18 +168,35 @@ internal fun AdvancedSwapSettingsSheet(
                     slippageValue = formatSlippage(stagedSlippageBps) ?: autoLabel,
                     gasLimitValue = stagedGasLimit?.toString() ?: autoLabel,
                     isGasLimitApplicable = isGasLimitApplicable,
+                    routeValue =
+                        if (isRouteManuallySelected)
+                            routeOptions.firstOrNull { it.isSelected }?.name?.asString()
+                                ?: autoLabel
+                        else autoLabel,
+                    isRouteSelectable = routeOptions.isNotEmpty(),
                     externalRecipientValue =
                         if (externalRecipient.isNullOrBlank())
                             stringResource(R.string.swap_advanced_value_off)
                         else stringResource(R.string.swap_advanced_value_on),
                     onSlippageClick = { page = AdvancedPage.Slippage },
                     onGasLimitClick = { page = AdvancedPage.GasLimit },
+                    onSelectRouteClick = { page = AdvancedPage.SelectRoute },
                     onExternalRecipientClick = { page = AdvancedPage.ExternalRecipient },
                 )
             AdvancedPage.Slippage ->
                 SlippagePage(slippageBps = stagedSlippageBps, onSelect = { stagedSlippageBps = it })
             AdvancedPage.GasLimit ->
                 GasLimitPage(gasLimitOverride = stagedGasLimit, onSelect = { stagedGasLimit = it })
+            AdvancedPage.SelectRoute ->
+                SelectRoutePage(
+                    routeOptions = routeOptions,
+                    onSelect = { provider ->
+                        onRouteSelected(provider)
+                        // A pick applies immediately; return to the menu like the iOS sheet so the
+                        // row reflects the new selection.
+                        page = AdvancedPage.Menu
+                    },
+                )
             AdvancedPage.ExternalRecipient ->
                 ExternalRecipientPage(
                     externalRecipient = externalRecipient,
@@ -180,16 +212,19 @@ internal fun AdvancedMenu(
     slippageValue: String,
     gasLimitValue: String,
     isGasLimitApplicable: Boolean,
+    routeValue: String,
+    isRouteSelectable: Boolean,
     externalRecipientValue: String,
     onSlippageClick: () -> Unit,
     onGasLimitClick: () -> Unit,
+    onSelectRouteClick: () -> Unit,
     onExternalRecipientClick: () -> Unit,
 ) {
     Column(
         modifier =
             Modifier.fillMaxWidth()
                 .padding(top = 16.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .background(Theme.v2.colors.backgrounds.secondary)
     ) {
         AdvancedSwapSettingRow(
@@ -207,12 +242,142 @@ internal fun AdvancedMenu(
             onClick = onGasLimitClick,
         )
         AdvancedSwapSettingDivider()
+        // Disabled until a quote resolves with more than one fetched route — with a single (or no)
+        // route there is nothing to pick.
+        AdvancedSwapSettingRow(
+            icon = R.drawable.ic_route,
+            title = stringResource(R.string.swap_advanced_select_route_title),
+            value = routeValue,
+            enabled = isRouteSelectable,
+            onClick = onSelectRouteClick,
+        )
+        AdvancedSwapSettingDivider()
         AdvancedSwapSettingRow(
             icon = R.drawable.ic_external_recipient,
             title = stringResource(R.string.swap_advanced_external_recipient_title),
             value = externalRecipientValue,
             onClick = onExternalRecipientClick,
         )
+    }
+}
+
+/**
+ * The Select-route page: every fetched route for the current pair/amount, active route first then
+ * best→worst by net output. Tapping a row applies that provider's quote immediately, overriding the
+ * automatic best until the next quote refresh.
+ */
+@Composable
+internal fun SelectRoutePage(
+    routeOptions: List<SwapRouteUiModel>,
+    onSelect: (SwapProvider) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+        Text(
+            text = stringResource(R.string.swap_select_route_helper),
+            style = Theme.brockmann.body.s.regular,
+            color = Theme.v2.colors.text.tertiary,
+            modifier = Modifier.padding(bottom = 16.dp),
+        )
+
+        Column(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .clip(Theme.v2.radius.md)
+                    .background(Theme.v2.colors.backgrounds.secondary)
+        ) {
+            routeOptions.forEachIndexed { index, route ->
+                if (index > 0) AdvancedSwapSettingDivider()
+                RouteOptionRow(route = route, onClick = { onSelect(route.provider) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun RouteOptionRow(route: SwapRouteUiModel, onClick: () -> Unit) {
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(
+                    if (route.isSelected) Theme.v2.colors.alerts.success.copy(alpha = 0.05f)
+                    else Color.Transparent
+                )
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        val providerName = route.name.asString()
+        route.logo?.let { logo -> TokenCircle(logo = logo, ticker = providerName, size = 36) }
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
+            Text(
+                text = providerName,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.primary,
+                maxLines = 1,
+            )
+            RouteFeeSubtitle(route)
+        }
+        Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = route.outputText,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.primary,
+                maxLines = 1,
+            )
+            Text(
+                text = route.outputFiatText,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.tertiary,
+                maxLines = 1,
+            )
+        }
+        VsUiCheckbox(checked = route.isSelected, onCheckedChange = { onClick() })
+    }
+}
+
+/**
+ * "Fee $X · ~Ns" subtitle. The fee amount is tinted green on the selected row (per Figma/iOS); the
+ * ETA segment is dropped when the provider exposes no estimate (EVM aggregators), and the fee
+ * segment when it is baked into the quoted rate (1inch).
+ */
+@Composable
+private fun RouteFeeSubtitle(route: SwapRouteUiModel) {
+    val fee = route.feeText
+    val eta = route.etaText?.asString()
+    if (fee == null && eta == null) return
+    Row {
+        if (fee != null) {
+            Text(
+                text = stringResource(R.string.swap_route_fee_prefix) + " ",
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.tertiary,
+            )
+            Text(
+                text = fee,
+                style = Theme.brockmann.supplementary.caption,
+                color =
+                    if (route.isSelected) Theme.v2.colors.alerts.success
+                    else Theme.v2.colors.text.tertiary,
+            )
+        }
+        if (fee != null && eta != null) {
+            Text(
+                text = " · ",
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.tertiary,
+            )
+        }
+        if (eta != null) {
+            Text(
+                text = eta,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.tertiary,
+            )
+        }
     }
 }
 
@@ -253,7 +418,7 @@ internal fun ExternalRecipientPage(
         Row(
             modifier =
                 Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(Theme.v2.radius.md)
                     .background(Theme.v2.colors.backgrounds.secondary)
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -301,7 +466,7 @@ internal fun SlippagePage(slippageBps: Int?, onSelect: (Int?) -> Unit) {
         Column(
             modifier =
                 Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(Theme.v2.radius.md)
                     .background(Theme.v2.colors.backgrounds.secondary)
         ) {
             SlippageOptionRow(
@@ -473,7 +638,7 @@ internal fun GasLimitPage(gasLimitOverride: Long?, onSelect: (Long?) -> Unit) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier =
                 Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(Theme.v2.radius.md)
                     .background(Theme.v2.colors.backgrounds.secondary)
                     .padding(horizontal = 16.dp, vertical = 16.dp),
         )

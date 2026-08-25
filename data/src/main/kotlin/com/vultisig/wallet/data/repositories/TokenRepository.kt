@@ -96,7 +96,7 @@ constructor(
                 val balances = thorApi.getBalance(address)
                 val metaCache = mutableMapOf<String, DenomMetadata?>()
                 balances.mapNotNull {
-                    if (it.denom in DEFI_ONLY_THORCHAIN_DENOMS) return@mapNotNull null
+                    if (it.denom.lowercase() in DEFI_ONLY_THORCHAIN_DENOMS) return@mapNotNull null
                     // The enabledDenoms gate keeps the wallet from auto-adding arbitrary bank
                     // denoms the user never enabled. Curated liquid-bonding denoms are the
                     // exception: they must surface the first time a wallet holds one, before any
@@ -155,21 +155,15 @@ constructor(
                     }
 
                     // The generic derivation uppercases tickers ("BRUNE") and can't map a logo for
-                    // Rujira's liquid-bonding denoms. Restore their proper casing + curated logo,
-                    // and store the canonical (lowercase) denom so case-sensitive consumers
-                    // (isLpToken picker exclusion, contract-based pricing) stay on the right path.
+                    // Rujira's liquid-bonding denom. Restore its proper casing + curated logo, and
+                    // store the canonical (lowercase) denom so case-sensitive consumers (isLpToken
+                    // picker exclusion, contract-based pricing) stay on the right path. Only liquid
+                    // bRUNE reaches here — the ybRUNE receipt is filtered out as DeFi-only above.
                     var contractAddress = it.denom
-                    when (it.denom.lowercase()) {
-                        Coins.ThorChain.bRUNE.contractAddress -> {
-                            symbol = Coins.ThorChain.bRUNE.ticker
-                            contractAddress = Coins.ThorChain.bRUNE.contractAddress
-                            decimal = Coins.ThorChain.bRUNE.decimal
-                        }
-                        Coins.ThorChain.ybRUNE.contractAddress -> {
-                            symbol = Coins.ThorChain.ybRUNE.ticker
-                            contractAddress = Coins.ThorChain.ybRUNE.contractAddress
-                            decimal = Coins.ThorChain.ybRUNE.decimal
-                        }
+                    if (it.denom.lowercase() == Coins.ThorChain.bRUNE.contractAddress) {
+                        symbol = Coins.ThorChain.bRUNE.ticker
+                        contractAddress = Coins.ThorChain.bRUNE.contractAddress
+                        decimal = Coins.ThorChain.bRUNE.decimal
                     }
 
                     if (denom == "rune") {
@@ -285,18 +279,22 @@ constructor(
     }
 }
 
-// Denoms surfaced under the DeFi tab — must not be auto-discovered as wallet tokens.
+// Denoms surfaced under the DeFi tab — must not be auto-discovered as wallet tokens. ybRUNE is the
+// auto-compounding receipt for bonded bRUNE, so it belongs here alongside the sRUJI receipt rather
+// than in the wallet's token list (iOS drops both via `defiOnlyTickers`).
 // The on-chain sRUJI receipt denom is "x/staking-x/ruji"; the legacy "x/staking-ruji" spelling is
 // kept defensively so the receipt stays excluded regardless of which the node reports.
-internal val DEFI_ONLY_THORCHAIN_DENOMS = setOf("x/staking-ruji", "x/staking-x/ruji")
+// Stored lowercase — callers compare the lowercased denom, since node casing is not guaranteed.
+internal val DEFI_ONLY_THORCHAIN_DENOMS =
+    setOf("x/staking-ruji", "x/staking-x/ruji", Coins.ThorChain.ybRUNE.contractAddress)
 
 // Curated Rujira liquid-bonding denoms that must auto-surface the first time a wallet receives one,
 // before the user has manually enabled it. getRefreshTokens seeds enabledDenoms only from
 // vault.coins, so a fresh holder (who only ever seeded native RUNE) would otherwise have these
 // dropped by the enabledDenoms gate and never reach the canonicalization override. Stored lowercase
 // to match the canonical denom casing the balance response is compared against.
-internal val AUTO_DISCOVER_THORCHAIN_DENOMS =
-    setOf(Coins.ThorChain.bRUNE.contractAddress, Coins.ThorChain.ybRUNE.contractAddress)
+// Liquid bRUNE only: its ybRUNE receipt is a DeFi position, dropped above before this gate.
+internal val AUTO_DISCOVER_THORCHAIN_DENOMS = setOf(Coins.ThorChain.bRUNE.contractAddress)
 
 /**
  * Decodes the result of an ERC-20 `name()` / `symbol()` `eth_call` into text.

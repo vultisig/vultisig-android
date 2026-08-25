@@ -45,9 +45,30 @@ sealed class SwapException(message: String) : Exception(message) {
     class AmountBelowDustThreshold(message: String) : SwapException(message)
 
     companion object {
+        /**
+         * Substrings THORChain and MAYAChain emit when a chain or an asset is paused upstream: a
+         * protocol-wide trading halt, `global_trading_paused`, or `chain_trading_paused`. Matched
+         * against the lowercased body, and kept in step with the iOS marker set so both stacks
+         * classify the same node text the same way.
+         */
+        private val TRADING_HALT_MARKERS =
+            listOf(
+                "trading is halted",
+                "trading halted",
+                "trading paused",
+                "_trading_paused",
+                "is paused",
+            )
+
         fun handleSwapException(error: String): SwapException {
             with(error.lowercase()) {
                 return when {
+                    // A pause is temporary and retryable, so it is matched ahead of every other
+                    // class. The nodes often report it alongside a fee or amount clause ("trading
+                    // paused; not enough asset to pay for fees"), and reading that as an amount
+                    // problem sends the user off to adjust an amount that cannot help while
+                    // trading is down.
+                    TRADING_HALT_MARKERS.any { marker -> contains(marker) } -> TradingHalted(error)
                     contains("amount cannot be zero") -> AmountCannotBeZero(error)
                     contains("swap is not supported") -> SwapIsNotSupported(error)
                     contains("/fromamount must pass") -> AmountCannotBeZero(error)
@@ -74,8 +95,6 @@ sealed class SwapException(message: String) : Exception(message) {
                     contains("bad to asset") ||
                         contains("bad from asset") ||
                         contains("invalid symbol") -> SwapRouteNotAvailable(error)
-                    contains("trading is halted") || contains("trading halted") ->
-                        TradingHalted(error)
                     contains("timeout") -> TimeOut(error)
                     contains("unable to resolve host") -> NetworkConnection(error)
                     contains("no internet connection") -> NetworkConnection(error)

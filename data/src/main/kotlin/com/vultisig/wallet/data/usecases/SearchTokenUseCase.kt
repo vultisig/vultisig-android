@@ -86,9 +86,9 @@ constructor(
 
     /**
      * Struct-tag shape check for a Sui coin type (`address::module::struct`) — the on-chain
-     * `suix_getCoinMetadata` call rejects anything malformed, so this only screens obviously wrong
-     * input before spending a network round-trip. The native SUI type is excluded: it's already on
-     * the vault by default, never a "custom" token to add.
+     * coin-metadata lookup rejects anything malformed, so this only screens obviously wrong input
+     * before spending a network round-trip. The native SUI type is excluded: it's already on the
+     * vault by default, never a "custom" token to add.
      */
     private fun String.isSuiCoinTypeShape(): Boolean {
         val segments = split("::")

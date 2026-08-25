@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
+import com.vultisig.wallet.data.usecases.GetThorChainPendingLpDepositsUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPositions
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.decimals
@@ -30,6 +31,7 @@ import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.v2.defi.defaultSelectedPositionsDialog
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.utils.UiText
 import io.kotest.matchers.shouldBe
@@ -89,6 +91,7 @@ internal class ThorchainDefiPositionsViewModelTest {
     private lateinit var defaultStakingPositionService: DefaultStakingPositionService
     private lateinit var balanceVisibilityRepository: BalanceVisibilityRepository
     private lateinit var getThorChainLpPositionsUseCase: GetThorChainLpPositionsUseCase
+    private lateinit var getThorChainPendingLpDepositsUseCase: GetThorChainPendingLpDepositsUseCase
 
     @BeforeEach
     fun setUp() {
@@ -108,6 +111,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         defaultStakingPositionService = mockk(relaxed = true)
         balanceVisibilityRepository = mockk(relaxed = true)
         getThorChainLpPositionsUseCase = mockk(relaxed = true)
+        getThorChainPendingLpDepositsUseCase = mockk(relaxed = true)
 
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { balanceVisibilityRepository.getVisibility(VAULT_ID) } returns true
@@ -122,6 +126,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         coEvery { tcyStakingService.getStakingDetails(any(), any()) } returns flowOf()
         coEvery { defaultStakingPositionService.getStakingDetails(any(), any()) } returns flowOf()
         coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns emptyList()
+        coEvery { getThorChainPendingLpDepositsUseCase(any()) } returns emptyList()
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions()
     }
@@ -390,6 +395,117 @@ internal class ThorchainDefiPositionsViewModelTest {
     }
 
     @Test
+    fun `the ybRUNE receipt renders as a compounded position counted in receipt units`() = runTest {
+        selectPositions("ybRUNE")
+        coEvery { defaultStakingPositionService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(listOf(stakingDetails(Coins.ThorChain.ybRUNE, BigInteger("523400000000"))))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val ybRune =
+            vm.state.value.staking.positions.single { it.coin.id == Coins.ThorChain.ybRUNE.id }
+        // Header and amount name the same unit. The sRUJI card can say RUJI because its amount is
+        // the pool's RUJI liquidSize; this one is the raw receipt balance, and a share is worth
+        // more than one bRUNE, so titling it bRUNE would understate the position.
+        val header = ybRune.stakeAssetHeader as UiText.FormattedText
+        assertEquals(R.string.defi_header_compounded, header.resId)
+        assertEquals(listOf(Coins.ThorChain.ybRUNE.ticker), header.formatArgs)
+        assertTrue(ybRune.stakedAmountDisplay.endsWith(Coins.ThorChain.ybRUNE.ticker))
+        // Auto-compounding: nothing is separately claimable. The receipt itself is a plain bank
+        // denom, so it can be moved to another address like the sTCY one above it.
+        assertFalse(ybRune.supportsMint)
+        assertTrue(ybRune.canTransfer)
+        assertFalse(ybRune.canWithdraw)
+        assertTrue(ybRune.canStake)
+        assertTrue(ybRune.canUnstake)
+    }
+
+    @Test
+    fun `transfer routes to send against the position's own receipt`() = runTest {
+        // Fixed to sTCY, the ybRUNE card's Transfer button would have opened the form on someone
+        // else's token.
+        selectPositions("ybRUNE")
+        coEvery { defaultStakingPositionService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(listOf(stakingDetails(Coins.ThorChain.ybRUNE, BigInteger("523400000000"))))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        val ybRune =
+            vm.state.value.staking.positions.single { it.coin.id == Coins.ThorChain.ybRUNE.id }
+        vm.onClickTransfer(ybRune.coin)
+
+        coVerify(exactly = 1) {
+            navigator.route(
+                Route.Send(
+                    vaultId = VAULT_ID,
+                    chainId = Chain.ThorChain.id,
+                    tokenId = Coins.ThorChain.ybRUNE.id,
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `a ybRUNE position nobody holds cannot be unbonded`() = runTest {
+        selectPositions("ybRUNE")
+        coEvery { defaultStakingPositionService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(listOf(stakingDetails(Coins.ThorChain.ybRUNE, BigInteger.ZERO)))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val ybRune =
+            vm.state.value.staking.positions.single { it.coin.id == Coins.ThorChain.ybRUNE.id }
+        assertFalse(ybRune.canUnstake)
+        assertTrue(ybRune.canStake)
+    }
+
+    /**
+     * These position tokens usually aren't vault coins, and the periodic price refresh only ever
+     * covers vault coins — so unless the screen refreshes them itself they have no cache row, and
+     * the contract fallback has nothing to hit. That combination is what left staked sTCY/yTCY
+     * reading $0.00.
+     */
+    @Test
+    fun `staking positions refresh their own prices rather than relying on vault membership`() =
+        runTest {
+            selectPositions("yRUNE", "sTCY")
+            coEvery {
+                defaultStakingPositionService.getStakingDetails(RUNE_ADDRESS, VAULT_ID)
+            } returns
+                flowOf(
+                    listOf(
+                        stakingDetails(Coins.ThorChain.yRUNE, BigInteger("100000000")),
+                        stakingDetails(Coins.ThorChain.sTCY, BigInteger("200000000")),
+                    )
+                )
+
+            createViewModel().also { it.setData(VAULT_ID) }
+
+            coVerify {
+                tokenPriceRepository.refresh(
+                    match { coins ->
+                        coins.map { it.id }.toSet() ==
+                            setOf(Coins.ThorChain.yRUNE.id, Coins.ThorChain.sTCY.id)
+                    }
+                )
+            }
+        }
+
+    @Test
+    fun `a failed price refresh still prices the cards from the cache`() = runTest {
+        selectPositions("sTCY")
+        coEvery { defaultStakingPositionService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(listOf(stakingDetails(Coins.ThorChain.sTCY, BigInteger("200000000"))))
+        coEvery { tokenPriceRepository.refresh(any()) } throws RuntimeException("thornode down")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        // 2 sTCY at the cached 2 — the refresh is an optimization, not a precondition.
+        vm.state.value.staking.positions
+            .single { it.coin.id == Coins.ThorChain.sTCY.id }
+            .stakedFiatDisplay shouldBe "$4.00"
+    }
+
+    @Test
     fun `a zero generic position cannot be unstaked`() = runTest {
         selectPositions("yTCY")
         coEvery { defaultStakingPositionService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
@@ -405,16 +521,19 @@ internal class ThorchainDefiPositionsViewModelTest {
     }
 
     @Test
-    fun `the LP tab stays loading until the available-pool fetch resolves`() = runTest {
+    fun `a failed available-pool fetch still settles the LP tab`() = runTest {
         selectPositions("RUNE")
         coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } throws
             RuntimeException("midgard down")
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
-        // availablePools stays null so the tab must not flash an empty state.
-        assertTrue(vm.state.value.lp.isLoading)
-        assertFalse(vm.state.value.lpDialogLoaded)
+        // lpDialogLoaded means settled, not succeeded: leaving it false parks the tab in a spinner
+        // no retry can clear, while a pending half-deposit still renders through it. Settled, the
+        // tab falls through to its no-positions container and its Manage Positions retry.
+        vm.state.value.lpDialogLoaded shouldBe true
+        // availablePools stays null so the next interaction re-fetches instead of soft-locking.
+        vm.state.value.lpPositionsDialog.isEmpty() shouldBe true
     }
 
     @Test
@@ -450,12 +569,14 @@ internal class ThorchainDefiPositionsViewModelTest {
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
-        // 3 RUNE at 2. The BTC side prices to zero — the vault holds no BTC coin, so it falls
-        // through to the contract lookup, which this test leaves unstubbed.
+        // 3 RUNE at 2 plus 1 BTC at 2. The vault holds no BTC coin, but the pool names its asset
+        // by chain and ticker, which resolves to the curated BTC and so to a real price — that
+        // side used to read zero because it went straight to a contract lookup BTC has no
+        // contract address for.
         vm.totalValueLpFiat.value shouldBe
-            LpLegTotal.Priced(FiatValue(BigDecimal("6.00"), AppCurrencyUsd.ticker))
-        vm.state.value.lp.positions.single().totalPriceLp shouldBe "$6.00"
-        vm.state.value.totalAmountPrice shouldBe "$6.00"
+            LpLegTotal.Priced(FiatValue(BigDecimal("8.00"), AppCurrencyUsd.ticker))
+        vm.state.value.lp.positions.single().totalPriceLp shouldBe "$8.00"
+        vm.state.value.totalAmountPrice shouldBe "$8.00"
     }
 
     @Test
@@ -1035,7 +1156,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         vm.onPositionSelectionDone()
 
         coVerify(exactly = 1) {
-            defiPositionsRepository.saveSelectedPositions(VAULT_ID, listOf("TCY"))
+            defiPositionsRepository.saveSelectedPositions(Chain.ThorChain, VAULT_ID, listOf("TCY"))
         }
         val state = vm.state.value
         assertFalse(state.showPositionSelectionDialog)
@@ -1115,7 +1236,9 @@ internal class ThorchainDefiPositionsViewModelTest {
         assertFalse(vm.state.value.showPositionSelectionDialog)
         vm.state.value.isTotalAmountLoading shouldBe false
         vm.state.value.totalAmountPrice shouldBe "$6.00"
-        coVerify(exactly = 0) { defiPositionsRepository.saveSelectedPositions(VAULT_ID, any()) }
+        coVerify(exactly = 0) {
+            defiPositionsRepository.saveSelectedPositions(Chain.ThorChain, VAULT_ID, any())
+        }
     }
 
     @Test
@@ -1135,8 +1258,20 @@ internal class ThorchainDefiPositionsViewModelTest {
         assertEquals(before.bonded, after.bonded)
     }
 
+    @Test
+    fun `a vault that never chose on this chain gets the default selection`() = runTest {
+        // The store no longer holds defaults of its own: null is "never chose", and it is the only
+        // case they apply to. An empty set is a selection the user cleared and stays empty.
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.ThorChain, VAULT_ID) } returns
+            flowOf<Set<String>?>(null)
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.state.value.selectedPositions shouldBe defaultSelectedPositionsDialog()
+    }
+
     private fun selectPositions(vararg keys: String) {
-        coEvery { defiPositionsRepository.getSelectedPositions(VAULT_ID) } returns
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.ThorChain, VAULT_ID) } returns
             flowOf(keys.toSet())
     }
 
@@ -1205,6 +1340,7 @@ internal class ThorchainDefiPositionsViewModelTest {
             defaultStakingPositionService = defaultStakingPositionService,
             balanceVisibilityRepository = balanceVisibilityRepository,
             getThorChainLpPositionsUseCase = getThorChainLpPositionsUseCase,
+            getThorChainPendingLpDepositsUseCase = getThorChainPendingLpDepositsUseCase,
             ioDispatcher = testDispatcher,
         )
 

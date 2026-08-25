@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.passcode
 
+import io.kotest.matchers.shouldBe
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -8,6 +9,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -18,6 +20,7 @@ import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class PasscodeRepositoryImplTest {
 
     private lateinit var store: FakePasscodeStore
@@ -313,6 +316,49 @@ internal class PasscodeRepositoryImplTest {
     }
 
     @Test
+    fun `setPasscode encrypts nothing when the wrap does not reach the disk`() = runTest {
+        val repository = repository()
+        store.writeFailure = IllegalStateException("credentials were not written to disk")
+
+        assertEquals(PasscodeUnlockResult.Failed, repository.setPasscode("123456"))
+
+        assertEquals(emptyList(), protection.calls, "nothing may be encrypted")
+        assertNull(store.readCredentials())
+    }
+
+    @Test
+    fun `changePasscode leaves the old passcode in force when the new wrap is not stored`() =
+        runTest {
+            val repository = repository()
+            repository.setPasscode("123456")
+            val credentials = store.readCredentials()
+            store.writeFailure = IllegalStateException("credentials were not written to disk")
+
+            assertEquals(PasscodeUnlockResult.Failed, repository.changePasscode("123456", "654321"))
+
+            store.writeFailure = null
+            assertEquals(credentials, store.readCredentials())
+            repository.lock()
+            assertEquals(PasscodeUnlockResult.Success, repository.unlock("123456"))
+        }
+
+    @Test
+    fun `disablePasscode reseals the keyshares when the credentials are not removed`() = runTest {
+        // The shares are decrypted before the credentials are dropped.
+        val repository = repository()
+        repository.setPasscode("123456")
+        val credentials = store.readCredentials()
+        store.writeFailure = IllegalStateException("credentials were not removed from disk")
+
+        assertEquals(PasscodeUnlockResult.Failed, repository.disablePasscode("123456"))
+
+        assertEquals(credentials, store.readCredentials())
+        assertEquals(PasscodeState.Unlocked, repository.state.value)
+        assertEquals(listOf("protect", "unprotect", "protect"), protection.calls)
+        assertContentEquals(repository.dataKeyOrNull(), protection.protectedWith)
+    }
+
+    @Test
     fun `setPasscode survives an encryption failure with a working passcode`() = runTest {
         // The wrap is already stored and the app is unlocked by the time protectAll runs, so a
         // failed row is not a reason to fail the operation around it — the next unlock sweeps it.
@@ -368,7 +414,7 @@ internal class PasscodeRepositoryImplTest {
         repository.initialize()
 
         assertEquals(PasscodeState.StoreUnavailable, repository.state.value)
-        assertEquals(true, repository.isLocked(), "keyshare writes must still be refused")
+        assertEquals(true, repository.isLocked(), "stored keyshares stay unreadable")
     }
 
     @Test
@@ -382,7 +428,37 @@ internal class PasscodeRepositoryImplTest {
         repository.initialize()
 
         assertEquals(PasscodeState.StoreUnavailable, repository.state.value)
-        assertEquals(true, repository.isLocked(), "keyshare writes must still be refused")
+        assertEquals(true, repository.isLocked(), "stored keyshares stay unreadable")
+    }
+
+    @Test
+    fun `retry re-reads a store that has come back`() = runTest {
+        // The screen it backs has no other way out, so a keystore that stalled once would
+        // otherwise cost the user a relaunch to repeat a read the app can just do again.
+        repository().setPasscode("123456")
+        store.readFailure = IllegalStateException("keystore is stalled")
+        val reopened = repository()
+        reopened.initialize()
+        reopened.state.value shouldBe PasscodeState.StoreUnavailable
+
+        store.readFailure = null
+        reopened.retry()
+
+        reopened.state.value shouldBe PasscodeState.Locked
+    }
+
+    @Test
+    fun `retry leaves a state that was already read alone`() = runTest {
+        repository().setPasscode("123456")
+        val reopened = repository()
+        reopened.initialize()
+        reopened.state.value shouldBe PasscodeState.Locked
+
+        // Would surface as StoreUnavailable if retry re-read a state nothing asked it to.
+        store.readFailure = IllegalStateException("keystore is stalled")
+        reopened.retry()
+
+        reopened.state.value shouldBe PasscodeState.Locked
     }
 
     @Test
@@ -618,6 +694,9 @@ internal class FakePasscodeStore : PasscodeStore {
     /** Set to stand in for a keystore that throws rather than returning nothing. */
     var readFailure: Throwable? = null
 
+    /** Set to stand in for a store whose write or removal never reaches the disk. */
+    var writeFailure: Throwable? = null
+
     override fun isPersistent(): Boolean = persistent
 
     @Synchronized
@@ -629,11 +708,13 @@ internal class FakePasscodeStore : PasscodeStore {
 
     @Synchronized
     override fun writeCredentials(credentials: PasscodeCredentials) {
+        writeFailure?.let { throw it }
         this.credentials = credentials
     }
 
     @Synchronized
     override fun clearCredentials() {
+        writeFailure?.let { throw it }
         credentials = null
     }
 

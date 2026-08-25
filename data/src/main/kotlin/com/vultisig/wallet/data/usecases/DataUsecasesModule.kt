@@ -268,6 +268,12 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindGetThorChainPendingLpDepositsUseCase(
+        impl: GetThorChainPendingLpDepositsUseCaseImpl
+    ): GetThorChainPendingLpDepositsUseCase
+
+    @Binds
+    @Singleton
     fun bindThorChainLpPreflightUseCase(
         impl: ThorChainLpPreflightUseCaseImpl
     ): ThorChainLpPreflightUseCase
@@ -289,6 +295,12 @@ internal interface DataUsecasesModule {
     @Binds
     @Singleton
     fun bindUriFileReaderUseCase(impl: UriFileReaderUseCaseImpl): UriFileReaderUseCase
+
+    @Binds
+    @Singleton
+    fun bindSupersedeUnopenableVaultUseCase(
+        impl: SupersedeUnopenableVaultUseCaseImpl
+    ): SupersedeUnopenableVaultUseCase
 
     @Binds
     @Singleton

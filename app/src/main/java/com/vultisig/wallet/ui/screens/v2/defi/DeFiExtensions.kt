@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.v2.defi
 
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
+import com.vultisig.wallet.data.blockchain.thorchain.ThorchainStakingContracts
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
@@ -36,6 +37,7 @@ internal val thorchainSupportStakingDeFi: List<Coin>
             Coins.ThorChain.sTCY,
             Coins.ThorChain.yRUNE,
             Coins.ThorChain.yTCY,
+            Coins.ThorChain.ybRUNE,
         )
 
 internal val thorchainSupportsBonDeFi: List<Coin>
@@ -109,6 +111,9 @@ internal fun DeFiNavActions.getContractByDeFiAction(): String? {
         DeFiNavActions.STAKE_STCY,
         DeFiNavActions.UNSTAKE_STCY -> STAKING_TCY_COMPOUND_CONTRACT
 
+        DeFiNavActions.STAKE_YBRUNE,
+        DeFiNavActions.UNSTAKE_YBRUNE -> STAKING_BRUNE_CONTRACT
+
         else -> null
     }
 }
@@ -130,6 +135,11 @@ internal const val STAKING_RUJI_CONTRACT =
 
 internal const val STAKING_TCY_COMPOUND_CONTRACT =
     "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
+
+// Rujira's liquid-bond contract for bRUNE: `liquid.bond` mints the ybRUNE receipt, `liquid.unbond`
+// redeems it. Aliased rather than spelled out, because the pricing repository reads the same
+// address for the contract's NAV — see [ThorchainStakingContracts].
+internal const val STAKING_BRUNE_CONTRACT = ThorchainStakingContracts.BRUNE_LIQUID_BOND
 
 internal const val YRUNE_CONTRACT =
     "thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt"

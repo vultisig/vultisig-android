@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.models.swap
 
+import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.swap.SwapMode
@@ -38,6 +40,28 @@ internal data class FeeBreakdown(
     // not report price impact (1inch/Kyber/LiFi/Jupiter). Drives the Price Impact row (iOS parity).
     val priceImpactPercent: String? = null,
     val priceImpactLevel: PriceImpactLevel? = null,
+)
+
+/**
+ * One row of the Select-route picker in the Advanced swap sheet: a fetched provider quote the user
+ * can pick over the automatic winner. Rows are ordered best→worst by net destination output, with
+ * the active route pinned to the top.
+ *
+ * @property feeText The provider/swap fee in fiat, or null when the fee is baked into the quoted
+ *   rate (1inch) and there is no separate amount to show.
+ * @property etaText Estimated completion time ("~600s"); only THORChain/Maya expose an estimate, so
+ *   null hides the segment for aggregator routes.
+ * @property outputText Approximate destination output, e.g. "~21.83561311 RUNE".
+ */
+internal data class SwapRouteUiModel(
+    val provider: SwapProvider,
+    val name: UiText,
+    val logo: ImageModel?,
+    val feeText: String?,
+    val etaText: UiText?,
+    val outputText: String,
+    val outputFiatText: String,
+    val isSelected: Boolean,
 )
 
 /** VULT-tier and referral discount info rendered in the fee-details panel. */
@@ -79,6 +103,13 @@ internal data class SwapFormUiModel(
     // Set when [externalRecipient] is not a valid address for the destination chain. Surfaced
     // inline in the recipient sheet and blocks the swap so funds can't go to a malformed address.
     val externalRecipientError: UiText? = null,
+    // Fetched routes for the Select-route picker, active route first then best→worst by output.
+    // Empty when fewer than two routes exist — the row is disabled and there is nothing to pick.
+    val routeOptions: List<SwapRouteUiModel> = emptyList(),
+    // True while the active route is a manual user pick rather than the automatic winner; the
+    // Select route row then shows the provider name instead of "Auto". Reset on every quote
+    // refresh, which re-defaults the route to the best quote.
+    val isRouteManuallySelected: Boolean = false,
     // Whether the Advanced swap sheet is open. Opened only after the VULT Silver-tier gate passes;
     // a below-tier vault sees [advancedSettingsGate] instead (#4858).
     val showAdvancedSettings: Boolean = false,

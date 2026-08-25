@@ -353,12 +353,12 @@ private fun SearchReferralTag(type: SearchStatusType) {
         modifier =
             Modifier.background(
                     color = Theme.v2.colors.backgrounds.secondary,
-                    shape = RoundedCornerShape(50),
+                    shape = Theme.v2.radius.pill,
                 )
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(50),
+                    shape = Theme.v2.radius.pill,
                 )
                 .padding(horizontal = 16.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center,
@@ -380,7 +380,7 @@ fun CounterYearExpiration(
     ) {
         Button(
             onClick = { if (count != defaultInitCounter) onDecrement() },
-            shape = RoundedCornerShape(12.dp),
+            shape = Theme.v2.radius.md,
             enabled = count != defaultInitCounter,
             colors =
                 ButtonDefaults.buttonColors(
@@ -393,7 +393,7 @@ fun CounterYearExpiration(
             modifier =
                 Modifier.weight(1f)
                     .height(height = 60.dp)
-                    .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(12.dp)),
+                    .border(1.dp, Theme.v2.colors.border.light, Theme.v2.radius.md),
         ) {
             Icon(painter = painterResource(R.drawable.circle_minus), contentDescription = null)
         }
@@ -402,7 +402,7 @@ fun CounterYearExpiration(
             modifier =
                 Modifier.weight(1f)
                     .height(height = 60.dp)
-                    .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(12.dp)),
+                    .border(1.dp, Theme.v2.colors.border.light, Theme.v2.radius.md),
             contentAlignment = Alignment.Center,
         ) {
             Text(
@@ -414,7 +414,7 @@ fun CounterYearExpiration(
 
         Button(
             onClick = { if (count < 100) onIncrement() },
-            shape = RoundedCornerShape(12.dp),
+            shape = Theme.v2.radius.md,
             colors =
                 ButtonDefaults.buttonColors(
                     containerColor = Theme.v2.colors.backgrounds.secondary,
@@ -423,7 +423,7 @@ fun CounterYearExpiration(
             modifier =
                 Modifier.weight(1f)
                     .height(height = 60.dp)
-                    .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(12.dp)),
+                    .border(1.dp, Theme.v2.colors.border.light, Theme.v2.radius.md),
         ) {
             Icon(painter = painterResource(R.drawable.circle_plus), contentDescription = null)
         }

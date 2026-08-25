@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
@@ -135,7 +134,7 @@ private fun NotificationsSettingsScreen(
                     modifier =
                         Modifier.background(
                             color = Theme.v2.colors.backgrounds.surface1,
-                            shape = RoundedCornerShape(size = 12.dp),
+                            shape = Theme.v2.radius.md,
                         )
                 ) {
                     state.vaults.forEachIndexed { index, vault ->
@@ -159,13 +158,13 @@ private fun SystemNotificationsBlockedWarning(onClick: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(size = 12.dp))
+                .clip(Theme.v2.radius.md)
                 .clickOnce(onClick = onClick)
                 .background(color = Theme.v2.colors.backgrounds.surface1)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.alerts.warning,
-                    shape = RoundedCornerShape(size = 12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(all = 16.dp),
     ) {
@@ -229,11 +228,11 @@ private fun VaultNotificationToggle(
                     Modifier.border(
                             width = 1.dp,
                             color = Theme.v2.colors.variables.bordersLight,
-                            shape = RoundedCornerShape(size = 99.dp),
+                            shape = Theme.v2.radius.pill,
                         )
                         .background(
                             color = Theme.v2.colors.variables.backgroundsSurface12,
-                            shape = RoundedCornerShape(size = 99.dp),
+                            shape = Theme.v2.radius.pill,
                         )
                         .padding(12.dp),
             )

@@ -159,6 +159,59 @@ class ExplorerLinkRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `Etherscan-family token link points at the contract page`() {
+        val contract = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+        assertEquals(
+            "https://etherscan.io/token/$contract",
+            repository.getTokenLink(Chain.Ethereum, contract),
+        )
+    }
+
+    @Test
+    fun `chains whose explorer uses its own token path get that path`() {
+        assertEquals(
+            "https://tronscan.org/#/token20/TR7NHq",
+            repository.getTokenLink(Chain.Tron, "TR7NHq"),
+        )
+        assertEquals(
+            "https://suiscan.xyz/mainnet/coin/0x2::sui::SUI",
+            repository.getTokenLink(Chain.Sui, "0x2::sui::SUI"),
+        )
+        assertEquals(
+            "https://orb.helius.dev/address/EPjFWmint",
+            repository.getTokenLink(Chain.Solana, "EPjFWmint"),
+        )
+    }
+
+    @Test
+    fun `chains with no per-token page have no token link`() {
+        // The UTXO family, the Cosmos-SDK chains and the Substrate chains have no contract to
+        // address, so the caller falls back to the holder's address page instead of linking to a
+        // URL that would 404.
+        assertEquals(null, repository.getTokenLink(Chain.Bitcoin, "whatever"))
+        assertEquals(null, repository.getTokenLink(Chain.GaiaChain, "whatever"))
+        assertEquals(null, repository.getTokenLink(Chain.ThorChain, "whatever"))
+        assertEquals(null, repository.getTokenLink(Chain.Qbtc, "whatever"))
+    }
+
+    @Test
+    fun `an empty contract address has no token link`() {
+        assertEquals(null, repository.getTokenLink(Chain.Ethereum, ""))
+    }
+
+    @Test
+    fun `every token link that exists is an https URL carrying the contract`() {
+        for (chain in Chain.entries) {
+            val link = repository.getTokenLink(chain, "CONTRACT123") ?: continue
+            assertTrue(link.startsWith("https://"), "Token link for ${chain.name} should be https")
+            assertTrue(
+                link.contains("CONTRACT123"),
+                "Token link for ${chain.name} should carry the contract",
+            )
+        }
+    }
+
     private fun coin(chain: Chain) = Coin.EMPTY.copy(chain = chain)
 
     private fun swapKitNativePayload(srcChain: Chain) =

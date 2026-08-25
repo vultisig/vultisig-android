@@ -4136,6 +4136,8 @@ object Coins {
                 isNativeToken = false,
             )
 
+        // The auto-compounding receipt for bonded bRUNE — a DeFi position, never a wallet token,
+        // so it is kept out of [all] and reached through [defiOnly] instead.
         val ybRUNE =
             Coin(
                 chain = Chain.ThorChain,
@@ -4150,22 +4152,7 @@ object Coins {
             )
 
         val all =
-            listOf(
-                RUNE,
-                TCY,
-                RUJI,
-                KUJI,
-                FUZN,
-                NSTK,
-                WINK,
-                LVN,
-                RKUJI,
-                sTCY,
-                yRUNE,
-                yTCY,
-                bRUNE,
-                ybRUNE,
-            )
+            listOf(RUNE, TCY, RUJI, KUJI, FUZN, NSTK, WINK, LVN, RKUJI, sTCY, yRUNE, yTCY, bRUNE)
     }
 
     object Ton {
@@ -4475,8 +4462,101 @@ object Coins {
      * out of [coins] so token discovery and the token-selection list never offer them, but they
      * must stay resolvable by id because a persisted position round-trips through its coin id.
      */
-    val defiOnly: List<Coin> = listOf(ThorChain.sRUJI)
+    val defiOnly: List<Coin> = listOf(ThorChain.sRUJI, ThorChain.ybRUNE)
 
     /** [all] plus [defiOnly] — use whenever a stored coin id is resolved back to its [Coin]. */
     val allResolvable: List<Coin> = all + defiOnly
+
+    /**
+     * Whether [coin] is one of the [defiOnly] positions.
+     *
+     * Matched on the id rather than by identity: these coins are stamped with the holding vault's
+     * address and public key before they reach an account, so the instance is never the catalogue's
+     * own.
+     */
+    fun isDefiOnly(coin: Coin): Boolean = defiOnly.any { it.id.equals(coin.id, ignoreCase = true) }
+
+    /**
+     * The coins that read another coin's price row instead of holding one of their own, keyed by
+     * the id they are asked for.
+     */
+    private val priceRowAliases: Map<String, Coin> =
+        mapOf(ThorChain.sRUJI.id.lowercase() to ThorChain.RUJI)
+
+    /**
+     * The coin whose price row values [coin].
+     *
+     * A position reported in an asset other than the one receipting it has to read that asset's
+     * row: the auto-compounding RUJI position is reported in RUJI — the pool's `liquidSize`, not a
+     * share count — so RUJI's row is the only one that can value it. Letting the receipt keep a row
+     * of its own put two prices on the same RUJI: it borrows RUJI's `rujira` provider id, so the
+     * CoinGecko batch filled that row with a quote, while RUJI's own row is overwritten moments
+     * later by the THOR.RUJI pool price every other RUJI reading in the app is taken from.
+     *
+     * It lives on the catalogue for the same reason as [isNavPricedDenom]: the pricing repository
+     * and everything that values a position have to agree on which rows exist, and two copies of
+     * the list would drift.
+     */
+    fun pricedAs(coin: Coin): Coin = priceRowAliases[coin.id.lowercase()] ?: coin
+
+    /** [pricedAs] for callers holding an id rather than the coin it belongs to. */
+    fun pricedAs(tokenId: TokenId): TokenId = priceRowAliases[tokenId.lowercase()]?.id ?: tokenId
+
+    /**
+     * The curated [Coin] a pool or contract refers to, or null when the catalogue doesn't carry it.
+     *
+     * Pools name their assets by chain and ticker (`BTC.BTC`, `ETH.USDC-0x…`), which is all a
+     * caller has for a position the vault doesn't hold. Resolving that to the curated coin is what
+     * gives the asset its CoinGecko id — without it a native asset has no contract address to look
+     * up and can only ever price at zero.
+     *
+     * [contractAddress] is matched case-insensitively because pool strings and the catalogue's
+     * checksummed EVM addresses disagree on case; an empty one matches on chain and ticker alone,
+     * which is how native assets arrive. Ticker matching is likewise case-insensitive: chain
+     * metadata is not uniformly uppercased the way the EVM token lists are.
+     */
+    fun findCurated(chain: Chain, ticker: String, contractAddress: String): Coin? =
+        allResolvable.firstOrNull { coin ->
+            coin.chain == chain &&
+                coin.ticker.equals(ticker, ignoreCase = true) &&
+                (contractAddress.isEmpty() ||
+                    coin.contractAddress.equals(contractAddress, ignoreCase = true))
+        }
+
+    /**
+     * The curated [Coin] for a contract address on [chain], when the caller has no ticker to go
+     * with it — a contract-address price lookup, for instance, which needs the coin only to learn
+     * the id its result should be cached under. Never matches an empty [contractAddress], because
+     * every native coin carries one and the first would win arbitrarily.
+     */
+    fun findCuratedByContract(chain: Chain, contractAddress: String): Coin? =
+        contractAddress
+            .takeIf { it.isNotEmpty() }
+            ?.let { address ->
+                allResolvable.firstOrNull { coin ->
+                    coin.chain == chain && coin.contractAddress.equals(address, ignoreCase = true)
+                }
+            }
+
+    /**
+     * Whether [coin] is a THORChain denom priced off index NAV or RUNE parity rather than off any
+     * market quote — the staking receipts and the liquid-bonding denoms.
+     *
+     * These borrow the underlying asset's [Coin.priceProviderID]: sTCY carries TCY's `tcy`, so a
+     * price-provider lookup answers with raw TCY under sTCY's name, dropping everything the
+     * position has compounded. Only the contract route applies the NAV correction, so a caller
+     * pricing one of these denoms must send it there and skip the provider id.
+     *
+     * It lives on the catalogue rather than in the pricing repository because the repository and
+     * the position screens both have to agree on which denoms it covers, and two copies of the list
+     * would silently drift.
+     */
+    fun isNavPricedDenom(coin: Coin): Boolean {
+        if (coin.chain != Chain.ThorChain) return false
+        val denom = coin.contractAddress.lowercase()
+        return denom.startsWith("x/nami") ||
+            denom == ThorChain.sTCY.contractAddress ||
+            denom == ThorChain.bRUNE.contractAddress ||
+            denom == ThorChain.ybRUNE.contractAddress
+    }
 }

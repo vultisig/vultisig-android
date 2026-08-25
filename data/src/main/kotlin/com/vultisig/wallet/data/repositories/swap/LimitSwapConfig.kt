@@ -7,11 +7,11 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * DataStore-backed feature flag for the THORChain Limit Swap ("Place Limit Order") flow. Default is
- * `false` — the feature is opt-in via Settings → Advanced → Limit Orders. Combined (AND) with the
+ * `true` — the feature is opt-out via Settings → Advanced → Limit Orders. Combined (AND) with the
  * remote `limit-swap` kill switch in `SwapFormViewModel`.
  */
 interface LimitSwapConfig {
-    /** Live flow of the user's Advanced Settings → Limit Swap toggle. Defaults to `false`. */
+    /** Live flow of the user's Advanced Settings → Limit Swap toggle. Defaults to `true`. */
     val isFeatureEnabled: Flow<Boolean>
 
     /** Persists the user's new toggle value. */
@@ -23,7 +23,7 @@ internal class LimitSwapConfigImpl @Inject constructor(private val dataStore: Ap
     LimitSwapConfig {
 
     override val isFeatureEnabled: Flow<Boolean>
-        get() = dataStore.readData(LIMIT_SWAP_ENABLED_KEY, false)
+        get() = dataStore.readData(LIMIT_SWAP_ENABLED_KEY, true)
 
     override suspend fun setFeatureEnabled(enabled: Boolean) {
         dataStore.set(LIMIT_SWAP_ENABLED_KEY, enabled)

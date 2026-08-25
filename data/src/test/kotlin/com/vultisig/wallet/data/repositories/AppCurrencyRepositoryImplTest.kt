@@ -101,6 +101,18 @@ class AppCurrencyRepositoryImplTest {
         assertEquals("£1.00", gbp)
     }
 
+    @Test
+    fun `format for a given currency ignores the selection, which may have moved on`() = runTest {
+        // A caller that priced its figures in euros asks for euros, even once the user has
+        // switched: the alternative stamps the new symbol on values priced in the old currency.
+        Locale.setDefault(Locale.US)
+        val repository = AppCurrencyRepositoryImpl(FakeCurrencyDataStore(AppCurrency.USD.ticker))
+
+        val formatted = repository.getCurrencyFormat(AppCurrency.EUR).format(1000)
+
+        assertEquals("€1,000.00", formatted)
+    }
+
     private class FakeCurrencyDataStore(var ticker: String) : AppDataStore {
         @Suppress("UNCHECKED_CAST")
         override fun <T> readData(key: Preferences.Key<T>, defaultValue: T): Flow<T> =

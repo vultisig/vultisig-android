@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,12 +33,12 @@ fun VsPromoBox(
                 .fillMaxWidth()
                 .background(
                     color = Theme.v2.colors.backgrounds.secondary,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(all = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -65,31 +65,17 @@ fun VsPromoBox(
 
 @Composable
 fun VsPromoTag(@DrawableRes icon: Int, text: String, modifier: Modifier = Modifier) {
+    // The tag runs off the start edge of the box, so only its end corners are drawn — and they are
+    // fully round. Both the fill and the border read the one shape: two spellings of it here is the
+    // drift this scale exists to stop.
+    val shape =
+        Theme.v2.radius.pill.shape.copy(topStart = CornerSize(0.dp), bottomStart = CornerSize(0.dp))
     Row(
         modifier =
             modifier
                 .padding(start = 16.dp)
-                .background(
-                    color = Theme.v2.colors.backgrounds.secondary,
-                    shape =
-                        RoundedCornerShape(
-                            topEnd = 50.dp,
-                            bottomEnd = 50.dp,
-                            topStart = 0.dp,
-                            bottomStart = 0.dp,
-                        ),
-                )
-                .border(
-                    width = 1.dp,
-                    color = Theme.v2.colors.border.light,
-                    shape =
-                        RoundedCornerShape(
-                            topEnd = 50.dp,
-                            bottomEnd = 50.dp,
-                            topStart = 0.dp,
-                            bottomStart = 0.dp,
-                        ),
-                )
+                .background(color = Theme.v2.colors.backgrounds.secondary, shape = shape)
+                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

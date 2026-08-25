@@ -10,9 +10,8 @@
         android:translateX="25.6"
         android:translateY="25.6">
         <path
-            android:fillColor="#0052FF"
-            android:fillType="evenOdd"
-            android:pathData="M256,128C256,198.69 198.59,256 127.78,256C60.59,256 5.47,204.42 0,138.76H169.48V117.24H0C5.47,51.58 60.59,0 127.78,0C198.59,0 256,57.31 256,128Z" />
+            android:fillColor="#0000FF"
+            android:pathData="M57.6,208C51.2,208 48,204.8 48,198.4V57.6C48,51.2 51.2,48 57.6,48H198.3992C204.7992,48 208,51.2 208,57.6V198.4C208,204.8 204.7992,208 198.3992,208H57.6Z" />
 
     </group>
 

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -142,9 +141,9 @@ internal fun SettingsBox(
                 Modifier.fillMaxWidth()
                     .background(
                         color = Theme.v2.colors.backgrounds.secondary,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = Theme.v2.radius.md,
                     )
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(Theme.v2.radius.md)
         ) {
             content()
         }

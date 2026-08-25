@@ -104,25 +104,31 @@ constructor(
         val action = depositTypeActionProvider()?.takeIf { it.isNotEmpty() } ?: return
         clearDepositTypeAction()
 
-        val depositOption =
-            when (parseDepositType(action)) {
-                DeFiNavActions.BOND -> DepositOption.Bond
-                DeFiNavActions.UNBOND -> DepositOption.Unbond
-                DeFiNavActions.STAKE_CACAO -> DepositOption.AddCacaoPool
-                DeFiNavActions.UNSTAKE_CACAO -> DepositOption.RemoveCacaoPool
-                DeFiNavActions.ADD_LP -> DepositOption.AddLiquidity
-                DeFiNavActions.REMOVE_LP -> DepositOption.RemoveLiquidity
-                else -> DepositOption.Bond
-            }
-        selectDepositOption(depositOption)
+        selectDepositOption(depositOptionFor(action))
     }
+
+    /**
+     * Maps a `depositTypeAction` deep-link to the option the form should open on. Deep-linked
+     * options are deliberately absent from the per-chain [DepositOption] dropdown: the flow is
+     * entered from the DeFi tab, not picked here.
+     */
+    private fun depositOptionFor(action: String): DepositOption =
+        when (parseDepositType(action)) {
+            DeFiNavActions.BOND -> DepositOption.Bond
+            DeFiNavActions.UNBOND -> DepositOption.Unbond
+            DeFiNavActions.STAKE_CACAO -> DepositOption.AddCacaoPool
+            DeFiNavActions.UNSTAKE_CACAO -> DepositOption.RemoveCacaoPool
+            DeFiNavActions.ADD_LP -> DepositOption.AddLiquidity
+            DeFiNavActions.REMOVE_LP -> DepositOption.RemoveLiquidity
+            else -> DepositOption.Bond
+        }
 
     /**
      * Wires the init-time deposit flow at screen entry: builds the per-[chain] option list and
      * seeds the initial [state], derives the merge coin list, resolves the vault [address], and
      * starts the three sequence-sensitive flow collectors (native-token reselection + ADD_LP gas
      * display, the `selectedCoin × address × depositOption × selectedToken`
-     * token-amount/secured-asset collector, and the `selectedCoin × depositOption` IBC/Switch
+     * token-amount/secured-asset collector, and the `selectedCoin × depositOption` IBC transfer
      * destination-chain collector).
      *
      * Collector order and structure are preserved exactly; the SecuredAsset address population
@@ -136,7 +142,7 @@ constructor(
      * @param state the ViewModel's mutable UI state, read for derivations and updated in place.
      * @param updateTokenAmount callback that refreshes the displayed balance for the resolved
      *   account.
-     * @param selectDstChain callback that selects the first IBC/Switch destination chain.
+     * @param selectDstChain callback that selects the first IBC transfer destination chain.
      * @param collectSecuredAssetAddresses trigger that populates the user's own THORChain address
      *   on the SecuredAsset form.
      * @param loadGasFeeForDisplay callback that loads and displays gas fees for the ADD_LP
@@ -160,8 +166,6 @@ constructor(
                         DepositOption.Unbond,
                         DepositOption.Leave,
                         DepositOption.Custom,
-                        DepositOption.Merge,
-                        DepositOption.UnMerge,
                         DepositOption.WithdrawSecuredAsset,
                     )
 
@@ -170,7 +174,7 @@ constructor(
                 Chain.Kujira,
                 Chain.Osmosis -> listOf(DepositOption.TransferIbc)
 
-                Chain.GaiaChain -> listOf(DepositOption.TransferIbc, DepositOption.Switch)
+                Chain.GaiaChain -> listOf(DepositOption.TransferIbc)
                 // TON staking moved to the dedicated DeFi-tab Stake/Unstake screens; it no longer
                 // surfaces Stake/Unstake in the generic deposit form (iOS Functions-flow parity).
                 else ->
@@ -180,7 +184,15 @@ constructor(
                         if (chain.ticker() in SECURE_ASSETS_TICKERS) add(DepositOption.SecuredAsset)
                     }
             }
-        val depositOption = depositOptions.first()
+        // The dropdown list is empty for chains that expose no self-service deposit action (any
+        // chain outside the branches above whose ticker is not a secured asset). Those chains are
+        // still reachable by deep link — completing a pending THORChain LP half-deposit routes to
+        // the pool's own asset chain — so seed from the pending action first and never assume the
+        // list has a head.
+        val depositOption =
+            depositTypeActionProvider()?.takeIf { it.isNotEmpty() }?.let { depositOptionFor(it) }
+                ?: depositOptions.firstOrNull()
+                ?: DepositOption.Custom
         val defaultToken =
             when (chain) {
                 Chain.MayaChain -> Coins.MayaChain.CACAO
@@ -201,13 +213,7 @@ constructor(
                 if (chain == Chain.Osmosis) it.filter { it.ticker.equals("LVN", ignoreCase = true) }
                 else it
             }
-        state.update {
-            it.copy(
-                selectedCoin = coinList.first(),
-                coinList = coinList,
-                selectedUnMergeCoin = coinList.first(),
-            )
-        }
+        state.update { it.copy(selectedCoin = coinList.first(), coinList = coinList) }
 
         loadAddress(vaultId, chain)
 
@@ -233,9 +239,7 @@ constructor(
 
                     val account =
                         when (depositOption) {
-                            DepositOption.Switch,
-                            DepositOption.TransferIbc,
-                            DepositOption.Merge -> {
+                            DepositOption.TransferIbc -> {
                                 targetTicker = selectedMergeToken.ticker
                                 address.accounts.find {
                                     it.token.ticker.equals(
@@ -281,8 +285,7 @@ constructor(
                     state.map { it.depositOption }.distinctUntilChanged(),
                 ) { selectedMergeToken, depositOption ->
                     when (depositOption) {
-                        DepositOption.TransferIbc,
-                        DepositOption.Switch -> {
+                        DepositOption.TransferIbc -> {
                             // special case, because of all supported merge tokens only lvn is
                             // osmosis native
                             val dstChainList =

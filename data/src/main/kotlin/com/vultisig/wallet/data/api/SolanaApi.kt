@@ -64,7 +64,21 @@ import timber.log.Timber
 import wallet.core.jni.SolanaAddress
 
 interface SolanaApi {
+    /**
+     * The address' lamport balance, or [BigInteger.ZERO] when it could not be read — an absent
+     * account and an unreachable node are one answer here. Callers that must tell those apart, such
+     * as the gates deciding whether a wallet can pay for a transaction, want [getBalanceOrNull].
+     */
     suspend fun getBalance(address: String): BigInteger
+
+    /**
+     * The address' lamport balance, or null when the read failed.
+     *
+     * [getBalance] answers every RPC error with zero, which reads as an empty wallet. Anything
+     * refusing a transaction on a zero balance therefore refuses a funded wallet whenever the node
+     * hiccups, so the affordability gates ask through here instead.
+     */
+    suspend fun getBalanceOrNull(address: String): BigInteger?
 
     /**
      * Live rent-exempt reserve for a new 165-byte SPL Associated Token Account. The last
@@ -105,6 +119,13 @@ interface SolanaApi {
      */
     suspend fun getAccountOwner(account: String): String?
 
+    /**
+     * Same lookup as [getAccountOwner], keeping "the cluster says there is no such account" apart
+     * from "the cluster did not answer". Callers that would act on the absence of an owner need
+     * that distinction: a missing account is a fact, a failed lookup is not.
+     */
+    suspend fun getAccountOwnership(account: String): SolanaAccountOwnership
+
     suspend fun checkStatus(txHash: String): SolanaRpcResponseJson<SolanaSignatureStatusesResult>?
 
     /**
@@ -127,6 +148,19 @@ interface SolanaApi {
      * or an empty list on RPC failure. Never stale-cached — always a fresh read.
      */
     suspend fun getStakeAccounts(ownerAddress: String): List<SolanaProgramAccountJson>
+}
+
+/** What `getAccountInfo` reports about the program that owns an account. */
+sealed interface SolanaAccountOwnership {
+
+    /** The account exists on-chain and [programId] owns it. */
+    data class Owned(val programId: String) : SolanaAccountOwnership
+
+    /** The cluster answered and there is no account at that address. */
+    data object Missing : SolanaAccountOwnership
+
+    /** The lookup failed, so the cluster's answer is unknown — not "no". */
+    data object Unavailable : SolanaAccountOwnership
 }
 
 internal class SolanaApiImp(
@@ -161,7 +195,10 @@ internal class SolanaApiImp(
     private var cachedSplAtaRentExemptionLamports: BigInteger =
         SPL_TOKEN_ACCOUNT_RENT_EXEMPT_LAMPORTS_BOOTSTRAP.toBigInteger()
 
-    override suspend fun getBalance(address: String): BigInteger {
+    override suspend fun getBalance(address: String): BigInteger =
+        getBalanceOrNull(address) ?: BigInteger.ZERO
+
+    override suspend fun getBalanceOrNull(address: String): BigInteger? {
         return try {
             val payload =
                 RpcPayload(
@@ -177,12 +214,13 @@ internal class SolanaApiImp(
             if (rpcResp.error != null) {
                 Timber.tag("solanaApiImp")
                     .d("get balance ,address: $address error: ${rpcResp.error}")
-                return BigInteger.ZERO
+                return null
             }
-            rpcResp.result?.value ?: error("getBalance error")
+            rpcResp.result?.value
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            BigInteger.ZERO
+            Timber.tag("solanaApiImp").e(e, "get balance failed, address: %s", address)
+            null
         }
     }
 
@@ -520,6 +558,9 @@ internal class SolanaApiImp(
     }
 
     override suspend fun getAccountOwner(account: String): String? =
+        (getAccountOwnership(account) as? SolanaAccountOwnership.Owned)?.programId
+
+    override suspend fun getAccountOwnership(account: String): SolanaAccountOwnership =
         try {
             val response =
                 httpClient.postRpc<SolanaAccountInfoResponseJson>(
@@ -532,19 +573,27 @@ internal class SolanaApiImp(
                         },
                 )
             // postRpc returns a 200 carrying a JSON-RPC `error` body without throwing, so a
-            // transient
-            // RPC failure would otherwise resolve to a null owner indistinguishable from a
-            // genuinely
-            // missing account — and silently drop the now-preferred Jupiter route. Log it so the
-            // failure is observable rather than masquerading as "mint not found".
+            // transient RPC failure would otherwise resolve to a null owner indistinguishable from
+            // a genuinely missing account — and silently drop the now-preferred Jupiter route. Log
+            // it so the failure is observable rather than masquerading as "mint not found".
             response.error?.let {
-                Timber.tag("SolanaApiImp").w("getAccountOwner RPC error for %s: %s", account, it)
+                Timber.tag("SolanaApiImp")
+                    .w("getAccountOwnership RPC error for %s: %s", account, it)
             }
-            response.result?.value?.owner
+            when {
+                response.error != null || response.result == null ->
+                    SolanaAccountOwnership.Unavailable
+                // `value` is null exactly when the cluster looked and found nothing. An owner
+                // missing from a present value is a malformed answer, not an absent account.
+                response.result?.value == null -> SolanaAccountOwnership.Missing
+                else ->
+                    response.result?.value?.owner?.let(SolanaAccountOwnership::Owned)
+                        ?: SolanaAccountOwnership.Unavailable
+            }
         } catch (e: Exception) {
             if (e is CancellationException) throw e
-            Timber.tag("SolanaApiImp").e(e, "getAccountOwner failed for %s", account)
-            null
+            Timber.tag("SolanaApiImp").e(e, "getAccountOwnership failed for %s", account)
+            SolanaAccountOwnership.Unavailable
         }
 
     override suspend fun getFeeForMessage(message: String): BigInteger {

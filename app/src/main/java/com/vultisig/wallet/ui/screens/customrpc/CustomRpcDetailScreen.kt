@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
@@ -135,13 +134,13 @@ private fun RpcEndpointField(
                 .heightIn(min = 120.dp)
                 .background(
                     color = Theme.v2.colors.backgrounds.surface1,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .border(
                     width = 1.dp,
                     color =
                         if (isError) Theme.v2.colors.alerts.error else Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -170,12 +169,12 @@ private fun DefaultEndpointCard(endpoint: String) {
                 Modifier.fillMaxWidth()
                     .background(
                         color = Theme.v2.colors.backgrounds.surface1,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = Theme.v2.radius.md,
                     )
                     .border(
                         width = 1.dp,
                         color = Theme.v2.colors.border.light,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = Theme.v2.radius.md,
                     )
                     .padding(16.dp)
         ) {

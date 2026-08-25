@@ -43,7 +43,6 @@ import com.vultisig.wallet.ui.models.deposit.load.DepositFieldInputCoordinator
 import com.vultisig.wallet.ui.models.deposit.load.DepositOptionCoordinator
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.NodeWhitelistChecker
-import com.vultisig.wallet.ui.models.deposit.load.RujiBalancesLoader
 import com.vultisig.wallet.ui.models.deposit.load.SecuredAssetLoader
 import com.vultisig.wallet.ui.models.deposit.submit.DepositStrategyFactory
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
@@ -162,26 +161,6 @@ internal class DepositFormViewModelTest {
                     getMayaCacaoMaturityStatus = getMayaCacaoMaturityStatus,
                     scope = scope,
                     onResult = onResult,
-                )
-        }
-    private val rujiBalancesLoaderFactory: RujiBalancesLoader.Factory =
-        object : RujiBalancesLoader.Factory {
-            override fun create(
-                scope: CoroutineScope,
-                tokenAmountFieldState: TextFieldState,
-                addressProvider: () -> String?,
-                selectedUnMergeCoinProvider: () -> TokenMergeInfo,
-                onSharesBalance: (UiText) -> Unit,
-                setLoading: (Boolean) -> Unit,
-            ): RujiBalancesLoader =
-                RujiBalancesLoader(
-                    thorChainApi = thorChainApi,
-                    scope = scope,
-                    tokenAmountFieldState = tokenAmountFieldState,
-                    addressProvider = addressProvider,
-                    selectedUnMergeCoinProvider = selectedUnMergeCoinProvider,
-                    onSharesBalance = onSharesBalance,
-                    setLoading = setLoading,
                 )
         }
     private val nodeWhitelistCheckerFactory: NodeWhitelistChecker.Factory =
@@ -347,7 +326,6 @@ internal class DepositFormViewModelTest {
             liquidityDataLoaderFactory = liquidityDataLoaderFactory,
             securedAssetLoaderFactory = securedAssetLoaderFactory,
             cacaoMaturityLoaderFactory = cacaoMaturityLoaderFactory,
-            rujiBalancesLoaderFactory = rujiBalancesLoaderFactory,
             nodeWhitelistCheckerFactory = nodeWhitelistCheckerFactory,
             dataLoaderFactory = dataLoaderFactory,
             depositOptionCoordinatorFactory = depositOptionCoordinatorFactory,
@@ -758,38 +736,32 @@ internal class DepositFormViewModelTest {
     }
 
     @Test
-    fun `loadData for ThorChain exposes bond unbond leave custom merge unmerge and withdraw`() =
-        runTest {
-            val vm = buildViewModel()
+    fun `loadData for ThorChain exposes bond unbond leave custom and withdraw`() = runTest {
+        val vm = buildViewModel()
 
-            vm.loadData("vault1", Chain.ThorChain.raw, null, null)
-            advanceUntilIdle()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+        advanceUntilIdle()
 
-            assertEquals(
-                listOf(
-                    DepositOption.Bond,
-                    DepositOption.Unbond,
-                    DepositOption.Leave,
-                    DepositOption.Custom,
-                    DepositOption.Merge,
-                    DepositOption.UnMerge,
-                    DepositOption.WithdrawSecuredAsset,
-                ),
-                vm.state.value.depositOptions,
-            )
-        }
+        assertEquals(
+            listOf(
+                DepositOption.Bond,
+                DepositOption.Unbond,
+                DepositOption.Leave,
+                DepositOption.Custom,
+                DepositOption.WithdrawSecuredAsset,
+            ),
+            vm.state.value.depositOptions,
+        )
+    }
 
     @Test
-    fun `loadData for GaiaChain exposes only IBC transfer and switch`() = runTest {
+    fun `loadData for GaiaChain exposes only IBC transfer`() = runTest {
         val vm = buildViewModel()
 
         vm.loadData("vault1", Chain.GaiaChain.raw, null, null)
         advanceUntilIdle()
 
-        assertEquals(
-            listOf(DepositOption.TransferIbc, DepositOption.Switch),
-            vm.state.value.depositOptions,
-        )
+        assertEquals(listOf(DepositOption.TransferIbc), vm.state.value.depositOptions)
     }
 
     @Test
@@ -999,17 +971,5 @@ internal class DepositFormViewModelTest {
         vm.validateLpUnits()
 
         assertEquals(null, vm.state.value.lpUnitsError)
-    }
-
-    @Test
-    fun `validateThorAddress is a no-op outside the Switch flow`() = runTest {
-        val vm = buildViewModel()
-        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
-        advanceUntilIdle()
-
-        vm.thorAddressFieldState.setTextAndPlaceCursorAtEnd("garbage-not-an-address")
-        vm.validateThorAddress()
-
-        assertEquals(null, vm.state.value.thorAddressError)
     }
 }

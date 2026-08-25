@@ -37,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -53,6 +54,7 @@ import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
+import com.vultisig.wallet.ui.screens.passcode.OnceUnlocked
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.NotificationsIntroBottomSheet
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.VaultNotificationOptInBottomSheet
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
@@ -77,6 +79,13 @@ internal fun VaultAccountsScreen(viewModel: VaultAccountsViewModel = hiltViewMod
             viewModel.onNotificationPermissionResult(granted)
         }
 
+    // Positions are managed one screen deeper, so the list is re-read on the way back rather than
+    // only when the tab is switched.
+    LifecycleResumeEffect(Unit) {
+        viewModel.onScreenResumed()
+        onPauseOrDispose {}
+    }
+
     LaunchedEffect(Unit) {
         viewModel.requestNotificationPermission.collect {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -87,30 +96,38 @@ internal fun VaultAccountsScreen(viewModel: VaultAccountsViewModel = hiltViewMod
         }
     }
 
+    // These three raise themselves off background work rather than off a tap, so each can open its
+    // window after the passcode lock has opened its own, and land above it.
     if (state.showMonthlyBackupReminder) {
-        MonthlyBackupReminder(
-            onDismiss = viewModel::dismissBackupReminder,
-            onBackup = viewModel::backupVault,
-            onDoNotRemind = viewModel::doNotRemindBackup,
-        )
+        OnceUnlocked {
+            MonthlyBackupReminder(
+                onDismiss = viewModel::dismissBackupReminder,
+                onBackup = viewModel::backupVault,
+                onDoNotRemind = viewModel::doNotRemindBackup,
+            )
+        }
     }
 
     if (state.showNotificationIntroSheet) {
-        NotificationsIntroBottomSheet(
-            onEnable = viewModel::onNotificationEnable,
-            onNotNow = viewModel::onNotificationNotNow,
-            onDismissRequest = viewModel::onNotificationNotNow,
-        )
+        OnceUnlocked {
+            NotificationsIntroBottomSheet(
+                onEnable = viewModel::onNotificationEnable,
+                onNotNow = viewModel::onNotificationNotNow,
+                onDismissRequest = viewModel::onNotificationNotNow,
+            )
+        }
     }
 
     if (state.showNotificationVaultSheet) {
-        VaultNotificationOptInBottomSheet(
-            vaults = state.notificationIntroVaults,
-            onEnableVault = viewModel::onNotificationVaultToggle,
-            onDismissRequest = viewModel::onNotificationVaultSheetDismiss,
-            onEnableAll = viewModel::onEnableAll,
-            onDone = viewModel::onNotificationVaultSheetDone,
-        )
+        OnceUnlocked {
+            VaultNotificationOptInBottomSheet(
+                vaults = state.notificationIntroVaults,
+                onEnableVault = viewModel::onNotificationVaultToggle,
+                onDismissRequest = viewModel::onNotificationVaultSheetDismiss,
+                onEnableAll = viewModel::onEnableAll,
+                onDone = viewModel::onNotificationVaultSheetDone,
+            )
+        }
     }
 
     VaultAccountsScreen(

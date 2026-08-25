@@ -9,12 +9,7 @@ import com.vultisig.wallet.data.models.TokenValue
  * @property ticker the merge token's display ticker (e.g. `KUJI`).
  * @property contract the THORChain contract address backing the token.
  */
-internal data class TokenMergeInfo(val ticker: String, val contract: String) {
-
-    /** The THORChain denom for this token, e.g. `thor.kuji`. */
-    val denom: String
-        get() = "thor.$ticker".lowercase()
-}
+internal data class TokenMergeInfo(val ticker: String, val contract: String)
 
 /**
  * Static descriptor for a secured asset available to withdraw, pairing chain metadata with the
@@ -43,7 +38,7 @@ internal data class TokenWithdrawSecureAsset(
     }
 }
 
-/** Catalogue of THORChain merge tokens offered on the Merge / UnMerge deposit sub-forms. */
+/** Catalogue of THORChain merge tokens offered on the IBC Transfer deposit sub-form. */
 internal val tokensToMerge =
     listOf(
         TokenMergeInfo(

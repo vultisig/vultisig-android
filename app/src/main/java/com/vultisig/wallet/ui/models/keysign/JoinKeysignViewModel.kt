@@ -13,6 +13,8 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ZcashApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.utils.HttpException
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRelayedIntent
+import com.vultisig.wallet.data.blockchain.solana.kamino.ResolveKaminoRelayedIntentUseCase
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
@@ -281,6 +283,7 @@ constructor(
     private val joinDepositUiModelBuilder: JoinDepositUiModelBuilder,
     private val joinSendUiModelBuilder: JoinSendUiModelBuilder,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
+    private val resolveKaminoRelayedIntent: ResolveKaminoRelayedIntentUseCase,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -610,6 +613,10 @@ constructor(
     private suspend fun loadTransaction(payload: KeysignPayload) {
         val currency = appCurrencyRepository.currency.first()
         val swapPayload = payload.swapPayload
+        // Resolved after the swap branch, not before it: recognition decodes the relayed bytes and
+        // derives an associated token account per allow-listed vault, none of which a swap payload
+        // has any use for.
+        val kamino = if (swapPayload == null) resolveKaminoIntent(payload) else null
         when {
             swapPayload != null ->
                 applyVerifyResult(
@@ -619,6 +626,13 @@ constructor(
                         vault = _currentVault,
                         currency = currency,
                     )
+                )
+
+            // A Kamino payload states none of what it is in a field — no memo, no deposit flag —
+            // so it reaches the deposit screen on the strength of its own bytes or not at all.
+            kamino != null ->
+                applyVerifyResult(
+                    joinDepositUiModelBuilder.build(payload, _currentVault.id, kamino)
                 )
 
             isDepositPayload(payload) ->
@@ -649,6 +663,23 @@ constructor(
                 scanTransaction(sendResult.transaction)
             }
         }
+    }
+
+    /**
+     * The Kamino Earn deposit or withdraw this payload describes, read from the transaction it
+     * carries, or null when the bytes are not one of this app's Kamino transactions.
+     *
+     * Read from the bytes rather than from the fields beside them, then held against those fields
+     * by [takeIfDescribedBy] before the payload is treated as a Kamino transaction.
+     */
+    private suspend fun resolveKaminoIntent(payload: KeysignPayload): KaminoRelayedIntent? {
+        if (payload.coin.chain != Chain.Solana) return null
+        val rawTransactions = payload.signSolana?.rawTransactions ?: return null
+
+        return withContext(Dispatchers.IO) {
+                resolveKaminoRelayedIntent(rawTransactions, payload.coin.address)
+            }
+            ?.takeIfDescribedBy(payload)
     }
 
     /**
@@ -720,7 +751,18 @@ constructor(
                     buildHeroContent(
                         simulation = result.simulation,
                         decodedFunctionName = decodedFunctionName,
-                        didLoadSimulation = true,
+                        // A network failure or an undecodable payload never produced a real
+                        // Blockaid verdict (see [BlockaidKeysignScanResult.didLoadSimulation]) —
+                        // only a completed scan (including a legitimate "no balance change" empty
+                        // one) is eligible to flip the hero to Unverified below. Otherwise a
+                        // Blockaid outage would hide the trustworthy native amount on every
+                        // in-app raw-Solana flow (staking, Kamino) that also sets [signSolana].
+                        didLoadSimulation = result.didLoadSimulation,
+                        // Solana never decodes a function name (no ABI to decode against), so a
+                        // raw dApp-signed Solana transaction (Kamino, other program calls) is the
+                        // only other signal that the payload's wire amount is unverified rather
+                        // than a plain transfer's trustworthy amount.
+                        isRawDappTransaction = payload.signSolana != null,
                     )
                 updateSendUiModel(verifyUiModel) { current ->
                     current.copy(transaction = current.transaction.copy(heroContent = hero))

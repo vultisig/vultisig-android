@@ -30,6 +30,12 @@ internal interface UseCasesModule {
 
     @Binds
     @Singleton
+    fun bindStoreImportedVaultUseCase(
+        impl: StoreImportedVaultUseCaseImpl
+    ): StoreImportedVaultUseCase
+
+    @Binds
+    @Singleton
     fun bindParseVaultFromStringUseCase(
         impl: ParseVaultFromStringUseCaseImpl
     ): ParseVaultFromStringUseCase
