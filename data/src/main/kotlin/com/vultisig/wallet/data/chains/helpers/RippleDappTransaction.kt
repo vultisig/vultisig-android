@@ -29,9 +29,11 @@ internal fun JsonObject.flagsOrNull(): Long? =
     (this["Flags"] as? JsonPrimitive)?.contentOrNull?.toLongOrNull()
 
 /**
- * The value of [key] when it is a non-blank JSON *string*, else null. XRPL encodes every amount as
- * a string, and a blank one names nothing: it must read the same as an absent field so a floor the
- * verify screen would not render cannot pass validation.
+ * The value of [key], trimmed, when it is a non-blank JSON *string*, else null. XRPL encodes every
+ * amount as a string, and a blank one names nothing: it must read the same as an absent field so a
+ * floor the verify screen would not render cannot pass validation. Stricter than
+ * [RippleDappTransactionDecoder.displayStringOrNull] on purpose — a number must not be able to talk
+ * validation into a floor.
  */
 private fun JsonObject.nonBlankStringOrNull(key: String): String? =
     (this[key] as? JsonPrimitive)
