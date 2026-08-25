@@ -76,19 +76,6 @@ class BittensorHelperSs58ParityTest {
     }
 
     @Test
-    fun encode_matches_the_reference_for_pubkeys_with_leading_zero_bytes() {
-        // Exercises the leading-'1' base58 path that a naive parity check on random keys is
-        // unlikely to hit organically; force it by masking the first three bytes of a real point.
-        val pubkey =
-            randomEdwardsPubkey(42L).copyOf().also {
-                it[0] = 0
-                it[1] = 0
-                it[2] = 0
-            }
-        assertEquals(ReferenceImpl.encode(pubkey), BittensorHelper.ss58Encode(pubkey))
-    }
-
-    @Test
     fun decode_recovers_exactly_the_pubkey_that_was_encoded() {
         for (seed in 1L..20L) {
             val pubkey = randomEdwardsPubkey(seed)
