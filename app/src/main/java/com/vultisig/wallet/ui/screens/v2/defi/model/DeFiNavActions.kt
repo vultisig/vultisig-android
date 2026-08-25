@@ -20,6 +20,8 @@ internal enum class DeFiNavActions(val type: String) {
     REDEEM_YTCY("redeem_ytcy"),
     STAKE_STCY("stake_stcy"),
     UNSTAKE_STCY("unstake_stcy"),
+    STAKE_YBRUNE("stake_ybrune"),
+    UNSTAKE_YBRUNE("unstake_ybrune"),
     WITHDRAW_USDC_CIRCLE("withdraw_usdc_circle"),
     STAKE_CACAO("stake_cacao"),
     UNSTAKE_CACAO("unstake_cacao"),
@@ -70,6 +72,10 @@ internal fun parseDepositType(type: String?): DeFiNavActions? {
         "stakestcy" -> DeFiNavActions.STAKE_STCY
         "unstakestcy",
         "unstake_stcy" -> DeFiNavActions.UNSTAKE_STCY
+        "stakeybrune",
+        "stake_ybrune" -> DeFiNavActions.STAKE_YBRUNE
+        "unstakeybrune",
+        "unstake_ybrune" -> DeFiNavActions.UNSTAKE_YBRUNE
         "withdraw_usdc_circle" -> DeFiNavActions.WITHDRAW_USDC_CIRCLE
         "stakecacao",
         "stake_cacao" -> DeFiNavActions.STAKE_CACAO
@@ -106,6 +112,9 @@ internal fun Coin.getStakeDeFiNavAction(): DeFiNavActions {
         Coins.ThorChain.yRUNE -> DeFiNavActions.MINT_YRUNE
         Coins.ThorChain.yTCY -> DeFiNavActions.MINT_YTCY
         Coins.ThorChain.sTCY -> DeFiNavActions.STAKE_STCY
+        // Keyed on the receipt because that is the coin the card carries; the bond itself is
+        // funded with bRUNE, which TokenPreselectionService selects for this action.
+        Coins.ThorChain.ybRUNE -> DeFiNavActions.STAKE_YBRUNE
         Coins.MayaChain.CACAO -> DeFiNavActions.STAKE_CACAO
         else -> error("Not supported ${this.coinType.name}")
     }
@@ -119,6 +128,7 @@ internal fun Coin.getUnstakeDeFiNavAction(): DeFiNavActions {
         Coins.ThorChain.yRUNE -> DeFiNavActions.REDEEM_YRUNE
         Coins.ThorChain.yTCY -> DeFiNavActions.REDEEM_YTCY
         Coins.ThorChain.sTCY -> DeFiNavActions.UNSTAKE_STCY
+        Coins.ThorChain.ybRUNE -> DeFiNavActions.UNSTAKE_YBRUNE
         Coins.MayaChain.CACAO -> DeFiNavActions.UNSTAKE_CACAO
         else -> error("Not supported ${this.coinType.name}")
     }

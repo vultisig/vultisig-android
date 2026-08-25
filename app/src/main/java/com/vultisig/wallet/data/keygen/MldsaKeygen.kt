@@ -64,10 +64,9 @@ class MldsaKeygen(
     @Throws(Exception::class)
     private fun getMldsaSetupMessage(): ByteArray {
         val buf = tss_buffer()
+        val ids = DklsHelper.arrayToBytes(keygenCommittee).toMldsaGoSlice()
         try {
             val threshold = DklsHelper.getThreshold(keygenCommittee.size)
-            val byteArray = DklsHelper.arrayToBytes(keygenCommittee)
-            val ids = byteArray.toMldsaGoSlice()
             val err =
                 mldsa_keygen_setupmsg_new(MldsaSecurityLevel.MlDsa44, threshold, null, ids, buf)
             if (err != LIB_OK) {
@@ -77,6 +76,7 @@ class MldsaKeygen(
             return setupMessage
         } finally {
             tss_buffer_free(buf)
+            ids.free()
         }
     }
 
@@ -125,15 +125,19 @@ class MldsaKeygen(
             }
 
             val message = outboundMessage.toMldsaGoSlice()
-            val encodedOutboundMessage = Base64.encode(outboundMessage)
-            for (i in keygenCommittee.indices) {
-                val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
-                if (receiverArray.isEmpty()) {
-                    break
+            try {
+                val encodedOutboundMessage = Base64.encode(outboundMessage)
+                for (i in keygenCommittee.indices) {
+                    val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
+                    if (receiverArray.isEmpty()) {
+                        break
+                    }
+                    val receiverString = receiverArray.toString(Charsets.UTF_8)
+                    Timber.d("sending message from $localPartyId to: $receiverString")
+                    messenger.send(localPartyId, receiverString, encodedOutboundMessage)
                 }
-                val receiverString = receiverArray.toString(Charsets.UTF_8)
-                Timber.d("sending message from $localPartyId to: $receiverString")
-                messenger.send(localPartyId, receiverString, encodedOutboundMessage)
+            } finally {
+                message.free()
             }
         }
     }
@@ -192,7 +196,12 @@ class MldsaKeygen(
             val decryptedBodySlice = decodedMsg.toMldsaGoSlice()
 
             val isFinished = intArrayOf(0)
-            val result = mldsa_keygen_session_input_message(handle, decryptedBodySlice, isFinished)
+            val result =
+                try {
+                    mldsa_keygen_session_input_message(handle, decryptedBodySlice, isFinished)
+                } finally {
+                    decryptedBodySlice.free()
+                }
 
             if (result != LIB_OK) {
                 error("fail to apply message to mldsa, $result")
@@ -270,12 +279,17 @@ class MldsaKeygen(
                 val localPartySlice = localPartyIDArr.toMldsaGoSlice()
 
                 val result =
-                    mldsa_keygen_session_from_setup(
-                        MldsaSecurityLevel.MlDsa44,
-                        decodedSetupMsg,
-                        localPartySlice,
-                        handler,
-                    )
+                    try {
+                        mldsa_keygen_session_from_setup(
+                            MldsaSecurityLevel.MlDsa44,
+                            decodedSetupMsg,
+                            localPartySlice,
+                            handler,
+                        )
+                    } finally {
+                        decodedSetupMsg.free()
+                        localPartySlice.free()
+                    }
                 if (result != LIB_OK) {
                     error("fail to create mldsa session from setup message, error: $result")
                 }

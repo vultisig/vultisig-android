@@ -3,7 +3,9 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.CoinGeckoApi
 import com.vultisig.wallet.data.api.LiQuestApi
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.MayaNodePool
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolJson
 import com.vultisig.wallet.data.api.models.thorchain.VaultRedemptionResponseJson
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.models.Chain
@@ -14,6 +16,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -347,6 +350,282 @@ internal class TokenPriceRepositoryImplTest {
 
         // 2 USD (TCY) × 2 (NAV) × 0.9 EUR/USD = 3.6 EUR. A double-applied FX would yield 3.24.
         assertPriceEquals("3.6", repository.getPrice(sTcy, AppCurrency.EUR).first())
+    }
+
+    private fun pool(asset: String, torPrice: String) =
+        ThorChainPoolJson(asset = asset, assetTorPrice = BigInteger(torPrice), status = "Available")
+
+    @Test
+    fun `a THORChain contract lookup prices the staking receipt off NAV instead of returning zero`() =
+        runTest {
+            // The contract route is the last resort for a DeFi position the vault doesn't hold.
+            // CoinGecko has no THORChain asset platform and LI.FI has no THORChain id, so this used
+            // to be dead code that answered zero for every `x/…` denom.
+            coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+            coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.TCY.id, "usd") } returns "2.0"
+            // sTCY NAV = 200 / 100 = 2, so sTCY = 2 (TCY) × 2 (NAV) = 4.
+            coEvery { thorApi.getThorchainTokenPriceByContract(any()) } returns
+                redemption(bondSize = "200", bondShares = "100")
+
+            val price =
+                repository.getPriceByContactAddress(Chain.ThorChain.id, sTcy.contractAddress)
+
+            assertPriceEquals("4", price)
+        }
+
+    @Test
+    fun `a THORChain contract with no receipt route falls back to its pool price`() = runTest {
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        // Pool TOR prices carry 8 decimals: 1_50000000 → $1.50.
+        coEvery { thorApi.getPools() } returns listOf(pool("THOR.RUJI", "150000000"))
+
+        val price =
+            repository.getPriceByContactAddress(
+                Chain.ThorChain.id,
+                Coins.ThorChain.RUJI.contractAddress,
+            )
+
+        assertPriceEquals("1.5", price)
+    }
+
+    @Test
+    fun `a resolved contract price is cached under the coin id readers query by`() = runTest {
+        // The row used to be keyed by the raw contract address, which nothing ever reads back, so
+        // the write was dead and every reload repeated the live lookup.
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.TCY.id, "usd") } returns "2.0"
+        coEvery { thorApi.getThorchainTokenPriceByContract(any()) } returns
+            redemption(bondSize = "200", bondShares = "100")
+
+        repository.getPriceByContactAddress(Chain.ThorChain.id, sTcy.contractAddress)
+
+        coVerify { tokenPriceDao.insertTokenPrice(match { it.tokenId == sTcy.id }) }
+        coVerify(exactly = 0) {
+            tokenPriceDao.insertTokenPrice(match { it.tokenId == sTcy.contractAddress })
+        }
+    }
+
+    @Test
+    fun `a non-USD price is left unresolved when the FX rate cannot be fetched`() = runTest {
+        // tetherPriceFor answers a CoinGecko miss with ZERO. Multiplying blind turned a good USD
+        // price into a $0.00 indistinguishable from "no price", and only ever for non-USD users.
+        coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrency.EUR)
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { thorApi.getPools() } returns listOf(pool("THOR.RUJI", "150000000"))
+
+        val price =
+            repository.getPriceByContactAddress(
+                Chain.ThorChain.id,
+                Coins.ThorChain.RUJI.contractAddress,
+            )
+
+        assertPriceEquals("0", price)
+        coVerify(exactly = 0) { tokenPriceDao.insertTokenPrice(any()) }
+    }
+
+    @Test
+    fun `a contract nothing can price is never written to the cache as zero`() = runTest {
+        // The old path mapped an unresolved LI.FI price to ZERO, which made the result look like a
+        // real quote: it was returned as $0.00 *and* persisted, and on a chain with no working
+        // contract source that poisoned row was the only price the token would ever have.
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { thorApi.getPools() } returns emptyList()
+
+        val price = repository.getPriceByContactAddress(Chain.ThorChain.id, "x/unknown-denom")
+
+        assertPriceEquals("0", price)
+        coVerify(exactly = 0) { tokenPriceDao.insertTokenPrice(any()) }
+    }
+
+    @Test
+    fun `a THORChain pool price is not cached when the FX rate cannot be fetched`() = runTest {
+        // The batch route had the same hole the single-contract route was fixed for: every pool
+        // price is multiplied by the USDT rate, and a CoinGecko miss answers ZERO — so a perfectly
+        // good pool quote landed in Room as a confident $0.00, and only for non-USD users.
+        coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrency.EUR)
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { thorApi.getPools() } returns listOf(pool("THOR.RUJI", "150000000"))
+
+        repository.refresh(listOf(Coins.ThorChain.RUJI))
+
+        coVerify(exactly = 0) {
+            tokenPriceDao.insertTokenPrice(match { it.tokenId == Coins.ThorChain.RUJI.id })
+        }
+    }
+
+    @Test
+    fun `the auto-compounding receipt is priced off RUJI's row, not one of its own`() = runTest {
+        // Both RUJI legs are reported in RUJI, and the pool price is the one every other RUJI
+        // reading in the app comes from. The receipt borrows RUJI's `rujira` provider id, so a row
+        // of its own kept CoinGecko's quote while RUJI's row was overwritten by the pool moments
+        // later — the same RUJI at two prices, one on the DeFi tab and one on the position card.
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns
+            mapOf("rujira" to mapOf("usd" to BigDecimal("0.171154")))
+        coEvery { thorApi.getPools() } returns listOf(pool("THOR.RUJI", "17177730"))
+
+        repository.refresh(listOf(Coins.ThorChain.sRUJI))
+
+        assertPriceEquals(
+            "0.17177730",
+            repository.getPrice(Coins.ThorChain.sRUJI, AppCurrency.USD).first(),
+        )
+        coVerify(exactly = 0) {
+            tokenPriceDao.insertTokenPrice(match { it.tokenId == Coins.ThorChain.sRUJI.id })
+        }
+    }
+
+    @Test
+    fun `a cached price read for the receipt is served from RUJI's row`() = runTest {
+        // A row written before this change is still in Room, and the cached DeFi emission reads
+        // one on every cold start — it must not be preferred over the row the position is valued
+        // from.
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.sRUJI.id, "usd") } returns "0.171154"
+        coEvery { tokenPriceDao.getTokenPrice(Coins.ThorChain.RUJI.id, "usd") } returns "0.17177730"
+
+        val price = repository.getCachedPrice(Coins.ThorChain.sRUJI.id, AppCurrency.USD)
+
+        assertPriceEquals("0.17177730", price!!)
+    }
+
+    @Test
+    fun `sTCY does not inherit TCY's price through their shared provider id`() = runTest {
+        // sTCY carries TCY's `tcy` priceProviderID, so the provider batch would cache raw TCY under
+        // sTCY's row. fetchThorContractPrices corrects it to NAV x TCY afterwards — but when that
+        // correction fails, the uncorrected row is what survives, pinning sTCY at bare TCY parity
+        // instead of leaving its last-known good price alone.
+        stubEmptyContractFallback()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns
+            mapOf("tcy" to mapOf("usd" to BigDecimal("1.0")))
+        coEvery { thorApi.getThorchainTokenPriceByContract(any()) } throws RuntimeException("NAV")
+
+        repository.refresh(listOf(Coins.ThorChain.sTCY))
+
+        coVerify(exactly = 0) {
+            tokenPriceDao.insertTokenPrice(match { it.tokenId == Coins.ThorChain.sTCY.id })
+        }
+    }
+
+    @Test
+    fun `a Maya pool price is computed in the currency it is persisted under`() = runTest {
+        // The currency was captured once for the label and reread live for the computation, so a
+        // switch mid-refresh priced the token in the new currency and filed it under the old one.
+        // Emit USD first (what refresh captures) and EUR after, so a reread is visible.
+        var reads = 0
+        coEvery { appCurrencyRepository.currency } answers
+            {
+                flowOf(if (reads++ == 0) AppCurrency.USD else AppCurrency.EUR)
+            }
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns
+            mapOf("cacao" to mapOf("usd" to BigDecimal("0.5")))
+        coEvery { thorApi.getPools() } returns emptyList()
+        // Cold cache, so CACAO is fetched live. The relaxed dao answers "" rather than null, which
+        // BigDecimal would reject.
+        coEvery { tokenPriceDao.getTokenPrice(Coins.MayaChain.CACAO.id, any()) } returns null
+        coEvery { mayaApi.getPool(any()) } returns
+            MayaNodePool(
+                asset = "MAYA.MAYA",
+                status = "Available",
+                balanceCacao = "1000000000000",
+                balanceAsset = "1000000",
+            )
+
+        repository.refresh(listOf(Coins.MayaChain.MAYA))
+
+        // CACAO must be priced in the currency the row is labeled with, never the reread one.
+        coVerify(exactly = 0) { coinGeckoApi.getCryptoPrices(any(), listOf("eur")) }
+        coVerify {
+            tokenPriceDao.insertTokenPrice(
+                match { it.tokenId == Coins.MayaChain.MAYA.id && it.currency == "usd" }
+            )
+        }
+    }
+
+    @Test
+    fun `a pool quoting zero is a miss, not a valuation worth caching`() = runTest {
+        // Distinct from an absent pool: the pool exists and answers, it just answers 0. Only the
+        // null case used to be rejected, so a zero survived to savePrices — which filters empty
+        // maps, not zero prices — and permanently blocked the token's later real price.
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { thorApi.getPools() } returns listOf(pool("THOR.RUJI", "0"))
+
+        val price =
+            repository.getPriceByContactAddress(
+                Chain.ThorChain.id,
+                Coins.ThorChain.RUJI.contractAddress,
+            )
+
+        assertPriceEquals("0", price)
+        coVerify(exactly = 0) { tokenPriceDao.insertTokenPrice(any()) }
+    }
+
+    @Test
+    fun `a non-EVM contract lookup never reaches LI_FI`() = runTest {
+        // LI.FI only indexes EVM chains, so a THORChain contract could only ever miss there.
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { thorApi.getPools() } returns emptyList()
+
+        repository.getPriceByContactAddress(Chain.ThorChain.id, "x/unknown-denom")
+
+        coVerify(exactly = 0) { liQuestApi.getLifiContractPriceUsd(any(), any()) }
+    }
+
+    @Test
+    fun `an EVM contract LI_FI cannot price is dropped rather than cached as zero`() = runTest {
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { liQuestApi.getLifiContractPriceUsd(any(), any()) } throws
+            RuntimeException("no lifi")
+
+        val price = repository.getPriceByContactAddress(Chain.Base.id, ezEth.contractAddress)
+
+        assertPriceEquals("0", price)
+        coVerify(exactly = 0) { tokenPriceDao.insertTokenPrice(any()) }
+    }
+
+    @Test
+    fun `the NAV batch gives up on a missing FX rate before paying for a NAV call`() = runTest {
+        // Every price in the batch is multiplied by the FX rate, and a CoinGecko miss arrives as
+        // ZERO, so without it the batch can only produce zeros the filter discards — after a live
+        // NAV call per token. The guard the sibling call sites already had was missing here.
+        coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrency.EUR)
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { thorApi.getPools() } returns emptyList()
+
+        repository.refresh(listOf(sTcy))
+
+        coVerify(exactly = 0) { thorApi.getThorchainTokenPriceByContract(any()) }
+        coVerify(exactly = 0) { tokenPriceDao.insertTokenPrice(any()) }
+    }
+
+    @Test
+    fun `a contract lookup quotes in the currency the caller captured`() = runTest {
+        // The app currency can change while a lookup is in flight, and the caller labels both the
+        // number it renders and the row this writes with the currency it captured. Rereading the
+        // app currency here filed a price resolved in the newer currency under the older label.
+        coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } returns emptyMap()
+        coEvery {
+            coinGeckoApi.getCryptoPrices(
+                match { it.contains("tether") },
+                match { it.contains("eur") },
+            )
+        } returns mapOf("tether" to mapOf("eur" to BigDecimal("0.5")))
+        coEvery { thorApi.getPools() } returns listOf(pool("THOR.RUJI", "150000000"))
+
+        val price =
+            repository.getPriceByContactAddress(
+                chainId = Chain.ThorChain.id,
+                contractAddress = Coins.ThorChain.RUJI.contractAddress,
+                appCurrency = AppCurrency.EUR,
+            )
+
+        // $1.50 × 0.5 EUR/USD, cached under "eur" rather than the app's "usd".
+        assertPriceEquals("0.75", price)
+        coVerify { tokenPriceDao.insertTokenPrice(match { it.currency == "eur" }) }
     }
 
     @Test

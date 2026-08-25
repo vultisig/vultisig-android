@@ -64,7 +64,21 @@ import timber.log.Timber
 import wallet.core.jni.SolanaAddress
 
 interface SolanaApi {
+    /**
+     * The address' lamport balance, or [BigInteger.ZERO] when it could not be read — an absent
+     * account and an unreachable node are one answer here. Callers that must tell those apart, such
+     * as the gates deciding whether a wallet can pay for a transaction, want [getBalanceOrNull].
+     */
     suspend fun getBalance(address: String): BigInteger
+
+    /**
+     * The address' lamport balance, or null when the read failed.
+     *
+     * [getBalance] answers every RPC error with zero, which reads as an empty wallet. Anything
+     * refusing a transaction on a zero balance therefore refuses a funded wallet whenever the node
+     * hiccups, so the affordability gates ask through here instead.
+     */
+    suspend fun getBalanceOrNull(address: String): BigInteger?
 
     /**
      * Live rent-exempt reserve for a new 165-byte SPL Associated Token Account. The last
@@ -161,7 +175,10 @@ internal class SolanaApiImp(
     private var cachedSplAtaRentExemptionLamports: BigInteger =
         SPL_TOKEN_ACCOUNT_RENT_EXEMPT_LAMPORTS_BOOTSTRAP.toBigInteger()
 
-    override suspend fun getBalance(address: String): BigInteger {
+    override suspend fun getBalance(address: String): BigInteger =
+        getBalanceOrNull(address) ?: BigInteger.ZERO
+
+    override suspend fun getBalanceOrNull(address: String): BigInteger? {
         return try {
             val payload =
                 RpcPayload(
@@ -177,12 +194,13 @@ internal class SolanaApiImp(
             if (rpcResp.error != null) {
                 Timber.tag("solanaApiImp")
                     .d("get balance ,address: $address error: ${rpcResp.error}")
-                return BigInteger.ZERO
+                return null
             }
-            rpcResp.result?.value ?: error("getBalance error")
+            rpcResp.result?.value
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            BigInteger.ZERO
+            Timber.tag("solanaApiImp").e(e, "get balance failed, address: %s", address)
+            null
         }
     }
 

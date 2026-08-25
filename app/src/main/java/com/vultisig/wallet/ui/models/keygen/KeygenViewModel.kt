@@ -298,6 +298,10 @@ constructor(
             updateStep(KeygenState.CreatingInstance)
 
             args.vaultId?.let { vaultId ->
+                // Reshare, migrate and MLDSA keygen all build on this vault's existing shares, and
+                // a read taken while the app is locked comes back without them.
+                vaultRepository.awaitKeySharesReadable()
+
                 val cachedVault = vaultRepository.get(vaultId)
                 if (cachedVault != null) {
                     vault.pubKeyECDSA = cachedVault.pubKeyECDSA
@@ -320,8 +324,8 @@ constructor(
 
             try {
                 // The ceremony holds auto-lock off from here until the keyshare is written. The
-                // other devices cannot be paused, and locking before saveVault() leaves this
-                // device with no share for a vault the rest of the group has already created.
+                // other devices cannot be paused, and locking before saveVault() costs the share
+                // its encryption at rest until the next unlock re-seals it.
                 autoLockHold.withHold {
                     featureFlags = featureFlagRepository.getFeatureFlags()
 

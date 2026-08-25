@@ -121,6 +121,10 @@ internal sealed interface SwapQuotePipelineResult {
         val utxoDstAddress: String?,
         val utxoMemo: String?,
         val srcTokenValue: BigInteger,
+        // Full fetched candidate set, best→worst by net output. Drives the Select-route picker;
+        // [quote]/[provider] is one of these (the auto winner, or the user's manual pick when this
+        // Success was rebuilt by a route selection).
+        val rankedQuotes: List<BestQuote> = emptyList(),
     ) : SwapQuotePipelineResult
 }
 
@@ -177,6 +181,10 @@ internal class SwapQuotePipeline(
             return SwapQuotePipelineResult.Empty
         }
 
+        // Set once the provider set is known, and read again from the catch blocks below, where
+        // the failure may have been thrown after the filter ran.
+        var recipientDroppedProviders = false
+
         return try {
             if (srcTokenValue == null || srcTokenValue <= BigInteger.ZERO) {
                 throw SwapException.AmountCannotBeZero("Amount must be positive")
@@ -206,6 +214,7 @@ internal class SwapQuotePipeline(
                             it == SwapProvider.SWAPKIT
                     }
                 }
+            recipientDroppedProviders = eligibleProviders.size < allEligibleProviders.size
             if (eligibleProviders.isEmpty()) {
                 throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
             }
@@ -250,7 +259,7 @@ internal class SwapQuotePipeline(
                 )
             // Map the sealed result: a typed fetch failure becomes a Failure carrying its
             // already-mapped error; only a Success continues into fee processing.
-            val bestQuote =
+            val resolved =
                 when (resolution) {
                     is QuoteResolution.Failure ->
                         return SwapQuotePipelineResult.Failure(
@@ -258,20 +267,21 @@ internal class SwapQuotePipeline(
                                 recipientAwareError(
                                     resolution.formError,
                                     resolution.cause,
-                                    externalRecipient,
+                                    recipientDroppedProviders,
                                 ),
                             cause = resolution.cause,
                             tag = resolution.tag,
                         )
-                    is QuoteResolution.Success -> resolution.best
+                    is QuoteResolution.Success -> resolution
                 }
 
             buildSuccess(
-                bestQuote = bestQuote,
+                bestQuote = resolved.best,
                 src = src,
                 srcTokenValue = srcTokenValue,
                 tokenValue = tokenValue,
                 currentDiscountInfo = currentDiscountInfo,
+                rankedQuotes = resolved.ranked,
             )
         } catch (e: SwapException) {
             SwapQuotePipelineResult.Failure(
@@ -283,14 +293,19 @@ internal class SwapQuotePipeline(
                             selectedSrcTokenTitle,
                         ),
                         e,
-                        externalRecipient,
+                        recipientDroppedProviders,
                     ),
                 cause = e,
                 tag = "swapError",
             )
         } catch (e: SwapKitError) {
             SwapQuotePipelineResult.Failure(
-                error = swapQuoteManager.mapSwapKitErrorToFormError(e),
+                error =
+                    recipientAwareError(
+                        swapQuoteManager.mapSwapKitErrorToFormError(e),
+                        e,
+                        recipientDroppedProviders,
+                    ),
                 cause = e,
                 tag = "swapKitError",
             )
@@ -306,12 +321,18 @@ internal class SwapQuotePipeline(
     }
 
     /**
-     * Rewrites a quote failure into a recipient-aware message when an external recipient is active.
+     * Rewrites a quote failure into a recipient-aware message when the recipient is what caused it.
      *
-     * Setting a recipient narrows the eligible providers to THORChain/Maya (the only protocols that
-     * route output to a custom address — see the native-only filter above). When the pair has no
-     * such route at all, the bare "not supported" error never explains that the recipient is the
-     * cause, so name it (#4858).
+     * Setting a recipient narrows the eligible providers to THORChain/Maya/SwapKit (the only ones
+     * that route output to a custom address — see the native-only filter above). When that filter
+     * is what emptied or crippled the candidate set, the bare "not supported" error never explains
+     * that the recipient is the cause, so name it (#4858).
+     *
+     * [recipientDroppedProviders] is the whole test: a pair the filter never touched fails for its
+     * own reasons, and telling the user to clear the recipient would send them to remove it and
+     * meet the identical error. A THORChain→THORChain pair is exactly that case — `bothThorChain`
+     * already leaves THORCHAIN as the only candidate — and it reaches here routinely now that a
+     * poolless pair answers with [SwapException.SwapRouteNotAvailable] instead of timing out.
      *
      * Sub-minimum failures are deliberately NOT rewritten here: THORChain surfaces the concrete
      * required minimum ("Minimum amount is X") via [SwapException.SmallSwapAmount], which is more
@@ -320,24 +341,72 @@ internal class SwapQuotePipeline(
     private fun recipientAwareError(
         error: UiText,
         cause: Throwable,
-        externalRecipient: String?,
+        recipientDroppedProviders: Boolean,
     ): UiText {
-        if (externalRecipient.isNullOrBlank()) return error
+        if (!recipientDroppedProviders) return error
         return when (cause) {
             is SwapException.SwapIsNotSupported,
             is SwapException.SwapRouteNotAvailable ->
                 UiText.StringResource(R.string.swap_external_recipient_unsupported)
+            // SwapKit survives the recipient filter, so it can be the provider whose verdict wins
+            // the ranking — and its route verdicts are the same news as SwapRouteNotAvailable,
+            // just typed by the aggregator instead of the native protocol.
+            is SwapKitError ->
+                if (swapKitSaysThePairHasNoRoute(cause)) {
+                    UiText.StringResource(R.string.swap_external_recipient_unsupported)
+                } else {
+                    error
+                }
             else -> error
         }
     }
 
-    /** Builds the display-ready [SwapQuotePipelineResult.Success] from the winning quote. */
+    /**
+     * Whether a SwapKit verdict means "none of the surviving providers can route this pair" — the
+     * only class of failure the recipient rewrite may claim, since it tells the user that clearing
+     * the recipient would hand the pair a provider the filter took away.
+     *
+     * Exhaustive over the sealed class on purpose: a new variant must be placed by hand rather than
+     * default into either answer. A verdict that proves a route *was* found (the id expired, the
+     * build failed) is left alone, as is one whose own copy is more specific than a generic
+     * recipient note — same reasoning that keeps [SwapException.SmallSwapAmount] out of the rewrite
+     * above.
+     */
+    private fun swapKitSaysThePairHasNoRoute(error: SwapKitError): Boolean =
+        when (error) {
+            is SwapKitError.NoRoutes,
+            is SwapKitError.RouteFiltered,
+            is SwapKitError.ProviderNotEnabled -> true
+            is SwapKitError.SwapRouteNotFound,
+            is SwapKitError.UnableToBuildTransaction,
+            is SwapKitError.QuoteDeviation,
+            is SwapKitError.BlackListAsset,
+            is SwapKitError.InsufficientBalance,
+            is SwapKitError.InsufficientAllowance,
+            is SwapKitError.InvalidSourceAddress,
+            is SwapKitError.InvalidDestinationAddress,
+            is SwapKitError.AddressScreening,
+            is SwapKitError.UnsupportedTxType,
+            is SwapKitError.MalformedAmount,
+            is SwapKitError.ApiKeyMissing,
+            is SwapKitError.ApiKeyInvalid,
+            is SwapKitError.Network,
+            is SwapKitError.Server,
+            is SwapKitError.Decoding -> false
+        }
+
+    /**
+     * Builds the display-ready [SwapQuotePipelineResult.Success] from the winning quote.
+     * [rankedQuotes] is passed through untouched so the Select-route picker keeps the full
+     * candidate set both on a fresh fetch and when re-applying a manual route pick.
+     */
     internal suspend fun buildSuccess(
         bestQuote: BestQuote,
         src: SendSrc,
         srcTokenValue: BigInteger,
         tokenValue: TokenValue,
         currentDiscountInfo: DiscountInfo,
+        rankedQuotes: List<BestQuote> = emptyList(),
     ): SwapQuotePipelineResult.Success {
         val quoteResult = bestQuote.result
         val provider = quoteResult.provider
@@ -447,6 +516,7 @@ internal class SwapQuotePipeline(
             utxoDstAddress = utxoFeeData?.first,
             utxoMemo = utxoFeeData?.second,
             srcTokenValue = srcTokenValue,
+            rankedQuotes = rankedQuotes,
         )
     }
 
@@ -466,6 +536,7 @@ internal class SwapQuotePipeline(
         gasFee: TokenValue?,
         gasFeeChain: Chain?,
         networkFeeTokenValue: TokenValue?,
+        evmBaselineEstimate: EstimatedGasFee? = null,
     ): NetworkFeeOutcome {
         val srcToken = src.account.token
         // Base state mirrors the display update: UTXO swaps stay disabled until the plan fee lands.
@@ -536,6 +607,18 @@ internal class SwapQuotePipeline(
                     networkFee = rebased.estimated.toNetworkFeeSet()
                     effectiveNetworkFeeTokenValue = rebased.estimated.tokenValue
                 }
+            }
+        } else if (srcToken.chain.standard == TokenStandard.EVM) {
+            // A non-aggregator quote (THORChain/Maya native EVM route) won or was picked: restore
+            // the gas-pass estimate the fee display started from ([evmBaselineEstimate], stamped
+            // by calculateGas). Without this, a fee previously re-based onto an aggregator's route
+            // gas lingers when the active route switches to one it never applied to — the same
+            // route then shows a different Network Fee than when it wins a fresh fetch. Restoring
+            // the stored estimate verbatim keeps it byte-identical to that fresh-fetch display.
+            val baseline = evmBaselineEstimate?.takeIf { gasFeeChain == srcToken.chain }
+            if (baseline != null) {
+                networkFee = baseline.toNetworkFeeSet()
+                effectiveNetworkFeeTokenValue = baseline.tokenValue
             }
         }
 

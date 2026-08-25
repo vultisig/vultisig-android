@@ -36,17 +36,16 @@ import timber.log.Timber
 
 /**
  * Owns the per-option selection orchestration extracted from `DepositFormViewModel`: the `when`
- * dispatch that runs when the user switches [DepositOption], including the Switch inbound
- * auto-population, Bond/Unbond/Leave default-token selection, MAYA bondable-asset load,
- * RemoveLiquidity per-chain routing, the WithdrawSecuredAsset address collector and the RemoveCacao
- * unstake-balance fetch.
+ * dispatch that runs when the user switches [DepositOption], including Bond/Unbond/Leave
+ * default-token selection, MAYA bondable-asset load, RemoveLiquidity per-chain routing, the
+ * WithdrawSecuredAsset address collector and the RemoveCacao unstake-balance fetch.
  *
  * The repos / API / mapper are Hilt-injected here; the ViewModel keeps `viewModelScope` ownership
  * and supplies it (assisted) along with the shared UI [state], the [address] flow, the form-owned
  * [fields], the existing [liquidityDataLoader] / [securedAssetLoader] / [cacaoMaturityLoader] seams
  * and the [chainProvider] / [vaultId] / [bondAddress] accessors so this coordinator never owns its
- * own scope or VM state. It owns the `switchInboundJob` / `withdrawSecuredAssetJob` references but
- * launches them on the supplied scope.
+ * own scope or VM state. It owns the `withdrawSecuredAssetJob` reference but launches it on the
+ * supplied scope.
  */
 internal class DepositOptionCoordinator
 @AssistedInject
@@ -87,22 +86,16 @@ constructor(
         ): DepositOptionCoordinator
     }
 
-    private var switchInboundJob: Job? = null
     private var withdrawSecuredAssetJob: Job? = null
 
     /**
      * Switches the active deposit form to [option], resetting the form fields and running the
-     * option-specific load/auto-population. Cancels any in-flight Remove LP / Switch inbound /
-     * WithdrawSecuredAsset work before re-selecting so stale callbacks can't write into the new
-     * option.
+     * option-specific load/auto-population. Cancels any in-flight Remove LP / WithdrawSecuredAsset
+     * work before re-selecting so stale callbacks can't write into the new option.
      */
     fun selectDepositOption(option: DepositOption) {
         // Stop any in-flight Remove LP fetch so it can't write stale state into the new option.
         liquidityDataLoader.cancelLoad()
-        // Stop any in-flight Switch inbound fetch so a late callback can't overwrite the
-        // freshly reset dstAddressError or keep writing to thorAddressFieldState from a stale
-        // Switch context.
-        switchInboundJob?.cancel()
         // Stop the previous WithdrawSecuredAsset address collector so re-selecting the option does
         // not leak an additional permanent collector running handleWithdrawSecuredAsset.
         withdrawSecuredAssetJob?.cancel()
@@ -112,59 +105,6 @@ constructor(
             val chain = chainProvider()
 
             when (option) {
-                DepositOption.Switch -> {
-                    switchInboundJob =
-                        scope.launch {
-                            val vaultId = vaultId() ?: return@launch
-                            try {
-                                when (
-                                    val result =
-                                        securedAssetLoader.fetchThorChainInboundForChain(
-                                            SWITCH_INBOUND_CHAIN
-                                        )
-                                ) {
-                                    is InboundAddressResult.Available -> {
-                                        fields.nodeAddressFieldState.setTextAndPlaceCursorAtEnd(
-                                            result.address
-                                        )
-                                        state.update { it.copy(dstAddressError = null) }
-                                    }
-                                    InboundAddressResult.Halted ->
-                                        state.update {
-                                            it.copy(
-                                                dstAddressError =
-                                                    UiText.FormattedText(
-                                                        R.string
-                                                            .deposit_error_thorchain_chain_halted,
-                                                        listOf(Chain.GaiaChain.raw),
-                                                    )
-                                            )
-                                        }
-                                    InboundAddressResult.FetchFailed,
-                                    InboundAddressResult.Unsupported ->
-                                        state.update {
-                                            it.copy(
-                                                dstAddressError =
-                                                    UiText.StringResource(
-                                                        R.string
-                                                            .deposit_error_thorchain_inbound_unavailable
-                                                    )
-                                            )
-                                        }
-                                }
-                                accountsRepository.loadAddress(vaultId, Chain.ThorChain).collect {
-                                    addresses ->
-                                    fields.thorAddressFieldState.setTextAndPlaceCursorAtEnd(
-                                        addresses.address
-                                    )
-                                }
-                            } catch (e: Exception) {
-                                if (e is CancellationException) throw e
-                                Timber.e(e)
-                            }
-                        }
-                }
-
                 DepositOption.Bond,
                 DepositOption.Unbond -> {
                     val defaultBondToken =
@@ -320,17 +260,7 @@ constructor(
         fields.assetsFieldState.clearText()
         fields.rewardsAmountFieldState.clearText()
         state.update {
-            it.copy(
-                tokenAmountError = null,
-                nodeAddressError = null,
-                dstAddressError = null,
-                thorAddressError = null,
-            )
+            it.copy(tokenAmountError = null, nodeAddressError = null, dstAddressError = null)
         }
-    }
-
-    private companion object {
-        /** THORChain inbound-addresses chain key used by the Switch (Gaia/ATOM) deposit option. */
-        private const val SWITCH_INBOUND_CHAIN = "GAIA"
     }
 }

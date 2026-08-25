@@ -170,6 +170,9 @@ constructor(
         _state.update { it.copy(percentageSelected = percent) }
         val available = _state.value.stakeableBalance
         if (available <= BigDecimal.ZERO) return
+        // Deliberately not locale-formatted: `submit()` reads this field back with
+        // `toBigDecimalOrNull()`, which only parses `.` as the decimal separator and rejects
+        // grouping separators outright.
         val amount =
             available
                 .multiply(BigDecimal(percent))

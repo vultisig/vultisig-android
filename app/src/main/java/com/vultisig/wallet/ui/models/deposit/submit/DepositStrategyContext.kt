@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models.deposit.submit
 
-import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -35,7 +34,6 @@ import java.math.BigInteger
  * @property resolvePairedAddress resolves the paired-chain address for a symmetric LP add.
  * @property resolveSecuredAssetInboundAddress resolves the THORChain inbound vault for a deposit.
  * @property getBitcoinTransactionPlan builds a Bitcoin transaction plan for secured-asset deposits.
- * @property rujiMergeBalances provides the loaded RUJI merge balances, or null.
  */
 internal class DepositStrategyContext(
     val vaultId: () -> String?,
@@ -53,5 +51,4 @@ internal class DepositStrategyContext(
     val resolvePairedAddress: suspend (Chain, String, String) -> String?,
     val resolveSecuredAssetInboundAddress: suspend (Coin) -> String,
     val getBitcoinTransactionPlan: BitcoinTransactionPlanBuilder,
-    val rujiMergeBalances: () -> List<MergeAccount>?,
 )

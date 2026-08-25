@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,6 +45,7 @@ import com.vultisig.wallet.ui.models.defi.TonStakeViewModel
 import com.vultisig.wallet.ui.screens.cosmosstaking.StakingAmountCard
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.formatTokenAmount
 import java.math.BigDecimal
 import java.text.DecimalFormat
 
@@ -87,7 +87,7 @@ internal fun TonStakeScreen(viewModel: TonStakeViewModel = hiltViewModel()) {
                         text =
                             stringResource(
                                 R.string.ton_stake_error_min_amount,
-                                state.requiredMinStake.stripTrailingZeros().toPlainString(),
+                                state.requiredMinStake.stripTrailingZeros().formatTokenAmount(),
                                 ticker,
                             ),
                         style = Theme.brockmann.supplementary.caption,
@@ -139,11 +139,11 @@ private fun TonPoolPickerField(selected: TonPoolUiModel?, onClick: () -> Unit) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(Theme.v2.radius.md)
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .clickable(onClick = onClick)
                 .padding(horizontal = 16.dp, vertical = 16.dp),
@@ -214,12 +214,12 @@ private fun TonPoolPickerSheet(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier =
                     Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(99.dp))
+                        .clip(Theme.v2.radius.pill)
                         .background(Theme.v2.colors.backgrounds.surface1)
                         .border(
                             width = 1.dp,
                             color = Theme.v2.colors.border.light,
-                            shape = RoundedCornerShape(99.dp),
+                            shape = Theme.v2.radius.pill,
                         )
                         .padding(horizontal = 12.dp, vertical = 12.dp),
             ) {
@@ -390,6 +390,6 @@ private fun PoolMonogram(letter: String, size: Int) {
 }
 
 private fun formatMinStake(minStake: BigDecimal): String =
-    minStake.stripTrailingZeros().toPlainString()
+    minStake.stripTrailingZeros().formatTokenAmount()
 
 private fun formatApy(apy: Double): String = DecimalFormat("0.##").format(apy)

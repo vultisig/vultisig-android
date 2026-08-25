@@ -58,17 +58,47 @@
     <string name="deposit_option_unstake">Unstake</string>
     <string name="deposit_option_custom">Custom</string>
     <string name="deposit_option_ibc_transfer">IBC Transfer</string>
-    <string name="deposit_option_switch">Switch</string>
-    <string name="deposit_option_merge">Merge</string>
-    <string name="deposit_option_withdraw_ruji">Withdraw RUJI</string>
     <string name="withdraw_amount">Withdraw %s</string>
     <string name="defi_tab_deposited">Deposited</string>
     <string name="defi_tab_staked">Staked</string>
     <string name="defi_tab_bonded">Bonded</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_tab_earn">Earn</string>
     <string name="defi_bond">Bond</string>
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Liquidity Pool</string>
+    <!-- Kamino Earn -->
+    <string name="kamino_earn_title">Kamino Earn</string>
+    <string name="kamino_earn_curated_by">Curated by %1$s</string>
+    <string name="kamino_earn_deposited">Deposited: %1$s</string>
+    <string name="kamino_earn_apy">APY</string>
+    <string name="kamino_earn_earned">Earned: %1$s</string>
+    <string name="kamino_earn_lost">Lost: %1$s</string>
+    <string name="kamino_earn_protocol">Kamino</string>
+    <string name="kamino_earn_load_failed">Couldn\'t refresh these vaults just now</string>
+    <string name="kamino_earn_risk_conservative">Conservative</string>
+    <string name="kamino_earn_risk_private_credit">Private Credit</string>
+    <string name="kamino_earn_deposit">Deposit</string>
+    <string name="kamino_earn_empty_title">No Earn positions enabled</string>
+    <string name="kamino_earn_empty_description">Enable a Kamino vault under Manage positions to start earning on your Solana assets.</string>
+    <string name="kamino_deposit_title">Deposit</string>
+    <string name="kamino_withdraw_title">Withdraw</string>
+    <string name="kamino_amount_exceeds_available">Amount exceeds the available balance</string>
+    <string name="kamino_amount_below_minimum">Minimum is %1$s %2$s</string>
+    <string name="kamino_error_unknown_vault">This vault is not one the app supports</string>
+    <string name="kamino_error_load_failed">Could not load this vault right now</string>
+    <string name="kamino_refusal_below_smallest_unit">Amount is smaller than the smallest unit of this asset</string>
+    <string name="kamino_refusal_below_minimum">Amount is below this vault\'s minimum</string>
+    <string name="kamino_refusal_rate_unavailable">This vault\'s share rate is unavailable right now</string>
+    <string name="kamino_refusal_larger_than_position">That amount is larger than this position</string>
+    <string name="verify_deposit_depositing">You\'re depositing</string>
+    <string name="verify_deposit_withdrawing">You\'re withdrawing</string>
+    <string name="kamino_verify_vault">Vault</string>
+    <string name="kamino_verify_withdraw_unverified">This device can\'t confirm this amount. The transaction withdraws %1$s vault shares.</string>
+    <string name="kamino_error_build_failed">Couldn\'t prepare this transaction</string>
+    <string name="kamino_withdraw_nothing">Nothing to withdraw from this vault</string>
+    <string name="kamino_withdraw_unreadable">This position couldn\'t be read, so no withdrawal can be prepared</string>
+    <string name="kamino_withdraw_delayed">Above the vault\'s instant liquidity of %1$s %2$s. This withdrawal may settle with a delay.</string>
     <!-- Tron DeFi -->
     <string name="tron_defi_freeze">Freeze</string>
     <string name="tron_defi_unfreeze">Unfreeze</string>
@@ -76,11 +106,13 @@
     <string name="tron_defi_frozen">Frozen</string>
     <string name="tron_defi_pending_withdrawals">Pending Withdrawals</string>
     <string name="tron_defi_ready_to_claim">Ready to claim</string>
+    <string name="tron_defi_claim_button">Claim %1$s</string>
     <string name="tron_defi_countdown_days">%1$d days, %2$d hrs</string>
     <string name="tron_defi_countdown_hours">%1$d hrs, %2$d min</string>
     <string name="tron_defi_error_trx_not_in_vault">TRX coin not found in vault</string>
     <string name="tron_freeze_screen_title">Freeze TRON</string>
     <string name="tron_unfreeze_screen_title">Unfreeze TRON</string>
+    <string name="tron_claim_screen_title">Claim TRON</string>
     <string name="tron_resource_type">Resource Type</string>
     <string name="tron_resource_bandwidth">Bandwidth</string>
     <string name="tron_resource_energy">Energy</string>
@@ -90,7 +122,9 @@
     <string name="open_account_button">Open Account</string>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Token logo</string>
-    <string name="tokens">Assets</string>
+    <string name="tokens">Tokens</string>
+    <string name="edit_chains">Chains</string>
+    <string name="edit_tokens">Tokens</string>
     <string name="keysign">Keysign</string>
     <string name="signing_error_please_try_again_s">Signing Error. Please try again. %s</string>
     <string name="try_again">Try again</string>
@@ -165,7 +199,6 @@
     <string name="send_to_address_hint">Enter address here</string>
     <string name="send_amount">Amount</string>
     <string name="send_amount_currency_hint">Enter Amount</string>
-    <string name="send_shares_currency_hint">Enter Shares</string>
     <string name="send_continue_button">Continue</string>
     <string name="send_percent" translatable="false">%d%%</string>
     <string name="chain_account_view_swap">Swap</string>
@@ -183,7 +216,6 @@
     <string name="send_error_no_amount">Amount must be a positive number</string>
     <string name="send_error_too_many_decimals">Amount can have at most %1$d decimal places</string>
     <string name="send_error_invalid_operator_fee">Operator fee must be a valid number between 0 and 10000 basis points</string>
-    <string name="send_error_max_shares">Amount should not exceed balance</string>
     <string name="send_error_insufficient_balance">Insufficient funds</string>
     <string name="send_error_msca_not_deployed">MSCA account not deployed yet, please try again</string>
     <string name="send_error_insufficient_native_balance_with_fees">Insufficient %1$s balance</string>
@@ -226,6 +258,7 @@
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA Key Copied</string>
     <string name="welcome_screen_skip">Skip</string>
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
+    <string name="keysign_malicious_party_detected">The device \"%1$s\" in this keysign session was detected acting maliciously. Do not use it for signing again.</string>
     <string name="vault_settings_delete_vault_caution1">I am aware that the vault will be deleted permanently</string>
     <string name="vault_settings_delete_vault_caution2">I am aware that I can lose funds</string>
     <string name="vault_settings_delete_vault_caution3">I have made a vault backup to restore later</string>
@@ -264,6 +297,7 @@
     <string name="passcode_settings_title">Passcode Encryption</string>
     <string name="passcode_settings_encryption_title">Passcode encryption</string>
     <string name="passcode_settings_encryption_subtitle">Encrypt vault storage on this device and lock the app.</string>
+    <string name="passcode_settings_encryption_explanation">Passcode encryption is tied to this device. Keep a .vult backup so you can always restore your vaults.</string>
     <string name="passcode_settings_change">Change passcode</string>
     <string name="passcode_settings_auto_lock">Auto-lock</string>
     <string name="auto_lock_setting_title">Auto-lock</string>
@@ -286,10 +320,12 @@
     <string name="passcode_entry_mismatch">Those passcodes do not match. Choose again.</string>
     <string name="passcode_operation_failed">That did not work. Your passcode is unchanged.</string>
     <string name="passcode_not_digits">Enter digits only.</string>
-    <string name="passcode_key_unavailable_title">Vaults unavailable</string>
-    <string name="passcode_key_unavailable_message">The keys that protect this device\'s vault storage are gone, so its keyshares can no longer be read. Reinstall the app and restore your vaults from a backup.</string>
-    <string name="passcode_store_unavailable_title">Vaults temporarily unavailable</string>
-    <string name="passcode_store_unavailable_message">This device\'s secure storage could not be opened this time, so your vaults stay locked. Restart the app to try again. Your vaults are still on this device, so there is no need to reinstall.</string>
+    <string name="passcode_key_unavailable_title">This device is missing your vault key</string>
+    <string name="passcode_key_unavailable_message">Your vaults are still on this device. Restore from your .vult backup to open them again.</string>
+    <string name="passcode_key_unavailable_restore">Restore from backup</string>
+    <string name="passcode_key_unavailable_restored">Vault restored. Another vault on this device still needs its backup.</string>
+    <string name="passcode_store_unavailable_title">Your vaults are locked for now</string>
+    <string name="passcode_store_unavailable_message">This device\'s secure storage didn\'t open this time. Everything is still here, so restart the app instead of reinstalling.</string>
     <string name="passcode_input_field_content_description">%1$d of %2$d digits entered</string>
     <string name="swap_form_from_title">From</string>
     <string name="swap_form_estimated_fees_title">Swap Fee</string>
@@ -349,7 +385,6 @@
     <string name="custom_token_token_not_found">Token not found</string>
     <string name="custom_token_add_token">Add %1$s Token</string>
     <string name="deposit_form_amount_title">Amount (Balance: %1$s)</string>
-    <string name="deposit_form_shares_title">Shares (Balance: %1$s)</string>
     <string name="share_vault_qr_share">Share</string>
     <string name="deposit_form_node_address_title">Node Address</string>
     <string name="bond_not_whitelisted_error">You are not whitelisted on this node</string>
@@ -382,6 +417,7 @@
     <string name="settings_screen_privacy_policy">Privacy Policy</string>
     <string name="settings_screen_tos">Terms of Service</string>
     <string name="import_file_not_supported">Unsupported file type, please try again</string>
+    <string name="import_file_zip_incomplete">Some vault shares in this file could not be read</string>
 
     <string name="failed_to_resolve_address">Failed to resolve address</string>
     <string name="vault_settings_success_backup_message">File saved successfully</string>
@@ -754,6 +790,10 @@
     <string name="swap_advanced_slippage_title">Slippage Tolerance</string>
     <string name="swap_advanced_slippage_page_title">Slippage</string>
     <string name="swap_advanced_gas_limit_title">Gas Limit</string>
+    <string name="swap_advanced_select_route_title">Select route</string>
+    <string name="swap_select_route_helper">Routes ranked by output amount. Selecting a route overrides auto.</string>
+    <string name="swap_route_fee_prefix">Fee</string>
+    <string name="swap_route_eta">~%1$ds</string>
     <string name="swap_advanced_external_recipient_title">Use External Recipient</string>
     <string name="swap_advanced_locked_title">Advanced Swap Settings</string>
     <string name="swap_advanced_locked_subtitle">Fine-tune slippage, gas, routing, and recipient for every swap.</string>
@@ -783,7 +823,6 @@
     <string name="backup_password_request_with_password_action">Use password</string>
     <string name="backup_password_topbar_title">Password</string>
     <string name="function_transfer_ibc_dst_address_input_title">Destination Address</string>
-    <string name="function_switch_thorchain_address">THORChain Address</string>
     <string name="migration_onboarding_step_1_text_start">Upgrade this vault to the</string>
     <string name="migration_onboarding_step_1_text_emphasized">world’s fastest MPC protocol</string>
     <string name="migration_onboarding_step_1_text_end">and sign faster than ever before</string>
@@ -797,7 +836,6 @@
     <string name="upgrade_banner_title">Upgrade your vault now</string>
     <string name="deposit_form_custom_memo_optional_title">Custom Memo (optional)</string>
     <string name="transfer_ibc_function_memo_title">Memo</string>
-    <string name="merge_account_doesnt_exist">Selected token is not found for this address</string>
     <string name="keygen_email_error">Incorrect email, please check</string>
     <string name="verify_transaction_function_signature_title">Function Signature</string>
     <string name="verify_transaction_function_inputs_title">Function Arguments</string>
@@ -1124,7 +1162,7 @@
     <string name="close_sheet_content_description">Close</string>
     <string name="price_chart_retry_hint">Couldn\'t load chart. Tap to retry.</string>
     <string name="token_details_market_stats_title">Market Stats</string>
-    <string name="token_details_price_extremes_title">Price Extremes</string>
+    <string name="token_details_price_extremes_title">Price Range</string>
     <string name="token_details_token_info_title">Token Info</string>
     <string name="token_details_market_cap">Market Cap</string>
     <string name="token_details_market_cap_rank">Rank</string>
@@ -1235,6 +1273,15 @@
     <string name="bond_node_state_active">Active</string>
     <string name="bond_node_state_disabled">Disabled</string>
     <string name="bond_node_state_unknown">Unknown</string>
+    <string name="lp_pending_title">Waiting for matching %1$s deposit</string>
+    <string name="lp_pending_subtitle">THORChain holds this deposit until the matching side arrives, then refunds it if it doesn\'t.</string>
+    <string name="lp_pending_deposited">Deposited</string>
+    <string name="lp_pending_from">From</string>
+    <string name="lp_pending_refunds_in">Refunds in</string>
+    <string name="lp_pending_duration_days_hours_format">%1$dd %2$dh</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$dh %2$dm</string>
+    <string name="lp_pending_refund_time_unknown">Unknown</string>
+    <string name="lp_pending_complete_deposit">Complete deposit</string>
     <string name="lp_position">Position</string>
     <string name="add">Add</string>
     <string name="remove">Remove</string>
@@ -1431,7 +1478,7 @@
     <string name="transaction_history_detail_fee">Fee</string>
     <string name="transaction_history_detail_network">Network</string>
     <string name="transaction_history_detail_provider">Provider</string>
-    <string name="transaction_history_view_on_explorer">View on Explorer</string>
+    <string name="view_on_explorer">View on Explorer</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Enter your seed phrase</string>

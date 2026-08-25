@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.Text
@@ -234,7 +233,7 @@ internal fun FoldableAmountWidget(
                     else
                         Modifier.background(
                                 color = Theme.v2.colors.backgrounds.secondary,
-                                shape = RoundedCornerShape(12.dp),
+                                shape = Theme.v2.radius.md,
                             )
                             .padding(all = 16.dp),
             ) {
@@ -245,8 +244,13 @@ internal fun FoldableAmountWidget(
                 )
 
                 val ticker = state.selectedCoin?.title?.let { " $it" } ?: ""
-                val balanceText =
-                    state.tronBalanceAvailableOverride ?: state.selectedCoin?.balance ?: "0"
+                // Unfreezing is per-resource, so only the override says how much can be unfrozen.
+                // The coin's balance here is the whole Tron DeFi position and includes TRX already
+                // in the unfreeze cooldown, which cannot be unfrozen again.
+                val fallbackBalance =
+                    if (state.defiType == DeFiNavActions.UNFREEZE_TRX) null
+                    else state.selectedCoin?.balance
+                val balanceText = state.tronBalanceAvailableOverride ?: fallbackBalance ?: "0"
 
                 Text(
                     text = balanceText + ticker,

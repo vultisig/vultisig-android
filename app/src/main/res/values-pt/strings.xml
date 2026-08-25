@@ -2,6 +2,8 @@
 <resources>
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
+    <string name="edit_chains">Cadeias</string>
+    <string name="edit_tokens">Tokens</string>
     <string name="signing_error_please_try_again_s">Erro ao Assinar. Por favor, tente novamente. %s</string>
     <string name="try_again">Tentar Novamente</string>
     <string name="vault_settings_title">Configurações do Cofre</string>
@@ -123,6 +125,7 @@
     <string name="vault_detail_screen_mldsa_key_copied">Chave MLDSA Copiada</string>
     <string name="welcome_screen_skip">Pular</string>
     <string name="keysign_screen_preparing_vault">PREPARANDO COFRE…</string>
+    <string name="keysign_malicious_party_detected">Foi detetado que o dispositivo \"%1$s\" nesta sessão de keysign agiu de forma maliciosa. Não o uses novamente para assinar.</string>
     <string name="vault_settings_delete_vault_caution1">Estou ciente de que o cofre será excluído permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Estou ciente de que posso perder fundos</string>
     <string name="vault_settings_delete_vault_caution3">Fiz um backup do cofre para restaurá-lo mais tarde</string>
@@ -173,6 +176,7 @@
     <string name="passcode_settings_title">Encriptação com código de acesso</string>
     <string name="passcode_settings_encryption_title">Encriptação com código de acesso</string>
     <string name="passcode_settings_encryption_subtitle">Encripta o armazenamento de cofres neste dispositivo e bloqueia a aplicação.</string>
+    <string name="passcode_settings_encryption_explanation">A encriptação com código de acesso está ligada a este dispositivo. Guarde um backup .vult para restaurar os seus cofres.</string>
     <string name="passcode_settings_change">Alterar código de acesso</string>
     <string name="passcode_settings_auto_lock">Bloqueio automático</string>
     <string name="auto_lock_setting_title">Bloqueio automático</string>
@@ -195,10 +199,12 @@
     <string name="passcode_entry_mismatch">Os códigos de acesso não coincidem. Escolha novamente.</string>
     <string name="passcode_operation_failed">Não funcionou. O seu código de acesso não foi alterado.</string>
     <string name="passcode_not_digits">Introduza apenas dígitos.</string>
-    <string name="passcode_key_unavailable_title">Cofres indisponíveis</string>
-    <string name="passcode_key_unavailable_message">As chaves que protegem o armazenamento de cofres deste dispositivo foram perdidas, pelo que as suas partilhas do cofre já não podem ser lidas. Reinstale a aplicação e restaure os seus cofres a partir de uma cópia de segurança.</string>
-    <string name="passcode_store_unavailable_title">Cofres temporariamente indisponíveis</string>
-    <string name="passcode_store_unavailable_message">Desta vez não foi possível abrir o armazenamento seguro deste dispositivo, pelo que os seus cofres permanecem bloqueados. Reinicie a aplicação para tentar novamente. Os seus cofres continuam neste dispositivo, pelo que não é necessário reinstalar.</string>
+    <string name="passcode_key_unavailable_title">Este dispositivo não tem a chave do seu cofre</string>
+    <string name="passcode_key_unavailable_message">Os seus cofres continuam neste dispositivo. Restaure a partir do backup .vult para os voltar a abrir.</string>
+    <string name="passcode_key_unavailable_restore">Restaurar a partir do backup</string>
+    <string name="passcode_key_unavailable_restored">Cofre restaurado. Outro cofre neste dispositivo ainda precisa do seu backup.</string>
+    <string name="passcode_store_unavailable_title">Os cofres estão bloqueados por agora</string>
+    <string name="passcode_store_unavailable_message">O armazenamento seguro deste dispositivo não abriu desta vez. Continua tudo aqui, por isso reinicie a aplicação em vez de a reinstalar.</string>
     <string name="passcode_input_field_content_description">%1$d de %2$d dígitos introduzidos</string>
     <string name="feature_item_learn_more">Saber mais</string>
     <string name="keysign">Keysign</string>
@@ -247,6 +253,7 @@
     <string name="swap_form_minimum_amount">Valor de swap muito pequeno. Quantidade recomendada %1$s %2$s</string>
     <string name="backup_password_screen_title">Backup</string>
     <string name="import_file_not_supported">O tipo de ficheiro não é compatível</string>
+    <string name="import_file_zip_incomplete">Não foi possível ler algumas partes do cofre neste ficheiro</string>
     <string name="import_file_screen_password_error">Palavra-passe incorreta, tente novamente.</string>
     <string name="add_vault_save">Guardar</string>
     <string name="backup_password_screen_enter_password">Introduza a senha</string>
@@ -470,9 +477,6 @@
     <string name="deposit_option_unstake">Unstake</string>
     <string name="deposit_option_custom">Personalizado</string>
     <string name="deposit_option_ibc_transfer">Transferência IBC</string>
-    <string name="deposit_option_switch">Trocar</string>
-    <string name="deposit_option_merge">Fundir</string>
-    <string name="deposit_option_withdraw_ruji">Sacar RUJI</string>
     <string name="withdraw_amount">Sacar %s</string>
     <string name="deposit_form_unstake_percentage_hint">Insira a percentagem para desbloquear</string>
     <string name="verify_transaction_function_signature_title">Assinatura de Função</string>
@@ -481,9 +485,6 @@
     <string name="dapp_hero_unverified_function_subtitle">Reveja os detalhes antes de assinar</string>
     <string name="dapp_unverified_function_done_caution">Função não verificada. Reveja os detalhes da transação.</string>
     <string name="request_from">Pedido de</string>
-    <string name="send_shares_currency_hint">Insira cotas</string>
-    <string name="send_error_max_shares">O valor não deve exceder o saldo</string>
-    <string name="deposit_form_shares_title">Cotas (Saldo: %1$s)</string>
     <string name="fast_vault_password_reminder_title">Verifique a sua palavra-passe para:</string>
     <string name="fast_vault_password_reminder_done_button">Concluído</string>
     <string name="periodically_ask_verify_password">Pedimos periodicamente uma verificação para que não esqueça a sua palavra-passe.</string>
@@ -506,7 +507,6 @@
     <string name="keygen_step_generating_mldsa">Gerando chave MLDSA</string>
     <string name="keygen_step_generating_chain_keys">Gerando chaves de cadeia</string>
     <string name="reshare_step_generating_ecdsa">Gerando chave ECDSA</string>
-    <string name="merge_account_doesnt_exist">O token selecionado não foi encontrado para este endereço</string>
     <string name="keygen_email_error">E-mail incorreto, por favor verifique</string>
     <string name="tx_overview_screen_tx_send">Enviar</string>
     <string name="tx_overview_screen_tx_deposit">Depósito</string>
@@ -515,9 +515,42 @@
     <string name="defi_tab_staked">Staking</string>
     <string name="defi_tab_bonded">Vinculado</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_tab_earn">Ganhar</string>
     <string name="defi_bond">Bond</string>
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Pool de liquidez</string>
+    <!-- Kamino Earn -->
+    <string name="kamino_earn_title">Kamino Earn</string>
+    <string name="kamino_earn_curated_by">Curado por %1$s</string>
+    <string name="kamino_earn_deposited">Depositado: %1$s</string>
+    <string name="kamino_earn_apy">APY</string>
+    <string name="kamino_earn_earned">Ganho: %1$s</string>
+    <string name="kamino_earn_lost">Perdido: %1$s</string>
+    <string name="kamino_earn_protocol">Kamino</string>
+    <string name="kamino_earn_load_failed">Não foi possível atualizar estes vaults agora</string>
+    <string name="kamino_earn_risk_conservative">Conservador</string>
+    <string name="kamino_earn_risk_private_credit">Crédito privado</string>
+    <string name="kamino_earn_deposit">Depositar</string>
+    <string name="kamino_earn_empty_title">Nenhuma posição Earn ativada</string>
+    <string name="kamino_earn_empty_description">Ative um vault da Kamino em «Gerenciar Posições» para começar a render com seus ativos Solana.</string>
+    <string name="kamino_deposit_title">Depositar</string>
+    <string name="kamino_withdraw_title">Retirar</string>
+    <string name="kamino_amount_exceeds_available">O valor excede o saldo disponível</string>
+    <string name="kamino_amount_below_minimum">O mínimo é %1$s %2$s</string>
+    <string name="kamino_error_unknown_vault">Este vault não é suportado pelo app</string>
+    <string name="kamino_error_load_failed">Não foi possível carregar este vault agora</string>
+    <string name="kamino_refusal_below_smallest_unit">O valor é menor que a menor unidade deste ativo</string>
+    <string name="kamino_refusal_below_minimum">O valor está abaixo do mínimo deste vault</string>
+    <string name="kamino_refusal_rate_unavailable">A taxa por cota deste vault não está disponível agora</string>
+    <string name="kamino_refusal_larger_than_position">Esse valor é maior que esta posição</string>
+    <string name="verify_deposit_depositing">Você está depositando</string>
+    <string name="verify_deposit_withdrawing">Você está retirando</string>
+    <string name="kamino_verify_vault">Vault</string>
+    <string name="kamino_verify_withdraw_unverified">Este dispositivo não consegue confirmar este valor. A transação retira %1$s cotas do vault.</string>
+    <string name="kamino_error_build_failed">Não foi possível preparar esta transação</string>
+    <string name="kamino_withdraw_nothing">Não há nada a retirar deste vault</string>
+    <string name="kamino_withdraw_unreadable">Não foi possível ler esta posição, então a retirada não pode ser preparada</string>
+    <string name="kamino_withdraw_delayed">Acima da liquidez imediata do vault de %1$s %2$s. Esta retirada pode demorar.</string>
     <!-- Tron DeFi -->
     <string name="tron_defi_freeze">Congelar</string>
     <string name="tron_defi_unfreeze">Descongelar</string>
@@ -525,11 +558,13 @@
     <string name="tron_defi_frozen">Congelado</string>
     <string name="tron_defi_pending_withdrawals">Saques Pendentes</string>
     <string name="tron_defi_ready_to_claim">Pronto para resgatar</string>
+    <string name="tron_defi_claim_button">Resgatar %1$s</string>
     <string name="tron_defi_countdown_days">%1$d dias, %2$d h</string>
     <string name="tron_defi_countdown_hours">%1$d h, %2$d min</string>
     <string name="tron_defi_error_trx_not_in_vault">Moeda TRX não encontrada no cofre</string>
     <string name="tron_freeze_screen_title">Congelar TRON</string>
     <string name="tron_unfreeze_screen_title">Descongelar TRON</string>
+    <string name="tron_claim_screen_title">Resgatar TRON</string>
     <string name="tron_frozen_balances_error">Não foi possível carregar os saldos congelados. Puxe para tentar novamente.</string>
     <string name="tron_resource_type">Tipo de Recurso</string>
     <string name="tron_resource_bandwidth">Largura de Banda</string>
@@ -800,7 +835,7 @@
     <string name="close_sheet_content_description">Fechar</string>
     <string name="price_chart_retry_hint">Não foi possível carregar o gráfico. Toque para tentar novamente.</string>
     <string name="token_details_market_stats_title">Estatísticas de mercado</string>
-    <string name="token_details_price_extremes_title">Extremos de preço</string>
+    <string name="token_details_price_extremes_title">Faixa de preço</string>
     <string name="token_details_token_info_title">Informações do token</string>
     <string name="token_details_market_cap">Capitalização de mercado</string>
     <string name="token_details_market_cap_rank">Classificação</string>
@@ -1087,6 +1122,10 @@
     <string name="swap_advanced_slippage_title">Tolerância de derrapagem</string>
     <string name="swap_advanced_slippage_page_title">Derrapagem</string>
     <string name="swap_advanced_gas_limit_title">Limite de Gás</string>
+    <string name="swap_advanced_select_route_title">Selecionar rota</string>
+    <string name="swap_select_route_helper">Rotas ordenadas por valor de saída. Selecionar uma rota substitui o modo automático.</string>
+    <string name="swap_route_fee_prefix">Taxa</string>
+    <string name="swap_route_eta">~%1$ds</string>
     <string name="swap_advanced_external_recipient_title">Usar destinatário externo</string>
     <string name="swap_advanced_locked_title">Configurações avançadas de swap</string>
     <string name="swap_advanced_locked_subtitle">Ajuste slippage, gas, rota e destinatário em cada swap.</string>
@@ -1162,7 +1201,6 @@
     <string name="enter_email_screen_desc">Este email é apenas utilizado para enviar o backup do servidor</string>
     <string name="onboarding_desc_page_6_part_1">Estas ações colaboram para</string>
     <string name="keygen_connecting_with_server_take_a_second">Isto deve demorar apenas um segundo.</string>
-    <string name="function_switch_thorchain_address">Endereço THORChain</string>
     <string name="tx_transaction_successful_screen_title">Transação concluída com sucesso</string>
     <string name="migration_onboarding_step_3_text_end">Ao atualizar</string>
     <string name="migration_onboarding_upgrade_your_vault">Atualize o seu cofre</string>
@@ -1171,6 +1209,15 @@
     <string name="onboarding_desc_page_1_part_2">Partilhas do cofre</string>
     <string name="verify_swap_youre_swapping_title">Está a trocar</string>
     <string name="keysign_app_version_text">Versão %1$s (%2$s)</string>
+    <string name="lp_pending_title">A aguardar o depósito %1$s correspondente</string>
+    <string name="lp_pending_subtitle">A THORChain retém este depósito até chegar a parte correspondente e reembolsa-o caso não chegue.</string>
+    <string name="lp_pending_deposited">Depositado</string>
+    <string name="lp_pending_from">De</string>
+    <string name="lp_pending_refunds_in">Reembolso em</string>
+    <string name="lp_pending_duration_days_hours_format">%1$dd %2$dh</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$dh %2$dm</string>
+    <string name="lp_pending_refund_time_unknown">Desconhecido</string>
+    <string name="lp_pending_complete_deposit">Concluir depósito</string>
     <string name="lp_position">Posição</string>
     <string name="add">Adicionar</string>
     <string name="remove">Remover</string>
@@ -1344,7 +1391,7 @@
     <string name="transaction_history_detail_fee">Taxa</string>
     <string name="transaction_history_detail_network">Rede</string>
     <string name="transaction_history_detail_provider">Provedor</string>
-    <string name="transaction_history_view_on_explorer">Ver no explorador</string>
+    <string name="view_on_explorer">Ver no explorador</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Digite sua frase semente</string>

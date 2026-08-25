@@ -139,6 +139,47 @@ internal class SwapQuotePipelineNetworkFeeTest {
     }
 
     @Test
+    fun `restores the gas-pass estimate for a THOR quote on an EVM source`() = runTest {
+        // An aggregator quote re-bases the displayed fee onto its route gas; when a THOR/Maya
+        // route becomes active on the same EVM source (fresh win or manual route pick), the
+        // gas-pass baseline must come back — otherwise the aggregator's re-based fee lingers on a
+        // route it never applied to.
+        val ethCoin = coin(Chain.Ethereum)
+        val baseline = gasResult(ethCoin, BigInteger.valueOf(6_000_000)).estimated
+
+        val outcome =
+            pipeline.resolveNetworkFee(
+                result = success(thorQuote(ethCoin)),
+                src = sendSrc(ethCoin),
+                vaultId = "vault",
+                gasFee = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
+                gasFeeChain = Chain.Ethereum,
+                networkFeeTokenValue = TokenValue(BigInteger.valueOf(2_861_460), ethCoin),
+                evmBaselineEstimate = baseline,
+            )
+
+        val set = assertIs<NetworkFeeUpdate.Set>(outcome.networkFee)
+        assertEquals(BigInteger.valueOf(6_000_000), set.tokenValue.value)
+        coVerify(exactly = 0) { swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), any()) }
+    }
+
+    @Test
+    fun `leaves the fee untouched for a THOR quote on EVM without a stored baseline`() = runTest {
+        val ethCoin = coin(Chain.Ethereum)
+        val outcome =
+            pipeline.resolveNetworkFee(
+                result = success(thorQuote(ethCoin)),
+                src = sendSrc(ethCoin),
+                vaultId = "vault",
+                gasFee = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
+                gasFeeChain = Chain.Ethereum,
+                networkFeeTokenValue = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
+            )
+
+        assertNull(outcome.networkFee)
+    }
+
+    @Test
     fun `clears the stale fee when the gas fee lags the source chain`() = runTest {
         val ethCoin = coin(Chain.Ethereum)
         val outcome =
@@ -188,6 +229,15 @@ internal class SwapQuotePipelineNetworkFeeTest {
                 ),
             provider = "SwapKit",
             subProvider = "FLASHNET",
+        )
+
+    private fun thorQuote(dstToken: Coin) =
+        SwapQuote.ThorChain(
+            expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
+            fees = TokenValue(BigInteger.valueOf(9), dstToken),
+            expiredAt = Clock.System.now(),
+            recommendedMinTokenValue = TokenValue(BigInteger.ONE, dstToken),
+            data = mockk(relaxed = true),
         )
 
     private fun oneInchQuote(dstToken: Coin, routeGas: Long) =

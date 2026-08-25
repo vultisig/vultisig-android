@@ -104,6 +104,16 @@ interface PasscodeRepository {
     suspend fun initialize()
 
     /**
+     * Reads the persisted state again after a launch that could not read it.
+     *
+     * Only [PasscodeState.KeyUnavailable] and [PasscodeState.StoreUnavailable] retry. Both are
+     * decided by what a keystore returned once, and a keystore that stalled can come back, so the
+     * alternative is telling the user to relaunch to repeat a read the app can just do again. Every
+     * other state is settled by something this cannot re-derive.
+     */
+    suspend fun retry()
+
+    /**
      * Configures [passcode] for the first time and leaves the app unlocked.
      *
      * Returns [PasscodeUnlockResult.Success] or [PasscodeUnlockResult.Failed]; the verification
@@ -144,7 +154,6 @@ internal interface PasscodeDataKeySource {
     /**
      * True when encrypted keyshares exist that this process cannot currently read — either the
      * passcode has not been entered this session, or the credentials that unwrap them are gone.
-     * Either way the storage layer must refuse to write a share in the clear beside them.
      */
     fun isLocked(): Boolean
 
@@ -153,8 +162,8 @@ internal interface PasscodeDataKeySource {
      * when no passcode is configured.
      *
      * Returns without waiting when the credentials are unreachable ([PasscodeState.KeyUnavailable],
-     * [PasscodeState.StoreUnavailable]): neither resolves without a relaunch, so waiting would be a
-     * hang rather than a delay.
+     * [PasscodeState.StoreUnavailable]): neither resolves without [PasscodeRepository.retry] or a
+     * relaunch, so waiting would be a hang rather than a delay.
      */
     suspend fun awaitUnlocked()
 }
@@ -224,24 +233,38 @@ internal class PasscodeRepositoryImpl(
     override suspend fun initialize() {
         mutex.withLock {
             if (_state.value != PasscodeState.Unknown) return
-            _state.value =
-                try {
-                    resolveInitialState()
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    // Reading the credentials is itself a keystore operation, and the database is
-                    // asked whether any ciphertext exists — either can fail. Neither leaving the
-                    // state Unknown nor letting this escape is survivable: the first leaves the
-                    // guard's blank cover over the whole app with nothing to move it, and the
-                    // second kills whichever coroutine happened to ask first. Reporting Disabled
-                    // is the one answer that would lose data, so it reports the truth — nothing
-                    // readable this launch — which at least says so on screen and names the fix.
-                    Timber.e(e, "Could not read the passcode state")
-                    PasscodeState.StoreUnavailable
-                }
+            _state.value = resolveOrReport()
         }
     }
+
+    override suspend fun retry() {
+        mutex.withLock {
+            when (_state.value) {
+                PasscodeState.KeyUnavailable,
+                PasscodeState.StoreUnavailable -> _state.value = resolveOrReport()
+                else -> Unit
+            }
+        }
+    }
+
+    /**
+     * Resolves the state, reporting a read that failed as one rather than letting it escape.
+     *
+     * Neither leaving the state Unknown nor throwing is survivable: the first leaves the guard's
+     * blank cover over the whole app with nothing to move it, and the second kills whichever
+     * coroutine happened to ask first. Disabled is the one answer that would lose data.
+     *
+     * Callers must hold [mutex].
+     */
+    private suspend fun resolveOrReport(): PasscodeState =
+        try {
+            resolveInitialState()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Could not read the passcode state")
+            PasscodeState.StoreUnavailable
+        }
 
     /** Callers must hold [mutex]. */
     private suspend fun resolveInitialState(): PasscodeState {
@@ -355,7 +378,19 @@ internal class PasscodeRepositoryImpl(
             verifyLocked(currentPasscode) { key ->
                 // The data key is unchanged, so stored keyshares stay valid: only the wrap is
                 // rewritten. This is why changing the passcode is instant on a large vault set.
-                persistWrappedKey(key, newPasscode)
+                //
+                // Nothing else has been touched yet, and the store puts back what it had, so a
+                // wrap that did not land leaves the old passcode in force.
+                try {
+                    persistWrappedKey(key, newPasscode)
+                } catch (e: CancellationException) {
+                    key.fill(0)
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to store the new passcode")
+                    key.fill(0)
+                    return@verifyLocked PasscodeUnlockResult.Failed
+                }
                 swapDataKey(key)
                 publishUnlockedUnlessLocked()
                 PasscodeUnlockResult.Success
@@ -382,11 +417,26 @@ internal class PasscodeRepositoryImpl(
                 // One unit, uncancellable. Stopping between the two leaves the key live and the
                 // state Unlocked with no wrap on disk: every keyshare written afterwards would be
                 // sealed under a key the next launch has no way to recover.
-                withContext(NonCancellable) {
-                    withContext(dispatcher) { store.clearCredentials() }
-                    swapDataKey(null)
+                try {
+                    withContext(NonCancellable) {
+                        withContext(dispatcher) { store.clearCredentials() }
+                        swapDataKey(null)
+                        _state.value = PasscodeState.Disabled
+                        key.fill(0)
+                    }
+                } catch (e: CancellationException) {
                     key.fill(0)
-                    _state.value = PasscodeState.Disabled
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e, "Refusing to disable the passcode: the credentials are still there")
+                    // unprotectAll has already put every share back in the clear, and the passcode
+                    // that guards them is still in force. Uncancellable because they stay exposed
+                    // until this finishes.
+                    withContext(NonCancellable) {
+                        protectAllOrLog(key)
+                        key.fill(0)
+                    }
+                    return@verifyLocked PasscodeUnlockResult.Failed
                 }
                 PasscodeUnlockResult.Success
             }

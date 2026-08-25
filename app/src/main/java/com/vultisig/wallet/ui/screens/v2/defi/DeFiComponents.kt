@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -34,22 +33,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -131,44 +124,6 @@ private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
  * hidden outright, which looked identical to the value having been dropped.
  */
 internal const val FIAT_VALUE_UNAVAILABLE = "—"
-
-private val ActionButtonBevelTopColor = Color.White.copy(alpha = 0.10f)
-private val ActionButtonBevelBottomColor = Color(0xFF0F1C3E)
-
-/**
- * Draws a 1dp top highlight and a 1dp bottom shadow inset on a pill-shaped button to match the
- * Figma `DeFi Button` bevel spec. Applies a 0.5 alpha multiplier when [enabled] is `false` so the
- * bevel dims with the rest of the disabled-state styling.
- */
-private fun Modifier.actionButtonInnerBevel(enabled: Boolean): Modifier = drawWithContent {
-    drawContent()
-    val alphaMultiplier = if (enabled) 1f else 0.5f
-    val strokePx = 1.dp.toPx()
-    val path =
-        Path().apply {
-            addRoundRect(
-                RoundRect(
-                    rect = Rect(offset = Offset.Zero, size = size),
-                    cornerRadius = CornerRadius(size.height / 2f),
-                )
-            )
-        }
-    clipPath(path) {
-        drawRect(
-            color =
-                ActionButtonBevelTopColor.copy(
-                    alpha = ActionButtonBevelTopColor.alpha * alphaMultiplier
-                ),
-            topLeft = Offset.Zero,
-            size = Size(size.width, strokePx),
-        )
-        drawRect(
-            color = ActionButtonBevelBottomColor.copy(alpha = alphaMultiplier),
-            topLeft = Offset(0f, size.height - strokePx),
-            size = Size(size.width, strokePx),
-        )
-    }
-}
 
 @Preview(showBackground = true, name = "Balance Banner - With Value")
 @Composable
@@ -272,6 +227,12 @@ fun ActionButton(
     contentColor: Color,
     iconCircleColor: Color,
     enabled: Boolean = true,
+    // The DeFi Button component measures these at 34dp and 16dp, which is what the Kamino cards
+    // pass. The defaults are the sizes every other caller was already drawing, left alone
+    // deliberately rather than corrected in passing: they reach screens this change has no business
+    // touching.
+    iconCircleSize: Dp = 30.dp,
+    iconSize: Dp = 12.dp,
     onClick: () -> Unit,
 ) {
     Button(
@@ -300,9 +261,9 @@ fun ActionButton(
                     )
                 }
             },
-        shape = RoundedCornerShape(50),
+        shape = Theme.v2.radius.pill,
         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
-        modifier = modifier.height(42.dp).actionButtonInnerBevel(enabled = enabled),
+        modifier = modifier.height(42.dp),
     ) {
         // Figma docks the icon to the button's leading edge while the label stays centered across
         // the full width, so the icon is absolutely positioned and the text is centered on top.
@@ -311,18 +272,18 @@ fun ActionButton(
                 Box(
                     modifier =
                         Modifier.align(Alignment.CenterStart)
-                            .size(30.dp)
+                            .size(iconCircleSize)
                             .background(
                                 if (enabled) iconCircleColor
                                 else iconCircleColor.copy(alpha = 0.5f),
-                                RoundedCornerShape(50),
+                                Theme.v2.radius.pill,
                             ),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         painter = painterResource(id = icon),
                         contentDescription = null,
-                        modifier = Modifier.size(12.dp),
+                        modifier = Modifier.size(iconSize),
                         tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f),
                     )
                 }
@@ -562,12 +523,12 @@ internal fun DeFiWarningBanner(text: String, onClickClose: (() -> Unit)? = null)
         Column(
             modifier =
                 Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(Theme.v2.radius.md)
                     .background(Theme.v2.colors.backgrounds.secondary)
                     .border(
                         width = 1.dp,
                         color = Theme.v2.colors.border.light,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = Theme.v2.radius.md,
                     )
                     .padding(
                         start = 16.dp,
@@ -1039,7 +1000,7 @@ private fun CompleteNodeCardMockPreview() {
         Column(
             modifier =
                 Modifier.fillMaxWidth()
-                    .background(Theme.v2.colors.backgrounds.secondary, RoundedCornerShape(12.dp))
+                    .background(Theme.v2.colors.backgrounds.secondary, Theme.v2.radius.md)
                     .padding(16.dp)
         ) {
             // Node Address

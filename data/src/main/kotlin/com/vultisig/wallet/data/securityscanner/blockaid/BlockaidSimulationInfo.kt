@@ -51,12 +51,26 @@ data class BlockaidSimulationCoin(
  * Pairs the parsed [simulation] (drives the dApp hero) with the existing [scannerResult] (drives
  * the security badge). Allows verify → sign → done to resolve both pieces of state from one cached
  * lookup.
+ *
+ * [didLoadSimulation] distinguishes a genuine Blockaid verdict (including a legitimate "no balance
+ * change" empty result) from a scan that never completed (network failure, malformed payload). Both
+ * shapes carry a null [simulation], but only the former is safe to combine with a raw-dApp-tx
+ * marker to show the [com.vultisig.wallet.ui.components.hero.HeroContent.Unverified] hero — an
+ * incomplete scan must fall back to the existing native-amount hero instead of manufacturing a
+ * false warning.
  */
 data class BlockaidKeysignScanResult(
     val simulation: BlockaidSimulationInfo?,
     val scannerResult: com.vultisig.wallet.data.securityscanner.SecurityScannerResult?,
+    val didLoadSimulation: Boolean = true,
 ) {
     companion object {
         val EMPTY = BlockaidKeysignScanResult(simulation = null, scannerResult = null)
+        val FAILED =
+            BlockaidKeysignScanResult(
+                simulation = null,
+                scannerResult = null,
+                didLoadSimulation = false,
+            )
     }
 }

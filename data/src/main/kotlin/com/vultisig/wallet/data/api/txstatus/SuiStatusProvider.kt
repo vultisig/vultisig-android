@@ -19,10 +19,10 @@ class SuiStatusProvider @Inject constructor(private val suiApi: SuiApi) :
             } catch (e: CancellationException) {
                 throw e
             } catch (e: SuiRpcException) {
-                // A terminal RPC error (any code other than not-found) — report it now instead of
-                // retrying until the poll timeout masks a persistent failure as still pending.
+                // A node refusal, as opposed to a digest that simply hasn't landed — report it now
+                // instead of retrying until the poll timeout masks a persistent failure as pending.
                 Timber.w(e, "Sui status check failed for %s", txHash)
-                return TransactionResult.Failed(e.rpcError.message)
+                return TransactionResult.Failed(e.errorMessage)
             } catch (e: Exception) {
                 Timber.w(e, "Sui status check failed for %s", txHash)
                 return TransactionResult.Pending

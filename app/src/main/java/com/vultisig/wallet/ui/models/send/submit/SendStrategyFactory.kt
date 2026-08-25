@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.send.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -56,12 +57,14 @@ internal data class SendStrategies(
             DeFiNavActions.STAKE_RUJI,
             DeFiNavActions.STAKE_SRUJI,
             DeFiNavActions.STAKE_TCY,
-            DeFiNavActions.STAKE_STCY -> stake.submit()
+            DeFiNavActions.STAKE_STCY,
+            DeFiNavActions.STAKE_YBRUNE -> stake.submit()
 
             DeFiNavActions.UNSTAKE_RUJI,
             DeFiNavActions.UNSTAKE_SRUJI,
             DeFiNavActions.UNSTAKE_TCY,
             DeFiNavActions.UNSTAKE_STCY,
+            DeFiNavActions.UNSTAKE_YBRUNE,
             DeFiNavActions.WITHDRAW_RUJI -> unstake.submit()
 
             DeFiNavActions.MINT_YRUNE,
@@ -143,6 +146,7 @@ constructor(
     private val chainValidationService: ChainValidationService,
     private val navigator: Navigator<Destination>,
     private val thorChainApi: ThorChainApi,
+    private val defaultStakingPositionService: DefaultStakingPositionService,
 ) {
 
     /**
@@ -251,6 +255,7 @@ constructor(
                     depositTransactionRepository = depositTransactionRepository,
                     navigator = navigator,
                     thorChainApi = thorChainApi,
+                    defaultStakingPositionService = defaultStakingPositionService,
                     defiTypeProvider = context.defiTypeProvider,
                     isAutocompoundProvider = context.isAutocompoundProvider,
                     showLoading = context.showLoading,

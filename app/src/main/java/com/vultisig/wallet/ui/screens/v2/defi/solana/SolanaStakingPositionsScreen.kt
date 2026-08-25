@@ -20,8 +20,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -48,43 +52,80 @@ import com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsViewMod
 import com.vultisig.wallet.ui.screens.cosmosstaking.ValidatorAvatar
 import com.vultisig.wallet.ui.screens.v2.defi.ActionButton
 import com.vultisig.wallet.ui.screens.v2.defi.ApyInfoItem
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.FIAT_VALUE_UNAVAILABLE
 import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
 import com.vultisig.wallet.ui.screens.v2.defi.InfoItem
+import com.vultisig.wallet.ui.screens.v2.defi.ManagePositionsButton
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 private val HIDE_BALANCE_CHARS = "• ".repeat(6).trim()
+
+/** Earn leads, matching the design: yield is the reason most users open this tab. */
+private val SOLANA_DEFI_TABS = listOf(DeFiTab.EARN, DeFiTab.STAKED)
 
 /** Entry point for the Solana native-staking positions screen. */
 @Composable
 internal fun SolanaStakingPositionsScreen(
     vaultId: VaultId,
     viewModel: SolanaStakingPositionsViewModel = hiltViewModel(),
+    kaminoViewModel: KaminoEarnViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    val kaminoState by kaminoViewModel.state.collectAsState()
+    var selectedTab by rememberSaveable { mutableStateOf(DeFiTab.EARN) }
 
     LifecycleResumeEffect(vaultId) {
         viewModel.setData(vaultId)
+        kaminoViewModel.setData(vaultId)
         onPauseOrDispose {}
+    }
+
+    // The header banner is the chain's total, so it needs both tabs' figures. Earn owns its own
+    // load, so its total is handed to the staking view-model as it resolves rather than being
+    // summed in the composition, where the user's currency format isn't available.
+    LaunchedEffect(kaminoState.totalValue) {
+        viewModel.onKaminoTotalChanged(kaminoState.totalValue)
     }
 
     SolanaStakingPositionsContent(
         state = state,
+        kaminoState = kaminoState,
+        selectedTab = selectedTab,
+        onTabSelected = { selectedTab = it },
         isRefreshing = state.isReloading,
-        onRefresh = viewModel::refresh,
+        onRefresh = {
+            viewModel.refresh()
+            kaminoViewModel.refresh()
+        },
         onStake = viewModel::onStake,
         onMove = viewModel::onMove,
         onFinishMove = viewModel::onFinishMove,
         onDeactivate = viewModel::onDeactivate,
         onWithdraw = viewModel::onWithdraw,
+        onKaminoDeposit = { kaminoViewModel.onDeposit(vaultId, it) },
+        onKaminoWithdraw = { kaminoViewModel.onWithdraw(vaultId, it) },
+        onManagePositions = kaminoViewModel::openPicker,
     )
+
+    if (kaminoState.isShowingPicker) {
+        KaminoVaultPickerSheet(
+            selected = kaminoState.pendingSelection,
+            onToggle = kaminoViewModel::onVaultToggled,
+            onDone = kaminoViewModel::savePicker,
+            onDismiss = kaminoViewModel::closePicker,
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SolanaStakingPositionsContent(
     state: SolanaStakingPositionsUiState,
+    kaminoState: KaminoEarnUiModel = KaminoEarnUiModel(),
+    selectedTab: DeFiTab = DeFiTab.EARN,
+    onTabSelected: (DeFiTab) -> Unit = {},
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
     onStake: () -> Unit = {},
@@ -92,6 +133,9 @@ internal fun SolanaStakingPositionsContent(
     onFinishMove: (String) -> Unit = {},
     onDeactivate: (String) -> Unit = {},
     onWithdraw: (String) -> Unit = {},
+    onKaminoDeposit: (String) -> Unit = {},
+    onKaminoWithdraw: (String) -> Unit = {},
+    onManagePositions: () -> Unit = {},
 ) {
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
         // One scroll surface for the whole screen: the banner and tab row scroll away with the
@@ -105,57 +149,140 @@ internal fun SolanaStakingPositionsContent(
             horizontalAlignment = CenterHorizontally,
         ) {
             SolanaHeaderBanner(
-                totalValue = state.totalStakedFiatDisplay,
-                isLoading = state.isLoading,
+                totalValue = state.chainTotalFiatDisplay,
+                // Both halves gate the banner, but only until it first resolves: Earn reloads on
+                // every pull-to-refresh and vault toggle, and gating on that would swap an
+                // already-correct figure for a skeleton. The handover runs a frame behind Earn's
+                // own load, so a total that has arrived but not yet reached the staking view-model
+                // reads as still loading rather than as unavailable.
+                isLoading =
+                    state.chainTotalFiatDisplay == null &&
+                        (state.isLoading ||
+                            kaminoState.isLoading ||
+                            kaminoState.totalValue != state.kaminoTotal),
                 isBalanceVisible = state.isBalanceVisible,
             )
 
             UiSpacer(16.dp)
 
-            Box(modifier = Modifier.fillMaxWidth()) {
-                VsTabGroup(index = 0) {
-                    tab { VsTab(label = stringResource(R.string.defi_tab_staked), onClick = {}) }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                VsTabGroup(index = SOLANA_DEFI_TABS.indexOf(selectedTab).coerceAtLeast(0)) {
+                    SOLANA_DEFI_TABS.forEach { tab ->
+                        tab {
+                            VsTab(
+                                label = stringResource(tab.displayNameRes),
+                                onClick = { onTabSelected(tab) },
+                            )
+                        }
+                    }
+                }
+
+                // Only Earn has anything to manage; native staking has no per-position opt-in.
+                if (selectedTab == DeFiTab.EARN) {
+                    ManagePositionsButton(onClick = onManagePositions)
                 }
             }
 
             UiSpacer(16.dp)
 
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                HeaderDeFiWidget(
-                    title = stringResource(R.string.solana_staking_total_staked_sol),
-                    iconRes = R.drawable.solana,
-                    buttonText = stringResource(R.string.solana_delegate_new_validator),
-                    onClickAction = onStake,
-                    totalAmount = state.totalStakedSolDisplay,
-                    totalPrice = state.totalStakedFiatDisplay,
-                    isLoading = state.isLoading,
-                    isBalanceVisible = state.isBalanceVisible,
+            if (selectedTab == DeFiTab.EARN) {
+                KaminoEarnTabContent(
+                    state = kaminoState,
+                    onDeposit = onKaminoDeposit,
+                    onWithdraw = onKaminoWithdraw,
+                    emptyState = { KaminoEarnEmptyState() },
                 )
-
-                if (state.positions.isNotEmpty()) {
-                    StakeAccountsWidget(
-                        positions = state.positions,
-                        isBalanceVisible = state.isBalanceVisible,
-                        onDeactivate = onDeactivate,
-                        onWithdraw = onWithdraw,
-                        onMove = onMove,
-                        onFinishMove = onFinishMove,
-                        onStake = onStake,
-                    )
-                }
-
-                state.error?.let {
-                    Text(
-                        text = it.asString(),
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.alerts.error,
-                    )
-                }
+            } else {
+                StakedTabContent(
+                    state = state,
+                    onStake = onStake,
+                    onMove = onMove,
+                    onFinishMove = onFinishMove,
+                    onDeactivate = onDeactivate,
+                    onWithdraw = onWithdraw,
+                )
             }
         }
+    }
+}
+
+/** Native SOL staking: the total, then one card per stake account. */
+@Composable
+private fun StakedTabContent(
+    state: SolanaStakingPositionsUiState,
+    onStake: () -> Unit,
+    onMove: (String) -> Unit,
+    onFinishMove: (String) -> Unit,
+    onDeactivate: (String) -> Unit,
+    onWithdraw: (String) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        HeaderDeFiWidget(
+            title = stringResource(R.string.solana_staking_total_staked_sol),
+            iconRes = R.drawable.solana,
+            buttonText = stringResource(R.string.solana_delegate_new_validator),
+            onClickAction = onStake,
+            totalAmount = state.totalStakedSolDisplay,
+            totalPrice = state.totalStakedFiatDisplay,
+            isLoading = state.isLoading,
+            isBalanceVisible = state.isBalanceVisible,
+        )
+
+        if (state.positions.isNotEmpty()) {
+            StakeAccountsWidget(
+                positions = state.positions,
+                isBalanceVisible = state.isBalanceVisible,
+                onDeactivate = onDeactivate,
+                onWithdraw = onWithdraw,
+                onMove = onMove,
+                onFinishMove = onFinishMove,
+                onStake = onStake,
+            )
+        }
+
+        state.error?.let {
+            Text(
+                text = it.asString(),
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.alerts.error,
+            )
+        }
+    }
+}
+
+/** Shown until the user switches a Kamino vault on under Manage positions. */
+@Composable
+private fun KaminoEarnEmptyState() {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(Theme.v2.radius.xl)
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.light,
+                    shape = Theme.v2.radius.xl,
+                )
+                .padding(16.dp),
+        horizontalAlignment = CenterHorizontally,
+    ) {
+        Text(
+            text = stringResource(R.string.kamino_earn_empty_title),
+            style = Theme.brockmann.body.m.medium,
+            color = Theme.v2.colors.text.primary,
+        )
+
+        UiSpacer(4.dp)
+
+        Text(
+            text = stringResource(R.string.kamino_earn_empty_description),
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.v2.colors.text.tertiary,
+        )
     }
 }
 
@@ -256,7 +383,9 @@ private fun StakeAccountContent(
                 )
                 UiSpacer(2.dp)
                 Text(
-                    text = if (isBalanceVisible) row.stakedFiatDisplay else HIDE_BALANCE_CHARS,
+                    text =
+                        if (isBalanceVisible) row.stakedFiatDisplay ?: FIAT_VALUE_UNAVAILABLE
+                        else HIDE_BALANCE_CHARS,
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.text.tertiary,
                 )

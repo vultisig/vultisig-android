@@ -9,8 +9,10 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChartRange
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.CoinMarketStats
 import com.vultisig.wallet.data.models.MarketChart
 import com.vultisig.wallet.data.models.MarketChartPoint
+import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -363,4 +365,291 @@ internal class TokenDetailViewModelTest {
     fun `PriceExtremesUiModel hasAnyValue is true when any single field is set`() {
         PriceExtremesUiModel(low24h = "$0.98").hasAnyValue() shouldBe true
     }
+
+    @Test
+    fun `hasBand is false without a marker position, so a bandless section drops the block`() {
+        PriceExtremesUiModel(low24h = "$0.98", high24h = "$1.02").hasBand() shouldBe false
+        PriceExtremesUiModel(low24h = "$0.98", high24h = "$1.02", bandPosition = 0.5f)
+            .hasBand() shouldBe true
+    }
+
+    @Test
+    fun `receive opens the address QR for the account resolved on this chain`() =
+        runTest(testDispatcher) {
+            coEvery {
+                tokenPriceChartRepository.getChart(coin, ChartRange.ONE_DAY, AppCurrency.USD)
+            } returns chart(sign = 1)
+            coEvery { tokenPriceChartRepository.getStats(coin, AppCurrency.USD) } returns null
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.receive()
+            advanceUntilIdle()
+
+            coVerify {
+                navigator.route(
+                    Route.AddressQr(
+                        vaultId = "vault-1",
+                        address = "bc1qxyz",
+                        name = Chain.Bitcoin.raw,
+                        logo = Chain.Bitcoin.logo,
+                    )
+                )
+            }
+        }
+
+    @Test
+    fun `receive does nothing until an address has resolved`() =
+        runTest(testDispatcher) {
+            // The action row hides Receive until chainAddress lands, so this guard is the second
+            // line of defence rather than the only one — but a navigation with an empty address
+            // would open a QR of nothing, so it stays.
+            coEvery { accountsRepository.loadAddress(any(), any()) } returns flowOf()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.receive()
+            advanceUntilIdle()
+
+            vm.uiState.value.chainAddress shouldBe ""
+            coVerify(exactly = 0) { navigator.route(any<Route.AddressQr>()) }
+        }
+
+    @Test
+    fun `a native coin's explorer row points at the holder's address page`() =
+        runTest(testDispatcher) {
+            coEvery {
+                tokenPriceChartRepository.getChart(coin, ChartRange.ONE_DAY, AppCurrency.USD)
+            } returns chart(sign = 1)
+            coEvery { tokenPriceChartRepository.getStats(coin, AppCurrency.USD) } returns null
+            every { explorerLinkRepository.getAddressLink(any(), any()) } returns
+                "https://mempool.space/address/bc1qxyz"
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.uiState.value.tokenExplorerUrl shouldBe "https://mempool.space/address/bc1qxyz"
+            vm.uiState.value.tokenInfo?.hasExplorerLink shouldBe true
+            // Native coins have no contract to show — their address is the chain's, not a token's.
+            vm.uiState.value.tokenInfo?.contractAddress shouldBe null
+        }
+
+    @Test
+    fun `a token's explorer row prefers its contract page over the holder's address page`() =
+        runTest(testDispatcher) {
+            val token =
+                coin.copy(
+                    chain = Chain.Ethereum,
+                    ticker = "USDT",
+                    isNativeToken = false,
+                    contractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                )
+            coEvery { accountsRepository.loadAddress(any(), any()) } returns
+                flowOf(
+                    Address(
+                        chain = Chain.Ethereum,
+                        address = "0xholder",
+                        accounts =
+                            listOf(
+                                Account(
+                                    token = token,
+                                    tokenValue = null,
+                                    fiatValue = null,
+                                    price = null,
+                                )
+                            ),
+                    )
+                )
+            every { any<SavedStateHandle>().toRoute<Route.TokenDetail>() } returns
+                Route.TokenDetail(
+                    vaultId = "vault-1",
+                    chainId = Chain.Ethereum.raw,
+                    tokenId = token.id,
+                    mergeId = "",
+                )
+            coEvery {
+                tokenPriceChartRepository.getChart(token, ChartRange.ONE_DAY, AppCurrency.USD)
+            } returns chart(sign = 1)
+            coEvery { tokenPriceChartRepository.getStats(token, AppCurrency.USD) } returns null
+            every { explorerLinkRepository.getAddressLink(any(), any()) } returns
+                "https://etherscan.io/address/0xholder"
+            every {
+                explorerLinkRepository.getTokenLink(Chain.Ethereum, token.contractAddress)
+            } returns "https://etherscan.io/token/${'$'}{token.contractAddress}"
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.uiState.value.tokenExplorerUrl shouldBe
+                "https://etherscan.io/token/${'$'}{token.contractAddress}"
+            vm.uiState.value.tokenInfo?.contractAddress shouldBe token.contractAddress
+            // The cube button in the header keeps pointing at the vault's address.
+            vm.uiState.value.explorerUrl shouldBe "https://etherscan.io/address/0xholder"
+        }
+
+    @Test
+    fun `a chain whose explorer has no token page falls back to the address page`() =
+        runTest(testDispatcher) {
+            val token = coin.copy(isNativeToken = false, contractAddress = "gaia-token")
+            coEvery { accountsRepository.loadAddress(any(), any()) } returns
+                flowOf(
+                    Address(
+                        chain = Chain.Bitcoin,
+                        address = "bc1qxyz",
+                        accounts =
+                            listOf(
+                                Account(
+                                    token = token,
+                                    tokenValue = null,
+                                    fiatValue = null,
+                                    price = null,
+                                )
+                            ),
+                    )
+                )
+            coEvery {
+                tokenPriceChartRepository.getChart(token, ChartRange.ONE_DAY, AppCurrency.USD)
+            } returns chart(sign = 1)
+            coEvery { tokenPriceChartRepository.getStats(token, AppCurrency.USD) } returns null
+            every { explorerLinkRepository.getAddressLink(any(), any()) } returns
+                "https://mempool.space/address/bc1qxyz"
+            every { explorerLinkRepository.getTokenLink(any(), any()) } returns null
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.uiState.value.tokenExplorerUrl shouldBe "https://mempool.space/address/bc1qxyz"
+        }
+
+    @Test
+    fun `a chain with no explorer at all drops the row rather than linking nowhere`() =
+        runTest(testDispatcher) {
+            coEvery {
+                tokenPriceChartRepository.getChart(coin, ChartRange.ONE_DAY, AppCurrency.USD)
+            } returns chart(sign = 1)
+            coEvery { tokenPriceChartRepository.getStats(coin, AppCurrency.USD) } returns null
+            every { explorerLinkRepository.getAddressLink(any(), any()) } returns ""
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.uiState.value.tokenInfo?.hasExplorerLink shouldBe false
+        }
+
+    @Test
+    fun `price extremes carry the band position and the all-time change percentages`() =
+        runTest(testDispatcher) {
+            coEvery {
+                tokenPriceChartRepository.getChart(coin, ChartRange.ONE_DAY, AppCurrency.USD)
+            } returns chart(sign = 1)
+            coEvery { tokenPriceChartRepository.getStats(coin, AppCurrency.USD) } returns
+                marketStats(
+                    currentPrice = BigDecimal("110"),
+                    low24h = BigDecimal("100"),
+                    high24h = BigDecimal("140"),
+                    athChangePercent = -62.1637,
+                    atlChangePercent = 23.164,
+                )
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            val extremes = vm.uiState.value.priceExtremes
+            // 110 sits a quarter of the way up a 100..140 band.
+            extremes?.bandPosition shouldBe 0.25f
+            extremes?.athChangePercent shouldBe "-62.16%"
+            extremes?.atlChangePercent shouldBe "+23.16%"
+            extremes?.hasBand() shouldBe true
+        }
+
+    @Test
+    fun `a degenerate 24h band leaves no marker to place`() =
+        runTest(testDispatcher) {
+            coEvery {
+                tokenPriceChartRepository.getChart(coin, ChartRange.ONE_DAY, AppCurrency.USD)
+            } returns chart(sign = 1)
+            coEvery { tokenPriceChartRepository.getStats(coin, AppCurrency.USD) } returns
+                marketStats(
+                    currentPrice = BigDecimal("100"),
+                    low24h = BigDecimal("100"),
+                    high24h = BigDecimal("100"),
+                )
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.uiState.value.priceExtremes?.bandPosition shouldBe null
+            vm.uiState.value.priceExtremes?.hasBand() shouldBe false
+        }
+
+    @Test
+    fun `market stats abbreviate large fiat figures and tag supply with the coin's ticker`() =
+        runTest(testDispatcher) {
+            coEvery {
+                tokenPriceChartRepository.getChart(coin, ChartRange.ONE_DAY, AppCurrency.USD)
+            } returns chart(sign = 1)
+            coEvery { tokenPriceChartRepository.getStats(coin, AppCurrency.USD) } returns
+                marketStats(
+                    marketCap = BigDecimal("2226290000000"),
+                    volume24h = BigDecimal("6960000"),
+                    circulatingSupply = BigDecimal("120680000"),
+                    // Below the abbreviation threshold, so this one keeps standard formatting —
+                    // which the mocked mapper stands in for.
+                    fullyDilutedValuation = BigDecimal("999999"),
+                )
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            val stats = vm.uiState.value.marketStats
+            stats?.marketCap shouldBe "$2.22T"
+            stats?.volume24h shouldBe "$6.96M"
+            stats?.circulatingSupply shouldBe "120.68M BTC"
+            stats?.fullyDilutedValuation shouldBe "$100.00"
+        }
+
+    @Test
+    fun `a supply CoinGecko does not track is dropped rather than shown as zero`() =
+        runTest(testDispatcher) {
+            coEvery {
+                tokenPriceChartRepository.getChart(coin, ChartRange.ONE_DAY, AppCurrency.USD)
+            } returns chart(sign = 1)
+            coEvery { tokenPriceChartRepository.getStats(coin, AppCurrency.USD) } returns
+                marketStats(maxSupply = BigDecimal.ZERO)
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.uiState.value.marketStats?.maxSupply shouldBe null
+        }
+
+    private fun marketStats(
+        currentPrice: BigDecimal? = null,
+        marketCap: BigDecimal? = null,
+        fullyDilutedValuation: BigDecimal? = null,
+        volume24h: BigDecimal? = null,
+        circulatingSupply: BigDecimal? = null,
+        maxSupply: BigDecimal? = null,
+        low24h: BigDecimal? = null,
+        high24h: BigDecimal? = null,
+        athChangePercent: Double? = null,
+        atlChangePercent: Double? = null,
+    ) =
+        CoinMarketStats(
+            currentPrice = currentPrice,
+            marketCap = marketCap,
+            marketCapRank = null,
+            fullyDilutedValuation = fullyDilutedValuation,
+            volume24h = volume24h,
+            circulatingSupply = circulatingSupply,
+            maxSupply = maxSupply,
+            low24h = low24h,
+            high24h = high24h,
+            athPrice = if (athChangePercent != null) BigDecimal("4956") else null,
+            athDate = null,
+            athChangePercent = athChangePercent,
+            atlPrice = if (atlChangePercent != null) BigDecimal("0.43") else null,
+            atlDate = null,
+            atlChangePercent = atlChangePercent,
+        )
 }

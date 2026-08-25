@@ -59,6 +59,7 @@ import java.math.BigInteger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
@@ -788,6 +789,154 @@ internal class VaultAccountsViewModelTest {
                 "$10"
             vm.uiState.value.totalFiatValue shouldBe "$10"
         }
+
+    /**
+     * The DeFi list has to be ordered by the fiat each row paints. Dedo's report — Circle Yield
+     * $0.00, TerraClassic $4.24, Tron $1.75, THORChain $0.61, Solana $11.03, Maya $0.00, Terra
+     * $0.00 — left the largest row fifth, behind a provider row showing nothing, because the sort
+     * key was the strict all-or-nothing fold: one account still resolving scored the whole row
+     * null, and null is the top of the list.
+     */
+    @Test
+    fun `DeFi rows are ordered by the fiat each row shows`() =
+        runTest(testDispatcher) {
+            // The provider row paints $0.00 off its resolved native account while a second one is
+            // still pending — the shape that lifted it above every funded chain.
+            val circle =
+                buildMultiTokenAddress(
+                    Chain.Ethereum,
+                    "0xeth",
+                    nativeFiat = BigDecimal.ZERO,
+                    tokenFiat = null,
+                )
+            stubDeFi(
+                listOf(
+                    circle,
+                    buildTestAddress(Chain.TerraClassic, "lunc", BigDecimal("4.24")),
+                    buildTestAddress(Chain.Tron, "tron", BigDecimal("1.75")),
+                    buildTestAddress(Chain.ThorChain, "thor", BigDecimal("0.61")),
+                    buildTestAddress(Chain.Solana, "sol", BigDecimal("11.03")),
+                    buildTestAddress(Chain.MayaChain, "maya", BigDecimal.ZERO),
+                    buildTestAddress(Chain.Terra, "luna", BigDecimal.ZERO),
+                )
+            )
+            stubBalanceMappers()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.deFiChains() shouldBe
+                listOf(
+                    Chain.Solana,
+                    Chain.TerraClassic,
+                    Chain.Tron,
+                    Chain.ThorChain,
+                    // The zeros tie on value and fall back to the chain name.
+                    Chain.Ethereum,
+                    Chain.MayaChain,
+                    Chain.Terra,
+                )
+        }
+
+    /**
+     * A row with nothing resolved yet renders no figure at all, so it belongs under the rows that
+     * do — the strict fold scored it null and put it first.
+     */
+    @Test
+    fun `a DeFi row with nothing resolved yet sits below the funded ones`() =
+        runTest(testDispatcher) {
+            stubDeFi(
+                listOf(
+                    buildTestAddress(Chain.Tron, "tron", fiat = null),
+                    buildTestAddress(Chain.Solana, "sol", BigDecimal("5")),
+                )
+            )
+            stubBalanceMappers()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.deFiChains() shouldBe listOf(Chain.Solana, Chain.Tron)
+        }
+
+    /**
+     * Rows restored from the last-known snapshot have to be ordered by what they end up showing.
+     * Sorting the incoming list instead ranked both chains on an emission that carried no fiat at
+     * all, which collapsed them onto the chain-name tie-break and dropped the $20 row under the $5
+     * one.
+     */
+    @Test
+    fun `DeFi rows restored from the cache are ordered by the value they show`() =
+        runTest(testDispatcher) {
+            val deFiAddresses = MutableSharedFlow<List<Address>>()
+            stubDeFi(emptyList(), chains = setOf(Chain.Terra, Chain.Solana))
+            coEvery { accountsRepository.loadDeFiAddresses("vault-1", any()) } returns deFiAddresses
+            stubBalanceMappers()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            deFiAddresses.emit(
+                listOf(
+                    buildTestAddress(Chain.Solana, "sol", BigDecimal("5")),
+                    buildTestAddress(Chain.Terra, "luna", BigDecimal("20")),
+                )
+            )
+            advanceUntilIdle()
+
+            vm.deFiChains() shouldBe listOf(Chain.Terra, Chain.Solana)
+
+            // Both chains come back mid-refetch with no fiat; the merge restores $20 and $5, and
+            // the order has to follow those restored figures rather than the empty emission.
+            deFiAddresses.emit(
+                listOf(
+                    buildTestAddress(Chain.Solana, "sol", fiat = null),
+                    buildTestAddress(Chain.Terra, "luna", fiat = null),
+                )
+            )
+            advanceUntilIdle()
+
+            vm.deFiChains() shouldBe listOf(Chain.Terra, Chain.Solana)
+            vm.uiState.value.defiAccounts.first().fiatAmount shouldBe "$20"
+        }
+
+    /**
+     * The DeFi ordering is a DeFi-only change. This pins the wallet list to the order it has today
+     * — its own strict fold, pending chains first — so the shared helper is not "fixed" out from
+     * under it.
+     */
+    @Test
+    fun `the wallet list order is left alone`() =
+        runTest(testDispatcher) {
+            val eth = buildTestAddress(Chain.Ethereum, "0xeth", BigDecimal("10"))
+            val solPending = buildTestAddress(Chain.Solana, "sol", fiat = null)
+
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { accountsRepository.loadAddressBalances("vault-1") } returns
+                flowOf(AddressBalancesUpdate(listOf(eth, solPending), isComplete = true))
+            stubBalanceMappers()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.uiState.value.accounts.map { it.model.chain } shouldBe
+                listOf(Chain.Solana, Chain.Ethereum)
+        }
+
+    private fun VaultAccountsViewModel.deFiChains(): List<Chain> =
+        uiState.value.defiAccounts.map { it.model.chain }
+
+    /** Serves [addresses] as the vault's DeFi list, with every chain in it switched on. */
+    private fun stubDeFi(addresses: List<Address>, chains: Set<Chain>? = null) {
+        every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+        coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+        coEvery { accountsRepository.loadDeFiAddresses("vault-1", any()) } returns flowOf(addresses)
+        every { defaultDeFiChainsRepository.getDefaultChains("vault-1") } returns
+            flowOf(chains ?: addresses.mapTo(mutableSetOf()) { it.chain })
+        // The Ethereum row is only surfaced for vaults that already opened a Circle account.
+        coEvery { hasCircleAccount("vault-1") } returns true
+    }
 
     private fun VaultAccountsViewModel.solanaRow(): AccountUiModel =
         uiState.value.accounts.first { it.model.chain == Chain.Solana }

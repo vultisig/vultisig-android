@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -39,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
@@ -56,6 +58,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.screens.home.VaultAccountsScreen
+import com.vultisig.wallet.ui.screens.passcode.LocalIsGateClosed
 import com.vultisig.wallet.ui.screens.passcode.PasscodeGuard
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.SnackbarFlow
@@ -80,7 +83,11 @@ internal fun MainActivityContent(
     // tree at the same moment. Swallowing pointer input is only half a lock: everything behind the
     // gate stays composed, and TalkBack would happily walk it, read it out and activate it.
     val passcodeGuardModel: PasscodeGuardViewModel = hiltViewModel()
-    val isGateClosed = passcodeGuardModel.state.collectAsStateWithLifecycle().value.isGateClosed
+    val guardState by passcodeGuardModel.state.collectAsStateWithLifecycle()
+    val isGateClosed = guardState.isGateClosed
+    val isLocked = guardState.isLocked
+
+    PopDialogDestinationsWhileLocked(navController, isLocked)
 
     val context = LocalContext.current
     val snackbarState = mainViewModel.snackbarState
@@ -88,6 +95,12 @@ internal fun MainActivityContent(
         snackbarFlow.collectMessage { (message, type) ->
             val resolved = message.asString(context)
             if (resolved.isBlank()) return@collectMessage
+            // Held rather than shown: the bar is a window of its own, so one raised while the gate
+            // is closed would be added after the lock's and drawn over it. Held rather than
+            // dropped, too — the bar's progress runs off its own scope whether or not anything is
+            // composed, so a message shown behind the lock would tick out unseen. The channel
+            // behind collectMessage buffers, so waiting here keeps it until there is a reader.
+            passcodeGuardModel.state.first { !it.isGateClosed }
             snackbarState.show(resolved, type)
         }
     }
@@ -126,26 +139,23 @@ internal fun MainActivityContent(
                 onNavigationReady()
             }
 
-            Box(
-                modifier =
-                    Modifier.fillMaxSize()
-                        .then(if (isGateClosed) Modifier.clearAndSetSemantics {} else Modifier)
-            ) {
-                SetupNavGraph(navController = navController, startDestination = startDestination)
+            // Neither the cover nor the semantics reset below reaches a window of its own, so
+            // content that opens one holds itself back on this instead. See OnceUnlocked.
+            CompositionLocalProvider(LocalIsGateClosed provides isGateClosed) {
+                Box(
+                    modifier =
+                        Modifier.fillMaxSize()
+                            .then(if (isGateClosed) Modifier.clearAndSetSemantics {} else Modifier)
+                ) {
+                    SetupNavGraph(
+                        navController = navController,
+                        startDestination = startDestination,
+                    )
+                }
             }
         },
         overlayContent = {
-            PasscodeGuard(
-                model = passcodeGuardModel,
-                // Dialog destinations render in their own window, above this overlay. Popping them
-                // as the gate closes is what stops a bottom sheet — a receive address, a QR — from
-                // sitting on top of the lock screen and still accepting taps.
-                onLocked = {
-                    while (navController.currentBackStackEntry.isDialog()) {
-                        if (!navController.popBackStack()) break
-                    }
-                },
-            )
+            PasscodeGuard(model = passcodeGuardModel)
 
             VsSnackBar(
                 modifier = Modifier.align(Alignment.BottomCenter),
@@ -306,6 +316,26 @@ private fun MainActivityContentPreview() {
             )
         },
     )
+}
+
+/**
+ * Keeps `dialog<>` destinations off the back stack for as long as [isLocked].
+ *
+ * They draw in a window of their own, and the passcode lock's window only covers the windows that
+ * were open before it, so one routed after the app locks opens on top of the lock — still visible,
+ * still taking input. Driven by the state rather than by the moment it changes, because routing
+ * carries on behind a closed gate.
+ */
+@Composable
+internal fun PopDialogDestinationsWhileLocked(navController: NavController, isLocked: Boolean) {
+    LaunchedEffect(navController, isLocked) {
+        if (!isLocked) return@LaunchedEffect
+        navController.currentBackStackEntryFlow.collect {
+            while (navController.currentBackStackEntry.isDialog()) {
+                if (!navController.popBackStack()) break
+            }
+        }
+    }
 }
 
 /**

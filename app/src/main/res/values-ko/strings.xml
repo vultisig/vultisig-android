@@ -55,17 +55,47 @@
     <string name="deposit_option_unstake">언스테이킹</string>
     <string name="deposit_option_custom">사용자 정의</string>
     <string name="deposit_option_ibc_transfer">IBC 전송</string>
-    <string name="deposit_option_switch">전환</string>
-    <string name="deposit_option_merge">병합</string>
-    <string name="deposit_option_withdraw_ruji">RUJI 출금</string>
     <string name="withdraw_amount">%s 출금</string>
     <string name="defi_tab_deposited">예치됨</string>
     <string name="defi_tab_staked">스테이킹됨</string>
     <string name="defi_tab_bonded">본딩됨</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_tab_earn">수익</string>
     <string name="defi_bond">본딩</string>
     <string name="defi_stake">스테이킹</string>
     <string name="liquidity_pool">유동성 풀</string>
+    <!-- Kamino Earn -->
+    <string name="kamino_earn_title">Kamino Earn</string>
+    <string name="kamino_earn_curated_by">%1$s 큐레이션</string>
+    <string name="kamino_earn_deposited">예치됨: %1$s</string>
+    <string name="kamino_earn_apy">APY</string>
+    <string name="kamino_earn_earned">수익: %1$s</string>
+    <string name="kamino_earn_lost">손실: %1$s</string>
+    <string name="kamino_earn_protocol">Kamino</string>
+    <string name="kamino_earn_load_failed">지금은 이 볼트를 새로 고칠 수 없습니다</string>
+    <string name="kamino_earn_risk_conservative">보수적</string>
+    <string name="kamino_earn_risk_private_credit">사모 신용</string>
+    <string name="kamino_earn_deposit">예치</string>
+    <string name="kamino_earn_empty_title">활성화된 Earn 포지션 없음</string>
+    <string name="kamino_earn_empty_description">‘포지션 관리’에서 Kamino 볼트를 활성화하면 Solana 자산으로 수익을 얻을 수 있습니다.</string>
+    <string name="kamino_deposit_title">예치</string>
+    <string name="kamino_withdraw_title">출금</string>
+    <string name="kamino_amount_exceeds_available">금액이 사용 가능한 잔액을 초과합니다</string>
+    <string name="kamino_amount_below_minimum">최소 %1$s %2$s</string>
+    <string name="kamino_error_unknown_vault">앱이 지원하지 않는 볼트입니다</string>
+    <string name="kamino_error_load_failed">지금은 이 볼트를 불러올 수 없습니다</string>
+    <string name="kamino_refusal_below_smallest_unit">금액이 이 자산의 최소 단위보다 작습니다</string>
+    <string name="kamino_refusal_below_minimum">금액이 이 볼트의 최소 금액보다 적습니다</string>
+    <string name="kamino_refusal_rate_unavailable">이 볼트의 지분 비율을 지금은 가져올 수 없습니다</string>
+    <string name="kamino_refusal_larger_than_position">이 금액은 보유 포지션보다 큽니다</string>
+    <string name="verify_deposit_depositing">예치 중</string>
+    <string name="verify_deposit_withdrawing">출금 중</string>
+    <string name="kamino_verify_vault">볼트</string>
+    <string name="kamino_verify_withdraw_unverified">이 기기에서는 이 금액을 확인할 수 없습니다. 이 트랜잭션은 볼트 지분 %1$s개를 출금합니다.</string>
+    <string name="kamino_error_build_failed">이 거래를 준비할 수 없습니다</string>
+    <string name="kamino_withdraw_nothing">이 볼트에서 출금할 것이 없습니다</string>
+    <string name="kamino_withdraw_unreadable">이 포지션을 읽을 수 없어 출금을 준비할 수 없습니다</string>
+    <string name="kamino_withdraw_delayed">볼트의 즉시 유동성 %1$s %2$s을(를) 초과합니다. 이 출금은 지연될 수 있습니다.</string>
     <!-- Tron DeFi -->
     <string name="tron_defi_freeze">동결</string>
     <string name="tron_defi_unfreeze">동결 해제</string>
@@ -73,11 +103,13 @@
     <string name="tron_defi_frozen">동결됨</string>
     <string name="tron_defi_pending_withdrawals">대기 중인 출금</string>
     <string name="tron_defi_ready_to_claim">청구 가능</string>
+    <string name="tron_defi_claim_button">%1$s 청구</string>
     <string name="tron_defi_countdown_days">%1$d일 %2$d시간</string>
     <string name="tron_defi_countdown_hours">%1$d시간 %2$d분</string>
     <string name="tron_defi_error_trx_not_in_vault">볼트에서 TRX 코인을 찾을 수 없습니다</string>
     <string name="tron_freeze_screen_title">TRON 동결</string>
     <string name="tron_unfreeze_screen_title">TRON 동결 해제</string>
+    <string name="tron_claim_screen_title">TRON 청구</string>
     <string name="tron_frozen_balances_error">동결된 잔액을 불러올 수 없습니다. 당겨서 다시 시도하세요.</string>
     <string name="tron_resource_type">리소스 유형</string>
     <string name="tron_resource_bandwidth">대역폭</string>
@@ -88,6 +120,8 @@
     <string name="app_name">Vultisig</string>
     <string name="token_logo">토큰 로고</string>
     <string name="tokens">토큰</string>
+    <string name="edit_chains">체인</string>
+    <string name="edit_tokens">토큰</string>
     <string name="keysign">서명</string>
     <string name="signing_error_please_try_again_s">서명 오류. 다시 시도해 주세요. %s</string>
     <string name="try_again">다시 시도</string>
@@ -162,7 +196,6 @@
     <string name="send_to_address_hint">주소를 입력하세요</string>
     <string name="send_amount">금액</string>
     <string name="send_amount_currency_hint">금액 입력</string>
-    <string name="send_shares_currency_hint">수량 입력</string>
     <string name="send_continue_button">계속</string>
     <string name="chain_account_view_swap">스왑</string>
     <string name="vault_settings_error_backup_file">오류가 발생했습니다</string>
@@ -179,7 +212,6 @@
     <string name="send_error_no_amount">금액은 양수여야 합니다</string>
     <string name="send_error_too_many_decimals">금액은 소수점 이하 최대 %1$d자리까지 입력할 수 있습니다</string>
     <string name="send_error_invalid_operator_fee">운영자 수수료는 0에서 10000 베이시스 포인트 사이의 유효한 숫자여야 합니다</string>
-    <string name="send_error_max_shares">금액이 잔액을 초과할 수 없습니다</string>
     <string name="send_error_insufficient_balance">잔액 부족</string>
     <string name="send_error_msca_not_deployed">MSCA 계정이 아직 배포되지 않았습니다. 다시 시도해 주세요</string>
     <string name="send_error_insufficient_native_balance_with_fees">%1$s 잔액 부족</string>
@@ -222,6 +254,7 @@
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA 키 복사됨</string>
     <string name="welcome_screen_skip">건너뛰기</string>
     <string name="keysign_screen_preparing_vault">볼트 준비 중…</string>
+    <string name="keysign_malicious_party_detected">이 keysign 세션의 기기 \"%1$s\"가 악의적으로 동작한 것이 감지되었습니다. 다시는 서명에 사용하지 마세요.</string>
     <string name="vault_settings_delete_vault_caution1">볼트가 영구적으로 삭제된다는 것을 알고 있습니다</string>
     <string name="vault_settings_delete_vault_caution2">자금을 잃을 수 있다는 것을 알고 있습니다</string>
     <string name="vault_settings_delete_vault_caution3">나중에 복원할 수 있도록 볼트 백업을 완료했습니다</string>
@@ -260,6 +293,7 @@
     <string name="passcode_settings_title">패스코드 암호화</string>
     <string name="passcode_settings_encryption_title">패스코드 암호화</string>
     <string name="passcode_settings_encryption_subtitle">이 기기의 볼트 저장소를 암호화하고 앱을 잠급니다.</string>
+    <string name="passcode_settings_encryption_explanation">패스코드 암호화는 이 기기에만 적용됩니다. 언제든 볼트를 복원할 수 있도록 .vult 백업을 보관하세요.</string>
     <string name="passcode_settings_change">패스코드 변경</string>
     <string name="passcode_settings_auto_lock">자동 잠금</string>
     <string name="auto_lock_setting_title">자동 잠금</string>
@@ -282,10 +316,12 @@
     <string name="passcode_entry_mismatch">패스코드가 일치하지 않습니다. 다시 선택하세요.</string>
     <string name="passcode_operation_failed">실패했습니다. 패스코드는 변경되지 않았습니다.</string>
     <string name="passcode_not_digits">숫자만 입력하세요.</string>
-    <string name="passcode_key_unavailable_title">볼트를 사용할 수 없음</string>
-    <string name="passcode_key_unavailable_message">이 기기의 볼트 저장소를 보호하는 키가 사라져 키셰어를 더 이상 읽을 수 없습니다. 앱을 다시 설치하고 백업에서 볼트를 복원하세요.</string>
-    <string name="passcode_store_unavailable_title">볼트를 일시적으로 사용할 수 없음</string>
-    <string name="passcode_store_unavailable_message">이번에는 이 기기의 보안 저장소를 열지 못해 볼트가 잠긴 상태로 유지됩니다. 앱을 다시 시작한 후 다시 시도하세요. 볼트는 이 기기에 그대로 있으므로 다시 설치할 필요는 없습니다.</string>
+    <string name="passcode_key_unavailable_title">이 기기에 볼트를 여는 키가 없습니다</string>
+    <string name="passcode_key_unavailable_message">볼트는 이 기기에 그대로 있습니다. 다시 열려면 .vult 백업에서 복원하세요.</string>
+    <string name="passcode_key_unavailable_restore">백업에서 복원</string>
+    <string name="passcode_key_unavailable_restored">볼트를 복원했습니다. 이 기기의 다른 볼트에도 백업이 필요합니다.</string>
+    <string name="passcode_store_unavailable_title">지금은 볼트가 잠겨 있습니다</string>
+    <string name="passcode_store_unavailable_message">이번에는 이 기기의 보안 저장소가 열리지 않았습니다. 모두 그대로 있으니 다시 설치하지 말고 앱을 다시 시작하세요.</string>
     <string name="passcode_input_field_content_description">%2$d자리 중 %1$d자리 입력됨</string>
     <string name="swap_form_from_title">보내는 토큰</string>
     <string name="swap_form_estimated_fees_title">스왑 수수료</string>
@@ -338,7 +374,6 @@
     <string name="custom_token_token_not_found">토큰을 찾을 수 없습니다</string>
     <string name="custom_token_add_token">%1$s 토큰 추가</string>
     <string name="deposit_form_amount_title">금액 (잔액: %1$s)</string>
-    <string name="deposit_form_shares_title">수량 (잔액: %1$s)</string>
     <string name="share_vault_qr_share">공유</string>
     <string name="deposit_form_node_address_title">노드 주소</string>
     <string name="bond_not_whitelisted_error">이 노드의 화이트리스트에 등록되지 않았습니다</string>
@@ -371,6 +406,7 @@
     <string name="settings_screen_privacy_policy">개인정보 처리방침</string>
     <string name="settings_screen_tos">서비스 이용약관</string>
     <string name="import_file_not_supported">지원되지 않는 파일 형식입니다. 다시 시도해 주세요</string>
+    <string name="import_file_zip_incomplete">이 파일의 일부 볼트 조각을 읽을 수 없습니다</string>
 
     <string name="failed_to_resolve_address">주소 확인 실패</string>
     <string name="vault_settings_success_backup_message">파일이 성공적으로 저장되었습니다</string>
@@ -743,6 +779,10 @@
     <string name="swap_advanced_slippage_title">슬리피지 허용 범위</string>
     <string name="swap_advanced_slippage_page_title">슬리피지</string>
     <string name="swap_advanced_gas_limit_title">가스 한도</string>
+    <string name="swap_advanced_select_route_title">경로 선택</string>
+    <string name="swap_select_route_helper">출력 금액 순으로 정렬된 경로입니다. 경로를 선택하면 자동 선택이 무시됩니다.</string>
+    <string name="swap_route_fee_prefix">수수료</string>
+    <string name="swap_route_eta">~%1$ds</string>
     <string name="swap_advanced_external_recipient_title">외부 수신자 사용</string>
     <string name="swap_advanced_locked_title">고급 스왑 설정</string>
     <string name="swap_advanced_locked_subtitle">모든 스왑에 대해 슬리피지, 가스, 경로, 수신자를 세밀하게 조정하세요.</string>
@@ -772,7 +812,6 @@
     <string name="backup_password_request_with_password_action">비밀번호 사용</string>
     <string name="backup_password_topbar_title">비밀번호</string>
     <string name="function_transfer_ibc_dst_address_input_title">수신 주소</string>
-    <string name="function_switch_thorchain_address">THORChain 주소</string>
     <string name="migration_onboarding_step_1_text_start">이 볼트를</string>
     <string name="migration_onboarding_step_1_text_emphasized">세계에서 가장 빠른 MPC 프로토콜</string>
     <string name="migration_onboarding_step_1_text_end">로 업그레이드하고 그 어느 때보다 빠르게 서명하세요</string>
@@ -786,7 +825,6 @@
     <string name="upgrade_banner_title">지금 볼트를 업그레이드하세요</string>
     <string name="deposit_form_custom_memo_optional_title">사용자 정의 메모 (선택사항)</string>
     <string name="transfer_ibc_function_memo_title">메모</string>
-    <string name="merge_account_doesnt_exist">이 주소에서 선택한 토큰을 찾을 수 없습니다</string>
     <string name="keygen_email_error">이메일이 올바르지 않습니다. 확인해 주세요</string>
     <string name="verify_transaction_function_signature_title">함수 서명</string>
     <string name="verify_transaction_function_inputs_title">함수 인수</string>
@@ -1204,6 +1242,15 @@
     <string name="bond_node_state_active">활성</string>
     <string name="bond_node_state_disabled">비활성</string>
     <string name="bond_node_state_unknown">알 수 없음</string>
+    <string name="lp_pending_title">%1$s 입금 대기 중</string>
+    <string name="lp_pending_subtitle">THORChain은 반대편 입금이 도착할 때까지 이 입금을 보관하며, 도착하지 않으면 환불합니다.</string>
+    <string name="lp_pending_deposited">입금됨</string>
+    <string name="lp_pending_from">보낼 주소</string>
+    <string name="lp_pending_refunds_in">환불까지</string>
+    <string name="lp_pending_duration_days_hours_format">%1$d일 %2$d시간</string>
+    <string name="lp_pending_duration_hours_minutes_format">%1$d시간 %2$d분</string>
+    <string name="lp_pending_refund_time_unknown">알 수 없음</string>
+    <string name="lp_pending_complete_deposit">입금 완료하기</string>
     <string name="lp_position">포지션</string>
     <string name="add">추가</string>
     <string name="remove">제거</string>
@@ -1374,7 +1421,7 @@
     <string name="transaction_history_detail_fee">수수료</string>
     <string name="transaction_history_detail_network">네트워크</string>
     <string name="transaction_history_detail_provider">제공자</string>
-    <string name="transaction_history_view_on_explorer">Explorer에서 보기</string>
+    <string name="view_on_explorer">Explorer에서 보기</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">시드 구문 입력</string>

@@ -48,6 +48,9 @@ import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBlockedReason
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoCurator
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRiskTier
+import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -110,6 +113,9 @@ import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyValidatorRow
+import com.vultisig.wallet.ui.models.defi.LpTabUiModel
+import com.vultisig.wallet.ui.models.defi.PendingLpDepositUiModel
+import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
@@ -145,6 +151,9 @@ import com.vultisig.wallet.ui.models.send.GasSettingsUiModel
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
+import com.vultisig.wallet.ui.models.solanastaking.KaminoAmountUiState
+import com.vultisig.wallet.ui.models.solanastaking.SolanaStakePositionRow
+import com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState
 import com.vultisig.wallet.ui.models.swap.LimitExpiryOption
 import com.vultisig.wallet.ui.models.swap.LimitFormSection
 import com.vultisig.wallet.ui.models.swap.LimitOrderUiModel
@@ -201,6 +210,7 @@ import com.vultisig.wallet.ui.screens.swap.preview.AdvancedExternalRecipientPrev
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedGasLimitPreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedMenuConfiguredPreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedMenuPreview
+import com.vultisig.wallet.ui.screens.swap.preview.AdvancedSelectRoutePreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedSlippagePreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapFormProviderPreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapFormQuoteLoadingPreview
@@ -214,8 +224,15 @@ import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
 import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
+import com.vultisig.wallet.ui.screens.v2.defi.maya.RemoveLpScreenContent
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.screens.v2.defi.solana.KaminoAmountContent
+import com.vultisig.wallet.ui.screens.v2.defi.solana.KaminoEarnRow
+import com.vultisig.wallet.ui.screens.v2.defi.solana.KaminoEarnUiModel
+import com.vultisig.wallet.ui.screens.v2.defi.solana.SolanaStakingPositionsContent
+import com.vultisig.wallet.ui.screens.v2.defi.thorchain.ThorchainDefiPositionScreenContent
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
@@ -231,6 +248,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.math.sin
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.delay
@@ -286,6 +304,49 @@ class PreviewActivity : ComponentActivity() {
                                 ),
                             textFieldState = TextFieldState(),
                         )
+                    "remove_thor_lp" ->
+                        RemoveLpScreenContent(
+                            state =
+                                DepositFormUiModel(
+                                    removeLpPercent = 0.92f,
+                                    removeLpCacaoDisplay = "1.84",
+                                    removeLpTokenSymbol = "RUNE",
+                                    removeLpAssetDisplay = "0.07149251",
+                                    removeLpAssetSymbol = "VVV",
+                                    availableLpUnits = "1000",
+                                    removeLpUnitsDivisor = BigInteger("1000"),
+                                    balance = UiText.DynamicString("2.083 RUNE"),
+                                )
+                        )
+                    "thor_lp_pending" ->
+                        ThorchainDefiPositionScreenContent(
+                            state =
+                                ThorchainDefiPositionsUiModel(
+                                    totalAmountPrice = "$1,204.55",
+                                    isTotalAmountLoading = false,
+                                    selectedTab = R.string.defi_tab_lp,
+                                    lpDialogLoaded = true,
+                                    selectedPositions = emptyList(),
+                                    lp =
+                                        LpTabUiModel(
+                                            pendingDeposits =
+                                                listOf(
+                                                    PendingLpDepositUiModel(
+                                                        poolId = "BASE.VVV",
+                                                        icon = R.drawable.base,
+                                                        chainLogo = R.drawable.base,
+                                                        awaitedTicker = "VVV",
+                                                        depositedAmount = "2 RUNE",
+                                                        pairedAddress = "0x14F6…89B6",
+                                                        refundsIn = UiText.DynamicString("21h 14m"),
+                                                    )
+                                                )
+                                        ),
+                                ),
+                            onClickBondToNode = {},
+                            onClickUnbond = {},
+                            onClickBond = {},
+                        )
                     "limit_swap_form" -> LimitSwapFormPreview()
                     "limit_swap_form_assets" ->
                         LimitSwapFormPreview(expandedSection = LimitFormSection.Asset)
@@ -297,6 +358,12 @@ class PreviewActivity : ComponentActivity() {
                     "join_limit_order_confirm_after" ->
                         JoinLimitOrderConfirmPreview(recognizesLimitOrder = true)
                     "limit_order_done" -> LimitOrderDonePreview()
+                    "solana_defi_earn" -> SolanaDeFiPreview(tab = DeFiTab.EARN)
+                    "solana_defi_earn_empty" ->
+                        SolanaDeFiPreview(tab = DeFiTab.EARN, hasEnabledVaults = false)
+                    "solana_defi_staked" -> SolanaDeFiPreview(tab = DeFiTab.STAKED)
+                    "kamino_deposit_form" -> KaminoAmountPreview(isWithdraw = false)
+                    "kamino_withdraw_form" -> KaminoAmountPreview(isWithdraw = true)
                     "swap_confirm" -> SwapConfirmPreview()
                     "swap_confirm_chain" -> SwapChainIndicatorPreview()
                     "swap_confirm_disabled" -> SwapConfirmPreview(allConsents = false)
@@ -352,6 +419,7 @@ class PreviewActivity : ComponentActivity() {
                     "swap_advanced_menu_configured" -> AdvancedMenuConfiguredPreview()
                     "swap_advanced_slippage" -> AdvancedSlippagePreview()
                     "swap_advanced_gas_limit" -> AdvancedGasLimitPreview()
+                    "swap_advanced_select_route" -> AdvancedSelectRoutePreview()
                     "swap_advanced_external_recipient" -> AdvancedExternalRecipientPreview()
                     "select_asset_secured_before" -> SelectAssetSecuredPreview(showSecured = false)
                     "select_asset_secured_after" -> SelectAssetSecuredPreview(showSecured = true)
@@ -1271,7 +1339,7 @@ private fun SolanaDisplayPreview() {
                 .fillMaxSize()
                 .background(
                     color = Theme.v2.colors.variables.bordersLight,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -1321,10 +1389,7 @@ private fun SolanaInstructionMock(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .background(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Theme.v2.colors.backgrounds.dark,
-                )
+                .background(shape = Theme.v2.radius.sm, color = Theme.v2.colors.backgrounds.dark)
                 .padding(6.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -1674,7 +1739,7 @@ private fun DeFiAccountListPreview() {
             modifier =
                 Modifier.background(
                     color = Theme.v2.colors.backgrounds.secondary,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
         ) {
             AccountList(
@@ -3199,6 +3264,7 @@ private fun SolanaStakingPositionsLoadedPreview() {
             com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState(
                 isLoading = false,
                 totalStakedFiatDisplay = "$78.04",
+                chainTotalFiatDisplay = "$78.04",
                 totalStakedSolDisplay = "1 SOL",
                 positions =
                     listOf(
@@ -3288,6 +3354,7 @@ private fun SolanaStakingPositionsEmptyPreview() {
             com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState(
                 isLoading = false,
                 totalStakedFiatDisplay = "$0.00",
+                chainTotalFiatDisplay = "$0.00",
                 totalStakedSolDisplay = "0 SOL",
                 positions = emptyList(),
                 isBalanceVisible = true,
@@ -3969,5 +4036,121 @@ private fun WithdrawUsdcCirclePreview() {
         operatorFeeFieldState = rememberTextFieldState(),
         providerFieldState = rememberTextFieldState(),
         slippageFieldState = rememberTextFieldState(),
+    )
+}
+
+private val KAMINO_PREVIEW_ROWS =
+    listOf(
+        KaminoEarnRow(
+            vaultAddress = "HDsayqAsDWy3QvANGqh2yNraqcD8Fnjgh73Mhb3WRS5E",
+            name = "Steakhouse USDC",
+            curator = KaminoCurator.STEAKHOUSE_FINANCIAL,
+            riskTier = KaminoRiskTier.CONSERVATIVE,
+            tokenLogo = "usdc",
+            tokenTicker = "USDC",
+            depositedDisplay = "1054.427822 USDC",
+            depositedFiat = "$1,054.22",
+            apyDisplay = "4.00%",
+            pnlDisplay = "54.427822 USDC",
+            pnlFiat = "$54.42",
+            pnlDirection = KaminoEarnRow.PnlDirection.UP,
+            fiatValue = java.math.BigDecimal("1054.22"),
+            hasPosition = true,
+        ),
+        KaminoEarnRow(
+            vaultAddress = "A1so1bPD3W1TfeFwboDh8yfAAVaVtcdAYBYCjhg2mJQ",
+            name = "Allez SOL",
+            curator = KaminoCurator.ALLEZ_LABS,
+            riskTier = KaminoRiskTier.CONSERVATIVE,
+            tokenLogo = "sol",
+            tokenTicker = "SOL",
+            depositedDisplay = "0 SOL",
+            depositedFiat = "$0.00",
+            apyDisplay = "5.14%",
+            pnlDisplay = "0 SOL",
+            pnlFiat = "$0.00",
+            pnlDirection = KaminoEarnRow.PnlDirection.FLAT,
+            fiatValue = java.math.BigDecimal.ZERO,
+            // Read, and holds nothing: the card drops its figure rows and offers only Deposit.
+            hasPosition = false,
+        ),
+        KaminoEarnRow(
+            vaultAddress = "DWSXb18xZApz29vnQpgR2m6MynCT7PznaXt7Ut7M7KaP",
+            name = "RWA USDC",
+            curator = KaminoCurator.ROCKAWAYX,
+            riskTier = KaminoRiskTier.PRIVATE_CREDIT,
+            tokenLogo = "usdc",
+            tokenTicker = "USDC",
+            depositedDisplay = "0 USDC",
+            depositedFiat = "$0.00",
+            apyDisplay = "5.88%",
+            pnlDisplay = "0 USDC",
+            pnlFiat = "$0.00",
+            pnlDirection = KaminoEarnRow.PnlDirection.FLAT,
+            fiatValue = java.math.BigDecimal.ZERO,
+            hasPosition = false,
+        ),
+    )
+
+@Composable
+private fun SolanaDeFiPreview(tab: DeFiTab, hasEnabledVaults: Boolean = true) {
+    SolanaStakingPositionsContent(
+        state =
+            SolanaStakingPositionsUiState(
+                isLoading = false,
+                isBalanceVisible = true,
+                totalStakedFiatDisplay = "$1,240.50",
+                // Staking plus the Earn tab, the way the banner reports it on device.
+                chainTotalFiatDisplay = if (hasEnabledVaults) "$2,294.72" else "$1,240.50",
+                totalStakedSolDisplay = "12.5 SOL",
+                positions =
+                    listOf(
+                        SolanaStakePositionRow(
+                            stakePubkey = "CrqEZ1u6vJb1sV9V4XkKZ6mQx8mUqk5vN7oPzYtWbK1P",
+                            validatorName = "Helius",
+                            validatorAddressDisplay = "CrqE...bK1P",
+                            validatorLogoUrl = null,
+                            votePubkey = "CrqEZ1u6vJb1sV9V4XkKZ6mQx8mUqk5vN7oPzYtWbK1P",
+                            stakedDisplay = "12.5 SOL",
+                            stakedFiatDisplay = "$2,450.00",
+                            rentReserveDisplay = "0.00228 SOL",
+                            state = SolanaStakeState.Active,
+                            stateLabel = UiText.DynamicString("Active"),
+                            apyDisplay = "7.1%",
+                            canManage = true,
+                            canUnstake = true,
+                            canWithdraw = false,
+                            accountLamports = java.math.BigInteger("12500000000"),
+                        )
+                    ),
+            ),
+        kaminoState =
+            KaminoEarnUiModel(
+                isLoading = false,
+                hasEnabledVaults = hasEnabledVaults,
+                rows = if (hasEnabledVaults) KAMINO_PREVIEW_ROWS else emptyList(),
+                isBalanceVisible = true,
+            ),
+        selectedTab = tab,
+    )
+}
+
+@Composable
+private fun KaminoAmountPreview(isWithdraw: Boolean) {
+    KaminoAmountContent(
+        state =
+            KaminoAmountUiState(
+                isWithdraw = isWithdraw,
+                vaultName = "Steakhouse USDC",
+                ticker = "USDC",
+                available =
+                    if (isWithdraw) java.math.BigDecimal("1054.427822")
+                    else java.math.BigDecimal("2500"),
+                minimum = java.math.BigDecimal(if (isWithdraw) "0.001" else "0.1"),
+                isLoading = false,
+            ),
+        amountFieldState = rememberTextFieldState(if (isWithdraw) "500" else "1000"),
+        onPercentage = {},
+        onSubmit = {},
     )
 }

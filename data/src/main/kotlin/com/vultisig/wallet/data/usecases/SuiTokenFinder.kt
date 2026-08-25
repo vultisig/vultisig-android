@@ -28,12 +28,13 @@ import timber.log.Timber
  * adds every discovered Sui coin to the vault unprompted, behind a spam heuristic Android has no
  * equivalent of.
  *
- * Unlike iOS, which walks `suix_getOwnedObjects` and fetches each object individually, this reads
- * the already-paginated `suix_getAllCoins`: it returns coin objects only (no NFTs), so nothing is
- * lost to a first-page cutoff. Held types the curated [Coins] catalog already lists resolve to the
- * catalog entry, which carries the hand-verified ticker, logo and `priceProviderID`; the rest are
- * described by their on-chain `CoinMetadata`, and are dropped when that metadata is missing or
- * unusable rather than shown under a placeholder ticker at a guessed magnitude.
+ * Unlike iOS, which walks the owned-object list and fetches each object individually, this reads
+ * the paginated coin-object connection via [SuiApi.getAllCoins]: it is filtered to
+ * `0x2::coin::Coin` (no NFTs) and followed to the last page, so nothing is lost to a first-page
+ * cutoff. Held types the curated [Coins] catalog already lists resolve to the catalog entry, which
+ * carries the hand-verified ticker, logo and `priceProviderID`; the rest are described by their
+ * on-chain `CoinMetadata`, and are dropped when that metadata is missing or unusable rather than
+ * shown under a placeholder ticker at a guessed magnitude.
  *
  * Network failures are logged and yield an empty list, matching the sibling finders: a transient
  * blip must not wipe tokens the vault already holds, and the next refresh retries.

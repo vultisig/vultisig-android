@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -112,7 +111,7 @@ private fun AddressBookContent(
                                 .heightIn(min = 140.dp)
                                 .background(
                                     color = Theme.v2.colors.variables.backgroundsSurface1,
-                                    shape = RoundedCornerShape(size = 12.dp),
+                                    shape = Theme.v2.radius.md,
                                 )
                                 .padding(vertical = 20.dp, horizontal = 24.dp),
                             verticalArrangement = Arrangement.Center,
@@ -171,7 +170,7 @@ private fun AddressToggle(
                     Modifier.border(
                             width = 1.dp,
                             color = Theme.v2.colors.border.light,
-                            shape = RoundedCornerShape(size = 60.dp),
+                            shape = Theme.v2.radius.pill,
                         )
                         .padding(4.dp)
                         .fillMaxWidth(),
@@ -209,7 +208,7 @@ private fun RowScope.PickerItem(title: String, onClick: () -> Unit, isSelected: 
                     color =
                         if (isSelected) Theme.v2.colors.variables.buttonsCTAPrimary
                         else Theme.v2.colors.backgrounds.transparent,
-                    shape = RoundedCornerShape(size = 99.dp),
+                    shape = Theme.v2.radius.pill,
                 )
                 .clickable(onClick = onClick)
                 .padding(vertical = 12.dp, horizontal = 20.dp),
@@ -231,7 +230,7 @@ private fun EntryItem(
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(horizontal = 20.dp, vertical = 12.dp)
                 .fillMaxWidth(),

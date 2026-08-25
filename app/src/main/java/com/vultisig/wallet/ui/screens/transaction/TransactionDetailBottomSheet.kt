@@ -106,7 +106,7 @@ internal fun TransactionDetailBottomSheet(
                             .size(width = 36.dp, height = 4.dp)
                             .background(
                                 color = Theme.v2.colors.vibrant.primary,
-                                shape = RoundedCornerShape(100.dp),
+                                shape = Theme.v2.radius.pill,
                             )
                 )
 
@@ -134,16 +134,16 @@ internal fun TransactionDetailBottomSheet(
                                 .border(
                                     width = 1.dp,
                                     color = Color(0x08FFFFFF),
-                                    shape = RoundedCornerShape(size = 99.dp),
+                                    shape = Theme.v2.radius.pill,
                                 )
                                 .background(
                                     color = Theme.v2.colors.variables.bordersLight,
-                                    shape = RoundedCornerShape(size = 99.dp),
+                                    shape = Theme.v2.radius.pill,
                                 )
                                 .padding(start = 32.dp, top = 16.dp, end = 32.dp, bottom = 16.dp),
                     ) {
                         Text(
-                            text = stringResource(R.string.transaction_history_view_on_explorer),
+                            text = stringResource(R.string.view_on_explorer),
                             style = Theme.brockmann.button.medium.medium,
                             color = Theme.v2.colors.variables.textPrimary,
                         )
@@ -311,10 +311,10 @@ private fun DetailInfoRows(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(12.dp))
+                .border(1.dp, Theme.v2.colors.border.light, Theme.v2.radius.md)
                 .background(
                     color = Theme.v2.colors.variables.backgroundsSurface1,
-                    shape = RoundedCornerShape(size = 12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(horizontal = 4.dp)
     ) {
@@ -347,7 +347,7 @@ private fun DetailInfoRows(
                     modifier =
                         Modifier.background(
                                 color = Theme.v2.colors.variables.backgroundsSurface12,
-                                shape = RoundedCornerShape(size = 8.dp),
+                                shape = Theme.v2.radius.sm,
                             )
                             .padding(vertical = 3.dp, horizontal = 8.dp)
                 ) {
@@ -412,11 +412,11 @@ internal fun RefundReasonBanner(reason: String) {
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.alerts.warning.copy(alpha = 0.4f),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .background(
                     color = Theme.v2.colors.alerts.warning.copy(alpha = 0.10f),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = Theme.v2.radius.md,
                 )
                 .padding(horizontal = 16.dp, vertical = 12.dp),
     )
@@ -447,7 +447,7 @@ private fun DetailValuePill(text: String, modifier: Modifier = Modifier, logo: I
             modifier
                 .background(
                     color = Theme.v2.colors.backgrounds.tertiary_2,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = Theme.v2.radius.sm,
                 )
                 .padding(horizontal = 8.dp, vertical = 3.dp),
     ) {

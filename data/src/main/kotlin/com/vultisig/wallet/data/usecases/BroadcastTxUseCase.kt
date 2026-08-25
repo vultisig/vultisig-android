@@ -130,12 +130,24 @@ constructor(
                 evmApi.sendTransaction(tx.rawTransaction)
             }
 
+            // A signature status appears as soon as the tx is processed and carries `err` when it
+            // executed but reverted, so the mere presence of a status proves nothing: a reverted tx
+            // moved no funds and must not be reported as a successful broadcast. Require a clean
+            // `err`, the same standard the Cosmos branch below applies with code==0.
+            //
+            // SolanaStatusProvider's finalized-only ladder is deliberately not reused here.
+            // Finality takes ~13s, far past this verify window, and a duplicate broadcast is
+            // observed seconds after the peer's, so gating on it would reject every genuine
+            // recovery. An unreverted tx seen at processed/confirmed is the strongest proof
+            // available in time, and accepting it is the safe direction — the alternative is
+            // re-signing a transaction that is already in flight.
             Solana ->
                 recoverIfAlreadyBroadcast(
                     tx = tx,
                     broadcast = { solanaApi.broadcastTransaction(tx.rawTransaction) },
                     verify = { hash ->
-                        solanaApi.checkStatus(hash)?.result?.value?.any { it != null } == true
+                        val status = solanaApi.checkStatus(hash)?.result?.value?.firstOrNull()
+                        status != null && status.err == null
                     },
                 )
 

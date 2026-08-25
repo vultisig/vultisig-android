@@ -102,6 +102,7 @@ fun BaseDeFiPositionsScreenContent(
 
 /** Tabs available in DeFi position screens. */
 enum class DeFiTab(@androidx.annotation.StringRes val displayNameRes: Int) {
+    EARN(R.string.defi_tab_earn),
     DEPOSITED(R.string.defi_tab_deposited),
     STAKED(R.string.defi_tab_staked),
     BONDED(R.string.defi_tab_bonded),

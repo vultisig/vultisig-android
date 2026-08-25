@@ -15,6 +15,13 @@ data class Account(
     val tokenValue: TokenValue?,
     val fiatValue: FiatValue?,
     val price: FiatValue?,
+    /**
+     * The account exists only to carry a DeFi position, because the vault does not hold this token
+     * as a wallet balance — a Kamino Earn deposit in a token the wallet has none of, for instance.
+     * Its balance is the position, so it counts towards the DeFi portfolio but is never something a
+     * form may spend.
+     */
+    val isPositionOnly: Boolean = false,
 ) {
     companion object {
         val EMPTY = Account(token = Coin.EMPTY, tokenValue = null, fiatValue = null, price = null)

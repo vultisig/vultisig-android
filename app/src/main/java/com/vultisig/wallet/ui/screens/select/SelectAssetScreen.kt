@@ -213,12 +213,12 @@ private fun PillText(
         color = textColor,
         modifier =
             (if (background != null) {
-                    Modifier.background(color = background, shape = RoundedCornerShape(70.dp))
+                    Modifier.background(color = background, shape = Theme.v2.radius.pill)
                 } else {
                     Modifier.border(
                         width = 1.dp,
                         color = Theme.v2.colors.border.light,
-                        shape = RoundedCornerShape(70.dp),
+                        shape = Theme.v2.radius.pill,
                     )
                 })
                 .padding(horizontal = 12.dp, vertical = 8.dp),

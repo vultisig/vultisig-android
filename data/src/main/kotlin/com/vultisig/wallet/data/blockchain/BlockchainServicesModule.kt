@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.blockchain
 
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.api.KaminoApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
@@ -10,6 +11,8 @@ import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.maya.MayaCacaoStakingService
 import com.vultisig.wallet.data.blockchain.maya.MayaDeFiBalanceService
+import com.vultisig.wallet.data.blockchain.solana.SolanaDeFiBalanceService
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingService
 import com.vultisig.wallet.data.blockchain.solana.staking.ValidatorMetadataProvider
@@ -20,6 +23,8 @@ import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.ton.TonDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.tron.TronDeFiBalanceService
 import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
+import com.vultisig.wallet.data.repositories.KaminoPositionCacheRepository
+import com.vultisig.wallet.data.repositories.KaminoVaultSelectionRepository
 import com.vultisig.wallet.data.repositories.ScaCircleAccountRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
@@ -158,6 +163,30 @@ internal interface BlockchainServicesModule {
                 solanaStakingService = solanaStakingService,
                 validatorMetadataProvider = validatorMetadataProvider,
                 stakingDetailsRepository = stakingDetailsRepository,
+            )
+
+        @Provides
+        @Singleton
+        fun provideKaminoDeFiBalanceService(
+            kaminoApi: KaminoApi,
+            selectionRepository: KaminoVaultSelectionRepository,
+            positionCache: KaminoPositionCacheRepository,
+        ): KaminoDeFiBalanceService =
+            KaminoDeFiBalanceService(
+                kaminoApi = kaminoApi,
+                selectionRepository = selectionRepository,
+                positionCache = positionCache,
+            )
+
+        @Provides
+        @Singleton
+        fun provideSolanaDeFiBalanceService(
+            stakingBalanceService: SolanaStakingDeFiBalanceService,
+            kaminoBalanceService: KaminoDeFiBalanceService,
+        ): SolanaDeFiBalanceService =
+            SolanaDeFiBalanceService(
+                stakingBalanceService = stakingBalanceService,
+                kaminoBalanceService = kaminoBalanceService,
             )
     }
 }

@@ -127,8 +127,7 @@ internal class PasscodeAutoLock(
      * Locks, once nothing is holding it off.
      *
      * The wait is not a grace period — the timeout has already elapsed. It exists because a keygen
-     * ceremony in flight has not yet written its keyshare, and locking first destroys that share
-     * outright. See [AutoLockHold].
+     * ceremony in flight has not yet written its keyshare. See [AutoLockHold].
      */
     private suspend fun lockWhenNothingHoldsIt(reason: String, vararg reasonArgs: Any) {
         if (autoLockHold.holds.value > 0) {

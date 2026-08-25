@@ -78,9 +78,22 @@ object MockHttpClient {
             installDefaults(jsonFormat)
         }
 
-    /** Mutable holder for the last outgoing request body captured by [capturingRequest]. */
+    /**
+     * Mutable holder for the outgoing request bodies captured by [capturingRequest] and
+     * [capturingRequestSequence]. [lastBody] is the most recent one; [bodies] keeps every request
+     * in order, which is what a paginated call needs — asserting only the last body cannot show
+     * that page two carried the cursor page one returned.
+     */
     class RequestCapture {
+        val bodies = mutableListOf<String>()
+
         var lastBody: String = ""
+            private set
+
+        internal fun record(body: String) {
+            lastBody = body
+            bodies += body
+        }
     }
 
     /**
@@ -96,12 +109,37 @@ object MockHttpClient {
     ): HttpClient =
         HttpClient(
             MockEngine { request ->
-                capture.lastBody = request.body.toByteArray().decodeToString()
+                capture.record(request.body.toByteArray().decodeToString())
                 respond(content = body, status = status, headers = JSON_HEADERS)
             }
         ) {
             installDefaults(jsonFormat)
         }
+
+    /**
+     * [respondingWithSequence] with [capturingRequest]'s recording, so a test can assert both what
+     * came back per call and what each call sent — e.g. that a paginated request forwards the
+     * cursor the previous page returned.
+     */
+    fun capturingRequestSequence(
+        capture: RequestCapture,
+        vararg responses: Pair<HttpStatusCode, String>,
+        jsonFormat: Json = json,
+    ): HttpClient {
+        require(responses.isNotEmpty()) {
+            "capturingRequestSequence requires at least one response"
+        }
+        var index = 0
+        return HttpClient(
+            MockEngine { request ->
+                capture.record(request.body.toByteArray().decodeToString())
+                val (status, body) = responses[minOf(index++, responses.size - 1)]
+                respond(content = body, status = status, headers = JSON_HEADERS)
+            }
+        ) {
+            installDefaults(jsonFormat)
+        }
+    }
 
     /**
      * Builds a client that steps through [responses] in order, pinning the last entry once the
@@ -123,6 +161,24 @@ object MockHttpClient {
                 val (status, body) = responses[i]
                 respond(content = body, status = status, headers = JSON_HEADERS)
             }
+        ) {
+            installDefaults(jsonFormat)
+        }
+    }
+
+    /**
+     * Builds a client whose response body is produced per call from the zero-based request index.
+     * For sequences too long or too open-ended to enumerate — e.g. a paginated connection that
+     * never reports a last page.
+     */
+    fun respondingWithGenerated(
+        status: HttpStatusCode = HttpStatusCode.OK,
+        jsonFormat: Json = json,
+        body: (Int) -> String,
+    ): HttpClient {
+        var index = 0
+        return HttpClient(
+            MockEngine { respond(content = body(index++), status = status, headers = JSON_HEADERS) }
         ) {
             installDefaults(jsonFormat)
         }

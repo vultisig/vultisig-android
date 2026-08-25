@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,7 +54,7 @@ private fun RowScope.PercentageItem(title: String, onClick: () -> Unit) {
             Modifier.clickable(onClick = onClick)
                 .background(
                     color = Theme.v2.colors.backgrounds.tertiary_2,
-                    shape = RoundedCornerShape(99.dp),
+                    shape = Theme.v2.radius.pill,
                 )
                 .padding(all = 8.dp)
                 .weight(1f),

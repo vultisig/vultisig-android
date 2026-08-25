@@ -57,7 +57,8 @@ internal class ThorChainQuoteSource @Inject constructor(private val thorChainApi
     /**
      * Fetches a THORChain quote, falling back to a streaming swap when rapid is unavailable or its
      * slippage is unacceptable. When both rapid and streaming succeed, picks whichever yields more
-     * output.
+     * output. A rapid failure that streaming cannot fix short-circuits instead of paying for the
+     * fallback round-trip.
      */
     private suspend fun fetchWithStreamingFallback(
         rapidRequest: ThorChainSwapQuoteRequest
@@ -65,6 +66,10 @@ internal class ThorChainQuoteSource @Inject constructor(private val thorChainApi
         val rapid = fetchRapid(rapidRequest)
         if (rapid is RapidQuote.Success && !rapid.needsStreaming()) {
             return rapid.data
+        }
+
+        if (rapid is RapidQuote.Failed && rapid.error.survivesTheInterval()) {
+            throw rapid.error
         }
 
         when (rapid) {
@@ -144,6 +149,18 @@ internal class ThorChainQuoteSource @Inject constructor(private val thorChainApi
         val streamingOut = streaming.expectedAmountOut.toBigInteger()
         return if (streamingOut > rapid.expectedAmountOut.toBigInteger()) streaming else rapid
     }
+
+    /**
+     * Whether a rapid-quote rejection would be repeated word for word by the streaming request. A
+     * halt belongs to the pool or the chain and a missing route to the pair, so neither is anything
+     * the swap interval can change — asking again only spends a second round-trip out of the
+     * caller's quote window before it surfaces the same answer. Amount rejections are excluded on
+     * purpose: streaming splits the swap, so an amount the rapid path refuses can still quote.
+     */
+    private fun SwapException.survivesTheInterval(): Boolean =
+        this is SwapException.TradingHalted ||
+            this is SwapException.SwapRouteNotAvailable ||
+            this is SwapException.SwapIsNotSupported
 
     private sealed interface RapidQuote {
         data class Success(val data: THORChainSwapQuote) : RapidQuote {

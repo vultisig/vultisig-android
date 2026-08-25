@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.crypto
 
+import com.vultisig.wallet.data.api.chains.unwrapCoinType
 import java.math.BigInteger
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -13,58 +14,71 @@ import vultisig.keysign.v1.SuiCoin
 import wallet.core.jni.proto.Sui
 
 /**
- * Covers [SuiHelper.selectSuiGasCoin] with exact `suix_getAllCoins` RPC response payloads to
- * protect the #3989 fix (filter by `balance >= gasBudget`, not `balance > referenceGasPrice`).
+ * Covers [SuiHelper.selectSuiGasCoin] with exact Sui GraphQL coin-object payloads to protect
+ * the #3989 fix (filter by `balance >= gasBudget`, not `balance > referenceGasPrice`).
  */
 class SuiHelperTest {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    // Real-shape suix_getAllCoins response. Three SUI coins of different balances and one
-    // non-SUI coin, so we can exercise eligibility + min-selection + non-SUI exclusion.
+    // Real-shape GraphQL coin-object connection. Three SUI coins of different balances and one
+    // non-SUI coin, so we can exercise eligibility + min-selection + non-SUI exclusion. The first
+    // coin carries the zero-padded address spelling GraphQL actually returns, so the parsing below
+    // has to normalize it the way production does rather than pass a pre-stripped string through.
     private val getAllCoinsResponse =
         """
         {
-          "jsonrpc": "2.0",
-          "result": {
-            "data": [
-              {
-                "coinType": "0x2::sui::SUI",
-                "coinObjectId": "0x0000000000000000000000000000000000000000000000000000000000000001",
-                "version": "100",
-                "digest": "DGstCoinOneXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-                "balance": "600",
-                "previousTransaction": "PrevTx1"
-              },
-              {
-                "coinType": "0x2::sui::SUI",
-                "coinObjectId": "0x0000000000000000000000000000000000000000000000000000000000000002",
-                "version": "101",
-                "digest": "DGstCoinTwoXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-                "balance": "3000000",
-                "previousTransaction": "PrevTx2"
-              },
-              {
-                "coinType": "0x2::sui::SUI",
-                "coinObjectId": "0x0000000000000000000000000000000000000000000000000000000000000003",
-                "version": "102",
-                "digest": "DGstCoinThreeXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-                "balance": "10000000000",
-                "previousTransaction": "PrevTx3"
-              },
-              {
-                "coinType": "0xabc::usdc::USDC",
-                "coinObjectId": "0x0000000000000000000000000000000000000000000000000000000000000099",
-                "version": "200",
-                "digest": "DGstUsdcXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-                "balance": "999999999999",
-                "previousTransaction": "PrevTx99"
+          "data": {
+            "address": {
+              "objects": {
+                "pageInfo": { "hasNextPage": false, "endCursor": null },
+                "nodes": [
+                  {
+                    "address": "0x0000000000000000000000000000000000000000000000000000000000000001",
+                    "version": 100,
+                    "digest": "DGstCoinOneXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+                    "previousTransaction": { "digest": "PrevTx1" },
+                    "contents": {
+                      "type": {
+                        "repr": "0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI>"
+                      },
+                      "json": { "balance": "600" }
+                    }
+                  },
+                  {
+                    "address": "0x0000000000000000000000000000000000000000000000000000000000000002",
+                    "version": 101,
+                    "digest": "DGstCoinTwoXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+                    "previousTransaction": { "digest": "PrevTx2" },
+                    "contents": {
+                      "type": { "repr": "0x2::coin::Coin<0x2::sui::SUI>" },
+                      "json": { "balance": "3000000" }
+                    }
+                  },
+                  {
+                    "address": "0x0000000000000000000000000000000000000000000000000000000000000003",
+                    "version": 102,
+                    "digest": "DGstCoinThreeXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+                    "previousTransaction": { "digest": "PrevTx3" },
+                    "contents": {
+                      "type": { "repr": "0x2::coin::Coin<0x2::sui::SUI>" },
+                      "json": { "balance": "10000000000" }
+                    }
+                  },
+                  {
+                    "address": "0x0000000000000000000000000000000000000000000000000000000000000099",
+                    "version": 200,
+                    "digest": "DGstUsdcXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+                    "previousTransaction": { "digest": "PrevTx99" },
+                    "contents": {
+                      "type": { "repr": "0x2::coin::Coin<0xabc::usdc::USDC>" },
+                      "json": { "balance": "999999999999" }
+                    }
+                  }
+                ]
               }
-            ],
-            "nextCursor": null,
-            "hasNextPage": false
-          },
-          "id": 1
+            }
+          }
         }
         """
             .trimIndent()
@@ -232,22 +246,35 @@ class SuiHelperTest {
             .setObjectDigest(digest)
             .build()
 
-    /** Mirrors the parsing in `SuiApiImpl.getAllCoins` so tests consume the real RPC shape. */
-    private fun parseCoins(rpcResponse: String): List<SuiCoin> =
+    /**
+     * Mirrors the parsing in `SuiApiImpl.getAllCoins` so tests consume the real GraphQL shape. The
+     * coin type goes through the production [unwrapCoinType] rather than a local copy: it both
+     * unwraps the `0x2::coin::Coin<T>` wrapper and strips the zero padding GraphQL spells addresses
+     * with, and a copy of that here could drift from the parser it claims to mirror.
+     */
+    private fun parseCoins(graphQlResponse: String): List<SuiCoin> =
         json
-            .parseToJsonElement(rpcResponse)
-            .jsonObject["result"]!!
+            .parseToJsonElement(graphQlResponse)
             .jsonObject["data"]!!
+            .jsonObject["address"]!!
+            .jsonObject["objects"]!!
+            .jsonObject["nodes"]!!
             .jsonArray
-            .map {
+            .map { node ->
+                val contents = node.jsonObject["contents"]!!.jsonObject
+                val repr = contents["type"]!!.jsonObject["repr"]!!.jsonPrimitive.content
                 SuiCoin(
-                    coinType = it.jsonObject["coinType"]!!.jsonPrimitive.content,
-                    coinObjectId = it.jsonObject["coinObjectId"]!!.jsonPrimitive.content,
-                    version = it.jsonObject["version"]!!.jsonPrimitive.content,
-                    digest = it.jsonObject["digest"]!!.jsonPrimitive.content,
-                    balance = it.jsonObject["balance"]!!.jsonPrimitive.content,
+                    coinType = unwrapCoinType(repr) ?: error("not a Coin<T> type: $repr"),
+                    coinObjectId = node.jsonObject["address"]!!.jsonPrimitive.content,
+                    version = node.jsonObject["version"]!!.jsonPrimitive.content,
+                    digest = node.jsonObject["digest"]!!.jsonPrimitive.content,
+                    balance = contents["json"]!!.jsonObject["balance"]!!.jsonPrimitive.content,
                     previousTransaction =
-                        it.jsonObject["previousTransaction"]?.jsonPrimitive?.content ?: "",
+                        node.jsonObject["previousTransaction"]
+                            ?.jsonObject
+                            ?.get("digest")
+                            ?.jsonPrimitive
+                            ?.content ?: "",
                 )
             }
 }
