@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.RecipientValidity
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
@@ -134,10 +135,22 @@ internal class DefaultSendStrategy(
                                 chainAccountAddressRepository.isValid(chain, dstAddress)
                         }
 
-                    if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
-                        throw InvalidTransactionDataException(
-                            UiText.StringResource(R.string.send_error_no_address)
-                        )
+                    // The form's own recipient check is debounced and drives nothing but the
+                    // Continue button, and this path re-resolves the address from the raw field
+                    // rather than reading what the form resolved. Re-check here so a submit that
+                    // races that debounce still can't build a transaction for a recipient the
+                    // form would have refused — a Solana token account above all, which strands
+                    // an SPL transfer for good.
+                    when (chainAccountAddressRepository.validateRecipient(chain, dstAddress)) {
+                        RecipientValidity.Valid -> Unit
+                        RecipientValidity.InvalidForChain ->
+                            throw InvalidTransactionDataException(
+                                UiText.StringResource(R.string.send_error_no_address)
+                            )
+                        RecipientValidity.NotAWalletAddress ->
+                            throw InvalidTransactionDataException(
+                                UiText.StringResource(R.string.error_recipient_not_a_wallet_address)
+                            )
                     }
 
                     val selectedTokenValue =
