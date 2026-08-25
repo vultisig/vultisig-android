@@ -3699,9 +3699,17 @@ internal class SwapFormViewModelTest {
     fun `a solana token account as external recipient gets its own error`() =
         runTest(mainDispatcher) {
             val tokenAccount = "GppmkdEmuqNgS7uY5SSN3gXEamJrcPG9197wBdQ37NLc"
-            coEvery { chainAccountAddressRepository.validateRecipient(any(), tokenAccount) } returns
-                RecipientValidity.NotAWalletAddress
-            val vm = createViewModelWithSwapTokens()
+            coEvery {
+                chainAccountAddressRepository.validateRecipient(Chain.Solana, tokenAccount)
+            } returns RecipientValidity.NotAWalletAddress
+            // The destination has to actually be Solana, or the verdict this asserts would be one
+            // the repository never reaches for.
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddress(), solanaAddress()),
+                    srcTokenId = ETH_COIN.id,
+                    dstTokenId = SOL_COIN.id,
+                )
             advanceUntilIdle()
 
             vm.setExternalRecipient(tokenAccount)
@@ -3713,6 +3721,7 @@ internal class SwapFormViewModelTest {
                 UiText.StringResource(R.string.error_recipient_not_a_wallet_address),
                 vm.uiState.value.externalRecipientError,
             )
+            coVerify { chainAccountAddressRepository.validateRecipient(Chain.Solana, tokenAccount) }
         }
 
     @Test
@@ -3774,6 +3783,41 @@ internal class SwapFormViewModelTest {
             )
             // The pre-flight gate returns before staging keysign, so no navigation to verify.
             coVerify(exactly = 0) { navigator.route(any()) }
+        }
+
+    @Test
+    fun `swap is refused when the destination moves while the recipient is being validated`() =
+        runTest(mainDispatcher) {
+            // The verdict can wait on the cluster, and nothing re-validates the recipient when the
+            // destination changes, so a swap judged against Bitcoin must not go on to build for an
+            // Ethereum destination the address was never judged for.
+            val recipient = "bc1qvalidrecipient"
+            val verdict = CompletableDeferred<Unit>()
+            coEvery {
+                chainAccountAddressRepository.validateRecipient(Chain.Bitcoin, recipient)
+            } coAnswers
+                {
+                    verdict.await()
+                    RecipientValidity.Valid
+                }
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+            vm.setExternalRecipient(recipient)
+
+            vm.swap()
+            // The form stays live while the cluster is asked: flipping the pair makes Ethereum the
+            // destination, and the outstanding verdict is about Bitcoin.
+            vm.flipSelectedTokens()
+            advanceUntilIdle()
+            verdict.complete(Unit)
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.StringResource(R.string.swap_external_recipient_invalid),
+                vm.uiState.value.error,
+            )
+            coVerify(exactly = 0) { swapTransactionRepository.addTransaction(any()) }
         }
 
     @Test
@@ -4371,6 +4415,13 @@ internal class SwapFormViewModelTest {
             chain = Chain.Bitcoin,
             address = "bc1qbtcaddress",
             accounts = listOf(createAccount(BTC_COIN, BigInteger("100000000"))),
+        )
+
+    private fun solanaAddress(): Address =
+        Address(
+            chain = Chain.Solana,
+            address = "soladdress",
+            accounts = listOf(createAccount(SOL_COIN, BigInteger("1000000000"))),
         )
 
     private fun btcAddressLargeBalance(): Address =

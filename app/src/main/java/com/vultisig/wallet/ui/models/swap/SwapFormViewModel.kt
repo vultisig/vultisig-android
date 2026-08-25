@@ -415,7 +415,7 @@ constructor(
             // must be rejected here rather than signed into an order that pays out to nowhere. The
             // whole body runs in the coroutine because the verdict can need a cluster round trip,
             // and it stays the first thing checked so its error is the one the user sees.
-            externalRecipientError()?.let { throw InvalidTransactionDataException(it) }
+            val recipient = validatedExternalRecipient()
 
             val targetPrice = limitTargetPrice.value
             if (targetPrice == null) {
@@ -463,7 +463,7 @@ constructor(
                         // anything longer with an exception rather than rounding it itself.
                         targetPrice = LimitOrderPricing.toMemoScale(targetPrice),
                         expiryHours = limitExpiry.value.hours,
-                        destinationAddress = externalRecipient.value ?: inputs.dstToken.address,
+                        destinationAddress = recipient ?: inputs.dstToken.address,
                         gasFee = inputs.gasFee,
                         gasFeeFiatValue = inputs.gasFeeFiatValue,
                         estimatedNetworkFeeTokenValue = inputs.estimatedNetworkFeeTokenValue,
@@ -644,13 +644,15 @@ constructor(
         assetFormat.format(value.stripTrailingZeros())
 
     /**
-     * The address-format error for the current external recipient, or `null` when the recipient is
-     * off or valid for the destination chain. Used both for inline feedback and as the [swap]
-     * pre-flight gate so a malformed address can never be baked into the swap memo/destination.
+     * The error for [address] as a recipient on [dstChain], or `null` when the recipient is off or
+     * can receive the swap. Used both for inline feedback and as the [swap] pre-flight gate so a
+     * malformed address can never be baked into the swap memo/destination.
+     *
+     * Takes both as arguments rather than reading them: the verdict can cost a cluster round trip,
+     * so what the fields hold when it returns is not necessarily what was asked about.
      */
-    private suspend fun externalRecipientError(): UiText? {
-        val address = externalRecipient.value ?: return null
-        val dstChain = selectedDst.value?.account?.token?.chain ?: return null
+    private suspend fun externalRecipientError(address: String?, dstChain: Chain?): UiText? {
+        if (address == null || dstChain == null) return null
         return when (chainAccountAddressRepository.validateRecipient(dstChain, address)) {
             RecipientValidity.Valid -> null
             RecipientValidity.InvalidForChain ->
@@ -658,6 +660,29 @@ constructor(
             RecipientValidity.NotAWalletAddress ->
                 UiText.StringResource(R.string.error_recipient_not_a_wallet_address)
         }
+    }
+
+    /**
+     * The external recipient the transaction may be built with — `null` when the recipient is off —
+     * throwing [InvalidTransactionDataException] when it cannot receive the swap.
+     *
+     * The checked address is returned rather than left for the caller to re-read, and the
+     * destination is re-read and compared, because the form stays live across the round trip the
+     * verdict can cost: [setExternalRecipient] and the token pickers run on the same dispatcher
+     * this suspends on. Building from the fields afterwards could sign an address that was never
+     * checked, or one checked against a chain that is no longer the destination — and nothing
+     * re-validates the recipient when the destination moves.
+     */
+    private suspend fun validatedExternalRecipient(): String? {
+        val address = externalRecipient.value
+        val dstChain = selectedDst.value?.account?.token?.chain
+        externalRecipientError(address, dstChain)?.let { throw InvalidTransactionDataException(it) }
+        if (address != null && selectedDst.value?.account?.token?.chain != dstChain) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.swap_external_recipient_invalid)
+            )
+        }
+        return address
     }
 
     /**
@@ -700,7 +725,7 @@ constructor(
             // value must be caught here, before the transaction is built (#4858). The whole body
             // runs in the coroutine because the verdict can need a cluster round trip, and it stays
             // the first thing checked so its error is the one the user sees.
-            externalRecipientError()?.let { throw InvalidTransactionDataException(it) }
+            val recipient = validatedExternalRecipient()
 
             val inputs =
                 try {
@@ -759,7 +784,7 @@ constructor(
                     estimatedNetworkFeeTokenValue = inputs.estimatedNetworkFeeTokenValue,
                     estimatedNetworkFeeFiatValue = inputs.estimatedNetworkFeeFiatValue,
                     gasLimitOverride = gasLimitOverride.value,
-                    externalRecipient = externalRecipient.value,
+                    externalRecipient = recipient,
                     feeDisplay = feeDisplay,
                 )
 
@@ -1081,7 +1106,18 @@ constructor(
         // cluster round trip, and a slower one for an earlier keystroke would otherwise land last
         // and describe an address the user has already replaced.
         externalRecipientRoutingJob?.cancel()
-        externalRecipientRoutingJob = viewModelScope.launch { syncExternalRecipientRouting() }
+        externalRecipientRoutingJob =
+            viewModelScope.safeLaunch(
+                onError = { e ->
+                    // A verdict that never arrived is not a verdict. Keep the recipient out of the
+                    // quote pipeline rather than routing quotes to an address nothing vouched for;
+                    // the pre-flight gate asks again before anything is built.
+                    Timber.e(e)
+                    quoteRecipient.value = null
+                }
+            ) {
+                syncExternalRecipientRouting()
+            }
     }
 
     /**
@@ -1093,7 +1129,7 @@ constructor(
      */
     private suspend fun syncExternalRecipientRouting() {
         val typed = externalRecipient.value
-        val error = externalRecipientError()
+        val error = externalRecipientError(typed, selectedDst.value?.account?.token?.chain)
         quoteRecipient.value = typed?.takeIf { error == null }
         _uiState.update { it.copy(externalRecipient = typed, externalRecipientError = error) }
     }

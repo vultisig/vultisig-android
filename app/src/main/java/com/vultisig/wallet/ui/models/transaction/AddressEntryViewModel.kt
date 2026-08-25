@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.repositories.RecipientValidity
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.NetworkUiModel
 import com.vultisig.wallet.ui.models.evmNetworkUiModel
 import com.vultisig.wallet.ui.models.toNetworkUiModel
@@ -223,10 +224,12 @@ constructor(
             }
         }
 
-        viewModelScope.launch {
+        // safeLaunch, not launch: the verdict now goes to the cluster and the body writes to the
+        // address book, so a failure on either belongs in the log rather than in a crash.
+        viewModelScope.safeLaunch {
             validateAddress(chain, address)?.let { addressError ->
                 state.update { it.copy(addressError = addressError) }
-                return@launch
+                return@safeLaunch
             }
 
             if (
