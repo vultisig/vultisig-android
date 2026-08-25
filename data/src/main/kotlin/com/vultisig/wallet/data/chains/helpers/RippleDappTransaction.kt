@@ -33,7 +33,7 @@ internal fun JsonObject.flagsOrNull(): Long? =
  * a string, and a blank one names nothing: it must read the same as an absent field so a floor the
  * verify screen would not render cannot pass validation.
  */
-private fun JsonObject.stringOrNull(key: String): String? =
+private fun JsonObject.nonBlankStringOrNull(key: String): String? =
     (this[key] as? JsonPrimitive)
         ?.takeIf { it.isString }
         ?.content
@@ -62,8 +62,9 @@ internal fun JsonObject.hasPositiveAmount(key: String): Boolean =
         }
         is JsonObject -> {
             val isIssuedAmount =
-                element.stringOrNull("currency") != null && element.stringOrNull("issuer") != null
-            val value = element.stringOrNull("value")?.toBigDecimalOrNull()
+                element.nonBlankStringOrNull("currency") != null &&
+                    element.nonBlankStringOrNull("issuer") != null
+            val value = element.nonBlankStringOrNull("value")?.toBigDecimalOrNull()
             isIssuedAmount && value != null && value > BigDecimal.ZERO
         }
         else -> false
@@ -143,19 +144,19 @@ object RippleDappTransactionDecoder {
                 return RippleDappTx(transactionType = null, fields = emptyList(), rawJson = rawJson)
             }
 
-        val transactionType = obj.stringOrNull("TransactionType")
+        val transactionType = obj.displayStringOrNull("TransactionType")
         val flags = obj.flagsOrNull()
         val isPartialPayment =
             transactionType == "Payment" && flags != null && (flags and TF_PARTIAL_PAYMENT) != 0L
         val fields = buildList {
             transactionType?.let { add(RippleDappTxField(RippleDappTxFieldKey.TYPE, it)) }
-            obj.stringOrNull("Account")?.let {
+            obj.displayStringOrNull("Account")?.let {
                 add(RippleDappTxField(RippleDappTxFieldKey.FROM, it))
             }
-            obj.stringOrNull("Destination")?.let {
+            obj.displayStringOrNull("Destination")?.let {
                 add(RippleDappTxField(RippleDappTxFieldKey.TO, it))
             }
-            obj.stringOrNull("DestinationTag")?.let {
+            obj.displayStringOrNull("DestinationTag")?.let {
                 add(RippleDappTxField(RippleDappTxFieldKey.DESTINATION_TAG, it))
             }
             addAmount(
@@ -209,7 +210,7 @@ object RippleDappTransactionDecoder {
             // The Fee that is actually signed (drops). Surfaced so the verify screen shows the real
             // network fee baked into the JSON rather than a live re-estimate (a malicious inflated
             // Fee must be visible, not masked by a normal-looking estimate).
-            obj.stringOrNull("Fee")?.let {
+            obj.displayStringOrNull("Fee")?.let {
                 add(RippleDappTxField(RippleDappTxFieldKey.FEE, formatXrpDrops(it)))
             }
         }
@@ -234,7 +235,7 @@ object RippleDappTransactionDecoder {
             } catch (e: Exception) {
                 return null
             }
-        return obj.stringOrNull("Fee")?.toBigIntegerOrNull()
+        return obj.displayStringOrNull("Fee")?.toBigIntegerOrNull()
     }
 
     /**
@@ -289,9 +290,9 @@ object RippleDappTransactionDecoder {
         }
         // An issued-currency amount is an object: { currency, issuer, value }.
         val amountObj = element as? JsonObject ?: return
-        val value = amountObj.stringOrNull("value")
-        val currency = amountObj.stringOrNull("currency")
-        val issuer = amountObj.stringOrNull("issuer")
+        val value = amountObj.displayStringOrNull("value")
+        val currency = amountObj.displayStringOrNull("currency")
+        val issuer = amountObj.displayStringOrNull("issuer")
         if (value != null && currency != null) {
             add(RippleDappTxField(amountKey, "$value $currency"))
             issuer?.let { add(RippleDappTxField(issuerKey, it)) }
@@ -306,6 +307,11 @@ object RippleDappTransactionDecoder {
             drops
         }
 
-    private fun JsonObject.stringOrNull(key: String): String? =
+    /**
+     * The value of [key] as text to display, taking any non-blank primitive — a JSON number
+     * included, since a row is worth rendering however the field was encoded. Deliberately looser
+     * than [nonBlankStringOrNull], which gates validation and so accepts JSON strings only.
+     */
+    private fun JsonObject.displayStringOrNull(key: String): String? =
         (this[key] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
 }
