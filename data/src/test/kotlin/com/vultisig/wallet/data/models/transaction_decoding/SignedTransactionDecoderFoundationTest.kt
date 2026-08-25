@@ -11,19 +11,22 @@ import vultisig.keysign.v1.TransactionType
 
 class SignedTransactionDecoderFoundationTest {
 
+    private lateinit var decoder: SignedTransactionDecoder
+
     @BeforeEach
     fun setUp() {
-        SignedTransactionDecoder.clear()
+        decoder = SignedTransactionDecoder()
+        decoder.clear()
     }
 
     @Test
     fun testRegistryStartsEmpty() {
-        assertTrue(SignedTransactionDecoder.getDecoders().isEmpty())
+        assertTrue(decoder.getDecoders().isEmpty())
     }
 
     @Test
     fun testUnregisteredContentIsUnreadable() {
-        val decoded = SignedTransactionDecoder.decode(StubContent())
+        val decoded = decoder.decode(StubContent())
 
         assertEquals(DecodedTransaction.unreadable, decoded)
         assertEquals(DecodedOperation.Unknown, decoded.operation)

@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.models.transaction_decoding
 
 import com.vultisig.wallet.data.models.Chain
+import dagger.Reusable
+import javax.inject.Inject
 
 /**
  * A reader for one chain family's signed grammar. `handles == null` requires the reader to
@@ -14,14 +16,22 @@ interface TransactionContentDecoder {
      */
     val handles: Set<Chain>?
 
+    /**
+     * Attempts to decode the signed transaction content into a [DecodedTransaction], or returns
+     * null if this decoder cannot handle it.
+     */
     fun decode(tx: SignedTransactionContent): DecodedTransaction?
 }
 
 /**
- * Reads operations from content that will actually be signed. The foundation registers no chain
+ * Reads operations from content that will actually be signed. Maintains an ordered registry of
+ * chain-family decoders and attempts each in precedence order. The foundation registers no chain
  * readers, so every transaction remains unreadable.
+ *
+ * Scoped as [Reusable] singleton for dependency injection with shared instance across the app.
  */
-object SignedTransactionDecoder {
+@Reusable
+class SignedTransactionDecoder @Inject constructor() {
 
     /** Registered readers in precedence order. Empty in the foundation. */
     private val decoders: MutableList<TransactionContentDecoder> = mutableListOf()
@@ -36,7 +46,7 @@ object SignedTransactionDecoder {
         decoders.remove(decoder)
     }
 
-    /** Get all registered decoders. */
+    /** Get all registered decoders in precedence order. */
     fun getDecoders(): List<TransactionContentDecoder> = decoders.toList()
 
     /** Clear all registered decoders. */
@@ -44,7 +54,11 @@ object SignedTransactionDecoder {
         decoders.clear()
     }
 
-    /** Returns `.unknown` when no reader can prove an operation. */
+    /**
+     * Decodes signed transaction content by attempting each registered decoder in precedence order
+     * until one returns non-null. Returns [DecodedTransaction.unreadable] when no reader can prove
+     * an operation.
+     */
     fun decode(tx: SignedTransactionContent): DecodedTransaction {
         for (decoder in decoders) {
             val handles = decoder.handles

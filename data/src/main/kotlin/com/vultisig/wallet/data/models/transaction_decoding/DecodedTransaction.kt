@@ -13,6 +13,7 @@ sealed class DecodedAsset {
     /** The instruction's fixed native asset, rendered from bundled metadata. */
     data object ChainNative : DecodedAsset()
 
+    /** Checks equality based on asset type and values. */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         return when {
@@ -23,6 +24,7 @@ sealed class DecodedAsset {
         }
     }
 
+    /** Computes hashCode based on asset type and values. */
     override fun hashCode(): Int {
         return when (this) {
             is Denom -> value.hashCode()
@@ -43,6 +45,7 @@ sealed class DecodedAmount {
     /** The signed operation names no quantity. */
     data object Unstated : DecodedAmount()
 
+    /** Checks equality based on amount type and values. */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         return when {
@@ -54,6 +57,7 @@ sealed class DecodedAmount {
         }
     }
 
+    /** Computes hashCode based on amount type and values. */
     override fun hashCode(): Int {
         return when (this) {
             is Units -> value.hashCode() * 31 + asset.hashCode()
@@ -97,14 +101,19 @@ enum class DecodedOperation {
 
 /** Who or what the operation is directed at, when the transaction names one. */
 sealed class DecodedCounterparty {
+    /** A network node. */
     data class Node(val value: String) : DecodedCounterparty()
 
+    /** A validator. */
     data class Validator(val value: String) : DecodedCounterparty()
 
+    /** A liquidity pool or similar aggregated asset. */
     data class Pool(val value: String) : DecodedCounterparty()
 
+    /** A smart contract. */
     data class Contract(val value: String) : DecodedCounterparty()
 
+    /** Checks equality based on counterparty type and values. */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         return when {
@@ -116,6 +125,7 @@ sealed class DecodedCounterparty {
         }
     }
 
+    /** Computes hashCode based on counterparty type and values. */
     override fun hashCode(): Int {
         return when (this) {
             is Node -> value.hashCode()
@@ -146,6 +156,10 @@ enum class DecodedEvidence(val strength: Int) {
     /** Nothing was read. Only ever paired with `.unknown`. */
     Unread(5);
 
+    /**
+     * Checks whether this evidence is at least as strong as [than]. Lower strength values are
+     * stronger, so this is true when strength <= than.strength.
+     */
     fun isNoWeaker(than: DecodedEvidence): Boolean = strength <= than.strength
 }
 

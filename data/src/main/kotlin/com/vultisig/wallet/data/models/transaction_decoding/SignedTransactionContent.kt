@@ -22,6 +22,7 @@ sealed class SignedAmount {
      */
     data object ComputedAtSigning : SignedAmount()
 
+    /** Checks equality based on amount type and values. */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         return when {
@@ -31,6 +32,7 @@ sealed class SignedAmount {
         }
     }
 
+    /** Computes hashCode based on amount type and values. */
     override fun hashCode(): Int {
         return when (this) {
             is Committed -> value.hashCode()
@@ -222,7 +224,7 @@ private data class KeysignPayloadContent(val payload: KeysignPayload) : SignedTr
         }
 
     override val hasOpaqueSignedContent: Boolean
-        get() = payload.signDirect != null
+        get() = signedDataBodyIsActive
 
     override val memoIsOutranked: Boolean
         get() {
