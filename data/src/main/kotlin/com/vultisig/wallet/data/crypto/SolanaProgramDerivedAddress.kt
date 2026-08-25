@@ -57,6 +57,21 @@ internal object SolanaProgramDerivedAddress {
         return null
     }
 
+    /**
+     * Whether [address] is a Solana address whose private half someone can hold — a 32-byte ed25519
+     * point.
+     *
+     * Every address the runtime derives for a program (a PDA, and so every associated token
+     * account) is by construction *not* on the curve: that is what lets the owning program sign for
+     * it, and it is exactly why no user can. Base58 length is all WalletCore checks, so an address
+     * that fails here is still a well-formed Solana address — it just isn't a wallet.
+     */
+    fun isWalletAddress(address: String): Boolean {
+        val decoded =
+            Base58Codec.decode(address)?.takeIf { it.size == PUBLIC_KEY_LENGTH } ?: return false
+        return isOnCurve(decoded)
+    }
+
     /** `BigInteger.TWO` is API 33 and this module ships to minSdk 26. */
     private val TWO = BigInteger.valueOf(2)
 

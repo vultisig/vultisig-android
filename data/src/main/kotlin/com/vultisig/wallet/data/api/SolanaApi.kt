@@ -119,6 +119,13 @@ interface SolanaApi {
      */
     suspend fun getAccountOwner(account: String): String?
 
+    /**
+     * Same lookup as [getAccountOwner], keeping "the cluster says there is no such account" apart
+     * from "the cluster did not answer". Callers that would act on the absence of an owner need
+     * that distinction: a missing account is a fact, a failed lookup is not.
+     */
+    suspend fun getAccountOwnership(account: String): SolanaAccountOwnership
+
     suspend fun checkStatus(txHash: String): SolanaRpcResponseJson<SolanaSignatureStatusesResult>?
 
     /**
@@ -141,6 +148,19 @@ interface SolanaApi {
      * or an empty list on RPC failure. Never stale-cached — always a fresh read.
      */
     suspend fun getStakeAccounts(ownerAddress: String): List<SolanaProgramAccountJson>
+}
+
+/** What `getAccountInfo` reports about the program that owns an account. */
+sealed interface SolanaAccountOwnership {
+
+    /** The account exists on-chain and [programId] owns it. */
+    data class Owned(val programId: String) : SolanaAccountOwnership
+
+    /** The cluster answered and there is no account at that address. */
+    data object Missing : SolanaAccountOwnership
+
+    /** The lookup failed, so the cluster's answer is unknown — not "no". */
+    data object Unavailable : SolanaAccountOwnership
 }
 
 internal class SolanaApiImp(
@@ -538,6 +558,9 @@ internal class SolanaApiImp(
     }
 
     override suspend fun getAccountOwner(account: String): String? =
+        (getAccountOwnership(account) as? SolanaAccountOwnership.Owned)?.programId
+
+    override suspend fun getAccountOwnership(account: String): SolanaAccountOwnership =
         try {
             val response =
                 httpClient.postRpc<SolanaAccountInfoResponseJson>(
@@ -550,19 +573,27 @@ internal class SolanaApiImp(
                         },
                 )
             // postRpc returns a 200 carrying a JSON-RPC `error` body without throwing, so a
-            // transient
-            // RPC failure would otherwise resolve to a null owner indistinguishable from a
-            // genuinely
-            // missing account — and silently drop the now-preferred Jupiter route. Log it so the
-            // failure is observable rather than masquerading as "mint not found".
+            // transient RPC failure would otherwise resolve to a null owner indistinguishable from
+            // a genuinely missing account — and silently drop the now-preferred Jupiter route. Log
+            // it so the failure is observable rather than masquerading as "mint not found".
             response.error?.let {
-                Timber.tag("SolanaApiImp").w("getAccountOwner RPC error for %s: %s", account, it)
+                Timber.tag("SolanaApiImp")
+                    .w("getAccountOwnership RPC error for %s: %s", account, it)
             }
-            response.result?.value?.owner
+            when {
+                response.error != null || response.result == null ->
+                    SolanaAccountOwnership.Unavailable
+                // `value` is null exactly when the cluster looked and found nothing. An owner
+                // missing from a present value is a malformed answer, not an absent account.
+                response.result?.value == null -> SolanaAccountOwnership.Missing
+                else ->
+                    response.result?.value?.owner?.let(SolanaAccountOwnership::Owned)
+                        ?: SolanaAccountOwnership.Unavailable
+            }
         } catch (e: Exception) {
             if (e is CancellationException) throw e
-            Timber.tag("SolanaApiImp").e(e, "getAccountOwner failed for %s", account)
-            null
+            Timber.tag("SolanaApiImp").e(e, "getAccountOwnership failed for %s", account)
+            SolanaAccountOwnership.Unavailable
         }
 
     override suspend fun getFeeForMessage(message: String): BigInteger {

@@ -228,6 +228,7 @@
     <string name="send_error_no_gas_fee">无燃料费</string>
     <string name="send_error_no_address">地址无效</string>
     <string name="send_error_invalid_recipient_address">该收款人不是此链的有效地址。</string>
+    <string name="error_recipient_not_a_wallet_address">该收款方是代币账户或程序地址，而非钱包。请输入所有者的钱包地址。</string>
     <string name="send_error_memo_too_long">备注过长：%1$d 个字节（最多 %2$d 个）。</string>
     <string name="send_error_no_amount">金额必须是正数</string>
     <string name="send_error_too_many_decimals">金额最多可保留 %1$d 位小数</string>
@@ -1619,6 +1620,9 @@
     <string name="ripple_field_buying_issuer">买入发行方</string>
     <string name="ripple_field_limit">限额</string>
     <string name="ripple_field_limit_issuer">限额发行方</string>
+    <string name="ripple_field_flags">Flags</string>
+    <string name="ripple_field_paths">支付路径</string>
+    <string name="ripple_partial_payment_warning">部分支付：显示的金额为上限，并非保证值。实际交付可能更少。</string>
     <string name="sui_sender">从</string>
     <string name="sui_gas_budget">Gas 预算：%1$s SUI</string>
     <string name="sui_gas_price">Gas 价格：%1$s MIST</string>

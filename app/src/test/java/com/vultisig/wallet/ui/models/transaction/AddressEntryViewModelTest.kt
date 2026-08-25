@@ -4,17 +4,20 @@ package com.vultisig.wallet.ui.models.transaction
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
 import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.RecipientValidity
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.UiText
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -61,6 +64,17 @@ internal class AddressEntryViewModelTest {
         requestQrScan = mockk(relaxed = true)
         addressBookRepository = mockk(relaxed = true)
         chainAccountAddressRepository = mockk(relaxed = true)
+        // The screen validates through validateRecipient, which only parts ways with isValid for
+        // an off-curve Solana recipient; deriving one from the other keeps each test's own isValid
+        // stub as the thing that decides the outcome.
+        coEvery { chainAccountAddressRepository.validateRecipient(any(), any()) } answers
+            {
+                if (chainAccountAddressRepository.isValid(firstArg(), secondArg())) {
+                    RecipientValidity.Valid
+                } else {
+                    RecipientValidity.InvalidForChain
+                }
+            }
         orderRepository = mockk(relaxed = true)
         requestResultRepository = mockk(relaxed = true)
     }
@@ -115,6 +129,38 @@ internal class AddressEntryViewModelTest {
             every { chainAccountAddressRepository.isValid(any(), any()) } returns false
             vm.saveAddress()
             vm.state.value.addressError.shouldNotBeNull()
+        }
+
+    /**
+     * Verifies saveAddress keeps the specific non-wallet message for an off-curve Solana recipient
+     * rather than replacing it with the generic invalid-for-chain text.
+     */
+    @Test
+    fun `saveAddress with a token account keeps the non-wallet error`() =
+        runTest(testDispatcher) {
+            every { any<SavedStateHandle>().toRoute<Route.AddressEntry>() } returns
+                Route.AddressEntry(
+                    chainId = "Solana",
+                    address = SOL_TOKEN_ACCOUNT,
+                    vaultId = VAULT_ID,
+                )
+            every { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            coEvery {
+                chainAccountAddressRepository.validateRecipient(Chain.Solana, SOL_TOKEN_ACCOUNT)
+            } returns RecipientValidity.NotAWalletAddress
+            val vm = createViewModel()
+            vm.titleTextFieldState.edit { replace(0, length, "Alice") }
+            vm.addressTextFieldState.edit { replace(0, length, SOL_TOKEN_ACCOUNT) }
+
+            vm.saveAddress()
+            advanceUntilIdle()
+
+            vm.state.value.addressError shouldBe
+                UiText.StringResource(R.string.error_recipient_not_a_wallet_address)
+            coVerify {
+                chainAccountAddressRepository.validateRecipient(Chain.Solana, SOL_TOKEN_ACCOUNT)
+            }
+            coVerify(exactly = 0) { addressBookRepository.add(any()) }
         }
 
     /** Verifies setOutputAddress sets the address field text. */
@@ -309,6 +355,7 @@ internal class AddressEntryViewModelTest {
         const val VAULT_ID = "vault-1"
         const val ETH_ADDRESS = "0x1234567890123456789012345678901234567890"
         const val SOL_ADDRESS = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+        const val SOL_TOKEN_ACCOUNT = "GppmkdEmuqNgS7uY5SSN3gXEamJrcPG9197wBdQ37NLc"
 
         // Length that exceeds the private LABEL_MAX_LENGTH constant in AddressEntryViewModel.
         // If the production constant changes, update this and the matching test name.

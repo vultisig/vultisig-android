@@ -74,9 +74,58 @@ class SolanaProgramDerivedAddressTest {
         assertNotNull(SolanaProgramDerivedAddress.find(List(16) { ByteArray(32) }, TOKEN_PROGRAM))
     }
 
+    @Test
+    fun `an associated token account is not a wallet address`() {
+        // Every address this object derives is off the curve — that is what find() selects for —
+        // so the three accounts pinned above are exactly the recipients that would strand a
+        // transfer: an SPL send to one creates an ATA-of-an-ATA nobody holds a key to.
+        listOf(
+                "GppmkdEmuqNgS7uY5SSN3gXEamJrcPG9197wBdQ37NLc",
+                "GSayQpRaoh1LFdBbja4vensNKDfihcixzCcQShKMCdMJ",
+                "Hq6N6sNE638VLULNEeAZRTMFmYtsG9ZLLPJYefxwPNWf",
+            )
+            .forEach { assertEquals(false, SolanaProgramDerivedAddress.isWalletAddress(it), it) }
+    }
+
+    @Test
+    fun `a wallet address is one`() {
+        assertEquals(true, SolanaProgramDerivedAddress.isWalletAddress(ON_CURVE_WALLET))
+        // A program id is generated as a keypair and so sits on the curve: off-curve is a test for
+        // "no key can exist", not for "dangerous", and the burn and program addresses need their
+        // own list.
+        assertEquals(true, SolanaProgramDerivedAddress.isWalletAddress(TOKEN_PROGRAM))
+    }
+
+    @Test
+    fun `anything that is not 32 base58 bytes is not a wallet address`() {
+        listOf("", "1111", "not an address", Base58Codec.encode(ByteArray(31))).forEach {
+            assertEquals(false, SolanaProgramDerivedAddress.isWalletAddress(it), it)
+        }
+    }
+
+    @Test
+    fun `mints are program-derived often enough that the guard cannot be part of chain validation`() {
+        // Kamino's share mints are PDAs. Chain address validation also screens contract addresses
+        // (SearchTokenUseCase), so folding the recipient rule into it would make exactly these
+        // tokens unsearchable — which is why the two checks stay separate.
+        listOf(
+                "7D8C5pDFxug58L9zkwK7bCiDg4kD4AygzbcZUmf5usHS",
+                "DgHN3q3dSYAchNX7V3D4aYiTWMx8RHTgHbfPiwiqBkE9",
+                "FiM4VQdXXnTXL7GgChryf9zHNG9cmvKECwf34L2y3CkN",
+            )
+            .forEach { assertEquals(false, SolanaProgramDerivedAddress.isWalletAddress(it), it) }
+    }
+
     private companion object {
         const val WALLET = "9ceRgz579BcfWogs3RE11FKNQaWW7Lmtnev3MXspxUjF"
         const val TOKEN_PROGRAM = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         const val ASSOCIATED_TOKEN_PROGRAM = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+
+        /**
+         * A real Solana wallet address. [WALLET] cannot stand in here: it is a synthetic fixture
+         * whose bytes happen to be off the curve, which is harmless for derivation but would make
+         * it the wrong witness for "this is a key someone holds".
+         */
+        const val ON_CURVE_WALLET = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
     }
 }

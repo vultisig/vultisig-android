@@ -104,6 +104,7 @@
     <string name="send_error_no_gas_fee">Нет платы за газ</string>
     <string name="send_error_no_address">Адрес недействителен</string>
     <string name="send_error_invalid_recipient_address">Этот получатель не является действительным адресом для этой сети.</string>
+    <string name="error_recipient_not_a_wallet_address">Этот получатель — токен-аккаунт или адрес программы, а не кошелёк. Введите адрес кошелька владельца.</string>
     <string name="send_error_memo_too_long">Мемо слишком длинное: %1$d байт (максимум %2$d).</string>
     <string name="send_error_no_amount">Сумма должна быть положительным числом</string>
     <string name="send_error_too_many_decimals">Сумма может содержать не более %1$d знаков после запятой</string>
@@ -1291,6 +1292,9 @@
     <string name="ripple_field_buying_issuer">Эмитент покупки</string>
     <string name="ripple_field_limit">Лимит</string>
     <string name="ripple_field_limit_issuer">Эмитент лимита</string>
+    <string name="ripple_field_flags">Flags</string>
+    <string name="ripple_field_paths">Маршруты платежа</string>
+    <string name="ripple_partial_payment_warning">Частичный платёж: показанное количество — это максимум, а не гарантия. Может быть доставлено меньше.</string>
     <string name="sui_sender">От</string>
     <string name="sui_gas_budget">Бюджет газа: %1$s SUI</string>
     <string name="sui_gas_price">Цена газа: %1$s MIST</string>

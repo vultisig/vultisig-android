@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.RecipientValidity
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
@@ -104,6 +105,8 @@ internal class DefaultSendStrategyTest {
     fun setUp() {
         Dispatchers.setMain(mainDispatcher)
         every { addressManager.dstAddressLabel } returns dstAddressLabelFlow
+        coEvery { chainAccountAddressRepository.validateRecipient(any(), any()) } returns
+            RecipientValidity.Valid
     }
 
     @AfterEach
@@ -1929,6 +1932,98 @@ internal class DefaultSendStrategyTest {
         return captured
     }
 
+    /**
+     * The submit path re-resolves the destination from the raw address field instead of reading
+     * what the form resolved, and the form's own check is debounced, so a submit landing inside
+     * that window would otherwise build a transaction for a recipient the form rejects. On Solana
+     * that recipient is unrecoverable: an SPL transfer to a token account derives an associated
+     * token account of a token account.
+     */
+    @Test
+    fun `submit rejects a solana token account the form's debounced check would have missed`() =
+        runTest {
+            val solCoin = solCoin()
+            val account =
+                Account(
+                    token = solCoin,
+                    tokenValue = TokenValue(BigInteger.valueOf(1_000_000_000L), solCoin),
+                    fiatValue = null,
+                    price = null,
+                )
+            vaultId = "vault-1"
+            selectedAccount = account
+            addressFieldState.setTextAndPlaceCursorAtEnd(SOL_TOKEN_ACCOUNT)
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+            coEvery { accountValidator.validate() } returns
+                ValidatedAccount(
+                    vaultId = "vault-1",
+                    selectedAccount = account,
+                    chain = Chain.Solana,
+                    gasFee = TokenValue(BigInteger.valueOf(5_000), solCoin),
+                    dstAddress = SOL_TOKEN_ACCOUNT,
+                )
+            // Well-formed for the chain: only the recipient rule separates it from a wallet.
+            coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            coEvery {
+                chainAccountAddressRepository.validateRecipient(Chain.Solana, SOL_TOKEN_ACCOUNT)
+            } returns RecipientValidity.NotAWalletAddress
+
+            build(this).submit()
+            advanceUntilIdle()
+
+            assertEquals(
+                R.string.error_recipient_not_a_wallet_address,
+                (lastError as UiText.StringResource).resId,
+            )
+            coVerify(exactly = 0) { transactionRepository.addTransaction(any()) }
+        }
+
+    @Test
+    fun `submit still reports a malformed recipient as an invalid address`() = runTest {
+        val solCoin = solCoin()
+        val account =
+            Account(
+                token = solCoin,
+                tokenValue = TokenValue(BigInteger.valueOf(1_000_000_000L), solCoin),
+                fiatValue = null,
+                price = null,
+            )
+        vaultId = "vault-1"
+        selectedAccount = account
+        addressFieldState.setTextAndPlaceCursorAtEnd("garbage")
+        tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+        coEvery { accountValidator.validate() } returns
+            ValidatedAccount(
+                vaultId = "vault-1",
+                selectedAccount = account,
+                chain = Chain.Solana,
+                gasFee = TokenValue(BigInteger.valueOf(5_000), solCoin),
+                dstAddress = "garbage",
+            )
+        coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns false
+        coEvery { chainAccountAddressRepository.validateRecipient(Chain.Solana, "garbage") } returns
+            RecipientValidity.InvalidForChain
+
+        build(this).submit()
+        advanceUntilIdle()
+
+        assertEquals(R.string.send_error_no_address, (lastError as UiText.StringResource).resId)
+        coVerify(exactly = 0) { transactionRepository.addTransaction(any()) }
+    }
+
+    private fun solCoin(): Coin =
+        Coin(
+            chain = Chain.Solana,
+            ticker = "SOL",
+            logo = "",
+            address = "SelfSolanaWallet",
+            decimal = 9,
+            hexPublicKey = "",
+            priceProviderID = "solana",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
     private fun btcCoin(): Coin =
         Coin(
             chain = Chain.Bitcoin,
@@ -1980,6 +2075,11 @@ internal class DefaultSendStrategyTest {
             contractAddress = "",
             isNativeToken = true,
         )
+
+    private companion object {
+        /** A wrapped-SOL associated token account: well-formed, off the curve, unspendable. */
+        const val SOL_TOKEN_ACCOUNT = "GppmkdEmuqNgS7uY5SSN3gXEamJrcPG9197wBdQ37NLc"
+    }
 
     private fun build(
         scope: CoroutineScope,
