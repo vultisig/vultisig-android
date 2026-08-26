@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.models.Chain
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
 
 /**
  * A reader for one chain family's signed grammar. `handles == null` requires the reader to
@@ -63,8 +64,9 @@ class SignedTransactionDecoder @Inject constructor() {
     /**
      * Decodes signed transaction content by attempting each registered decoder in precedence order
      * until one returns non-null. Returns [DecodedTransaction.unreadable] when no reader can prove
-     * an operation. If a decoder throws an exception, iteration continues to the next eligible
-     * decoder.
+     * an operation. If a decoder throws an exception (except CancellationException), iteration
+     * continues to the next eligible decoder. Coroutine cancellation is rethrown to preserve
+     * cancellation semantics.
      */
     fun decode(tx: SignedTransactionContent): DecodedTransaction {
         for (decoder in decoders) {
@@ -74,6 +76,9 @@ class SignedTransactionDecoder @Inject constructor() {
                     decoder.decode(tx)?.let {
                         return it
                     }
+                } catch (cancellation: CancellationException) {
+                    // Rethrow coroutine cancellation to preserve cancellation semantics
+                    throw cancellation
                 } catch (_: Exception) {
                     // Decoder failed on malformed content; continue to next decoder
                 }

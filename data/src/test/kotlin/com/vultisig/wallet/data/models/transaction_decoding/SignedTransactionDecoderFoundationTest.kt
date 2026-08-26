@@ -4,8 +4,10 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import java.math.BigInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CancellationException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import vultisig.keysign.v1.TransactionType
@@ -247,6 +249,20 @@ class SignedTransactionDecoderFoundationTest {
         )
     }
 
+    @Test
+    fun testCancellationExceptionIsRethrown() {
+        val cancellingDecoder = CancellingDecoder(setOf(Chain.Bitcoin))
+        val succeedingDecoder = FakeDecoder("succeeding", setOf(Chain.Bitcoin))
+
+        decoder.register(cancellingDecoder)
+        decoder.register(succeedingDecoder)
+
+        val content = StubContent(contentChain = Chain.Bitcoin)
+
+        // CancellationException should be rethrown, not swallowed
+        assertFailsWith<CancellationException> { decoder.decode(content) }
+    }
+
     // Stub implementation for testing
     private data class StubContent(
         private val stubHasOpaqueSignedContent: Boolean = false,
@@ -300,6 +316,15 @@ class SignedTransactionDecoderFoundationTest {
 
         override fun decode(tx: SignedTransactionContent): DecodedTransaction? {
             throw IllegalArgumentException("Malformed content")
+        }
+    }
+
+    /** Decoder that throws CancellationException to test cancellation propagation. */
+    private data class CancellingDecoder(override val handles: Set<Chain>?) :
+        TransactionContentDecoder {
+
+        override fun decode(tx: SignedTransactionContent): DecodedTransaction? {
+            throw CancellationException("Decoding cancelled")
         }
     }
 }
