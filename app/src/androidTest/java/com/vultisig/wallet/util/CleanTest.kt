@@ -1,6 +1,6 @@
 package com.vultisig.wallet.util
 
-import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
 import com.vultisig.wallet.app.activity.MainActivity
 import dagger.hilt.android.testing.HiltAndroidRule
