@@ -63,14 +63,19 @@ class SignedTransactionDecoder @Inject constructor() {
     /**
      * Decodes signed transaction content by attempting each registered decoder in precedence order
      * until one returns non-null. Returns [DecodedTransaction.unreadable] when no reader can prove
-     * an operation.
+     * an operation. If a decoder throws an exception, iteration continues to the next eligible
+     * decoder.
      */
     fun decode(tx: SignedTransactionContent): DecodedTransaction {
         for (decoder in decoders) {
             val handles = decoder.handles
             if (handles == null || handles.contains(tx.chain)) {
-                decoder.decode(tx)?.let {
-                    return it
+                try {
+                    decoder.decode(tx)?.let {
+                        return it
+                    }
+                } catch (_: Exception) {
+                    // Decoder failed on malformed content; continue to next decoder
                 }
             }
         }

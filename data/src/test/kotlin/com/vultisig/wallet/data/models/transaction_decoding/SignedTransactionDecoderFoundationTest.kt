@@ -192,6 +192,61 @@ class SignedTransactionDecoderFoundationTest {
         )
     }
 
+    @Test
+    fun testThrowingDecoderSkippedInFavorOfNextDecoder() {
+        val throwingDecoder = ThrowingDecoder(setOf(Chain.Bitcoin))
+        val succeedingDecoder = FakeDecoder("succeeding", setOf(Chain.Bitcoin))
+
+        decoder.register(throwingDecoder)
+        decoder.register(succeedingDecoder)
+
+        val content = StubContent(contentChain = Chain.Bitcoin)
+        val result = decoder.decode(content)
+
+        // Throwing decoder should be skipped, succeeding decoder should provide result
+        assertEquals(DecodedOperation.Transfer, result.operation)
+        assertEquals(
+            "succeeding",
+            result.counterparty?.let { (it as DecodedCounterparty.Node).value },
+        )
+    }
+
+    @Test
+    fun testAllThrowingDecodersFallbackToUnreadable() {
+        val throwingDecoder1 = ThrowingDecoder(setOf(Chain.Bitcoin))
+        val throwingDecoder2 = ThrowingDecoder(null) // Universal handler that throws
+
+        decoder.register(throwingDecoder1)
+        decoder.register(throwingDecoder2)
+
+        val content = StubContent(contentChain = Chain.Bitcoin)
+        val result = decoder.decode(content)
+
+        // All decoders threw; should return unreadable
+        assertEquals(DecodedTransaction.unreadable, result)
+        assertEquals(DecodedOperation.Unknown, result.operation)
+        assertEquals(DecodedEvidence.Unread, result.evidence)
+    }
+
+    @Test
+    fun testThrowingDecoderDoesNotBlockOtherChains() {
+        val throwingDecoder = ThrowingDecoder(setOf(Chain.Bitcoin))
+        val ethereumDecoder = FakeDecoder("ethereum", setOf(Chain.Ethereum))
+
+        decoder.register(throwingDecoder)
+        decoder.register(ethereumDecoder)
+
+        val ethereumContent = StubContent(contentChain = Chain.Ethereum)
+        val result = decoder.decode(ethereumContent)
+
+        // Bitcoin decoder shouldn't match Ethereum, Ethereum decoder should succeed
+        assertEquals(DecodedOperation.Transfer, result.operation)
+        assertEquals(
+            "ethereum",
+            result.counterparty?.let { (it as DecodedCounterparty.Node).value },
+        )
+    }
+
     // Stub implementation for testing
     private data class StubContent(
         private val stubHasOpaqueSignedContent: Boolean = false,
@@ -236,6 +291,15 @@ class SignedTransactionDecoderFoundationTest {
             } else {
                 null
             }
+        }
+    }
+
+    /** Decoder that throws an exception, used to test error handling. */
+    private data class ThrowingDecoder(override val handles: Set<Chain>?) :
+        TransactionContentDecoder {
+
+        override fun decode(tx: SignedTransactionContent): DecodedTransaction? {
+            throw IllegalArgumentException("Malformed content")
         }
     }
 }
