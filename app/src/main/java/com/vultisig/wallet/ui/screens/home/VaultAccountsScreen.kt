@@ -68,6 +68,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.NoChainFound
 import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.screens.v2.home.components.TopRow
 import com.vultisig.wallet.ui.screens.v2.home.components.WalletExpandedTopbarContent
+import com.vultisig.wallet.ui.screens.v2.home.pager.banner.HomeBannerType
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -144,11 +145,8 @@ internal fun VaultAccountsScreen(viewModel: VaultAccountsViewModel = hiltViewMod
         onOpenSettingsClick = viewModel::openSettings,
         onToggleVaultListClick = viewModel::openVaultList,
         onChooseChains = viewModel::openAddChainAccount,
-        onMigrateClick = viewModel::migrate,
-        onUpgradeDismiss = viewModel::dismissUpgradeBanner,
-        onFollowXDismiss = viewModel::dismissFollowXBanner,
-        onBuyVultClick = viewModel::buyVult,
-        onBuyVultDismiss = viewModel::dismissBuyVultBanner,
+        onBannerClick = viewModel::onBannerClick,
+        onBannerDismiss = viewModel::onBannerDismiss,
         onCryptoConnectionTypeClick = viewModel::setCryptoConnectionType,
     )
 }
@@ -166,14 +164,11 @@ internal fun VaultAccountsScreen(
     onToggleVaultListClick: () -> Unit = {},
     onAccountClick: (AccountUiModel) -> Unit = {},
     onToggleBalanceVisibility: () -> Unit = {},
-    onMigrateClick: () -> Unit = {},
     onOpenHistoryClick: () -> Unit = {},
     onOpenSettingsClick: () -> Unit = {},
     onChooseChains: () -> Unit = {},
-    onUpgradeDismiss: () -> Unit = {},
-    onFollowXDismiss: () -> Unit = {},
-    onBuyVultClick: () -> Unit = {},
-    onBuyVultDismiss: () -> Unit = {},
+    onBannerClick: (HomeBannerType) -> Unit = {},
+    onBannerDismiss: (HomeBannerType) -> Unit = {},
     onCryptoConnectionTypeClick: (CryptoConnectionType) -> Unit = {},
 ) {
 
@@ -298,9 +293,7 @@ internal fun VaultAccountsScreen(
                     item {
                         AnimatedVisibility(
                             visible =
-                                (state.showUpgradeBanner ||
-                                    state.showFollowXBanner ||
-                                    state.showBuyVultBanner) &&
+                                state.banners.isNotEmpty() &&
                                     state.cryptoConnectionType == CryptoConnectionType.Wallet,
                             enter = fadeIn() + expandVertically(),
                             exit = fadeOut() + shrinkVertically(),
@@ -308,15 +301,10 @@ internal fun VaultAccountsScreen(
                             Banners(
                                 modifier =
                                     Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
-                                showUpgrade = state.showUpgradeBanner,
-                                showFollowX = state.showFollowXBanner,
-                                showBuyVult = state.showBuyVultBanner,
-                                onMigrateClick = onMigrateClick,
-                                onBuyVultClick = onBuyVultClick,
-                                onBuyVultDismiss = onBuyVultDismiss,
+                                banners = state.banners,
+                                onBannerClick = onBannerClick,
+                                onBannerDismiss = onBannerDismiss,
                                 context = context,
-                                onUpgradeDismiss = onUpgradeDismiss,
-                                onFollowXDismiss = onFollowXDismiss,
                             )
                         }
                     }

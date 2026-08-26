@@ -1098,7 +1098,6 @@
     <string name="search_bar_soon">Soon</string>
     <string name="upgrade_banner_sign_faster">Sign faster than ever before</string>
     <string name="upgrade_banner_upgrade_your">Upgrade your vault now</string>
-    <string name="upgrade_banner_upgrade_now">Upgrade now</string>
     <string name="home_portfolio_balance">Portfolio Balance</string>
     <string name="wallet">Wallet</string>
     <string name="governance">Governance</string>
@@ -1182,10 +1181,16 @@
     <string name="send_tx_overview_add_to_address_book">Add to Address Book</string>
     <string name="invite_to_x_banner_title">Vultisig is building with you.</string>
     <string name="invite_to_x_banner_desc">Follow us on X</string>
-    <string name="invite_to_x_banner_button">Follow @%s</string>
     <string name="buy_vult_banner_title" translatable="false">Buy $VULT</string>
     <string name="buy_vult_banner_desc">And save on swap fees</string>
-    <string name="buy_vult_banner_button" translatable="false">Buy $VULT</string>
+    <string name="rujira_banner_caption">Stake &amp; earn</string>
+    <string name="rujira_banner_title">Rujira staking live now</string>
+    <string name="backup_banner_caption">Back Up Your Vault</string>
+    <string name="backup_banner_title">Request full vault custody</string>
+    <string name="referral_rewards_banner_caption">Don’t miss rewards</string>
+    <string name="referral_rewards_banner_title">Add your referral code</string>
+    <string name="kamino_banner_caption">New on Solana</string>
+    <string name="kamino_banner_title">Start earning with Kamino</string>
     <string name="home_defi_portfolio">DeFi Portfolio</string>
     <string name="home_page_no_chains_enabled">No chains enabled</string>
     <string name="home_page_no_chain_enabled_desc">You’ve disabled all chains. Make sure that at least one chain is enabled.</string>

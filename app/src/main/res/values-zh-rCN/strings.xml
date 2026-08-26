@@ -1159,7 +1159,6 @@
     <!-- Upgrade Banner -->
     <string name="upgrade_banner_sign_faster">比以往更快地签名</string>
     <string name="upgrade_banner_upgrade_your">立即升级您的保险库</string>
-    <string name="upgrade_banner_upgrade_now">立即升级</string>
 
     <!-- Home -->
     <string name="home_portfolio_balance">投资组合余额</string>
@@ -1256,8 +1255,15 @@
     <string name="send_tx_overview_add_to_address_book">添加到地址簿</string>
     <string name="invite_to_x_banner_title">Vultisig 正在与您一起构建。</string>
     <string name="invite_to_x_banner_desc">在 X 上关注我们</string>
-    <string name="invite_to_x_banner_button">关注 %s</string>
     <string name="buy_vult_banner_desc">并节省交换费用</string>
+    <string name="rujira_banner_caption">质押并赚取收益</string>
+    <string name="rujira_banner_title">Rujira 质押现已上线</string>
+    <string name="backup_banner_caption">备份您的保险库</string>
+    <string name="backup_banner_title">申请完整保管您的保险库</string>
+    <string name="referral_rewards_banner_caption">不要错过奖励</string>
+    <string name="referral_rewards_banner_title">添加您的推荐代码</string>
+    <string name="kamino_banner_caption">Solana 新功能</string>
+    <string name="kamino_banner_title">通过 Kamino 开始赚取收益</string>
     <string name="rename_vault_screen_rename_vault">改名</string>
     <string name="custom_token_screen_finding_token">查找代币</string>
     <string name="retry">重试</string>

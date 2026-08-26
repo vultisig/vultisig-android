@@ -359,6 +359,7 @@ internal class VaultAccountsViewModelTest {
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             enableTokenUseCase = mockk(relaxed = true),
             promoBannerDismissalRepository = mockk(relaxed = true),
+            referralCodeSettingsRepository = mockk(relaxed = true),
             cryptoConnectionTypeRepository = cryptoConnectionTypeRepository,
             defaultDeFiChainsRepository = defaultDeFiChainsRepository,
             hasCircleAccount = hasCircleAccount,

@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.PromoBanner
 import com.vultisig.wallet.data.repositories.PromoBannerDismissalRepository
+import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TiersNFTRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -41,9 +42,13 @@ import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.v2.home.pager.banner.HomeBannerType
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
@@ -93,6 +98,7 @@ internal class VaultAccountsViewModelTest {
     private lateinit var lastOpenedVaultRepository: LastOpenedVaultRepository
     private lateinit var enableTokenUseCase: EnableTokenUseCase
     private lateinit var promoBannerDismissalRepository: PromoBannerDismissalRepository
+    private lateinit var referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract
     private lateinit var cryptoConnectionTypeRepository: CryptoConnectionTypeRepository
     private lateinit var defaultDeFiChainsRepository: DefaultDeFiChainsRepository
     private lateinit var hasCircleAccount: HasCircleAccountUseCase
@@ -121,6 +127,7 @@ internal class VaultAccountsViewModelTest {
         lastOpenedVaultRepository = mockk(relaxed = true)
         enableTokenUseCase = mockk(relaxed = true)
         promoBannerDismissalRepository = mockk(relaxed = true)
+        referralCodeSettingsRepository = mockk(relaxed = true)
         cryptoConnectionTypeRepository = mockk(relaxed = true)
         defaultDeFiChainsRepository = mockk(relaxed = true)
         hasCircleAccount = mockk(relaxed = true)
@@ -132,6 +139,9 @@ internal class VaultAccountsViewModelTest {
             MutableStateFlow(CryptoConnectionType.Wallet)
         every { lastOpenedVaultRepository.lastOpenedVaultId } returns emptyFlow()
         every { promoBannerDismissalRepository.isDismissed(any()) } returns flowOf(false)
+        // The banner carousel combines the backup flow, so a relaxed mock's non-emitting Flow
+        // would stall it. Backed up by default, which keeps the backup banner out of the way.
+        coEvery { vaultDataStoreRepository.readBackupStatus(any()) } returns flowOf(true)
         // Function-type-interface mocks need explicit return-type stubs; relaxed mode auto-stubs
         // to a generic Object that fails the implicit cast at the VM call site.
         coEvery { isGlobalBackupReminderRequired() } returns false
@@ -162,6 +172,7 @@ internal class VaultAccountsViewModelTest {
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             enableTokenUseCase = enableTokenUseCase,
             promoBannerDismissalRepository = promoBannerDismissalRepository,
+            referralCodeSettingsRepository = referralCodeSettingsRepository,
             cryptoConnectionTypeRepository = cryptoConnectionTypeRepository,
             defaultDeFiChainsRepository = defaultDeFiChainsRepository,
             hasCircleAccount = hasCircleAccount,
@@ -183,20 +194,20 @@ internal class VaultAccountsViewModelTest {
 
     /** Verifies dismissing the Follow-X banner records a global dismissal for that banner. */
     @Test
-    fun `dismissFollowXBanner records a global dismissal`() =
+    fun `onBannerDismiss records a global dismissal for Follow X`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            vm.dismissFollowXBanner()
+            vm.onBannerDismiss(HomeBannerType.FollowX)
             advanceUntilIdle()
             coVerify { promoBannerDismissalRepository.dismiss(PromoBanner.FollowXVultisig) }
         }
 
     /** Verifies dismissing the upgrade banner records a global dismissal for that banner. */
     @Test
-    fun `dismissUpgradeBanner records a global dismissal`() =
+    fun `onBannerDismiss records a global dismissal for Upgrade`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            vm.dismissUpgradeBanner()
+            vm.onBannerDismiss(HomeBannerType.UpgradeVault)
             advanceUntilIdle()
             coVerify { promoBannerDismissalRepository.dismiss(PromoBanner.UpgradeVaultDkls) }
         }
@@ -401,24 +412,24 @@ internal class VaultAccountsViewModelTest {
             verify(atLeast = 1) { accountsRepository.loadAddressBalances("vault-1") }
         }
 
-    /** Verifies dismissBuyVultBanner records a global dismissal for the Buy VULT banner. */
+    /** Verifies dismissing the Buy VULT banner records a global dismissal for that banner. */
     @Test
-    fun `dismissBuyVultBanner records a global dismissal`() =
+    fun `onBannerDismiss records a global dismissal for Buy VULT`() =
         runTest(testDispatcher) {
             every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
             coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
             val vm = createViewModel()
             advanceUntilIdle()
 
-            vm.dismissBuyVultBanner()
+            vm.onBannerDismiss(HomeBannerType.BuyVult)
             advanceUntilIdle()
 
             coVerify { promoBannerDismissalRepository.dismiss(PromoBanner.BuyVultSwap) }
         }
 
-    /** Verifies showBuyVultBanner is true while the banner is not within its dismissal TTL. */
+    /** Verifies the Buy VULT banner is offered while it is not within its dismissal TTL. */
     @Test
-    fun `showBuyVultBanner is true when not dismissed`() =
+    fun `banners include Buy VULT when not dismissed`() =
         runTest(testDispatcher) {
             every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
             coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
@@ -426,12 +437,12 @@ internal class VaultAccountsViewModelTest {
                 flowOf(false)
             val vm = createViewModel()
             advanceUntilIdle()
-            vm.uiState.value.showBuyVultBanner.shouldBeTrue()
+            vm.uiState.value.banners.shouldContain(HomeBannerType.BuyVult)
         }
 
-    /** Verifies showBuyVultBanner is false while the banner is within its dismissal TTL. */
+    /** Verifies the Buy VULT banner is withheld while it is within its dismissal TTL. */
     @Test
-    fun `showBuyVultBanner is false when dismissed within TTL`() =
+    fun `banners exclude Buy VULT when dismissed within TTL`() =
         runTest(testDispatcher) {
             every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
             coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
@@ -439,12 +450,12 @@ internal class VaultAccountsViewModelTest {
                 flowOf(true)
             val vm = createViewModel()
             advanceUntilIdle()
-            vm.uiState.value.showBuyVultBanner.shouldBeFalse()
+            vm.uiState.value.banners.shouldNotContain(HomeBannerType.BuyVult)
         }
 
     /** Verifies the upgrade banner shows only for a GG20 (migration-eligible) vault. */
     @Test
-    fun `showUpgradeBanner is true for a GG20 vault that is not dismissed`() =
+    fun `banners include Upgrade for a GG20 vault that is not dismissed`() =
         runTest(testDispatcher) {
             every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
             coEvery { vaultRepository.get("vault-1") } returns
@@ -454,12 +465,12 @@ internal class VaultAccountsViewModelTest {
             } returns flowOf(false)
             val vm = createViewModel()
             advanceUntilIdle()
-            vm.uiState.value.showUpgradeBanner.shouldBeTrue()
+            vm.uiState.value.banners.shouldContain(HomeBannerType.UpgradeVault)
         }
 
     /** Verifies the upgrade banner is hidden for a non-GG20 vault even when not dismissed. */
     @Test
-    fun `showUpgradeBanner is false for a non-GG20 vault`() =
+    fun `banners exclude Upgrade for a non-GG20 vault`() =
         runTest(testDispatcher) {
             every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
             coEvery { vaultRepository.get("vault-1") } returns
@@ -469,7 +480,103 @@ internal class VaultAccountsViewModelTest {
             } returns flowOf(false)
             val vm = createViewModel()
             advanceUntilIdle()
-            vm.uiState.value.showUpgradeBanner.shouldBeFalse()
+            vm.uiState.value.banners.shouldNotContain(HomeBannerType.UpgradeVault)
+        }
+
+    /**
+     * Kamino and Rujira each open one chain's DeFi screen, so a vault without that chain has
+     * nowhere for them to go and must not be offered them.
+     */
+    @Test
+    fun `banners exclude chain-gated promos for a vault without those chains`() =
+        runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns
+                Vault(id = "vault-1", name = "Test", coins = listOf(Coins.Bitcoin.BTC))
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.banners.shouldNotContain(HomeBannerType.KaminoEarn)
+            vm.uiState.value.banners.shouldNotContain(HomeBannerType.RujiraStaking)
+        }
+
+    /** Verifies the chain-gated promos are offered once their chain is enabled on the vault. */
+    @Test
+    fun `banners include chain-gated promos for a vault with Solana and THORChain`() =
+        runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns
+                Vault(
+                    id = "vault-1",
+                    name = "Test",
+                    coins = listOf(Coins.Solana.SOL, Coins.ThorChain.RUNE),
+                )
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.banners.shouldContain(HomeBannerType.KaminoEarn)
+            vm.uiState.value.banners.shouldContain(HomeBannerType.RujiraStaking)
+        }
+
+    /** Verifies the referral promo is withheld once the vault already carries a referred code. */
+    @Test
+    fun `banners exclude Referral when the vault already has a referred code`() =
+        runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { referralCodeSettingsRepository.getExternalReferralBy("vault-1") } returns "ABC"
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.banners.shouldNotContain(HomeBannerType.ReferralRewards)
+        }
+
+    /** Verifies the referral promo is offered while no referred code has been entered. */
+    @Test
+    fun `banners include Referral when the vault has no referred code`() =
+        runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { referralCodeSettingsRepository.getExternalReferralBy("vault-1") } returns null
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.banners.shouldContain(HomeBannerType.ReferralRewards)
+        }
+
+    /**
+     * The backup reminder tracks the vault's live backup state rather than a snapshot: backing the
+     * vault up happens on another screen while home is still alive.
+     */
+    @Test
+    fun `banners drop Backup once the vault is backed up`() =
+        runTest(testDispatcher) {
+            val backupStatus = MutableStateFlow(false)
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            coEvery { vaultDataStoreRepository.readBackupStatus("vault-1") } returns backupStatus
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.banners.shouldContain(HomeBannerType.BackupVault)
+
+            backupStatus.value = true
+            advanceUntilIdle()
+
+            vm.uiState.value.banners.shouldNotContain(HomeBannerType.BackupVault)
+        }
+
+    /** Carousel order is the declaration order of [HomeBannerType], which is Figma's order. */
+    @Test
+    fun `banners keep Figma carousel order`() =
+        runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns
+                Vault(
+                    id = "vault-1",
+                    name = "Test",
+                    libType = SigningLibType.GG20,
+                    coins = listOf(Coins.Solana.SOL, Coins.ThorChain.RUNE),
+                )
+            coEvery { vaultDataStoreRepository.readBackupStatus("vault-1") } returns flowOf(false)
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.banners.shouldContainExactly(HomeBannerType.entries)
         }
 
     /** Verifies buyVult navigates to Swap with VULT preselected when vault already has VULT. */
