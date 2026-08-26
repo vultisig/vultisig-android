@@ -9,8 +9,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
@@ -115,8 +116,8 @@ private val PromoBannerMutedPurple = Color(0xFF5C5277)
 private val PromoBannerDeepBlue = Color(0xFF07156F)
 private val PromoBannerBrightBlue = Color(0xFF0343CD)
 
-/** Figma's banner height: 20 padding + a 41 icon tile + 20 padding. */
-private val BannerMinHeight = 81.dp
+/** Figma's banner height: 20 of clearance above and below a 41 dp icon tile. Fixed, like iOS. */
+private val BannerHeight = 81.dp
 
 /** Room kept clear on the trailing side so long copy wraps before it reaches the close button. */
 private val CloseButtonReserve = 32.dp
@@ -266,7 +267,7 @@ internal fun HomeBanner(
         Box(
             modifier =
                 Modifier.fillMaxWidth()
-                    .heightIn(min = BannerMinHeight)
+                    .height(BannerHeight)
                     .clip(Theme.v2.radius.xl)
                     .background(Theme.v2.colors.backgrounds.surface1)
                     .background(
@@ -304,7 +305,7 @@ internal fun HomeBanner(
             )
 
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 20.dp),
+                modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
