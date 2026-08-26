@@ -20,13 +20,13 @@ import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -99,7 +99,7 @@ internal class ChainTokensViewModelTest {
 
         vm.showSearchBar()
 
-        assertTrue(vm.uiState.value.isSearchMode)
+        vm.uiState.value.isSearchMode shouldBe true
     }
 
     @Test
@@ -109,34 +109,34 @@ internal class ChainTokensViewModelTest {
 
         vm.hideSearchBar()
 
-        assertFalse(vm.uiState.value.isSearchMode)
+        vm.uiState.value.isSearchMode shouldBe false
     }
 
     @Test
     fun `isSearchMode is false by default`() {
         val vm = createViewModel()
 
-        assertFalse(vm.uiState.value.isSearchMode)
+        vm.uiState.value.isSearchMode shouldBe false
     }
 
     @Test
     fun `showSearchBar then hideSearchBar toggles state correctly`() {
         val vm = createViewModel()
 
-        assertFalse(vm.uiState.value.isSearchMode)
+        vm.uiState.value.isSearchMode shouldBe false
 
         vm.showSearchBar()
-        assertTrue(vm.uiState.value.isSearchMode)
+        vm.uiState.value.isSearchMode shouldBe true
 
         vm.hideSearchBar()
-        assertFalse(vm.uiState.value.isSearchMode)
+        vm.uiState.value.isSearchMode shouldBe false
     }
 
     @Test
     fun `the qbtc claim banner shows on bitcoin for a vault that can claim`() {
         val vm = createEligibleViewModel()
 
-        assertTrue(vm.uiState.value.showQbtcClaimBanner)
+        vm.uiState.value.showQbtcClaimBanner shouldBe true
     }
 
     @Test
@@ -145,7 +145,17 @@ internal class ChainTokensViewModelTest {
 
         vm.dismissQbtcClaimBanner()
 
-        assertFalse(vm.uiState.value.showQbtcClaimBanner)
+        vm.uiState.value.showQbtcClaimBanner shouldBe false
+    }
+
+    @Test
+    fun `the qbtc claim banner goes before the dismissal reaches disk`() {
+        promoBannerDismissalRepository.holdDismissal()
+        val vm = createEligibleViewModel()
+
+        vm.dismissQbtcClaimBanner()
+
+        vm.uiState.value.showQbtcClaimBanner shouldBe false
     }
 
     @Test
@@ -154,7 +164,7 @@ internal class ChainTokensViewModelTest {
 
         val vm = createEligibleViewModel()
 
-        assertFalse(vm.uiState.value.showQbtcClaimBanner)
+        vm.uiState.value.showQbtcClaimBanner shouldBe false
     }
 
     /** A view model on the Bitcoin screen of a DKLS vault — the state that surfaces the banner. */
@@ -173,13 +183,22 @@ internal class ChainTokensViewModelTest {
      */
     private class FakePromoBannerDismissalRepository : PromoBannerDismissalRepository {
         private val dismissed = MutableStateFlow(emptySet<PromoBanner>())
+        private var dismissalLands = true
 
         fun setDismissed(banner: PromoBanner) = dismissed.update { it + banner }
+
+        /** Stands in for a write that has not reached disk, so nothing is read back from it. */
+        fun holdDismissal() {
+            dismissalLands = false
+        }
 
         override fun isDismissed(banner: PromoBanner, policy: DismissPolicy): Flow<Boolean> =
             dismissed.map { banner in it }
 
-        override suspend fun dismiss(banner: PromoBanner) = setDismissed(banner)
+        override suspend fun dismiss(banner: PromoBanner) {
+            if (!dismissalLands) awaitCancellation()
+            setDismissed(banner)
+        }
     }
 
     private companion object {

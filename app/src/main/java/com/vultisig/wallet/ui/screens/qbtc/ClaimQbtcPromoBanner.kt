@@ -38,6 +38,10 @@ import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -54,6 +58,15 @@ private val GlassCloseSize = 40.dp
 private val GlassCloseInset = 9.dp
 private val GlassCloseBlur = 20.dp
 private val GlassCloseIconSize = 12.dp
+
+private val ContentPadding = 24.dp
+
+/**
+ * Kept clear of the close control on both sides, so the subtitle stays centred on the card: it is
+ * the one line drawn level with the control, and a long translation would otherwise run under the
+ * frost disc.
+ */
+private val SubtitleGutter = GlassCloseInset + GlassCloseSize - ContentPadding
 
 @Composable
 internal fun ClaimQbtcPromoBanner(
@@ -126,7 +139,7 @@ internal fun ClaimQbtcPromoBanner(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth().padding(24.dp),
+                modifier = Modifier.fillMaxWidth().padding(ContentPadding),
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -137,6 +150,7 @@ internal fun ClaimQbtcPromoBanner(
                         style = Theme.brockmann.supplementary.caption,
                         color = Theme.v2.colors.text.tertiary,
                         textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = SubtitleGutter),
                     )
                     Text(
                         text = stringResource(R.string.qbtc_claim_banner_title),
@@ -165,6 +179,8 @@ internal fun ClaimQbtcPromoBanner(
                 }
         )
 
+        // The icon carries no description of its own, so the control announces once, as a button.
+        val dismissLabel = stringResource(R.string.close_sheet_content_description)
         Box(
             contentAlignment = Alignment.Center,
             modifier =
@@ -172,7 +188,11 @@ internal fun ClaimQbtcPromoBanner(
                     .padding(all = GlassCloseInset)
                     .size(GlassCloseSize)
                     .clip(CircleShape)
-                    .clickOnce(onClick = onDismiss),
+                    .clickOnce(onClick = onDismiss)
+                    .semantics {
+                        role = Role.Button
+                        contentDescription = dismissLabel
+                    },
         ) {
             UiIcon(
                 drawableResId = R.drawable.glass,

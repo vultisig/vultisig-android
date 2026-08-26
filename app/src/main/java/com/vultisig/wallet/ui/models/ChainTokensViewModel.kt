@@ -214,6 +214,9 @@ constructor(
     // Global dismissal under the banner's own policy — permanent, so the card does not come back
     // once closed. The claim itself stays reachable from the QBTC chain screen.
     fun dismissQbtcClaimBanner() {
+        // Hidden here rather than left to the dismissal collector, so the card goes on the tap
+        // instead of a disk write later; the stored dismissal then re-emits the same false.
+        uiState.update { it.copy(showQbtcClaimBanner = false) }
         viewModelScope.safeLaunch { promoBannerDismissalRepository.dismiss(PromoBanner.ClaimQbtc) }
     }
 
