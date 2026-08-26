@@ -390,7 +390,7 @@ class ChainHelpersTest {
     }
 
     /**
-     * One send per Cosmos-family chain not otherwise covered by [sendCosmosTest]/ [sendKUJIRATest],
+     * One send per Cosmos-family chain not otherwise covered by [sendCosmosTest],
      * plus one genuine IBC transfer (`transaction_type` 3, routed through [CosmosHelper]'s
      * `TRANSACTION_TYPE_IBC_TRANSFER` branch rather than a plain send whose memo merely looks like
      * IBC routing info). Regression coverage for issue #5421 item 5.
@@ -659,24 +659,6 @@ class ChainHelpersTest {
             val coin = payload.coin.coinType
 
             val helper = UtxoHelper(coin, HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
-            val preImageHashes =
-                helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
-
-            assertEquals(preImageHashes, transaction.expectedImageHash)
-        }
-    }
-
-    @Test
-    fun sendKUJIRATest() {
-        val transactions: List<TransactionData> = loadTransactionData(KUJIRA_JSON_FILE)
-        val helper =
-            CosmosHelper(
-                coinType = CoinType.KUJIRA,
-                denom = Chain.Kujira.feeUnit,
-                gasLimit = CosmosHelper.getChainGasLimit(Chain.Kujira),
-            )
-
-        transactions.forEach { transaction ->
             val preImageHashes =
                 helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
 
@@ -1016,7 +998,6 @@ class ChainHelpersTest {
         private const val QBTC_JSON_FILE = "qbtc.json"
         private const val SUI_JSON_FILE = "sui.json"
         private const val TRON_JSON_FILE = "tron.json"
-        private const val KUJIRA_JSON_FILE = "kujira.json"
 
         private const val CARDANO_JSON_FILE = "cardano.json"
 
@@ -1055,7 +1036,6 @@ class ChainHelpersTest {
                 QBTC_JSON_FILE to "sendQBTCTest",
                 SUI_JSON_FILE to "sendSUI",
                 TRON_JSON_FILE to "sendTronTest",
-                KUJIRA_JSON_FILE to "sendKUJIRATest",
                 CARDANO_JSON_FILE to "sendCardano",
                 THORCHAIN_SWAP_JSON_FILE to "sendThorchainSwapTest",
                 THORCHAIN_SWAP_LIMIT_ORDER_JSON_FILE to "sendThorchainSwapTest",

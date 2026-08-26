@@ -24,7 +24,6 @@ constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val searchEvmToken: SearchEvmTokenUseCase,
     private val searchSolToken: SearchSolTokenUseCase,
-    private val searchKujiToken: SearchKujiraTokenUseCase,
     private val searchTerraToken: SearchTerraTokenUseCase,
     private val searchSuiToken: SearchSuiTokenUseCase,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
@@ -44,7 +43,6 @@ constructor(
         when {
             chain.standard == EVM -> searchEvmToken(chainId, address)
             chain.standard == SOL -> searchSolToken(address)
-            chain == Chain.Kujira -> searchKujiToken(address)
             chain == Chain.Terra || chain == Chain.TerraClassic -> searchTerraToken(chain, address)
             chain == Chain.Sui -> searchSuiToken(address)
             else -> null
@@ -60,15 +58,8 @@ constructor(
             Chain.Terra,
             Chain.TerraClassic -> isCw20ContractAddressShape()
             Chain.Sui -> isSuiCoinTypeShape()
-            else ->
-                isNotEmpty() &&
-                    chainAccountAddressRepository.isValid(chain, canonicalizedFor(chain))
+            else -> isNotEmpty() && chainAccountAddressRepository.isValid(chain, this)
         }
-
-    private fun String.canonicalizedFor(chain: Chain): String =
-        if (chain == Chain.Kujira && startsWith(KUJIRA_FACTORY_PREFIX)) {
-            substringAfter('/').substringBefore('/')
-        } else this
 
     /**
      * Bech32 *shape* check for a Terra CW20 contract address, mirroring the SDK's
@@ -101,7 +92,6 @@ constructor(
     private fun Coin.hasSaneMetadata(): Boolean = ticker.isNotBlank() && decimal in 0..MAX_DECIMALS
 
     private companion object {
-        const val KUJIRA_FACTORY_PREFIX = "factory/"
         const val TERRA_CONTRACT_PREFIX = "terra1"
         const val MAX_DECIMALS = 30
     }

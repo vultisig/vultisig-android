@@ -183,7 +183,6 @@ class CosmosFeeServiceTest {
         val cosmosChains =
             listOf(
                 Chain.GaiaChain,
-                Chain.Kujira,
                 Chain.Osmosis,
                 Chain.Terra,
                 Chain.Akash,

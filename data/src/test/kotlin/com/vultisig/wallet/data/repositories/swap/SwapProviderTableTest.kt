@@ -242,34 +242,7 @@ internal class SwapProviderTableTest {
     }
 
     @Test
-    fun `Kujira offers no providers now that Maya has delisted every KUJI pool`() {
-        // MayaChain was Kujira's only provider and no KUJI.* pool remains, so KUJI→USK and every
-        // cross-chain KUJI pair must resolve to no providers — the pipeline then raises
-        // SwapIsNotSupported → "Swap route not available" instead of a doomed quote (#5472).
-        listOf(
-                coin(Chain.Kujira, "KUJI", isNative = true),
-                coin(Chain.Kujira, "USK", isNative = false, contract = "factory/kujira1/uusk"),
-            )
-            .forEach { c ->
-                assertEquals(
-                    emptySet<SwapProvider>(),
-                    table.providersFor(c),
-                    "Kujira must offer no providers for ${c.ticker}",
-                )
-            }
-
-        assertEquals(
-            emptyList<SwapProvider>(),
-            table.eligibleProvidersFor(
-                srcToken = coin(Chain.Kujira, "KUJI", isNative = true),
-                dstToken = coin(Chain.Kujira, "USK", isNative = false, contract = "factory/uusk"),
-            ),
-            "Same-chain KUJI→USK must have no eligible provider",
-        )
-    }
-
-    @Test
-    fun `MayaChain keeps its MAYA route after Kujira was split out`() {
+    fun `MayaChain keeps its MAYA route`() {
         assertEquals(
             setOf(SwapProvider.MAYA),
             table.providersFor(coin(Chain.MayaChain, "CACAO", isNative = true)),

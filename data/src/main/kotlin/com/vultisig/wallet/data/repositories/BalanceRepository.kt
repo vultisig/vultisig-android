@@ -42,7 +42,6 @@ import com.vultisig.wallet.data.models.Chain.Dydx
 import com.vultisig.wallet.data.models.Chain.Ethereum
 import com.vultisig.wallet.data.models.Chain.GaiaChain
 import com.vultisig.wallet.data.models.Chain.Hyperliquid
-import com.vultisig.wallet.data.models.Chain.Kujira
 import com.vultisig.wallet.data.models.Chain.Litecoin
 import com.vultisig.wallet.data.models.Chain.Mantle
 import com.vultisig.wallet.data.models.Chain.MayaChain
@@ -521,7 +520,6 @@ constructor(
                             }
 
                             GaiaChain,
-                            Kujira,
                             Dydx,
                             Osmosis,
                             Terra,

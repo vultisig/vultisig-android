@@ -24,7 +24,6 @@ const chainMap = {
     dogecoin: "Dogecoin",
     dash: "Dash",
     gaiachain: "GaiaChain",
-    kujira: "Kujira",
     dydx: "Dydx",
     osmosis: "Osmosis",
     terra: "Terra",

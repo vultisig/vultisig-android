@@ -47,7 +47,6 @@ enum class Chain(val raw: ChainId, val standard: TokenStandard, val feeUnit: Str
     Zcash("Zcash", UTXO, "ZEC/vbyte"),
     Cardano("Cardano", UTXO, "Lovelace"),
     GaiaChain("Cosmos", COSMOS, "uatom"),
-    Kujira("Kujira", COSMOS, "ukuji"),
     Dydx("Dydx", COSMOS, "adydx"),
     Osmosis("Osmosis", COSMOS, "uosmo"),
     Terra("Terra", COSMOS, "uluna"),
@@ -111,7 +110,6 @@ val Chain.coinType: CoinType
             Chain.Optimism -> CoinType.OPTIMISM
             Chain.BscChain -> CoinType.SMARTCHAIN
             Chain.GaiaChain -> CoinType.COSMOS
-            Chain.Kujira -> CoinType.KUJIRA
             Chain.CronosChain -> CoinType.CRONOSCHAIN
             Chain.Polkadot -> CoinType.POLKADOT
             Chain.Bittensor -> CoinType.POLKADOT
@@ -168,7 +166,6 @@ val Chain.canSelectTokens: Boolean
             Chain.Terra,
             Chain.TerraClassic,
             Chain.Sui,
-            Chain.Kujira,
             Chain.GaiaChain,
             Chain.Osmosis,
             Chain.Tron,
@@ -190,7 +187,6 @@ val Chain.isSwapSupported: Boolean
                 Chain.ThorChain,
                 Chain.MayaChain,
                 Chain.GaiaChain,
-                Chain.Kujira,
                 Chain.Bitcoin,
                 Chain.Dogecoin,
                 Chain.BitcoinCash,
@@ -226,7 +222,6 @@ val Chain.isDepositSupported: Boolean
             // TON staking (stake / unstake) lives on the DeFi tab, not the generic
             // Functions/Deposit
             // flow — mirroring iOS, which removed TON from the Functions flow.
-            Chain.Kujira,
             Chain.GaiaChain,
             Chain.Osmosis,
             Chain.Bitcoin,
@@ -400,7 +395,6 @@ fun Chain.swapAssetName(): String {
         Chain.Litecoin -> "LTC"
         Chain.Dogecoin -> "DOGE"
         Chain.GaiaChain -> "GAIA"
-        Chain.Kujira -> "KUJI"
         Chain.Solana -> "SOL"
         Chain.Dash -> "DASH"
         Chain.MayaChain -> "MAYA"
@@ -479,7 +473,6 @@ fun Chain.ticker(): String {
         Chain.Dogecoin -> "DOGE"
         Chain.Dash -> "DASH"
         Chain.GaiaChain -> "UATOM"
-        Chain.Kujira -> "KUJI"
         Chain.MayaChain -> "CACAO"
         Chain.CronosChain -> "CRO"
         Chain.Polkadot -> "DOT"
@@ -561,7 +554,6 @@ val Chain.cosmosNativeDenom: String?
             Chain.ThorChain -> "rune"
             Chain.MayaChain -> "cacao"
             Chain.GaiaChain -> "uatom"
-            Chain.Kujira -> "ukuji"
             Chain.Dydx -> "adydx"
             Chain.Osmosis -> "uosmo"
             Chain.Terra,
@@ -599,7 +591,6 @@ val Chain.maxMemoCharacters: Int?
             // broadcast rejection this limit exists to prevent.
             Chain.Noble,
             Chain.Osmosis,
-            Chain.Kujira,
             Chain.Dydx,
             Chain.TerraClassic,
             Chain.Akash,

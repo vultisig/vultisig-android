@@ -152,11 +152,45 @@ internal class AddressBookRepositoryImplTest {
         assertFalse(repository.entryExists(Chain.Ethereum.id, BTC_ADDRESS))
     }
 
+    @Test
+    fun `an entry saved for a since-retired chain is dropped from the list`() = runTest {
+        dao.upsert(
+            AddressBookEntryEntity(
+                chainId = RETIRED_CHAIN_ID,
+                address = "kujira1abc",
+                title = "Old",
+            )
+        )
+        repository.add(
+            AddressBookEntry(chain = Chain.Bitcoin, address = BTC_ADDRESS, title = "Cold storage")
+        )
+
+        val entries = repository.getEntries()
+
+        assertEquals(listOf(Chain.Bitcoin), entries.map { it.chain })
+    }
+
+    @Test
+    fun `an entry saved for a since-retired chain reads back as absent`() = runTest {
+        dao.upsert(
+            AddressBookEntryEntity(
+                chainId = RETIRED_CHAIN_ID,
+                address = "kujira1abc",
+                title = "Old",
+            )
+        )
+
+        assertNull(repository.getEntry(RETIRED_CHAIN_ID, "kujira1abc"))
+    }
+
     private companion object {
         // EIP-55 checksummed reference address and its all-lowercase canonical form.
         const val CHECKSUMMED = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed"
         const val LOWERCASED = "0x5aaeb6053f3e94c9b9a09f33669435e7ef1beaed"
         const val BTC_ADDRESS = "1BoatSLRHtKNngkdXEeobR76b53LETtpyT"
+
+        // A chain id still sitting in old databases after the chain was removed from [Chain].
+        const val RETIRED_CHAIN_ID = "Kujira"
     }
 }
 

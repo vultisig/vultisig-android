@@ -1024,7 +1024,6 @@ private fun mayaPoolChainPrefixToChain(prefix: String): Chain? =
         "BTC" -> Chain.Bitcoin
         "ETH" -> Chain.Ethereum
         "DASH" -> Chain.Dash
-        "KUJI" -> Chain.Kujira
         "MAYA" -> Chain.MayaChain
         "BASE" -> Chain.Base
         "ARB" -> Chain.Arbitrum

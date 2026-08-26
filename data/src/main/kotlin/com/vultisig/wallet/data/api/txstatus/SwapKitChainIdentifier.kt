@@ -38,7 +38,6 @@ internal object SwapKitChainIdentifier {
             Chain.Zcash -> "zcash"
             Chain.Sui -> "sui"
             Chain.Dogecoin -> "dogecoin"
-            Chain.Kujira -> "kaiyo-1"
             // THORChain/Maya are filtered out of SwapKit routes (Vultisig pays those affiliates
             // directly), so a SwapKit swap is never sourced from them — but kept for iOS parity.
             Chain.MayaChain -> "mayachain-mainnet-v1"

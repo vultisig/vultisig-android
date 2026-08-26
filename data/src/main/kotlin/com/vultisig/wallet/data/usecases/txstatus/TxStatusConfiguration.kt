@@ -38,7 +38,6 @@ internal class TxStatusConfigurationProviderImpl @Inject constructor() :
             Chain.Zcash to TxStatusConfiguration(15, 30 * 60),
             Chain.Cardano to TxStatusConfiguration(5, 10 * 60),
             Chain.GaiaChain to TxStatusConfiguration(3, 5 * 60),
-            Chain.Kujira to TxStatusConfiguration(3, 5 * 60),
             Chain.Dydx to TxStatusConfiguration(3, 5 * 60),
             Chain.Osmosis to TxStatusConfiguration(3, 5 * 60),
             Chain.Terra to TxStatusConfiguration(3, 5 * 60),

@@ -22,7 +22,6 @@ internal class SearchTokenUseCaseImplTest {
     private val addressRepository: ChainAccountAddressRepository = mockk()
     private val searchEvmToken: SearchEvmTokenUseCase = mockk()
     private val searchSolToken: SearchSolTokenUseCase = mockk()
-    private val searchKujiToken: SearchKujiraTokenUseCase = mockk()
     private val searchTerraToken: SearchTerraTokenUseCase = mockk()
     private val searchSuiToken: SearchSuiTokenUseCase = mockk()
     private val appCurrencyRepository: AppCurrencyRepository = mockk {
@@ -34,7 +33,6 @@ internal class SearchTokenUseCaseImplTest {
             appCurrencyRepository = appCurrencyRepository,
             searchEvmToken = searchEvmToken,
             searchSolToken = searchSolToken,
-            searchKujiToken = searchKujiToken,
             searchTerraToken = searchTerraToken,
             searchSuiToken = searchSuiToken,
             chainAccountAddressRepository = addressRepository,
@@ -47,7 +45,6 @@ internal class SearchTokenUseCaseImplTest {
         verify(exactly = 0) { addressRepository.isValid(any(), any()) }
         coVerify(exactly = 0) { searchEvmToken(any(), any()) }
         coVerify(exactly = 0) { searchSolToken(any()) }
-        coVerify(exactly = 0) { searchKujiToken(any()) }
     }
 
     @Test
@@ -115,52 +112,6 @@ internal class SearchTokenUseCaseImplTest {
 
         assertEquals(BigDecimal("20.0"), result?.fiatValue?.value)
         coVerify(exactly = 1) { searchSolToken(address) }
-    }
-
-    @Test
-    fun `invalid Kujira address returns null and skips Kujira searcher`() = runTest {
-        stubValid(Chain.Kujira, "0xnot-a-bech32", valid = false)
-
-        assertNull(useCase(Chain.Kujira.id, "0xnot-a-bech32"))
-
-        coVerify(exactly = 0) { searchKujiToken(any()) }
-    }
-
-    @Test
-    fun `valid Kujira bech32 address delegated to Kujira searcher`() = runTest {
-        val address = "kujira1xyzcontractaddress"
-        stubValid(Chain.Kujira, address, valid = true)
-        coEvery { searchKujiToken(address) } returns
-            CoinAndPrice(kujiraCoin(contract = address), BigDecimal.ZERO)
-
-        val result = useCase(Chain.Kujira.id, address)
-
-        assertEquals(BigDecimal.ZERO, result?.fiatValue?.value)
-        coVerify(exactly = 1) { searchKujiToken(address) }
-    }
-
-    @Test
-    fun `Kujira factory denom validates against extracted creator address`() = runTest {
-        val creator = "kujira1creator"
-        val factoryAddress = "factory/$creator/uusdc"
-        stubValid(Chain.Kujira, creator, valid = true)
-        coEvery { searchKujiToken(factoryAddress) } returns
-            CoinAndPrice(kujiraCoin(contract = factoryAddress), BigDecimal.ZERO)
-
-        val result = useCase(Chain.Kujira.id, factoryAddress)
-
-        assertEquals(BigDecimal.ZERO, result?.fiatValue?.value)
-        verify(exactly = 1) { addressRepository.isValid(Chain.Kujira, creator) }
-        coVerify(exactly = 1) { searchKujiToken(factoryAddress) }
-    }
-
-    @Test
-    fun `Kujira factory denom with invalid creator returns null`() = runTest {
-        stubValid(Chain.Kujira, "0xbadcreator", valid = false)
-
-        assertNull(useCase(Chain.Kujira.id, "factory/0xbadcreator/uusdc"))
-
-        coVerify(exactly = 0) { searchKujiToken(any()) }
     }
 
     @Test
@@ -275,16 +226,6 @@ internal class SearchTokenUseCaseImplTest {
     }
 
     @Test
-    fun `blank Kujira ticker returns null after successful search`() = runTest {
-        val address = "kujira1xyzcontractaddress"
-        stubValid(Chain.Kujira, address, valid = true)
-        coEvery { searchKujiToken(address) } returns
-            CoinAndPrice(kujiraCoin(ticker = "", contract = address), BigDecimal.ZERO)
-
-        assertNull(useCase(Chain.Kujira.id, address))
-    }
-
-    @Test
     fun `valid Sui coin type delegated to Sui searcher without WalletCore`() = runTest {
         val coinType =
             "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN"
@@ -327,7 +268,6 @@ internal class SearchTokenUseCaseImplTest {
 
         coVerify(exactly = 0) { searchEvmToken(any(), any()) }
         coVerify(exactly = 0) { searchSolToken(any()) }
-        coVerify(exactly = 0) { searchKujiToken(any()) }
         coVerify(exactly = 0) { searchTerraToken(any(), any()) }
     }
 
@@ -366,19 +306,6 @@ internal class SearchTokenUseCaseImplTest {
             decimal = 9,
             hexPublicKey = "",
             priceProviderID = "solana",
-            contractAddress = contract,
-            isNativeToken = false,
-        )
-
-    private fun kujiraCoin(ticker: String = "TOKEN", contract: String): Coin =
-        Coin(
-            chain = Chain.Kujira,
-            ticker = ticker,
-            logo = "",
-            address = "",
-            decimal = 6,
-            hexPublicKey = "",
-            priceProviderID = "",
             contractAddress = contract,
             isNativeToken = false,
         )

@@ -46,8 +46,7 @@ constructor(private val suiApi: SuiApi, private val tokenPriceRepository: TokenP
     /**
      * Mirrors [SuiTokenFinder]'s handling of the same call: a bad node response or transient
      * network failure must surface as "not found" rather than crash the custom-token screen, the
-     * same contract [SearchTerraTokenUseCase] and [SearchKujiraTokenUseCase] give their own RPC
-     * reads.
+     * same contract [SearchTerraTokenUseCase] gives its own RPC reads.
      */
     private suspend fun fetchMetadata(coinType: String): SuiCoinMetadata? =
         try {

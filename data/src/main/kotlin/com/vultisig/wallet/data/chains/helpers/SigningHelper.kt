@@ -289,7 +289,6 @@ object SigningHelper {
                     }
 
                     Chain.GaiaChain,
-                    Chain.Kujira,
                     Chain.Dydx,
                     Chain.Osmosis,
                     Chain.Noble,
@@ -541,7 +540,6 @@ object SigningHelper {
             }
 
             Chain.GaiaChain,
-            Chain.Kujira,
             Chain.Dydx,
             Chain.Osmosis,
             Chain.Noble,
