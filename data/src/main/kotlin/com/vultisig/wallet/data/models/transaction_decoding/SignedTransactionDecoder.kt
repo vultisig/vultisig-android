@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.models.transaction_decoding
 
 import com.vultisig.wallet.data.models.Chain
+import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,12 +31,16 @@ interface TransactionContentDecoder {
  *
  * Scoped as [Singleton] for true app-level shared instance across the app. All decoder
  * registrations are visible to any consumer, ensuring consistent provenance verification.
+ *
+ * The registry is thread-safe: concurrent calls to register, unregister, and clear are safe due to
+ * the use of CopyOnWriteArrayList, which prevents ConcurrentModificationException during iteration
+ * in [decode].
  */
 @Singleton
 class SignedTransactionDecoder @Inject constructor() {
 
-    /** Registered readers in precedence order. Empty in the foundation. */
-    private val decoders: MutableList<TransactionContentDecoder> = mutableListOf()
+    /** Registered readers in precedence order. Thread-safe for concurrent access. */
+    private val decoders: CopyOnWriteArrayList<TransactionContentDecoder> = CopyOnWriteArrayList()
 
     /** Register a decoder to the registry. */
     fun register(decoder: TransactionContentDecoder) {

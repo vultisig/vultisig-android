@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.models.transaction_decoding
 
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -58,12 +59,146 @@ class SignedTransactionDecoderFoundationTest {
         assertTrue(!DecodedEvidence.Unread.isNoWeaker(than = DecodedEvidence.SignedData))
     }
 
+    // MARK: - Decoder Registry Contract Tests
+
+    @Test
+    fun testDecoderRegistrationAndRetrieval() {
+        val decoder1 = FakeDecoder("first", setOf(Chain.Bitcoin))
+        val decoder2 = FakeDecoder("second", setOf(Chain.Ethereum))
+
+        decoder.register(decoder1)
+        decoder.register(decoder2)
+
+        val decoders = decoder.getDecoders()
+        assertEquals(2, decoders.size)
+        assertEquals(decoder1, decoders[0])
+        assertEquals(decoder2, decoders[1])
+    }
+
+    @Test
+    fun testInsertionOrderIsPreserved() {
+        val decoderA = FakeDecoder("A", setOf(Chain.Bitcoin))
+        val decoderB = FakeDecoder("B", setOf(Chain.Ethereum))
+        val decoderC = FakeDecoder("C", setOf(Chain.Solana))
+
+        decoder.register(decoderA)
+        decoder.register(decoderB)
+        decoder.register(decoderC)
+
+        val decoders = decoder.getDecoders()
+        assertEquals(listOf(decoderA, decoderB, decoderC), decoders)
+    }
+
+    @Test
+    fun testHandlesChainFiltering() {
+        val bitcoinDecoder = FakeDecoder("btc", setOf(Chain.Bitcoin))
+        val ethereumDecoder = FakeDecoder("eth", setOf(Chain.Ethereum))
+        val universalDecoder = FakeDecoder("universal", null, shouldSucceed = true)
+
+        decoder.register(bitcoinDecoder)
+        decoder.register(ethereumDecoder)
+        decoder.register(universalDecoder)
+
+        val bitcoinContent = StubContent(contentChain = Chain.Bitcoin)
+        val result = decoder.decode(bitcoinContent)
+
+        // bitcoinDecoder should match and return first result
+        assertEquals(DecodedOperation.Transfer, result.operation)
+        assertEquals("btc", result.counterparty?.let { (it as DecodedCounterparty.Node).value })
+    }
+
+    @Test
+    fun testFirstSuccessfulDecoderWins() {
+        val failingDecoder = FakeDecoder("failing", setOf(Chain.Bitcoin), shouldSucceed = false)
+        val succeedingDecoder =
+            FakeDecoder("succeeding", setOf(Chain.Bitcoin), shouldSucceed = true)
+        val thirdDecoder = FakeDecoder("third", setOf(Chain.Bitcoin), shouldSucceed = true)
+
+        decoder.register(failingDecoder)
+        decoder.register(succeedingDecoder)
+        decoder.register(thirdDecoder)
+
+        val content = StubContent(contentChain = Chain.Bitcoin)
+        val result = decoder.decode(content)
+
+        // succeedingDecoder should be selected, not thirdDecoder
+        assertEquals(DecodedOperation.Transfer, result.operation)
+        assertEquals(
+            "succeeding",
+            result.counterparty?.let { (it as DecodedCounterparty.Node).value },
+        )
+    }
+
+    @Test
+    fun testUnregisterRemovesDecoder() {
+        val decoder1 = FakeDecoder("first", setOf(Chain.Bitcoin))
+        val decoder2 = FakeDecoder("second", setOf(Chain.Ethereum))
+
+        decoder.register(decoder1)
+        decoder.register(decoder2)
+        assertEquals(2, decoder.getDecoders().size)
+
+        decoder.unregister(decoder1)
+        assertEquals(1, decoder.getDecoders().size)
+        assertEquals(decoder2, decoder.getDecoders()[0])
+    }
+
+    @Test
+    fun testClearRemovesAllDecoders() {
+        val decoder1 = FakeDecoder("first", setOf(Chain.Bitcoin))
+        val decoder2 = FakeDecoder("second", setOf(Chain.Ethereum))
+        val decoder3 = FakeDecoder("third", setOf(Chain.Solana))
+
+        decoder.register(decoder1)
+        decoder.register(decoder2)
+        decoder.register(decoder3)
+        assertEquals(3, decoder.getDecoders().size)
+
+        decoder.clear()
+        assertTrue(decoder.getDecoders().isEmpty())
+    }
+
+    @Test
+    fun testDecoderSelectionRespectsPrecedence() {
+        val firstRegistered =
+            FakeDecoder("first", setOf(Chain.Bitcoin), operation = DecodedOperation.Transfer)
+        val secondRegistered =
+            FakeDecoder("second", setOf(Chain.Bitcoin), operation = DecodedOperation.Swap)
+
+        decoder.register(firstRegistered)
+        decoder.register(secondRegistered)
+
+        val content = StubContent(contentChain = Chain.Bitcoin)
+        val result = decoder.decode(content)
+
+        // firstRegistered should be selected due to registration order
+        assertEquals(DecodedOperation.Transfer, result.operation)
+    }
+
+    @Test
+    fun testNullHandlesDecoderAcceptsAnyChain() {
+        val universalDecoder = FakeDecoder("universal", null, shouldSucceed = true)
+        val chainSpecificDecoder = FakeDecoder("specific", setOf(Chain.Bitcoin))
+
+        decoder.register(chainSpecificDecoder)
+        decoder.register(universalDecoder)
+
+        // For Ethereum, only universalDecoder should match
+        val ethereumContent = StubContent(contentChain = Chain.Ethereum)
+        val result = decoder.decode(ethereumContent)
+        assertEquals(
+            "universal",
+            result.counterparty?.let { (it as DecodedCounterparty.Node).value },
+        )
+    }
+
     // Stub implementation for testing
     private data class StubContent(
         private val stubHasOpaqueSignedContent: Boolean = false,
         val swapPayload: SwapPayload? = null,
+        private val contentChain: Chain = Chain.Ton,
     ) : SignedTransactionContent {
-        override val chain: Chain = Chain.Ton
+        override val chain: Chain = contentChain
         override val isNativeCoin = true
         override val rawToAddress = "destination"
         override val rawAmount = SignedAmount.Committed(42.toBigInteger())
@@ -76,5 +211,31 @@ class SignedTransactionDecoderFoundationTest {
         override val stakingIntent = null
         override val cosmosStakingIntent = null
         override val hasOpaqueSignedContent: Boolean = stubHasOpaqueSignedContent
+    }
+
+    /** Fake decoder for testing registry behavior with distinct results. */
+    private data class FakeDecoder(
+        private val id: String,
+        override val handles: Set<Chain>?,
+        private val shouldSucceed: Boolean = true,
+        private val operation: DecodedOperation = DecodedOperation.Transfer,
+    ) : TransactionContentDecoder {
+
+        override fun decode(tx: SignedTransactionContent): DecodedTransaction? {
+            return if (shouldSucceed) {
+                DecodedTransaction(
+                    operation = operation,
+                    amount =
+                        DecodedAmount.Units(
+                            value = BigInteger.ONE,
+                            asset = DecodedAsset.TransactionCoin,
+                        ),
+                    counterparty = DecodedCounterparty.Node(id),
+                    evidence = DecodedEvidence.Memo,
+                )
+            } else {
+                null
+            }
+        }
     }
 }
