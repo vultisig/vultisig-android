@@ -95,6 +95,10 @@ internal data class VaultAccountsUiModel(
     val isBalanceValueVisible: Boolean = true,
     val accounts: List<AccountUiModel> = emptyList(),
     val defiAccounts: List<AccountUiModel> = emptyList(),
+    // Set once the corresponding flow has emitted, so an empty list can be read as "no chains
+    // enabled" rather than "not loaded yet".
+    val hasLoadedAccounts: Boolean = false,
+    val hasLoadedDeFiAccounts: Boolean = false,
     val searchTextFieldState: TextFieldState = TextFieldState(),
     // Per-banner visibility, each gated on a global dismissal whose lifetime is the banner's own
     // policy (#5064). The upgrade banner additionally requires the vault to be GG20
@@ -116,6 +120,14 @@ internal data class VaultAccountsUiModel(
                 accounts
             } else {
                 defiAccounts
+            }
+
+    val areAccountsLoaded: Boolean
+        get() =
+            if (cryptoConnectionType == CryptoConnectionType.Wallet) {
+                hasLoadedAccounts
+            } else {
+                hasLoadedDeFiAccounts
             }
 }
 
@@ -278,6 +290,8 @@ constructor(
                 it.copy(
                     accounts = emptyList(),
                     defiAccounts = emptyList(),
+                    hasLoadedAccounts = false,
+                    hasLoadedDeFiAccounts = false,
                     totalFiatValue = null,
                     totalDeFiValue = null,
                     // Upgrade banner is vault-scoped (GG20-only); clear it eagerly so the previous
@@ -695,11 +709,19 @@ constructor(
 
         uiState.update { state ->
             if (!isDefi) {
-                state.copy(totalFiatValue = totalFiatValue, accounts = accountsUiModel)
+                state.copy(
+                    totalFiatValue = totalFiatValue,
+                    accounts = accountsUiModel,
+                    hasLoadedAccounts = true,
+                )
             } else {
                 // An empty merged list (e.g. every DeFi chain deselected) yields a null total here,
                 // clearing the header instead of stranding a stale figure over zero rows (#4768).
-                state.copy(totalDeFiValue = totalFiatValue, defiAccounts = accountsUiModel)
+                state.copy(
+                    totalDeFiValue = totalFiatValue,
+                    defiAccounts = accountsUiModel,
+                    hasLoadedDeFiAccounts = true,
+                )
             }
         }
 

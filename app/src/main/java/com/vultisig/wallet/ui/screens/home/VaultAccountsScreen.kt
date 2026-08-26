@@ -337,10 +337,15 @@ internal fun VaultAccountsScreen(
 
                     item {
                         TopShineContainer(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            if (isShowingSearchResult.value && state.noChainFound) {
-                                NoChainFound(onChooseChains = onChooseChains)
-                            } else {
-                                if (state.getAccounts.isEmpty()) {
+                            when {
+                                isShowingSearchResult.value && state.noChainFound ->
+                                    NoChainFound(onChooseChains = onChooseChains)
+
+                                // Only once the accounts flow has emitted does an empty list mean
+                                // the user disabled every chain; before that it just means the
+                                // addresses are still being derived, which on a cold start with
+                                // many chains takes seconds.
+                                state.areAccountsLoaded && state.getAccounts.isEmpty() ->
                                     NotEnabledContainer(
                                         title =
                                             stringResource(R.string.home_page_no_chains_enabled),
@@ -352,7 +357,8 @@ internal fun VaultAccountsScreen(
                                         // steps down rather than matching it.
                                         radius = Theme.v2.radius.md,
                                     )
-                                } else {
+
+                                else ->
                                     AccountList(
                                         onAccountClick = onAccountClick,
                                         snackbarState = snackbarState,
@@ -360,7 +366,6 @@ internal fun VaultAccountsScreen(
                                         accounts = state.getAccounts,
                                         showAddress = isWallet,
                                     )
-                                }
                             }
                         }
                     }
