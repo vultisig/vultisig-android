@@ -92,6 +92,15 @@ internal class PromoBannerDismissalRepositoryTest {
         repo.isDismissed(PromoBanner.FollowXVultisig).first() shouldBe false
     }
 
+    @Test
+    fun `closing the QBTC claim banner keeps it closed for good`() = runTest {
+        repo.dismiss(PromoBanner.ClaimQbtc)
+
+        now += 3650.days.inWholeMilliseconds
+
+        repo.isDismissed(PromoBanner.ClaimQbtc).first() shouldBe true
+    }
+
     private fun ttlOf(banner: PromoBanner): Long {
         val policy = banner.dismissPolicy
         check(policy is DismissPolicy.Ttl) { "Expected a TTL policy for $banner" }
