@@ -19,6 +19,7 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
             Chain.Blast,
             Chain.BscChain,
             Chain.Ethereum,
+            Chain.Hyperliquid,
             Chain.Optimism,
             Chain.Sei,
             Chain.Polygon -> scanEvmTransaction(transaction)
@@ -112,6 +113,10 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
                 Chain.BscChain,
                 Chain.Bitcoin,
                 Chain.Ethereum,
+                // HyperEVM (999) is indexed by Blockaid as `hyperevm`, matching iOS. Listing it
+                // here is what lets SwapKit quote HyperEVM as a *source*: an EVM SwapKit route is
+                // only offered from chains this scanner covers (SwapKitCapability.canQuoteFrom).
+                Chain.Hyperliquid,
                 Chain.Optimism,
                 Chain.Polygon,
                 Chain.Sui,

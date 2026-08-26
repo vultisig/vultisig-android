@@ -46,13 +46,17 @@ import org.junit.jupiter.api.assertThrows
  * filtering with the wire-format provider ids, ranking by [SwapKitRoute.expectedBuyAmount], Solana
  * base64-as-JsonPrimitive decoding (+ legacy object fallback), `SERIALIZED_BASE64` txType aliasing,
  * refusal of EVM routes missing `tx.gas`, inbound-fee extraction from `route.fees[]`, sub-provider
- * passthrough into [SwapQuoteResult.Evm.subProvider], and exception wrapping. No provider-cache
- * gate — `/v3/quote` is the authority on unsupported chains (mirrors iOS' fail-open cache).
+ * passthrough into [SwapQuoteResult.Evm.subProvider], the `/providers` enablement gate, and
+ * exception wrapping.
  */
 internal class SwapKitQuoteSourceTest {
 
     private val api: SwapKitApi = mockk()
     private val config: SwapKitConfig = mockk()
+    // Enabled everywhere by default; the gate itself is pinned by its own tests below.
+    private val providerCache: SwapKitProviderCache = mockk {
+        coEvery { isEnabled(any()) } returns true
+    }
     private val json = Json { ignoreUnknownKeys = true }
 
     // ERC20 approve(address,uint256) calldata fragments for the approval-spender decode tests.
@@ -61,7 +65,7 @@ internal class SwapKitQuoteSourceTest {
     private val MAX_AMOUNT_WORD = "f".repeat(64) // 32-byte amount word
     private val APPROVE_SELECTOR = "095ea7b3"
 
-    private fun source(): SwapKitQuoteSource = SwapKitQuoteSource(api, config, json)
+    private fun source(): SwapKitQuoteSource = SwapKitQuoteSource(api, config, providerCache, json)
 
     @Test
     fun `fetch throws NoRoutes when feature flag is disabled`() = runTest {
@@ -373,7 +377,7 @@ internal class SwapKitQuoteSourceTest {
                 providers = listOf("NEAR"),
             )
 
-        val result = source().fetch(request()) as SwapQuoteResult.Evm
+        val result = source().fetch(request(srcToken = solanaCoin())) as SwapQuoteResult.Evm
 
         assertEquals("BASE64SOLANA", result.data.tx.data)
         assertEquals("9000000000", result.data.dstAmount)
@@ -396,7 +400,7 @@ internal class SwapKitQuoteSourceTest {
                 expectedBuyAmount = "9",
             )
 
-        val result = source().fetch(request()) as SwapQuoteResult.Evm
+        val result = source().fetch(request(srcToken = solanaCoin())) as SwapQuoteResult.Evm
 
         assertEquals("BASE64LEGACY", result.data.tx.data)
     }
@@ -421,7 +425,7 @@ internal class SwapKitQuoteSourceTest {
                     expectedBuyAmount = "9",
                 )
 
-            val result = source().fetch(request()) as SwapQuoteResult.Evm
+            val result = source().fetch(request(srcToken = solanaCoin())) as SwapQuoteResult.Evm
 
             assertEquals("BASE64MESSAGE", result.data.tx.data)
         }
@@ -446,7 +450,7 @@ internal class SwapKitQuoteSourceTest {
                     expectedBuyAmount = "9",
                 )
 
-            assertThrows<SwapKitError.Decoding> { source().fetch(request()) }
+            assertThrows<SwapKitError.Decoding> { source().fetch(request(srcToken = solanaCoin())) }
         }
 
     @Test
@@ -467,7 +471,7 @@ internal class SwapKitQuoteSourceTest {
                 expectedBuyAmount = "9",
             )
 
-        val result = source().fetch(request()) as SwapQuoteResult.Evm
+        val result = source().fetch(request(srcToken = solanaCoin())) as SwapQuoteResult.Evm
 
         assertEquals("BASE64SERIAL", result.data.tx.data)
     }
@@ -721,7 +725,8 @@ internal class SwapKitQuoteSourceTest {
                 routes =
                     listOf(route(routeId = "r", providers = listOf("CHAINFLIP"), expectedBuy = "1"))
             )
-        coEvery { api.swap(any()) } returns evmSwapResponse()
+        coEvery { api.swap(any()) } returns
+            tonSwapResponse(transfers = listOf("EQvault" to "1000000000"))
 
         val gram = tonCoin().copy(ticker = "GRAM")
         source().fetch(request(srcToken = gram))
@@ -750,8 +755,12 @@ internal class SwapKitQuoteSourceTest {
 
     @Test
     fun `fetch throws NoRoutes when source chain has no SwapKit prefix mapping`() = runTest {
+        // Mantle is offered by the provider table (every EVM chain is) and would be waved through
+        // by a provider cache that enabled it, but no asset prefix is known for it. The route has
+        // to die here rather than mint a garbage `ETH.ETH`-shaped identifier — SwapKit alone is
+        // dropped, the pair's other providers are unaffected.
         every { config.isFeatureEnabled } returns flowOf(true)
-        val unmapped = ethCoin().copy(chain = Chain.Hyperliquid)
+        val unmapped = ethCoin().copy(chain = Chain.Mantle)
 
         assertThrows<SwapKitError.NoRoutes> { source().fetch(request(srcToken = unmapped)) }
     }

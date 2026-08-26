@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.quotes.SwapKitProvidersResponseJson
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.evmChainId
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -14,9 +15,15 @@ import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 
 /**
- * 24h in-memory cache for SwapKit `/providers` enablement data. Phase 1 source chains (EVM +
- * Solana) are derived by unioning every provider's `supportedChainIds` and mapping back to
- * Vultisig's [Chain] enum.
+ * 24h in-memory cache for SwapKit `/providers` enablement data. The eligible chain set is the union
+ * of every non-filtered provider's `enabledChainIds`, mapped back to Vultisig's [Chain] enum.
+ *
+ * Two details this gets wrong easily, both mirroring iOS' `SwapKitProviderCache.chainEnabled`:
+ * - `enabledChainIds`, not `supportedChainIds`. The latter is a superset a provider merely knows
+ *   about; unioning it marks chains live that route nothing.
+ * - THORChain / Maya sub-providers are excluded. Vultisig pays those affiliates through its own
+ *   native integrations and filters their SwapKit routes out at ranking, so a chain only they
+ *   enable is not a chain SwapKit can serve us.
  *
  * The cache is intentionally process-scoped (no disk persistence) — a cold launch every 24h is
  * cheap, and stale enablement is the failure mode we want to avoid most.
@@ -102,7 +109,8 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
     }
 
     private fun SwapKitProvidersResponseJson.toEnabledChains(): Set<Chain> =
-        flatMap { it.supportedChainIds }
+        filterNot { it.provider.uppercase(Locale.ROOT) in FILTERED_PROVIDERS }
+            .flatMap { it.enabledChainIds }
             .mapNotNull { id ->
                 swapKitChainToVultisig(id).also {
                     if (it == null) Timber.w("Unknown SwapKit chain id: %s", id)
@@ -115,31 +123,69 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
         private const val TTL_MILLIS: Long = 24L * 60L * 60L * 1000L
 
         /**
-         * Maps a SwapKit V3 `supportedChainIds` entry to Vultisig's [Chain] enum. Per the V3 docs
-         * these are EVM chain ids as decimal strings (`"1"`, `"56"`, `"137"`, `"42161"`, ...) and
-         * lowercase named ids for non-EVM (`"solana"`, `"bitcoin"`, ...). Returns `null` for chains
-         * not yet supported in Phase 1.
+         * Sub-providers whose enablement never counts as SwapKit coverage. Vultisig routes
+         * THORChain and Maya through its own native integrations and drops their SwapKit routes at
+         * ranking, so treating a chain they alone enable as SwapKit-eligible would offer a provider
+         * that can only lose. Matches iOS' `SwapKitConfig.filteredProviders`; compared upper-cased
+         * because the upstream has returned mixed casing for these names.
          */
-        internal fun swapKitChainToVultisig(swapKitChain: String): Chain? =
-            when (swapKitChain.lowercase(Locale.ROOT)) {
-                "1",
+        private val FILTERED_PROVIDERS =
+            setOf("THORCHAIN", "THORCHAIN_STREAMING", "MAYACHAIN", "MAYACHAIN_STREAMING")
+
+        /**
+         * Maps a SwapKit V3 chain-id entry to Vultisig's [Chain] enum. EVM networks are decimal
+         * chain ids (`"1"`, `"56"`, `"4663"`, `"999"`, ...), non-EVM are lowercase slugs
+         * (`"solana"`, `"bitcoin"`, ...). Returns `null` for a chain the wallet holds no account on
+         * — the caller drops it.
+         *
+         * EVM ids resolve through [Chain.evmChainId] rather than a hand-written list, so a network
+         * the wallet already supports is recognised the moment SwapKit lights it up. The named
+         * aliases below stay for the non-numeric spellings the endpoint has historically returned.
+         *
+         * `"hype"` is deliberately absent: it is HyperCore, a separate venue whose assets carry
+         * `USDC:0x…`-style addresses. HyperEVM — the chain this wallet holds — is `"999"`.
+         */
+        internal fun swapKitChainToVultisig(swapKitChain: String): Chain? {
+            val id = swapKitChain.lowercase(Locale.ROOT)
+            EVM_CHAINS_BY_ID[id]?.let {
+                return it
+            }
+            return when (id) {
                 "ethereum" -> Chain.Ethereum
-                "56",
                 "bsc",
                 "bnb" -> Chain.BscChain
-                "43114",
                 "avalanche" -> Chain.Avalanche
-                "42161",
                 "arbitrum" -> Chain.Arbitrum
-                "10",
                 "optimism" -> Chain.Optimism
-                "8453",
                 "base" -> Chain.Base
-                "137",
                 "polygon",
                 "matic" -> Chain.Polygon
                 "solana" -> Chain.Solana
+                "bitcoin" -> Chain.Bitcoin
+                "bitcoincash" -> Chain.BitcoinCash
+                "litecoin" -> Chain.Litecoin
+                "dogecoin" -> Chain.Dogecoin
+                "dash" -> Chain.Dash
+                "zcash" -> Chain.Zcash
+                "ripple",
+                "xrp" -> Chain.Ripple
+                // Tron is the one non-EVM chain SwapKit keys by a decimal id, so it cannot come
+                // from the EVM map above.
+                "728126428",
+                "tron",
+                "trx" -> Chain.Tron
+                "cardano" -> Chain.Cardano
+                "ton" -> Chain.Ton
+                "sui" -> Chain.Sui
                 else -> null
             }
+        }
+
+        /**
+         * Every EVM chain the wallet holds, keyed by its decimal chain id. Built from the enum so
+         * Robinhood (4663), HyperEVM (999) and any future network need no entry of their own.
+         */
+        private val EVM_CHAINS_BY_ID: Map<String, Chain> =
+            Chain.entries.mapNotNull { chain -> chain.evmChainId()?.let { it to chain } }.toMap()
     }
 }
