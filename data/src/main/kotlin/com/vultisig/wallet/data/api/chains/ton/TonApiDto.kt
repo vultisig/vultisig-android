@@ -214,10 +214,10 @@ data class TonTransactionDescriptionJson(
 
 /**
  * Action phase of a TON transaction — where the wallet contract actually emits its outgoing
- * transfer message(s). Because every Vultisig TON send is signed with `IGNORE_ACTION_PHASE_ERRORS`,
- * an action that can't be carried out (e.g. insufficient balance for value+fees) is silently
- * skipped instead of aborting the transaction, so these fields — not `aborted` — are what reveal a
- * transfer that never moved any funds.
+ * transfer message(s). When a send is signed with `IGNORE_ACTION_PHASE_ERRORS`, an action that
+ * can't be carried out (e.g. insufficient balance for value+fees) is silently skipped instead of
+ * aborting the transaction, so these fields — not `aborted` — are what reveal a transfer that never
+ * moved any funds.
  */
 @Serializable
 data class TonActionPhaseJson(
