@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -38,10 +39,10 @@ import timber.log.Timber
 
 /**
  * SwapKit V3 quote source. Mirrors iOS' `SwapKitService.fetchBestRoute` + `buildSwapTx`:
- * 1. Short-circuit on the user's `SwapKitConfig` opt-out flag (default on) before any network I/O.
- *    No cache gate beyond that — iOS' `SwapKitProviderCache` returns `true` on cache-miss and lets
- *    `/v3/quote` surface unsupported chains via `noRoutesFound`; the Android source matches that
- *    fail-open semantics so a single bad-network app launch doesn't hide SwapKit until refresh.
+ * 1. Short-circuit on the user's `SwapKitConfig` opt-out flag (default on) before any network I/O,
+ *    then on [SwapKitProviderCache]: both legs of the pair must be chains SwapKit currently routes.
+ *    Since [SwapProviderTableImpl] stopped allowlisting chains, this cache is what keeps a network
+ *    SwapKit does not serve from costing a `/v3/quote` round trip on every keystroke.
  * 2. Call `POST /v3/quote`, drop multi-hop routes and any route whose sub-provider is THORChain or
  *    Maya (Vultisig pays those affiliates directly via the existing integrations — routing through
  *    SwapKit would stack a second affiliate fee on top). Filter uses the wire-format provider ids
@@ -75,6 +76,7 @@ internal class SwapKitQuoteSource
 constructor(
     private val api: SwapKitApi,
     private val config: SwapKitConfig,
+    private val providerCache: SwapKitProviderCache,
     private val json: Json,
 ) : SwapQuoteSource {
 
@@ -108,6 +110,12 @@ constructor(
         if (!config.isFeatureEnabled.first()) {
             return TokenValue(BigInteger.ZERO, request.srcToken)
         }
+        // No provider-cache gate here, unlike [fetchInternal]. This runs only for a
+        // `SwapPayload.SwapKit` another device already quoted and signed off on, so the gate could
+        // never veto a bad pair — its one reachable effect would be turning the real fee into a
+        // confident $0.00 on the joiner whenever this device's `/providers` snapshot is missing.
+        // Letting `/v3/quote` answer keeps the joiner's fee row honest; a genuine failure still
+        // degrades to zero via the caller's catch.
         val quoteResponse =
             api.quote(
                 SwapKitQuoteRequest(
@@ -132,12 +140,11 @@ constructor(
             throw SwapKitError.NoRoutes("SwapKit feature flag disabled")
         }
 
-        // No provider-cache gate here on purpose. iOS' SwapKitProviderCache returns `true` on a
-        // cache-miss and lets `/v3/quote` surface the real error so a single bad-network app
-        // launch doesn't silently hide SwapKit until the next refresh. Android's cache currently
-        // returns `false` on cache-miss (fail-closed), which would diverge. Letting `/v3/quote`
-        // be the authority — it returns a clear `noRoutesFound` for unsupported chains — keeps
-        // the user opt-in and the swap picker behaviour aligned with iOS.
+        // Both legs must be chains SwapKit currently routes (iOS SwapService.fetchSwapKitQuote).
+        // Fails closed on a cold launch that never reached `/providers`: SwapKit is skipped until a
+        // refresh succeeds rather than quoting chains that will fail downstream. Only SwapKit is
+        // affected — the other providers for the pair are fetched independently.
+        assertChainsEnabled(request.srcToken.chain, request.dstToken.chain)
 
         val quoteResponse =
             api.quote(
@@ -238,7 +245,15 @@ constructor(
         // from `tx.data`, matching how JupiterQuoteSource stages a Solana swap). PSBT (Bitcoin),
         // TRON and TON can't fit that shape, so they surface as a fully-formed SwapQuote.SwapKit
         // on the Native result for a per-chain signer to consume.
-        return when (txTypeOf(swapResponse)) {
+        val txKind = txTypeOf(swapResponse)
+        // A typed payload for the wrong chain is as unsafe as an unknown one — both reach a signer
+        // that cannot vouch for what it signs. The chain allowlist used to make most mismatches
+        // unreachable; with the list open, this is the check that keeps them so. Port of iOS'
+        // `SwapKitCapability.canSign`.
+        if (!signerMatches(txKind, request.srcToken.chain)) {
+            throw SwapKitError.UnsupportedTxType(swapResponse.meta.txType)
+        }
+        return when (txKind) {
             TxKind.EVM,
             TxKind.SOLANA ->
                 SwapQuoteResult.Evm(
@@ -270,6 +285,36 @@ constructor(
                     )
                 )
             TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(swapResponse.meta.txType)
+        }
+    }
+
+    /**
+     * True when [kind] is a payload shape the signer for [srcChain] can actually produce a
+     * signature over. EVM calldata is signable from any EVM source; every other kind belongs to
+     * exactly one chain.
+     */
+    private fun signerMatches(kind: TxKind, srcChain: Chain): Boolean =
+        when (kind) {
+            TxKind.EVM -> srcChain.standard == TokenStandard.EVM
+            TxKind.SOLANA -> srcChain == Chain.Solana
+            TxKind.PSBT -> srcChain in PSBT_CHAINS
+            TxKind.TRON -> srcChain == Chain.Tron
+            TxKind.SUI -> srcChain == Chain.Sui
+            TxKind.CARDANO,
+            TxKind.CARDANO_PREBUILT -> srcChain == Chain.Cardano
+            TxKind.TON -> srcChain == Chain.Ton
+            TxKind.XRP -> srcChain == Chain.Ripple
+            TxKind.UNSUPPORTED -> false
+        }
+
+    /**
+     * Refuse the pair unless SwapKit currently routes on both legs, per the cached `/providers`
+     * response. Throws [SwapKitError.ProviderNotEnabled] — the variant iOS raises here — so the
+     * picker drops SwapKit alone and keeps every other eligible provider for the pair.
+     */
+    private suspend fun assertChainsEnabled(srcChain: Chain, dstChain: Chain) {
+        if (!providerCache.isEnabled(srcChain) || !providerCache.isEnabled(dstChain)) {
+            throw SwapKitError.ProviderNotEnabled
         }
     }
 
@@ -341,7 +386,7 @@ constructor(
         fees: List<SwapKitFee>,
         fallbackFees: List<SwapKitFee> = emptyList(),
     ): BigInteger {
-        val prefix = chainPrefix(srcToken.chain) ?: return BigInteger.ZERO
+        val prefix = SwapKitAssetPrefix.of(srcToken.chain) ?: return BigInteger.ZERO
         val inbound =
             findInboundFee(fees, prefix)
                 ?: findInboundFee(fallbackFees, prefix)
@@ -365,7 +410,7 @@ constructor(
     /**
      * Native gas-coin decimals for a SwapKit source chain. EVM chains use 18, Solana 9, Bitcoin 8.
      * The inbound fee is always denominated in the source chain's native coin, so it is scaled by
-     * these — not the sell token's decimals. Only reached for chains [chainPrefix] already maps.
+     * these — not the sell token's decimals. Only reached for chains [SwapKitAssetPrefix] maps.
      */
     private fun nativeDecimals(chain: Chain): Int =
         when (chain) {
@@ -692,7 +737,8 @@ constructor(
     /**
      * Map a UTXO source chain onto the per-chain PSBT txType discriminator. BTC/LTC share the
      * segwit `PSBT`; DOGE/BCH/DASH/ZEC get their own legacy / Sapling discriminators. An unmapped
-     * chain (shouldn't happen — [chainPrefix] gates the route) falls back to the segwit `PSBT`.
+     * chain (shouldn't happen — [SwapKitAssetPrefix] gates the route) falls back to the segwit
+     * `PSBT`.
      */
     private fun psbtTxTypeForChain(chain: Chain): String =
         when (chain) {
@@ -857,6 +903,17 @@ constructor(
         )
     }
 
+    /** UTXO chains whose SwapKit route arrives as a PSBT, segwit or legacy P2PKH alike. */
+    private val PSBT_CHAINS =
+        setOf(
+            Chain.Bitcoin,
+            Chain.BitcoinCash,
+            Chain.Litecoin,
+            Chain.Dogecoin,
+            Chain.Dash,
+            Chain.Zcash,
+        )
+
     private enum class TxKind {
         EVM,
         SOLANA,
@@ -897,13 +954,12 @@ constructor(
      * SwapKit asset identifier: `CHAIN.TICKER` or `CHAIN.TICKER-CONTRACT` for ERC-20-style tokens.
      */
     private fun assetIdentifier(coin: Coin): String {
-        // The provider-cache gate upstream of this call should already block any chain we don't
-        // have a SwapKit prefix mapping for. Throwing NoRoutes here (rather than falling back to
-        // `coin.ticker`) is defense-in-depth: a future cache change that enables a chain we
-        // haven't mapped would otherwise mint a garbage identifier (e.g. `ETH.ETH` for ZkSync.ETH)
-        // and surface as `helpers_invalid_asset_identifier` 500s from the proxy.
+        // [SwapKitCapability.canReceiveOn] already refuses to offer a chain with no prefix, so
+        // this is defense-in-depth: throwing NoRoutes (rather than falling back to `coin.ticker`)
+        // keeps a future capability change from minting a garbage identifier — e.g. `ETH.ETH` for
+        // ZkSync.ETH — and surfacing as `helpers_invalid_asset_identifier` 500s from the proxy.
         val prefix =
-            chainPrefix(coin.chain)
+            SwapKitAssetPrefix.of(coin.chain)
                 ?: throw SwapKitError.NoRoutes(
                     "SwapKit asset identifier missing chain prefix for ${coin.chain.raw}"
                 )
@@ -923,30 +979,6 @@ constructor(
     @VisibleForTesting
     internal fun swapSymbol(coin: Coin): String =
         if (coin.chain == Chain.Ton && coin.isNativeToken) "TON" else coin.ticker
-
-    private fun chainPrefix(chain: Chain): String? =
-        when (chain) {
-            Chain.Ethereum -> "ETH"
-            Chain.BscChain -> "BSC"
-            Chain.Avalanche -> "AVAX"
-            Chain.Arbitrum -> "ARB"
-            Chain.Optimism -> "OP"
-            Chain.Base -> "BASE"
-            Chain.Polygon -> "POL"
-            Chain.Solana -> "SOL"
-            Chain.Bitcoin -> "BTC"
-            Chain.Litecoin -> "LTC"
-            Chain.Dogecoin -> "DOGE"
-            Chain.BitcoinCash -> "BCH"
-            Chain.Dash -> "DASH"
-            Chain.Zcash -> "ZEC"
-            Chain.Tron -> "TRON"
-            Chain.Sui -> "SUI"
-            Chain.Cardano -> "ADA"
-            Chain.Ton -> "TON"
-            Chain.Ripple -> "XRP"
-            else -> null
-        }
 
     /**
      * Parse a SwapKit EVM tx numeric field (gas / gasPrice / value). SwapKit V3 hex-encodes these
