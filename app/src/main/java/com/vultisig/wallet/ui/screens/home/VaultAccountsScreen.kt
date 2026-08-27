@@ -80,8 +80,8 @@ internal fun VaultAccountsScreen(viewModel: VaultAccountsViewModel = hiltViewMod
             viewModel.onNotificationPermissionResult(granted)
         }
 
-    // Positions are managed one screen deeper, so the list is re-read on the way back rather than
-    // only when the tab is switched.
+    // Positions and the facts the promo banners are chosen from are both changed one screen
+    // deeper, so both are re-read on the way back rather than only when the tab is switched.
     LifecycleResumeEffect(Unit) {
         viewModel.onScreenResumed()
         onPauseOrDispose {}

@@ -50,6 +50,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.VaultIntroItem
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.HomeBannerType
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.pushNotificationErrorUiText
@@ -415,7 +416,7 @@ constructor(
     }
 
     /**
-     * Re-reads the DeFi list when home comes back to the front.
+     * Re-reads the promo banners and the DeFi list when home comes back to the front.
      *
      * Positions are changed a screen deeper — a Kamino vault switched on under Manage Positions, a
      * deposit signed — and nothing on the way back asks this list to look again, so it kept
@@ -429,6 +430,10 @@ constructor(
      */
     fun onScreenResumed() {
         val vaultId = vaultId ?: return
+        // Banner eligibility is a snapshot taken per load, and the facts behind it are changed a
+        // screen deeper: a referral code entered through the referral banner itself, a chain
+        // enabled. Re-read them here or the promo keeps asking for what the user just gave it.
+        collectBannerVisibility(vaultId)
         if (uiState.value.cryptoConnectionType != CryptoConnectionType.Defi) return
         if (isDeFiRefreshThrottled) return
         loadDeFiBalances(vaultId, isRefresh = true)
@@ -482,18 +487,35 @@ constructor(
             HomeBannerType.UpgradeVault -> migrate()
             HomeBannerType.BuyVult -> buyVult()
             HomeBannerType.BackupVault -> backupVault()
-            // Straight to the chain's DeFi screen: Solana opens on Earn and THORChain on staking,
-            // which is what each banner advertises.
+            // Straight to the chain's DeFi screen: Solana opens on Earn, and THORChain is asked
+            // for Staked because it otherwise opens on Bonded, a tab away from the Rujira staking
+            // this banner advertises.
+            //
+            // The chain dashboard renders whichever side of the wallet / DeFi toggle is active
+            // rather than the route it was opened with, so the toggle has to move first: from the
+            // wallet tab, where these banners are usually tapped, both would otherwise land on the
+            // chain's token list.
             HomeBannerType.KaminoEarn ->
                 viewModelScope.launch {
+                    cryptoConnectionTypeRepository.setActiveCryptoConnection(
+                        CryptoConnectionType.Defi
+                    )
                     navigator.route(
                         Route.ChainDashboard(ChainDashboardRoute.PositionSolana(vaultId = vaultId))
                     )
                 }
             HomeBannerType.RujiraStaking ->
                 viewModelScope.launch {
+                    cryptoConnectionTypeRepository.setActiveCryptoConnection(
+                        CryptoConnectionType.Defi
+                    )
                     navigator.route(
-                        Route.ChainDashboard(ChainDashboardRoute.PositionTokens(vaultId = vaultId))
+                        Route.ChainDashboard(
+                            ChainDashboardRoute.PositionTokens(
+                                vaultId = vaultId,
+                                tab = DeFiTab.STAKED,
+                            )
+                        )
                     )
                 }
             HomeBannerType.ReferralRewards ->

@@ -39,9 +39,11 @@ import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.navigation.ChainDashboardRoute
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.HomeBannerType
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import io.kotest.matchers.booleans.shouldBeFalse
@@ -577,6 +579,106 @@ internal class VaultAccountsViewModelTest {
             val vm = createViewModel()
             advanceUntilIdle()
             vm.uiState.value.banners.shouldContainExactly(HomeBannerType.entries)
+        }
+
+    /**
+     * The chain dashboard renders the side of the wallet / DeFi toggle that is active rather than
+     * the route it was opened with, so a banner tapped from the wallet tab has to move the toggle
+     * or it lands on Solana's token list instead of Kamino.
+     */
+    @Test
+    fun `Kamino banner switches to DeFi before opening Solana positions`() =
+        runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns
+                Vault(id = "vault-1", name = "Test", coins = listOf(Coins.Solana.SOL))
+            val vm = createViewModel()
+            advanceUntilIdle()
+            clearMocks(navigator, cryptoConnectionTypeRepository, answers = false)
+
+            vm.onBannerClick(HomeBannerType.KaminoEarn)
+            advanceUntilIdle()
+
+            verify(exactly = 1) {
+                cryptoConnectionTypeRepository.setActiveCryptoConnection(CryptoConnectionType.Defi)
+            }
+            coVerify(exactly = 1) {
+                navigator.route(
+                    Route.ChainDashboard(ChainDashboardRoute.PositionSolana(vaultId = "vault-1"))
+                )
+            }
+        }
+
+    /**
+     * THORChain's positions screen opens on Bonded, which is the node-bonding list — a tab away
+     * from the Rujira staking the banner advertises.
+     */
+    @Test
+    fun `Rujira banner opens THORChain positions on the Staked tab`() =
+        runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns
+                Vault(id = "vault-1", name = "Test", coins = listOf(Coins.ThorChain.RUNE))
+            val vm = createViewModel()
+            advanceUntilIdle()
+            clearMocks(navigator, cryptoConnectionTypeRepository, answers = false)
+
+            vm.onBannerClick(HomeBannerType.RujiraStaking)
+            advanceUntilIdle()
+
+            verify(exactly = 1) {
+                cryptoConnectionTypeRepository.setActiveCryptoConnection(CryptoConnectionType.Defi)
+            }
+            coVerify(exactly = 1) {
+                navigator.route(
+                    Route.ChainDashboard(
+                        ChainDashboardRoute.PositionTokens(
+                            vaultId = "vault-1",
+                            tab = DeFiTab.STAKED,
+                        )
+                    )
+                )
+            }
+        }
+
+    /**
+     * The code is entered on the screen the banner itself opens, and home is still alive behind it,
+     * so the promo has to be re-evaluated on the way back or it keeps asking for a code the user
+     * has already given.
+     */
+    @Test
+    fun `onScreenResumed drops the Referral banner once a code has been entered`() =
+        runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { referralCodeSettingsRepository.getExternalReferralBy("vault-1") } returns null
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.banners.shouldContain(HomeBannerType.ReferralRewards)
+
+            every { referralCodeSettingsRepository.getExternalReferralBy("vault-1") } returns "ABC"
+            vm.onScreenResumed()
+            advanceUntilIdle()
+
+            vm.uiState.value.banners.shouldNotContain(HomeBannerType.ReferralRewards)
+        }
+
+    /** The reverse: removing the code offers the promo again on the next return to home. */
+    @Test
+    fun `onScreenResumed restores the Referral banner once the code is removed`() =
+        runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { referralCodeSettingsRepository.getExternalReferralBy("vault-1") } returns "ABC"
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.banners.shouldNotContain(HomeBannerType.ReferralRewards)
+
+            every { referralCodeSettingsRepository.getExternalReferralBy("vault-1") } returns null
+            vm.onScreenResumed()
+            advanceUntilIdle()
+
+            vm.uiState.value.banners.shouldContain(HomeBannerType.ReferralRewards)
         }
 
     /** Verifies buyVult navigates to Swap with VULT preselected when vault already has VULT. */
