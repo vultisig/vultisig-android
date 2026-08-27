@@ -163,11 +163,6 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
 
             Chain.Hyperliquid -> setOf(SwapProvider.LIFI)
 
-            // MayaChain was the only provider ever mapped for Kujira, and it has delisted every
-            // KUJI.* pool (verified against /mayachain/pools on 2026-08-01), so every Kujira quote
-            // is a guaranteed failure (#5472). [poolEligibility] can only ADD routes, so the entry
-            // has to go for the pair to stop being offered.
-            Chain.Kujira,
             Chain.Polkadot,
             Chain.Bittensor,
             Chain.Dydx,

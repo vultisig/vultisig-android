@@ -210,8 +210,7 @@ fun limitOrderCancelDustCeiling(chain: Chain): BigDecimal =
         Chain.Dash,
         Chain.Zcash -> BigDecimal("0.001")
         Chain.GaiaChain,
-        Chain.Noble,
-        Chain.Kujira -> BigDecimal("0.5")
+        Chain.Noble -> BigDecimal("0.5")
         // ETH (0.00002 attach), BSC (0.0002) and the remaining EVM chains, which quote in ETH-like
         // units. Immaterial in fiat there while still leaving room for a threshold that moves by an
         // order of magnitude.

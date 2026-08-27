@@ -118,8 +118,9 @@ class TonStatusProviderTest {
 
     @Test
     fun `action phase out of funds returns Failed even when not aborted`() = runTest {
-        // The core bug: IGNORE_ACTION_PHASE_ERRORS leaves the tx un-aborted while the
-        // transfer action is silently skipped for lack of funds — no funds actually moved.
+        // A send signed with IGNORE_ACTION_PHASE_ERRORS lands un-aborted while the transfer
+        // action is silently skipped for lack of funds — no funds actually moved. Vultisig no
+        // longer signs that way, but peers and older sends still do.
         coEvery { tonApi.getTsStatus(any()) } returns
             statusWith(
                 TonTransactionDescriptionJson(

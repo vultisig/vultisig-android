@@ -104,6 +104,7 @@ import com.vultisig.wallet.ui.screens.referral.ReferralCreateScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralEditExternalScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralEditVaultScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralOnboardingScreen
+import com.vultisig.wallet.ui.screens.referral.ReferralPayoutAssetScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralVaultListScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralViewScreen
@@ -445,6 +446,8 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         }
 
         composable<Route.ReferralCreation> { ReferralCreateScreen(navController = navController) }
+
+        dialog<Route.ReferralPayoutAsset> { ReferralPayoutAssetScreen() }
 
         composable(
             route = Destination.ReferralView.STATIC_ROUTE,

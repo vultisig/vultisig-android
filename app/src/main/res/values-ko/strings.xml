@@ -928,6 +928,7 @@
     <string name="referral_create_search">검색</string>
     <string name="referral_create_expiration_date">만료 날짜</string>
     <string name="referral_create_set_expiration_years">만료 기간 설정 (년 단위)</string>
+    <string name="referral_choose_payout_asset">지급 자산 선택</string>
     <string name="referral_create_registration_fees">등록 수수료</string>
     <string name="referral_create_cost">비용</string>
     <string name="referral_create_fees_error">수수료를 불러오지 못했습니다. 다시 시도해 주세요.</string>

@@ -155,16 +155,6 @@ internal interface DepositMemo {
 
         private val ibcChannel: String =
             when (srcChain) {
-                Chain.Kujira ->
-                    when (dstChain) {
-                        Chain.GaiaChain -> "channel-0"
-                        Chain.Akash -> "channel-64"
-                        Chain.Dydx -> "channel-118"
-                        Chain.Noble -> "channel-62"
-                        Chain.Osmosis -> "channel-3"
-                        else -> ""
-                    }
-
                 Chain.Osmosis ->
                     when (dstChain) {
                         Chain.GaiaChain -> "channel-0"
@@ -173,7 +163,6 @@ internal interface DepositMemo {
 
                 Chain.GaiaChain ->
                     when (dstChain) {
-                        Chain.Kujira -> "channel-343"
                         Chain.Osmosis -> "channel-141"
                         Chain.Noble -> "channel-536"
                         Chain.Akash -> "channel-184"

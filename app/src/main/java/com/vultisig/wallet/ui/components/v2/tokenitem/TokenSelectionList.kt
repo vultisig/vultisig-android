@@ -290,7 +290,7 @@ private fun TokenSelectionListPreview() {
                             SingleToken(data = Coins.Ethereum.UNI),
                             PairToken(data = Coins.Arbitrum.LINK to Coins.Optimism.LINK),
                             SingleToken(data = Coins.ThorChain.RUNE),
-                            SingleToken(data = Coins.Kujira.KUJI),
+                            SingleToken(data = Coins.GaiaChain.ATOM),
                             SingleToken(data = Coins.Base.AERO),
                         ),
                     mapper = {

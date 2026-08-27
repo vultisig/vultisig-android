@@ -11,13 +11,13 @@ data class CosmosBalance(
 ) {
     fun hasValidDenom(coin: Coin) =
         denom.isValidDenom(coin.ticker) ||
-            denom.isValidKujiraFactoryDenom(coin.ticker) ||
+            denom.isValidFactoryDenom(coin.ticker) ||
             denom.equals(coin.contractAddress, ignoreCase = true)
 
     private fun String.isValidDenom(ticker: String) =
         equals(("u$ticker"), ignoreCase = true) || equals(("a$ticker"), ignoreCase = true)
 
-    private fun String.isValidKujiraFactoryDenom(ticker: String): Boolean {
+    private fun String.isValidFactoryDenom(ticker: String): Boolean {
         val value = removePrefix("factory/").substringAfter('/')
         return value.equals("u$ticker", ignoreCase = true) ||
             value.equals("a$ticker", ignoreCase = true)

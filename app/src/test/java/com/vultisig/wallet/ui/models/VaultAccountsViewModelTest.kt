@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.HasCircleAccountUseCase
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -266,6 +267,81 @@ internal class VaultAccountsViewModelTest {
         viewModel.uiState.value.showBackupWarning shouldBe false
     }
 
+    @Test
+    fun `an empty list is not the no-chains-enabled state until the accounts flow emits`() =
+        runTest {
+            val balances = Channel<AddressBalancesUpdate>(Channel.UNLIMITED)
+            every { accountsRepository.loadAddressBalances(VAULT_ID) } returns
+                balances.consumeAsFlow()
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            // Deriving the addresses and reading their cached balances takes seconds on a cold
+            // start
+            // with many chains; until that first emission lands, an empty list says nothing about
+            // which chains the user enabled.
+            viewModel.uiState.value.getAccounts.shouldBeEmpty()
+            viewModel.uiState.value.areAccountsLoaded shouldBe false
+
+            balances.send(AddressBalancesUpdate(addresses = emptyList(), isComplete = false))
+            advanceUntilIdle()
+
+            // The cached snapshot is the first emission, so the guard lifts without waiting on the
+            // network — a vault that really has every chain disabled still reads as such.
+            viewModel.uiState.value.getAccounts.shouldBeEmpty()
+            viewModel.uiState.value.areAccountsLoaded shouldBe true
+        }
+
+    @Test
+    fun `switching vaults re-arms the guard until the next vault's accounts land`() = runTest {
+        val vaultIds = MutableSharedFlow<String?>(replay = 1)
+        vaultIds.emit(VAULT_ID)
+        every { lastOpenedVaultRepository.lastOpenedVaultId } returns vaultIds
+        every { accountsRepository.loadAddressBalances(VAULT_ID) } returns
+            flowOf(AddressBalancesUpdate(addresses = emptyList(), isComplete = true))
+        every { accountsRepository.loadAddressBalances(OTHER_VAULT_ID) } returns
+            Channel<AddressBalancesUpdate>(Channel.UNLIMITED).consumeAsFlow()
+        coEvery { vaultRepository.get(OTHER_VAULT_ID) } returns VAULT.copy(id = OTHER_VAULT_ID)
+        coEvery { accountsRepository.loadDeFiAddresses(OTHER_VAULT_ID, any()) } returns
+            flowOf(emptyList())
+        every { defaultDeFiChainsRepository.getDefaultChains(OTHER_VAULT_ID) } returns
+            flowOf(emptySet())
+        coEvery { balanceVisibilityRepository.getVisibility(OTHER_VAULT_ID) } returns true
+        coEvery { vaultDataStoreRepository.readBackupStatus(OTHER_VAULT_ID) } returns flowOf(true)
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.uiState.value.areAccountsLoaded shouldBe true
+
+        vaultIds.emit(OTHER_VAULT_ID)
+        advanceUntilIdle()
+
+        // The previous vault's rows are dropped on the switch, so the empty list left behind is
+        // once again "not loaded yet" rather than "this vault has no chains".
+        viewModel.uiState.value.areAccountsLoaded shouldBe false
+    }
+
+    @Test
+    fun `the DeFi tab waits on its own flow rather than the wallet one`() = runTest {
+        connectionType.value = CryptoConnectionType.Defi
+        val deFiAddresses = Channel<List<Address>>(Channel.UNLIMITED)
+        coEvery { accountsRepository.loadDeFiAddresses(VAULT_ID, any()) } returns
+            deFiAddresses.consumeAsFlow()
+        // The wallet list is loaded either way, and on this tab it says nothing about whether the
+        // positions the user is looking at have arrived.
+        every { accountsRepository.loadAddressBalances(VAULT_ID) } returns
+            flowOf(AddressBalancesUpdate(addresses = emptyList(), isComplete = true))
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.uiState.value.areAccountsLoaded shouldBe false
+
+        deFiAddresses.send(emptyList())
+        advanceUntilIdle()
+
+        viewModel.uiState.value.areAccountsLoaded shouldBe true
+    }
+
     private fun viewModel() =
         VaultAccountsViewModel(
             savedStateHandle = SavedStateHandle(),
@@ -295,6 +371,7 @@ internal class VaultAccountsViewModelTest {
 
     private companion object {
         const val VAULT_ID = "vault-id"
+        const val OTHER_VAULT_ID = "other-vault-id"
 
         // Mirrors DEFI_REFRESH_THROTTLE, which is private to the ViewModel.
         val THROTTLE_WINDOW = 15.seconds

@@ -575,9 +575,19 @@ constructor(
         // so populate chain settings from the route args (originally from the QR code).
         if (!isInitiatingDevice) {
             keyImportRepository.clear()
+            // Every chain the initiator picked gets its own keygen session, routed by raw id, and
+            // it waits for this device in each. Skipping one this build no longer knows would
+            // strand that session: the initiator times out and both sides fail with nothing to
+            // point at. Refuse up front instead, naming the chain.
             val chainSettings =
-                args.chains.mapNotNull { raw ->
-                    Chain.entries.find { it.raw == raw }?.let { ChainImportSetting(chain = it) }
+                args.chains.map { raw ->
+                    val chain =
+                        Chain.fromRawOrNull(raw)
+                            ?: error(
+                                "This version no longer supports $raw. Start the import again " +
+                                    "without it, or update the other device."
+                            )
+                    ChainImportSetting(chain = chain)
                 }
             keyImportRepository.setChainSettings(chainSettings)
         }

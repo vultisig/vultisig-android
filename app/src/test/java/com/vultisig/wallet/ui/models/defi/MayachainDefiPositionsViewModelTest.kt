@@ -56,6 +56,8 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 /**
  * Characterization tests: they pin the behavior this ViewModel has today so the upcoming split into
@@ -267,6 +269,21 @@ internal class MayachainDefiPositionsViewModelTest {
         assertEquals("25.00%", position.apr)
         assertTrue(position.canRemove)
         assertEquals(Chain.Bitcoin.monoToneLogo, position.chainLogo)
+    }
+
+    @ParameterizedTest(name = "{0} prices its asset leg")
+    @ValueSource(strings = ["THOR.RUNE", "ADA.ADA", "ZEC.ZEC"])
+    fun `every Available Maya pool resolves to a chain`(pool: String) = runTest {
+        // The prefix table is what turns a pool string into a chain, and a prefix it misses leaves
+        // the asset leg at zero — the card and the header then report half the position's value.
+        selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, pool)
+        givenLpPool(liquidityUnits = "100", units = "1000", pool = pool)
+
+        val position =
+            successData(createViewModel().also { it.setData(VAULT_ID) }).lp.positions.single()
+
+        // 10% of a pool holding 1 asset and 1 CACAO, both priced at $2.
+        assertEquals("$0.40", position.totalPriceLp)
     }
 
     @Test
@@ -905,15 +922,16 @@ internal class MayachainDefiPositionsViewModelTest {
         units: String,
         assetAdded: String = "0",
         cacaoAdded: String = "0",
+        pool: String = BTC_POOL,
     ) {
         coEvery { mayachainBondRepository.getMayaNodePools() } returns
-            listOf(MayaNodePool(asset = BTC_POOL, status = "Available"))
+            listOf(MayaNodePool(asset = pool, status = "Available"))
         coEvery { mayachainBondRepository.getMemberDetails(CACAO_ADDRESS) } returns
             MayaMemberDetails(
                 pools =
                     listOf(
                         MayaMemberPool(
-                            pool = BTC_POOL,
+                            pool = pool,
                             assetAdded = assetAdded,
                             cacaoAdded = cacaoAdded,
                             liquidityUnits = liquidityUnits,
@@ -923,7 +941,7 @@ internal class MayachainDefiPositionsViewModelTest {
         coEvery { mayachainBondRepository.getLpPoolStats() } returns
             listOf(
                 MayaLpPoolStats(
-                    asset = BTC_POOL,
+                    asset = pool,
                     annualPercentageRate = "0.25",
                     status = "Available",
                     assetDepth = "100000000",

@@ -209,6 +209,85 @@ class ChainHelpersTest {
     }
 
     /**
+     * Every app-built TON transfer carries mode PAY_FEES_SEPARATELY and nothing else - in
+     * particular not IGNORE_ACTION_PHASE_ERRORS, which lets a transfer the wallet contract cannot
+     * pay for be skipped while the transaction still lands un-aborted (seqno consumed, no funds
+     * moved). The mode is part of the signed body, so a co-signer that derives a different one
+     * computes a different pre-image hash and never finishes keysign. Mirrors iOS
+     * `TonSendTransactionTests.testNativeSingleTransferUsesPayFeesSeparately`.
+     */
+    @Test
+    fun tonSendModeIsPayFeesSeparatelyOnEveryBuilder() {
+        val payFeesSeparately = TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE
+
+        loadTransactionData(TON_JSON_FILE).forEach { transaction ->
+            val inputData =
+                TonHelper.getPreSignedInputData(
+                    transaction.keysignPayload.toInternalKeySignPayload()
+                )
+            val signingInput = TheOpenNetwork.SigningInput.parseFrom(inputData)
+
+            signingInput.messagesList.forEach { message ->
+                assertEquals(transaction.name, payFeesSeparately, message.mode)
+            }
+        }
+    }
+
+    /**
+     * A MAX send signs the explicit amount the user was shown (balance - fee), not amount 0 with
+     * ATTACH_ALL_CONTRACT_BALANCE - a mode-128 sweep would move the whole balance including the
+     * reserve, so the displayed and sent amounts diverge. Mirrors iOS
+     * `TonSendTransactionTests.testNativeMaxSignsExplicitAmountNotSweep`.
+     */
+    @Test
+    fun tonMaxSendSignsExplicitAmountNotSweep() {
+        val amount = 950_000_000L
+        val coin =
+            Coin(
+                chain = "Ton",
+                ticker = "TON",
+                address = "UQCc9iCgP_b5RMJcFE5XD8zStfjtNHLhDWfUqC5m1SjSer95",
+                decimals = 9,
+                priceProviderId = "the-open-network",
+                isNativeToken = true,
+                hexPublicKey = HEX_PUBLIC_KEY_EDDSA,
+                logo = "ton",
+            )
+        val payload =
+            KeysignPayload(
+                    coin = coin,
+                    toAddress = "UQDmLe6ticcY_uLZsfurdYONshNuCn8IS81KcJ8p6M6ISMcB",
+                    toAmount = amount.toString(),
+                    blockchainSpecific =
+                        BlockchainSpecific(
+                            tonSpecific =
+                                TonSpecific(
+                                    sendMaxAmount = true,
+                                    sequenceNumber = 0L,
+                                    expireAt = 1753579977L,
+                                    bounceable = false,
+                                )
+                        ),
+                    vaultPublicKeyEcdsa = HEX_PUBLIC_KEY,
+                    libType = "DKLS",
+                )
+                .toInternalKeySignPayload()
+
+        val signingInput =
+            TheOpenNetwork.SigningInput.parseFrom(TonHelper.getPreSignedInputData(payload))
+
+        assertEquals(1, signingInput.messagesCount)
+        assertEquals(
+            BigInteger.valueOf(amount),
+            BigInteger(1, signingInput.getMessages(0).amount.toByteArray()),
+        )
+        assertEquals(
+            TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE,
+            signingInput.getMessages(0).mode,
+        )
+    }
+
+    /**
      * Regression: verifies that per-message `payload` and `stateInit` fields are threaded into the
      * WalletCore SigningInput, and that multi-message signing emits one Transfer per TonMessage in
      * order. Mirrors iOS `TonSendTransactionTests.testTonConnectThreadsStateInitAndCustomPayload`.
@@ -272,6 +351,9 @@ class ChainHelpersTest {
         val signingInput = TheOpenNetwork.SigningInput.parseFrom(inputData)
 
         assertEquals(2, signingInput.messagesCount)
+        signingInput.messagesList.forEach { message ->
+            assertEquals(TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE, message.mode)
+        }
         assertEquals(stateInit, signingInput.getMessages(0).stateInit)
         assertEquals(customPayload, signingInput.getMessages(0).customPayload)
         assertEquals("", signingInput.getMessages(1).stateInit)
@@ -390,8 +472,8 @@ class ChainHelpersTest {
     }
 
     /**
-     * One send per Cosmos-family chain not otherwise covered by [sendCosmosTest]/ [sendKUJIRATest],
-     * plus one genuine IBC transfer (`transaction_type` 3, routed through [CosmosHelper]'s
+     * One send per Cosmos-family chain not otherwise covered by [sendCosmosTest], plus one genuine
+     * IBC transfer (`transaction_type` 3, routed through [CosmosHelper]'s
      * `TRANSACTION_TYPE_IBC_TRANSFER` branch rather than a plain send whose memo merely looks like
      * IBC routing info). Regression coverage for issue #5421 item 5.
      */
@@ -659,24 +741,6 @@ class ChainHelpersTest {
             val coin = payload.coin.coinType
 
             val helper = UtxoHelper(coin, HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
-            val preImageHashes =
-                helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
-
-            assertEquals(preImageHashes, transaction.expectedImageHash)
-        }
-    }
-
-    @Test
-    fun sendKUJIRATest() {
-        val transactions: List<TransactionData> = loadTransactionData(KUJIRA_JSON_FILE)
-        val helper =
-            CosmosHelper(
-                coinType = CoinType.KUJIRA,
-                denom = Chain.Kujira.feeUnit,
-                gasLimit = CosmosHelper.getChainGasLimit(Chain.Kujira),
-            )
-
-        transactions.forEach { transaction ->
             val preImageHashes =
                 helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
 
@@ -1016,7 +1080,6 @@ class ChainHelpersTest {
         private const val QBTC_JSON_FILE = "qbtc.json"
         private const val SUI_JSON_FILE = "sui.json"
         private const val TRON_JSON_FILE = "tron.json"
-        private const val KUJIRA_JSON_FILE = "kujira.json"
 
         private const val CARDANO_JSON_FILE = "cardano.json"
 
@@ -1055,7 +1118,6 @@ class ChainHelpersTest {
                 QBTC_JSON_FILE to "sendQBTCTest",
                 SUI_JSON_FILE to "sendSUI",
                 TRON_JSON_FILE to "sendTronTest",
-                KUJIRA_JSON_FILE to "sendKUJIRATest",
                 CARDANO_JSON_FILE to "sendCardano",
                 THORCHAIN_SWAP_JSON_FILE to "sendThorchainSwapTest",
                 THORCHAIN_SWAP_LIMIT_ORDER_JSON_FILE to "sendThorchainSwapTest",
@@ -1071,7 +1133,9 @@ class ChainHelpersTest {
         // so it belongs in the matrix rather than a standalone file).
         // The standalone fixture files are shared byte-for-byte with the Swift and TS corpora,
         // preserving the cross-signer agreement required by #5421 and vultisig-sdk#1585.
-        private const val EXPECTED_CASE_COUNT = 88
+        // -3: kujira.json, dropped with the chain — the other corpora still carry it, so the sync
+        // check reports it as missing here rather than as a hash disagreement.
+        private const val EXPECTED_CASE_COUNT = 85
 
         private const val HEX_PUBLIC_KEY =
             "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b"

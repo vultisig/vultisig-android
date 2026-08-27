@@ -46,11 +46,12 @@ private fun TonComputePhaseJson?.hasFailed(): Boolean =
     this?.exitCode?.let { it != 0 && it != 1 } == true
 
 /**
- * The action phase is where the wallet emits its outgoing transfer(s). Since every Vultisig TON
- * send is signed with `IGNORE_ACTION_PHASE_ERRORS`, a transfer that can't be paid for is silently
- * skipped rather than aborting the transaction — the wallet tx lands un-aborted with the seqno
- * consumed but no funds moved. Treat a skipped / unfunded / unsuccessful action phase as a failure
- * so the user isn't shown a false "Confirmed".
+ * The action phase is where the wallet emits its outgoing transfer(s). A send signed with
+ * `IGNORE_ACTION_PHASE_ERRORS` skips a transfer it can't pay for rather than aborting — the wallet
+ * tx lands un-aborted with the seqno consumed but no funds moved. Vultisig no longer sets that flag
+ * (see [com.vultisig.wallet.data.crypto.TonHelper]), but this status path still reads transactions
+ * it did not sign: older sends, and sends built by peers or other clients. Treat a skipped /
+ * unfunded / unsuccessful action phase as a failure so the user isn't shown a false "Confirmed".
  */
 private fun TonActionPhaseJson?.hasFailed(): Boolean {
     if (this == null) return false

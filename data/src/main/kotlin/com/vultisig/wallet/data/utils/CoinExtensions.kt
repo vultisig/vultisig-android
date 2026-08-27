@@ -29,7 +29,6 @@ fun String.getChain(): Chain {
         "DOGE" -> Chain.Dogecoin
         "DASH" -> Chain.Dash
         "UATOM" -> Chain.GaiaChain
-        "KUJI" -> Chain.Kujira
         "CACAO" -> Chain.MayaChain
         "CRO" -> Chain.CronosChain
         "DOT" -> Chain.Polkadot

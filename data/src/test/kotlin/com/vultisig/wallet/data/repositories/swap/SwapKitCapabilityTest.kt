@@ -58,7 +58,6 @@ internal class SwapKitCapabilityTest {
                 Chain.ThorChain,
                 Chain.MayaChain,
                 Chain.GaiaChain,
-                Chain.Kujira,
                 Chain.Polkadot,
                 Chain.Osmosis,
                 Chain.Dydx,
