@@ -625,6 +625,7 @@
     <string name="referral_create_search">Zoeken</string>
     <string name="referral_create_expiration_date">Vervaldatum</string>
     <string name="referral_create_set_expiration_years">Vervaldatum instellen (in jaren)</string>
+    <string name="referral_choose_payout_asset">Kies uitbetalingsasset</string>
     <string name="referral_create_registration_fees">Registratiekosten</string>
     <string name="referral_create_cost">Kosten</string>
     <string name="referral_create_fees_error">Laden van vergoedingen mislukt. Probeer het opnieuw.</string>

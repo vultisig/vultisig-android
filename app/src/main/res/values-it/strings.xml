@@ -628,6 +628,7 @@
     <string name="referral_create_search">Cerca</string>
     <string name="referral_create_expiration_date">Data di scadenza</string>
     <string name="referral_create_set_expiration_years">Imposta scadenza (in anni)</string>
+    <string name="referral_choose_payout_asset">Scegli asset di pagamento</string>
     <string name="referral_create_registration_fees">Commissioni di registrazione</string>
     <string name="referral_create_cost">Costo</string>
     <string name="referral_create_fees_error">Impossibile caricare le commissioni. Riprova.</string>

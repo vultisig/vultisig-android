@@ -270,6 +270,12 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindGetThorChainPoolAssetsUseCase(
+        impl: GetThorChainPoolAssetsUseCaseImpl
+    ): GetThorChainPoolAssetsUseCase
+
+    @Binds
+    @Singleton
     fun bindThorChainLpPreflightUseCase(
         impl: ThorChainLpPreflightUseCaseImpl
     ): ThorChainLpPreflightUseCase

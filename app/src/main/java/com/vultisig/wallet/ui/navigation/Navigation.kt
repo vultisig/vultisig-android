@@ -613,6 +613,13 @@ internal sealed class Route {
 
     @Serializable data class ReferralCreation(val vaultId: String)
 
+    /**
+     * Payout-asset picker for a referral. [selectedAsset] is the THORChain pool asset id currently
+     * chosen, so the list can mark it; the pick is returned through [requestId].
+     */
+    @Serializable
+    data class ReferralPayoutAsset(val requestId: String, val selectedAsset: String? = null)
+
     @Serializable data class ReferralExternalEdition(val vaultId: String)
 
     @Serializable data class ReferralListVault(val vaultId: String)

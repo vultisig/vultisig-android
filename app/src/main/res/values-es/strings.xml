@@ -628,6 +628,7 @@
     <string name="referral_create_search">Buscar</string>
     <string name="referral_create_expiration_date">Fecha de vencimiento</string>
     <string name="referral_create_set_expiration_years">Establecer vencimiento (en años)</string>
+    <string name="referral_choose_payout_asset">Elegir activo de pago</string>
     <string name="referral_create_registration_fees">Tarifas de registro</string>
     <string name="referral_create_cost">Costo</string>
     <string name="referral_create_fees_error">Error al cargar las tarifas. Inténtelo de nuevo.</string>
